@@ -19,3 +19,6 @@ cmake .. -G "Visual Studio 17 2022" -B build
 &nbsp;&nbsp;delete visual studio generated folders
 #### using cmake Visual Studio solution generator
 &nbsp;&nbsp;delete build folder
+
+## working directory (debugger)
+&nbsp;&nbsp;the working directory is located in the bin folder at the top directory level
