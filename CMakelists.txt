@@ -1,0 +1,29 @@
+#prereq
+cmake_minimum_required(VERSION 3.20)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+#proj
+project(gam300)
+
+#cfg c++
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CONFIGURATION_TYPES Debug Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+#modules
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+include(import-dependencies)
+include(utilities)
+
+#execute modules
+import_dependencies()
+
+#global compile options
+add_compile_options(/W4)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+#srcs
+add_subdirectory(src)
+add_subdirectory(test)

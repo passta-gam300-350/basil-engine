@@ -1,0 +1,20 @@
+project(dummy)
+
+file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+    ${CMAKE_CURRENT_LIST_DIR}/*.[ch]pp
+    ${CMAKE_CURRENT_LIST_DIR}/*.h
+)
+
+set(ALL_LIBS
+  PUBLIC glad
+  PUBLIC glfw
+  PUBLIC EnTT::EnTT
+  PUBLIC assimp::assimp
+  PUBLIC RTTR::Core
+)
+
+add_executable(${PROJECT_NAME} ${ALL_FILES})
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
