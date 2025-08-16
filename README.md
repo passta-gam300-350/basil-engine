@@ -11,7 +11,7 @@ repo for gam300 engine
 #### using cmake Visual Studio solution generator
 &nbsp;&nbsp;open command prompt and set directory to top directory (root) and run the following command
 ```bash
-cmake .. -G "Visual Studio 17 2022" -B build
+cmake -G "Visual Studio 17 2022" -B build
 ```
 &nbsp;&nbsp;locate the visual studio sln file at the build folder
 ```bash
