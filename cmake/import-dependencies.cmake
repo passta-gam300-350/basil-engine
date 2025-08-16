@@ -146,5 +146,5 @@ macro(import_dependencies)
     import_rttr()
     import_imgui()
 
-    set_target_properties(glad glfw glm rttr_core PROPERTIES FOLDER dep)
+    set_target_properties(glad glfw glm rttr_core assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
 endmacro()
