@@ -1,4 +1,4 @@
-#include "FrameBuffer.h"
+#include "../../include/Buffer/FrameBuffer.h"
 #include <glad/gl.h>
 #include <iostream>
 
@@ -9,7 +9,7 @@ namespace Utils
 		switch (format)
 		{
 		case FBOTextureFormat::RGBA8: return GL_RGBA8;
-		case FBOTextureFormat::RED_INTEGER: return GL32I;
+		case FBOTextureFormat::RED_INTEGER: return GL_R32I;
 		case FBOTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
 		default: return 0;
 		}
@@ -31,7 +31,7 @@ FrameBuffer::FrameBuffer(FBOSpecs const &spec)
 	Invalidate();
 }
 
-Framebuffer::~Framebuffer()
+FrameBuffer::~FrameBuffer()
 {
 	ClearAttachments();
 	glDeleteFramebuffers(1, &m_FBOHandle);
@@ -54,7 +54,7 @@ void FrameBuffer::Invalidate()
 	if (m_ColorAttachmentSpecs.size() > 0)
 	{
 		m_ColorAttachments.resize(m_ColorAttachmentSpecs.size());
-		glGenTextures(static_cast<GLsizei>(m_ColorAttachments.size), m_ColorAttachments.data());
+		glGenTextures(static_cast<GLsizei>(m_ColorAttachments.size()), m_ColorAttachments.data());
 
 		for (uint32_t i = 0; i < m_ColorAttachments.size(); ++i)
 		{
@@ -111,7 +111,7 @@ void FrameBuffer::Invalidate()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Framebuffer::ClearAttachments()
+void FrameBuffer::ClearAttachments()
 {
 	if (!m_ColorAttachments.empty())
 	{
@@ -126,18 +126,18 @@ void Framebuffer::ClearAttachments()
 	}
 }
 
-void Framebuffer::Bind()
+void FrameBuffer::Bind()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
 	glViewport(0, 0, m_Specifications.Width, m_Specifications.Height);
 }
 
-void Framebuffer::Unbind()
+void FrameBuffer::Unbind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Framebuffer::Resize(uint32_t width, uint32_t height)
+void FrameBuffer::Resize(uint32_t width, uint32_t height)
 {
 	if (width == 0 || height == 0)
 	{
@@ -151,7 +151,7 @@ void Framebuffer::Resize(uint32_t width, uint32_t height)
 	Invalidate();
 }
 
-void Framebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
+void FrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 {
 	if (attachmentIndex >= m_ColorAttachments.size())
 	{
@@ -164,7 +164,7 @@ void Framebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 		GL_RGBA, GL_INT, &value);
 }
 
-uint32_t Framebuffer::GetColorAttachmentRendererID(uint32_t index) const
+uint32_t FrameBuffer::GetColorAttachmentRendererID(uint32_t index) const
 {
 	if (index >= m_ColorAttachments.size())
 	{

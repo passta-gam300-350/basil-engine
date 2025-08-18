@@ -1,4 +1,4 @@
-#include "VertexBuffer.h"
+#include "../../include/Buffer/VertexBuffer.h"
 #include <glad/gl.h>
 
 VertexBuffer::VertexBuffer(const void *data, uint32_t size)
@@ -15,7 +15,7 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::Bind() const
 {
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBOHandle)
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOHandle);
 }
 
 void VertexBuffer::Unbind() const

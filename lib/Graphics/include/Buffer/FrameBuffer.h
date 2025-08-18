@@ -20,7 +20,7 @@ struct FBOTextureSpecs
 	{
 	}
 
-	FBOTextureFormat TextureFormat = FBOTextureFormat::None
+	FBOTextureFormat TextureFormat = FBOTextureFormat::None;
 };
 
 struct FBOAttachmentSpecs
@@ -57,7 +57,7 @@ public:
 	uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const;
 	const FBOSpecs &GetSpecification() const
 	{
-		return m_Specification;
+		return m_Specifications;
 	}
 
 
