@@ -1,5 +1,76 @@
-#include <dummy.h>
+#pragma once
 
-int main() {
-	return 0;
-}
+#include <cstdint>
+#include <vector>
+
+enum class FBOTextureFormat
+{
+	None = 0,
+	RGBA8,
+	RED_INTEGER,
+	DEPTH24STENCIL8,
+	Depth = DEPTH24STENCIL8
+};
+
+struct FBOTextureSpecs
+{
+	FBOTextureSpecs() = default;
+	FBOTextureSpecs(FBOTextureFormat format)
+		: TextureFormat(format)
+	{
+	}
+
+	FBOTextureFormat TextureFormat = FBOTextureFormat::None
+};
+
+struct FBOAttachmentSpecs
+{
+	FBOAttachmentSpecs() = default;
+	FBOAttachmentSpecs(std::initializer_list<FBOTextureSpecs> attachments)
+		: Attachments(attachments)
+	{
+	}
+
+	std::vector<FBOTextureSpecs> Attachments;
+};
+
+struct FBOSpecs
+{
+	uint32_t Width = 0, Height = 0;
+	FBOAttachmentSpecs Attachments;
+	uint32_t Samples = 1;
+	bool SwapChainTarget = false;
+};
+
+class FrameBuffer
+{
+public:
+	FrameBuffer(FBOSpecs const &spec);
+	~FrameBuffer();
+
+	void Bind();
+	void Unbind();
+
+	void Resize(uint32_t width, uint32_t height);
+	void ClearAttachment(uint32_t attachmentIndex, int value);
+
+	uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const;
+	const FBOSpecs &GetSpecification() const
+	{
+		return m_Specification;
+	}
+
+
+private:
+	void Invalidate();
+	void ClearAttachments();
+
+	uint32_t m_FBOHandle = 0;
+	FBOSpecs m_Specifications;
+
+	std::vector<FBOTextureSpecs> m_ColorAttachmentSpecs;
+	FBOTextureSpecs m_DepthAttachmentSpec = FBOTextureFormat::None;
+
+	std::vector<uint32_t> m_ColorAttachments;
+	uint32_t m_DepthAttachment = 0;
+};
