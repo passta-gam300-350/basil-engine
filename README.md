@@ -9,7 +9,7 @@ repo for gam300 engine
 #### using Visual Studio CMake
 &nbsp;&nbsp;open the top directory(root) with visual studio's build in CMake support
 #### using cmake Visual Studio solution generator
-&nbsp;&nbsp;open command prompt and set directory to top directory (root) and run the following command
+&nbsp;&nbsp;open command prompt and set directory to top directory (root) and run the following command 
 ```bash
 cmake -G "Visual Studio 17 2022" -B build
 ```
