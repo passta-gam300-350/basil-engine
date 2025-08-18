@@ -15,13 +15,13 @@ void ClearCommand::Execute()
 
 // DrawCommand implementation
 DrawCommand::DrawCommand(uint32_t vao, uint32_t indexCount)
-    : m_VertexArray(vao), m_IndexCount(indexCount)
+    : m_VertexArrayID(vao), m_IndexCount(indexCount)
 {
 }
 
 void DrawCommand::Execute()
 {
-    glBindVertexArray(m_VertexArray);
+    glBindVertexArray(m_VertexArrayID);
     glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(0);
 }

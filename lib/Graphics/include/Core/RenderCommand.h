@@ -22,7 +22,7 @@ public:
 
 private:
 	glm::vec4 m_ClearColor;
-}
+};
 
 class DrawCommand : public RenderCommand
 {
@@ -32,6 +32,6 @@ public:
 	virtual RenderCommand* Clone() const override { return new DrawCommand(m_VertexArrayID, m_IndexCount); }
 
 private:
-	uint32_t m_VertexArray;
+	uint32_t m_VertexArrayID;
 	uint32_t m_IndexCount;
-}
+};
