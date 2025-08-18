@@ -1,5 +1,5 @@
 #include "../../include/Core/GraphicsContext.h"
-
+#include <iostream>
 #include <glad/gl.h>
 
 GraphicsContext::GraphicsContext(GLFWwindow* windowHandle)
@@ -21,13 +21,6 @@ void GraphicsContext::Initialize()
         return;
     }
 
-    // Context should already be current from Window creation
-    // Just verify GLAD is loaded
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cerr << "Failed to initialize GLAD in GraphicsContext" << std::endl;
-        return;
-    }
 	
     // Print OpenGL info
     std::cout << "OpenGL Vendor: " << glGetString(GL_VENDOR) << std::endl;
