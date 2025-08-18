@@ -1,4 +1,4 @@
-#include <VertexArray.hpp>
+#include "VertexArray.h"
 #include <glad/gl.h>
 
 uint32_t VertexBufferLayout::Element::GetSizeOfType(uint32_t type)

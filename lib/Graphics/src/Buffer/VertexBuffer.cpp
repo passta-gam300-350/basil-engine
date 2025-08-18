@@ -1,4 +1,4 @@
-#include <VertexBuffer.hpp>
+#include "VertexBuffer.h"
 #include <glad/gl.h>
 
 VertexBuffer::VertexBuffer(const void *data, uint32_t size)

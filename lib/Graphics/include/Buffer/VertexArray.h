@@ -1,5 +1,5 @@
-#include "VertexBuffer.hpp"
-#include "IndexBuffer.hpp"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 #include <memory>
 #include <vector>
 
