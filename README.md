@@ -24,5 +24,5 @@ start "" "build/gam300.sln"
 #### using cmake Visual Studio solution generator
 &nbsp;&nbsp;delete build folder
 
-## working directory (debugger)
-&nbsp;&nbsp;the working directory is located in the bin folder at the top directory level
+## ~~working directory (debugger)~~
+~~&nbsp;&nbsp;the working directory is located in the bin folder at the top directory level~~
