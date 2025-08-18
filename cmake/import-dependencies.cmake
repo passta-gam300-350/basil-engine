@@ -1,5 +1,15 @@
 include(FetchContent)
 
+macro(import_catch)
+    FetchContent_Declare(
+       catch
+       GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+       GIT_TAG v3.9.1
+    )
+
+    FetchContent_MakeAvailable(catch)
+endmacro()
+
 macro(import_gtest)
     FetchContent_Declare(
        gtest
@@ -8,7 +18,6 @@ macro(import_gtest)
     )
 
     FetchContent_MakeAvailable(gtest)
-    include_directories(${gtest_SOURCE_DIR})
 endmacro()
 
 macro(import_glad)
@@ -42,7 +51,6 @@ macro(import_glfw)
     )
 
     FetchContent_MakeAvailable(glfw)
-    include_directories(${glfw_SOURCE_DIR})
 endmacro()
 
 macro(import_glm)
@@ -53,7 +61,6 @@ macro(import_glm)
     )
 
     FetchContent_MakeAvailable(glm)
-    include_directories(${glm_SOURCE_DIR})
 endmacro()
 
 macro(import_assimp)
@@ -64,7 +71,6 @@ macro(import_assimp)
     )
 
     FetchContent_MakeAvailable(assimp)
-    include_directories(${assimp_SOURCE_DIR})
 endmacro()
 
 macro(import_rttr)
@@ -75,7 +81,6 @@ macro(import_rttr)
     )
 
     FetchContent_MakeAvailable(rttr)
-    include_directories(${rttr_SOURCE_DIR})
 endmacro()
 
 macro(import_entt)
@@ -86,7 +91,6 @@ macro(import_entt)
     )
 
     FetchContent_MakeAvailable(entt)
-    include_directories(${entt_SOURCE_DIR})
 endmacro()
 
 macro(import_imgui)
@@ -145,6 +149,8 @@ macro(import_dependencies)
     import_assimp()
     import_rttr()
     import_imgui()
+
+    import_catch()
 
     set_target_properties(glad glfw glm rttr_core assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
 endmacro()
