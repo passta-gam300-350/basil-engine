@@ -13,6 +13,9 @@ repo for gam300 engine
 ```bash
 cmake -G "Visual Studio 17 2022" -B build
 ```
+```bash
+cmake 
+```
 &nbsp;&nbsp;locate the visual studio sln file at the build folder
 ```bash
 start "" "build/gam300.sln"
