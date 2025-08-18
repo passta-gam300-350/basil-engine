@@ -24,5 +24,6 @@ add_compile_options(/W4)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 #srcs
-add_subdirectory(src)
+add_subdirectory(lib)
+add_subdirectory(engine)
 add_subdirectory(test)
