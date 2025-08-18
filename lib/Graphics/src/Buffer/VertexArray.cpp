@@ -31,7 +31,7 @@ void VertexArray::Unbind() const
 	glBindVertexArray(0);
 }
 
-void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuffer, const VertexBufferLayout &layout)
+void VertexArray::AddVertexBuffer(std::shared_ptr<VertexBuffer> const &vertexBuffer, VertexBufferLayout const &layout)
 {
 	Bind();
 	vertexBuffer->Bind();
@@ -56,7 +56,7 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuf
 	m_VertexBuffers.push_back(vertexBuffer);
 }
 
-void VertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer> &indexBuffer)
+void VertexArray::SetIndexBuffer(std::shared_ptr<IndexBuffer> const &indexBuffer)
 {
 	Bind();
 	indexBuffer->Bind();

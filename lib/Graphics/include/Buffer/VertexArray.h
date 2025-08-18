@@ -65,8 +65,8 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
-	void AddVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuffer, const VertexBufferLayout &layout);
-	void SetIndexBuffer(const std::shared_ptr<IndexBuffer> &indexBuffer);
+	void AddVertexBuffer(std::shared_ptr<VertexBuffer> const &vertexBuffer, VertexBufferLayout const &layout);
+	void SetIndexBuffer(std::shared_ptr<IndexBuffer> const &indexBuffer);
 
 	const std::vector<std::shared_ptr<VertexBuffer>> &GetVertexBuffers() const
 	{
