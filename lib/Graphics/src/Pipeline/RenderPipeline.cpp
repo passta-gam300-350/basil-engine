@@ -11,7 +11,7 @@ RenderPipeline::~RenderPipeline()
 	// Passes will be cleaned up by shared_ptr
 }
 
-RenderPipeline::AddPass(const std::shared_ptr<RenderPass>& pass)
+void RenderPipeline::AddPass(const std::shared_ptr<RenderPass>& pass)
 {
 	m_Passes.push_back(pass);
 }

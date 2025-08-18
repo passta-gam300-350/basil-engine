@@ -6,7 +6,7 @@ PostProcessEffect::PostProcessEffect(const std::string& name, const std::shared_
 {
 }
 
-void PostProcessEffect::Apply(const std::shared_ptr<Framebuffer>& source, std::shared_ptr<Framebuffer>& destination)
+void PostProcessEffect::Apply(const std::shared_ptr<FrameBuffer>& source, std::shared_ptr<FrameBuffer>& destination)
 {
 	// Bind the input framebuffer as the source texture
 	destination->Bind();
@@ -40,12 +40,12 @@ void PostProcessEffect::Apply(const std::shared_ptr<Framebuffer>& source, std::s
 PostProcessStack::PostProcessStack()
 {
 	// Create an intermediate framebuffer for ping-pong rendering
-    FramebufferSpecification spec;
+    FBOSpecs spec;
     spec.Width = 1280; // Default size, should be resized to match the screen
     spec.Height = 720;
-    spec.Attachments = { { FramebufferTextureFormat::RGBA8 } };
+    spec.Attachments = { { FBOTextureFormat::RGBA8 } };
 
-    m_IntermediateFramebuffer = std::make_shared<Framebuffer>(spec);
+    m_IntermediateFramebuffer = std::make_shared<FrameBuffer>(spec);
 }
 
 PostProcessStack::~PostProcessStack()
@@ -71,7 +71,7 @@ void PostProcessStack::ClearEffects()
     m_Effects.clear();
 }
 
-void PostProcessStack::Apply(const std::shared_ptr<Framebuffer>& source, std::shared_ptr<Framebuffer>& destination)
+void PostProcessStack::Apply(const std::shared_ptr<FrameBuffer>& source, std::shared_ptr<FrameBuffer>& destination)
 {
     if (m_Effects.empty())
     {
@@ -89,8 +89,8 @@ void PostProcessStack::Apply(const std::shared_ptr<Framebuffer>& source, std::sh
     }
 
     // Ping-pong between source and intermediate buffer for all effects except the last one
-    std::shared_ptr<Framebuffer> currentSource = source;
-    std::shared_ptr<Framebuffer> currentDest = m_IntermediateFramebuffer;
+    std::shared_ptr<FrameBuffer> currentSource = source;
+    std::shared_ptr<FrameBuffer> currentDest = m_IntermediateFramebuffer;
 
     for (size_t i = 0; i < m_Effects.size(); ++i)
     {

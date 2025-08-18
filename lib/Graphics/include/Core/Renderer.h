@@ -8,10 +8,10 @@
 class Renderer
 {
 public:
-	Renderer(GLFWwindow* windowHandle);
+	Renderer();
 	~Renderer();
 
-	void Initialize();
+	void Initialize(GLFWwindow* windowHandle);
 	void Shutdown();
 
 	void BeginFrame();

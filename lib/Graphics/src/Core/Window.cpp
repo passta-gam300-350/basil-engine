@@ -42,11 +42,6 @@ void Window::PollEvents()
 	glfwPollEvents();
 }
 
-void Window::SwapBuffers()
-{
-	glfwSwapBuffers(m_Window);
-}
-
 bool Window::ShouldClose() const
 {
 	return glfwWindowShouldClose(m_Window);

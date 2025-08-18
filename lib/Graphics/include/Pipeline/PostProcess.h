@@ -29,9 +29,9 @@ public:
     void PopEffect();
     void ClearEffects();
 
-    void Apply(const std::shared_ptr<Framebuffer>& source, std::shared_ptr<Framebuffer>& destination);
+    void Apply(const std::shared_ptr<FrameBuffer>& source, std::shared_ptr<FrameBuffer>& destination);
 
 private:
     std::vector<std::shared_ptr<PostProcessEffect>> m_Effects;
-    std::shared_ptr<Framebuffer> m_IntermediateFramebuffer;
+    std::shared_ptr<FrameBuffer> m_IntermediateFramebuffer;
 };
