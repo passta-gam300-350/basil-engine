@@ -78,6 +78,11 @@ public:
 		return m_IndexBuffer;
 	}
 
+	uint32_t GetVAOHandle() const
+	{
+		return m_VAOHandle;
+	}
+
 private:
 	uint32_t m_VAOHandle;
 	std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers; // Vector of buffers since a buffer represent a type data like position/texCoord/normals
