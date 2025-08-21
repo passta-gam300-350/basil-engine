@@ -11,6 +11,7 @@ set(ALL_LIBS
   PRIVATE glm
   PRIVATE assimp::assimp
   PRIVATE stb
+  PRIVATE EnTT
 )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
