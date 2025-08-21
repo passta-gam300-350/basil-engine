@@ -10,7 +10,6 @@ set(ALL_LIBS
   PRIVATE glfw
   PRIVATE glm
   PRIVATE assimp::assimp
-  PRIVATE RTTR::Core
   PRIVATE stb
 )
 
