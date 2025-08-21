@@ -10,7 +10,6 @@ set(ALL_LIBS
   PRIVATE glfw
   PRIVATE glm
   PRIVATE assimp::assimp
-  PRIVATE RTTR::Core
 )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})

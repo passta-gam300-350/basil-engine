@@ -20,6 +20,16 @@ macro(import_gtest)
     FetchContent_MakeAvailable(gtest)
 endmacro()
 
+macro(import_spdlog)
+    FetchContent_Declare(
+       spdlog
+       GIT_REPOSITORY https://github.com/gabime/spdlog.git
+       GIT_TAG v1.15.3
+    )
+
+    FetchContent_MakeAvailable(spdlog)
+endmacro()
+
 macro(import_glad)
     # FetchContent_Declare(
     #   glad
@@ -73,14 +83,14 @@ macro(import_assimp)
     FetchContent_MakeAvailable(assimp)
 endmacro()
 
-macro(import_rttr)
+macro(import_reflect)
     FetchContent_Declare(
-        rttr
-        GIT_REPOSITORY https://github.com/rttrorg/rttr.git
-        GIT_TAG v0.9.6
+        reflect
+        GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
+        GIT_TAG v0.20.0
     )
 
-    FetchContent_MakeAvailable(rttr)
+    FetchContent_MakeAvailable(reflect)
 endmacro()
 
 macro(import_entt)
@@ -147,10 +157,10 @@ macro(import_dependencies)
     import_glm()
     import_entt()
     import_assimp()
-    import_rttr()
+    import_reflect()
     import_imgui()
-
+    import_spdlog()
     import_catch()
 
-    set_target_properties(glad glfw glm rttr_core assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+    set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
 endmacro()
