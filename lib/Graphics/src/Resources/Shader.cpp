@@ -194,7 +194,7 @@ void Shader::Compile(std::unordered_map<uint32_t, std::string> const &shaderSour
 
 void Shader::Bind() const
 {
-    glUseProgram(m_RendererID);
+    glUseProgram(m_ShdrPgmHandle);
 }
 
 void Shader::Unbind() const
@@ -255,7 +255,7 @@ GLint Shader::GetUniformLocation(std::string const &name)
     if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
         return m_UniformLocationCache[name];
 
-    GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+    GLint location = glGetUniformLocation(m_ShdrPgmHandle, name.c_str());
     if (location == -1)
         std::cerr << "Warning: Uniform '" << name << "' doesn't exist!" << std::endl;
 
