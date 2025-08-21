@@ -11,6 +11,7 @@ set(ALL_LIBS
   PRIVATE glfw
   PRIVATE glm
   PRIVATE EnTT
+  PRIVATE assimp::assimp
   PRIVATE stb
 )
 
