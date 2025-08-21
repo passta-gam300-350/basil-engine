@@ -74,6 +74,37 @@ public:
 		return m_TextureID;
 	}
 
+	std::string const &GetPath() const
+	{
+		return m_Path;
+	}
+
+	Format GetFormat() const
+	{
+		return m_Properties.format;
+	}
+
+	Type GetType() const
+	{
+		return m_Properties.type;
+	}
+
+	// Utility functions
+	bool IsLoaded() const
+	{
+		return m_TextureID != 0;
+	}
+
+	bool operator == (Texture const &other) const
+	{
+		return m_TextureID == other.m_TextureID;
+	}
+
+	// Static Utility Functions
+	static std::string TypeToString(Type type);
+	static Type StringToType(const std::string &typeStr);
+	static Format GetFormatFromChannels(int channels);
+
 private:
 	void CreateTexture(const void *data);
 	void SetTextureParameters();
