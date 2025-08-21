@@ -1,4 +1,5 @@
-int main() 
+#include <stb_image.h>
+int main()
 {
 	return 0;
 }
