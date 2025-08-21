@@ -140,6 +140,17 @@ macro(import_imgui)
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 endmacro()
 
+macro(import_stb)
+    set(STB_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/stb)
+    set(STB_SRC_FILES
+        ${STB_DIR}/stb_image.cpp
+    )
+    add_library(stb STATIC
+        ${STB_SRC_FILES}
+    )
+    target_include_directories(stb PUBLIC ${STB_DIR})
+endmacro()
+
 # Macro to import all dependencies
 macro(import_dependencies)
     import_glad()
@@ -149,6 +160,7 @@ macro(import_dependencies)
     import_assimp()
     import_rttr()
     import_imgui()
+    import_stb()
 
     import_catch()
 

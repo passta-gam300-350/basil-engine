@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <glad/gl.h>
 #include <unordered_map>
 #include <glm/glm.hpp>
 
@@ -38,7 +39,7 @@ private:
 	std::string ReadFile(const std::string &filepath);
 	std::unordered_map<uint32_t, std::string> PreProcess(const std::string &source);
 	void Compile(const std::unordered_map<uint32_t, std::string> &shaderSources);
-	GLint GetUniformLocation(const std::string &name);
+	GLint GetUniformLocation(std::string const &name);
 
 	uint32_t m_ShdrPgmHandle;
 	std::string m_Name;

@@ -1,4 +1,4 @@
-#include"../../include/Resources/Shader.h"
+#include <Resources/Shader.h>
 #include <glad/gl.h>
 #include <fstream>
 #include <sstream>
@@ -123,7 +123,8 @@ void Shader::Compile(std::unordered_map<uint32_t, std::string> const &shaderSour
         GLuint shader = glCreateShader(type);
 
         // Set the shader source
-        glShaderSource(shader, 1, &source.c_str(), nullptr);
+        const GLchar *sourceCStr = source.c_str();
+        glShaderSource(shader, 1, &sourceCStr, nullptr);
 
         // Compile the shader
         glCompileShader(shader);

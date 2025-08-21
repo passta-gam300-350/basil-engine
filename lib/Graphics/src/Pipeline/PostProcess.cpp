@@ -2,7 +2,7 @@
 #include <glad/gl.h>
 
 PostProcessEffect::PostProcessEffect(const std::string& name, const std::shared_ptr<Shader>& shader)
-	: m_Name(name), m_shader(shader)
+	: m_Name(name), m_Shader(shader)
 {
 }
 
