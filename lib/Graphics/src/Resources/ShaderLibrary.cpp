@@ -1,4 +1,4 @@
-#include "../../include/Resources/ShaderLibrary.h"
+#include <Resources/ShaderLibrary.h>
 #include <iostream>
 #include <filesystem>
 #include <algorithm>

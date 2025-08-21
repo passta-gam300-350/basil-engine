@@ -1,4 +1,4 @@
-#include "../../include/Buffer/IndexBuffer.h"
+#include <Buffer/IndexBuffer.h>
 #include <glad/gl.h>
 
 IndexBuffer::IndexBuffer(const uint32_t *indices, uint32_t count) 

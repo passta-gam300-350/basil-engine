@@ -1,4 +1,4 @@
-#include "../../include/Buffer/FrameBuffer.h"
+#include <Buffer/FrameBuffer.h>
 #include <glad/gl.h>
 #include <iostream>
 
