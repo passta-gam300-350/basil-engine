@@ -60,7 +60,7 @@ namespace Utils
 
 }
 
-Texture::Texture(uint32_t width, uint32_t height, Properties const &props = {})
+Texture::Texture(uint32_t width, uint32_t height, Properties const &props)
 	: m_Width(width), m_Height(height), m_Properties(props)
 {
 	// Determine channels from format
@@ -78,7 +78,7 @@ Texture::Texture(uint32_t width, uint32_t height, Properties const &props = {})
 	CreateTexture(nullptr);
 }
 
-Texture::Texture(std::string const &path, Properties const &props = {})
+Texture::Texture(std::string const &path, Properties const &props)
 	: m_Path(path), m_Properties(props)
 {
 	// Check if file exists
@@ -154,7 +154,7 @@ void Texture::SetData(void *data, uint32_t size)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::Bind(uint32_t textureUnit = 0) const
+void Texture::Bind(uint32_t textureUnit) const
 {
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
 	glBindTexture(GL_TEXTURE_2D, m_TextureID);
