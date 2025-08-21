@@ -68,6 +68,12 @@ public:
         return m_Indices;
     }
 
+    std::shared_ptr<VertexArray> &GetVertexArray()
+    {
+        return m_VertexArray;
+    }
+
+
     // Material management
     void SetMaterial(std::shared_ptr<Material> const &material)
     {
