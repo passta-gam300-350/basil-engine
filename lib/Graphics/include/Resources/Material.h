@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Resources/Shader.h>
 #include <Resources/Texture.h>
 #include <memory>

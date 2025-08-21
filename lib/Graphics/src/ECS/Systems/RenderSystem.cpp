@@ -19,10 +19,7 @@ void RenderSystem::OnUpdate(Scene* scene)
 
 	// Find the main camera
     auto cameraView = scene->GetRegistry().view<CameraComponent, TransformComponent>();
-    for (auto entity : cameraView)
-    {
-        auto [camera, transform] = cameraView.get<CameraComponent, TransformComponent>(entity);
-
+    cameraView.each([&](auto entity, auto& camera, auto& transform) {
         if (camera.Primary)
         {
             mainCamera = camera.camera.get();
@@ -33,9 +30,8 @@ void RenderSystem::OnUpdate(Scene* scene)
 
             viewMatrix = mainCamera->GetViewMatrix();
             projectionMatrix = mainCamera->GetProjectionMatrix();
-            break;
         }
-    }
+    });
 
     if (!mainCamera)
     {
@@ -49,10 +45,9 @@ void RenderSystem::OnUpdate(Scene* scene)
     // ...
 
     // Main pass: Render geometry
-    for (auto entity : renderableView)
-    {
+    renderableView.each([&](auto entity, auto& mesh, auto& material, auto& transform) {
         DrawEntity(scene->GetRegistry(), entity);
-    }
+    });
 
     // Additional passes (e.g., transparency, post-processing)
     // ...
@@ -66,7 +61,7 @@ void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity)
     auto& transform = registry.get<TransformComponent>(entity);
 
     // Skip if no mesh or material
-    if (!mesh.Mesh || material.Materials.empty())
+    if (!mesh.mesh || material.Materials.empty())
     {
         return;
     }
@@ -78,14 +73,14 @@ void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity)
     mat->Bind();
 
     // Set transform matrix
-    mat->Set("u_Model", transform.GetTransform());
+    mat->SetMat4("u_Model", transform.GetTransform());
 
     // The camera view/projection would have been set globally
 
     // Draw the mesh
-    mesh.Mesh->Bind();
+    mesh.mesh->Bind();
 
     // Create a draw command
-    DrawCommand drawCmd(mesh.Mesh->GetVertexArray()->GetRendererID(), mesh.Mesh->GetIndexCount());
+    DrawCommand drawCmd(mesh.mesh->GetVertexArray()->GetVAOHandle(), mesh.mesh->GetIndexCount());
     Renderer::Get().Submit(drawCmd);
 }

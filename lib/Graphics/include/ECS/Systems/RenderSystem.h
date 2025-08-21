@@ -1,4 +1,3 @@
-// Engine/ECS/Systems/RenderSystem.h
 #pragma once
 
 #include <entt/entt.hpp>

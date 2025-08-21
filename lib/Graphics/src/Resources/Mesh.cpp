@@ -5,7 +5,7 @@
 #include <cmath>
 
 Mesh::Mesh(std::vector<Vertex> const &vertices, std::vector<uint32_t> const &indices,
-    std::shared_ptr<Material> const &material = nullptr)
+    std::shared_ptr<Material> const &material)
     : m_Vertices(vertices), m_Indices(indices), m_Material(material)
 {
     SetupMesh();

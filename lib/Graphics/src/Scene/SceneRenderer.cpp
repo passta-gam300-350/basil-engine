@@ -30,39 +30,42 @@ void SceneRenderer::InitializePipeline() {
         });
 
     // Set up render function for geometry pass
-    geometryPass->SetRenderFunction([this]() {
+    geometryPass->SetRenderFunction([this]()
+    {
         // Clear the framebuffer
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render all entities with mesh and material components
-        if (m_Scene) {
+        if (m_Scene)
+        {
             auto view = m_Scene->GetRegistry().view<MeshComponent, MaterialComponent, TransformComponent>();
 
-            for (auto entity : view) {
-                auto [mesh, material, transform] = view.get<MeshComponent, MaterialComponent, TransformComponent>(entity);
-
+            view.each([&](auto entity, auto& mesh, auto& material, auto& transform)
+            {
                 // Skip if no mesh or material
-                if (!mesh.Mesh || material.Materials.empty()) {
-                    continue;
+                if (!mesh.mesh || material.Materials.empty())
+                {
+                    return;
                 }
 
                 // Bind the first material
                 material.Materials[0]->Bind();
 
                 // Set transform
-                material.Materials[0]->Set("u_Model", transform.GetTransform());
+                material.Materials[0]->SetMat4("u_Model", transform.GetTransform());
 
                 // Set view and projection from camera
-                if (m_Camera) {
-                    material.Materials[0]->Set("u_View", m_Camera->GetViewMatrix());
-                    material.Materials[0]->Set("u_Projection", m_Camera->GetProjectionMatrix());
+                if (m_Camera)
+                {
+                    material.Materials[0]->SetMat4("u_View", m_Camera->GetViewMatrix());
+                    material.Materials[0]->SetMat4("u_Projection", m_Camera->GetProjectionMatrix());
                 }
 
                 // Draw the mesh
-                mesh.Mesh->Bind();
-                glDrawElements(GL_TRIANGLES, mesh.Mesh->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
-            }
+                mesh.mesh->Bind();
+                glDrawElements(GL_TRIANGLES, mesh.mesh->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+            });
         }
     });
 

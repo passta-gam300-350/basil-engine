@@ -12,11 +12,13 @@ set(ALL_LIBS
   PRIVATE assimp::assimp
   PRIVATE stb
   PRIVATE EnTT
-)
+ )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 #add_executable(${PROJECT_NAME} ${ALL_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})

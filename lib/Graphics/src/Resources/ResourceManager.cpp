@@ -58,7 +58,7 @@ bool ResourceManager::HasShader(std::string const &name) const
     return m_ShaderLibrary.Exists(name);
 }
 
-std::shared_ptr<Texture> ResourceManager::LoadTexture(std::string const &name, std::string const &filepath, Texture::Properties const &props = {})
+std::shared_ptr<Texture> ResourceManager::LoadTexture(std::string const &name, std::string const &filepath, Texture::Properties const &props)
 {
     if (HasTexture(name))
     {
@@ -175,7 +175,7 @@ bool ResourceManager::HasMesh(std::string const &name) const
     return m_Meshes.find(name) != m_Meshes.end();
 }
 
-ModelData ResourceManager::LoadModel(std::string const &name, std::string const &filepath, std::string const &defaultShaderName = "")
+ModelData ResourceManager::LoadModel(std::string const &name, std::string const &filepath, std::string const &defaultShaderName)
 {
     // Check if model already loaded
     if (HasModel(name))
