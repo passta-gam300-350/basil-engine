@@ -15,13 +15,13 @@ void PostProcessEffect::Apply(const std::shared_ptr<FrameBuffer>& source, std::s
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Bind the shader program
-	m_Shader->Bind();
+	// Use the shader
+	m_Shader->use();
 	
     // Bind source texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, source->GetColorAttachmentRendererID());
-    m_Shader->SetInt("u_SourceTexture", 0);
+    m_Shader->setInt("u_SourceTexture", 0);
 
     // Draw fullscreen quad
     glDisable(GL_DEPTH_TEST);
@@ -30,7 +30,7 @@ void PostProcessEffect::Apply(const std::shared_ptr<FrameBuffer>& source, std::s
     glEnable(GL_DEPTH_TEST);
 
 	// Unbind the shader
-	m_Shader->Unbind();
+	glUseProgram(0);
 
 	// Unbind the destination framebuffer
 	destination->Unbind();

@@ -49,22 +49,28 @@ void SceneRenderer::InitializePipeline() {
                     return;
                 }
 
-                // Bind the first material
-                material.Materials[0]->Bind();
+                // Get the shader from the material
+                auto shader = material.Materials[0]->GetShader();
+                if (!shader)
+                {
+                    return;
+                }
+                
+                // Use the shader
+                shader->use();
 
                 // Set transform
-                material.Materials[0]->SetMat4("u_Model", transform.GetTransform());
+                shader->setMat4("u_Model", transform.GetTransform());
 
                 // Set view and projection from camera
                 if (m_Camera)
                 {
-                    material.Materials[0]->SetMat4("u_View", m_Camera->GetViewMatrix());
-                    material.Materials[0]->SetMat4("u_Projection", m_Camera->GetProjectionMatrix());
+                    shader->setMat4("u_View", m_Camera->GetViewMatrix());
+                    shader->setMat4("u_Projection", m_Camera->GetProjectionMatrix());
                 }
 
-                // Draw the mesh
-                mesh.mesh->Bind();
-                glDrawElements(GL_TRIANGLES, mesh.mesh->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+                // Draw the mesh using its Draw method
+                mesh.mesh->Draw(*shader);
             });
         }
     });

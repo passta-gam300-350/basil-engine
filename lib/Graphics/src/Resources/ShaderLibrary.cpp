@@ -19,14 +19,9 @@ void Shaderlibrary::Add(std::string const &name, std::shared_ptr<Shader> const &
 
 void Shaderlibrary::Add(std::shared_ptr<Shader> const &shader)
 {
-	std::string const &name = shader->GetName();
-	if (name.empty())
-	{
-		std::cerr << "Cannot add shader with empty name to library" << std::endl;
-		return;
-	}
-
-	Add(name, shader);
+	// Since Shader doesn't have a GetName() method anymore,
+	// this overload requires the user to use the Add(name, shader) version
+	std::cerr << "Cannot add shader without specifying a name. Use Add(name, shader) instead." << std::endl;
 }
 
 std::shared_ptr<Shader> Shaderlibrary::Load(std::string const &filepath)
@@ -51,10 +46,21 @@ std::shared_ptr<Shader> Shaderlibrary::Load(std::string const &name, std::string
 		return nullptr;
 	}
 
-	// Create and load shader
+	// Shader constructor needs vertex and fragment paths separately
+	// For now, assume filepath is the base name and we add .vert and .frag extensions
+	std::string vertPath = filepath + ".vert";
+	std::string fragPath = filepath + ".frag";
+	
+	if (!fs::exists(vertPath) || !fs::exists(fragPath))
+	{
+		// Try without extensions if they don't exist
+		vertPath = filepath;
+		fragPath = filepath;
+	}
+	
 	try
 	{
-		auto shader = std::make_shared<Shader>(filepath);
+		auto shader = std::make_shared<Shader>(vertPath.c_str(), fragPath.c_str());
 		Add(name, shader);
 		return shader;
 	}
@@ -74,16 +80,17 @@ std::shared_ptr<Shader> Shaderlibrary::Load(std::string const& vertexSrc, std::s
 		return Get(name);
 	}
 
-	// Create shader from source strings
+	// Shader constructor expects file paths, not source strings
+	// This needs to be vertex and fragment file paths
 	try
 	{
-		auto shader = std::make_shared<Shader>(vertexSrc, fragmentSrc);
+		auto shader = std::make_shared<Shader>(vertexSrc.c_str(), fragmentSrc.c_str());
 		Add(name, shader);
 		return shader;
 	}
 	catch (std::exception const &e)
 	{
-		std::cerr << "Failed to load shader " << name << " from sources: " << e.what() << std::endl;
+		std::cerr << "Failed to load shader " << name << " from paths: " << e.what() << std::endl;
 		return nullptr;
 	}
 }

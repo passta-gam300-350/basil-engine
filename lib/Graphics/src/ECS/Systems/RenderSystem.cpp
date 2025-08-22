@@ -24,9 +24,9 @@ void RenderSystem::OnUpdate(Scene* scene)
         {
             mainCamera = camera.camera.get();
 
-            // Update camera view matrix based on transform
-            glm::mat4 cameraTransform = transform.GetTransform();
-            mainCamera->SetViewMatrix(glm::inverse(cameraTransform));
+            // Update camera position and rotation based on transform
+            mainCamera->SetPosition(transform.Translation);
+            mainCamera->SetRotation(transform.Rotation);
 
             viewMatrix = mainCamera->GetViewMatrix();
             projectionMatrix = mainCamera->GetProjectionMatrix();
@@ -66,21 +66,21 @@ void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity)
         return;
     }
 
-    // Get the first material
+    // Get the first material and its shader
     auto& mat = material.Materials[0];
+    auto shader = mat->GetShader();
+    
+    if (!shader)
+    {
+        return;
+    }
 
-    // Bind the shader
-    mat->Bind();
+    // Use the shader
+    shader->use();
 
     // Set transform matrix
-    mat->SetMat4("u_Model", transform.GetTransform());
+    shader->setMat4("u_Model", transform.GetTransform());
 
-    // The camera view/projection would have been set globally
-
-    // Draw the mesh
-    mesh.mesh->Bind();
-
-    // Create a draw command
-    DrawCommand drawCmd(mesh.mesh->GetVertexArray()->GetVAOHandle(), mesh.mesh->GetIndexCount());
-    Renderer::Get().Submit(drawCmd);
+    // Draw the mesh using its Draw method
+    mesh.mesh->Draw(*shader);
 }

@@ -1,47 +1,38 @@
 #pragma once
 
-#include <string>
 #include <glad/gl.h>
-#include <unordered_map>
 #include <glm/glm.hpp>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 class Shader
 {
 public:
-	Shader(std::string const &vertexSrc, std::string const &fragmentSrc);
-	Shader(std::string const &filepath);
-	~Shader();
-
-	void Bind() const;
-	void Unbind() const;
-
-	void SetInt(std::string const &name, int value);
-	void SetIntArray(std::string const &name, int *values, uint32_t count);
-	void SetFloat(std::string const &name, float value);
-	void SetFloat2(std::string const &name, glm::vec2 const &value);
-	void SetFloat3(std::string const &name, glm::vec3 const &value);
-	void SetFloat4(std::string const &name, glm::vec4 const &value);
-	void SetMat3(std::string const &name, glm::mat3 const &matrix);
-	void SetMat4(std::string const &name, glm::mat4 const&matrix);
-
-	uint32_t GetShdrPgmHandle () const
-	{
-		return m_ShdrPgmHandle;
-	}
-	const std::string &GetName() const
-	{
-		return m_Name;
-	}
-
-
+    unsigned int ID;
+    
+    // Constructor generates the shader on the fly
+    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
+    
+    // Activate the shader
+    void use();
+    
+    // Utility uniform functions
+    void setBool(const std::string &name, bool value) const;
+    void setInt(const std::string &name, int value) const;
+    void setFloat(const std::string &name, float value) const;
+    void setVec2(const std::string &name, const glm::vec2 &value) const;
+    void setVec2(const std::string &name, float x, float y) const;
+    void setVec3(const std::string &name, const glm::vec3 &value) const;
+    void setVec3(const std::string &name, float x, float y, float z) const;
+    void setVec4(const std::string &name, const glm::vec4 &value) const;
+    void setVec4(const std::string &name, float x, float y, float z, float w) const;
+    void setMat2(const std::string &name, const glm::mat2 &mat) const;
+    void setMat3(const std::string &name, const glm::mat3 &mat) const;
+    void setMat4(const std::string &name, const glm::mat4 &mat) const;
 
 private:
-	std::string ReadFile(const std::string &filepath);
-	std::unordered_map<uint32_t, std::string> PreProcess(const std::string &source);
-	void Compile(const std::unordered_map<uint32_t, std::string> &shaderSources);
-	GLint GetUniformLocation(std::string const &name);
-
-	uint32_t m_ShdrPgmHandle;
-	std::string m_Name;
-	std::unordered_map<std::string, int> m_UniformLocationCache;
+    // Utility function for checking shader compilation/linking errors
+    void checkCompileErrors(GLuint shader, std::string type);
 };
