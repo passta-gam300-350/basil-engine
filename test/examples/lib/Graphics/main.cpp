@@ -9,7 +9,6 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Utility/Camera.h>
-#include <Utility/Light.h>
 #include <ECS/Components/TransformComponent.h>
 #include <ECS/Components/MeshComponent.h>
 #include <ECS/Components/MaterialComponent.h>
@@ -78,7 +77,9 @@ int main()
         Entity cameraEntity = scene.CreateEntity("MainCamera");
         auto camera = std::make_shared<Camera>(CameraType::Perspective);
         camera->SetPerspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
-        cameraEntity.AddComponent<CameraComponent>(camera, true); // Set as primary
+        auto& camComp = cameraEntity.AddComponent<CameraComponent>();
+        camComp.camera = camera;
+        camComp.Primary = true;
 
         // Create entities for each mesh in the model
         std::vector<Entity> modelEntities;
@@ -114,11 +115,10 @@ int main()
 
         // Create light entity
         Entity lightEntity = scene.CreateEntity("DirectionalLight");
-        auto light = std::make_shared<Light>(Light::Type::Directional);
-        light->SetDirection({0.5f, -1.0f, -0.3f});
-        light->SetColor({1.0f, 1.0f, 1.0f});
-        light->SetIntensity(1.0f);
-        lightEntity.AddComponent<LightComponent>(light);
+        auto& lightComp = lightEntity.AddComponent<LightComponent>();
+        lightComp.Type = LightType::Directional;
+        lightComp.Color = {1.0f, 1.0f, 1.0f};
+        lightComp.Intensity = 1.0f;
 
         std::cout << "Scene set up successfully!" << std::endl;
 

@@ -56,6 +56,13 @@ inline void VertexBufferLayout::Push<uint8_t>(uint32_t count)
 	m_Stride += count * sizeof(uint8_t);
 }
 
+template<>
+inline void VertexBufferLayout::Push<int>(uint32_t count)
+{
+	m_Elements.push_back({ 0x1404, count, false }); // GL_INT
+	m_Stride += count * sizeof(int);
+}
+
 class VertexArray // VAO Wrapper
 {
 public:
