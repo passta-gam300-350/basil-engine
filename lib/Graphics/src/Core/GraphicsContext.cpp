@@ -1,6 +1,6 @@
 #include "../../include/Core/GraphicsContext.h"
 #include <iostream>
-#include <glad/gl.h>
+
 
 GraphicsContext::GraphicsContext(GLFWwindow* windowHandle)
 	: m_WindowHandle(windowHandle), m_Initialized(false)
@@ -18,6 +18,12 @@ void GraphicsContext::Initialize()
     if (!m_WindowHandle)
     {
         std::cerr << "No window handle provided to GraphicsContext" << std::endl;
+        return;
+    }
+
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+    {
+        std::cerr << "Failed to initialize GLAD2" << std::endl;
         return;
     }
 

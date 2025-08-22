@@ -16,7 +16,7 @@ public:
         return m_Count;
     }
 
-    uint32_t GetVAOHandle() const
+    uint32_t GetIBOHandle() const
     {
         return m_IBOHandle;
     }

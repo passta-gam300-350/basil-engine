@@ -31,7 +31,7 @@ void Camera::RecalculateProjection()
 {
 	if (m_Type == CameraType::Perspective)
 	{
-		m_ProjectionMatrix = glm::perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip);
+		m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
 	}
 	else
 	{
