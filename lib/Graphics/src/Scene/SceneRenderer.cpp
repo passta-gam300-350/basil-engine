@@ -20,7 +20,7 @@ void SceneRenderer::InitializePipeline() {
 
     // Create geometry pass
     auto geometryPass = std::make_shared<RenderPass>("GeometryPass", FBOSpecs{
-        800, 600, // Default size, will be resized later
+        1280, 720, // Default size, will be resized later
         {
             { FBOTextureFormat::RGBA8 },     // Color
             { FBOTextureFormat::RGBA8 },     // Normal

@@ -65,6 +65,29 @@ std::shared_ptr<Shader> Shaderlibrary::Load(std::string const &name, std::string
 	}
 }
 
+std::shared_ptr<Shader> Shaderlibrary::Load(std::string const& vertexSrc, std::string const& fragmentSrc, std::string const& name)
+{
+	// Check if already loaded
+	if (Exists(name))
+	{
+		std::cout << "Shader already loaded: " << name << std::endl;
+		return Get(name);
+	}
+
+	// Create shader from source strings
+	try
+	{
+		auto shader = std::make_shared<Shader>(vertexSrc, fragmentSrc);
+		Add(name, shader);
+		return shader;
+	}
+	catch (std::exception const &e)
+	{
+		std::cerr << "Failed to load shader " << name << " from sources: " << e.what() << std::endl;
+		return nullptr;
+	}
+}
+
 std::shared_ptr<Shader> Shaderlibrary::Get(std::string const &name)
 {
 	if (!Exists(name))

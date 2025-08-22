@@ -19,6 +19,9 @@ public:
 	// Load shaders from filepath
 	std::shared_ptr<Shader> Load(std::string const &filepath);
 	std::shared_ptr<Shader> Load(std::string const& name, std::string const &filepath);
+	
+	// Load shaders from source strings
+	std::shared_ptr<Shader> Load(std::string const& vertexSrc, std::string const& fragmentSrc, std::string const& name);
 
 	// Retrieve shaders
 	std::shared_ptr<Shader> Get(std::string const &name);

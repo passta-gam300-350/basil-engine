@@ -35,7 +35,8 @@ public:
 
     // Shader management
     std::shared_ptr<Shader> LoadShader(std::string const &name, std::string const &filepath);
-    std::shared_ptr<Shader> LoadShader(std::string const &vertexSrc, std::string const &fragmentSrc, std::string const &name);
+    std::shared_ptr<Shader> LoadShader(std::string const &name, std::string const &vertexPath, std::string const &fragmentPath);
+    //std::shared_ptr<Shader> LoadShader(std::string const &vertexSrc, std::string const &fragmentSrc, std::string const &name);
     std::shared_ptr<Shader> GetShader(std::string const &name);
     bool HasShader(std::string const &name) const;
 

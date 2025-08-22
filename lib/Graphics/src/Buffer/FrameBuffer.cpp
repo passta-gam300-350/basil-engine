@@ -46,6 +46,15 @@ void FrameBuffer::Invalidate()
 		glDeleteFramebuffers(1, &m_FBOHandle);
 	}
 
+	// Ensure valid dimensions
+	if (m_Specifications.Width == 0 || m_Specifications.Height == 0)
+	{
+		std::cerr << "Warning: Framebuffer dimensions are invalid (Width: " << m_Specifications.Width 
+				  << ", Height: " << m_Specifications.Height << ")" << std::endl;
+		m_Specifications.Width = 1280;
+		m_Specifications.Height = 720;
+	}
+
 	// Create framebuffer
 	glGenFramebuffers(1, &m_FBOHandle);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
@@ -58,10 +67,10 @@ void FrameBuffer::Invalidate()
 
 		for (uint32_t i = 0; i < m_ColorAttachments.size(); ++i)
 		{
-			GLenum format = Utils::TextureFormatToGL(m_ColorAttachmentSpecs[i].TextureFormat);
-
 			glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[i]);
-			glTexImage2D(GL_TEXTURE_2D, 0, format, m_Specifications.Width, m_Specifications.Height, 0,
+			
+			// Use standard RGBA8 format for color attachments
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specifications.Width, m_Specifications.Height, 0,
 				GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -79,9 +88,15 @@ void FrameBuffer::Invalidate()
 		glGenTextures(1, &m_DepthAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 
-		GLenum format = Utils::TextureFormatToGL(m_DepthAttachmentSpec.TextureFormat);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, m_Specifications.Width, m_Specifications.Height, 0,
+		// Use standard depth-stencil format
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
 			GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
+		
+		// Set texture parameters for depth texture
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 	}
@@ -103,9 +118,40 @@ void FrameBuffer::Invalidate()
 	}
 
 	// Check if framebuffer is complete
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		std::cerr << "Framebuffer is incomplete!" << std::endl;
+		std::cerr << "Framebuffer is incomplete! Status: ";
+		switch (status)
+		{
+		case GL_FRAMEBUFFER_UNDEFINED:
+			std::cerr << "GL_FRAMEBUFFER_UNDEFINED" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_UNSUPPORTED:
+			std::cerr << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE" << std::endl;
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS" << std::endl;
+			break;
+		default:
+			std::cerr << "Unknown error: 0x" << std::hex << status << std::endl;
+			break;
+		}
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

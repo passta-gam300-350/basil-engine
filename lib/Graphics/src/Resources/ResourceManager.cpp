@@ -1,4 +1,6 @@
 #include <Resources/ResourceManager.h>
+#include <fstream>
+#include <sstream>
 
 namespace fs = std::filesystem;
 
@@ -41,11 +43,45 @@ std::shared_ptr<Shader> ResourceManager::LoadShader(std::string const &name, std
     return m_ShaderLibrary.Load(name, filepath);
 }
 
-std::shared_ptr<Shader> ResourceManager::LoadShader(std::string const &vertexSrc, std::string const &fragmentSrc, std::string const &name)
+//std::shared_ptr<Shader> ResourceManager::LoadShader(std::string const &vertexSrc, std::string const &fragmentSrc, std::string const &name)
+//{
+//    auto shader = std::make_shared<Shader>(vertexSrc, fragmentSrc);
+//    m_ShaderLibrary.Add(name, shader);
+//    return shader;
+//}
+
+std::shared_ptr<Shader> ResourceManager::LoadShader(std::string const &name, std::string const &vertexPath, std::string const &fragmentPath)
 {
-    auto shader = std::make_shared<Shader>(vertexSrc, fragmentSrc);
-    m_ShaderLibrary.Add(name, shader);
-    return shader;
+    if (HasShader(name))
+    {
+        std::cout << "Shader already loaded: " << name << std::endl;
+        return GetShader(name);
+    }
+
+    // Read vertex shader file
+    std::ifstream vertexFile(vertexPath);
+    if (!vertexFile.is_open())
+    {
+        std::cerr << "Failed to open vertex shader file: " << vertexPath << std::endl;
+        return nullptr;
+    }
+    std::string vertexSrc((std::istreambuf_iterator<char>(vertexFile)),
+                          std::istreambuf_iterator<char>());
+    vertexFile.close();
+
+    // Read fragment shader file
+    std::ifstream fragmentFile(fragmentPath);
+    if (!fragmentFile.is_open())
+    {
+        std::cerr << "Failed to open fragment shader file: " << fragmentPath << std::endl;
+        return nullptr;
+    }
+    std::string fragmentSrc((std::istreambuf_iterator<char>(fragmentFile)),
+                            std::istreambuf_iterator<char>());
+    fragmentFile.close();
+
+    // Create shader from sources
+    return m_ShaderLibrary.Load(vertexSrc, fragmentSrc, name);
 }
 
 std::shared_ptr<Shader> ResourceManager::GetShader(std::string const &name)
