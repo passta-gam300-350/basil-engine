@@ -3,16 +3,23 @@
 #include "ECS/Components/MaterialComponent.h"
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/CameraComponent.h"
+#include "Core/RenderCommand.h"
+#include "Core/Renderer.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <iterator>
+#include <iostream>
 
 void RenderSystem::OnUpdate(Scene* scene)
 {
 	if (!scene)
 	{
+		std::cerr << "RenderSystem: No scene provided" << std::endl;
 		return;
 	}
+	
+	std::cout << "RenderSystem: OnUpdate called (legacy ECS camera version)" << std::endl;
 
-	// Get the main camera
+	// Get the main camera from ECS components
 	Camera* mainCamera = nullptr;
 	glm::mat4 viewMatrix = glm::mat4(1.0f);
 	glm::mat4 projectionMatrix = glm::mat4(1.0f);
@@ -35,25 +42,92 @@ void RenderSystem::OnUpdate(Scene* scene)
 
     if (!mainCamera)
     {
+        std::cout << "RenderSystem: No main camera found, returning early" << std::endl;
         return; // No camera to render from
     }
+    
+    std::cout << "RenderSystem: Found main camera, proceeding with rendering" << std::endl;
 
+    // Debug: Check what entities exist (only print first time)
+    static bool firstTime = true;
+    if (firstTime) {
+        auto meshView = scene->GetRegistry().view<MeshComponent>();
+        auto materialView = scene->GetRegistry().view<MaterialComponent>();
+        auto transformView = scene->GetRegistry().view<TransformComponent>();
+        
+        std::cout << "RenderSystem: Entities with MeshComponent: " << std::distance(meshView.begin(), meshView.end()) << std::endl;
+        std::cout << "RenderSystem: Entities with MaterialComponent: " << std::distance(materialView.begin(), materialView.end()) << std::endl;
+        std::cout << "RenderSystem: Entities with TransformComponent: " << std::distance(transformView.begin(), transformView.end()) << std::endl;
+        firstTime = false;
+    }
+    
     // Get all renderable entities
     auto renderableView = scene->GetRegistry().view<MeshComponent, MaterialComponent, TransformComponent>();
+    auto entityCount = std::distance(renderableView.begin(), renderableView.end());
+    std::cout << "RenderSystem: Found " << entityCount << " renderable entities with all three components" << std::endl;
 
     // First pass: Depth prepass (optional)
     // ...
 
     // Main pass: Render geometry
     renderableView.each([&](auto entity, auto& mesh, auto& material, auto& transform) {
-        DrawEntity(scene->GetRegistry(), entity);
+        std::cout << "RenderSystem: Processing entity for rendering" << std::endl;
+        DrawEntity(scene->GetRegistry(), entity, mainCamera, viewMatrix, projectionMatrix);
     });
 
     // Additional passes (e.g., transparency, post-processing)
     // ...
 }
 
-void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity)
+void RenderSystem::OnUpdate(Scene* scene, Camera& camera)
+{
+	if (!scene)
+	{
+		std::cerr << "RenderSystem: No scene provided" << std::endl;
+		return;
+	}
+	
+	std::cout << "RenderSystem: OnUpdate called with direct camera" << std::endl;
+
+	// Use the provided camera directly
+	Camera* mainCamera = &camera;
+	glm::mat4 viewMatrix = camera.GetViewMatrix();
+	glm::mat4 projectionMatrix = camera.GetProjectionMatrix();
+    
+    std::cout << "RenderSystem: Using provided camera, proceeding with rendering" << std::endl;
+
+    // Debug: Check what entities exist (only print first time)
+    static bool firstTime = true;
+    if (firstTime) {
+        auto meshView = scene->GetRegistry().view<MeshComponent>();
+        auto materialView = scene->GetRegistry().view<MaterialComponent>();
+        auto transformView = scene->GetRegistry().view<TransformComponent>();
+        
+        std::cout << "RenderSystem: Entities with MeshComponent: " << std::distance(meshView.begin(), meshView.end()) << std::endl;
+        std::cout << "RenderSystem: Entities with MaterialComponent: " << std::distance(materialView.begin(), materialView.end()) << std::endl;
+        std::cout << "RenderSystem: Entities with TransformComponent: " << std::distance(transformView.begin(), transformView.end()) << std::endl;
+        firstTime = false;
+    }
+    
+    // Get all renderable entities
+    auto renderableView = scene->GetRegistry().view<MeshComponent, MaterialComponent, TransformComponent>();
+    auto entityCount = std::distance(renderableView.begin(), renderableView.end());
+    std::cout << "RenderSystem: Found " << entityCount << " renderable entities with all three components" << std::endl;
+
+    // First pass: Depth prepass (optional)
+    // ...
+
+    // Main pass: Render geometry
+    renderableView.each([&](auto entity, auto& mesh, auto& material, auto& transform) {
+        std::cout << "RenderSystem: Processing entity for rendering" << std::endl;
+        DrawEntity(scene->GetRegistry(), entity, mainCamera, viewMatrix, projectionMatrix);
+    });
+
+    // Additional passes (e.g., transparency, post-processing)
+    // ...
+}
+
+void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity, Camera* camera, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
 {
     // Get components
     auto& mesh = registry.get<MeshComponent>(entity);
@@ -80,7 +154,19 @@ void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity)
 
     // Set transform matrix
     shader->setMat4("u_Model", transform.GetTransform());
+    
+    // Set view and projection matrices
+    shader->setMat4("u_View", viewMatrix);
+    shader->setMat4("u_Projection", projectionMatrix);
+    
+    // Set camera position for lighting
+    if (camera) {
+        shader->setVec3("u_ViewPos", camera->GetPosition());
+    }
 
-    // Draw the mesh using its Draw method
-    mesh.mesh->Draw(*shader);
+    // Create a draw command and submit to renderer
+    std::cout << "RenderSystem: Submitting draw command with VAO " << mesh.mesh->GetVertexArray()->GetVAOHandle() 
+              << " and " << mesh.mesh->GetIndexCount() << " indices" << std::endl;
+    DrawCommand drawCmd(mesh.mesh->GetVertexArray()->GetVAOHandle(), mesh.mesh->GetIndexCount());
+    Renderer::Get().Submit(drawCmd);
 }
