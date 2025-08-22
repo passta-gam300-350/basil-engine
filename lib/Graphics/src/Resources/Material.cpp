@@ -13,16 +13,16 @@ Material::Material(std::shared_ptr<Shader> const &shader, std::string const &nam
 		std::cerr << "Warning: Material '" << name << "' created with null shader!" << std::endl;
 	}
 
-    // Setup default texture type to uniform mappings (PBR standard)
-    m_TextureTypeToUniform[Texture::Type::Diffuse] = "u_Material.diffuse";
-    m_TextureTypeToUniform[Texture::Type::BaseColor] = "u_Material.albedo";
-    m_TextureTypeToUniform[Texture::Type::Normal] = "u_Material.normal";
-    m_TextureTypeToUniform[Texture::Type::Metallic] = "u_Material.metallic";
-    m_TextureTypeToUniform[Texture::Type::Roughness] = "u_Material.roughness";
-    m_TextureTypeToUniform[Texture::Type::AmbientOcclusion] = "u_Material.ao";
-    m_TextureTypeToUniform[Texture::Type::Emissive] = "u_Material.emission";
-    m_TextureTypeToUniform[Texture::Type::Height] = "u_Material.height";
-    m_TextureTypeToUniform[Texture::Type::Specular] = "u_Material.specular";
+    // Setup texture type to uniform mappings (matching basic.frag shader)
+    m_TextureTypeToUniform[Texture::Type::Diffuse] = "texture_diffuse1";
+    m_TextureTypeToUniform[Texture::Type::BaseColor] = "texture_diffuse1";
+    m_TextureTypeToUniform[Texture::Type::Normal] = "texture_normal1";
+    m_TextureTypeToUniform[Texture::Type::Metallic] = "texture_metallic1";
+    m_TextureTypeToUniform[Texture::Type::Roughness] = "texture_roughness1";
+    m_TextureTypeToUniform[Texture::Type::AmbientOcclusion] = "texture_ao1";
+    m_TextureTypeToUniform[Texture::Type::Emissive] = "texture_emissive1";
+    m_TextureTypeToUniform[Texture::Type::Height] = "texture_height1";
+    m_TextureTypeToUniform[Texture::Type::Specular] = "texture_specular1";
 }
 
 void Material::Bind()
@@ -253,10 +253,11 @@ void Material::LoadFromAssimp(aiMaterial *assimpMaterial, std::string const &dir
         std::cout << "  Albedo: (" << color.r << ", " << color.g << ", " << color.b << ")" << std::endl;
     }
 
-    // Specular color
+    // Specular color (not used in basic shader, but keep for compatibility)
     if (assimpMaterial->Get(AI_MATKEY_COLOR_SPECULAR, color) == AI_SUCCESS)
     {
-        SetVec3("u_Material.specular", glm::vec3(color.r, color.g, color.b));
+        // The basic shader doesn't use this uniform, but we can store it
+        // SetVec3("u_Material.specular", glm::vec3(color.r, color.g, color.b));
     }
 
     // Emissive color
@@ -287,22 +288,33 @@ void Material::LoadFromAssimp(aiMaterial *assimpMaterial, std::string const &dir
         std::cout << "  Roughness: " << value << std::endl;
     }
 
-    // Opacity
+    // Opacity (not used in basic shader directly)
     if (assimpMaterial->Get(AI_MATKEY_OPACITY, value) == AI_SUCCESS)
     {
-        SetFloat("u_Material.opacity", value);
+        // The basic shader doesn't use this uniform
+        // SetFloat("u_Material.opacity", value);
     }
 
-    // Load textures for all types
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_DIFFUSE);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_SPECULAR);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_NORMALS);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_HEIGHT);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_EMISSIVE);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_METALNESS);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_DIFFUSE_ROUGHNESS);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_AMBIENT_OCCLUSION);
-    LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_BASE_COLOR);
+    // Temporarily disable texture loading from Assimp to avoid crashes
+    std::cout << "Skipping Assimp texture loading (will use manually loaded textures instead)" << std::endl;
+    
+    // TODO: Fix Texture constructor crash and re-enable this
+    /*
+    // Load textures for all types with error handling
+    try {
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_DIFFUSE);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_SPECULAR);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_NORMALS);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_HEIGHT);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_EMISSIVE);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_METALNESS);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_DIFFUSE_ROUGHNESS);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_AMBIENT_OCCLUSION);
+        LoadTexturesFromAssimp(assimpMaterial, directory, aiTextureType_BASE_COLOR);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception during texture loading from Assimp: " << e.what() << std::endl;
+    }
+    */
 }
 
 Texture::Type Material::AssimpTextureTypeToEngineType(aiTextureType assimpType)
@@ -347,19 +359,57 @@ std::string Material::GetUniformNameForTextureType(Texture::Type type) const
 
 void Material::LoadTexturesFromAssimp(aiMaterial *assimpMaterial, std::string const &directory, aiTextureType textureType)
 {
-    unsigned int textureCount = assimpMaterial->GetTextureCount(textureType);
+    if (!assimpMaterial) {
+        std::cerr << "Error: Null aiMaterial in LoadTexturesFromAssimp" << std::endl;
+        return;
+    }
+
+    unsigned int textureCount = 0;
+    try {
+        textureCount = assimpMaterial->GetTextureCount(textureType);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception getting texture count: " << e.what() << std::endl;
+        return;
+    }
 
     for (unsigned int i = 0; i < textureCount; i++)
     {
         aiString texturePath;
         if (assimpMaterial->GetTexture(textureType, i, &texturePath) == AI_SUCCESS)
         {
-            std::string fullPath = directory + "/" + std::string(texturePath.C_Str());
+            std::string texturePathStr = std::string(texturePath.C_Str());
+            std::string fullPath;
+            
+            std::cout << "  Found texture reference: " << texturePathStr << std::endl;
+            std::cout << "  Directory context: " << directory << std::endl;
+            
+            // Check if the texture path is already absolute
+            if (fs::path(texturePathStr).is_absolute())
+            {
+                fullPath = texturePathStr;
+                std::cout << "  Using absolute path: " << fullPath << std::endl;
+            }
+            else
+            {
+                // For relative paths, first try with absolute asset base path
+                std::string assetBase = "D:/Projects/CSD3401/test/examples/lib/Graphics/assets/models/tinbox/";
+                fullPath = assetBase + texturePathStr;
+                std::cout << "  Trying absolute path: " << fullPath << std::endl;
+                
+                // If not found with absolute path, try the relative directory path as fallback
+                if (!fs::exists(fullPath))
+                {
+                    fullPath = directory + "/" + texturePathStr;
+                    std::cout << "  Trying relative path: " << fullPath << std::endl;
+                }
+            }
 
             // Check if file exists
             if (!fs::exists(fullPath))
             {
                 std::cerr << "Warning: Texture file not found: " << fullPath << std::endl;
+                std::cerr << "  Original path: " << texturePathStr << std::endl;
+                std::cerr << "  Directory: " << directory << std::endl;
                 continue;
             }
 
@@ -377,23 +427,46 @@ void Material::LoadTexturesFromAssimp(aiMaterial *assimpMaterial, std::string co
                 props.flipOnLoad = false; // Normal maps usually shouldn't be flipped
             }
 
+            std::cout << "  Attempting to load texture: " << fullPath << std::endl;
+            
+            // First verify the file actually exists and is readable
+            if (!fs::exists(fullPath)) {
+                std::cerr << "  ✗ File does not exist: " << fullPath << std::endl;
+                continue;
+            }
+            
+            if (!fs::is_regular_file(fullPath)) {
+                std::cerr << "  ✗ Not a regular file: " << fullPath << std::endl;
+                continue;
+            }
+            
+            std::cout << "  File exists, creating Texture object..." << std::endl;
+            
             try
             {
+                std::cout << "  Calling Texture constructor..." << std::endl;
                 auto texture = std::make_shared<Texture>(fullPath, props);
-                if (texture->IsLoaded())
+                std::cout << "  Texture constructor completed, checking if loaded..." << std::endl;
+                
+                if (texture && texture->IsLoaded())
                 {
+                    std::cout << "  Setting texture on material..." << std::endl;
                     SetTexture(engineType, texture);
-                    std::cout << "  Loaded " << Texture::TypeToString(engineType)
-                        << " texture: " << texturePath.C_Str() << std::endl;
+                    std::cout << "  ✓ Loaded " << Texture::TypeToString(engineType)
+                        << " texture: " << texturePathStr << std::endl;
                 }
                 else
                 {
-                    std::cerr << "Failed to load texture: " << fullPath << std::endl;
+                    std::cerr << "  ✗ Failed to load texture: " << fullPath << std::endl;
                 }
             }
             catch (const std::exception &e)
             {
-                std::cerr << "Exception loading texture " << fullPath << ": " << e.what() << std::endl;
+                std::cerr << "  ✗ Exception loading texture " << fullPath << ": " << e.what() << std::endl;
+            }
+            catch (...)
+            {
+                std::cerr << "  ✗ Unknown exception loading texture " << fullPath << std::endl;
             }
         }
     }

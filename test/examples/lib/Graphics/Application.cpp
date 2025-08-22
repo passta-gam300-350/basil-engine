@@ -139,6 +139,9 @@ void Application::InitializeEngine()
     // Print system information
     std::cout << "Window Size: " << m_Window->GetWidth() << "x" << m_Window->GetHeight() << std::endl;
 
+    // EnTT handles component registration automatically
+    std::cout << "ECS system ready (EnTT v3.15.0)" << std::endl;
+
     // You could add default resources here
     // LoadDefaultShaders();
     // LoadDefaultTextures();

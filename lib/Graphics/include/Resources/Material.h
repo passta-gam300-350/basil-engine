@@ -36,26 +36,26 @@ public:
     void RemoveTexture(std::string const &uniformName);
     void RemoveTexture(Texture::Type type);
 
-    // Common material properties (PBR-ready)
+    // Common material properties (matching basic.frag shader)
     void SetAlbedo(glm::vec3 const &color)
     {
-        SetVec3("u_Material.albedo", color);
+        SetVec3("u_AlbedoColor", color);
     }
     void SetMetallic(float metallic)
     {
-        SetFloat("u_Material.metallic", metallic);
+        SetFloat("u_Metallic", metallic);
     }
     void SetRoughness(float roughness)
     {
-        SetFloat("u_Material.roughness", roughness);
+        SetFloat("u_Roughness", roughness);
     }
     void SetAO(float ao)
     {
-        SetFloat("u_Material.ao", ao);
+        SetFloat("u_AO", ao);
     }
     void SetEmission(glm::vec3 const &emission)
     {
-        SetVec3("u_Material.emission", emission);
+        SetVec3("u_EmissiveColor", emission);
     }
 
     // Getters

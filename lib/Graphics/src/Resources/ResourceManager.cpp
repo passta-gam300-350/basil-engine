@@ -396,8 +396,12 @@ void ResourceManager::ProcessNode(aiNode *node, aiScene const *scene, std::strin
                 std::string materialName = GenerateUniqueName(modelName, "material_" + std::to_string(mesh->mMaterialIndex));
 
                 // Check if we've already processed this material
-                auto existingMaterial = GetMaterial(materialName);
-                if (!existingMaterial)
+                std::shared_ptr<Material> existingMaterial = nullptr;
+                if (HasMaterial(materialName))
+                {
+                    existingMaterial = GetMaterial(materialName);
+                }
+                else
                 {
                     aiMaterial *assimpMaterial = scene->mMaterials[mesh->mMaterialIndex];
                     existingMaterial = ProcessMaterial(assimpMaterial, scene, directory, materialName, defaultShaderName);
@@ -469,14 +473,17 @@ std::shared_ptr<Material> ResourceManager::ProcessMaterial(aiMaterial *assimpMat
         }
     }
 
-    // Create material
-    auto material = std::make_shared<Material>(shader, materialName);
+    // Create material using the proper CreateMaterial method
+    auto material = CreateMaterial(materialName, shader);
+    
+    if (!material)
+    {
+        std::cerr << "Failed to create material: " << materialName << std::endl;
+        return nullptr;
+    }
 
     // Load material properties and textures from Assimp
     material->LoadFromAssimp(assimpMaterial, directory);
-
-    // Store the material
-    m_Materials[materialName] = material;
 
     std::cout << "  Processed material: " << materialName << std::endl;
 
