@@ -1,172 +1,101 @@
-#include <iostream>
-#include <memory>
-
-// Graphics library includes - these should handle all the dependencies internally
-#include <Core/Window.h>
-#include <Core/GraphicsContext.h>
-#include <Core/Renderer.h>
-#include <Resources/ResourceManager.h>
-#include <Scene/Scene.h>
-#include <Scene/Entity.h>
-#include <Utility/Camera.h>
+// test/examples/lib/graphics/main.cpp
+#include "Application.h"
 #include <ECS/Components/TransformComponent.h>
 #include <ECS/Components/MeshComponent.h>
 #include <ECS/Components/MaterialComponent.h>
 #include <ECS/Components/CameraComponent.h>
 #include <ECS/Components/LightComponent.h>
-#include <ECS/Systems/RenderSystem.h>
 
-int main()
+class GraphicsTestApp : public Application
 {
-    try 
+public:
+    GraphicsTestApp() : Application("Graphics Engine Test", 1280, 720)
     {
-        std::cout << "Initializing Graphics Engine..." << std::endl;
+    }
 
-        // Create window and graphics context
-        Window window("Graphics Engine Demo - Tinbox Model", 800, 600);
-        auto nativeWindow = window.GetNativeWindow();
-        if (!nativeWindow)
-        {
-            std::cerr << "Failed to create window!" << std::endl;
-            return -1;
-        }
+protected:
+    void LoadResources() override
+    {
+        auto &rm = GetResourceManager();
 
-        GraphicsContext context(nativeWindow);
-        context.Initialize();
-        if (!context.IsInitialized())
-        {
-            std::cerr << "Failed to initialize graphics context!" << std::endl;
-            return -1;
-        }
+        // Load your actual assets
+        std::cout << "Loading shaders..." << std::endl;
+        m_BasicShader = rm.LoadShader("basic", "assets/shaders/basic.glsl");
 
-        std::cout << "Window and context initialized successfully!" << std::endl;
+        std::cout << "Loading models..." << std::endl;
+        auto modelData = rm.LoadModel("testModel", "assets/models/your_model.obj", "basic");
 
-        // Initialize renderer and resource manager
-        Renderer::Get().Initialize(nativeWindow);
-        ResourceManager::Get().Initialize();
+        std::cout << "Loading textures..." << std::endl;
+        m_TestTexture = rm.LoadTexture("test", "assets/textures/your_texture.png");
 
-        std::cout << "Renderer and ResourceManager initialized!" << std::endl;
+        // Setup scene
+        SetupScene();
+    }
 
-        // Load shaders from the assets directory
-        auto basicShader = ResourceManager::Get().LoadShader("basic", "assets/shaders/basic");
-        if (!basicShader) 
-        {
-            std::cerr << "Failed to load basic shader!" << std::endl;
-            return -1;
-        }
-
-        std::cout << "Shaders loaded successfully!" << std::endl;
-
-        // Load the tinbox model using ResourceManager
-        ModelData tinboxModel = ResourceManager::Get().LoadModel("tinbox", "assets/models/tinbox/tin_box.obj", "basic");
-        
-        if (tinboxModel.meshes.empty()) 
-        {
-            std::cerr << "Failed to load tinbox model or model has no meshes!" << std::endl;
-            return -1;
-        }
-
-        std::cout << "Tinbox model loaded successfully!" << std::endl;
-        std::cout << "Model contains " << tinboxModel.meshes.size() << " meshes" << std::endl;
-        std::cout << "Model contains " << tinboxModel.materials.size() << " materials" << std::endl;
-
-        // Create scene and entities
-        Scene scene("MainScene");
+    void SetupScene()
+    {
+        auto &scene = GetScene();
 
         // Create camera entity
         Entity cameraEntity = scene.CreateEntity("MainCamera");
         auto camera = std::make_shared<Camera>(CameraType::Perspective);
-        camera->SetPerspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
-        auto& camComp = cameraEntity.AddComponent<CameraComponent>();
-        camComp.camera = camera;
-        camComp.Primary = true;
+        camera->SetPerspective(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f);
+        camera->SetPosition({ 0.0f, 2.0f, 5.0f });
+        camera->SetRotation({ -15.0f, 0.0f, 0.0f });
 
-        // Create entities for each mesh in the model
-        std::vector<Entity> modelEntities;
-        for (size_t i = 0; i < tinboxModel.meshes.size(); ++i) 
-        {
-            Entity meshEntity = scene.CreateEntity("TinboxMesh_" + std::to_string(i));
-            meshEntity.AddComponent<TransformComponent>();
-            meshEntity.AddComponent<MeshComponent>(tinboxModel.meshes[i]);
-            
-            // Set up materials
-            MaterialComponent matComp;
-            if (i < tinboxModel.materials.size() && tinboxModel.materials[i]) 
-            {
-                matComp.Materials.push_back(tinboxModel.materials[i]);
-            }
-            else 
-            {
-                // Create a default material if none exists
-                auto defaultMaterial = ResourceManager::Get().CreateMaterial("default_" + std::to_string(i), "basic");
-                if (defaultMaterial) 
-                {
-                    // Set default material properties using available API
-                    defaultMaterial->SetAlbedo({0.8f, 0.8f, 0.8f});
-                    defaultMaterial->SetMetallic(0.0f);
-                    defaultMaterial->SetRoughness(0.5f);
-                    matComp.Materials.push_back(defaultMaterial);
-                }
-            }
-            meshEntity.AddComponent<MaterialComponent>(matComp);
-            
-            modelEntities.push_back(meshEntity);
-        }
+        cameraEntity.AddComponent<CameraComponent>(camera);
+        cameraEntity.AddComponent<TransformComponent>(glm::vec3(0.0f, 2.0f, 5.0f));
+
+        SetActiveCamera(camera);
 
         // Create light entity
-        Entity lightEntity = scene.CreateEntity("DirectionalLight");
-        auto& lightComp = lightEntity.AddComponent<LightComponent>();
-        lightComp.Type = LightType::Directional;
-        lightComp.Color = {1.0f, 1.0f, 1.0f};
-        lightComp.Intensity = 1.0f;
+        Entity lightEntity = scene.CreateEntity("MainLight");
+        lightEntity.AddComponent<TransformComponent>(glm::vec3(5.0f, 5.0f, 5.0f));
+        lightEntity.AddComponent<LightComponent>(LightType::Directional,
+            glm::vec3(1.0f, 0.95f, 0.8f), 1.2f);
 
-        std::cout << "Scene set up successfully!" << std::endl;
-
-        // Create render system
-        RenderSystem renderSystem;
-        
-        // Set up renderer
-        Renderer& renderer = Renderer::Get();
-        renderer.GetContext()->SetClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-        std::cout << "Starting render loop..." << std::endl;
-
-        // Simple render loop - no input handling for now to avoid GLFW dependencies
-        float rotationAngle = 0.0f;
-        while (!window.ShouldClose())
+        // Create model entity
+        auto modelData = GetResourceManager().GetModel("testModel");
+        for (size_t i = 0; i < modelData.meshes.size(); ++i)
         {
-            // Simple time-based rotation
-            rotationAngle += 0.01f; // Rotate slowly
+            Entity modelEntity = scene.CreateEntity("ModelPart_" + std::to_string(i));
+            modelEntity.AddComponent<TransformComponent>(glm::vec3(0.0f, 0.0f, 0.0f));
+            modelEntity.AddComponent<MeshComponent>(modelData.meshes[i]);
 
-            // Update transforms (rotate model)
-            for (auto& entity : modelEntities) 
+            if (i < modelData.materials.size())
             {
-                auto& transform = entity.GetComponent<TransformComponent>();
-                transform.Rotation.y = rotationAngle;
+                modelEntity.AddComponent<MaterialComponent>(modelData.materials[i]);
             }
-
-            // Begin frame
-            renderer.BeginFrame();
-
-            // Update and render scene
-            scene.OnUpdate(0.016f); // Assume ~60fps
-            renderSystem.OnUpdate(&scene);
-
-            // End frame
-            renderer.EndFrame();
-            context.SwapBuffers();
-            window.PollEvents();
         }
-
-        std::cout << "Shutting down..." << std::endl;
-
-        // Cleanup
-        ResourceManager::Get().Shutdown();
-        Renderer::Get().Shutdown();
     }
-    catch (const std::exception& e) 
+
+    void Update(float deltaTime) override
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        // Add any custom update logic here
+        // Rotate model, move camera, etc.
+    }
+
+    void Render() override
+    {
+        // Any custom rendering outside the pipeline
+        // Usually empty if using the scene renderer
+    }
+
+private:
+    std::shared_ptr<Shader> m_BasicShader;
+    std::shared_ptr<Texture> m_TestTexture;
+};
+
+int main()
+{
+    try
+    {
+        GraphicsTestApp app;
+        app.Run();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Application error: " << e.what() << std::endl;
         return -1;
     }
 
