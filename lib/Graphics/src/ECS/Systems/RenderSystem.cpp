@@ -164,9 +164,35 @@ void RenderSystem::DrawEntity(entt::registry& registry, entt::entity entity, Cam
         shader->setVec3("u_ViewPos", camera->GetPosition());
     }
 
-    // Create a draw command and submit to renderer
+    // Set texture availability flags for the shader
+    auto& meshData = *mesh.mesh;
+    bool hasDiffuse = false, hasNormal = false, hasMetallic = false, hasRoughness = false, hasAO = false, hasEmissive = false;
+    
+    // Check what texture types are available
+    for (const auto& texture : meshData.textures) {
+        if (texture.type == "texture_diffuse") hasDiffuse = true;
+        else if (texture.type == "texture_normal") hasNormal = true;
+        else if (texture.type == "texture_metallic") hasMetallic = true;
+        else if (texture.type == "texture_roughness") hasRoughness = true;
+        else if (texture.type == "texture_ao") hasAO = true;
+        else if (texture.type == "texture_emissive") hasEmissive = true;
+    }
+    
+    // Set texture availability flags in shader
+    shader->setBool("u_HasDiffuseMap", hasDiffuse);
+    shader->setBool("u_HasNormalMap", hasNormal);
+    shader->setBool("u_HasMetallicMap", hasMetallic);
+    shader->setBool("u_HasRoughnessMap", hasRoughness);
+    shader->setBool("u_HasAOMap", hasAO);
+    shader->setBool("u_HasEmissiveMap", hasEmissive);
+
+    // Create enhanced draw command that handles textures within the pipeline
     std::cout << "RenderSystem: Submitting draw command with VAO " << mesh.mesh->GetVertexArray()->GetVAOHandle() 
-              << " and " << mesh.mesh->GetIndexCount() << " indices" << std::endl;
-    DrawCommand drawCmd(mesh.mesh->GetVertexArray()->GetVAOHandle(), mesh.mesh->GetIndexCount());
+              << ", " << mesh.mesh->GetIndexCount() << " indices, and " << meshData.textures.size() << " textures" << std::endl;
+    
+    DrawWithTexturesCommand drawCmd(mesh.mesh->GetVertexArray()->GetVAOHandle(), 
+                                   mesh.mesh->GetIndexCount(), 
+                                   meshData.textures, 
+                                   shader);
     Renderer::Get().Submit(drawCmd);
 }

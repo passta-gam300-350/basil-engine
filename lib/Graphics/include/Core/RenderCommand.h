@@ -2,6 +2,10 @@
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <vector>
+#include <string>
+#include <Resources/Texture.h>
+#include <Resources/Shader.h>
 
 class RenderCommand
 {
@@ -34,4 +38,20 @@ public:
 private:
 	uint32_t m_VertexArrayID;
 	uint32_t m_IndexCount;
+};
+
+class DrawWithTexturesCommand : public RenderCommand
+{
+public:
+	DrawWithTexturesCommand(uint32_t vao, uint32_t indexCount, 
+	                       const std::vector<Texture>& textures, 
+	                       std::shared_ptr<Shader> shader);
+	virtual void Execute() override;
+	virtual RenderCommand* Clone() const override;
+
+private:
+	uint32_t m_VertexArrayID;
+	uint32_t m_IndexCount;
+	std::vector<Texture> m_Textures;
+	std::shared_ptr<Shader> m_Shader;
 };
