@@ -36,43 +36,9 @@ void SceneRenderer::InitializePipeline() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render all entities with mesh and material components
-        if (m_Scene)
-        {
-            auto view = m_Scene->GetRegistry().view<MeshComponent, MaterialComponent, TransformComponent>();
-
-            view.each([&](auto entity, auto& mesh, auto& material, auto& transform)
-            {
-                // Skip if no mesh or material
-                if (!mesh.mesh || material.Materials.empty())
-                {
-                    return;
-                }
-
-                // Get the shader from the material
-                auto shader = material.Materials[0]->GetShader();
-                if (!shader)
-                {
-                    return;
-                }
-                
-                // Use the shader
-                shader->use();
-
-                // Set transform
-                shader->setMat4("u_Model", transform.GetTransform());
-
-                // Set view and projection from camera
-                if (m_Camera)
-                {
-                    shader->setMat4("u_View", m_Camera->GetViewMatrix());
-                    shader->setMat4("u_Projection", m_Camera->GetProjectionMatrix());
-                }
-
-                // Draw the mesh using its Draw method
-                mesh.mesh->Draw(*shader);
-            });
-        }
+        // The actual rendering will be handled by RenderSystem
+        // which submits commands to the RenderQueue
+        // This pass just sets up the framebuffer and clears it
     });
 
     // Add the geometry pass to the pipeline
