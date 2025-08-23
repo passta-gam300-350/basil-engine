@@ -62,7 +62,8 @@ out/
 build/
 _deps/
 
-
+# Mono Folder
+dep/vendor/mono/
 # Negation
 !tool/
 !tool/*

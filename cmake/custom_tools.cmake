@@ -1,7 +1,9 @@
 
+
+set(CS_TOOL_PATH ${CMAKE_SOURCE_DIR}/tools)
 #Find program CSBridge.exe
-find_program(CSBridge_EXECUTABLE NAMES CSBridge.exe PATHS ${CMAKE_SOURCE_DIR}/tool/bin/
+find_program(CSBridger NAMES CSBridge.exe PATHS ${CS_TOOL_PATH}/bin/
 )
 
 
-message(STATUS "CSBridge executable found at: ${CSBridge_EXECUTABLE}")
+message(STATUS "CSBridge executable found at: ${CSBridger}")
