@@ -61,3 +61,10 @@ out/
 .git/
 build/
 _deps/
+
+
+# Negation
+!tool/
+!tool/*
+!tool/bin/
+!tool/bin/*
