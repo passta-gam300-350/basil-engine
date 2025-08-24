@@ -161,6 +161,66 @@ macro(import_stb)
     target_include_directories(stb PUBLIC ${STB_DIR})
 endmacro()
 
+
+#Import Mono
+macro(import_mono)
+set(MONO_IMPORT_DIR "${CMAKE_SOURCE_DIR}/dep/vendor/mono")
+set(MONO_IMPORT_INCLUDE_DIR "${MONO_IMPORT_DIR}/include/mono-2.0")
+set(MONO_IMPORT_LIB_DIR "${MONO_IMPORT_DIR}/lib")
+set(MONO_IMPORT_SUCCESS TRUE)
+if(NOT EXISTS "${MONO_IMPORT_DIR}")
+    message(STATUS "MONO not found in MONO/ folder")
+    set(MONO_IMPORT_SUCCESS FALSE)
+endif()
+if (NOT EXISTS "${MONO_IMPORT_INCLUDE_DIR}")
+    message(STATUS "MONO include directory not found in mono/ folder")
+    set(MONO_IMPORT_SUCCESS FALSE)
+endif()
+if (NOT EXISTS "${MONO_IMPORT_LIB_DIR}")
+    message(STATUS "MONO lib directory not found in mono/ folder")
+    set(MONO_IMPORT_SUCCESS FALSE)
+endif()
+
+IF (${MONO_IMPORT_SUCCESS})
+    message(STATUS "${MONO_IMPORT_LIB_DIR} HERE")
+    find_library(MONO_LIBRARY mono-2.0-sgen PATHS ${MONO_IMPORT_LIB_DIR})
+    find_library(MONO_POSIX_LIBRARY MonoPosixHelper PATHS ${MONO_IMPORT_LIB_DIR})
+
+    # Collect necessary bin files
+    set(MONO_DLL_PATH "${MONO_IMPORT_DIR}/bin/mono-2.0-sgen.dll")
+    set(MONO_DLL_STATIC "${MONO_IMPORT_DIR}/bin/libmono-btls-shared")
+    set(MONO_DLL_POSIX "${MONO_IMPORT_DIR}/bin/MonoPosixHelper.dll")
+
+    if (NOT MONO_LIBRARY)
+        message(STATUS "MONO library not found in MONO/ folder")
+        set(MONO_IMPORT_SUCCESS FALSE)
+    endif()
+    
+    set(CMAKE_CSharp_COMPILER "${MONO_IMPORT_DIR}/bin/csc")
+    
+    add_library(mono SHARED IMPORTED)
+    message(STATUS "Mono: ${MONO_LIBRARY}")
+    set_target_properties(mono PROPERTIES
+        IMPORTED_IMPLIB_RELEASE "${MONO_LIBRARY}"
+        IMPORTED_IMPLIB_DEBUG "${MONO_LIBRARY}"
+        IMPORTED_IMPLIB_MINSIZEREL "${MONO_LIBRARY}"
+        IMPORTED_IMPLIB_RELWITHDEBINFO "${MONO_LIBRARY}"
+        IMPORTED_IMPLIB_INSTALLER "${MONO_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES ${MONO_IMPORT_INCLUDE_DIR}
+    )
+
+
+    add_library(mono_interface INTERFACE)
+
+    target_link_libraries(mono_interface 
+    INTERFACE mono
+    ${MONO_POSIX_LIBRARY}
+    )
+ELSE()
+    message(STATUS "MONO Import Failed.")
+ENDIF()
+endmacro()
+
 # Macro to import all dependencies
 macro(import_dependencies)
     import_glad()
@@ -175,5 +235,7 @@ macro(import_dependencies)
     import_spdlog()
     import_catch()
 
-    set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+    import_mono()
+
+    set_target_properties(glad glfw glm assimp EnTT imgui mono_interface UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
 endmacro()

@@ -10,12 +10,19 @@ set(ALL_LIBS
   PRIVATE glfw
   PRIVATE EnTT::EnTT
   PRIVATE assimp::assimp
+  PUBLIC mono_interface
 )
 
-add_library(${PROJECT_NAME} SHARED ${ALL_FILES})
+set(MANAGED_FOLDER managed)
+
+add_library(${PROJECT_NAME}Library SHARED ${ALL_FILES})
+add_executable(${PROJECT_NAME} ${ALL_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME}Library PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set_property(TARGET ${PROJECT_NAME}Library PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+target_link_libraries(${PROJECT_NAME}Library ${ALL_LIBS})
