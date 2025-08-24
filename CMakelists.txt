@@ -28,4 +28,5 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 #srcs
 add_subdirectory(lib)
 add_subdirectory(engine)
+add_subdirectory(app)
 add_subdirectory(test)
