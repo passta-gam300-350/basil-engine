@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../../../../lib/Graphics/include/ECS/ComponentInterfaces.h"
+#include <ECS/ComponentInterfaces.h>
 #include "Components/TransformComponent.h"
 #include "Components/VisibilityComponent.h"
 
