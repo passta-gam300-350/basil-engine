@@ -3,10 +3,9 @@
 #include <Core/Window.h>
 #include <Core/Renderer.h>
 #include <Resources/ResourceManager.h>
-#include <Scene/Scene.h>
+#include "Engine/Scene/Scene.h"
 #include <Scene/SceneRenderer.h>
-#include <ECS/Systems/RenderSystem.h>
-#include <ECS/Systems/CullingSystem.h>
+// Old hybrid systems removed - now using pure ECS + rendering coordinators
 #include <Utility/Camera.h>
 #include <memory>
 #include <chrono>
@@ -65,13 +64,12 @@ private:
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
-    // Core graphics systems - fully managed by graphics lib
+    // Core graphics systems - fully managed by graphics lib  
     std::unique_ptr<Window> m_Window;
     std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<ResourceManager> m_ResourceManager;
     std::unique_ptr<SceneRenderer> m_SceneRenderer;
-    std::unique_ptr<RenderSystem> m_RenderSystem;
-    std::unique_ptr<CullingSystem> m_CullingSystem;
+    // Note: Rendering coordinators (MeshRenderer, FrustumCuller) now owned by SceneRenderer
 
     // Scene and camera
     std::shared_ptr<Scene> m_CurrentScene;

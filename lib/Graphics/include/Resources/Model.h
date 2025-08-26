@@ -29,8 +29,8 @@ public:
     // constructor, expects a filepath to a 3D model.
     Model(std::string const &path, bool gamma = false);
 
-    // draws the model, and thus all its meshes
-    void Draw(Shader &shader);
+    // Note: Removed Draw() method - rendering is now handled by ECS system
+    // Model is now pure data container
     
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.

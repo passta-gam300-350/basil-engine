@@ -1,16 +1,14 @@
 #include <Resources/Model.h>
 #include <Resources/Texture.h>
+#include <iostream>
 
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 {
     loadModel(path);
 }
 
-void Model::Draw(Shader &shader)
-{
-    for(unsigned int i = 0; i < meshes.size(); i++)
-        meshes[i].Draw(shader);
-}
+// Draw() method removed - Model is now pure data
+// Rendering is handled by ECS system through individual Mesh objects
 
 void Model::loadModel(std::string const &path)
 {

@@ -23,7 +23,8 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 		return;
 	}
 
-	glfwMakeContextCurrent(m_Window);
+	// Note: OpenGL context creation moved to GraphicsContext
+	// glfwMakeContextCurrent is now handled by GraphicsContext
 
 	// Set up callbacks
 	glfwSetFramebufferSizeCallback(m_Window, FramebufferSizeCallback);
@@ -48,11 +49,13 @@ bool Window::ShouldClose() const
 
 void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-	// Update viewport when window is resized
-	glViewport(0, 0, width, height);
-
-	// Update stored dimensions
+	// Update stored dimensions (OpenGL viewport update moved to GraphicsContext)
 	Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
-	windowInstance->m_Width = width;
-	windowInstance->m_Height = height;
+	if (windowInstance) {
+		windowInstance->m_Width = width;
+		windowInstance->m_Height = height;
+	}
+	
+	// Note: glViewport call moved to GraphicsContext::OnWindowResize()
+	// Window class should not make OpenGL calls
 }

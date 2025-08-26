@@ -71,7 +71,7 @@ public:
     void OnMouseScroll(double yoffset) override
     {
         // Additional scroll handling if needed
-        std::cout << "Scroll: " << yoffset << std::endl;
+        // std::cout << "Scroll: " << yoffset << std::endl;
     }
 
     void Render() override

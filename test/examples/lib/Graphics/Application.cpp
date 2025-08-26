@@ -4,8 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <ECS/Components/MeshComponent.h>
 #include <ECS/Components/MaterialComponent.h>
-#include <ECS/Components/TransformComponent.h>
-#include <Scene/Entity.h>
+#include "Engine/ECS/Components/TransformComponent.h"
+#include "Engine/Scene/Entity.h"
 #include <unordered_map>
 
 Application::Application(const std::string& name, uint32_t width, uint32_t height)
@@ -97,12 +97,11 @@ void Application::RenderModel(const std::string& modelName, const std::string& s
         // Create a new entity for this model
         entity = m_CurrentScene->CreateEntity(modelName);
         modelEntities[modelName] = entity;
-        std::cout << "RenderModel: Created main entity for model '" << modelName << "'" << std::endl;
+        // Created main entity for model
         
         // For models with multiple meshes, create a child entity for each mesh
         if (model->meshes.size() == 1) {
             // Single mesh - attach directly to this entity
-            std::cout << "RenderModel: Single mesh model, adding components to main entity" << std::endl;
             auto meshPtr = std::make_shared<Mesh>(model->meshes[0].vertices, model->meshes[0].indices, model->meshes[0].textures);
             m_CurrentScene->GetRegistry().emplace<MeshComponent>(entity, meshPtr);
             
@@ -111,35 +110,31 @@ void Application::RenderModel(const std::string& modelName, const std::string& s
             m_CurrentScene->GetRegistry().emplace<MaterialComponent>(entity, material);
             
             // TransformComponent is already added by CreateEntity
-            std::cout << "RenderModel: Added all components to single mesh entity" << std::endl;
         } else {
             // Multiple meshes - create child entities
-            std::cout << "RenderModel: Multi-mesh model (" << model->meshes.size() << " meshes), creating child entities" << std::endl;
             std::vector<entt::entity> childEntities;
             for (size_t i = 0; i < model->meshes.size(); ++i) {
                 auto childEntity = m_CurrentScene->CreateEntity(modelName + "_mesh_" + std::to_string(i));
                 childEntities.push_back(childEntity);
-                std::cout << "RenderModel: Created child entity " << i << " for mesh" << std::endl;
+                // Created child entity for mesh
                 
                 auto meshPtr = std::make_shared<Mesh>(model->meshes[i].vertices, model->meshes[i].indices, model->meshes[i].textures);
                 m_CurrentScene->GetRegistry().emplace<MeshComponent>(childEntity, meshPtr);
-                std::cout << "RenderModel: Added MeshComponent to child entity " << i << std::endl;
+                // Added MeshComponent to child entity
                 
                 auto material = std::make_shared<Material>(shader, shaderName);
                 m_CurrentScene->GetRegistry().emplace<MaterialComponent>(childEntity, material);
-                std::cout << "RenderModel: Added MaterialComponent to child entity " << i << std::endl;
+                // Added MaterialComponent to child entity
                 
-                // Transform component is already added by CreateEntity, just update it if needed
-                auto& childTransform = m_CurrentScene->GetRegistry().get<TransformComponent>(childEntity);
-                std::cout << "RenderModel: Child entity " << i << " has all three components" << std::endl;
+                // Transform component is already added by CreateEntity
                 // Could set specific transform properties here if needed
             }
             modelChildEntities[modelName] = childEntities;
-            std::cout << "RenderModel: Completed creating " << childEntities.size() << " child entities" << std::endl;
+            // Completed creating child entities
         }
     } else {
         entity = it->second;
-        std::cout << "RenderModel: Using existing entity for model '" << modelName << "'" << std::endl;
+        // Using existing entity for model
         
         // Update the material's shader if it changed
         // Only update if this entity actually has a MaterialComponent (single mesh case)
@@ -162,12 +157,29 @@ void Application::RenderModel(const std::string& modelName, const std::string& s
         }
     }
     
-    // Update transform component (CreateEntity always adds TransformComponent)
+    // Update transform component - properly decompose the transform matrix
     auto& transformComp = m_CurrentScene->GetRegistry().get<TransformComponent>(entity);
-    // Extract translation, rotation, and scale from the transform matrix
+    
+    // Extract translation from transform matrix
     transformComp.Translation = glm::vec3(transform[3]);
-    // For now, just set the transform matrix directly via a helper
-    // In a real implementation, you'd decompose the matrix properly
+    
+    // Extract scale
+    transformComp.Scale = glm::vec3(
+        glm::length(glm::vec3(transform[0])),
+        glm::length(glm::vec3(transform[1])),
+        glm::length(glm::vec3(transform[2]))
+    );
+    
+    // Extract rotation (simplified - assumes uniform scale and no shear)
+    glm::mat3 rotMat = glm::mat3(transform);
+    rotMat[0] /= transformComp.Scale.x;
+    rotMat[1] /= transformComp.Scale.y;  
+    rotMat[2] /= transformComp.Scale.z;
+    
+    // Convert rotation matrix to Euler angles (rough approximation)
+    transformComp.Rotation.y = atan2(rotMat[0][2], rotMat[2][2]);
+    transformComp.Rotation.x = atan2(-rotMat[1][2], sqrt(rotMat[1][0] * rotMat[1][0] + rotMat[1][1] * rotMat[1][1]));
+    transformComp.Rotation.z = atan2(rotMat[1][0], rotMat[1][1]);
 }
 
 void Application::SetCameraPosition(const glm::vec3& position)
@@ -225,14 +237,10 @@ void Application::InitializeGraphicsEngine()
     m_ActiveCamera->SetPerspective(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f);
     m_ActiveCamera->SetPosition(glm::vec3(0.0f, 0.0f, 3.0f));
     
-    // 6. Scene Renderer
+    // 6. Scene Renderer - now owns and coordinates ECS systems
     m_SceneRenderer = std::make_unique<SceneRenderer>();
     m_SceneRenderer->SetScene(m_CurrentScene);
     m_SceneRenderer->SetCamera(m_ActiveCamera);
-    
-    // 7. ECS Systems
-    m_RenderSystem = std::make_unique<RenderSystem>();
-    m_CullingSystem = std::make_unique<CullingSystem>();
     
     // Initialize timing
     m_LastFrameTime = std::chrono::steady_clock::now();
@@ -243,8 +251,7 @@ void Application::InitializeGraphicsEngine()
 void Application::ShutdownGraphicsEngine()
 {
     // Clean up in reverse order
-    m_CullingSystem.reset();
-    m_RenderSystem.reset();
+    // Note: Systems are now owned by SceneRenderer and cleaned up automatically
     m_SceneRenderer.reset();
     m_CurrentScene.reset();
     m_ActiveCamera.reset();
@@ -303,13 +310,10 @@ void Application::RenderFrame()
     // Call user's render method to update scene/entities
     Render();
     
-    // Update ECS systems - this will submit render commands to the queue
-    if (m_ActiveCamera) {
-        m_CullingSystem->OnUpdate(m_CurrentScene.get(), *m_ActiveCamera);
-        m_RenderSystem->OnUpdate(m_CurrentScene.get(), *m_ActiveCamera);  // Use the new overload with camera
-    }
+    // Update Scene ECS systems (pure game logic, no rendering)
+    m_CurrentScene->OnUpdate(m_DeltaTime);
     
-    // Scene rendering through pipeline - this executes the render queue
+    // Scene rendering through pipeline - coordinates rendering coordinators
     m_SceneRenderer->Render();
     
     m_Renderer->EndFrame();

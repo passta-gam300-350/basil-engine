@@ -176,24 +176,188 @@ This document provides a comprehensive analysis of the graphics library architec
 #### **Utility/Viewport.h & Viewport.cpp**
 - **Role**: Viewport and scissor management
 
-## Architecture Issues & Overlaps
+## Architecture Issues & Overlaps - ✅ RESOLVED
 
-### 1. **Responsibility Overlaps**
-- **Rendering Logic**: Split between RenderSystem, Mesh::Draw(), and RenderCommand
-- **Context Management**: Window and GraphicsContext both handle OpenGL state
-- **Resource Loading**: ResourceManager and individual resource classes duplicate logic
-- **Scene Coordination**: Renderer, SceneRenderer, and RenderSystem have unclear boundaries
+### 1. **Responsibility Overlaps** - ✅ FIXED
+- ~~**Rendering Logic**: Split between RenderSystem, Mesh::Draw(), and RenderCommand~~ 
+  - **RESOLVED**: All rendering logic moved to `DrawMeshCommand`, `Mesh` and `Model` are pure data
+- ~~**Context Management**: Window and GraphicsContext both handle OpenGL state~~
+  - **RESOLVED**: Clean separation - Window handles GLFW, GraphicsContext handles OpenGL
+- **Resource Loading**: ResourceManager and individual resource classes duplicate logic - ⚠️ REMAINS
+- ~~**Scene Coordination**: Renderer, SceneRenderer, and RenderSystem have unclear boundaries~~
+  - **RESOLVED**: Clear separation - Renderer (low-level), SceneRenderer (coordination), Systems (pure ECS)
 
-### 2. **Tight Coupling**
-- RenderSystem directly creates commands instead of using factories
-- Mesh class handles its own rendering instead of being purely data
-- Materials are just thin wrappers around shaders
+### 2. **Tight Coupling** - ✅ FIXED  
+- ~~RenderSystem directly creates commands instead of using factories~~
+  - **RESOLVED**: Architectural split made this coupling appropriate (rendering coordinator → commands)
+- ~~Mesh class handles its own rendering instead of being purely data~~
+  - **RESOLVED**: `Mesh::Draw()` removed, now pure data structure
+- **Materials are just thin wrappers around shaders** - ⚠️ REMAINS (deferred for later)
 
-### 3. **Missing Abstractions**
-- No render graph system
-- No GPU resource pooling
-- No multi-threading support
-- No memory management strategy
+### 3. **Missing Abstractions** - ⚠️ PARTIALLY ADDRESSED
+- ~~No render graph system~~ - **RESOLVED**: RenderPipeline with RenderPass system implemented
+- No GPU resource pooling - ⚠️ REMAINS  
+- No multi-threading support - ⚠️ REMAINS (intentionally not implemented)
+- No memory management strategy - ⚠️ REMAINS
+
+## ✅ NEW: Clean ECS/Rendering Architecture (IMPLEMENTED)
+
+### **Engine Layer** (`test/examples/lib/Graphics/Engine/`)
+Pure ECS systems with no rendering concerns:
+
+#### **TransformSystem** 
+- **Role**: Pure ECS transform logic - hierarchies, animations, matrix updates
+- **Owned by**: Scene (Engine layer)
+- **Responsibilities**: Component updates, no OpenGL calls
+
+#### **VisibilitySystem**
+- **Role**: Pure ECS visibility logic - distance culling, LOD, game rules  
+- **Owned by**: Scene (Engine layer)
+- **Responsibilities**: Updates VisibilityComponent based on game logic, no camera concerns
+
+### **Graphics Layer** (`lib/Graphics/`)
+Rendering coordinators with no ECS system logic:
+
+#### **MeshRenderer** 
+- **Role**: Rendering coordinator - queries visible entities, generates render commands
+- **Owned by**: SceneRenderer (Graphics layer)
+- **Responsibilities**: ECS queries → command generation, no component updates
+
+#### **FrustumCuller**
+- **Role**: Rendering coordinator - camera-based frustum culling
+- **Owned by**: SceneRenderer (Graphics layer)  
+- **Responsibilities**: Camera math → visibility updates, graphics-specific culling
+
+### **Clean Data Flow**
+```
+Application::RenderFrame()
+    ↓
+1. User::Render() - Update entity transforms/positions
+    ↓
+2. Scene::OnUpdate() - Pure ECS systems (TransformSystem, VisibilitySystem)
+    ↓  
+3. SceneRenderer::Render() - Coordinate rendering
+    ↓
+4. FrustumCuller::CullAgainstCamera() - Graphics culling
+    ↓
+5. MeshRenderer::Render() - Query visible entities, generate commands
+    ↓
+6. Renderer::Submit() - Execute commands
+```
+
+### **Benefits Achieved**
+- ✅ **Pure ECS Systems**: Game logic separate from rendering
+- ✅ **Clean Ownership**: Scene owns ECS, SceneRenderer owns rendering coordinators  
+- ✅ **Future-Proof**: Advanced culling (BVH, GPU-driven) goes in Graphics as coordinators
+- ✅ **Multi-Library Ready**: Graphics lib has minimal Engine dependencies
+- ✅ **Proper Separation**: ECS logic vs Rendering coordination clearly separated
+
+## ✅ Implementation Workflow (COMPLETED)
+
+This section documents the step-by-step process used to transform the architecture:
+
+### **Phase 1: Quick Wins & Performance Fixes**
+1. **Clean up excessive debug logging** - Removed per-frame console output from render loop
+2. **Fix entity creation spam** - Stopped duplicate entity creation every frame
+
+### **Phase 2: Architectural Decoupling**
+3. **Decouple rendering logic**:
+   - Created `DrawMeshCommand` to encapsulate all OpenGL rendering state
+   - Moved shader calls, uniform setup, texture binding from `RenderSystem` to command
+   - Removed `Mesh::Draw()` and `Model::Draw()` - made them pure data structures
+
+4. **Separate context management**:
+   - **Window**: GLFW lifecycle, window properties, input setup (no OpenGL calls)
+   - **GraphicsContext**: OpenGL context creation, OpenGL state, viewport management
+
+5. **Define clear system boundaries**:
+   - **Renderer**: Low-level command execution, OpenGL state, buffer swaps
+   - **SceneRenderer**: High-level orchestration, system coordination, pipeline management
+   - **Systems**: Pure ECS logic - entity queries, component processing
+
+### **Phase 3: File Restructuring**
+6. **Move Engine concepts out of Graphics library**:
+   - Moved `Scene.h/.cpp` → `test/examples/lib/Graphics/Engine/Scene/`
+   - Moved `Entity.h/.cpp` → `test/examples/lib/Graphics/Engine/Scene/` 
+   - Moved `TransformComponent.h` → `test/examples/lib/Graphics/Engine/ECS/Components/`
+   - Updated all include paths to reflect new structure
+
+### **Phase 4: ECS/Rendering Split**
+7. **Create pure ECS systems** (Engine layer):
+   ```cpp
+   // test/examples/lib/Graphics/Engine/ECS/Systems/
+   TransformSystem   - Pure transform logic, hierarchies, animations
+   VisibilitySystem  - Distance/LOD culling, game visibility rules
+   ```
+
+8. **Create rendering coordinators** (Graphics layer):
+   ```cpp
+   // lib/Graphics/src/Rendering/
+   MeshRenderer      - Queries visible entities, generates render commands
+   FrustumCuller     - Camera-based frustum culling
+   ```
+
+9. **Update ownership model**:
+   - **Scene** (Engine) owns: `TransformSystem`, `VisibilitySystem` + future ECS systems
+   - **SceneRenderer** (Graphics) owns: `MeshRenderer`, `FrustumCuller` + future coordinators
+
+10. **Wire new architecture**:
+    - Scene calls pure ECS systems during `OnUpdate()`
+    - SceneRenderer coordinates rendering through pipeline passes
+    - Pipeline executes: FrustumCuller → MeshRenderer → Command submission
+
+11. **Remove old hybrid systems**:
+    - Deleted `lib/Graphics/.../RenderSystem.h/.cpp` (was doing ECS + rendering)
+    - Deleted `lib/Graphics/.../CullingSystem.h/.cpp` (was doing ECS + rendering) 
+    - Updated includes and fixed compilation issues
+
+### **Final Architecture Workflow**
+```
+┌─ Application::RenderFrame() ─────────────────────────────┐
+│                                                          │
+├─ 1. User::Render() ──────────────────────────────────────┤
+│     • Update entity positions, rotations                 │
+│     • Modify component data                              │
+│                                                          │
+├─ 2. Scene::OnUpdate(deltaTime) ──── Engine Layer ───────┤
+│     • TransformSystem::OnUpdate()                       │ 
+│       - Process transform hierarchies                    │
+│       - Update transform matrices                        │
+│     • VisibilitySystem::OnUpdate()                      │
+│       - Distance-based visibility                        │
+│       - LOD visibility rules                             │
+│     • [Future: PhysicsSystem, AudioSystem, AISystem]    │
+│                                                          │
+├─ 3. SceneRenderer::Render() ───── Graphics Layer ───────┤
+│     │                                                    │
+│     ├─ 4. Pipeline::Execute() ──────────────────────────┤
+│     │     │                                              │
+│     │     ├─ 5. FrustumCuller::CullAgainstCamera() ─────┤
+│     │     │     • Extract camera frustum planes          │
+│     │     │     • Test entities against frustum          │
+│     │     │     • Update VisibilityComponent.IsVisible   │
+│     │     │                                              │
+│     │     ├─ 6. MeshRenderer::Render() ──────────────────┤
+│     │     │     • Query entities with VisibilityComponent │
+│     │     │     • Filter for IsVisible = true            │
+│     │     │     • Generate DrawMeshCommand per entity    │
+│     │     │                                              │
+│     │     └─ 7. Commands submitted to RenderQueue ──────┤
+│     │                                                    │
+│     └─ 8. Renderer::Submit() & Execute() ───────────────┤
+│           • Execute all DrawMeshCommands                 │
+│           • OpenGL state changes & draw calls           │
+│                                                          │
+└─ 9. Renderer::EndFrame() ───────────────────────────────┘
+    • Swap buffers, present frame
+```
+
+### **Key Principles Applied**
+- **Engine Layer**: Pure game logic, no rendering concerns, no OpenGL
+- **Graphics Layer**: Rendering coordination, queries ECS but doesn't modify game logic  
+- **Command Pattern**: All OpenGL calls encapsulated in commands for deferred execution
+- **Single Responsibility**: Each system/coordinator has one clear purpose
+- **Clean Dependencies**: Graphics depends on Engine, not vice versa
 
 ## Proposed Improvements
 

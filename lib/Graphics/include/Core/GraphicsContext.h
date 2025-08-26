@@ -10,12 +10,13 @@ public:
 	GraphicsContext(GLFWwindow* windowHandle);
 	~GraphicsContext();
 
-	// All graphics operations
+	// OpenGL context operations
 	void Initialize();
 	void SwapBuffers();
 	void SetVSync(bool enabled);
 	void SetClearColor(float r, float g, float b, float a = 1.0f);
 	void Clear();
+	void OnWindowResize(uint32_t width, uint32_t height);
 
 	bool IsInitialized() const { return m_Initialized; }
 

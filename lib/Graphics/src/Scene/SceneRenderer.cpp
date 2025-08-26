@@ -1,17 +1,17 @@
 #include "Scene/SceneRenderer.h"
-#include "ECS/Components/MeshComponent.h"
-#include "ECS/Components/MaterialComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "ECS/Components/LightComponent.h"
-#include "Core/RenderCommand.h"
-#include "Core/Renderer.h"
+#include "Rendering/MeshRenderer.h"
+#include "Rendering/FrustumCuller.h"
+#include "Pipeline/RenderPass.h"
+#include "Buffer/FrameBuffer.h"
+#include <glad/gl.h>
 
 SceneRenderer::SceneRenderer() {
     InitializePipeline();
+    InitializeRenderingCoordinators();
 }
 
 SceneRenderer::~SceneRenderer() {
-    // Pipeline will be cleaned up by unique_ptr
+    // Pipeline and coordinators will be cleaned up by unique_ptr
 }
 
 void SceneRenderer::InitializePipeline() {
@@ -29,16 +29,21 @@ void SceneRenderer::InitializePipeline() {
         }
         });
 
-    // Set up render function for geometry pass
+    // Set up render function for geometry pass - now properly coordinates rendering
     geometryPass->SetRenderFunction([this]()
     {
         // Clear the framebuffer
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // The actual rendering will be handled by RenderSystem
-        // which submits commands to the RenderQueue
-        // This pass just sets up the framebuffer and clears it
+        // Coordinate rendering pipeline properly
+        if (m_Scene && m_Camera) {
+            // 1. Frustum culling updates VisibilityComponent based on camera
+            m_FrustumCuller->CullAgainstCamera(m_Scene.get(), *m_Camera);
+            
+            // 2. Mesh renderer queries visible entities and generates commands  
+            m_MeshRenderer->Render(m_Scene.get(), *m_Camera);
+        }
     });
 
     // Add the geometry pass to the pipeline
@@ -47,11 +52,17 @@ void SceneRenderer::InitializePipeline() {
     // Add other passes as needed (e.g., lighting, post-processing)
 }
 
+void SceneRenderer::InitializeRenderingCoordinators() {
+    // Create rendering coordinators - graphics-specific, not ECS systems
+    m_MeshRenderer = std::make_unique<MeshRenderer>();
+    m_FrustumCuller = std::make_unique<FrustumCuller>();
+}
+
 void SceneRenderer::Render() {
     if (!m_Scene || !m_Camera) {
         return;
     }
 
-    // Execute the rendering pipeline
+    // Execute the rendering pipeline - which coordinates the rendering systems
     m_Pipeline->Execute();
 }

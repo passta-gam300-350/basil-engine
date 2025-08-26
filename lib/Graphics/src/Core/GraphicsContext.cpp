@@ -21,6 +21,9 @@ void GraphicsContext::Initialize()
         return;
     }
 
+    // Make this window's context current (moved from Window class)
+    glfwMakeContextCurrent(m_WindowHandle);
+
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD2" << std::endl;
@@ -63,4 +66,12 @@ void GraphicsContext::SetClearColor(float r, float g, float b, float a)
 void GraphicsContext::Clear()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void GraphicsContext::OnWindowResize(uint32_t width, uint32_t height)
+{
+    if (!m_Initialized) return;
+    
+    // Update OpenGL viewport (moved from Window::FramebufferSizeCallback)
+    glViewport(0, 0, width, height);
 }

@@ -55,3 +55,33 @@ private:
 	std::vector<Texture> m_Textures;
 	std::shared_ptr<Shader> m_Shader;
 };
+
+// Enhanced command that handles all rendering state setup
+class DrawMeshCommand : public RenderCommand
+{
+public:
+	DrawMeshCommand(uint32_t vao, uint32_t indexCount,
+	               const std::vector<Texture>& textures,
+	               std::shared_ptr<Shader> shader,
+	               const glm::mat4& modelMatrix,
+	               const glm::mat4& viewMatrix, 
+	               const glm::mat4& projectionMatrix,
+	               const glm::vec3& cameraPosition);
+	               
+	virtual void Execute() override;
+	virtual RenderCommand* Clone() const override;
+
+private:
+	uint32_t m_VertexArrayID;
+	uint32_t m_IndexCount;
+	std::vector<Texture> m_Textures;
+	std::shared_ptr<Shader> m_Shader;
+	
+	// Transform matrices
+	glm::mat4 m_ModelMatrix;
+	glm::mat4 m_ViewMatrix;
+	glm::mat4 m_ProjectionMatrix;
+	
+	// Camera data
+	glm::vec3 m_CameraPosition;
+};
