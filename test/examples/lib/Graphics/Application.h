@@ -11,6 +11,9 @@
 #include <chrono>
 #include <GLFW/glfw3.h>
 
+// Forward declaration for component accessor
+class EngineComponentAccessor;
+
 class Application
 {
 public:
@@ -74,6 +77,9 @@ private:
     // Scene and camera
     std::shared_ptr<Scene> m_CurrentScene;
     std::shared_ptr<Camera> m_ActiveCamera;
+    
+    // Component accessor for Graphics/Engine communication
+    std::unique_ptr<EngineComponentAccessor> m_ComponentAccessor;
 
     // Application state
     bool m_Running = true;

@@ -1,709 +1,624 @@
-# Graphics Library Architecture Analysis
+# Graphics Architecture Documentation
 
-## Overview
-This document provides a comprehensive analysis of the graphics library architecture, detailing each component's responsibilities, identifying areas of overlap, and proposing modern rendering techniques for optimization.
+## Table of Contents
+1. [Architecture Overview](#architecture-overview)
+2. [Core Systems](#core-systems)
+3. [File Structure & Responsibilities](#file-structure--responsibilities)
+4. [Workflow & Data Flow](#workflow--data-flow)
+5. [ECS Integration](#ecs-integration)
+6. [Current Features](#current-features)
+7. [Implementation Guide for Advanced Features](#implementation-guide-for-advanced-features)
+8. [Suggested Improvements](#suggested-improvements)
+9. [Known Issues](#known-issues)
 
-## Current Architecture
+---
 
-### 1. Core Rendering Pipeline
+## Architecture Overview
 
-#### **Core/Window.h & Window.cpp**
-- **Role**: GLFW window management and OpenGL context creation
-- **Responsibilities**:
-  - Window lifecycle (create, update, destroy)
-  - Input event handling setup
-  - OpenGL context initialization
-- **Strengths**: Clean abstraction of windowing system
-- **Issues**: Tightly coupled to GLFW (platform dependency)
+The graphics library follows a **modern, clean architecture** with clear separation between Engine-level ECS systems and Graphics-level rendering coordination. This design ensures maintainability, performance, and extensibility.
 
-#### **Core/GraphicsContext.h & GraphicsContext.cpp**
-- **Role**: OpenGL context management and state tracking
-- **Responsibilities**:
-  - OpenGL initialization and capability queries
-  - Context state management
-  - Extension loading coordination
-- **Overlap**: Some functionality overlaps with Window class
+### Key Architectural Principles
+- **Value-Based Commands**: Efficient command system using `std::variant` for cache-friendly execution
+- **Component Separation**: Graphics library doesn't directly depend on Engine components
+- **Resource Decoupling**: CPU resource loading separated from GPU resource creation
+- **Bindless Ready**: Abstracted texture binding system for future bindless support
+- **Sorting Optimization**: Commands are sortable for optimal GPU state changes
 
-#### **Core/Renderer.h & Renderer.cpp**
-- **Role**: High-level rendering coordination
-- **Responsibilities**:
-  - Frame lifecycle management (BeginFrame/EndFrame)
-  - RenderQueue coordination
-  - Singleton pattern for global access
-- **Issues**: Too thin - mostly just delegates to RenderQueue
+### High-Level Architecture Diagram
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        APPLICATION LAYER                        │
+├─────────────────────────────────────────────────────────────────┤
+│  ENGINE LAYER           │        GRAPHICS LAYER                 │
+│                         │                                       │
+│  ┌─────────────────┐   │  ┌─────────────────────────────────┐  │
+│  │ ECS Systems     │   │  │ Rendering Coordinators          │  │
+│  │ - Transform     │◄──┼──┤ - MeshRenderer                  │  │
+│  │ - Visibility    │   │  │ - FrustumCuller                 │  │
+│  │ - Physics       │   │  │ - LightingSystem (future)       │  │
+│  └─────────────────┘   │  └─────────────────────────────────┘  │
+│                         │                                       │
+│  ┌─────────────────┐   │  ┌─────────────────────────────────┐  │
+│  │ Scene & Entity  │   │  │ Command System                  │  │
+│  │ Management      │   │  │ - Value-based commands          │  │
+│  └─────────────────┘   │  │ - Efficient sorting             │  │
+│                         │  │ - Batch execution               │  │
+└─────────────────────────┼─────────────────────────────────────┘
+                          │
+                          │  ┌─────────────────────────────────┐
+                          │  │ Resource Management             │
+                          │  │ - Decoupled loading/GPU         │
+                          │  │ - Texture binding abstraction  │
+                          │  └─────────────────────────────────┘
+```
 
-### 2. Command Pattern Implementation
+---
 
-#### **Core/RenderCommand.h & RenderCommand.cpp**
-- **Role**: Encapsulation of rendering operations
-- **Current Commands**:
-  - `ClearCommand`: Screen clearing operations
-  - `DrawCommand`: Basic geometry rendering
-  - `DrawWithTexturesCommand`: Enhanced geometry with textures
-- **Strengths**: Clean command pattern implementation
-- **Limitations**: Limited command types, no state change optimization
+## Core Systems
 
-#### **Core/RenderQueue.h & RenderQueue.cpp**
-- **Role**: Command batching and execution management
-- **Responsibilities**:
-  - Command storage and ordering
-  - Batch execution
-  - Queue state management
-- **Missing Features**: Command sorting, state change optimization, instancing
+### 1. Command System (`Core/RenderCommandBuffer.h/.cpp`)
+The heart of the graphics system, providing efficient, sortable rendering commands.
 
-### 3. Resource Management System
+**Key Components:**
+- **Value-Based Commands**: Uses `std::variant<>` instead of virtual functions
+- **Sort Keys**: 64-bit keys for optimal command ordering
+- **Batch Execution**: Efficient command processing with `std::visit`
 
-#### **Resources/ResourceManager.h & ResourceManager.cpp**
-- **Role**: Central asset loading and caching
-- **Responsibilities**:
-  - Model and shader loading
-  - Resource lifetime management
-  - Caching to prevent duplicate loads
-- **Issues**: Simple hash-map storage, no memory management, no streaming
+```cpp
+// Command types
+struct BindShaderData { std::shared_ptr<Shader> shader; };
+struct SetUniformsData { /* matrices, camera data */ };
+struct BindTexturesData { std::vector<Texture> textures; };
+struct DrawElementsData { uint32_t vao, indexCount; };
 
-#### **Resources/Model.h & Model.cpp**
-- **Role**: 3D model representation using Assimp
-- **Responsibilities**:
-  - Assimp integration for model loading
-  - Mesh hierarchy processing
-  - Material and texture association
-- **Strengths**: Industry-standard model loading
-- **Issues**: Immediate mode loading, no LOD system
+// Sort key for batching
+struct CommandSortKey {
+    uint8_t pass;          // Rendering pass (0-255)
+    uint32_t material;     // Material ID for batching
+    uint16_t mesh;         // Mesh ID
+    uint16_t instance;     // Instance ID
+};
+```
 
-#### **Resources/Mesh.h & Mesh.cpp**
-- **Role**: Individual mesh geometry and rendering
-- **Responsibilities**:
-  - Vertex/index buffer management
-  - Texture binding during rendering
-  - OpenGL VAO setup
-- **Overlap**: Rendering logic duplicated in RenderCommand system
+### 2. Renderer (`Core/Renderer.h/.cpp`)
+Central rendering coordinator managing the command buffer and graphics context.
 
-#### **Resources/Material.h & Material.cpp**
-- **Role**: Shader and material property management
-- **Responsibilities**:
-  - Shader parameter forwarding
-  - Material property storage
-- **Issues**: Very thin wrapper, limited functionality
+**Responsibilities:**
+- Frame lifecycle management (BeginFrame/EndFrame)
+- Command submission and sorting
+- Graphics context coordination
 
-#### **Resources/Texture.h & Texture.cpp**
-- **Role**: Texture loading and management
-- **Responsibilities**:
-  - STB image integration
-  - OpenGL texture object creation
-  - Format detection
-- **Issues**: No texture streaming, no compression support, no bindless textures
+### 3. Resource Management (`Resources/`)
+Decoupled resource system separating CPU loading from GPU creation.
 
-#### **Resources/Shader.h & Shader.cpp**
-- **Role**: Shader compilation and uniform management
-- **Responsibilities**:
-  - Vertex/fragment shader compilation
-  - Uniform value setting
-  - Program linking
-- **Issues**: No shader hot-reloading, no compute shader support
+**Key Files:**
+- `Texture.h/.cpp`: CPU/GPU separated texture loading
+- `TextureBindingSystem.h/.cpp`: Bindless-ready texture binding
+- `Shader.h/.cpp`, `Material.h/.cpp`, `Mesh.h/.cpp`: Core resources
 
-### 4. Buffer Management
+### 4. Scene Rendering (`Scene/SceneRenderer.h/.cpp`)
+High-level coordinator that orchestrates rendering operations.
 
-#### **Buffer/VertexArray.h & VertexArray.cpp**
-- **Role**: OpenGL VAO abstraction
-- **Responsibilities**:
-  - Vertex buffer layout management
-  - Index buffer association
-- **Strengths**: Clean OpenGL abstraction
+**Workflow:**
+1. Manages rendering coordinators (MeshRenderer, FrustumCuller)
+2. Executes render pipeline
+3. Coordinates between ECS and Graphics systems
 
-#### **Buffer/VertexBuffer.h & VertexBuffer.cpp**
-- **Role**: Vertex data storage
-- **Issues**: Static allocation only, no dynamic updates
+---
 
-#### **Buffer/IndexBuffer.h & IndexBuffer.cpp**
-- **Role**: Index data storage
-- **Issues**: Same as VertexBuffer
+## File Structure & Responsibilities
 
-#### **Buffer/FrameBuffer.h & FrameBuffer.cpp**
-- **Role**: Render target management
-- **Responsibilities**:
-  - FBO creation and management
-  - Color/depth attachment handling
+### Core Graphics (`lib/Graphics/`)
 
-### 5. Entity Component System (ECS)
+```
+lib/Graphics/
+├── include/
+│   ├── Core/
+│   │   ├── Renderer.h                    # Central rendering coordinator
+│   │   ├── RenderCommandBuffer.h         # Modern command system
+│   │   ├── RenderCommand.h               # Legacy compatibility layer
+│   │   ├── GraphicsContext.h             # OpenGL context management
+│   │   └── Window.h                      # Window management
+│   │
+│   ├── Resources/
+│   │   ├── Texture.h                     # Decoupled texture loading
+│   │   ├── TextureBindingSystem.h        # Bindless-ready binding
+│   │   ├── Shader.h                      # Shader management
+│   │   ├── Material.h                    # Material system
+│   │   ├── Mesh.h                        # Geometry data
+│   │   └── ResourceManager.h             # Resource coordination
+│   │
+│   ├── ECS/
+│   │   ├── ComponentInterfaces.h         # Engine/Graphics decoupling
+│   │   └── Components/                   # Graphics-specific components
+│   │       ├── MeshComponent.h
+│   │       └── MaterialComponent.h
+│   │
+│   ├── Rendering/
+│   │   ├── MeshRenderer.h                # Mesh rendering coordinator
+│   │   └── FrustumCuller.h               # Camera frustum culling
+│   │
+│   ├── Scene/
+│   │   └── SceneRenderer.h               # High-level scene coordination
+│   │
+│   └── Utility/
+│       ├── Camera.h                      # Camera mathematics
+│       └── Light.h                       # Lighting data structures
+│
+└── src/ [corresponding .cpp implementations]
+```
 
-#### **ECS/Components/**
-- **MeshComponent**: Links entities to renderable geometry
-- **MaterialComponent**: Associates materials with entities
-- **TransformComponent**: Spatial transformation data
-- **CameraComponent**: Camera properties and matrices
-- **LightComponent**: Lighting parameters
+### Engine Layer (`test/examples/lib/Graphics/Engine/`)
 
-#### **ECS/Systems/RenderSystem.h & RenderSystem.cpp**
-- **Role**: ECS rendering logic
-- **Responsibilities**:
-  - Entity query and processing
-  - Command generation from components
-  - Shader uniform setup
-- **Issues**: Doing too much per-entity work, no culling integration
+```
+Engine/
+├── ECS/
+│   ├── Components/
+│   │   ├── TransformComponent.h          # Transform mathematics
+│   │   └── VisibilityComponent.h         # Visibility state
+│   │
+│   ├── Systems/
+│   │   ├── TransformSystem.h/.cpp        # Pure ECS transform logic
+│   │   └── VisibilitySystem.h/.cpp       # Pure ECS visibility logic
+│   │
+│   └── ComponentAccessor.h/.cpp          # Graphics/Engine interface
+│
+└── Scene/
+    ├── Scene.h/.cpp                      # ECS registry management
+    └── Entity.h/.cpp                     # Entity creation/management
+```
 
-#### **ECS/Systems/CullingSystem.h & CullingSystem.cpp**
-- **Role**: Visibility determination
-- **Issues**: Minimal implementation, no spatial optimization
+---
 
-### 6. Scene Management
+## Workflow & Data Flow
 
-#### **Scene/Scene.h & Scene.cpp**
-- **Role**: Entity registry and scene graph
-- **Responsibilities**:
-  - EnTT registry management
-  - Entity creation/destruction
-- **Missing**: Scene serialization, hierarchical transforms
+### 1. Initialization Sequence
+```
+Application::InitializeGraphicsEngine()
+├── 1. Window (OpenGL context)
+├── 2. Renderer (command system)
+├── 3. ResourceManager (asset loading)
+├── 4. Scene (ECS registry)
+├── 4.5. ComponentAccessor (Engine/Graphics bridge)
+├── 5. Camera (view/projection)
+└── 6. SceneRenderer (rendering coordination)
+```
 
-#### **Scene/SceneRenderer.h & SceneRenderer.cpp**
-- **Role**: High-level scene rendering coordination
-- **Responsibilities**:
-  - System orchestration
-  - Camera management
-- **Overlap**: Functionality duplicated with Renderer
-
-### 7. Utility Classes
-
-#### **Utility/Camera.h & Camera.cpp**
-- **Role**: View and projection matrix management
-- **Responsibilities**:
-  - Perspective/orthographic projections
-  - View matrix calculation
-  - Input handling
-
-#### **Utility/Light.h & Light.cpp**
-- **Role**: Light parameter management
-
-#### **Utility/Viewport.h & Viewport.cpp**
-- **Role**: Viewport and scissor management
-
-## Architecture Issues & Overlaps - ✅ RESOLVED
-
-### 1. **Responsibility Overlaps** - ✅ FIXED
-- ~~**Rendering Logic**: Split between RenderSystem, Mesh::Draw(), and RenderCommand~~ 
-  - **RESOLVED**: All rendering logic moved to `DrawMeshCommand`, `Mesh` and `Model` are pure data
-- ~~**Context Management**: Window and GraphicsContext both handle OpenGL state~~
-  - **RESOLVED**: Clean separation - Window handles GLFW, GraphicsContext handles OpenGL
-- **Resource Loading**: ResourceManager and individual resource classes duplicate logic - ⚠️ REMAINS
-- ~~**Scene Coordination**: Renderer, SceneRenderer, and RenderSystem have unclear boundaries~~
-  - **RESOLVED**: Clear separation - Renderer (low-level), SceneRenderer (coordination), Systems (pure ECS)
-
-### 2. **Tight Coupling** - ✅ FIXED  
-- ~~RenderSystem directly creates commands instead of using factories~~
-  - **RESOLVED**: Architectural split made this coupling appropriate (rendering coordinator → commands)
-- ~~Mesh class handles its own rendering instead of being purely data~~
-  - **RESOLVED**: `Mesh::Draw()` removed, now pure data structure
-- **Materials are just thin wrappers around shaders** - ⚠️ REMAINS (deferred for later)
-
-### 3. **Missing Abstractions** - ⚠️ PARTIALLY ADDRESSED
-- ~~No render graph system~~ - **RESOLVED**: RenderPipeline with RenderPass system implemented
-- No GPU resource pooling - ⚠️ REMAINS  
-- No multi-threading support - ⚠️ REMAINS (intentionally not implemented)
-- No memory management strategy - ⚠️ REMAINS
-
-## ✅ NEW: Clean ECS/Rendering Architecture (IMPLEMENTED)
-
-### **Engine Layer** (`test/examples/lib/Graphics/Engine/`)
-Pure ECS systems with no rendering concerns:
-
-#### **TransformSystem** 
-- **Role**: Pure ECS transform logic - hierarchies, animations, matrix updates
-- **Owned by**: Scene (Engine layer)
-- **Responsibilities**: Component updates, no OpenGL calls
-
-#### **VisibilitySystem**
-- **Role**: Pure ECS visibility logic - distance culling, LOD, game rules  
-- **Owned by**: Scene (Engine layer)
-- **Responsibilities**: Updates VisibilityComponent based on game logic, no camera concerns
-
-### **Graphics Layer** (`lib/Graphics/`)
-Rendering coordinators with no ECS system logic:
-
-#### **MeshRenderer** 
-- **Role**: Rendering coordinator - queries visible entities, generates render commands
-- **Owned by**: SceneRenderer (Graphics layer)
-- **Responsibilities**: ECS queries → command generation, no component updates
-
-#### **FrustumCuller**
-- **Role**: Rendering coordinator - camera-based frustum culling
-- **Owned by**: SceneRenderer (Graphics layer)  
-- **Responsibilities**: Camera math → visibility updates, graphics-specific culling
-
-### **Clean Data Flow**
+### 2. Frame Rendering Workflow
 ```
 Application::RenderFrame()
-    ↓
-1. User::Render() - Update entity transforms/positions
-    ↓
-2. Scene::OnUpdate() - Pure ECS systems (TransformSystem, VisibilitySystem)
-    ↓  
-3. SceneRenderer::Render() - Coordinate rendering
-    ↓
-4. FrustumCuller::CullAgainstCamera() - Graphics culling
-    ↓
-5. MeshRenderer::Render() - Query visible entities, generate commands
-    ↓
-6. Renderer::Submit() - Execute commands
+├── Renderer::BeginFrame()
+│   ├── Clear command buffer
+│   └── Clear screen
+│
+├── SceneRenderer::Render()
+│   ├── RenderPipeline::Execute()
+│   │   ├── FrustumCuller::CullAgainstCamera()
+│   │   │   ├── Query entities with MeshComponent
+│   │   │   ├── Get Transform/Visibility via ComponentAccessor
+│   │   │   └── Update visibility based on camera frustum
+│   │   │
+│   │   └── MeshRenderer::Render()
+│   │       ├── Query visible entities
+│   │       ├── For each visible mesh:
+│   │       │   ├── Generate sort key (pass/material/mesh/instance)
+│   │       │   ├── Submit BindShaderData command
+│   │       │   ├── Submit SetUniformsData command
+│   │       │   ├── Submit BindTexturesData command
+│   │       │   └── Submit DrawElementsData command
+│   │       └── Commands queued for sorting
+│   │
+│   └── Commands submitted to RenderCommandBuffer
+│
+└── Renderer::EndFrame()
+    ├── RenderCommandBuffer::Sort() (by sort keys)
+    ├── RenderCommandBuffer::Execute() (batch processing)
+    └── SwapBuffers()
 ```
 
-### **Benefits Achieved**
-- ✅ **Pure ECS Systems**: Game logic separate from rendering
-- ✅ **Clean Ownership**: Scene owns ECS, SceneRenderer owns rendering coordinators  
-- ✅ **Future-Proof**: Advanced culling (BVH, GPU-driven) goes in Graphics as coordinators
-- ✅ **Multi-Library Ready**: Graphics lib has minimal Engine dependencies
-- ✅ **Proper Separation**: ECS logic vs Rendering coordination clearly separated
-
-## ✅ Implementation Workflow (COMPLETED)
-
-This section documents the step-by-step process used to transform the architecture:
-
-### **Phase 1: Quick Wins & Performance Fixes**
-1. **Clean up excessive debug logging** - Removed per-frame console output from render loop
-2. **Fix entity creation spam** - Stopped duplicate entity creation every frame
-
-### **Phase 2: Architectural Decoupling**
-3. **Decouple rendering logic**:
-   - Created `DrawMeshCommand` to encapsulate all OpenGL rendering state
-   - Moved shader calls, uniform setup, texture binding from `RenderSystem` to command
-   - Removed `Mesh::Draw()` and `Model::Draw()` - made them pure data structures
-
-4. **Separate context management**:
-   - **Window**: GLFW lifecycle, window properties, input setup (no OpenGL calls)
-   - **GraphicsContext**: OpenGL context creation, OpenGL state, viewport management
-
-5. **Define clear system boundaries**:
-   - **Renderer**: Low-level command execution, OpenGL state, buffer swaps
-   - **SceneRenderer**: High-level orchestration, system coordination, pipeline management
-   - **Systems**: Pure ECS logic - entity queries, component processing
-
-### **Phase 3: File Restructuring**
-6. **Move Engine concepts out of Graphics library**:
-   - Moved `Scene.h/.cpp` → `test/examples/lib/Graphics/Engine/Scene/`
-   - Moved `Entity.h/.cpp` → `test/examples/lib/Graphics/Engine/Scene/` 
-   - Moved `TransformComponent.h` → `test/examples/lib/Graphics/Engine/ECS/Components/`
-   - Updated all include paths to reflect new structure
-
-### **Phase 4: ECS/Rendering Split**
-7. **Create pure ECS systems** (Engine layer):
-   ```cpp
-   // test/examples/lib/Graphics/Engine/ECS/Systems/
-   TransformSystem   - Pure transform logic, hierarchies, animations
-   VisibilitySystem  - Distance/LOD culling, game visibility rules
-   ```
-
-8. **Create rendering coordinators** (Graphics layer):
-   ```cpp
-   // lib/Graphics/src/Rendering/
-   MeshRenderer      - Queries visible entities, generates render commands
-   FrustumCuller     - Camera-based frustum culling
-   ```
-
-9. **Update ownership model**:
-   - **Scene** (Engine) owns: `TransformSystem`, `VisibilitySystem` + future ECS systems
-   - **SceneRenderer** (Graphics) owns: `MeshRenderer`, `FrustumCuller` + future coordinators
-
-10. **Wire new architecture**:
-    - Scene calls pure ECS systems during `OnUpdate()`
-    - SceneRenderer coordinates rendering through pipeline passes
-    - Pipeline executes: FrustumCuller → MeshRenderer → Command submission
-
-11. **Remove old hybrid systems**:
-    - Deleted `lib/Graphics/.../RenderSystem.h/.cpp` (was doing ECS + rendering)
-    - Deleted `lib/Graphics/.../CullingSystem.h/.cpp` (was doing ECS + rendering) 
-    - Updated includes and fixed compilation issues
-
-### **Final Architecture Workflow**
+### 3. Command Processing Pipeline
 ```
-┌─ Application::RenderFrame() ─────────────────────────────┐
-│                                                          │
-├─ 1. User::Render() ──────────────────────────────────────┤
-│     • Update entity positions, rotations                 │
-│     • Modify component data                              │
-│                                                          │
-├─ 2. Scene::OnUpdate(deltaTime) ──── Engine Layer ───────┤
-│     • TransformSystem::OnUpdate()                       │ 
-│       - Process transform hierarchies                    │
-│       - Update transform matrices                        │
-│     • VisibilitySystem::OnUpdate()                      │
-│       - Distance-based visibility                        │
-│       - LOD visibility rules                             │
-│     • [Future: PhysicsSystem, AudioSystem, AISystem]    │
-│                                                          │
-├─ 3. SceneRenderer::Render() ───── Graphics Layer ───────┤
-│     │                                                    │
-│     ├─ 4. Pipeline::Execute() ──────────────────────────┤
-│     │     │                                              │
-│     │     ├─ 5. FrustumCuller::CullAgainstCamera() ─────┤
-│     │     │     • Extract camera frustum planes          │
-│     │     │     • Test entities against frustum          │
-│     │     │     • Update VisibilityComponent.IsVisible   │
-│     │     │                                              │
-│     │     ├─ 6. MeshRenderer::Render() ──────────────────┤
-│     │     │     • Query entities with VisibilityComponent │
-│     │     │     • Filter for IsVisible = true            │
-│     │     │     • Generate DrawMeshCommand per entity    │
-│     │     │                                              │
-│     │     └─ 7. Commands submitted to RenderQueue ──────┤
-│     │                                                    │
-│     └─ 8. Renderer::Submit() & Execute() ───────────────┤
-│           • Execute all DrawMeshCommands                 │
-│           • OpenGL state changes & draw calls           │
-│                                                          │
-└─ 9. Renderer::EndFrame() ───────────────────────────────┘
-    • Swap buffers, present frame
+Command Generation → Sort Key Creation → Command Submission
+                                              ↓
+Command Sorting → Batch Execution → GPU State Changes
+     ↓                 ↓                    ↓
+(by material,    (std::visit        (Minimized driver
+ pass, mesh)     dispatch)           overhead)
 ```
 
-### **Key Principles Applied**
-- **Engine Layer**: Pure game logic, no rendering concerns, no OpenGL
-- **Graphics Layer**: Rendering coordination, queries ECS but doesn't modify game logic  
-- **Command Pattern**: All OpenGL calls encapsulated in commands for deferred execution
-- **Single Responsibility**: Each system/coordinator has one clear purpose
-- **Clean Dependencies**: Graphics depends on Engine, not vice versa
+---
 
-## Proposed Improvements
+## ECS Integration
 
-### 1. **Modern Rendering Techniques**
+### Component Accessor Pattern
+The graphics library uses an interface-based system to access Engine components without direct dependencies.
 
-#### **Instanced Rendering**
 ```cpp
-// New command type for instanced rendering
-class InstancedDrawCommand : public RenderCommand {
-private:
-    uint32_t m_InstanceCount;
-    std::shared_ptr<InstanceBuffer> m_InstanceData;
-    
+// Graphics library interface
+class ITransformComponent {
 public:
-    void Execute() override {
-        // Bind instance data buffer
-        m_InstanceData->Bind();
-        glDrawElementsInstanced(GL_TRIANGLES, m_IndexCount, 
-                              GL_UNSIGNED_INT, nullptr, m_InstanceCount);
-    }
+    virtual glm::mat4 GetTransform() const = 0;
+    virtual glm::vec3 GetPosition() const = 0;
 };
 
-// Instance data management
-class InstanceBuffer {
+// Engine implementation
+class TransformComponentAdapter : public ITransformComponent {
+    TransformComponent& m_Transform;
+public:
+    glm::mat4 GetTransform() const override { 
+        return m_Transform.GetTransform(); 
+    }
+};
+```
+
+### Data Flow Between Layers
+```
+ECS Systems (Engine) → ComponentAccessor → Rendering Coordinators (Graphics)
+        ↓                      ↓                       ↓
+   Game Logic            Type Erasure              Render Commands
+   Physics               Interface              Command Buffer
+   Transform                                   GPU Execution
+```
+
+### Component Responsibilities
+
+**Engine Components:**
+- `TransformComponent`: Position, rotation, scale, matrix calculations
+- `VisibilityComponent`: Visibility flags, culling state, bounding data
+
+**Graphics Components:**
+- `MeshComponent`: Mesh resource reference, VAO handle
+- `MaterialComponent`: Material resource references, shader bindings
+
+---
+
+## Current Features
+
+### ✅ Implemented Features
+
+1. **Modern Command System**
+   - Value-based commands using `std::variant`
+   - Efficient sorting by material, pass, and mesh
+   - Batch command execution with `std::visit`
+
+2. **Resource Management**
+   - CPU/GPU decoupled texture loading
+   - Move semantics for efficient resource transfers
+   - Resource caching and management
+
+3. **Texture Binding Abstraction**
+   - Traditional OpenGL binding implementation
+   - Bindless texture interface (stub ready)
+   - Factory pattern for easy switching
+
+4. **ECS Integration**
+   - Clean separation between Engine and Graphics
+   - Component accessor pattern for decoupling
+   - Pure ECS systems vs. rendering coordinators
+
+5. **Rendering Pipeline**
+   - Multi-pass rendering support
+   - Framebuffer management
+   - Camera frustum culling
+
+6. **Asset Loading**
+   - Model loading via Assimp
+   - Shader compilation and management
+   - Texture loading with STB
+
+### 🚧 Partially Implemented
+
+1. **Lighting System**
+   - Basic structure exists
+   - Needs integration with command system
+
+2. **Material System**
+   - Basic material support
+   - Needs PBR workflow implementation
+
+---
+
+## Implementation Guide for Advanced Features
+
+### 1. BVH (Bounding Volume Hierarchy) for Culling
+
+**Where to implement:** `lib/Graphics/include/Rendering/BVHCuller.h`
+
+```cpp
+class BVHCuller {
+public:
+    struct BVHNode {
+        AABB bounds;
+        std::vector<entt::entity> entities;  // Leaf nodes only
+        std::unique_ptr<BVHNode> left, right;
+    };
+    
+    void BuildBVH(entt::registry& registry);
+    void CullAgainstFrustum(const Frustum& frustum, std::vector<entt::entity>& visibleEntities);
+    
+private:
+    std::unique_ptr<BVHNode> m_Root;
+    void BuildRecursive(std::vector<entt::entity>& entities, int depth);
+};
+```
+
+**Integration Points:**
+1. Replace `FrustumCuller` in `SceneRenderer::InitializeRenderingCoordinators()`
+2. Build BVH when scene changes significantly
+3. Use spatial partitioning for large numbers of objects
+
+**Performance Considerations:**
+- Rebuild BVH when >10% of objects move
+- Use incremental updates for dynamic objects
+- Consider GPU-based BVH for very large scenes
+
+### 2. SSBO for Bindless Textures
+
+**Where to implement:** `lib/Graphics/src/Resources/TextureBindingSystem.cpp`
+
+```cpp
+class BindlessTextureBinding : public ITextureBindingSystem {
+private:
+    struct TextureHandle {
+        GLuint64 handle;
+        GLuint textureId;
+    };
+    
+    GLuint m_HandleSSBO;
+    std::vector<TextureHandle> m_TextureHandles;
+    std::unordered_map<GLuint, size_t> m_TextureToIndex;
+    
+public:
+    void InitializeSSBO(size_t maxTextures = 1024);
+    void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) override;
+};
+```
+
+**Implementation Steps:**
+1. Check for `GL_ARB_bindless_texture` extension
+2. Create SSBO for texture handles: `glGenBuffers(1, &m_HandleSSBO)`
+3. Generate texture handles: `glGetTextureHandleARB(textureId)`
+4. Make handles resident: `glMakeTextureHandleResidentARB(handle)`
+5. Update SSBO with handle array
+6. Bind SSBO to shader: `glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, m_HandleSSBO)`
+
+**Shader Integration:**
+```glsl
+layout(std430, binding = 0) readonly buffer TextureHandles {
+    uint64_t handles[];
+};
+
+uniform int textureIndices[MAX_TEXTURES];
+// Use: texture(sampler2D(handles[textureIndices[0]]), texCoord)
+```
+
+### 3. GPU Instancing
+
+**Where to implement:** `lib/Graphics/include/Rendering/InstanceRenderer.h`
+
+```cpp
+class InstanceRenderer {
+public:
     struct InstanceData {
         glm::mat4 modelMatrix;
         glm::vec4 color;
-        uint32_t materialIndex;
+        uint32_t materialId;
     };
     
-    void UpdateInstances(const std::vector<InstanceData>& instances);
-    void Bind();
-};
-```
-
-#### **Bindless Textures (OpenGL 4.5+)**
-```cpp
-class BindlessTextureManager {
-private:
-    std::vector<GLuint64> m_TextureHandles;
-    GLuint m_TextureArraySSBO;
-    
-public:
-    uint32_t RegisterTexture(GLuint textureId) {
-        GLuint64 handle = glGetTextureHandleARB(textureId);
-        glMakeTextureHandleResidentARB(handle);
-        m_TextureHandles.push_back(handle);
-        UpdateSSBO();
-        return m_TextureHandles.size() - 1;
-    }
-    
-    void UpdateSSBO() {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 
-                    m_TextureHandles.size() * sizeof(GLuint64),
-                    m_TextureHandles.data(), GL_DYNAMIC_DRAW);
-    }
-};
-
-// In shader:
-// layout(std430, binding = 0) buffer TextureHandles {
-//     uvec2 textureHandles[];
-// };
-// 
-// sampler2D tex = sampler2D(textureHandles[materialIndex]);
-```
-
-#### **Shader Storage Buffer Objects (SSBO)**
-```cpp
-// Material data in SSBO instead of uniforms
-struct MaterialData {
-    glm::vec3 albedo;
-    float metallic;
-    glm::vec3 emissive;
-    float roughness;
-    uint32_t diffuseTexture;
-    uint32_t normalTexture;
-    uint32_t metallicTexture;
-    uint32_t roughnessTexture;
-};
-
-class MaterialBuffer {
-private:
-    GLuint m_SSBO;
-    std::vector<MaterialData> m_Materials;
-    
-public:
-    uint32_t AddMaterial(const MaterialData& material) {
-        m_Materials.push_back(material);
-        UpdateBuffer();
-        return m_Materials.size() - 1;
-    }
-    
-    void UpdateBuffer() {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER,
-                    m_Materials.size() * sizeof(MaterialData),
-                    m_Materials.data(), GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_SSBO);
-    }
-};
-```
-
-### 2. **Architectural Improvements**
-
-#### **Render Graph System**
-```cpp
-class RenderGraph {
-public:
-    struct RenderPass {
-        std::string name;
-        std::vector<std::string> inputs;
-        std::vector<std::string> outputs;
-        std::function<void()> execute;
-    };
-    
-    void AddPass(const RenderPass& pass);
-    void Compile();  // Topological sort and optimization
-    void Execute();
+    void AddInstance(const InstanceData& instance);
+    void Render(const std::string& meshName, Camera& camera);
+    void Clear();
     
 private:
-    std::vector<RenderPass> m_Passes;
-    std::unordered_map<std::string, RenderTarget> m_Resources;
-};
-
-// Usage:
-RenderGraph graph;
-graph.AddPass({
-    .name = "GBuffer",
-    .outputs = {"albedo", "normal", "depth"},
-    .execute = [&]() { /* G-buffer rendering */ }
-});
-graph.AddPass({
-    .name = "Lighting",
-    .inputs = {"albedo", "normal", "depth"},
-    .outputs = {"lit_color"},
-    .execute = [&]() { /* Deferred lighting */ }
-});
-```
-
-#### **GPU Resource Management**
-```cpp
-class GPUResourcePool {
-private:
-    struct BufferBlock {
-        GLuint buffer;
-        size_t size;
-        size_t offset;
-        bool inUse;
-    };
-    
-    std::vector<BufferBlock> m_VertexBlocks;
-    std::vector<BufferBlock> m_IndexBlocks;
-    std::vector<BufferBlock> m_UniformBlocks;
-    
-public:
-    BufferHandle AllocateVertexBuffer(size_t size);
-    BufferHandle AllocateIndexBuffer(size_t size);
-    BufferHandle AllocateUniformBuffer(size_t size);
-    void Deallocate(BufferHandle handle);
-    
-    // Defragmentation and garbage collection
-    void Defragment();
-    void GarbageCollect();
+    std::vector<InstanceData> m_InstanceData;
+    GLuint m_InstanceVBO;
+    void UpdateInstanceBuffer();
 };
 ```
 
-#### **Multi-threaded Rendering**
+**Command System Integration:**
 ```cpp
-class RenderJobSystem {
+struct DrawInstancedData {
+    uint32_t vao;
+    uint32_t indexCount;
+    uint32_t instanceCount;
+    uint32_t instanceVBO;
+};
+```
+
+**Implementation Steps:**
+1. Create instance VBO with `GL_DYNAMIC_DRAW`
+2. Update instance data each frame: `glBufferSubData`
+3. Bind instance VBO as vertex buffer with divisor: `glVertexAttribDivisor(location, 1)`
+4. Use `glDrawElementsInstanced` instead of `glDrawElements`
+
+### 4. Deferred Rendering Pipeline
+
+**Where to implement:** `lib/Graphics/include/Pipeline/DeferredPipeline.h`
+
+```cpp
+class DeferredPipeline : public RenderPipeline {
 public:
-    struct RenderJob {
-        std::function<void()> execute;
-        std::vector<RenderJob*> dependencies;
-    };
-    
-    void SubmitJob(RenderJob* job);
-    void ExecuteJobs();  // Multi-threaded execution
-    void WaitForCompletion();
+    void Initialize(uint32_t width, uint32_t height) override;
     
 private:
-    ThreadPool m_ThreadPool;
-    std::queue<RenderJob*> m_JobQueue;
-    std::mutex m_QueueMutex;
-};
-
-// Command generation can be multi-threaded
-class ParallelRenderSystem : public RenderSystem {
-    void OnUpdate(Scene* scene, Camera& camera) override {
-        auto chunks = ChunkEntities(scene);
-        
-        std::vector<std::future<std::vector<RenderCommand*>>> futures;
-        
-        for (auto& chunk : chunks) {
-            futures.push_back(std::async(std::launch::async, [&]() {
-                return GenerateCommandsForChunk(chunk, camera);
-            }));
-        }
-        
-        for (auto& future : futures) {
-            auto commands = future.get();
-            for (auto* cmd : commands) {
-                Renderer::Get().Submit(*cmd);
-            }
-        }
-    }
+    // G-Buffer pass
+    std::shared_ptr<RenderPass> m_GeometryPass;
+    std::unique_ptr<FrameBuffer> m_GBuffer;
+    
+    // Lighting pass
+    std::shared_ptr<RenderPass> m_LightingPass;
+    std::unique_ptr<Shader> m_LightingShader;
+    
+    // Forward pass (for transparent objects)
+    std::shared_ptr<RenderPass> m_ForwardPass;
 };
 ```
 
-### 3. **Improved Resource Management**
+**G-Buffer Layout:**
+- RT0: Albedo (RGB) + Metallic (A)
+- RT1: Normal (RGB) + Roughness (A)  
+- RT2: Position (RGB) + AO (A)
+- RT3: Entity ID (R) + Motion Vector (GB)
+- Depth: Depth + Stencil
 
-#### **Asset Streaming System**
+### 5. Compute Shader Integration
+
+**Where to implement:** `lib/Graphics/include/Compute/ComputeDispatcher.h`
+
 ```cpp
-class StreamingManager {
+class ComputeDispatcher {
 public:
-    enum class Priority { Low, Normal, High, Critical };
+    void Dispatch(std::shared_ptr<ComputeShader> shader, 
+                  uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ);
+    void DispatchIndirect(GLuint indirectBuffer);
     
-    struct StreamingRequest {
-        std::string assetPath;
-        Priority priority;
-        std::function<void(AssetHandle)> callback;
-    };
-    
-    void RequestAsset(const StreamingRequest& request);
-    void Update();  // Process pending requests
-    
-private:
-    ThreadPool m_LoaderThreads;
-    PriorityQueue<StreamingRequest> m_PendingRequests;
-    LRUCache<std::string, AssetHandle> m_Cache;
+    // For GPU-driven rendering
+    void CullOnGPU(const CameraData& camera, GLuint instanceSSBO);
 };
 ```
 
-#### **Memory-Mapped Asset Loading**
-```cpp
-class MemoryMappedFile {
-public:
-    MemoryMappedFile(const std::string& filepath);
-    ~MemoryMappedFile();
-    
-    const void* GetData() const { return m_Data; }
-    size_t GetSize() const { return m_Size; }
-    
-private:
-    void* m_Data = nullptr;
-    size_t m_Size = 0;
-    
-#ifdef _WIN32
-    HANDLE m_FileHandle = INVALID_HANDLE_VALUE;
-    HANDLE m_MappingHandle = INVALID_HANDLE_VALUE;
-#else
-    int m_FileDescriptor = -1;
-#endif
-};
-```
+**Use Cases:**
+- GPU-driven culling and LOD selection
+- Particle system updates
+- Post-processing effects
+- Mesh optimization (decimation, normal generation)
 
-### 4. **Clean Architecture Separation**
+---
 
-#### **Proposed New Structure**
-```
-Graphics/
-├── Core/
-│   ├── Device.h              // GPU device abstraction
-│   ├── CommandBuffer.h       // Command recording
-│   └── RenderGraph.h         // Frame graph
-├── Resources/
-│   ├── ResourcePool.h        // GPU memory management
-│   ├── AssetStreaming.h      // Async asset loading
-│   └── BindlessResources.h   // Modern resource binding
-├── Rendering/
-│   ├── RenderPipeline.h      // PSO management
-│   ├── InstanceRenderer.h    // Instanced rendering
-│   └── ComputeDispatch.h     // Compute shader dispatch
-├── Scene/
-│   ├── SceneGraph.h          // Hierarchical transforms
-│   ├── Visibility.h          // Culling and occlusion
-│   └── Components.h          // ECS components only
-└── Systems/
-    ├── RenderSystem.h        // Pure ECS logic
-    ├── CullingSystem.h       // Spatial queries
-    └── AnimationSystem.h     // Transform updates
-```
+## Suggested Improvements
 
-### 5. **Performance Optimizations**
+### High Priority
 
-#### **Command Sorting and Batching**
-```cpp
-class OptimizedRenderQueue {
-    struct RenderItem {
-        uint64_t sortKey;
-        RenderCommand* command;
-        
-        // Sort key encoding:
-        // [8 bits: Pass] [24 bits: Material] [16 bits: Mesh] [16 bits: Instance]
-    };
-    
-    void Submit(RenderCommand* cmd, uint32_t passId, uint32_t materialId, 
-                uint32_t meshId, uint32_t instanceId) {
-        uint64_t sortKey = 
-            ((uint64_t)passId << 56) |
-            ((uint64_t)materialId << 32) |
-            ((uint64_t)meshId << 16) |
-            ((uint64_t)instanceId);
-            
-        m_Items.push_back({sortKey, cmd});
-    }
-    
-    void ExecuteSorted() {
-        std::sort(m_Items.begin(), m_Items.end(), 
-                 [](const RenderItem& a, const RenderItem& b) {
-                     return a.sortKey < b.sortKey;
-                 });
-                 
-        uint32_t currentMaterial = UINT32_MAX;
-        for (const auto& item : m_Items) {
-            uint32_t materialId = (item.sortKey >> 32) & 0xFFFFFF;
-            if (materialId != currentMaterial) {
-                BindMaterial(materialId);
-                currentMaterial = materialId;
-            }
-            item.command->Execute();
-        }
-    }
-};
-```
+1. **GPU Resource Pooling**
+   - Implement buffer/texture pools to reduce allocation overhead
+   - Add automatic resource defragmentation
+   - Location: `lib/Graphics/include/Resources/ResourcePool.h`
 
-## Migration Strategy
+2. **Multi-threaded Command Generation**
+   - Thread-safe command buffer per thread
+   - Merge command buffers before sorting
+   - Location: `lib/Graphics/include/Core/ThreadedCommandBuffer.h`
 
-1. **Phase 1: Core Infrastructure**
-   - Implement GPU resource pooling
-   - Add render graph foundation
-   - Create command sorting system
+3. **Shader Reflection System**
+   - Automatic uniform binding based on reflection
+   - Validation of shader/material compatibility
+   - Location: `lib/Graphics/include/Resources/ShaderReflection.h`
 
-2. **Phase 2: Modern Techniques**
-   - Implement bindless textures
-   - Add instanced rendering support
-   - Migrate to SSBO-based materials
+### Medium Priority
 
-3. **Phase 3: Advanced Features**
-   - Multi-threaded command generation
-   - Asset streaming system
-   - Compute shader integration
+4. **Asset Streaming System**
+   - LOD-based model loading
+   - Texture streaming for large worlds
+   - Location: `lib/Graphics/include/Streaming/AssetStreamer.h`
 
-4. **Phase 4: Optimization**
-   - Profile-guided optimizations
-   - GPU-driven rendering
-   - Advanced culling techniques
+5. **Debug Renderer**
+   - Wireframe, bounding box, normal visualization
+   - Performance profiling overlays
+   - Location: `lib/Graphics/include/Debug/DebugRenderer.h`
 
-This architecture evolution will transform your graphics library from a simple immediate-mode renderer into a modern, high-performance graphics engine suitable for complex 3D applications.
+6. **Material Graph System**
+   - Node-based material editor data structures
+   - Shader generation from graphs
+   - Location: `lib/Graphics/include/Materials/MaterialGraph.h`
+
+### Low Priority
+
+7. **Temporal Anti-Aliasing (TAA)**
+   - Motion vector generation
+   - Temporal accumulation
+   - Location: `lib/Graphics/include/PostProcess/TAA.h`
+
+8. **Screen Space Reflections**
+   - Ray marching in screen space
+   - Hierarchical depth buffer
+   - Location: `lib/Graphics/include/PostProcess/SSR.h`
+
+---
+
+## Known Issues
+
+### Critical Issues
+1. **Cross-Library Dependencies**
+   - Status: ✅ **RESOLVED** - Component accessor pattern implemented
+   - Impact: Clean separation between Engine and Graphics
+
+2. **Command Sorting Performance**
+   - Status: ✅ **RESOLVED** - Value-based commands with efficient sort keys
+   - Impact: Optimal GPU state changes
+
+### Minor Issues
+
+3. **Resource Loading Blocking**
+   - Issue: Asset loading blocks main thread
+   - Impact: Frame drops during loading
+   - Solution: Implement background loading with `std::async`
+
+4. **Memory Fragmentation**
+   - Issue: No buffer/texture pooling
+   - Impact: Allocation overhead in dynamic scenes
+   - Solution: Implement resource pools
+
+5. **Limited Error Handling**
+   - Issue: OpenGL errors not consistently checked
+   - Impact: Silent failures in release builds
+   - Solution: Add debug callback and error checking macros
+
+### Future Considerations
+
+6. **Platform Abstraction**
+   - Current: OpenGL only
+   - Future: Add Vulkan/DirectX abstraction layer
+   - Location: `lib/Graphics/include/Platform/RenderAPI.h`
+
+7. **Asset Format Optimization**
+   - Current: Assimp loading (slow)
+   - Future: Custom binary format for faster loading
+   - Location: `lib/Graphics/include/Assets/BinaryAssetLoader.h`
+
+---
+
+## Performance Guidelines
+
+### Command System Best Practices
+1. **Minimize State Changes**: Sort by material, then mesh
+2. **Batch Similar Objects**: Use instancing for identical meshes
+3. **Reduce Command Count**: Combine operations where possible
+
+### Resource Management
+1. **Preload Resources**: Load during initialization, not runtime
+2. **Use Resource Pools**: Reuse buffers/textures to reduce allocations
+3. **Texture Atlasing**: Combine small textures to reduce bind count
+
+### Memory Management
+1. **Move Semantics**: Use `std::move` for large resource transfers
+2. **Smart Pointers**: Use `shared_ptr` for shared resources
+3. **RAII**: Ensure proper cleanup of OpenGL resources
+
+---
+
+## Development Workflow
+
+### Adding New Features
+1. **Design Phase**: Define interfaces and data structures
+2. **Implementation**: Start with CPU implementation
+3. **Testing**: Unit tests for core functionality
+4. **Integration**: Add to command system and pipeline
+5. **Optimization**: Profile and optimize performance
+6. **Documentation**: Update this architecture guide
+
+### Debugging Graphics Issues
+1. **Use RenderDoc**: Frame debugging and GPU profiling
+2. **OpenGL Debug Context**: Enable debug callbacks
+3. **Command Buffer Inspection**: Log command submission
+4. **Resource Tracking**: Monitor GPU memory usage
+
+### Contributing Guidelines
+1. **Follow Architecture**: Maintain separation of concerns
+2. **Value Semantics**: Prefer value types over pointers
+3. **Interface Design**: Use abstract interfaces for extensibility
+4. **Performance First**: Consider cache-friendliness and GPU efficiency
+
+---
+
+*This document should be updated whenever significant architectural changes are made to the graphics system.*

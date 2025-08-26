@@ -6,6 +6,8 @@
 #include <ECS/Components/MaterialComponent.h>
 #include "Engine/ECS/Components/TransformComponent.h"
 #include "Engine/Scene/Entity.h"
+#include "Engine/ECS/ComponentAccessor.h"
+#include <ECS/ComponentInterfaces.h>
 #include <unordered_map>
 
 Application::Application(const std::string& name, uint32_t width, uint32_t height)
@@ -231,6 +233,10 @@ void Application::InitializeGraphicsEngine()
     
     // 4. Scene
     m_CurrentScene = std::make_shared<Scene>("MainScene");
+    
+    // 4.5. Set up component accessor for Graphics/Engine communication
+    m_ComponentAccessor = std::make_unique<EngineComponentAccessor>();
+    ComponentUtils::SetComponentAccessor(m_ComponentAccessor.get());
     
     // 5. Camera with proper controls
     m_ActiveCamera = std::make_shared<Camera>(CameraType::Perspective);

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
 #include "../Utility/Camera.h"
+#include <entt/entt.hpp>
 #include <glm/glm.hpp>
+
+// Forward declaration to avoid cross-library dependencies
+class Scene;
 
 // Rendering coordinator - handles camera frustum culling
 // Owned by SceneRenderer, not Scene - this is graphics-specific  

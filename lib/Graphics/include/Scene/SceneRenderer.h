@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
+#include "../../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
 #include "../Pipeline/RenderPipeline.h"
 #include "../Utility/Camera.h"
 #include <memory>

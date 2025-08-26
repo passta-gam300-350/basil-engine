@@ -1,8 +1,12 @@
 #pragma once
 
-#include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
 #include "../Utility/Camera.h"
 #include <memory>
+#include <entt/entt.hpp>
+#include <glm/glm.hpp>
+
+// Forward declaration to avoid cross-library dependencies
+class Scene;
 
 // Rendering coordinator - queries ECS for renderable entities and generates commands
 // Owned by SceneRenderer, not Scene - this is graphics-specific
