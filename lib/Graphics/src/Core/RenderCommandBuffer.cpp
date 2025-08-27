@@ -112,3 +112,23 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
         m_TextureBindingSystem->UnbindAll();
     }
 }
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindSSBOData& cmd)
+{
+    // Bind SSBO to specified binding point for shader access
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, cmd.bindingPoint, cmd.ssboHandle);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd)
+{
+    // Instanced drawing - assumes SSBO and state are already set up
+    glBindVertexArray(cmd.vao);
+    glDrawElementsInstanced(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr, 
+                           cmd.instanceCount);
+    glBindVertexArray(0);
+    
+    // Reset texture state using abstraction
+    if (m_TextureBindingSystem) {
+        m_TextureBindingSystem->UnbindAll();
+    }
+}

@@ -1,6 +1,7 @@
 #include "Scene/SceneRenderer.h"
 #include "Rendering/MeshRenderer.h"
 #include "Rendering/FrustumCuller.h"
+#include "Rendering/InstancedRenderer.h"
 #include "Pipeline/RenderPass.h"
 #include "Buffer/FrameBuffer.h"
 #include <glad/gl.h>
@@ -56,6 +57,7 @@ void SceneRenderer::InitializeRenderingCoordinators() {
     // Create rendering coordinators - graphics-specific, not ECS systems
     m_MeshRenderer = std::make_unique<MeshRenderer>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
+    m_InstancedRenderer = std::make_unique<InstancedRenderer>();
 }
 
 void SceneRenderer::Render() {

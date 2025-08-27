@@ -8,6 +8,7 @@
 // Forward declarations for rendering coordinators
 class MeshRenderer;
 class FrustumCuller;
+class InstancedRenderer;
 
 class SceneRenderer {
 public:
@@ -19,6 +20,9 @@ public:
 
     // High-level scene rendering coordination
     void Render();
+    
+    // Access to rendering coordinators for advanced usage
+    InstancedRenderer* GetInstancedRenderer() const { return m_InstancedRenderer.get(); }
 
 private:
     void InitializePipeline();
@@ -31,4 +35,5 @@ private:
     // Rendering coordinators - SceneRenderer owns these (graphics-specific)
     std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
+    std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
 };

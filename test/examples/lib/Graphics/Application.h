@@ -38,6 +38,7 @@ protected:
     ResourceManager& GetResourceManager() { return *m_ResourceManager; }
     Scene& GetScene() { return *m_CurrentScene; }
     Camera& GetCamera() { return *m_ActiveCamera; }
+    SceneRenderer* GetSceneRenderer() { return m_SceneRenderer.get(); }
     
     // High-level graphics operations
     void LoadModel(const std::string& name, const std::string& filepath);
@@ -53,7 +54,7 @@ protected:
     uint32_t GetWindowHeight() const;
     bool ShouldClose() const;
 
-private:
+protected:
     // Graphics engine - handles all graphics operations internally
     void InitializeGraphicsEngine();
     void ShutdownGraphicsEngine();

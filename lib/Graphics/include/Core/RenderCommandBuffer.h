@@ -6,6 +6,7 @@
 #include <Resources/Shader.h>
 #include <Resources/Texture.h>
 #include <Resources/TextureBindingSystem.h>
+#include <Buffer/ShaderStorageBuffer.h>
 #include <glm/glm.hpp>
 
 // Value-based command types - no heap allocation, efficient copying
@@ -40,6 +41,18 @@ namespace RenderCommands {
         uint32_t indexCount;
     };
 
+    struct BindSSBOData {
+        uint32_t ssboHandle;
+        uint32_t bindingPoint;
+    };
+
+    struct DrawElementsInstancedData {
+        uint32_t vao;
+        uint32_t indexCount;
+        uint32_t instanceCount;
+        uint32_t baseInstance;
+    };
+
     // Sort keys for command ordering
     struct CommandSortKey {
         uint8_t pass;          // Rendering pass (0-255)
@@ -62,7 +75,9 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BindShaderData,
     RenderCommands::SetUniformsData,
     RenderCommands::BindTexturesData,
-    RenderCommands::DrawElementsData
+    RenderCommands::DrawElementsData,
+    RenderCommands::BindSSBOData,
+    RenderCommands::DrawElementsInstancedData
 >;
 
 // Sortable command with metadata
@@ -106,4 +121,6 @@ private:
     void ExecuteCommand(const RenderCommands::SetUniformsData& cmd);
     void ExecuteCommand(const RenderCommands::BindTexturesData& cmd);
     void ExecuteCommand(const RenderCommands::DrawElementsData& cmd);
+    void ExecuteCommand(const RenderCommands::BindSSBOData& cmd);
+    void ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd);
 };
