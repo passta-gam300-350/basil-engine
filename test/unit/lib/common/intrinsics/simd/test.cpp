@@ -10,6 +10,8 @@ int main() {
 	glm::vec4 g1;
 	glm::vec4 g2;
 
+	auto v5 = v1 ^ v2;
+
 	auto start = std::chrono::steady_clock::now();
 	for (int i{}; i < 1000; i++) {
 		v1[1] = 30.2f;

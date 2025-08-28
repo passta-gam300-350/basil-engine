@@ -283,6 +283,54 @@ b128<t> operator/(b128<t> const& lhs, b128<t> const& rhs) {
 	}
 }
 
+//opinion: disgusting constexpr branches maybe consider using template specialisation for better readability and possible speed up in compilation time if tad is faster than constexpr eval
+template <typename t>
+b128<t> operator^(b128<t> const& lhs, b128<t> const& rhs) {
+	if constexpr (std::is_same_v<typename deduce_128bits<t>::type, __m128>) {
+		return b128<t>(_mm_xor_ps(lhs._data, rhs._data));
+	}
+	else if constexpr (std::is_same_v<typename deduce_128bits<t>::type, __m128d>) {
+		return b128<t>(_mm_xor_pd(lhs._data, rhs._data));
+	}
+	else if constexpr (sizeof(t)<=sizeof(std::uint32_t)) { //assume __m128i for everything else since __mm128h and stuff are all typedefs of i anyways
+		return b128<t>(_mm_xor_epi32(lhs._data, rhs._data));
+	}
+	else {
+		return b128<t>(_mm_xor_epi64(lhs._data, rhs._data));
+	}
+}
+
+template <typename t>
+b128<t> operator&(b128<t> const& lhs, b128<t> const& rhs) {
+	if constexpr (std::is_same_v<typename deduce_128bits<t>::type, __m128>) {
+		return b128<t>(_mm_and_ps(lhs._data, rhs._data));
+	}
+	else if constexpr (std::is_same_v<typename deduce_128bits<t>::type, __m128d>) {
+		return b128<t>(_mm_and_pd(lhs._data, rhs._data));
+	}
+	else if constexpr (sizeof(t) <= sizeof(std::uint32_t)) { //assume __m128i for everything else since __mm128h and stuff are all typedefs of i anyways
+		return b128<t>(_mm_and_epi32(lhs._data, rhs._data));
+	}
+	else {
+		return b128<t>(_mm_and_epi64(lhs._data, rhs._data));
+	}
+}
+
+template <typename t>
+b128<t> operator|(b128<t> const& lhs, b128<t> const& rhs) {
+	if constexpr (std::is_same_v<typename deduce_128bits<t>::type, __m128>) {
+		return b128<t>(_mm_or_ps(lhs._data, rhs._data));
+	}
+	else if constexpr (std::is_same_v<typename deduce_128bits<t>::type, __m128d>) {
+		return b128<t>(_mm_or_pd(lhs._data, rhs._data));
+	}
+	else if constexpr (sizeof(t) <= sizeof(std::uint32_t)) { //assume __m128i for everything else since __mm128h and stuff are all typedefs of i anyways
+		return b128<t>(_mm_or_epi32(lhs._data, rhs._data));
+	}
+	else {
+		return b128<t>(_mm_or_epi64(lhs._data, rhs._data));
+	}
+}
 
 
 #endif
