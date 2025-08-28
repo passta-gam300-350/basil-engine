@@ -10,7 +10,6 @@ set(ALL_LIBS
   PRIVATE glfw
   PRIVATE EnTT::EnTT
   PRIVATE assimp::assimp
-  PRIVATE RTTR::Core
 )
 
 add_library(${PROJECT_NAME} SHARED ${ALL_FILES})
