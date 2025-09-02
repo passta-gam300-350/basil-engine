@@ -5,8 +5,9 @@
 #include <iostream>
 
 RenderCommandBuffer::RenderCommandBuffer() {
-    // Default to traditional texture binding
-    m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Traditional);
+    // Defer texture binding system creation until first use
+    // This ensures OpenGL context is valid when checking for bindless support
+    m_TextureBindingSystem = nullptr;
 }
 
 void RenderCommandBuffer::Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey)
@@ -94,7 +95,18 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformsData& 
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexturesData& cmd)
 {
-    if (!cmd.shader || !m_TextureBindingSystem) return;
+    if (!cmd.shader) return;
+    
+    // Lazy initialization of texture binding system
+    if (!m_TextureBindingSystem) {
+        // Now OpenGL context should be valid since we're in a render call
+        std::cout << "[RenderCommandBuffer] Initializing texture binding system..." << std::endl;
+        m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Bindless);
+        if (!m_TextureBindingSystem) {
+            std::cout << "[RenderCommandBuffer] Failed to create binding system, using traditional" << std::endl;
+            m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Traditional);
+        }
+    }
     
     // Use abstracted texture binding system
     m_TextureBindingSystem->BindTextures(cmd.textures, cmd.shader);

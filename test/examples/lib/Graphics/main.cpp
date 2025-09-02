@@ -1,4 +1,18 @@
 // test/examples/lib/graphics/main.cpp
+
+// Force discrete GPU usage on systems with both integrated and discrete GPUs
+#ifdef _WIN32
+// NVIDIA Optimus - force discrete GPU
+extern "C" {
+    __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+}
+
+// AMD PowerXpress - force discrete GPU  
+extern "C" {
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 #include "Application.h"
 #include <Scene/SceneRenderer.h>
 #include <Rendering/InstancedRenderer.h>
