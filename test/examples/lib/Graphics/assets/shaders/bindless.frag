@@ -2,6 +2,8 @@
 
 // Enable bindless texture extension
 #extension GL_ARB_bindless_texture : require
+// Enable 64-bit integer support for texture handles
+#extension GL_ARB_gpu_shader_int64 : require
 
 // Input from vertex shader
 in vec3 FragPos;
@@ -13,9 +15,9 @@ out vec4 FragColor;
 
 // SSBO containing texture handles (must match C++ layout exactly)
 layout(std430, binding = 1) readonly buffer TextureHandles {
-    uvec2 handles[];        // Array of 64-bit handles (stored as 2x32-bit)
-    uint types[];           // Array of texture types
-    uint flags[];           // Array of texture flags
+    uvec2 handles[1024];    // Array of 64-bit handles (stored as 2x32-bit)
+    uint types[1024];       // Array of texture types  
+    uint flags[1024];       // Array of texture flags
 } textureData;
 
 // Texture availability flags (set by bindless texture system)
@@ -46,7 +48,7 @@ uniform float u_RoughnessValue = 0.5;
 
 // Helper function to sample texture using bindless handle
 vec4 SampleTexture(int index, vec2 coords) {
-    if (index >= 0 && index < textureData.handles.length()) {
+    if (index >= 0 && index < 1024) {
         // Reconstruct 64-bit handle from two 32-bit values
         uint64_t handle = packUint2x32(textureData.handles[index]);
         
@@ -61,7 +63,7 @@ vec4 SampleTexture(int index, vec2 coords) {
 
 // Normal mapping helper
 vec3 SampleNormal(int index, vec2 coords, vec3 normal, vec3 tangent) {
-    if (index >= 0 && index < textureData.handles.length()) {
+    if (index >= 0 && index < 1024) {
         uint64_t handle = packUint2x32(textureData.handles[index]);
         
         if ((textureData.flags[index] & 1u) != 0u && handle != 0ul) {

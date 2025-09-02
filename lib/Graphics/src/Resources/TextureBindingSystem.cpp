@@ -105,6 +105,14 @@ BindlessTextureBinding::~BindlessTextureBinding() {
 }
 
 void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
+    std::cout << "[BindlessTextureBinding] BindTextures called with " << textures.size() << " textures" << std::endl;
+    
+    // Debug: Show what textures we're getting
+    for (size_t i = 0; i < textures.size(); ++i) {
+        const auto& tex = textures[i];
+        std::cout << "  [" << i << "] Type: " << tex.type << ", ID: " << tex.id << ", Path: " << tex.path << std::endl;
+    }
+    
     // Lazy initialization - only initialize when first used
     if (!m_Initialized) {
         bool extensionSupported = IsBindlessSupported();
@@ -131,11 +139,14 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
     }
     
     if (!m_Initialized || !shader) {
+        std::cout << "[BindlessTextureBinding] Falling back to traditional binding (initialized: " << m_Initialized << ", shader: " << (shader ? "valid" : "null") << ")" << std::endl;
         // Fallback to traditional binding
         TraditionalTextureBinding traditional;
         traditional.BindTextures(textures, shader);
         return;
     }
+    
+    std::cout << "[BindlessTextureBinding] Processing bindless textures..." << std::endl;
     
     // Update handle data for current textures
     UpdateHandleData(textures);
@@ -147,6 +158,12 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
     
     // Bind SSBO to shader binding point
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, m_HandlesSSBO);
+    std::cout << "[BindlessTextureBinding] SSBO bound to binding point " << TEXTURE_HANDLES_SSBO_BINDING << " (ID: " << m_HandlesSSBO << ")" << std::endl;
+    
+    // Verify binding
+    GLint currentSSBO = 0;
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, TEXTURE_HANDLES_SSBO_BINDING, &currentSSBO);
+    std::cout << "[BindlessTextureBinding] Verified SSBO binding: " << currentSSBO << " (expected: " << m_HandlesSSBO << ")" << std::endl;
     
     // Set texture availability flags in shader (same as traditional)
     SetTextureAvailabilityFlags(textures, shader);
@@ -173,21 +190,36 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
 }
 
 void BindlessTextureBinding::UnbindAll() {
-    if (m_Initialized) {
-        // Unbind SSBO
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, 0);
+    std::cout << "[BindlessTextureBinding] UnbindAll called - keeping SSBO bound for bindless textures" << std::endl;
+    // For bindless textures, we should NOT unbind the SSBO after each draw call
+    // The SSBO should remain bound throughout the frame for performance
+    // Verify SSBO is still bound
+    GLint currentSSBO = 0;
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, TEXTURE_HANDLES_SSBO_BINDING, &currentSSBO);
+    
+    if (currentSSBO != (GLint)m_HandlesSSBO) {
+        std::cout << "[BindlessTextureBinding] WARNING: SSBO binding lost! Re-binding..." << std::endl;
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, m_HandlesSSBO);
+    } else {
+        std::cout << "[BindlessTextureBinding] SSBO still bound correctly (ID: " << currentSSBO << ")" << std::endl;
     }
 }
 
 void BindlessTextureBinding::BeginBatch() {
     m_BatchActive = true;
-    m_TextureHandles.clear();
-    m_HandleData.clear();
+    // For bindless textures, don't clear existing handles - they should persist
+    // Only clear if we need to reset the batch completely
+    std::cout << "[BindlessTextureBinding] BeginBatch: Starting new batch (preserving " 
+              << m_HandleData.size() << " existing handles)" << std::endl;
 }
 
 void BindlessTextureBinding::EndBatch() {
     if (m_BatchActive) {
-        m_SSBODirty = true;
+        // Force SSBO update at the end of the batch to ensure data is uploaded before drawing
+        if (m_SSBODirty) {
+            std::cout << "[BindlessTextureBinding] EndBatch: Forcing SSBO update" << std::endl;
+            UpdateSSBO();
+        }
         m_BatchActive = false;
     }
 }
@@ -298,7 +330,7 @@ void BindlessTextureBinding::MakeHandleResident(GLuint64 handle) {
         auto makeResident = reinterpret_cast<void(*)(GLuint64)>(m_MakeTextureHandleResidentARB);
         makeResident(handle);
     }
-}
+} 
 
 void BindlessTextureBinding::MakeHandleNonResident(GLuint64 handle) {
     if (m_MakeTextureHandleNonResidentARB && handle != 0) {
@@ -308,16 +340,29 @@ void BindlessTextureBinding::MakeHandleNonResident(GLuint64 handle) {
 }
 
 void BindlessTextureBinding::InitializeSSBO() {
+    std::cout << "[BindlessTextureBinding] InitializeSSBO: Creating SSBO for bindless textures" << std::endl;
+    
     // Create SSBO for texture handles
     glGenBuffers(1, &m_HandlesSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_HandlesSSBO);
     
-    // Allocate space for three separate arrays (handles, types, flags)
-    size_t totalSize = MAX_BINDLESS_TEXTURES * sizeof(GLuint64) +   // handles array
-                      MAX_BINDLESS_TEXTURES * sizeof(uint32_t) +    // types array
-                      MAX_BINDLESS_TEXTURES * sizeof(uint32_t);     // flags array
+    // Allocate space for three separate arrays (handles as uvec2, types, flags)
+    size_t totalSize = MAX_BINDLESS_TEXTURES * sizeof(uint32_t) * 2 +   // handles array (uvec2 = 2x uint32_t)
+                      MAX_BINDLESS_TEXTURES * sizeof(uint32_t) +        // types array
+                      MAX_BINDLESS_TEXTURES * sizeof(uint32_t);         // flags array
     
+    std::cout << "[BindlessTextureBinding] Allocating SSBO of size " << totalSize << " bytes" << std::endl;
     glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+    
+    // Bind SSBO to its designated binding point immediately
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, m_HandlesSSBO);
+    std::cout << "[BindlessTextureBinding] SSBO bound to binding point " << TEXTURE_HANDLES_SSBO_BINDING 
+              << " (SSBO ID: " << m_HandlesSSBO << ")" << std::endl;
+    
+    // Verify binding
+    GLint verifySSBO = 0;
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, TEXTURE_HANDLES_SSBO_BINDING, &verifySSBO);
+    std::cout << "[BindlessTextureBinding] Verified binding: " << verifySSBO << std::endl;
     
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
@@ -327,31 +372,53 @@ void BindlessTextureBinding::UpdateSSBO() {
         return;
     }
     
+    std::cout << "[BindlessTextureBinding] UpdateSSBO: Updating SSBO with " << m_HandleData.size() << " handles" << std::endl;
+    
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_HandlesSSBO);
     
-    // Create separate arrays for handles, types, and flags (matching shader layout)
-    std::vector<GLuint64> handles;
-    std::vector<uint32_t> types;
-    std::vector<uint32_t> flags;
+    // Create separate arrays for handles, types, and flags (matching shader layout exactly)
+    std::vector<uint32_t> handlesPacked(MAX_BINDLESS_TEXTURES * 2, 0); // uvec2 format, initialized to 0
+    std::vector<uint32_t> types(MAX_BINDLESS_TEXTURES, 0);            // Initialize to 0
+    std::vector<uint32_t> flags(MAX_BINDLESS_TEXTURES, 0);            // Initialize to 0
     
-    for (const auto& data : m_HandleData) {
-        handles.push_back(data.handle);
-        types.push_back(data.type);
-        flags.push_back(data.flags);
+    // Fill arrays with actual data
+    for (size_t i = 0; i < m_HandleData.size() && i < MAX_BINDLESS_TEXTURES; ++i) {
+        const auto& data = m_HandleData[i];
+        
+        // Convert GLuint64 to uvec2 (2x32-bit) format for shader
+        uint32_t low = static_cast<uint32_t>(data.handle & 0xFFFFFFFF);
+        uint32_t high = static_cast<uint32_t>((data.handle >> 32) & 0xFFFFFFFF);
+        handlesPacked[i * 2] = low;      // uvec2.x
+        handlesPacked[i * 2 + 1] = high; // uvec2.y
+        
+        types[i] = data.type;
+        flags[i] = data.flags;
+        
+        std::cout << "  [" << i << "] Handle: 0x" << std::hex << data.handle << std::dec 
+                  << " -> low=0x" << std::hex << low << ", high=0x" << high << std::dec
+                  << ", type=" << data.type << ", flags=" << data.flags << std::endl;
     }
     
-    // Calculate offsets for each array
+    // Calculate offsets for each array in the SSBO
     size_t handleOffset = 0;
-    size_t typeOffset = handles.size() * sizeof(GLuint64);
-    size_t flagOffset = typeOffset + types.size() * sizeof(uint32_t);
+    size_t typeOffset = MAX_BINDLESS_TEXTURES * sizeof(uint32_t) * 2;  // After all uvec2 handles
+    size_t flagOffset = typeOffset + MAX_BINDLESS_TEXTURES * sizeof(uint32_t); // After types array
     
-    // Upload each array separately
+    std::cout << "[BindlessTextureBinding] SSBO layout: handles@" << handleOffset 
+              << ", types@" << typeOffset << ", flags@" << flagOffset << std::endl;
+    
+    // Upload each array separately to match shader layout exactly
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, handleOffset, 
-                    handles.size() * sizeof(GLuint64), handles.data());
+                    handlesPacked.size() * sizeof(uint32_t), handlesPacked.data());
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, typeOffset,
                     types.size() * sizeof(uint32_t), types.data());
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, flagOffset,
                     flags.size() * sizeof(uint32_t), flags.data());
+    
+    // Verify upload
+    std::cout << "[BindlessTextureBinding] SSBO updated successfully (size=" 
+              << (handlesPacked.size() * sizeof(uint32_t) + types.size() * sizeof(uint32_t) + flags.size() * sizeof(uint32_t)) 
+              << " bytes)" << std::endl;
     
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
@@ -359,10 +426,12 @@ void BindlessTextureBinding::UpdateSSBO() {
 }
 
 void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textures) {
+    std::cout << "[BindlessTextureBinding] UpdateHandleData: Processing " << textures.size() << " textures" << std::endl;
     m_HandleData.clear();
     m_HandleData.reserve(textures.size());
     
     for (const auto& texture : textures) {
+        std::cout << "  Creating handle for texture ID " << texture.id << " (" << texture.type << ")" << std::endl;
         GLuint64 handle = GetOrCreateHandle(texture.id);
         
         if (handle != 0) {
@@ -371,7 +440,10 @@ void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textur
             handleData.type = GetTextureTypeIndex(texture.type);
             handleData.flags = 1; // Mark as valid
             
+            std::cout << "    ✓ Handle created: 0x" << std::hex << handle << std::dec << ", type: " << handleData.type << std::endl;
             m_HandleData.push_back(handleData);
+        } else {
+            std::cout << "    ✗ Failed to create handle for texture ID " << texture.id << std::endl;
         }
     }
     

@@ -44,6 +44,13 @@ public:
             "assets/shaders/instanced.vert", 
             "assets/shaders/instanced.frag");
 
+        // Load bindless shader for advanced texture handling
+        LoadShader("bindless", 
+            "assets/shaders/bindless.vert", 
+            "assets/shaders/bindless.frag");
+        
+        std::cout << "✓ Loaded bindless shader for advanced texture management" << std::endl;
+
         // Load model using clean graphics lib interface  
         LoadModel("tinbox", "assets/models/tinbox/tin_box.obj");
 
@@ -71,7 +78,7 @@ private:
         
         // Set up mesh and material for instancing
         auto model = m_ResourceManager->GetModel("tinbox");
-        auto shader = m_ResourceManager->GetShader("instanced");
+        auto shader = m_ResourceManager->GetShader("bindless");
         
         if (!model) {
             std::cerr << "Error: Model 'tinbox' not found!" << std::endl;
@@ -79,7 +86,7 @@ private:
         }
         
         if (!shader) {
-            std::cerr << "Error: Shader 'instanced' not found!" << std::endl;
+            std::cerr << "Error: Shader 'bindless' not found!" << std::endl;
             return;
         }
         
@@ -91,9 +98,9 @@ private:
         std::cout << "✓ Model loaded with " << model->meshes.size() << " meshes" << std::endl;
         std::cout << "✓ Shader loaded successfully" << std::endl;
         
-        // Create material for instanced rendering
-        auto instancedMaterial = std::make_shared<Material>(shader, "InstancedMaterial");
-        std::cout << "✓ Created instanced material" << std::endl;
+        // Create material for bindless instanced rendering
+        auto instancedMaterial = std::make_shared<Material>(shader, "BindlessInstancedMaterial");
+        std::cout << "✓ Created bindless instanced material" << std::endl;
         
         // Set up all meshes from the model for instanced rendering
         for (size_t i = 0; i < model->meshes.size(); ++i) {
@@ -101,7 +108,13 @@ private:
                                                  model->meshes[i].indices, 
                                                  model->meshes[i].textures);
             std::cout << "✓ Created mesh " << i << " with " << meshPtr->GetVertexCount() << " vertices, " 
-                      << meshPtr->GetIndexCount() << " indices" << std::endl;
+                      << meshPtr->GetIndexCount() << " indices, " << model->meshes[i].textures.size() << " textures" << std::endl;
+            
+            // Debug: Show texture information
+            for (size_t t = 0; t < model->meshes[i].textures.size(); ++t) {
+                const auto& tex = model->meshes[i].textures[t];
+                std::cout << "  - Texture " << t << ": " << tex.type << " (ID: " << tex.id << ", Path: " << tex.path << ")" << std::endl;
+            }
             
             // Set mesh data for each part (body, lid, etc.)
             std::string meshId = "tinbox_instanced_" + std::to_string(i);
@@ -166,6 +179,7 @@ private:
         instancedRenderer->EndInstanceBatch();
         
         std::cout << "Generated " << (m_GridSize * m_GridSize) << " instances for " << model->meshes.size() << " mesh parts successfully!" << std::endl;
+        std::cout << "🚀 Using BINDLESS TEXTURES with instanced rendering!" << std::endl;
     }
 
     void Update(float deltaTime) override
