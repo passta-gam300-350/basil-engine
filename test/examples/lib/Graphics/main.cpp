@@ -230,13 +230,10 @@ private:
     void Render() override
     {
         if (m_UseInstancing) {
-            // Use instanced renderer
-            auto* instancedRenderer = GetSceneRenderer()->GetInstancedRenderer();
-            if (instancedRenderer) {
-                instancedRenderer->Render(m_CurrentScene.get(), *m_ActiveCamera);
-            }
+            // Instanced data already set up in LoadResources()
+            // Pipeline will automatically render instances via InstancedRenderer
         } else {
-            // Fallback to regular rendering with a single model
+            // Create/update ECS entity - pipeline will render via MeshRenderer
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
             model = glm::scale(model, glm::vec3(0.5f));

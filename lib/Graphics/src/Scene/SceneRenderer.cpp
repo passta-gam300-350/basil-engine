@@ -44,6 +44,9 @@ void SceneRenderer::InitializePipeline() {
             
             // 2. Mesh renderer queries visible entities and generates commands  
             m_MeshRenderer->Render(m_Scene.get(), *m_Camera);
+            
+            // 3. Instanced renderer generates instanced draw commands
+            m_InstancedRenderer->Render(m_Scene.get(), *m_Camera);
         }
     });
 
