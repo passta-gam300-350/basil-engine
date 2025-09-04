@@ -14,13 +14,11 @@ Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
-// #include "AWOLPch.h"
 #include "./Input/InputManager.h"
 
 // Initialise static instance pointer
 InputManager* InputManager::instance = nullptr;
 const float DEAD_ZONE = 0.25f; //  Adjustable
-
 
 // GLFW Callbacks. Remains active every frame once registered
 void InputManager::Setup_Callbacks()
@@ -114,10 +112,6 @@ void InputManager::CursorPosition_Callback(GLFWwindow* , double xpos, double ypo
 
 void InputManager::Scroll_Callback(GLFWwindow* , double xoffset, double yoffset)
 {
-    // #ifndef AWOL_INSTALLER_M3
-    //     std::cout << "Mouse scroll wheel offset: (" << xoffset << ", " << yoffset << ")" << std::endl;
-    // #endif
-
     if (instance)
     {
         instance->scrollXOffset = xoffset;
@@ -128,10 +122,6 @@ void InputManager::Scroll_Callback(GLFWwindow* , double xoffset, double yoffset)
 
 void InputManager::FramebufferSize_Callback(GLFWwindow* , int widthFb, int heightFb)
 {
-    // #ifndef AWOL_INSTALLER_M3
-    //     std::cout << "fbsize_cb getting called!!!" << std::endl;
-    // #endif
-
     GLHelper::width = widthFb;
     GLHelper::height = heightFb;
 }
@@ -290,10 +280,6 @@ void InputManager::Get_MousePosition(float& xpos, float& ypos) const
 
 void InputManager::Get_ScrollOffset(double& xoffset, double& yoffset) const
 {
-    // #ifndef AWOL_INSTALLER_M3
-    //     std::cout << "Mouse cursor position: (" << xoffset << ", " << yoffset << ")" << std::endl;
-    // #endif
-
     xoffset = scrollXOffset;
     yoffset = scrollYOffset;
 }
