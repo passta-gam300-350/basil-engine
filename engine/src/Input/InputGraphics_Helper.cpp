@@ -25,6 +25,11 @@ GLFWmonitor* GLHelper::monitor;
 const GLFWvidmode* GLHelper::mode;
 GLint GLHelper::windowX, GLHelper::windowY;
 
+bool isWindowMinimized;
+bool isWindowFocused;
+bool modeChanged;
+bool isFullscreen;
+
 bool GLHelper::Initialise_OpenGL(GLint widthInit, GLint heightInit, std::string titleInit)
 {
     GLHelper::width = widthInit;
