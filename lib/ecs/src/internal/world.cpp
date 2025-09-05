@@ -1,7 +1,7 @@
 #include <vector>
-#include "ecs/world.h"
-#include "ecs/entity.h"
-#include "ecs/utility.h"
+#include "ecs/internal/world.h"
+#include "ecs/internal/entity.h"
+#include "ecs/utility/utility.h"
 
 namespace ecs {
 
@@ -19,17 +19,22 @@ namespace ecs {
 		return (*worlds)[wrld.impl.handle];
 	}
 
-	entt::registry& world::detail::get_registry()
+	entt::registry& world::detail::get_registry() const
 	{
 		return get_world_registry(handle);
 	}
 
 	STRONG_INLINE entt::entity world::detail::entt_entity_cast(ecs::entity enty)
 	{
-		return static_cast<entt::entity>(enty.id);
+		return static_cast<entt::entity>(enty.get_uid());
 	}
 
-	ecs::entity world::detail::entity_cast(entt::entity entt_entity)
+	STRONG_INLINE std::uint32_t world::detail::entity_id_cast(entt::entity entt_entity)
+	{
+		return static_cast<std::uint32_t>(entt_entity);
+	}
+
+	ecs::entity world::detail::entity_cast(entt::entity entt_entity) const
 	{
 		return ecs::entity{ handle, static_cast<std::uint32_t>(entt_entity) };
 	}
@@ -43,7 +48,9 @@ namespace ecs {
 
 	entity world::add_entity()
 	{
-		entt::entity new_entity{ impl.get_registry().create() };
+		entt::registry& reg{ impl.get_registry() };
+		entt::entity new_entity{ reg.create() };
+		reg.emplace<entity::entity_name_t>(new_entity, default_name);
 		return entity{ impl.handle, static_cast<std::uint32_t>(new_entity) };
 	}
 

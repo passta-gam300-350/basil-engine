@@ -4,6 +4,7 @@
 #include <memory>
 #include <entt/entt.hpp>
 #include "ecs/fwd.h"
+#include "ecs/internal/entity.h"
 
 namespace ecs {
 
@@ -17,9 +18,10 @@ namespace ecs {
 
 		//Do not use. struct for implementation use only
 		struct detail {
-			entt::registry& get_registry();
+			entt::registry& get_registry() const;
 			static entt::entity entt_entity_cast(ecs::entity);
-			ecs::entity entity_cast(entt::entity);
+			static std::uint32_t entity_id_cast(entt::entity);
+			ecs::entity entity_cast(entt::entity) const;
 
 			consteval detail() : handle{ world::invalid_handle } {}
 			detail(world_id_t hdl) : handle{ hdl } {}
@@ -34,6 +36,13 @@ namespace ecs {
 		world(std::uint32_t hdl) : impl(hdl) {}
 		world(world const& wrld) : impl(wrld.impl) {}
 
+		operator bool() {
+			return impl.handle != invalid_handle;
+		}
+		operator std::uint32_t() {
+			return impl.handle;
+		}
+
 		entity add_entity();
 		void remove_entity(entity);
 
@@ -47,13 +56,13 @@ namespace ecs {
 		void remove_component_from_entity(entity);
 
 		template <typename... component_ts>
-		bool has_any_components_in_entity(entity);
+		bool has_any_components_in_entity(entity) const;
 
 		template <typename... component_ts>
-		bool has_all_components_in_entity(entity);
+		bool has_all_components_in_entity(entity) const;
 
 		template <typename... requires_t, typename... excludes_t>
-		ecs_iterative_container decltype(auto) filter_entities(excludes_t...);
+		ecs_iterative_container decltype(auto) filter_entities(excludes_t...) const;
 
 		world::detail impl;
 	};
@@ -77,27 +86,48 @@ namespace ecs {
 	template<typename ...component_ts>
 	inline void world::remove_component_from_entity(entity enty)
 	{
-		impl.get_registry().remove(enty);
-		impl.get_registry().view();
+		impl.get_registry().remove<component_ts...>(enty);
 	}
 
 	template<typename ...component_ts>
-	inline bool world::has_any_components_in_entity(entity enty)
+	inline bool world::has_any_components_in_entity(entity enty) const
 	{
 		return impl.get_registry().any_of<component_ts...>(detail::entt_entity_cast(enty));
 	}
 
 	template<typename ...component_ts>
-	inline bool world::has_all_components_in_entity(entity enty)
+	inline bool world::has_all_components_in_entity(entity enty) const
 	{
 		return impl.get_registry().all_of<component_ts...>(detail::entt_entity_cast(enty));
 	}
 
-	template <typename... requires_t, typename... excludes_t>
-	inline ecs_iterative_container decltype(auto) world::filter_entities(excludes_t... ex)
+	template <typename component_t, typename ...c_args>
+	inline component_t& entity::add(c_args&&... cargs) 
 	{
-		return impl.handle, impl.get_registry().view<requires_t...>(ex...);
+		return world(detail.descriptor).add_component_to_entity<component_t>(*this, std::forward<c_args>(cargs));
 	}
 
+	template <typename ...component_t>
+	inline void entity::remove() 
+	{
+		world(impl.descriptor).remove_component_from_entity<component_t...>(*this);
+	}
+
+	template <typename ...component_t>
+	inline decltype(auto) entity::get() const
+	{
+		return world(get_world_handle()).get_component_from_entity<component_t...>(*this);
+	}
+
+	template <typename ...requires_t>
+	inline bool entity::all() const
+	{
+		return world(get_world_handle()).has_all_components_in_entity<requires_t...>(*this);
+	}
+	template <typename ...requires_t>
+	inline bool entity::any() const
+	{
+		return world(get_world_handle()).has_any_components_in_entity<requires_t...>(*this);
+	}
 }
 #endif

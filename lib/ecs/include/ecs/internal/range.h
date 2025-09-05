@@ -1,25 +1,11 @@
-#ifndef LIB_ECS_ENTITY_H
-#define LIB_ECS_ENTITY_H
+#ifndef LIB_ECS_RANGES
+#define LIB_ECS_RANGES
 
-#include <cstdint>
+#include "ecs/fwd.h"
+#include "ecs/internal/entity.h"
 
 namespace ecs {
-	struct entity {
-		using entity_id_t = uint32_t;
-
-		union {
-			struct {
-				std::uint64_t descriptor : 32; //mainly used for world
-				std::uint64_t id : 32;
-			};
-			std::uint64_t handle;
-		};
-
-		operator entity_id_t() const {
-			return id;
-		};
-	};
-	/*
+	//not thread safe
 	template <ecs_iterative_container range_based_container_t>
 	struct entity_range {
 
@@ -29,11 +15,11 @@ namespace ecs {
 			using reference = entity&;
 
 			iterator() = delete;
-			iterator(std::uint32_t wid, range_based_container_t::iterator rb_it) : world_handle{ wid }, it{ rb_it } {}
-			iterator(iterator const& iter) : world_handle{ iter.world_handle }, it{ iter.it } {}
+			iterator(std::uint32_t wid, range_based_container_t::iterator rb_it) : world_handle{ wid }, ref_physical_address{}, it{ rb_it } {}
+			iterator(iterator const& iter) : world_handle{ iter.world_handle }, ref_physical_address{}, it{ iter.it } {}
 
-			value_type operator*() {
-				return entity{ world_handle, static_cast<std::uint32_t>(*it) };
+			reference operator*() {
+				return ref_physical_address = entity{ world_handle, static_cast<std::uint32_t>(*it) };
 			}
 			iterator operator++() {
 				return iterator{ world_handle, it++ };
@@ -42,11 +28,15 @@ namespace ecs {
 				return iterator{ world_handle, it-- };
 			}
 			bool operator!=(iterator rhs) {
-				return it!=rhs.it;
+				return it != rhs.it;
+			}
+			bool operator==(iterator rhs) {
+				return it == rhs.it;
 			}
 
 		private:
 			std::uint32_t world_handle;
+			entity ref_physical_address;
 			range_based_container_t::iterator it;
 		};
 
@@ -56,13 +46,21 @@ namespace ecs {
 		entity_range(entity_range const& er) : world_handle{ er.world_handle }, entities(er.entities) {}
 		entity_range(entity_range&& er) noexcept : world_handle{ er.world_handle }, entities(std::move(er.entities)) {}
 
-		iterator begin();
-		iterator end();
+		iterator begin() {
+			return iterator(world_handle, entities.begin());
+		}
+		iterator end() {
+			return iterator(world_handle, entities.end());
+		}
+
+		entity_range operator|(entity_range const& rhs) {
+			assert(rhs.world_handle == world_handle && "disjoint set of entities. entities are not from the same world!");
+			return entity_range(world_handle, rhs.entities | entities);
+		}
 
 		std::uint32_t world_handle;
 		range_based_container_t entities;
 	};
-	*/
 }
 
 #endif
