@@ -15,6 +15,11 @@ namespace ecs {
 		return entity(get_world_handle(), static_cast<std::uint32_t>(new_entity));
 	}
 
+	void entity::destroy() {
+		world(get_world_handle()).impl.get_registry().destroy(world::detail::entt_entity_cast(*this));
+		invalidate();
+	}
+
 	std::string& entity::name() {
 		return get<entity_name_t>().m_name;
 	}

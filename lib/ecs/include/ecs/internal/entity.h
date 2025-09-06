@@ -29,6 +29,10 @@ namespace ecs {
 			} impl;
 			std::uint64_t handle;
 		};
+		//invalids this class and set handle to invalid. does not delete underlying entity. use destroy if the use case is to detroy entity 
+		void invalidate() {
+			handle = null_handle64;
+		}
 
 	public:
 		entity() : handle{ null_handle64 } {}
@@ -58,6 +62,19 @@ namespace ecs {
 		bool all() const;
 		template <typename ...requires_t>
 		bool any() const;
+
+		//upstream 1-1
+		entity parent();
+		//downstream 1-many
+		decltype(auto) children();
+		void destroy();
+
+		//returns parent entity
+		entity set_parent(entity);
+		//return child entity
+		entity add_child(entity);
+		template <class... entity_t>
+		decltype(auto) add_children();
 
 		entity duplicate();
 		std::string& name();

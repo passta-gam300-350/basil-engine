@@ -4,6 +4,17 @@
 #include "ecs/utility/utility.h"
 
 namespace ecs {
+	struct world_registry {
+		std::unique_ptr<std::vector<entt::registry>> packed_worlds;
+		std::vector<std::uint64_t> sparse_handles;
+		std::uint64_t head;
+
+		world new_world();
+		void destroy_world(world);
+	} world_reg;
+}
+
+namespace ecs {
 
 	std::unique_ptr<std::vector<entt::registry>> worlds{};
 
@@ -44,6 +55,11 @@ namespace ecs {
 		std::uint32_t id{ static_cast<std::uint32_t>(worlds->size()) };
 		worlds->emplace_back();
 		return world(id);
+	}
+
+	void world::destroy_world()
+	{
+
 	}
 
 	entity world::add_entity()

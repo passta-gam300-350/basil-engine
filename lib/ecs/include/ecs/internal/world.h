@@ -28,6 +28,13 @@ namespace ecs {
 			detail(detail const& dt) : handle{ dt.handle } {}
 			~detail() {}
 
+			bool operator!=(detail other) const {
+				return handle != other.handle;
+			}
+			bool operator==(detail other) const {
+				return handle == other.handle;
+			}
+
 			world_id_t handle;
 		};
 
@@ -43,6 +50,20 @@ namespace ecs {
 			return impl.handle;
 		}
 
+		bool operator==(world other) {
+			return other.impl == impl;
+		}
+		bool operator!=(world other) {
+			return other.impl != impl;
+		}
+
+		world copy(world);
+		world inplace_union_world(world);
+		world inplace_intersect_world(world);
+
+		void destroy_world();
+
+		entity migrate_entity(entity);
 		entity add_entity();
 		void remove_entity(entity);
 
