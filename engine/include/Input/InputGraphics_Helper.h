@@ -14,7 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #define GLHELPER_H
 
 #pragma once
-#include <GL/glew.h>
+#include <glew/include/GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <string>
 
