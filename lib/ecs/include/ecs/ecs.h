@@ -5,5 +5,6 @@
 #include "ecs/internal/world.h"
 #include "ecs/internal/range.h"
 #include "ecs/internal/query.h"
+#include "ecs/system/scheduler.h"
 
 #endif;

@@ -1,14 +1,24 @@
 #ifndef LIB_ECS_SYS_H
 #define LIB_ECS_SYS_H
 
-template <>
-struct generic_system_wrapper {
+#include "ecs/fwd.h"
+#include <functional>
 
-};
+namespace ecs {
+	struct generic_system_wrapper {
+	public:
+		void invoke();
+		template <typename func>
+		generic_system_wrapper(func cb) : m_callback{cb} {}
+		system_callback get() { return m_callback; }
 
-struct system_registry {
-	
-};
+	private:
+		system_callback m_callback;
+	};
 
+	struct system_registry {
+		std::vector<std::function<void(entt::registry&)>> system_callbacks;
+	};
+}
 
 #endif

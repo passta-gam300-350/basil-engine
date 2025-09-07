@@ -19,6 +19,7 @@ namespace ecs {
 		//Do not use. struct for implementation use only
 		struct detail {
 			entt::registry& get_registry() const;
+			Scheduler& get_scheduler() const;
 			static entt::entity entt_entity_cast(ecs::entity);
 			static std::uint32_t entity_id_cast(entt::entity);
 			ecs::entity entity_cast(entt::entity) const;
@@ -62,6 +63,7 @@ namespace ecs {
 		world inplace_intersect_world(world);
 
 		void destroy_world();
+		void update();
 
 		entity migrate_entity(entity);
 		entity add_entity();
@@ -84,6 +86,11 @@ namespace ecs {
 
 		template <typename... requires_t, typename... excludes_t>
 		ecs_iterative_container decltype(auto) filter_entities(excludes_t...) const;
+
+		template <ecs_system_callback ecs_system_callback_t>
+		auto add_system(ecs_system_callback_t sys_fn);
+
+		auto disable_system();
 
 		world::detail impl;
 	};
@@ -125,7 +132,7 @@ namespace ecs {
 	template <typename component_t, typename ...c_args>
 	inline component_t& entity::add(c_args&&... cargs) 
 	{
-		return world(detail.descriptor).add_component_to_entity<component_t>(*this, std::forward<c_args>(cargs));
+		return world(impl.descriptor).add_component_to_entity<component_t>(*this, std::forward<c_args>(cargs)...);
 	}
 
 	template <typename ...component_t>
