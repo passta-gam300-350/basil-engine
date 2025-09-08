@@ -23,3 +23,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+
+postimport_dll(${PROJECT_NAME})

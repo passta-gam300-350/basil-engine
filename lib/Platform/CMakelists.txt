@@ -1,4 +1,4 @@
-project(scripting_lib)
+project(platform_lib)
 
 file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
     ${CMAKE_CURRENT_LIST_DIR}/*.[ch]pp
@@ -13,7 +13,6 @@ set(ALL_LIBS
   PUBLIC stb
   PUBLIC EnTT
   PUBLIC mono_interface
-#  PUBLIC platform_lib
  )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
@@ -23,7 +22,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+#target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 
-postimport_dll(${PROJECT_NAME})
+#postimport_dll(${PROJECT_NAME})

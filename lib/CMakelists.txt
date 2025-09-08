@@ -1,2 +1,5 @@
+# add_subdirectory(Platform)
 add_subdirectory(Graphics)
-# add_subdirectory(Scripting)
+add_subdirectory(Scripting)
+
+
