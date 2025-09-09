@@ -1,0 +1,32 @@
+project(engine)
+
+add_subdirectory(managed)
+
+file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+    ${CMAKE_CURRENT_LIST_DIR}/*.[ch]pp
+    ${CMAKE_CURRENT_LIST_DIR}/*.h
+)
+
+set(ALL_LIBS
+  PRIVATE glad
+  PRIVATE glfw
+  PRIVATE EnTT::EnTT
+  PUBLIC ecs_lib
+  PRIVATE assimp::assimp
+<<<<<<< HEAD
+  PUBLIC mono_interface
+=======
+>>>>>>> main
+)
+
+
+
+add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+
+postimport_dll(${PROJECT_NAME})

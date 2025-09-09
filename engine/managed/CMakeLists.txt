@@ -36,6 +36,7 @@ add_custom_command(
 
 add_custom_target(EngineAPI_Managed ALL
   DEPENDS "${DOTNET_OUTPUT}.timestamp"
+  SOURCES "${CSPROJPath}"
 )
 
 # Building managed code
@@ -46,10 +47,10 @@ execute_process(
     ERROR_VARIABLE DOTNET_BUILD_ERROR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-
+message(STATUS  "${TOOL_CSBRIDGE} ${DOTNET_OUTPUT} -v -o ${OUTPUT_DIR}")
 # Call CSBridge
 execute_process(
-    COMMAND ${TOOL_CSBRIDGE} ${DOTNET_OUTPUT} -o ${OUTPUT_DIR}
+    COMMAND "${TOOL_CSBRIDGE}" "${DOTNET_OUTPUT}" -v -o ${OUTPUT_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE CSBRIDGE_OUTPUT
     ERROR_VARIABLE CSBRIDGE_ERROR
