@@ -4,9 +4,10 @@
 class Engine
 {
 public:
-	void Init();
-	void Update();
-	void FixedUpdate();
-	void Exit();
+	
+	static void Init();
+	static void Update();
+	static void FixedUpdate();
+	static void Exit();
 };
 #endif // Engine_HPP
