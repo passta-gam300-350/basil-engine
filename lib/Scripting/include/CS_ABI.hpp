@@ -7,6 +7,10 @@
 #include <mono/metadata/object.h>
 
 
+
+template <typename T>
+concept Numeric = std::is_arithmetic_v<T> && !std::is_same_v<T, bool>;
+
 struct AssemblyInfo
 {
 	std::string name;
@@ -41,12 +45,14 @@ struct ManagedObject
 
 	template <typename T>
 	T GetFieldValue(const char* fieldName);
+	template <typename T>
+	T GetFieldValue(const char* fieldName) requires Numeric<T>;
 
 };
 
 
 template <typename T>
-T ManagedObject::GetFieldValue(const char* fieldName)
+T ManagedObject::GetFieldValue(const char* fieldName) 
 {
 	MonoClassField* field = mono_class_get_field_from_name(managed_class->klass, fieldName);
 	if (!field) return T();
@@ -55,6 +61,18 @@ T ManagedObject::GetFieldValue(const char* fieldName)
 	mono_field_get_value(object, field, &value);
 	return value;
 }
+
+template <typename  T>
+T ManagedObject::GetFieldValue(const char* fieldName) requires Numeric<T>
+{
+	MonoClassField* field = mono_class_get_field_from_name(managed_class->klass, fieldName);
+	if (!field) return T();
+	T value{};
+	mono_field_get_value(object, field, &value);
+	return value;
+}
+
+
 
 template <>
 std::string ManagedObject::GetFieldValue<std::string>(const char* fieldName)
