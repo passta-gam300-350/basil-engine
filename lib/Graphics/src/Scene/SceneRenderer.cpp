@@ -48,7 +48,7 @@ RenderPipeline *SceneRenderer::GetPipeline(std::string const &name)
     return it != m_Pipelines.end() ? it->second.get() : nullptr;
 }
 
-void SceneRenderer::EnablePipeline(std::string const &name, bool enabled = true)
+void SceneRenderer::EnablePipeline(std::string const &name, bool enabled)
 {
     m_PipelineEnabled[name] = enabled;
 }
@@ -128,6 +128,14 @@ void SceneRenderer::Render() {
         auto pipelineIt = m_Pipelines.find(pipelineName);
         if (pipelineIt != m_Pipelines.end() && IsPipelineEnabled(pipelineName))
         {
+            // Debug output for pipeline execution (only show first few times)
+            static std::unordered_map<std::string, int> pipelineExecuteCount;
+            pipelineExecuteCount[pipelineName]++;
+            
+            if (pipelineExecuteCount[pipelineName] <= 3) {
+                std::cout << "🔄 Executing pipeline: " << pipelineName << " (frame #" << m_FrameData.frameNumber << ")" << std::endl;
+            }
+            
             pipelineIt->second->Execute();
         }
     }

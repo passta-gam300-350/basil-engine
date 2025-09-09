@@ -61,6 +61,9 @@ public:
         // Set up instanced rendering
         SetupInstancing();
         
+        // TEST MULTI-PIPELINE FUNCTIONALITY
+        TestMultiPipeline();
+        
         std::cout << "Resources loaded successfully!" << std::endl;
     }
     
@@ -181,6 +184,142 @@ private:
         std::cout << "Generated " << (m_GridSize * m_GridSize) << " instances for " << model->meshes.size() << " mesh parts successfully!" << std::endl;
         std::cout << "🚀 Using BINDLESS TEXTURES with instanced rendering!" << std::endl;
     }
+    
+    void TestMultiPipeline()
+    {
+        std::cout << "\n=== TESTING MULTI-PIPELINE FUNCTIONALITY ===" << std::endl;
+        
+        auto* sceneRenderer = GetSceneRenderer();
+        if (!sceneRenderer) {
+            std::cerr << "❌ SceneRenderer not available!" << std::endl;
+            return;
+        }
+        
+        std::cout << "📋 Current Pipeline Status:" << std::endl;
+        
+        // Test getting existing pipeline
+        auto* mainPipeline = sceneRenderer->GetPipeline("MainRendering");
+        if (mainPipeline) {
+            std::cout << "✅ MainRendering pipeline exists" << std::endl;
+        } else {
+            std::cout << "❌ MainRendering pipeline NOT found" << std::endl;
+        }
+        
+        // Check if pipeline is enabled
+        bool isMainEnabled = sceneRenderer->IsPipelineEnabled("MainRendering");
+        std::cout << "🔧 MainRendering pipeline enabled: " << (isMainEnabled ? "YES" : "NO") << std::endl;
+        
+        // Test adding a new test pipeline
+        auto testPipeline = std::make_unique<RenderPipeline>("TestPipeline");
+        
+        // Create a simple test pass
+        auto testPass = std::make_shared<RenderPass>("TestPass", FBOSpecs{
+            640, 360,  // Half resolution for testing
+            {
+                { FBOTextureFormat::RGBA8 },     // Color
+                { FBOTextureFormat::DEPTH24STENCIL8 } // Depth
+            }
+        });
+        
+        // Set a simple render function that just clears with a different color
+        testPass->SetRenderFunction([]() {
+            std::cout << "🎨 TestPipeline::TestPass executing..." << std::endl;
+            glClearColor(0.2f, 0.4f, 0.8f, 1.0f);  // Blue clear color
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        });
+        
+        testPipeline->AddPass(testPass);
+        sceneRenderer->AddPipeline("TestPipeline", std::move(testPipeline));
+        
+        std::cout << "✅ Added TestPipeline successfully" << std::endl;
+        
+        // Test pipeline order
+        sceneRenderer->SetPipelineOrder({"TestPipeline", "MainRendering"});
+        std::cout << "🔄 Set pipeline order: TestPipeline -> MainRendering" << std::endl;
+        
+        // Test enabling/disabling pipelines
+        sceneRenderer->EnablePipeline("TestPipeline", false);
+        std::cout << "⏸️  TestPipeline disabled" << std::endl;
+        
+        bool isTestEnabled = sceneRenderer->IsPipelineEnabled("TestPipeline");
+        std::cout << "🔧 TestPipeline enabled: " << (isTestEnabled ? "YES" : "NO") << std::endl;
+        
+        // Re-enable for one frame to test execution
+        sceneRenderer->EnablePipeline("TestPipeline", true);
+        std::cout << "▶️  TestPipeline re-enabled" << std::endl;
+        
+        // Disable it again after testing
+        sceneRenderer->EnablePipeline("TestPipeline", false);
+        
+        std::cout << "🏁 Multi-pipeline test completed!" << std::endl;
+        std::cout << "📝 Note: TestPipeline will execute once then be disabled" << std::endl;
+        std::cout << "=== MULTI-PIPELINE TEST END ===\n" << std::endl;
+    }
+    
+    void TestPipelineOperations()
+    {
+        static int testPhase = 0;
+        auto* sceneRenderer = GetSceneRenderer();
+        if (!sceneRenderer) return;
+        
+        switch (testPhase % 4) {
+            case 0: {
+                std::cout << "\n🔧 Phase 1: Adding PostProcessing Pipeline" << std::endl;
+                
+                // Create a post-processing pipeline
+                auto postPipeline = std::make_unique<RenderPipeline>("PostProcessing");
+                
+                auto postPass = std::make_shared<RenderPass>("PostProcessPass", FBOSpecs{
+                    1280, 720,
+                    {
+                        { FBOTextureFormat::RGBA8 },
+                        { FBOTextureFormat::DEPTH24STENCIL8 }
+                    }
+                });
+                
+                postPass->SetRenderFunction([]() {
+                    std::cout << "📺 PostProcessing pipeline executing..." << std::endl;
+                    // Simple color tint effect
+                    glClearColor(0.9f, 0.7f, 0.9f, 1.0f);  // Pink tint
+                    glClear(GL_COLOR_BUFFER_BIT);
+                });
+                
+                postPipeline->AddPass(postPass);
+                sceneRenderer->AddPipeline("PostProcessing", std::move(postPipeline));
+                sceneRenderer->SetPipelineOrder({"MainRendering", "PostProcessing"});
+                
+                std::cout << "✅ Added PostProcessing pipeline" << std::endl;
+                break;
+            }
+            
+            case 1: {
+                std::cout << "\n🔧 Phase 2: Disabling MainRendering (PostProcessing only)" << std::endl;
+                sceneRenderer->EnablePipeline("MainRendering", false);
+                sceneRenderer->EnablePipeline("PostProcessing", true);
+                std::cout << "📺 Only PostProcessing should render now" << std::endl;
+                break;
+            }
+            
+            case 2: {
+                std::cout << "\n🔧 Phase 3: Re-enabling MainRendering, Disabling PostProcessing" << std::endl;
+                sceneRenderer->EnablePipeline("MainRendering", true);
+                sceneRenderer->EnablePipeline("PostProcessing", false);
+                std::cout << "🎮 Back to normal MainRendering" << std::endl;
+                break;
+            }
+            
+            case 3: {
+                std::cout << "\n🔧 Phase 4: Removing PostProcessing Pipeline" << std::endl;
+                sceneRenderer->RemovePipeline("PostProcessing");
+                sceneRenderer->SetPipelineOrder({"MainRendering"});
+                std::cout << "🗑️ PostProcessing pipeline removed" << std::endl;
+                break;
+            }
+        }
+        
+        testPhase++;
+        std::cout << "Press P again for next phase..." << std::endl;
+    }
 
     void Update(float deltaTime) override
     {
@@ -235,6 +374,10 @@ private:
                     std::cout << "Grid size changed to: " << m_GridSize << "x" << m_GridSize << std::endl;
                     GenerateInstances();
                     break;
+                case GLFW_KEY_P:
+                    // Test pipeline operations
+                    TestPipelineOperations();
+                    break;
                 case GLFW_KEY_H:
                     // Show help
                     std::cout << "\n=== Controls ===\n";
@@ -243,6 +386,7 @@ private:
                     std::cout << "SPACE: Instance animation (DISABLED - was causing crashes)\n";
                     std::cout << "I: Toggle instanced vs regular rendering\n";
                     std::cout << "G: Change grid size (5x5, 10x10, 20x20)\n";
+                    std::cout << "P: Test multi-pipeline operations\n";
                     std::cout << "H: Show this help\n\n";
                     break;
             }

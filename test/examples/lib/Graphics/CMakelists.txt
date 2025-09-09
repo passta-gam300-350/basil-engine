@@ -13,6 +13,7 @@ set(ALL_LIBS
   PRIVATE EnTT
   PRIVATE assimp::assimp
   PRIVATE stb
+  PRIVATE spdlog
 )
 
 add_executable(${PROJECT_NAME} ${ALL_FILES})
