@@ -4,6 +4,10 @@ set(CSPROJPath ${ASM_NAME}/${ASM_NAME}.csproj)
 
 set(OUTPUT_DIR ../CPPGlue)
 
+
+option("USE_FOLDERS" "Use Csharp glue generator" OFF)
+
+
 # Engine API Side
 file(GLOB_RECURSE MANAGED_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/*.cs
@@ -49,6 +53,7 @@ execute_process(
 )
 message(STATUS  "${TOOL_CSBRIDGE} ${DOTNET_OUTPUT} -v -o ${OUTPUT_DIR}")
 # Call CSBridge
+if (USE_FOLDERS)
 execute_process(
     COMMAND "${TOOL_CSBRIDGE}" "${DOTNET_OUTPUT}" -v -o ${OUTPUT_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -56,5 +61,6 @@ execute_process(
     ERROR_VARIABLE CSBRIDGE_ERROR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+endif()
 
 message(STATUS "${CSBRIDGE_OUTPUT}")
