@@ -11,6 +11,7 @@ set(ALL_LIBS
   PRIVATE glad
   PRIVATE glfw
   PRIVATE EnTT::EnTT
+  PUBLIC ecs_lib
   PRIVATE assimp::assimp
   PUBLIC mono_interface
 )

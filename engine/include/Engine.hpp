@@ -8,3 +8,4 @@ class Engine
 	void FixedUpdate();
 	void Exit();
 };
+#endif // Engine_HPP
