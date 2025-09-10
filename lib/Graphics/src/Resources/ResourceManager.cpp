@@ -43,12 +43,12 @@ std::shared_ptr<Shader> ResourceManager::LoadShader(const std::string& name, con
     {
         auto shader = std::make_shared<Shader>(vertexPath.c_str(), fragmentPath.c_str());
         m_Shaders[name] = shader;
-        std::cout << "✓ Shader '" << name << "' loaded successfully" << std::endl;
+        std::cout << "Shader '" << name << "' loaded successfully" << std::endl;
         return shader;
     }
     catch (const std::exception& e)
     {
-        std::cerr << "✗ Failed to load shader '" << name << "': " << e.what() << std::endl;
+        std::cerr << "Failed to load shader '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -80,12 +80,12 @@ std::shared_ptr<Model> ResourceManager::LoadModel(const std::string& name, const
     {
         auto model = std::make_shared<Model>(filepath);
         m_Models[name] = model;
-        std::cout << "✓ Model '" << name << "' loaded successfully (" << model->meshes.size() << " meshes)" << std::endl;
+        std::cout << "Model '" << name << "' loaded successfully (" << model->meshes.size() << " meshes)" << std::endl;
         return model;
     }
     catch (const std::exception& e)
     {
-        std::cerr << "✗ Failed to load model '" << name << "': " << e.what() << std::endl;
+        std::cerr << "Failed to load model '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }

@@ -13,7 +13,7 @@ void MeshRenderer::Render(Scene* scene, Camera& camera)
     if (!scene)
         return;
 
-    std::cout << "MeshRenderer: Rendering visible meshes" << std::endl;
+    //std::cout << "MeshRenderer: Rendering visible meshes" << std::endl;
     
     // This is RENDERING COORDINATION - queries ECS and generates commands
     // No ECS system logic, just graphics work

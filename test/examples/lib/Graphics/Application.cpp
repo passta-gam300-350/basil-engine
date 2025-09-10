@@ -62,9 +62,9 @@ void Application::LoadModel(const std::string& name, const std::string& filepath
     auto model = m_ResourceManager->LoadModel(name, filepath);
     if (model) {
         m_LoadedModels.push_back(name);
-        std::cout << "✓ Model '" << name << "' loaded successfully" << std::endl;
+        //std::cout << "✓ Model '" << name << "' loaded successfully" << std::endl;
     } else {
-        std::cerr << "✗ Failed to load model '" << name << "'" << std::endl;
+        //std::cerr << "✗ Failed to load model '" << name << "'" << std::endl;
     }
 }
 
@@ -73,9 +73,9 @@ void Application::LoadShader(const std::string& name, const std::string& vertexP
     auto shader = m_ResourceManager->LoadShader(name, vertexPath, fragmentPath);
     if (shader) {
         m_LoadedShaders.push_back(name);
-        std::cout << "✓ Shader '" << name << "' loaded successfully" << std::endl;
+        //std::cout << "✓ Shader '" << name << "' loaded successfully" << std::endl;
     } else {
-        std::cerr << "✗ Failed to load shader '" << name << "'" << std::endl;
+        //std::cerr << "✗ Failed to load shader '" << name << "'" << std::endl;
     }
 }
 

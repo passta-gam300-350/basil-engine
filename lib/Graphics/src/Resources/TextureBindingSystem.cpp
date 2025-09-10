@@ -105,48 +105,23 @@ BindlessTextureBinding::~BindlessTextureBinding() {
 }
 
 void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
-    std::cout << "[BindlessTextureBinding] BindTextures called with " << textures.size() << " textures" << std::endl;
-    
-    // Debug: Show what textures we're getting
-    for (size_t i = 0; i < textures.size(); ++i) {
-        const auto& tex = textures[i];
-        std::cout << "  [" << i << "] Type: " << tex.type << ", ID: " << tex.id << ", Path: " << tex.path << std::endl;
-    }
-    
     // Lazy initialization - only initialize when first used
     if (!m_Initialized) {
         bool extensionSupported = IsBindlessSupported();
         bool extensionsLoaded = LoadBindlessExtensions();
         
-        std::cout << "[BindlessTextureBinding] Extension supported: " << (extensionSupported ? "YES" : "NO") << std::endl;
-        std::cout << "[BindlessTextureBinding] Extensions loaded: " << (extensionsLoaded ? "YES" : "NO") << std::endl;
-        
         if (extensionSupported && extensionsLoaded) {
             InitializeSSBO();
             m_Initialized = true;
-            std::cout << "[BindlessTextureBinding] Initialized successfully" << std::endl;
-        } else {
-            std::cout << "[BindlessTextureBinding] Bindless textures not supported, falling back to traditional binding" << std::endl;
-            
-            // Print GPU info for debugging
-            const GLubyte* vendor = glGetString(GL_VENDOR);
-            const GLubyte* renderer = glGetString(GL_RENDERER);
-            const GLubyte* version = glGetString(GL_VERSION);
-            std::cout << "[GPU Info] Vendor: " << (vendor ? (const char*)vendor : "Unknown") << std::endl;
-            std::cout << "[GPU Info] Renderer: " << (renderer ? (const char*)renderer : "Unknown") << std::endl;
-            std::cout << "[GPU Info] Version: " << (version ? (const char*)version : "Unknown") << std::endl;
         }
     }
     
     if (!m_Initialized || !shader) {
-        std::cout << "[BindlessTextureBinding] Falling back to traditional binding (initialized: " << m_Initialized << ", shader: " << (shader ? "valid" : "null") << ")" << std::endl;
         // Fallback to traditional binding
         TraditionalTextureBinding traditional;
         traditional.BindTextures(textures, shader);
         return;
     }
-    
-    std::cout << "[BindlessTextureBinding] Processing bindless textures..." << std::endl;
     
     // Update handle data for current textures
     UpdateHandleData(textures);
@@ -158,12 +133,6 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
     
     // Bind SSBO to shader binding point
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, m_HandlesSSBO);
-    std::cout << "[BindlessTextureBinding] SSBO bound to binding point " << TEXTURE_HANDLES_SSBO_BINDING << " (ID: " << m_HandlesSSBO << ")" << std::endl;
-    
-    // Verify binding
-    GLint currentSSBO = 0;
-    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, TEXTURE_HANDLES_SSBO_BINDING, &currentSSBO);
-    std::cout << "[BindlessTextureBinding] Verified SSBO binding: " << currentSSBO << " (expected: " << m_HandlesSSBO << ")" << std::endl;
     
     // Set texture availability flags in shader (same as traditional)
     SetTextureAvailabilityFlags(textures, shader);
@@ -190,34 +159,19 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
 }
 
 void BindlessTextureBinding::UnbindAll() {
-    std::cout << "[BindlessTextureBinding] UnbindAll called - keeping SSBO bound for bindless textures" << std::endl;
     // For bindless textures, we should NOT unbind the SSBO after each draw call
     // The SSBO should remain bound throughout the frame for performance
-    // Verify SSBO is still bound
-    GLint currentSSBO = 0;
-    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, TEXTURE_HANDLES_SSBO_BINDING, &currentSSBO);
-    
-    if (currentSSBO != (GLint)m_HandlesSSBO) {
-        std::cout << "[BindlessTextureBinding] WARNING: SSBO binding lost! Re-binding..." << std::endl;
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, m_HandlesSSBO);
-    } else {
-        std::cout << "[BindlessTextureBinding] SSBO still bound correctly (ID: " << currentSSBO << ")" << std::endl;
-    }
 }
 
 void BindlessTextureBinding::BeginBatch() {
     m_BatchActive = true;
     // For bindless textures, don't clear existing handles - they should persist
-    // Only clear if we need to reset the batch completely
-    std::cout << "[BindlessTextureBinding] BeginBatch: Starting new batch (preserving " 
-              << m_HandleData.size() << " existing handles)" << std::endl;
 }
 
 void BindlessTextureBinding::EndBatch() {
     if (m_BatchActive) {
         // Force SSBO update at the end of the batch to ensure data is uploaded before drawing
         if (m_SSBODirty) {
-            std::cout << "[BindlessTextureBinding] EndBatch: Forcing SSBO update" << std::endl;
             UpdateSSBO();
         }
         m_BatchActive = false;
@@ -238,7 +192,6 @@ bool BindlessTextureBinding::LoadBindlessExtensions() {
 bool BindlessTextureBinding::IsBindlessSupported() {
     // Check if we have a valid OpenGL context
     if (!glGetIntegerv || !glGetString || !glGetStringi) {
-        std::cout << "[BindlessTextureBinding] OpenGL context not ready - deferring check" << std::endl;
         return false;
     }
     
@@ -246,7 +199,6 @@ bool BindlessTextureBinding::IsBindlessSupported() {
     GLenum error = glGetError(); // Clear any pending errors
     const GLubyte* versionStr = glGetString(GL_VERSION);
     if (!versionStr) {
-        std::cout << "[BindlessTextureBinding] OpenGL context not fully initialized" << std::endl;
         return false;
     }
     
@@ -256,15 +208,7 @@ bool BindlessTextureBinding::IsBindlessSupported() {
     glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
     
     if (majorVersion == 0) {
-        std::cout << "[BindlessTextureBinding] Failed to get OpenGL version - context may not be current" << std::endl;
         return false;
-    }
-    
-    std::cout << "[BindlessTextureBinding] OpenGL Version: " << majorVersion << "." << minorVersion << std::endl;
-    
-    // Bindless textures require OpenGL 4.4+ or the extension
-    if (majorVersion > 4 || (majorVersion == 4 && minorVersion >= 4)) {
-        std::cout << "[BindlessTextureBinding] OpenGL 4.4+ detected, checking for core bindless support" << std::endl;
     }
     
     // Check for ARB_bindless_texture extension
@@ -274,11 +218,8 @@ bool BindlessTextureBinding::IsBindlessSupported() {
     glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
     error = glGetError();
     if (error != GL_NO_ERROR || numExtensions <= 0) {
-        std::cout << "[BindlessTextureBinding] Failed to get extensions count. Error: " << error << std::endl;
         return false;
     }
-    
-    std::cout << "[BindlessTextureBinding] Checking " << numExtensions << " extensions..." << std::endl;
     
     for (GLint i = 0; i < numExtensions; ++i) {
         const GLubyte* extension = glGetStringi(GL_EXTENSIONS, i);
@@ -286,16 +227,13 @@ bool BindlessTextureBinding::IsBindlessSupported() {
         
         const char* extName = (const char*)extension;
         if (strcmp(extName, "GL_ARB_bindless_texture") == 0) {
-            std::cout << "[BindlessTextureBinding] Found GL_ARB_bindless_texture extension!" << std::endl;
             return true;
         }
         if (strcmp(extName, "GL_NV_bindless_texture") == 0) {
-            std::cout << "[BindlessTextureBinding] Found GL_NV_bindless_texture extension!" << std::endl;
             return true;
         }
     }
     
-    std::cout << "[BindlessTextureBinding] Bindless texture extensions not found" << std::endl;
     return false;
 }
 
@@ -340,8 +278,6 @@ void BindlessTextureBinding::MakeHandleNonResident(GLuint64 handle) {
 }
 
 void BindlessTextureBinding::InitializeSSBO() {
-    std::cout << "[BindlessTextureBinding] InitializeSSBO: Creating SSBO for bindless textures" << std::endl;
-    
     // Create SSBO for texture handles
     glGenBuffers(1, &m_HandlesSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_HandlesSSBO);
@@ -351,18 +287,10 @@ void BindlessTextureBinding::InitializeSSBO() {
                       MAX_BINDLESS_TEXTURES * sizeof(uint32_t) +        // types array
                       MAX_BINDLESS_TEXTURES * sizeof(uint32_t);         // flags array
     
-    std::cout << "[BindlessTextureBinding] Allocating SSBO of size " << totalSize << " bytes" << std::endl;
     glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
     
     // Bind SSBO to its designated binding point immediately
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_HANDLES_SSBO_BINDING, m_HandlesSSBO);
-    std::cout << "[BindlessTextureBinding] SSBO bound to binding point " << TEXTURE_HANDLES_SSBO_BINDING 
-              << " (SSBO ID: " << m_HandlesSSBO << ")" << std::endl;
-    
-    // Verify binding
-    GLint verifySSBO = 0;
-    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, TEXTURE_HANDLES_SSBO_BINDING, &verifySSBO);
-    std::cout << "[BindlessTextureBinding] Verified binding: " << verifySSBO << std::endl;
     
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
@@ -371,8 +299,6 @@ void BindlessTextureBinding::UpdateSSBO() {
     if (!m_SSBODirty || m_HandleData.empty()) {
         return;
     }
-    
-    std::cout << "[BindlessTextureBinding] UpdateSSBO: Updating SSBO with " << m_HandleData.size() << " handles" << std::endl;
     
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_HandlesSSBO);
     
@@ -393,19 +319,12 @@ void BindlessTextureBinding::UpdateSSBO() {
         
         types[i] = data.type;
         flags[i] = data.flags;
-        
-        std::cout << "  [" << i << "] Handle: 0x" << std::hex << data.handle << std::dec 
-                  << " -> low=0x" << std::hex << low << ", high=0x" << high << std::dec
-                  << ", type=" << data.type << ", flags=" << data.flags << std::endl;
     }
     
     // Calculate offsets for each array in the SSBO
     size_t handleOffset = 0;
     size_t typeOffset = MAX_BINDLESS_TEXTURES * sizeof(uint32_t) * 2;  // After all uvec2 handles
     size_t flagOffset = typeOffset + MAX_BINDLESS_TEXTURES * sizeof(uint32_t); // After types array
-    
-    std::cout << "[BindlessTextureBinding] SSBO layout: handles@" << handleOffset 
-              << ", types@" << typeOffset << ", flags@" << flagOffset << std::endl;
     
     // Upload each array separately to match shader layout exactly
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, handleOffset, 
@@ -415,23 +334,16 @@ void BindlessTextureBinding::UpdateSSBO() {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, flagOffset,
                     flags.size() * sizeof(uint32_t), flags.data());
     
-    // Verify upload
-    std::cout << "[BindlessTextureBinding] SSBO updated successfully (size=" 
-              << (handlesPacked.size() * sizeof(uint32_t) + types.size() * sizeof(uint32_t) + flags.size() * sizeof(uint32_t)) 
-              << " bytes)" << std::endl;
-    
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
     m_SSBODirty = false;
 }
 
 void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textures) {
-    std::cout << "[BindlessTextureBinding] UpdateHandleData: Processing " << textures.size() << " textures" << std::endl;
     m_HandleData.clear();
     m_HandleData.reserve(textures.size());
     
     for (const auto& texture : textures) {
-        std::cout << "  Creating handle for texture ID " << texture.id << " (" << texture.type << ")" << std::endl;
         GLuint64 handle = GetOrCreateHandle(texture.id);
         
         if (handle != 0) {
@@ -440,10 +352,7 @@ void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textur
             handleData.type = GetTextureTypeIndex(texture.type);
             handleData.flags = 1; // Mark as valid
             
-            std::cout << "    ✓ Handle created: 0x" << std::hex << handle << std::dec << ", type: " << handleData.type << std::endl;
             m_HandleData.push_back(handleData);
-        } else {
-            std::cout << "    ✗ Failed to create handle for texture ID " << texture.id << std::endl;
         }
     }
     

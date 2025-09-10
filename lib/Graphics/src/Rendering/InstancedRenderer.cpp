@@ -17,7 +17,7 @@ InstancedRenderer::~InstancedRenderer()
 void InstancedRenderer::BeginInstanceBatch()
 {
     if (m_BatchActive) {
-        std::cerr << "Warning: Instance batch already active" << std::endl;
+        //std::cerr << "Warning: Instance batch already active" << std::endl;
         return;
     }
     
@@ -65,8 +65,8 @@ void InstancedRenderer::EndInstanceBatch()
         }
     }
     
-    std::cout << "InstancedRenderer: Batch completed with " << m_TotalInstances << " instances across " 
-              << m_MeshInstances.size() << " mesh types" << std::endl;
+    /*std::cout << "InstancedRenderer: Batch completed with " << m_TotalInstances << " instances across " 
+              << m_MeshInstances.size() << " mesh types" << std::endl;*/
 }
 
 void InstancedRenderer::Clear()
@@ -106,8 +106,8 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
     
     meshInstances.dirty = false;
     
-    std::cout << "InstancedRenderer: Updated SSBO for '" << meshId << "' with " 
-              << matrices.size() << " transform matrices" << std::endl;
+    /*std::cout << "InstancedRenderer: Updated SSBO for '" << meshId << "' with " 
+              << matrices.size() << " transform matrices" << std::endl;*/
 }
 
 void InstancedRenderer::Render(Scene* scene, Camera& camera)
@@ -116,7 +116,7 @@ void InstancedRenderer::Render(Scene* scene, Camera& camera)
         return;
     }
     
-    std::cout << "InstancedRenderer: Rendering " << m_MeshInstances.size() << " instanced meshes" << std::endl;
+    //std::cout << "InstancedRenderer: Rendering " << m_MeshInstances.size() << " instanced meshes" << std::endl;
     
     // Render each instanced mesh type
     for (const auto& pair : m_MeshInstances) {
@@ -128,12 +128,12 @@ void InstancedRenderer::Render(Scene* scene, Camera& camera)
 
 void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& camera)
 {
-    std::cout << "InstancedRenderer::RenderInstancedMesh called for '" << meshId << "'" << std::endl;
+    //std::cout << "InstancedRenderer::RenderInstancedMesh called for '" << meshId << "'" << std::endl;
     
     auto meshIt = m_MeshInstances.find(meshId);
     if (meshIt == m_MeshInstances.end()) {
-        std::cerr << "Error: No mesh instances found for '" << meshId << "'" << std::endl;
-        std::cout << "Available mesh IDs: ";
+        //std::cerr << "Error: No mesh instances found for '" << meshId << "'" << std::endl;
+        //std::cout << "Available mesh IDs: ";
         for (const auto& pair : m_MeshInstances) {
             std::cout << "'" << pair.first << "' ";
         }
@@ -142,12 +142,12 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& c
     }
     
     if (meshIt->second.instances.empty()) {
-        std::cerr << "Error: No instances for mesh '" << meshId << "'" << std::endl;
+        //std::cerr << "Error: No instances for mesh '" << meshId << "'" << std::endl;
         return;
     }
     
     const auto& meshInstances = meshIt->second;
-    std::cout << "Found " << meshInstances.instances.size() << " instances for '" << meshId << "'" << std::endl;
+    //std::cout << "Found " << meshInstances.instances.size() << " instances for '" << meshId << "'" << std::endl;
     
     auto ssboIt = m_InstanceSSBOs.find(meshId);
     if (ssboIt == m_InstanceSSBOs.end()) {
@@ -165,8 +165,6 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& c
         std::cerr << "Error: Missing material for '" << meshId << "'" << std::endl;
         return;
     }
-    
-    std::cout << "✓ Mesh and material found for '" << meshId << "'" << std::endl;
     
     auto shader = meshInstances.material->GetShader();
     if (!shader) {
@@ -233,8 +231,8 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& c
     };
     Renderer::Get().Submit(drawCmd, sortKey);
     
-    std::cout << "InstancedRenderer: Submitted instanced draw for '" << meshId 
-              << "' with " << meshInstances.instances.size() << " instances" << std::endl;
+    /*std::cout << "InstancedRenderer: Submitted instanced draw for '" << meshId 
+              << "' with " << meshInstances.instances.size() << " instances" << std::endl;*/
 }
 
 void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)

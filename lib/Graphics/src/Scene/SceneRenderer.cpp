@@ -133,7 +133,7 @@ void SceneRenderer::Render() {
             pipelineExecuteCount[pipelineName]++;
             
             if (pipelineExecuteCount[pipelineName] <= 3) {
-                std::cout << "🔄 Executing pipeline: " << pipelineName << " (frame #" << m_FrameData.frameNumber << ")" << std::endl;
+                std::cout << "Executing pipeline: " << pipelineName << " (frame #" << m_FrameData.frameNumber << ")" << std::endl;
             }
             
             pipelineIt->second->Execute();

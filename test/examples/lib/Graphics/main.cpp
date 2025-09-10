@@ -49,7 +49,7 @@ public:
             "assets/shaders/bindless.vert", 
             "assets/shaders/bindless.frag");
         
-        std::cout << "✓ Loaded bindless shader for advanced texture management" << std::endl;
+        std::cout << "Loaded bindless shader for advanced texture management" << std::endl;
 
         // Load model using clean graphics lib interface  
         LoadModel("tinbox", "assets/models/tinbox/tin_box.obj");
@@ -98,20 +98,20 @@ private:
             return;
         }
         
-        std::cout << "✓ Model loaded with " << model->meshes.size() << " meshes" << std::endl;
-        std::cout << "✓ Shader loaded successfully" << std::endl;
+        std::cout << "Model loaded with " << model->meshes.size() << " meshes" << std::endl;
+        std::cout << "Shader loaded successfully" << std::endl;
         
         // Create material for bindless instanced rendering
         auto instancedMaterial = std::make_shared<Material>(shader, "BindlessInstancedMaterial");
-        std::cout << "✓ Created bindless instanced material" << std::endl;
+        std::cout << "Created bindless instanced material" << std::endl;
         
         // Set up all meshes from the model for instanced rendering
         for (size_t i = 0; i < model->meshes.size(); ++i) {
             auto meshPtr = std::make_shared<Mesh>(model->meshes[i].vertices, 
                                                  model->meshes[i].indices, 
                                                  model->meshes[i].textures);
-            std::cout << "✓ Created mesh " << i << " with " << meshPtr->GetVertexCount() << " vertices, " 
-                      << meshPtr->GetIndexCount() << " indices, " << model->meshes[i].textures.size() << " textures" << std::endl;
+            //std::cout << "Created mesh " << i << " with " << meshPtr->GetVertexCount() << " vertices, " 
+            //          << meshPtr->GetIndexCount() << " indices, " << model->meshes[i].textures.size() << " textures" << std::endl;
             
             // Debug: Show texture information
             for (size_t t = 0; t < model->meshes[i].textures.size(); ++t) {
@@ -122,7 +122,7 @@ private:
             // Set mesh data for each part (body, lid, etc.)
             std::string meshId = "tinbox_instanced_" + std::to_string(i);
             instancedRenderer->SetMeshData(meshId, meshPtr, instancedMaterial);
-            std::cout << "✓ Set mesh data for '" << meshId << "'" << std::endl;
+            std::cout << "Set mesh data for '" << meshId << "'" << std::endl;
         }
         
         // Generate instances in a grid pattern
@@ -181,8 +181,8 @@ private:
         
         instancedRenderer->EndInstanceBatch();
         
-        std::cout << "Generated " << (m_GridSize * m_GridSize) << " instances for " << model->meshes.size() << " mesh parts successfully!" << std::endl;
-        std::cout << "🚀 Using BINDLESS TEXTURES with instanced rendering!" << std::endl;
+        /*std::cout << "Generated " << (m_GridSize * m_GridSize) << " instances for " << model->meshes.size() << " mesh parts successfully!" << std::endl;
+        std::cout << "🚀 Using BINDLESS TEXTURES with instanced rendering!" << std::endl;*/
     }
     
     void TestMultiPipeline()
@@ -195,19 +195,19 @@ private:
             return;
         }
         
-        std::cout << "📋 Current Pipeline Status:" << std::endl;
+        std::cout << "Current Pipeline Status:" << std::endl;
         
         // Test getting existing pipeline
         auto* mainPipeline = sceneRenderer->GetPipeline("MainRendering");
         if (mainPipeline) {
-            std::cout << "✅ MainRendering pipeline exists" << std::endl;
+            std::cout << "MainRendering pipeline exists" << std::endl;
         } else {
-            std::cout << "❌ MainRendering pipeline NOT found" << std::endl;
+            std::cout << "MainRendering pipeline NOT found" << std::endl;
         }
         
         // Check if pipeline is enabled
         bool isMainEnabled = sceneRenderer->IsPipelineEnabled("MainRendering");
-        std::cout << "🔧 MainRendering pipeline enabled: " << (isMainEnabled ? "YES" : "NO") << std::endl;
+        std::cout << "MainRendering pipeline enabled: " << (isMainEnabled ? "YES" : "NO") << std::endl;
         
         // Test adding a new test pipeline
         auto testPipeline = std::make_unique<RenderPipeline>("TestPipeline");
@@ -223,7 +223,7 @@ private:
         
         // Set a simple render function that just clears with a different color
         testPass->SetRenderFunction([]() {
-            std::cout << "🎨 TestPipeline::TestPass executing..." << std::endl;
+            std::cout << "TestPipeline::TestPass executing..." << std::endl;
             glClearColor(0.2f, 0.4f, 0.8f, 1.0f);  // Blue clear color
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         });
@@ -231,28 +231,28 @@ private:
         testPipeline->AddPass(testPass);
         sceneRenderer->AddPipeline("TestPipeline", std::move(testPipeline));
         
-        std::cout << "✅ Added TestPipeline successfully" << std::endl;
+        std::cout << "Added TestPipeline successfully" << std::endl;
         
         // Test pipeline order
         sceneRenderer->SetPipelineOrder({"TestPipeline", "MainRendering"});
-        std::cout << "🔄 Set pipeline order: TestPipeline -> MainRendering" << std::endl;
+        std::cout << "Set pipeline order: TestPipeline -> MainRendering" << std::endl;
         
         // Test enabling/disabling pipelines
         sceneRenderer->EnablePipeline("TestPipeline", false);
-        std::cout << "⏸️  TestPipeline disabled" << std::endl;
+        std::cout << "TestPipeline disabled" << std::endl;
         
         bool isTestEnabled = sceneRenderer->IsPipelineEnabled("TestPipeline");
-        std::cout << "🔧 TestPipeline enabled: " << (isTestEnabled ? "YES" : "NO") << std::endl;
+        std::cout << "TestPipeline enabled: " << (isTestEnabled ? "YES" : "NO") << std::endl;
         
         // Re-enable for one frame to test execution
         sceneRenderer->EnablePipeline("TestPipeline", true);
-        std::cout << "▶️  TestPipeline re-enabled" << std::endl;
+        std::cout << "TestPipeline re-enabled" << std::endl;
         
         // Disable it again after testing
         sceneRenderer->EnablePipeline("TestPipeline", false);
         
-        std::cout << "🏁 Multi-pipeline test completed!" << std::endl;
-        std::cout << "📝 Note: TestPipeline will execute once then be disabled" << std::endl;
+        std::cout << "Multi-pipeline test completed!" << std::endl;
+        std::cout << "Note: TestPipeline will execute once then be disabled" << std::endl;
         std::cout << "=== MULTI-PIPELINE TEST END ===\n" << std::endl;
     }
     
@@ -264,7 +264,7 @@ private:
         
         switch (testPhase % 4) {
             case 0: {
-                std::cout << "\n🔧 Phase 1: Adding PostProcessing Pipeline" << std::endl;
+                std::cout << "\nPhase 1: Adding PostProcessing Pipeline" << std::endl;
                 
                 // Create a post-processing pipeline
                 auto postPipeline = std::make_unique<RenderPipeline>("PostProcessing");
@@ -278,7 +278,7 @@ private:
                 });
                 
                 postPass->SetRenderFunction([]() {
-                    std::cout << "📺 PostProcessing pipeline executing..." << std::endl;
+                    std::cout << "PostProcessing pipeline executing..." << std::endl;
                     // Simple color tint effect
                     glClearColor(0.9f, 0.7f, 0.9f, 1.0f);  // Pink tint
                     glClear(GL_COLOR_BUFFER_BIT);
@@ -288,31 +288,31 @@ private:
                 sceneRenderer->AddPipeline("PostProcessing", std::move(postPipeline));
                 sceneRenderer->SetPipelineOrder({"MainRendering", "PostProcessing"});
                 
-                std::cout << "✅ Added PostProcessing pipeline" << std::endl;
+                std::cout << "Added PostProcessing pipeline" << std::endl;
                 break;
             }
             
             case 1: {
-                std::cout << "\n🔧 Phase 2: Disabling MainRendering (PostProcessing only)" << std::endl;
+                std::cout << "\nPhase 2: Disabling MainRendering (PostProcessing only)" << std::endl;
                 sceneRenderer->EnablePipeline("MainRendering", false);
                 sceneRenderer->EnablePipeline("PostProcessing", true);
-                std::cout << "📺 Only PostProcessing should render now" << std::endl;
+                std::cout << "Only PostProcessing should render now" << std::endl;
                 break;
             }
             
             case 2: {
-                std::cout << "\n🔧 Phase 3: Re-enabling MainRendering, Disabling PostProcessing" << std::endl;
+                std::cout << "\nPhase 3: Re-enabling MainRendering, Disabling PostProcessing" << std::endl;
                 sceneRenderer->EnablePipeline("MainRendering", true);
                 sceneRenderer->EnablePipeline("PostProcessing", false);
-                std::cout << "🎮 Back to normal MainRendering" << std::endl;
+                std::cout << "Back to normal MainRendering" << std::endl;
                 break;
             }
             
             case 3: {
-                std::cout << "\n🔧 Phase 4: Removing PostProcessing Pipeline" << std::endl;
+                std::cout << "\nPhase 4: Removing PostProcessing Pipeline" << std::endl;
                 sceneRenderer->RemovePipeline("PostProcessing");
                 sceneRenderer->SetPipelineOrder({"MainRendering"});
-                std::cout << "🗑️ PostProcessing pipeline removed" << std::endl;
+                std::cout << "PostProcessing pipeline removed" << std::endl;
                 break;
             }
         }
