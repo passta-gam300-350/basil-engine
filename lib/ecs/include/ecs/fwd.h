@@ -18,6 +18,28 @@ namespace ecs {
 	template <ecs_iterative_container cont>
 	struct entity_range;
 
+	template <typename ...types>
+	struct type_set {
+		using type = type_set;
+		static constexpr std::uint64_t elem_ct{ sizeof(types...) };
+	};
+
+	template <typename ...excludes>
+	struct exclude_t : type_set<excludes...> {
+		exclude_t() = default;
+	};
+
+	template <typename ...includes>
+	struct include_t : type_set<includes...> {
+		include_t() = default;
+	};
+
+	template <typename ...excludes_t>
+	inline constexpr exclude_t<excludes_t...> exclude{};
+
+	template <typename ...excludes_t>
+	inline constexpr exclude_t<excludes_t...> include{};
+
 	struct Scheduler;
 	struct system_registry;
 	struct generic_system_wrapper;

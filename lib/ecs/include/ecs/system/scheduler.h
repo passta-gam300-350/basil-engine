@@ -39,11 +39,19 @@ namespace ecs {
         std::unordered_set<entt::id_type> excludes;
     };
 
+    template <typename fn>
+    struct thread_pool {
+
+    };
+
     //pipeline for work, task are pushed into the pipeline, owns the worker thread
     struct pipeline {
         struct task_list {
-
+            
         };
+
+        static std::atomic<std::uint64_t> thread_ct;
+        static const std::uint64_t thread_limit;
     };
 
     // A scheduler for entt systems that attempts to parallelize system execution.
@@ -293,6 +301,12 @@ namespace ecs {
     template <ecs_system_callback ecs_system_callback_t>
     auto world::add_system(ecs_system_callback_t sys_fn) {
         return impl.get_scheduler.add_system(sys_fn);
+    }
+    template<typename ...requires_t>
+    template<typename ...excludes_t>
+    inline query_set<requires_t...>::query_set(excludes_t ... ex)
+    {
+        
     }
 }
 
