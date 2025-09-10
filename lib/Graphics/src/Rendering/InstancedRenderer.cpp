@@ -202,13 +202,54 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& c
     };
     Renderer::Get().Submit(uniformsCmd, sortKey);
     
-    // 4. Set material uniforms
+    // 4. Set up dynamic multi-light system
     shader->use(); // Ensure shader is active for uniform setting
-    shader->setVec3("u_LightPos", glm::vec3(10.0f, 10.0f, 10.0f));
-    shader->setVec3("u_LightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    shader->setVec3("u_BaseColor", glm::vec3(1.0f, 1.0f, 1.0f));  // White to show textures
-    shader->setFloat("u_Metallic", 0.1f);
-    shader->setFloat("u_Roughness", 0.6f);
+    
+    // Set light counts based on stored lights
+    shader->setInt("u_NumPointLights", static_cast<int>(m_PointLights.size()));
+    shader->setInt("u_NumDirectionalLights", static_cast<int>(m_DirectionalLights.size()));
+    shader->setInt("u_NumSpotLights", static_cast<int>(m_SpotLights.size()));
+    
+    // Set up point lights
+    for (size_t i = 0; i < m_PointLights.size(); ++i) {
+        const auto& light = m_PointLights[i];
+        std::string prefix = "u_PointLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "position", light.position);
+        shader->setVec3(prefix + "color", light.color);
+        shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "constant", light.constant);
+        shader->setFloat(prefix + "linear", light.linear);
+        shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+    
+    // Set up directional lights
+    for (size_t i = 0; i < m_DirectionalLights.size(); ++i) {
+        const auto& light = m_DirectionalLights[i];
+        std::string prefix = "u_DirectionalLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "direction", light.direction);
+        shader->setVec3(prefix + "color", light.color);
+        shader->setFloat(prefix + "intensity", light.intensity);
+    }
+    
+    // Set up spot lights
+    for (size_t i = 0; i < m_SpotLights.size(); ++i) {
+        const auto& light = m_SpotLights[i];
+        std::string prefix = "u_SpotLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "position", light.position);
+        shader->setVec3(prefix + "direction", light.direction);
+        shader->setVec3(prefix + "color", light.color);
+        shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "cutOff", light.cutOff);
+        shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
+        shader->setFloat(prefix + "constant", light.constant);
+        shader->setFloat(prefix + "linear", light.linear);
+        shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+    
+    // Material properties
+    shader->setVec3("u_AlbedoColor", glm::vec3(0.8f, 0.7f, 0.6f));  // Warm metallic base
+    shader->setFloat("u_MetallicValue", 0.7f);                       // More metallic for better reflections
+    shader->setFloat("u_RoughnessValue", 0.3f);                      // Smoother for better light interaction
     
     // Enable texture if mesh has diffuse texture
     if (!meshInstances.mesh->textures.empty()) {
@@ -256,3 +297,27 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<M
     std::cout << "  - Mesh indices: " << mesh->GetIndexCount() << std::endl;
     std::cout << "  - Material name: " << material->GetName() << std::endl;
 }
+
+// Light management methods
+void InstancedRenderer::ClearLights()
+{
+    m_PointLights.clear();
+    m_DirectionalLights.clear();
+    m_SpotLights.clear();
+}
+
+void InstancedRenderer::AddPointLight(const PointLight& light)
+{
+    m_PointLights.push_back(light);
+}
+
+void InstancedRenderer::AddDirectionalLight(const DirectionalLight& light)
+{
+    m_DirectionalLights.push_back(light);
+}
+
+void InstancedRenderer::AddSpotLight(const SpotLight& light)
+{
+    m_SpotLights.push_back(light);
+}
+

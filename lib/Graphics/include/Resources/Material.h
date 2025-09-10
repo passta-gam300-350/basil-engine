@@ -16,6 +16,9 @@ public:
     // Basic getters
     std::shared_ptr<Shader> GetShader() const { return m_Shader; }
     const std::string& GetName() const { return m_Name; }
+    
+    // Shader setters
+    void SetShader(std::shared_ptr<Shader> shader) { m_Shader = shader; }
 
     // Simple property setters that forward to the shader
     void SetFloat(const std::string& name, float value);

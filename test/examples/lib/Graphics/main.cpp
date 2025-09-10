@@ -39,17 +39,10 @@ public:
             "assets/shaders/basic.vert", 
             "assets/shaders/basic.frag");
 
-        // Load instanced shader
-        LoadShader("instanced", 
-            "assets/shaders/instanced.vert", 
-            "assets/shaders/instanced.frag");
-
-        // Load bindless shader for advanced texture handling
-        LoadShader("bindless", 
-            "assets/shaders/bindless.vert", 
-            "assets/shaders/bindless.frag");
-        
-        std::cout << "Loaded bindless shader for advanced texture management" << std::endl;
+        // Load combined instanced + bindless shader for advanced rendering
+        LoadShader("instanced_bindless", 
+            "assets/shaders/instanced_bindless.vert", 
+            "assets/shaders/instanced_bindless.frag");
 
         // Load model using clean graphics lib interface  
         LoadModel("tinbox", "assets/models/tinbox/tin_box.obj");
@@ -58,8 +51,12 @@ public:
         SetCameraPosition(glm::vec3(0.0f, 5.0f, 15.0f));
         SetCameraRotation(glm::vec3(-15.0f, 0.0f, 0.0f));
         
+        
         // Set up instanced rendering
         SetupInstancing();
+        
+        // Set up lighting
+        SetupLighting();
         
         // TEST MULTI-PIPELINE FUNCTIONALITY
         TestMultiPipeline();
@@ -81,7 +78,7 @@ private:
         
         // Set up mesh and material for instancing
         auto model = m_ResourceManager->GetModel("tinbox");
-        auto shader = m_ResourceManager->GetShader("bindless");
+        auto shader = m_ResourceManager->GetShader("instanced_bindless");
         
         if (!model) {
             std::cerr << "Error: Model 'tinbox' not found!" << std::endl;
@@ -89,7 +86,7 @@ private:
         }
         
         if (!shader) {
-            std::cerr << "Error: Shader 'bindless' not found!" << std::endl;
+            std::cerr << "Error: Shader 'instanced_bindless' not found!" << std::endl;
             return;
         }
         
@@ -183,6 +180,101 @@ private:
         
         /*std::cout << "Generated " << (m_GridSize * m_GridSize) << " instances for " << model->meshes.size() << " mesh parts successfully!" << std::endl;
         std::cout << "🚀 Using BINDLESS TEXTURES with instanced rendering!" << std::endl;*/
+    }
+    
+    void SetupLighting()
+    {
+        std::cout << "Setting up lighting..." << std::endl;
+        
+        auto* instancedRenderer = GetSceneRenderer()->GetInstancedRenderer();
+        if (!instancedRenderer) {
+            std::cerr << "Error: InstancedRenderer not available!" << std::endl;
+            return;
+        }
+        
+        // Clear any existing lights
+        instancedRenderer->ClearLights();
+        
+        // Add point lights at corners of the grid (same as before but now configurable)
+        InstancedRenderer::PointLight pointLight1{
+            glm::vec3(-12.0f, 8.0f, -12.0f),  // position: Front-left, elevated
+            glm::vec3(1.0f, 0.2f, 0.2f),      // color: Red
+            15.0f,                             // intensity
+            1.0f,                              // constant
+            0.09f,                             // linear
+            0.032f                             // quadratic
+        };
+        instancedRenderer->AddPointLight(pointLight1);
+        
+        InstancedRenderer::PointLight pointLight2{
+            glm::vec3(12.0f, 8.0f, -12.0f),   // position: Front-right, elevated
+            glm::vec3(0.2f, 1.0f, 0.2f),      // color: Green
+            15.0f,                             // intensity
+            1.0f,                              // constant
+            0.09f,                             // linear
+            0.032f                             // quadratic
+        };
+        instancedRenderer->AddPointLight(pointLight2);
+        
+        InstancedRenderer::PointLight pointLight3{
+            glm::vec3(-12.0f, 8.0f, 12.0f),   // position: Back-left, elevated
+            glm::vec3(0.2f, 0.2f, 1.0f),      // color: Blue
+            15.0f,                             // intensity
+            1.0f,                              // constant
+            0.09f,                             // linear
+            0.032f                             // quadratic
+        };
+        instancedRenderer->AddPointLight(pointLight3);
+        
+        InstancedRenderer::PointLight pointLight4{
+            glm::vec3(12.0f, 8.0f, 12.0f),    // position: Back-right, elevated
+            glm::vec3(1.0f, 1.0f, 0.2f),      // color: Yellow
+            15.0f,                             // intensity
+            1.0f,                              // constant
+            0.09f,                             // linear
+            0.032f                             // quadratic
+        };
+        instancedRenderer->AddPointLight(pointLight4);
+        
+        // Add main directional light (sun)
+        InstancedRenderer::DirectionalLight directionalLight{
+            glm::vec3(0.3f, -1.0f, -0.2f),    // direction: Angled down
+            glm::vec3(1.0f, 0.95f, 0.8f),     // color: Warm white
+            3.0f                               // intensity
+        };
+        instancedRenderer->AddDirectionalLight(directionalLight);
+        
+        // Add spot lights for dramatic effect
+        InstancedRenderer::SpotLight spotLight1{
+            glm::vec3(0.0f, 15.0f, -15.0f),   // position: Above, pointing down at grid
+            glm::vec3(0.0f, -1.0f, 0.3f),     // direction
+            glm::vec3(1.0f, 0.8f, 0.6f),      // color: Warm spotlight
+            20.0f,                             // intensity
+            cos(glm::radians(25.0f)),          // cutOff: Inner cone
+            cos(glm::radians(35.0f)),          // outerCutOff: Outer cone
+            1.0f,                              // constant
+            0.045f,                            // linear
+            0.0075f                            // quadratic
+        };
+        instancedRenderer->AddSpotLight(spotLight1);
+        
+        InstancedRenderer::SpotLight spotLight2{
+            glm::vec3(-8.0f, 12.0f, 8.0f),    // position: Side spotlight
+            glm::vec3(0.5f, -0.8f, -0.3f),    // direction
+            glm::vec3(0.8f, 0.6f, 1.0f),      // color: Purple spotlight
+            15.0f,                             // intensity
+            cos(glm::radians(20.0f)),          // cutOff
+            cos(glm::radians(30.0f)),          // outerCutOff
+            1.0f,                              // constant
+            0.045f,                            // linear
+            0.0075f                            // quadratic
+        };
+        instancedRenderer->AddSpotLight(spotLight2);
+        
+        std::cout << "Lighting setup complete!" << std::endl;
+        std::cout << "  - Point lights: 4" << std::endl;
+        std::cout << "  - Directional lights: 1" << std::endl;
+        std::cout << "  - Spot lights: 2" << std::endl;
     }
     
     void TestMultiPipeline()
@@ -383,7 +475,6 @@ private:
                     std::cout << "\n=== Controls ===\n";
                     std::cout << "R: Reset camera\n";
                     std::cout << "C: Toggle camera circle mode\n";
-                    std::cout << "SPACE: Instance animation (DISABLED - was causing crashes)\n";
                     std::cout << "I: Toggle instanced vs regular rendering\n";
                     std::cout << "G: Change grid size (5x5, 10x10, 20x20)\n";
                     std::cout << "P: Test multi-pipeline operations\n";
@@ -409,7 +500,7 @@ private:
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
             model = glm::scale(model, glm::vec3(0.5f));
-            RenderModel("tinbox", "basic", model);
+            RenderModel("tinbox", "instanced_bindless", model);
         }
     }
 

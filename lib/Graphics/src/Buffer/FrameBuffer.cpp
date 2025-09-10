@@ -9,6 +9,7 @@ namespace Utils
 		switch (format)
 		{
 		case FBOTextureFormat::RGBA8: return GL_RGBA8;
+		case FBOTextureFormat::RGBA16F: return GL_RGBA16F;
 		case FBOTextureFormat::RED_INTEGER: return GL_R32I;
 		case FBOTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
 		default: return 0;

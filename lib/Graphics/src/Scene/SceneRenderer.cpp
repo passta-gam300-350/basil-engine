@@ -60,51 +60,43 @@ bool SceneRenderer::IsPipelineEnabled(std::string const &name) const
 }
 
 void SceneRenderer::InitializeDefaultPipelines() {
-    // Main Rendering Pipeline - coordinates your existing systems
+    // Default forward rendering pipeline
     auto mainPipeline = std::make_unique<RenderPipeline>("MainRendering");
 
-    // Create geometry pass
-    auto geometryPass = std::make_shared<RenderPass>("GeometryPass", FBOSpecs{
+    // Single forward rendering pass
+    auto mainPass = std::make_shared<RenderPass>("MainPass", FBOSpecs{
         1280, 720,
         {
-            { FBOTextureFormat::RGBA8 },     // Color
-            { FBOTextureFormat::RGBA8 },     // Normal
-            { FBOTextureFormat::RED_INTEGER },// Entity ID
-            { FBOTextureFormat::DEPTH24STENCIL8 } // Depth
+            { FBOTextureFormat::RGBA8 },
+            { FBOTextureFormat::DEPTH24STENCIL8 }
         }
-        });
+    });
 
-    // Set up render function for geometry pass - now properly coordinates rendering
-    geometryPass->SetRenderFunction([this, geometryPass]()
+    mainPass->SetRenderFunction([this, mainPass]()
         {
-            // Clear the framebuffer
+            // Clear color and depth buffers
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Coordinate rendering pipeline properly
+            // Standard forward rendering
             if (m_Scene && m_Camera)
             {
-                // 1. Frustum culling updates VisibilityComponent based on camera
+                // 1. Frustum culling
                 m_FrustumCuller->CullAgainstCamera(m_Scene.get(), *m_Camera);
 
-                // 2. Mesh renderer queries visible entities and generates commands  
-                m_MeshRenderer->Render(m_Scene.get(), *m_Camera);
-
-                // 3. Instanced renderer generates instanced draw commands
+                // 2. Forward instanced rendering
                 m_InstancedRenderer->Render(m_Scene.get(), *m_Camera);
             }
 
-            // Store output for potential post-processing pipeline
-            m_FrameData.mainColorBuffer = geometryPass->GetFramebuffer();
+            // Store main color buffer
+            m_FrameData.mainColorBuffer = mainPass->GetFramebuffer();
         });
 
-    mainPipeline->AddPass(geometryPass);
+    mainPipeline->AddPass(mainPass);
     AddPipeline("MainRendering", std::move(mainPipeline));
 
-    // Set default pipeline order (just main for now)
+    // Set pipeline order
     SetPipelineOrder({ "MainRendering" });
-
-    // Add other passes as needed (e.g., lighting, post-processing)
 }
 
 void SceneRenderer::InitializeRenderingCoordinators() {
@@ -142,3 +134,4 @@ void SceneRenderer::Render() {
 
     m_FrameData.frameNumber++;
 }
+

@@ -6,6 +6,7 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include "Resources/Shader.h"
 
 struct FrameData
 {
@@ -13,8 +14,6 @@ struct FrameData
     std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
     std::vector<glm::mat4> shadowMatrices;
 
-    // G-Buffer data (for deferred rendering)
-    std::shared_ptr<FrameBuffer> gBuffer;
 
     // Main rendering output
     std::shared_ptr<FrameBuffer> mainColorBuffer;
@@ -41,6 +40,7 @@ class SceneRenderer {
 public:
     SceneRenderer();
     ~SceneRenderer();
+    
 
     void SetScene(const std::shared_ptr<Scene>& scene) { m_Scene = scene; }
     void SetCamera(const std::shared_ptr<Camera>& camera) { m_Camera = camera; }
@@ -73,6 +73,7 @@ private:
 
     // Multi pipelines methods
     void InitializeDefaultPipelines();
+    
     void UpdateFrameData()
     {
         m_FrameData.viewMatrix = m_Camera->GetViewMatrix();
@@ -91,8 +92,9 @@ private:
     // Shared frame data
     FrameData m_FrameData;
     
-    // Rendering coordinators - SceneRenderer owns these (graphics-specific)
+    // Rendering coordinators - SceneRenderer owns these
     std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
+    
 };
