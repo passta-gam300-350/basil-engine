@@ -1,6 +1,7 @@
-add_subdirectory(Graphics)
+
 add_subdirectory(common)
-# add_subdirectory(Platform)
+add_subdirectory(Graphics)
 add_subdirectory(Scripting)
-
-
+#add_subdirectory(memory)
+add_subdirectory(ecs)
+add_subdirectory(uuid)

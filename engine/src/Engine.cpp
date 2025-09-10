@@ -21,22 +21,25 @@ void Engine::Input()
 
 void Engine::Update()
 {
-
+#ifdef _DEBUG
 	spdlog::info("Engine Update");
+#endif
 }
 
 
 void Engine::FixedUpdate()
 {
-
+#ifdef _DEBUG
 	spdlog::info("Engine Fixed Update");
+#endif
 }
 
 
 void Engine::Exit()
 {
-
+#ifdef _DEBUG
 	spdlog::info("Engine Exit");
+#endif
 }
 
 
