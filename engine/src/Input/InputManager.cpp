@@ -15,6 +15,9 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
 #include "./Input/InputManager.h"
+#include "./Messaging/Message.h"
+#include "./Messaging/Messaging_System.h"
+#include "./Messaging/Subscriber.h"
 
 InputManager* InputManager::instance = nullptr;
 const float DEAD_ZONE = 0.25f; //  Adjustable
@@ -38,27 +41,27 @@ void InputManager::Key_Callback(GLFWwindow*, int key, int , int action, int)
 {
     if (instance)
     {
-        // std::unique_ptr<InputMessage> keyMessage = std::make_unique<InputMessage>();
+        std::unique_ptr<InputMessage> keyMessage = std::make_unique<InputMessage>();
 
         if (action == GLFW_PRESS)
         {
             instance->keyPressedStates[key] = true;
             instance->keyReleasedStates[key] = false;
             instance->Test_KeyPressed(key);
-            // keyMessage->keyPressed.push_back(instance->Key_ToString(key)[0]);
+            keyMessage->keyPressed.push_back(instance->Key_ToString(key)[0]);
         }
         else if (action == GLFW_RELEASE)
         {
             instance->keyPressedStates[key] = false;
             instance->keyReleasedStates[key] = true;
             instance->Test_KeyReleased(key);
-            // keyMessage->keyReleased.push_back(instance->Key_ToString(key)[0]);
+            keyMessage->keyReleased.push_back(instance->Key_ToString(key)[0]);
         }
 
-        // if (!keyMessage->keyPressed.empty() || !keyMessage->keyReleased.empty())
-        // {
-        //     messagingSystem.Publish(INPUT_KEY, std::move(keyMessage));
-        // }
+         if (!keyMessage->keyPressed.empty() || !keyMessage->keyReleased.empty())
+         {
+             messagingSystem.Publish(INPUT_KEY, std::move(keyMessage));
+         }
     }
 }
 
@@ -75,27 +78,27 @@ void InputManager::Mouse_Callback(GLFWwindow*, int button, int action, int )
     std::string buttonName;
     if (instance)
     {
-        // std::unique_ptr<InputMessage> mouseMessage = std::make_unique<InputMessage>();
+        std::unique_ptr<InputMessage> mouseMessage = std::make_unique<InputMessage>();
 
         if (action == GLFW_PRESS)
         {
             instance->mousePressedStates[button] = true;
             instance->mouseReleasedStates[button] = false;
             instance->Test_MousePressed(button);
-            // mouseMessage->mousePressed.push_back(instance->Mouse_ToString(button));
+            mouseMessage->mousePressed.push_back(instance->Mouse_ToString(button));
         }
         else if (action == GLFW_RELEASE)
         {
             instance->mousePressedStates[button] = false;
             instance->mouseReleasedStates[button] = true;
             instance->Test_MouseReleased(button);
-            // mouseMessage->mouseReleased.push_back(instance->Mouse_ToString(button));
+            mouseMessage->mouseReleased.push_back(instance->Mouse_ToString(button));
         }
 
-        // if (!mouseMessage->mousePressed.empty() || !mouseMessage->mouseReleased.empty())
-        // {
-        //     messagingSystem.Publish(INPUT_MOUSE_, std::move(mouseMessage));
-        // }
+         if (!mouseMessage->mousePressed.empty() || !mouseMessage->mouseReleased.empty())
+         {
+             messagingSystem.Publish(INPUT_MOUSE_, std::move(mouseMessage));
+         }
     }
 }
 
@@ -309,7 +312,7 @@ void InputManager::Poll_GamepadInput()
     GLFWgamepadstate state;
     if (!glfwGetGamepadState(GLFW_JOYSTICK_1, &state)) return;
 
-    // std::unique_ptr<InputMessage> keyMessage = std::make_unique<InputMessage>();
+    std::unique_ptr<InputMessage> keyMessage = std::make_unique<InputMessage>();
 
     for (const auto& [gamepadButton, mappedKey] : gamepadButtonToKeyMap)
     {
@@ -326,7 +329,7 @@ void InputManager::Poll_GamepadInput()
                     instance->keyPressedStates[mappedKey] = true;
                     instance->keyReleasedStates[mappedKey] = false;
                     instance->Test_KeyPressed(mappedKey);
-                    // keyMessage->keyPressed.push_back(instance->Key_ToString(mappedKey)[0]);
+                    keyMessage->keyPressed.push_back(instance->Key_ToString(mappedKey)[0]);
                 }
             }
         }
@@ -343,20 +346,20 @@ void InputManager::Poll_GamepadInput()
                     instance->keyPressedStates[mappedKey] = false;
                     instance->keyReleasedStates[mappedKey] = true;
                     instance->Test_KeyReleased(mappedKey);
-                    // keyMessage->keyReleased.push_back(instance->Key_ToString(mappedKey)[0]);
+                    keyMessage->keyReleased.push_back(instance->Key_ToString(mappedKey)[0]);
                 }
             }
         }
     }
 
     // Send key messages if any key events occurred
-    // if (!keyMessage->keyPressed.empty() || !keyMessage->keyReleased.empty())
-    // {
-    //     messagingSystem.Publish(INPUT_KEY, std::move(keyMessage));
-    // }
+     if (!keyMessage->keyPressed.empty() || !keyMessage->keyReleased.empty())
+     {
+         messagingSystem.Publish(INPUT_KEY, std::move(keyMessage));
+     }
 
     // Handle gamepad axis movement
-    // std::unique_ptr<InputMessage> gamepadMessage = std::make_unique<InputMessage>();
+    std::unique_ptr<InputMessage> gamepadMessage = std::make_unique<InputMessage>();
 
     for (const auto& [gamepadAxis, mappedKey] : gamepadAxisToKeyMap)
     {
@@ -381,7 +384,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_A])
                     {
                         instance->keyPressedStates[GLFW_KEY_A] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_A)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_A)[0]);
                         std::cout << "Gamepad moving left\n";
                     }
                 }
@@ -393,7 +396,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_D])
                     {
                         instance->keyPressedStates[GLFW_KEY_D] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_D)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_D)[0]);
                         std::cout << "Gamepad moving right\n";
                     }
                 }
@@ -404,8 +407,8 @@ void InputManager::Poll_GamepadInput()
                 {
                     instance->keyPressedStates[GLFW_KEY_A] = false;
                     instance->keyPressedStates[GLFW_KEY_D] = false;
-                    // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_A)[0]);
-                    // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_D)[0]);
+                    gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_A)[0]);
+                    gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_D)[0]);
                 }
             }
         }
@@ -419,7 +422,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_W])
                     {
                         instance->keyPressedStates[GLFW_KEY_W] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_W)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_W)[0]);
                         std::cout << "Gamepad moving up\n";
                     }
                 }
@@ -431,7 +434,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_H])
                     {
                         instance->keyPressedStates[GLFW_KEY_H] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_H)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_H)[0]);
                         std::cout << "Gamepad moving down\n";
                     }
                 }
@@ -440,8 +443,8 @@ void InputManager::Poll_GamepadInput()
             {
                 instance->keyPressedStates[GLFW_KEY_W] = false;
                 instance->keyPressedStates[GLFW_KEY_H] = false;
-                // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_W)[0]);
-                // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_H)[0]);
+                gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_W)[0]);
+                gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_H)[0]);
             }
         }
 
@@ -454,7 +457,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_LEFT])
                     {
                         instance->keyPressedStates[GLFW_KEY_LEFT] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_LEFT)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_LEFT)[0]);
                         std::cout << "Gamepad moving left\n";
                     }
                 }
@@ -466,7 +469,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_RIGHT])
                     {
                         instance->keyPressedStates[GLFW_KEY_RIGHT] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_RIGHT)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_RIGHT)[0]);
                         std::cout << "Gamepad moving right\n";
                     }
                 }
@@ -477,8 +480,8 @@ void InputManager::Poll_GamepadInput()
                 {
                     instance->keyPressedStates[GLFW_KEY_LEFT] = false;
                     instance->keyPressedStates[GLFW_KEY_RIGHT] = false;
-                    // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_LEFT)[0]);
-                    // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_RIGHT)[0]);
+                    gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_LEFT)[0]);
+                    gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_RIGHT)[0]);
                 }
             }
         }
@@ -492,7 +495,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_UP])
                     {
                         instance->keyPressedStates[GLFW_KEY_UP] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_UP)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_UP)[0]);
                         std::cout << "Gamepad moving up\n";
                     }
                 }
@@ -504,7 +507,7 @@ void InputManager::Poll_GamepadInput()
                     if (!instance->keyPressedStates[GLFW_KEY_DOWN])
                     {
                         instance->keyPressedStates[GLFW_KEY_DOWN] = true;
-                        // gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_DOWN)[0]);
+                        gamepadMessage->keyPressed.push_back(Key_ToString(GLFW_KEY_DOWN)[0]);
                         std::cout << "Gamepad moving down\n";
                     }
                 }
@@ -513,15 +516,15 @@ void InputManager::Poll_GamepadInput()
             {
                 instance->keyPressedStates[GLFW_KEY_UP] = false;
                 instance->keyPressedStates[GLFW_KEY_DOWN] = false;
-                // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_UP)[0]);
-                // gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_DOWN)[0]);
+                gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_UP)[0]);
+                gamepadMessage->keyReleased.push_back(Key_ToString(GLFW_KEY_DOWN)[0]);
             }
         }
     }
 
     // Send axis movement messages if any occurred
-    // if (!gamepadMessage->keyPressed.empty() || !gamepadMessage->keyReleased.empty())
-    // {
-    //     messagingSystem.Publish(INPUT_KEY, std::move(gamepadMessage));
-    // }
+    if (!gamepadMessage->keyPressed.empty() || !gamepadMessage->keyReleased.empty())
+    {
+        messagingSystem.Publish(INPUT_KEY, std::move(gamepadMessage));
+    }
 }
