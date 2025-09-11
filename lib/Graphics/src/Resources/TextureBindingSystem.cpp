@@ -140,10 +140,12 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
     // Set texture indices for shader access
     std::vector<int> textureIndices(8, -1); // Support up to 8 texture types
     
+    std::cout << "\n=== SHADER UNIFORM DEBUG ===" << std::endl;
     for (size_t i = 0; i < textures.size() && i < MAX_BINDLESS_TEXTURES; ++i) {
         uint32_t typeIndex = GetTextureTypeIndex(textures[i].type);
         if (typeIndex < 8) {
             textureIndices[typeIndex] = static_cast<int>(i);
+            std::cout << "Texture[" << i << "] " << textures[i].type << " -> index slot " << typeIndex << std::endl;
         }
     }
     
@@ -156,6 +158,17 @@ void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, 
     shader->setInt("u_EmissiveIndex", textureIndices[5]);
     shader->setInt("u_SpecularIndex", textureIndices[6]);
     shader->setInt("u_HeightIndex", textureIndices[7]);
+    
+    std::cout << "Shader uniform indices set:" << std::endl;
+    std::cout << "- u_DiffuseIndex = " << textureIndices[0] << std::endl;
+    std::cout << "- u_NormalIndex = " << textureIndices[1] << std::endl;
+    std::cout << "- u_MetallicIndex = " << textureIndices[2] << std::endl;
+    std::cout << "- u_RoughnessIndex = " << textureIndices[3] << std::endl;
+    std::cout << "- u_AOIndex = " << textureIndices[4] << std::endl;
+    std::cout << "- u_EmissiveIndex = " << textureIndices[5] << std::endl;
+    std::cout << "- u_SpecularIndex = " << textureIndices[6] << std::endl;
+    std::cout << "- u_HeightIndex = " << textureIndices[7] << std::endl;
+    std::cout << "=== SHADER UNIFORM DEBUG END ===\n" << std::endl;
 }
 
 void BindlessTextureBinding::UnbindAll() {
@@ -300,6 +313,9 @@ void BindlessTextureBinding::UpdateSSBO() {
         return;
     }
     
+    std::cout << "\n=== SSBO DATA DEBUG ===" << std::endl;
+    std::cout << "Updating SSBO with " << m_HandleData.size() << " textures:" << std::endl;
+    
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_HandlesSSBO);
     
     // Create separate arrays for handles, types, and flags (matching shader layout exactly)
@@ -319,12 +335,32 @@ void BindlessTextureBinding::UpdateSSBO() {
         
         types[i] = data.type;
         flags[i] = data.flags;
+        
+        // Debug output for each texture
+        std::string typeName;
+        switch(data.type) {
+            case 0: typeName = "diffuse"; break;
+            case 1: typeName = "normal"; break; 
+            case 2: typeName = "metallic"; break;
+            case 3: typeName = "roughness"; break;
+            case 7: typeName = "height"; break;
+            default: typeName = "unknown(" + std::to_string(data.type) + ")"; break;
+        }
+        
+        std::cout << "[" << i << "] " << typeName << " -> Handle: 0x" << std::hex << data.handle 
+                  << std::dec << " (low=0x" << std::hex << low << ", high=0x" << high 
+                  << std::dec << "), type=" << data.type << ", flags=" << data.flags << std::endl;
     }
     
     // Calculate offsets for each array in the SSBO
     size_t handleOffset = 0;
     size_t typeOffset = MAX_BINDLESS_TEXTURES * sizeof(uint32_t) * 2;  // After all uvec2 handles
     size_t flagOffset = typeOffset + MAX_BINDLESS_TEXTURES * sizeof(uint32_t); // After types array
+    
+    std::cout << "\nSSBO Memory Layout:" << std::endl;
+    std::cout << "- Handles array: offset " << handleOffset << ", size " << (handlesPacked.size() * sizeof(uint32_t)) << " bytes" << std::endl;
+    std::cout << "- Types array: offset " << typeOffset << ", size " << (types.size() * sizeof(uint32_t)) << " bytes" << std::endl;
+    std::cout << "- Flags array: offset " << flagOffset << ", size " << (flags.size() * sizeof(uint32_t)) << " bytes" << std::endl;
     
     // Upload each array separately to match shader layout exactly
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, handleOffset, 
@@ -333,6 +369,9 @@ void BindlessTextureBinding::UpdateSSBO() {
                     types.size() * sizeof(uint32_t), types.data());
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, flagOffset,
                     flags.size() * sizeof(uint32_t), flags.data());
+    
+    std::cout << "SSBO updated successfully!" << std::endl;
+    std::cout << "=== SSBO DATA DEBUG END ===\n" << std::endl;
     
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
