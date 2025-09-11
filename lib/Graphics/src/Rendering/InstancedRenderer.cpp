@@ -1,4 +1,5 @@
 #include "Rendering/InstancedRenderer.h"
+#include "Rendering/PBRLightingRenderer.h"
 #include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
@@ -202,61 +203,20 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& c
     };
     Renderer::Get().Submit(uniformsCmd, sortKey);
     
-    // 4. Set up dynamic multi-light system
-    shader->use(); // Ensure shader is active for uniform setting
-    
-    // Set light counts based on stored lights
-    shader->setInt("u_NumPointLights", static_cast<int>(m_PointLights.size()));
-    shader->setInt("u_NumDirectionalLights", static_cast<int>(m_DirectionalLights.size()));
-    shader->setInt("u_NumSpotLights", static_cast<int>(m_SpotLights.size()));
-    
-    // Set up point lights
-    for (size_t i = 0; i < m_PointLights.size(); ++i) {
-        const auto& light = m_PointLights[i];
-        std::string prefix = "u_PointLights[" + std::to_string(i) + "].";
-        shader->setVec3(prefix + "position", light.position);
-        shader->setVec3(prefix + "color", light.color);
-        shader->setFloat(prefix + "intensity", light.intensity);
-        shader->setFloat(prefix + "constant", light.constant);
-        shader->setFloat(prefix + "linear", light.linear);
-        shader->setFloat(prefix + "quadratic", light.quadratic);
-    }
-    
-    // Set up directional lights
-    for (size_t i = 0; i < m_DirectionalLights.size(); ++i) {
-        const auto& light = m_DirectionalLights[i];
-        std::string prefix = "u_DirectionalLights[" + std::to_string(i) + "].";
-        shader->setVec3(prefix + "direction", light.direction);
-        shader->setVec3(prefix + "color", light.color);
-        shader->setFloat(prefix + "intensity", light.intensity);
-    }
-    
-    // Set up spot lights
-    for (size_t i = 0; i < m_SpotLights.size(); ++i) {
-        const auto& light = m_SpotLights[i];
-        std::string prefix = "u_SpotLights[" + std::to_string(i) + "].";
-        shader->setVec3(prefix + "position", light.position);
-        shader->setVec3(prefix + "direction", light.direction);
-        shader->setVec3(prefix + "color", light.color);
-        shader->setFloat(prefix + "intensity", light.intensity);
-        shader->setFloat(prefix + "cutOff", light.cutOff);
-        shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
-        shader->setFloat(prefix + "constant", light.constant);
-        shader->setFloat(prefix + "linear", light.linear);
-        shader->setFloat(prefix + "quadratic", light.quadratic);
-    }
-    
-    // Material properties
-    shader->setVec3("u_AlbedoColor", glm::vec3(0.8f, 0.7f, 0.6f));  // Warm metallic base
-    shader->setFloat("u_MetallicValue", 0.7f);                       // More metallic for better reflections
-    shader->setFloat("u_RoughnessValue", 0.3f);                      // Smoother for better light interaction
-    
-    // Enable texture if mesh has diffuse texture
-    if (!meshInstances.mesh->textures.empty()) {
-        shader->setBool("u_HasTexture0", true);
-        shader->setInt("u_Texture0", 0);  // Texture unit 0
+    // 4. Apply PBR lighting using the independent lighting system
+    auto* pbrLighting = PBRLightingRenderer::GetInstance();
+    if (pbrLighting) {
+        // Create material properties from mesh data
+        PBRLightingRenderer::PBRMaterialProperties material;
+        material.albedoColor = glm::vec3(0.8f, 0.7f, 0.6f);  // Warm metallic base
+        material.metallicValue = 0.7f;                       // More metallic for better reflections
+        material.roughnessValue = 0.3f;                      // Smoother for better light interaction
+        material.hasTexture = !meshInstances.mesh->textures.empty();
+        
+        // Apply lighting to shader
+        pbrLighting->ApplyLightingToShader(shader, material);
     } else {
-        shader->setBool("u_HasTexture0", false);
+        std::cerr << "Warning: PBRLightingRenderer not available for lighting setup" << std::endl;
     }
     
     // 5. Bind textures (if any)
@@ -298,26 +258,4 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<M
     std::cout << "  - Material name: " << material->GetName() << std::endl;
 }
 
-// Light management methods
-void InstancedRenderer::ClearLights()
-{
-    m_PointLights.clear();
-    m_DirectionalLights.clear();
-    m_SpotLights.clear();
-}
-
-void InstancedRenderer::AddPointLight(const PointLight& light)
-{
-    m_PointLights.push_back(light);
-}
-
-void InstancedRenderer::AddDirectionalLight(const DirectionalLight& light)
-{
-    m_DirectionalLights.push_back(light);
-}
-
-void InstancedRenderer::AddSpotLight(const SpotLight& light)
-{
-    m_SpotLights.push_back(light);
-}
 

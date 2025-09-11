@@ -2,6 +2,7 @@
 #include "Rendering/MeshRenderer.h"
 #include "Rendering/FrustumCuller.h"
 #include "Rendering/InstancedRenderer.h"
+#include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/RenderPass.h"
 #include "Buffer/FrameBuffer.h"
 #include <glad/gl.h>
@@ -75,16 +76,19 @@ void SceneRenderer::InitializeDefaultPipelines() {
     mainPass->SetRenderFunction([this, mainPass]()
         {
             // Clear color and depth buffers
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClearColor(1.0f, 1.0f, 1.0f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Standard forward rendering
             if (m_Scene && m_Camera)
             {
-                // 1. Frustum culling
+                // 1. Update scene-wide lighting
+                m_PBRLightingRenderer->UpdateSceneLighting(m_Scene.get(), *m_Camera);
+
+                // 2. Frustum culling
                 m_FrustumCuller->CullAgainstCamera(m_Scene.get(), *m_Camera);
 
-                // 2. Forward instanced rendering
+                // 3. Forward instanced rendering (will query lighting automatically)
                 m_InstancedRenderer->Render(m_Scene.get(), *m_Camera);
             }
 
@@ -101,6 +105,7 @@ void SceneRenderer::InitializeDefaultPipelines() {
 
 void SceneRenderer::InitializeRenderingCoordinators() {
     // Create rendering coordinators - graphics-specific, not ECS systems
+    m_PBRLightingRenderer = std::make_unique<PBRLightingRenderer>();  // Initialize lighting first
     m_MeshRenderer = std::make_unique<MeshRenderer>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
     m_InstancedRenderer = std::make_unique<InstancedRenderer>();

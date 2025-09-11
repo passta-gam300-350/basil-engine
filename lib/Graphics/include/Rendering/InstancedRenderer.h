@@ -29,33 +29,6 @@ public:
         // Total: 96 bytes per instance (properly aligned)
     };
     
-    // Light data structures
-    struct PointLight {
-        glm::vec3 position;
-        glm::vec3 color;
-        float intensity;
-        float constant;
-        float linear;
-        float quadratic;
-    };
-    
-    struct DirectionalLight {
-        glm::vec3 direction;
-        glm::vec3 color;
-        float intensity;
-    };
-    
-    struct SpotLight {
-        glm::vec3 position;
-        glm::vec3 direction;
-        glm::vec3 color;
-        float intensity;
-        float cutOff;
-        float outerCutOff;
-        float constant;
-        float linear;
-        float quadratic;
-    };
     
 public:
     InstancedRenderer();
@@ -73,11 +46,6 @@ public:
     // Mesh and material setup
     void SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
     
-    // Light management
-    void ClearLights();
-    void AddPointLight(const PointLight& light);
-    void AddDirectionalLight(const DirectionalLight& light);
-    void AddSpotLight(const SpotLight& light);
     
     // Configuration
     void SetMaxInstances(uint32_t maxInstances) { m_MaxInstances = maxInstances; }
@@ -97,11 +65,6 @@ private:
     
     std::unordered_map<std::string, MeshInstances> m_MeshInstances;
     std::unordered_map<std::string, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
-    
-    // Light storage
-    std::vector<PointLight> m_PointLights;
-    std::vector<DirectionalLight> m_DirectionalLights;
-    std::vector<SpotLight> m_SpotLights;
     
     uint32_t m_MaxInstances;
     uint32_t m_TotalInstances;

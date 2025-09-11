@@ -35,6 +35,7 @@ struct FrameData
 class MeshRenderer;
 class FrustumCuller;
 class InstancedRenderer;
+class PBRLightingRenderer;
 
 class SceneRenderer {
 public:
@@ -66,6 +67,7 @@ public:
     
     // Access to rendering coordinators for advanced usage
     InstancedRenderer* GetInstancedRenderer() const { return m_InstancedRenderer.get(); }
+    PBRLightingRenderer* GetPBRLightingRenderer() const { return m_PBRLightingRenderer.get(); }
 
 private:
     //void InitializePipeline();
@@ -96,5 +98,6 @@ private:
     std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
+    std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;
     
 };

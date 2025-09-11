@@ -16,6 +16,7 @@ extern "C" {
 #include "Application.h"
 #include <Scene/SceneRenderer.h>
 #include <Rendering/InstancedRenderer.h>
+#include <Rendering/PBRLightingRenderer.h>
 #include <Resources/Material.h>
 #include <Resources/Mesh.h>
 #include <glm/glm.hpp>
@@ -186,90 +187,90 @@ private:
     {
         std::cout << "Setting up lighting..." << std::endl;
         
-        auto* instancedRenderer = GetSceneRenderer()->GetInstancedRenderer();
-        if (!instancedRenderer) {
-            std::cerr << "Error: InstancedRenderer not available!" << std::endl;
+        auto* pbrLightingRenderer = GetSceneRenderer()->GetPBRLightingRenderer();
+        if (!pbrLightingRenderer) {
+            std::cerr << "Error: PBRLightingRenderer not available!" << std::endl;
             return;
         }
         
         // Clear any existing lights
-        instancedRenderer->ClearLights();
+        pbrLightingRenderer->ClearLights();
         
         // Add point lights at corners of the grid (same as before but now configurable)
-        InstancedRenderer::PointLight pointLight1{
+        PBRLightingRenderer::PointLight pointLight1{
             glm::vec3(-12.0f, 8.0f, -12.0f),  // position: Front-left, elevated
             glm::vec3(1.0f, 0.2f, 0.2f),      // color: Red
-            15.0f,                             // intensity
+            3.0f,                             // intensity
             1.0f,                              // constant
             0.09f,                             // linear
             0.032f                             // quadratic
         };
-        instancedRenderer->AddPointLight(pointLight1);
+        pbrLightingRenderer->AddPointLight(pointLight1);
         
-        InstancedRenderer::PointLight pointLight2{
+        PBRLightingRenderer::PointLight pointLight2{
             glm::vec3(12.0f, 8.0f, -12.0f),   // position: Front-right, elevated
             glm::vec3(0.2f, 1.0f, 0.2f),      // color: Green
-            15.0f,                             // intensity
+            3.0f,                             // intensity
             1.0f,                              // constant
             0.09f,                             // linear
             0.032f                             // quadratic
         };
-        instancedRenderer->AddPointLight(pointLight2);
+        pbrLightingRenderer->AddPointLight(pointLight2);
         
-        InstancedRenderer::PointLight pointLight3{
+        PBRLightingRenderer::PointLight pointLight3{
             glm::vec3(-12.0f, 8.0f, 12.0f),   // position: Back-left, elevated
             glm::vec3(0.2f, 0.2f, 1.0f),      // color: Blue
-            15.0f,                             // intensity
+            3.0f,                             // intensity
             1.0f,                              // constant
             0.09f,                             // linear
             0.032f                             // quadratic
         };
-        instancedRenderer->AddPointLight(pointLight3);
+        pbrLightingRenderer->AddPointLight(pointLight3);
         
-        InstancedRenderer::PointLight pointLight4{
+        PBRLightingRenderer::PointLight pointLight4{
             glm::vec3(12.0f, 8.0f, 12.0f),    // position: Back-right, elevated
             glm::vec3(1.0f, 1.0f, 0.2f),      // color: Yellow
-            15.0f,                             // intensity
+            3.0f,                             // intensity
             1.0f,                              // constant
             0.09f,                             // linear
             0.032f                             // quadratic
         };
-        instancedRenderer->AddPointLight(pointLight4);
+        pbrLightingRenderer->AddPointLight(pointLight4);
         
         // Add main directional light (sun)
-        InstancedRenderer::DirectionalLight directionalLight{
+        PBRLightingRenderer::DirectionalLight directionalLight{
             glm::vec3(0.3f, -1.0f, -0.2f),    // direction: Angled down
             glm::vec3(1.0f, 0.95f, 0.8f),     // color: Warm white
-            3.0f                               // intensity
+            0.1f                               // intensity
         };
-        instancedRenderer->AddDirectionalLight(directionalLight);
+        pbrLightingRenderer->AddDirectionalLight(directionalLight);
         
         // Add spot lights for dramatic effect
-        InstancedRenderer::SpotLight spotLight1{
+        PBRLightingRenderer::SpotLight spotLight1{
             glm::vec3(0.0f, 15.0f, -15.0f),   // position: Above, pointing down at grid
             glm::vec3(0.0f, -1.0f, 0.3f),     // direction
             glm::vec3(1.0f, 0.8f, 0.6f),      // color: Warm spotlight
-            20.0f,                             // intensity
+            3.0f,                             // intensity
             cos(glm::radians(25.0f)),          // cutOff: Inner cone
             cos(glm::radians(35.0f)),          // outerCutOff: Outer cone
             1.0f,                              // constant
             0.045f,                            // linear
             0.0075f                            // quadratic
         };
-        instancedRenderer->AddSpotLight(spotLight1);
+        pbrLightingRenderer->AddSpotLight(spotLight1);
         
-        InstancedRenderer::SpotLight spotLight2{
+        PBRLightingRenderer::SpotLight spotLight2{
             glm::vec3(-8.0f, 12.0f, 8.0f),    // position: Side spotlight
             glm::vec3(0.5f, -0.8f, -0.3f),    // direction
             glm::vec3(0.8f, 0.6f, 1.0f),      // color: Purple spotlight
-            15.0f,                             // intensity
+            3.0f,                             // intensity
             cos(glm::radians(20.0f)),          // cutOff
             cos(glm::radians(30.0f)),          // outerCutOff
             1.0f,                              // constant
             0.045f,                            // linear
             0.0075f                            // quadratic
         };
-        instancedRenderer->AddSpotLight(spotLight2);
+        pbrLightingRenderer->AddSpotLight(spotLight2);
         
         std::cout << "Lighting setup complete!" << std::endl;
         std::cout << "  - Point lights: 4" << std::endl;
