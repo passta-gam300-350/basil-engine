@@ -11,6 +11,8 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 *************************************************************************/
 #include "Message.h"
+#include <iostream>
+#include <functional>
 
 using MessageCallback = std::function<void(std::unique_ptr<Message>)>;
 using MessageFunctionPtr = void(*)(std::unique_ptr<Message>);

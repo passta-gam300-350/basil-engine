@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include "Subscriber.h"
 #include "Message.h"
+#include <deque>
 
 /**
  * @brief A class that manages the communication between different systems via messages.
