@@ -97,9 +97,9 @@ void SceneRenderer::InitializeDefaultPipelines() {
                 // 1. Update scene-wide lighting with submitted lights
                 m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
 
-                // 2. Frustum culling on submitted renderables (disabled for testing)
-                auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
-                //auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
+                // 2. Frustum culling on submitted renderables
+                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
+                //auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
 
                 // 3. Forward instanced rendering with visible renderables
                 m_InstancedRenderer->Render(visibleRenderables, m_FrameData);

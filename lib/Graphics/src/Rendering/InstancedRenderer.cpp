@@ -114,13 +114,15 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 
 void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
-    // For static instances, we only need to build the data once
-    // This should be called during scene setup, not every frame
-    if (m_MeshInstances.empty() && !renderables.empty()) {
-        BuildStaticInstanceData(renderables);
+    if (renderables.empty()) {
+        return;
     }
     
-    // Just render the pre-built instance data
+    // Always rebuild instance data based on currently visible renderables
+    // This handles dynamic frustum culling as camera moves
+    BuildDynamicInstanceData(renderables);
+    
+    // Render the instance batches
     for (const auto& pair : m_MeshInstances) {
         if (!pair.second.instances.empty()) {
             RenderInstancedMesh(pair.first, frameData);
@@ -128,13 +130,13 @@ void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, c
     }
 }
 
-void InstancedRenderer::BuildStaticInstanceData(const std::vector<RenderableData>& renderables)
+void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableData>& renderables)
 {
-    // Clear and rebuild instance data (called once for static scenes)
+    // Clear and rebuild instance data based on currently visible renderables
     Clear();
     BeginInstanceBatch();
     
-    std::cout << "BuildStaticInstanceData: Processing " << renderables.size() << " renderables" << std::endl;
+    // Debug output removed for performance
     
     // Group renderables by mesh for instancing
     for (size_t i = 0; i < renderables.size(); ++i) {
@@ -146,9 +148,9 @@ void InstancedRenderer::BuildStaticInstanceData(const std::vector<RenderableData
         // Generate mesh ID from mesh pointer only (ignore material for batching)
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
         
-        std::cout << "Renderable[" << i << "]: meshId=" << meshId 
+        /*std::cout << "Renderable[" << i << "]: meshId=" << meshId
                   << ", materialPtr=" << renderable.material.get()
-                  << ", materialName=" << renderable.material->GetName() << std::endl;
+                  << ", materialName=" << renderable.material->GetName() << std::endl;*/
         
         // Add instance data
         InstanceData instanceData;
@@ -166,10 +168,10 @@ void InstancedRenderer::BuildStaticInstanceData(const std::vector<RenderableData
         AddInstance(meshId, instanceData);
     }
     
-    std::cout << "Final mesh groups: " << m_MeshInstances.size() << std::endl;
+    /*std::cout << "Final mesh groups: " << m_MeshInstances.size() << std::endl;
     for (const auto& pair : m_MeshInstances) {
         std::cout << "  MeshID " << pair.first << ": " << pair.second.instances.size() << " instances" << std::endl;
-    }
+    }*/
     
     // End instance batch to update SSBOs
     EndInstanceBatch();
