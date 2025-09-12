@@ -6,12 +6,12 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set(ALL_LIBS
-  PUBLIC glad
-  PUBLIC glfw
-  PUBLIC glm
-  PUBLIC assimp::assimp
-  PUBLIC stb
-  PUBLIC EnTT
+  #PUBLIC glad
+ # PUBLIC glfw
+ # PUBLIC glm
+  #PUBLIC assimp::assimp
+  #PUBLIC stb
+ # PUBLIC EnTT
   PUBLIC mono_interface
 #  PUBLIC platform_lib
  )

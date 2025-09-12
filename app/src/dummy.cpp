@@ -6,7 +6,6 @@ int main() {
 	while (!Engine::WindowShouldClose()) {
 		Engine::Input();
 		Engine::Update();
-		
 	}
 	Engine::Exit();
 }

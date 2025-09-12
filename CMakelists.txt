@@ -32,3 +32,5 @@ add_subdirectory(engine)
 add_subdirectory(test)
 
 add_subdirectory(app)
+
+add_subdirectory(editor)
