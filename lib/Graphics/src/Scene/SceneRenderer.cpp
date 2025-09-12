@@ -25,8 +25,7 @@ void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
 }
 
 void SceneRenderer::ClearFrame() {
-    m_SubmittedRenderables.clear();
-    m_SubmittedLights.clear();
+    // Don't clear renderables or lights - they are static and submitted once during initialization
 }
 
 void SceneRenderer::AddPipeline(std::string const &name, std::unique_ptr<RenderPipeline> pipeline)
@@ -89,7 +88,7 @@ void SceneRenderer::InitializeDefaultPipelines() {
     mainPass->SetRenderFunction([this, mainPass]()
         {
             // Clear color and depth buffers
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClearColor(0.7f, 0.7f, 0.7f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Standard forward rendering with submitted data
@@ -98,8 +97,9 @@ void SceneRenderer::InitializeDefaultPipelines() {
                 // 1. Update scene-wide lighting with submitted lights
                 m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
 
-                // 2. Frustum culling on submitted renderables
-                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
+                // 2. Frustum culling on submitted renderables (disabled for testing)
+                auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
+                //auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
 
                 // 3. Forward instanced rendering with visible renderables
                 m_InstancedRenderer->Render(visibleRenderables, m_FrameData);

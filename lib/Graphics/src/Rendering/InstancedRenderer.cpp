@@ -114,21 +114,41 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 
 void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
-    if (renderables.empty()) {
-        return;
+    // For static instances, we only need to build the data once
+    // This should be called during scene setup, not every frame
+    if (m_MeshInstances.empty() && !renderables.empty()) {
+        BuildStaticInstanceData(renderables);
     }
     
-    // Clear existing instances and rebuild from submitted renderables
+    // Just render the pre-built instance data
+    for (const auto& pair : m_MeshInstances) {
+        if (!pair.second.instances.empty()) {
+            RenderInstancedMesh(pair.first, frameData);
+        }
+    }
+}
+
+void InstancedRenderer::BuildStaticInstanceData(const std::vector<RenderableData>& renderables)
+{
+    // Clear and rebuild instance data (called once for static scenes)
     Clear();
+    BeginInstanceBatch();
+    
+    std::cout << "BuildStaticInstanceData: Processing " << renderables.size() << " renderables" << std::endl;
     
     // Group renderables by mesh for instancing
-    for (const auto& renderable : renderables) {
+    for (size_t i = 0; i < renderables.size(); ++i) {
+        const auto& renderable = renderables[i];
         if (!renderable.visible || !renderable.mesh || !renderable.material) {
             continue;
         }
         
-        // Generate a mesh ID from the mesh pointer for grouping
+        // Generate mesh ID from mesh pointer only (ignore material for batching)
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
+        
+        std::cout << "Renderable[" << i << "]: meshId=" << meshId 
+                  << ", materialPtr=" << renderable.material.get()
+                  << ", materialName=" << renderable.material->GetName() << std::endl;
         
         // Add instance data
         InstanceData instanceData;
@@ -139,17 +159,20 @@ void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, c
         instanceData.metallic = 0.5f; // Default PBR values
         instanceData.roughness = 0.5f;
         
-        // Set mesh data if not already set
-        SetMeshData(meshId, renderable.mesh, renderable.material);
+        // Set mesh data if not already set (use first material encountered for the mesh)
+        if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
+            SetMeshData(meshId, renderable.mesh, renderable.material);
+        }
         AddInstance(meshId, instanceData);
     }
     
-    // Render each instanced mesh type
+    std::cout << "Final mesh groups: " << m_MeshInstances.size() << std::endl;
     for (const auto& pair : m_MeshInstances) {
-        if (!pair.second.instances.empty()) {
-            RenderInstancedMesh(pair.first, frameData);
-        }
+        std::cout << "  MeshID " << pair.first << ": " << pair.second.instances.size() << " instances" << std::endl;
     }
+    
+    // End instance batch to update SSBOs
+    EndInstanceBatch();
 }
 
 void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const FrameData& frameData)
@@ -277,10 +300,6 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<M
     meshInstances.mesh = mesh;
     meshInstances.material = material;
     
-    std::cout << "InstancedRenderer: Successfully set mesh and material data for '" << meshId << "'" << std::endl;
-    std::cout << "  - Mesh vertices: " << mesh->GetVertexCount() << std::endl;
-    std::cout << "  - Mesh indices: " << mesh->GetIndexCount() << std::endl;
-    std::cout << "  - Material name: " << material->GetName() << std::endl;
 }
 
 

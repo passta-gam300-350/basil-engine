@@ -11,6 +11,18 @@
 #include <cmath>
 #include <random>
 
+#ifdef _WIN32
+// NVIDIA Optimus - force discrete GPU
+extern "C" {
+    __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+}
+
+// AMD PowerXpress - force discrete GPU  
+extern "C" {
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 // Static instance for callbacks
 GraphicsTestDriver* GraphicsTestDriver::s_Instance = nullptr;
 
@@ -82,6 +94,14 @@ bool GraphicsTestDriver::Initialize()
 
     // Setup the advanced demo scene
     SetupAdvancedScene();
+    
+    // Submit static data once during initialization
+    for (const auto& light : m_SceneLights) {
+        m_SceneRenderer->SubmitLight(light);
+    }
+    for (const auto& renderable : m_SceneObjects) {
+        m_SceneRenderer->SubmitRenderable(renderable);
+    }
 
     // Print system info
     PrintSystemInfo();
@@ -128,13 +148,7 @@ void GraphicsTestDriver::Run()
         // Update the advanced scene
         UpdateAdvancedScene();
 
-        // Submit scene data
-        for (const auto& renderable : m_SceneObjects) {
-            m_SceneRenderer->SubmitRenderable(renderable);
-        }
-        for (const auto& light : m_SceneLights) {
-            m_SceneRenderer->SubmitLight(light);
-        }
+        // Static data submitted once during initialization - no need to resubmit
 
         // Render scene
         m_SceneRenderer->Render();
@@ -258,194 +272,171 @@ void GraphicsTestDriver::SetupAdvancedScene()
 {
     std::cout << "Setting up Advanced Graphics Demo...\n";
     
-    // Create a massive field of objects for instanced rendering
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> pos(-25.0f, 25.0f);
-    std::uniform_real_distribution<float> scale(0.3f, 2.5f);
-    std::uniform_int_distribution<int> materialIdx(0, 4);
-    
+    // Create a 10x10 grid of objects for instanced rendering
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
     
-    // Create 500+ objects for impressive instanced rendering
-    for (int i = 0; i < 500; ++i) {
-        glm::vec3 position(pos(gen), pos(gen) * 0.3f, pos(gen));
-        glm::vec3 scaleVec(scale(gen));
-        std::string material = materials[materialIdx(gen)];
-        
-        auto renderable = CreateRenderable("tinbox", material, position, scaleVec);
-        m_SceneObjects.push_back(renderable);
+    const int gridSize = 10;
+    const float spacing = 3.0f;
+    const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
+    
+    // Create 10x10 grid (100 objects total) using both meshes
+    for (int x = 0; x < gridSize; ++x) {
+        for (int z = 0; z < gridSize; ++z) {
+            glm::vec3 position(
+                startOffset + x * spacing,
+                0.0f,
+                startOffset + z * spacing
+            );
+            
+            // Use uniform scale
+            glm::vec3 scaleVec(1.0f);
+            
+            // Cycle through materials based on position
+            int materialIndex = (x + z) % materials.size();
+            std::string material = materials[materialIndex];
+            
+            CreateModelInstance("tinbox", "DefaultMaterial", position, scaleVec);
+        }
     }
     
     // Complex PBR lighting setup
     m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.2f, -0.8f, 0.3f),
         glm::vec3(1.0f, 0.95f, 0.85f),
-        1.5f
+        1.0f
     ));
     
-    // Multiple dynamic point lights
+    // Point lights at the four corners of the 10x10 grid
+    // Grid spans from -13.5 to +13.5 (with 3.0f spacing)
+    float cornerOffset = 13.5f; // Half of (gridSize-1) * spacing
+    float lightHeight = 8.0f;
+    
+    // Top-left corner (red light)
     m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(-12.0f, 8.0f, -12.0f),
-        glm::vec3(1.0f, 0.3f, 0.1f),
+        glm::vec3(-cornerOffset, lightHeight, -cornerOffset),
+        glm::vec3(1.0f, 0.2f, 0.2f),
         4.0f,
         25.0f
     ));
     
+    // Top-right corner (green light)
     m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(12.0f, 6.0f, 12.0f),
-        glm::vec3(0.1f, 0.3f, 1.0f),
-        3.5f,
-        20.0f
-    ));
-    
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(0.0f, 10.0f, 0.0f),
-        glm::vec3(0.2f, 1.0f, 0.4f),
-        5.0f,
-        30.0f
-    ));
-    
-    // Dramatic spot lights
-    m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(-20.0f, 15.0f, -20.0f),
-        glm::vec3(1.0f, 0.2f, 0.8f),
-        glm::vec3(1.0f, 0.5f, 0.2f),
-        6.0f,
-        35.0f,
-        12.0f,
+        glm::vec3(cornerOffset, lightHeight, -cornerOffset),
+        glm::vec3(0.2f, 1.0f, 0.2f),
+        4.0f,
         25.0f
     ));
     
+    // Bottom-left corner (blue light)
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(-cornerOffset, lightHeight, cornerOffset),
+        glm::vec3(0.2f, 0.2f, 1.0f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Bottom-right corner (yellow light)
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(cornerOffset, lightHeight, cornerOffset),
+        glm::vec3(1.0f, 1.0f, 0.2f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Single spotlight in center above the grid
     m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(20.0f, 12.0f, 20.0f),
-        glm::vec3(-0.8f, -0.5f, -0.6f),
-        glm::vec3(0.3f, 0.8f, 1.0f),
-        4.5f,
-        28.0f,
-        15.0f,
-        30.0f
+        glm::vec3(0.0f, 20.0f, 0.0f),        // Position: centered above grid
+        glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
+        glm::vec3(1.0f, 1.0f, 0.8f),         // Color: warm white light
+        6.0f,                                // Intensity
+        40.0f,                               // Range
+        15.0f,                               // Inner cone angle
+        30.0f                                // Outer cone angle
     ));
     
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
     
     std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, " 
               << m_SceneLights.size() << " dynamic lights\n";
+              
+    // Debug: verify all objects were created
+    std::cout << "Debug: Created " << m_SceneObjects.size() << " scene objects" << std::endl;
 }
 
 void GraphicsTestDriver::UpdateAdvancedScene()
 {
-    // Complex wave-based animation for all instances
-    for (size_t i = 0; i < m_SceneObjects.size(); ++i) {
-        float phase = i * 0.05f;
-        float time_offset = i * 0.1f;
-        
-        // Extract base position (stored in transform matrix column 3)
-        glm::vec3 basePos = glm::vec3(m_SceneObjects[i].transform[3]);
-        
-        // Multi-layered wave motion
-        glm::vec3 waveOffset(
-            sin(m_Time * 0.8f + phase) * 1.2f + cos(m_Time * 1.3f + time_offset) * 0.6f,
-            cos(m_Time * 1.2f + phase) * 0.8f + sin(m_Time * 0.9f + time_offset) * 0.4f,
-            sin(m_Time * 0.6f + phase) * 1.0f + cos(m_Time * 1.1f + time_offset) * 0.5f
-        );
-        
-        // Complex rotation combining multiple axes
-        glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), m_Time * 0.3f + phase, 
-            glm::vec3(1.0f, 0.0f, 0.0f));
-        glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), m_Time * 0.5f + time_offset, 
-            glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), m_Time * 0.2f + phase, 
-            glm::vec3(0.0f, 0.0f, 1.0f));
-        
-        glm::mat4 rotation = rotationY * rotationX * rotationZ;
-        
-        // Dynamic scaling based on distance from center
-        float distFromCenter = glm::length(basePos);
-        float scaleWave = 0.8f + 0.4f * sin(m_Time * 2.0f + distFromCenter * 0.1f);
-        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(scaleWave));
-        
-        // Combine transformations
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), basePos + waveOffset);
-        m_SceneObjects[i].transform = translation * rotation * scale;
+    // Completely static scene - no animations for instances or lights
+    // Objects and lights remain in their original positions with initial properties
+}
+void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
+                                            const glm::vec3& position, const glm::vec3& scale)
+{
+    auto model = m_ResourceManager->GetModel(modelName);
+    if (!model || model->meshes.empty()) {
+        return;
     }
     
-    // Animate lights for dramatic effect
-    if (m_SceneLights.size() >= 6) {
-        // Animate point light positions in orbiting patterns
-        float radius1 = 15.0f + 8.0f * sin(m_Time * 0.3f);
-        float radius2 = 12.0f + 6.0f * cos(m_Time * 0.4f);
+    // Create a renderable for each mesh in the model
+    for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
+        // Share the same mesh objects instead of creating new ones
+        static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
         
-        m_SceneLights[1].position = glm::vec3(
-            cos(m_Time * 0.6f) * radius1,
-            8.0f + 4.0f * sin(m_Time * 0.8f),
-            sin(m_Time * 0.6f) * radius1
-        );
+        std::string meshKey = modelName + "_mesh" + std::to_string(meshIndex);
+        auto it = s_MeshCache.find(meshKey);
         
-        m_SceneLights[2].position = glm::vec3(
-            cos(m_Time * 0.7f + 3.14f) * radius2,
-            6.0f + 3.0f * cos(m_Time * 1.2f),
-            sin(m_Time * 0.7f + 3.14f) * radius2
-        );
+        std::shared_ptr<Mesh> mesh;
+        if (it != s_MeshCache.end()) {
+            // Reuse existing mesh
+            mesh = it->second;
+        } else {
+            // Create new mesh and cache it
+            mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
+            s_MeshCache[meshKey] = mesh;
+        }
         
-        // Animate light colors
-        m_SceneLights[1].color = glm::vec3(
-            0.8f + 0.3f * sin(m_Time),
-            0.2f + 0.2f * cos(m_Time * 1.3f),
-            0.1f + 0.1f * sin(m_Time * 0.7f)
-        );
+        // Create renderable for this mesh
+        RenderableData renderable;
+        renderable.mesh = mesh;
+        renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
+        renderable.visible = true;
         
-        m_SceneLights[2].color = glm::vec3(
-            0.1f + 0.1f * sin(m_Time * 0.9f),
-            0.2f + 0.2f * cos(m_Time * 1.1f),
-            0.8f + 0.3f * sin(m_Time * 1.4f)
-        );
+        // Use the mesh's original material if it exists, otherwise create a simple one
+        auto shader = m_ResourceManager->GetShader("instanced_bindless");
+        if (!shader) {
+            shader = m_ResourceManager->GetShader("basic");
+        }
         
-        m_SceneLights[3].color = glm::vec3(
-            0.2f + 0.3f * cos(m_Time * 0.6f),
-            0.9f + 0.2f * sin(m_Time * 0.8f),
-            0.4f + 0.4f * sin(m_Time * 1.0f)
-        );
+        if (shader) {
+            // Create a simple material wrapper - the mesh may already have texture/material data
+            renderable.material = std::make_shared<Material>(shader, "MeshMaterial_" + std::to_string(meshIndex));
+        }
         
-        // Animate spot light directions
-        m_SceneLights[4].direction = glm::normalize(glm::vec3(
-            sin(m_Time * 0.4f),
-            -0.6f,
-            cos(m_Time * 0.3f)
-        ));
-        
-        m_SceneLights[5].direction = glm::normalize(glm::vec3(
-            -sin(m_Time * 0.5f),
-            -0.8f,
-            -cos(m_Time * 0.4f)
-        ));
-    }
-    
-    // Animate directional light
-    if (!m_SceneLights.empty()) {
-        m_SceneLights[0].direction = glm::normalize(glm::vec3(
-            0.3f * sin(m_Time * 0.2f),
-            -0.8f,
-            0.5f * cos(m_Time * 0.15f)
-        ));
-        
-        // Subtle color animation for day/night cycle effect
-        float dayNightCycle = 0.8f + 0.2f * sin(m_Time * 0.1f);
-        m_SceneLights[0].color = glm::vec3(
-            dayNightCycle * 1.0f,
-            dayNightCycle * 0.95f,
-            dayNightCycle * 0.85f
-        );
+        m_SceneObjects.push_back(renderable);
     }
 }
+
+
 RenderableData GraphicsTestDriver::CreateRenderable(const std::string& modelName, const std::string& materialName, 
-                                                  const glm::vec3& position, const glm::vec3& scale)
+                                                  const glm::vec3& position, const glm::vec3& scale, int meshIndex)
 {
+    // This method is deprecated - use CreateModelInstance instead
     RenderableData renderable;
     
     auto model = m_ResourceManager->GetModel(modelName);
     if (model && !model->meshes.empty()) {
-        renderable.mesh = std::make_shared<Mesh>(model->meshes[0]);
+        // Share the same mesh object instead of creating new ones  
+        static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
+        
+        auto it = s_MeshCache.find(modelName);
+        if (it != s_MeshCache.end()) {
+            // Reuse existing mesh
+            renderable.mesh = it->second;
+        } else {
+            // Create new mesh and cache it using first mesh only
+            auto newMesh = std::make_shared<Mesh>(model->meshes[0]);
+            s_MeshCache[modelName] = newMesh;
+            renderable.mesh = newMesh;
+        }
     }
     
     // Try to use bindless shader first, fall back to basic shader
@@ -455,33 +446,47 @@ RenderableData GraphicsTestDriver::CreateRenderable(const std::string& modelName
     }
     
     if (shader) {
-        renderable.material = std::make_shared<Material>(shader, materialName);
+        // Reuse existing materials instead of creating new ones
+        // This ensures all renderables with the same material name share the same material pointer
+        static std::unordered_map<std::string, std::shared_ptr<Material>> s_MaterialCache;
         
-        // Set material properties based on name
-        if (materialName == "RedMaterial") {
-            renderable.material->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.2f, 0.2f));
-            renderable.material->SetFloat("u_Metallic", 0.1f);
-            renderable.material->SetFloat("u_Roughness", 0.8f);
-        }
-        else if (materialName == "GreenMaterial") {
-            renderable.material->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.8f, 0.2f));
-            renderable.material->SetFloat("u_Metallic", 0.3f);
-            renderable.material->SetFloat("u_Roughness", 0.6f);
-        }
-        else if (materialName == "BlueMaterial") {
-            renderable.material->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.2f, 0.8f));
-            renderable.material->SetFloat("u_Metallic", 0.5f);
-            renderable.material->SetFloat("u_Roughness", 0.4f);
-        }
-        else if (materialName == "GoldMaterial") {
-            renderable.material->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.8f, 0.2f));
-            renderable.material->SetFloat("u_Metallic", 0.9f);
-            renderable.material->SetFloat("u_Roughness", 0.1f);
-        }
-        else if (materialName == "WhiteMaterial") {
-            renderable.material->SetVec3("u_AlbedoColor", glm::vec3(0.9f, 0.9f, 0.9f));
-            renderable.material->SetFloat("u_Metallic", 0.0f);
-            renderable.material->SetFloat("u_Roughness", 0.9f);
+        auto it = s_MaterialCache.find(materialName);
+        if (it != s_MaterialCache.end()) {
+            // Reuse existing material
+            renderable.material = it->second;
+        } else {
+            // Create new material and cache it
+            auto newMaterial = std::make_shared<Material>(shader, materialName);
+            
+            // Set material properties based on name
+            if (materialName == "RedMaterial") {
+                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.2f, 0.2f));
+                newMaterial->SetFloat("u_Metallic", 0.1f);
+                newMaterial->SetFloat("u_Roughness", 0.8f);
+            }
+            else if (materialName == "GreenMaterial") {
+                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.8f, 0.2f));
+                newMaterial->SetFloat("u_Metallic", 0.3f);
+                newMaterial->SetFloat("u_Roughness", 0.6f);
+            }
+            else if (materialName == "BlueMaterial") {
+                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.2f, 0.8f));
+                newMaterial->SetFloat("u_Metallic", 0.5f);
+                newMaterial->SetFloat("u_Roughness", 0.4f);
+            }
+            else if (materialName == "GoldMaterial") {
+                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.8f, 0.2f));
+                newMaterial->SetFloat("u_Metallic", 0.9f);
+                newMaterial->SetFloat("u_Roughness", 0.1f);
+            }
+            else if (materialName == "WhiteMaterial") {
+                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.9f, 0.9f, 0.9f));
+                newMaterial->SetFloat("u_Metallic", 0.0f);
+                newMaterial->SetFloat("u_Roughness", 0.9f);
+            }
+            
+            s_MaterialCache[materialName] = newMaterial;
+            renderable.material = newMaterial;
         }
     }
     

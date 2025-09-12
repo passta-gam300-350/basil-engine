@@ -13,6 +13,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	// Create the GLFW window
 	m_Window = glfwCreateWindow(m_Width, m_Height, title.c_str(), nullptr, nullptr);

@@ -43,6 +43,9 @@ public:
     // Rendering using existing command buffer system
     void Render(const std::vector<RenderableData>& renderables, const FrameData& frameData);
     
+    // Build static instance data once (for static scenes)
+    void BuildStaticInstanceData(const std::vector<RenderableData>& renderables);
+    
     // Mesh and material setup
     void SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
     
