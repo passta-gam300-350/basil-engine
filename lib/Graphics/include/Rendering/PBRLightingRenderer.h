@@ -9,17 +9,17 @@
 #include <glm/glm.hpp>
 
 // Forward declarations
-class Scene;
+struct SubmittedLightData;
 
 /**
- * PBR Lighting Renderer - Independent Scene-Wide Lighting System
+ * PBR Lighting Renderer - Independent Lighting System
  * 
- * Manages all physically-based rendering lighting for the entire scene.
+ * Manages all physically-based rendering lighting using submitted data.
  * Completely independent from any specific renderer (InstancedRenderer, MeshRenderer, etc.).
  * Other renderers can query this system for lighting data.
  * 
  * This system handles:
- * - Scene-wide light management (Point, Directional, Spot)
+ * - Light management from submitted data (Point, Directional, Spot)
  * - PBR material properties
  * - Lighting uniform setup for any shader
  * - Integration with the existing command system
@@ -96,8 +96,9 @@ public:
     size_t GetDirectionalLightCount() const { return m_DirectionalLights.size(); }
     size_t GetSpotLightCount() const { return m_SpotLights.size(); }
     
-    // Scene-wide lighting update (called once per frame)
-    void UpdateSceneLighting(Scene* scene, Camera& camera);
+    // Lighting update with submitted data (called once per frame)
+    void UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
+                       const glm::vec3& ambientLight, Camera& camera);
     
     // Helper method for any renderer to apply lighting to their shader
     void ApplyLightingToShader(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material = PBRMaterialProperties{});

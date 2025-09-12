@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 
 // Forward declarations to avoid cross-library dependencies
-class Scene;
+struct RenderableData;
 class Mesh;
 class Material;
 
@@ -41,7 +41,7 @@ public:
     void Clear();
     
     // Rendering using existing command buffer system
-    void Render(Scene* scene, Camera& camera);
+    void Render(const std::vector<RenderableData>& renderables, Camera& camera);
     
     // Mesh and material setup
     void SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);

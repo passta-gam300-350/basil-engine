@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../include/Buffer/FrameBuffer.h"
+#include "../Buffer/FrameBuffer.h"
 #include <memory>
 #include <string>
 #include <functional>

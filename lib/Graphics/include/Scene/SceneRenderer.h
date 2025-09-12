@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
 #include "../Pipeline/RenderPipeline.h"
 #include "../Utility/Camera.h"
+#include "../Utility/RenderData.h"
 #include <memory>
 #include <unordered_map>
 #include <string>
-#include "Resources/Shader.h"
+#include <vector>
 
 struct FrameData
 {
@@ -42,9 +42,14 @@ public:
     SceneRenderer();
     ~SceneRenderer();
     
-
-    void SetScene(const std::shared_ptr<Scene>& scene) { m_Scene = scene; }
+    // Data submission API - application pushes data each frame
+    void SubmitRenderable(const RenderableData& renderable);
+    void SubmitLight(const SubmittedLightData& light);
     void SetCamera(const std::shared_ptr<Camera>& camera) { m_Camera = camera; }
+    void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
+    
+    // Clear submitted data (call at start of frame)
+    void ClearFrame();
 
     // High-level scene rendering coordination
     void Render();
@@ -78,12 +83,18 @@ private:
     
     void UpdateFrameData()
     {
-        m_FrameData.viewMatrix = m_Camera->GetViewMatrix();
-        m_FrameData.projectionMatrix = m_Camera->GetProjectionMatrix();
-        m_FrameData.cameraPosition = m_Camera->GetPosition();
+        if (m_Camera) {
+            m_FrameData.viewMatrix = m_Camera->GetViewMatrix();
+            m_FrameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+            m_FrameData.cameraPosition = m_Camera->GetPosition();
+        }
     }
 
-    std::shared_ptr<Scene> m_Scene;
+    // Frame-submitted data
+    std::vector<RenderableData> m_SubmittedRenderables;
+    std::vector<SubmittedLightData> m_SubmittedLights;
+    glm::vec3 m_AmbientLight = glm::vec3(0.1f);
+    
     std::shared_ptr<Camera> m_Camera;
 
     // NEW: Multiple pipelines with order

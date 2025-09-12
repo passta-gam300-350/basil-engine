@@ -1,6 +1,6 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
-#include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
+#include "Utility/RenderData.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
 #include <iostream>
@@ -111,13 +111,37 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
               << matrices.size() << " transform matrices" << std::endl;*/
 }
 
-void InstancedRenderer::Render(Scene* scene, Camera& camera)
+void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, Camera& camera)
 {
-    if (!scene || m_MeshInstances.empty()) {
+    if (renderables.empty()) {
         return;
     }
     
-    //std::cout << "InstancedRenderer: Rendering " << m_MeshInstances.size() << " instanced meshes" << std::endl;
+    // Clear existing instances and rebuild from submitted renderables
+    Clear();
+    
+    // Group renderables by mesh for instancing
+    for (const auto& renderable : renderables) {
+        if (!renderable.visible || !renderable.mesh || !renderable.material) {
+            continue;
+        }
+        
+        // Generate a mesh ID from the mesh pointer for grouping
+        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
+        
+        // Add instance data
+        InstanceData instanceData;
+        instanceData.modelMatrix = renderable.transform;
+        instanceData.color = glm::vec4(1.0f); // Default color
+        instanceData.materialId = 0; // Default material ID
+        instanceData.flags = 0;
+        instanceData.metallic = 0.5f; // Default PBR values
+        instanceData.roughness = 0.5f;
+        
+        // Set mesh data if not already set
+        SetMeshData(meshId, renderable.mesh, renderable.material);
+        AddInstance(meshId, instanceData);
+    }
     
     // Render each instanced mesh type
     for (const auto& pair : m_MeshInstances) {

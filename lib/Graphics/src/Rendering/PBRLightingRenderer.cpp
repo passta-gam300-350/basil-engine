@@ -1,5 +1,6 @@
 #include "Rendering/PBRLightingRenderer.h"
-#include "../../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
+#include "Utility/RenderData.h"
+#include "Utility/Light.h"
 #include <iostream>
 
 // Static instance for scene-wide access
@@ -70,11 +71,60 @@ void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
     SetupPBRLighting(shader, camera, material);
 }
 
-void PBRLightingRenderer::UpdateSceneLighting(Scene* scene, Camera& camera)
+void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
+                                         const glm::vec3& ambientLight, Camera& camera)
 {
-    // Scene-wide lighting update - called once per frame
-    // This can be used for light culling, shadow map updates, etc.
-    // For now, it's mainly a coordination point
+    // Clear existing lights
+    ClearLights();
+    
+    // Convert submitted light data to internal format
+    for (const auto& submittedLight : submittedLights)
+    {
+        if (!submittedLight.enabled)
+            continue;
+            
+        switch (submittedLight.type)
+        {
+            case Light::Type::DIRECTIONAL:
+            {
+                DirectionalLight dirLight;
+                dirLight.direction = submittedLight.direction;
+                dirLight.color = submittedLight.color;
+                dirLight.intensity = submittedLight.intensity;
+                AddDirectionalLight(dirLight);
+                break;
+            }
+            case Light::Type::POINT:
+            {
+                PointLight pointLight;
+                pointLight.position = submittedLight.position;
+                pointLight.color = submittedLight.color;
+                pointLight.intensity = submittedLight.intensity;
+                // Default attenuation values - could be configurable
+                pointLight.constant = 1.0f;
+                pointLight.linear = 0.09f;
+                pointLight.quadratic = 0.032f;
+                AddPointLight(pointLight);
+                break;
+            }
+            case Light::Type::SPOT:
+            {
+                SpotLight spotLight;
+                spotLight.position = submittedLight.position;
+                spotLight.direction = submittedLight.direction;
+                spotLight.color = submittedLight.color;
+                spotLight.intensity = submittedLight.intensity;
+                spotLight.cutOff = glm::cos(glm::radians(submittedLight.innerCone));
+                spotLight.outerCutOff = glm::cos(glm::radians(submittedLight.outerCone));
+                // Default attenuation values
+                spotLight.constant = 1.0f;
+                spotLight.linear = 0.09f;
+                spotLight.quadratic = 0.032f;
+                AddSpotLight(spotLight);
+                break;
+            }
+        }
+    }
 }
 
 void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material)

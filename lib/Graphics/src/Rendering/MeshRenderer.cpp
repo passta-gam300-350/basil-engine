@@ -1,98 +1,49 @@
 #include "Rendering/MeshRenderer.h"
-#include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
-#include "ECS/Components/MeshComponent.h"
-#include "ECS/Components/MaterialComponent.h"
-#include "ECS/ComponentInterfaces.h"
+#include "Utility/RenderData.h"
 #include "Core/RenderCommandBuffer.h"
 #include "Core/Renderer.h"
 #include <iostream>
-#include <entt/entt.hpp>
 
-void MeshRenderer::Render(Scene* scene, Camera& camera)
+void MeshRenderer::Render(const std::vector<RenderableData>& renderables, Camera& camera)
 {
-    if (!scene)
+    if (renderables.empty())
         return;
-
-    //std::cout << "MeshRenderer: Rendering visible meshes" << std::endl;
-    
-    // This is RENDERING COORDINATION - queries ECS and generates commands
-    // No ECS system logic, just graphics work
-    RenderVisibleMeshes(scene, camera);
-}
-
-void MeshRenderer::RenderVisibleMeshes(Scene* scene, Camera& camera)
-{
-    auto& registry = scene->GetRegistry();
-    auto* componentAccessor = ComponentUtils::GetComponentAccessor();
-    
-    if (!componentAccessor) {
-        std::cout << "Warning: No component accessor set for MeshRenderer" << std::endl;
-        return;
-    }
     
     // Get view and projection matrices
     glm::mat4 viewMatrix = camera.GetViewMatrix();
     glm::mat4 projectionMatrix = camera.GetProjectionMatrix();
+    glm::vec3 cameraPosition = camera.GetPosition();
     
-    // Query for renderable entities
-    auto view = registry.view<MeshComponent, MaterialComponent>();
-    
-    view.each([&](auto entity, auto& mesh, auto& material) {
-        // Check if entity has required components using interface
-        if (!componentAccessor->HasTransform(registry, entity) || 
-            !componentAccessor->HasVisibility(registry, entity)) {
-            return;
-        }
-        
-        // Get components via interface
-        auto* visibility = componentAccessor->GetVisibility(registry, entity);
-        if (!visibility || !visibility->IsVisible()) {
-            return;
-        }
-        
-        // Skip if no mesh or material data
-        if (!mesh.mesh || material.Materials.empty()) {
-            return;
+    // Generate render commands for each renderable
+    for (const auto& renderable : renderables)
+    {
+        // Skip if not visible or no mesh/material
+        if (!renderable.visible || !renderable.mesh || !renderable.material) {
+            continue;
         }
         
         // Generate render command - this is pure graphics work
-        GenerateDrawCommand(registry, entity, viewMatrix, projectionMatrix, camera);
-    });
+        GenerateDrawCommand(renderable, viewMatrix, projectionMatrix, cameraPosition);
+    }
 }
 
-void MeshRenderer::GenerateDrawCommand(entt::registry& registry, entt::entity entity, 
-                                     const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix,
-                                     Camera& camera)
+void MeshRenderer::GenerateDrawCommand(const RenderableData& renderable, 
+                                     const glm::mat4& viewMatrix, 
+                                     const glm::mat4& projectionMatrix,
+                                     const glm::vec3& cameraPosition)
 {
-    // Get graphics components
-    auto& mesh = registry.get<MeshComponent>(entity);
-    auto& material = registry.get<MaterialComponent>(entity);
-    
-    // Get engine components via interface
-    auto* componentAccessor = ComponentUtils::GetComponentAccessor();
-    if (!componentAccessor) return;
-    
-    auto* transform = componentAccessor->GetTransform(registry, entity);
-    if (!transform) return;
-
-    // Get the first material and its shader
-    auto& mat = material.Materials[0];
-    auto shader = mat->GetShader();
+    auto shader = renderable.material->GetShader();
     
     if (!shader) {
         return;
     }
 
-    // Create value-based commands for efficient sorting - this is graphics work
-    auto& meshData = *mesh.mesh;
-    glm::vec3 cameraPosition = camera.GetPosition();
-    
     // Generate sort key for efficient batching
     RenderCommands::CommandSortKey sortKey;
-    sortKey.pass = 0;  // Main opaque pass
-    sortKey.material = reinterpret_cast<uintptr_t>(mat.get()) & 0xFFFFFF; // Material ID
-    sortKey.mesh = reinterpret_cast<uintptr_t>(mesh.mesh.get()) & 0xFFFF;  // Mesh ID
-    sortKey.instance = static_cast<uint32_t>(entity) & 0xFFFF;  // Instance ID
+    sortKey.pass = renderable.renderLayer;  // Use render layer as pass
+    sortKey.material = reinterpret_cast<uintptr_t>(renderable.material.get()) & 0xFFFFFF;
+    sortKey.mesh = reinterpret_cast<uintptr_t>(renderable.mesh.get()) & 0xFFFF;
+    sortKey.instance = 0;  // Could use entity ID if available
     
     // 1. Bind shader (can be sorted and deduplicated)
     RenderCommands::BindShaderData bindShaderCmd{shader};
@@ -101,7 +52,7 @@ void MeshRenderer::GenerateDrawCommand(entt::registry& registry, entt::entity en
     // 2. Set uniforms (per-object, cannot be deduplicated)
     RenderCommands::SetUniformsData uniformsCmd{
         shader,
-        transform->GetTransform(), // Model matrix via interface
+        renderable.transform,      // Model matrix
         viewMatrix,                // View matrix  
         projectionMatrix,          // Projection matrix
         cameraPosition             // Camera position
@@ -109,13 +60,13 @@ void MeshRenderer::GenerateDrawCommand(entt::registry& registry, entt::entity en
     Renderer::Get().Submit(uniformsCmd, sortKey);
     
     // 3. Bind textures (can be sorted and deduplicated by material)
-    RenderCommands::BindTexturesData texturesCmd{meshData.textures, shader};
+    RenderCommands::BindTexturesData texturesCmd{renderable.mesh->textures, shader};
     Renderer::Get().Submit(texturesCmd, sortKey);
     
     // 4. Draw geometry (pure drawing, no state setup)
     RenderCommands::DrawElementsData drawCmd{
-        mesh.mesh->GetVertexArray()->GetVAOHandle(), 
-        mesh.mesh->GetIndexCount()
+        renderable.mesh->GetVertexArray()->GetVAOHandle(), 
+        renderable.mesh->GetIndexCount()
     };
     Renderer::Get().Submit(drawCmd, sortKey);
 }

@@ -1,22 +1,22 @@
 #pragma once
 
 #include "../Utility/Camera.h"
-#include <entt/entt.hpp>
+#include <vector>
 #include <glm/glm.hpp>
 
-// Forward declaration to avoid cross-library dependencies
-class Scene;
+// Forward declarations
+struct RenderableData;
 
 // Rendering coordinator - handles camera frustum culling
-// Owned by SceneRenderer, not Scene - this is graphics-specific  
+// Owned by SceneRenderer - this is graphics-specific  
 class FrustumCuller
 {
 public:
     FrustumCuller() = default;
     ~FrustumCuller() = default;
 
-    // Graphics-specific culling - updates VisibilityComponent based on camera frustum
-    void CullAgainstCamera(Scene* scene, Camera& camera);
+    // Graphics-specific culling - filters renderables based on camera frustum
+    std::vector<RenderableData> CullRenderables(const std::vector<RenderableData>& renderables, Camera& camera);
 
 private:
     struct Frustum {
@@ -27,5 +27,6 @@ private:
         bool IsSphereVisible(const glm::vec3& center, float radius) const;
     };
     
-    bool IsEntityInFrustum(const glm::vec3& position, float boundingSphereRadius, const Frustum& frustum);
+    bool IsRenderableInFrustum(const RenderableData& renderable, const Frustum& frustum);
+    glm::vec3 ExtractPosition(const glm::mat4& transform) const;
 };

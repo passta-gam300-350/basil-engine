@@ -16,6 +16,19 @@ SceneRenderer::~SceneRenderer() {
     // Pipeline and coordinators will be cleaned up by unique_ptr
 }
 
+void SceneRenderer::SubmitRenderable(const RenderableData& renderable) {
+    m_SubmittedRenderables.push_back(renderable);
+}
+
+void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
+    m_SubmittedLights.push_back(light);
+}
+
+void SceneRenderer::ClearFrame() {
+    m_SubmittedRenderables.clear();
+    m_SubmittedLights.clear();
+}
+
 void SceneRenderer::AddPipeline(std::string const &name, std::unique_ptr<RenderPipeline> pipeline)
 {
     m_Pipelines[name] = std::move(pipeline);
@@ -76,20 +89,20 @@ void SceneRenderer::InitializeDefaultPipelines() {
     mainPass->SetRenderFunction([this, mainPass]()
         {
             // Clear color and depth buffers
-            glClearColor(1.0f, 1.0f, 1.0f, 0.5f);
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Standard forward rendering
-            if (m_Scene && m_Camera)
+            // Standard forward rendering with submitted data
+            if (m_Camera && !m_SubmittedRenderables.empty())
             {
-                // 1. Update scene-wide lighting
-                m_PBRLightingRenderer->UpdateSceneLighting(m_Scene.get(), *m_Camera);
+                // 1. Update scene-wide lighting with submitted lights
+                m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, *m_Camera);
 
-                // 2. Frustum culling
-                m_FrustumCuller->CullAgainstCamera(m_Scene.get(), *m_Camera);
+                // 2. Frustum culling on submitted renderables
+                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, *m_Camera);
 
-                // 3. Forward instanced rendering (will query lighting automatically)
-                m_InstancedRenderer->Render(m_Scene.get(), *m_Camera);
+                // 3. Forward instanced rendering with visible renderables
+                m_InstancedRenderer->Render(visibleRenderables, *m_Camera);
             }
 
             // Store main color buffer
@@ -112,7 +125,7 @@ void SceneRenderer::InitializeRenderingCoordinators() {
 }
 
 void SceneRenderer::Render() {
-    if (!m_Scene || !m_Camera) {
+    if (!m_Camera) {
         return;
     }
 
@@ -125,14 +138,6 @@ void SceneRenderer::Render() {
         auto pipelineIt = m_Pipelines.find(pipelineName);
         if (pipelineIt != m_Pipelines.end() && IsPipelineEnabled(pipelineName))
         {
-            // Debug output for pipeline execution (only show first few times)
-            static std::unordered_map<std::string, int> pipelineExecuteCount;
-            pipelineExecuteCount[pipelineName]++;
-            
-            if (pipelineExecuteCount[pipelineName] <= 3) {
-                std::cout << "Executing pipeline: " << pipelineName << " (frame #" << m_FrameData.frameNumber << ")" << std::endl;
-            }
-            
             pipelineIt->second->Execute();
         }
     }

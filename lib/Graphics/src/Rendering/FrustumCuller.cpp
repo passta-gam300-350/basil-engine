@@ -1,58 +1,50 @@
 #include "Rendering/FrustumCuller.h"
-#include "../../../test/examples/lib/Graphics/Engine/Scene/Scene.h"
-#include "ECS/Components/MeshComponent.h"
-#include "ECS/ComponentInterfaces.h"
+#include "Utility/RenderData.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include <entt/entt.hpp>
 
-void FrustumCuller::CullAgainstCamera(Scene* scene, Camera& camera)
+std::vector<RenderableData> FrustumCuller::CullRenderables(const std::vector<RenderableData>& renderables, Camera& camera)
 {
-    if (!scene)
-        return;
-
-    auto* componentAccessor = ComponentUtils::GetComponentAccessor();
-    if (!componentAccessor) {
-        std::cout << "Warning: No component accessor set for FrustumCuller" << std::endl;
-        return;
-    }
+    std::vector<RenderableData> visibleRenderables;
+    
+    if (renderables.empty())
+        return visibleRenderables;
 
     // Extract frustum planes from camera
     Frustum frustum;
     frustum.ExtractPlanes(camera.GetViewProjectionMatrix());
+    
+    // Filter renderables based on frustum culling
+    for (const auto& renderable : renderables)
+    {
+        // Skip if already marked invisible
+        if (!renderable.visible)
+            continue;
+            
+        // Check if renderable is in camera frustum
+        if (IsRenderableInFrustum(renderable, frustum))
+        {
+            visibleRenderables.push_back(renderable);
+        }
+    }
+    
+    return visibleRenderables;
+}
 
-    auto& registry = scene->GetRegistry();
+bool FrustumCuller::IsRenderableInFrustum(const RenderableData& renderable, const Frustum& frustum)
+{
+    // Extract position from transform matrix
+    glm::vec3 position = ExtractPosition(renderable.transform);
     
-    // Update visibility based on camera frustum for entities with mesh components
-    auto view = registry.view<MeshComponent>();
+    // Use a default bounding sphere radius - could be improved by getting actual mesh bounds
+    float boundingSphereRadius = 1.0f;
     
-    view.each([&](auto entity, auto& mesh) {
-        // Check if entity has required components using interface
-        if (!componentAccessor->HasTransform(registry, entity) || 
-            !componentAccessor->HasVisibility(registry, entity)) {
-            return;
-        }
-        
-        // Get components via interface
-        auto* transform = componentAccessor->GetTransform(registry, entity);
-        auto* visibility = componentAccessor->GetVisibility(registry, entity);
-        
-        if (!transform || !visibility) return;
-        
-        // Only cull if the entity was previously visible (don't override other visibility systems)
-        if (!visibility->IsVisible()) {
-            return;
-        }
-        
-        // Check if entity is in camera frustum - use transform position
-        glm::vec3 position = transform->GetPosition();
-        bool inFrustum = IsEntityInFrustum(position, 1.0f, frustum); // Default radius for now
-        
-        // If culled by frustum, mark as invisible
-        if (!inFrustum) {
-            visibility->SetVisible(false);
-        }
-    });
+    return frustum.IsSphereVisible(position, boundingSphereRadius);
+}
+
+glm::vec3 FrustumCuller::ExtractPosition(const glm::mat4& transform) const
+{
+    return glm::vec3(transform[3]); // Translation component
 }
 
 void FrustumCuller::Frustum::ExtractPlanes(const glm::mat4& viewProj)
@@ -110,7 +102,3 @@ bool FrustumCuller::Frustum::IsSphereVisible(const glm::vec3& center, float radi
     return true;
 }
 
-bool FrustumCuller::IsEntityInFrustum(const glm::vec3& position, float boundingSphereRadius, const Frustum& frustum)
-{
-    return frustum.IsSphereVisible(position, boundingSphereRadius);
-}
