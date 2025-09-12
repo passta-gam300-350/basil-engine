@@ -11,7 +11,6 @@ void Engine::Init(std::string const& name, unsigned width, unsigned height)
 	m_Window = new Window(name, width, height);
 	m_Renderer = new Renderer();
 	m_Renderer->Initialize(m_Window->GetNativeWindow());
-
 }
 
 void Engine::Input()

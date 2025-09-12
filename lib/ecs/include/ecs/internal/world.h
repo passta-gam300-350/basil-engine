@@ -63,7 +63,7 @@ namespace ecs {
 		world inplace_intersect_world(world);
 
 		void destroy_world();
-		void update();
+		void update(float);
 
 		entity migrate_entity(entity);
 		entity add_entity();

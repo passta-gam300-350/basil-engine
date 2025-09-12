@@ -59,11 +59,12 @@ endforeach()
 set(ALL_LIBS
 PRIVATE graphics_lib
 PRIVATE scripting_lib
+  PRIVATE uuid_lib
 PRIVATE spdlog
   PRIVATE glad
   PRIVATE glfw
   PRIVATE EnTT::EnTT
-  #PUBLIC ecs_lib
+  PUBLIC ecs_lib
   PRIVATE assimp::assimp
   PUBLIC mono_interface
 )
