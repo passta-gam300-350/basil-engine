@@ -44,8 +44,9 @@ macro(import_glad)
 
     # using generated glad src based on gl:core=4.6 no ext (update versioning here)
     set(GLAD_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/glad)
-    set(GLAD_SRC_FILES
-        ${GLAD_DIR}/src/gl.c
+    file(GLOB_RECURSE GLAD_SRC_FILES
+        ${GLAD_DIR}/src/*.c
+        ${GLAD_DIR}/src/*.cpp
     )
     add_library(glad STATIC
         ${GLAD_SRC_FILES}
