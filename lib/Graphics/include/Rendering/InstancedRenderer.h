@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Buffer/ShaderStorageBuffer.h"
-#include "../Utility/Camera.h"
 #include "../Core/Renderer.h"
 #include "../Core/RenderCommandBuffer.h"
 #include <memory>
@@ -12,6 +11,7 @@
 
 // Forward declarations to avoid cross-library dependencies
 struct RenderableData;
+struct FrameData;
 class Mesh;
 class Material;
 
@@ -41,7 +41,7 @@ public:
     void Clear();
     
     // Rendering using existing command buffer system
-    void Render(const std::vector<RenderableData>& renderables, Camera& camera);
+    void Render(const std::vector<RenderableData>& renderables, const FrameData& frameData);
     
     // Mesh and material setup
     void SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
@@ -71,5 +71,5 @@ private:
     bool m_BatchActive;
     
     void UpdateInstanceSSBO(const std::string& meshId);
-    void RenderInstancedMesh(const std::string& meshId, Camera& camera);
+    void RenderInstancedMesh(const std::string& meshId, const FrameData& frameData);
 };

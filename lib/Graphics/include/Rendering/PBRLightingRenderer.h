@@ -3,13 +3,13 @@
 #include "../Core/Renderer.h"
 #include "../Core/RenderCommandBuffer.h"
 #include "../Resources/Shader.h"
-#include "../Utility/Camera.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
 
 // Forward declarations
 struct SubmittedLightData;
+struct FrameData;
 
 /**
  * PBR Lighting Renderer - Independent Lighting System
@@ -74,12 +74,12 @@ public:
     
     // PBR lighting setup for any shader
     void SetupPBRLighting(std::shared_ptr<Shader> shader, 
-                          const Camera& camera, 
+                          const FrameData& frameData, 
                           const PBRMaterialProperties& material = PBRMaterialProperties{});
     
     // Command-based lighting setup (integrates with render pipeline)
     void SubmitLightingCommands(std::shared_ptr<Shader> shader, 
-                                const Camera& camera, 
+                                const FrameData& frameData, 
                                 const PBRMaterialProperties& material,
                                 const RenderCommands::CommandSortKey& sortKey);
     
@@ -98,7 +98,7 @@ public:
     
     // Lighting update with submitted data (called once per frame)
     void UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
-                       const glm::vec3& ambientLight, Camera& camera);
+                       const glm::vec3& ambientLight, const FrameData& frameData);
     
     // Helper method for any renderer to apply lighting to their shader
     void ApplyLightingToShader(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material = PBRMaterialProperties{});

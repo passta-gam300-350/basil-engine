@@ -1,18 +1,20 @@
 #include "Rendering/FrustumCuller.h"
+#include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
-std::vector<RenderableData> FrustumCuller::CullRenderables(const std::vector<RenderableData>& renderables, Camera& camera)
+std::vector<RenderableData> FrustumCuller::CullRenderables(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     std::vector<RenderableData> visibleRenderables;
     
     if (renderables.empty())
         return visibleRenderables;
 
-    // Extract frustum planes from camera
+    // Extract frustum planes from frame data
     Frustum frustum;
-    frustum.ExtractPlanes(camera.GetViewProjectionMatrix());
+    glm::mat4 viewProj = frameData.projectionMatrix * frameData.viewMatrix;
+    frustum.ExtractPlanes(viewProj);
     
     // Filter renderables based on frustum culling
     for (const auto& renderable : renderables)

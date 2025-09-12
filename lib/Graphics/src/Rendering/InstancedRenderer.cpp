@@ -1,5 +1,6 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
+#include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
@@ -111,7 +112,7 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
               << matrices.size() << " transform matrices" << std::endl;*/
 }
 
-void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, Camera& camera)
+void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     if (renderables.empty()) {
         return;
@@ -146,12 +147,12 @@ void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, C
     // Render each instanced mesh type
     for (const auto& pair : m_MeshInstances) {
         if (!pair.second.instances.empty()) {
-            RenderInstancedMesh(pair.first, camera);
+            RenderInstancedMesh(pair.first, frameData);
         }
     }
 }
 
-void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& camera)
+void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const FrameData& frameData)
 {
     //std::cout << "InstancedRenderer::RenderInstancedMesh called for '" << meshId << "'" << std::endl;
     
@@ -221,9 +222,9 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, Camera& c
     RenderCommands::SetUniformsData uniformsCmd{
         shader,
         glm::mat4(1.0f),  // Identity model matrix (instances have their own transforms)
-        camera.GetViewMatrix(),
-        camera.GetProjectionMatrix(),
-        camera.GetPosition()
+        frameData.viewMatrix,
+        frameData.projectionMatrix,
+        frameData.cameraPosition
     };
     Renderer::Get().Submit(uniformsCmd, sortKey);
     

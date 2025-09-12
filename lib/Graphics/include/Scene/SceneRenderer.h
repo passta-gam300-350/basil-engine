@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Pipeline/RenderPipeline.h"
-#include "../Utility/Camera.h"
 #include "../Utility/RenderData.h"
 #include <memory>
 #include <unordered_map>
@@ -45,7 +44,6 @@ public:
     // Data submission API - application pushes data each frame
     void SubmitRenderable(const RenderableData& renderable);
     void SubmitLight(const SubmittedLightData& light);
-    void SetCamera(const std::shared_ptr<Camera>& camera) { m_Camera = camera; }
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -83,11 +81,8 @@ private:
     
     void UpdateFrameData()
     {
-        if (m_Camera) {
-            m_FrameData.viewMatrix = m_Camera->GetViewMatrix();
-            m_FrameData.projectionMatrix = m_Camera->GetProjectionMatrix();
-            m_FrameData.cameraPosition = m_Camera->GetPosition();
-        }
+        // Camera data is now set directly by applications via GetFrameData()
+        // This method can be used for other frame-level updates if needed
     }
 
     // Frame-submitted data
@@ -95,7 +90,6 @@ private:
     std::vector<SubmittedLightData> m_SubmittedLights;
     glm::vec3 m_AmbientLight = glm::vec3(0.1f);
     
-    std::shared_ptr<Camera> m_Camera;
 
     // NEW: Multiple pipelines with order
     std::unordered_map<std::string, std::unique_ptr<RenderPipeline>> m_Pipelines;

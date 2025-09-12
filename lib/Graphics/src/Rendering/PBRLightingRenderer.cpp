@@ -1,4 +1,5 @@
 #include "Rendering/PBRLightingRenderer.h"
+#include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include "Utility/Light.h"
 #include <iostream>
@@ -41,7 +42,7 @@ void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
 }
 
 void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader, 
-                                           const Camera& camera, 
+                                           const FrameData& frameData, 
                                            const PBRMaterialProperties& material)
 {
     if (!shader) {
@@ -62,17 +63,17 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
 }
 
 void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader, 
-                                                 const Camera& camera, 
+                                                 const FrameData& frameData, 
                                                  const PBRMaterialProperties& material,
                                                  const RenderCommands::CommandSortKey& sortKey)
 {
     // For now, we'll use immediate setup since we don't have specific lighting commands yet
     // TODO: Add dedicated lighting commands to RenderCommandBuffer
-    SetupPBRLighting(shader, camera, material);
+    SetupPBRLighting(shader, frameData, material);
 }
 
 void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
-                                         const glm::vec3& ambientLight, Camera& camera)
+                                         const glm::vec3& ambientLight, const FrameData& frameData)
 {
     // Clear existing lights
     ClearLights();
@@ -85,7 +86,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
             
         switch (submittedLight.type)
         {
-            case Light::Type::DIRECTIONAL:
+            case Light::Type::Directional:
             {
                 DirectionalLight dirLight;
                 dirLight.direction = submittedLight.direction;
@@ -94,7 +95,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 AddDirectionalLight(dirLight);
                 break;
             }
-            case Light::Type::POINT:
+            case Light::Type::Point:
             {
                 PointLight pointLight;
                 pointLight.position = submittedLight.position;
@@ -107,7 +108,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 AddPointLight(pointLight);
                 break;
             }
-            case Light::Type::SPOT:
+            case Light::Type::Spot:
             {
                 SpotLight spotLight;
                 spotLight.position = submittedLight.position;

@@ -93,16 +93,16 @@ void SceneRenderer::InitializeDefaultPipelines() {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Standard forward rendering with submitted data
-            if (m_Camera && !m_SubmittedRenderables.empty())
+            if (!m_SubmittedRenderables.empty())
             {
                 // 1. Update scene-wide lighting with submitted lights
-                m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, *m_Camera);
+                m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
 
                 // 2. Frustum culling on submitted renderables
-                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, *m_Camera);
+                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
 
                 // 3. Forward instanced rendering with visible renderables
-                m_InstancedRenderer->Render(visibleRenderables, *m_Camera);
+                m_InstancedRenderer->Render(visibleRenderables, m_FrameData);
             }
 
             // Store main color buffer
@@ -125,10 +125,6 @@ void SceneRenderer::InitializeRenderingCoordinators() {
 }
 
 void SceneRenderer::Render() {
-    if (!m_Camera) {
-        return;
-    }
-
     // Update shared frame data
     UpdateFrameData();
 

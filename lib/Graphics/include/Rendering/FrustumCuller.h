@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../Utility/Camera.h"
 #include <vector>
 #include <glm/glm.hpp>
 
 // Forward declarations
 struct RenderableData;
+struct FrameData;
 
 // Rendering coordinator - handles camera frustum culling
 // Owned by SceneRenderer - this is graphics-specific  
@@ -16,7 +16,7 @@ public:
     ~FrustumCuller() = default;
 
     // Graphics-specific culling - filters renderables based on camera frustum
-    std::vector<RenderableData> CullRenderables(const std::vector<RenderableData>& renderables, Camera& camera);
+    std::vector<RenderableData> CullRenderables(const std::vector<RenderableData>& renderables, const FrameData& frameData);
 
 private:
     struct Frustum {

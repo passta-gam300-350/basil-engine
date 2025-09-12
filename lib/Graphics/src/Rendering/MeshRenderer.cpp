@@ -1,18 +1,19 @@
 #include "Rendering/MeshRenderer.h"
+#include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include "Core/RenderCommandBuffer.h"
 #include "Core/Renderer.h"
 #include <iostream>
 
-void MeshRenderer::Render(const std::vector<RenderableData>& renderables, Camera& camera)
+void MeshRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     if (renderables.empty())
         return;
     
-    // Get view and projection matrices
-    glm::mat4 viewMatrix = camera.GetViewMatrix();
-    glm::mat4 projectionMatrix = camera.GetProjectionMatrix();
-    glm::vec3 cameraPosition = camera.GetPosition();
+    // Get view and projection matrices from frame data
+    glm::mat4 viewMatrix = frameData.viewMatrix;
+    glm::mat4 projectionMatrix = frameData.projectionMatrix;
+    glm::vec3 cameraPosition = frameData.cameraPosition;
     
     // Generate render commands for each renderable
     for (const auto& renderable : renderables)

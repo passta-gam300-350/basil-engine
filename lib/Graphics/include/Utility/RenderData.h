@@ -16,7 +16,7 @@ struct RenderableData {
 };
 
 struct SubmittedLightData {
-    Light::Type type = Light::Type::DIRECTIONAL;
+    Light::Type type = Light::Type::Directional;
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f);
     glm::vec3 color = glm::vec3(1.0f);
