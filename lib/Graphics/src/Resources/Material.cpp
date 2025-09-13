@@ -50,7 +50,7 @@ void Material::ApplyPBRProperties()
 {
     if (!m_Shader) return;
 
-    m_Shader->use();
+    // Note: Shader is already bound by the command buffer system, don't call use() here
 
     // Apply PBR material properties to shader
     m_Shader->setVec3("u_AlbedoColor", m_AlbedoColor);

@@ -221,43 +221,54 @@ bool GraphicsTestDriver::LoadTestResources()
 
 void GraphicsTestDriver::CreateTestMaterials()
 {
-    auto basicShader = m_ResourceManager->GetShader("basic");
-    if (!basicShader) return;
+    // Use the instanced bindless shader for materials (fallback to basic if needed)
+    auto shader = m_ResourceManager->GetShader("instanced_bindless");
+    if (!shader) {
+        shader = m_ResourceManager->GetShader("basic");
+    }
+    if (!shader) return;
 
     // Red material
-    auto redMaterial = std::make_shared<Material>(basicShader, "RedMaterial");
+    auto redMaterial = std::make_shared<Material>(shader, "RedMaterial");
     redMaterial->SetAlbedoColor(glm::vec3(0.8f, 0.2f, 0.2f));
     redMaterial->SetMetallicValue(0.1f);
     redMaterial->SetRoughnessValue(0.8f);
     m_ResourceManager->AddMaterial("RedMaterial", redMaterial);
 
     // Green material
-    auto greenMaterial = std::make_shared<Material>(basicShader, "GreenMaterial");
+    auto greenMaterial = std::make_shared<Material>(shader, "GreenMaterial");
     greenMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.8f, 0.2f));
     greenMaterial->SetMetallicValue(0.3f);
     greenMaterial->SetRoughnessValue(0.6f);
     m_ResourceManager->AddMaterial("GreenMaterial", greenMaterial);
 
     // Blue material
-    auto blueMaterial = std::make_shared<Material>(basicShader, "BlueMaterial");
+    auto blueMaterial = std::make_shared<Material>(shader, "BlueMaterial");
     blueMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.2f, 0.8f));
     blueMaterial->SetMetallicValue(0.5f);
     blueMaterial->SetRoughnessValue(0.4f);
     m_ResourceManager->AddMaterial("BlueMaterial", blueMaterial);
 
     // Metallic gold material
-    auto goldMaterial = std::make_shared<Material>(basicShader, "GoldMaterial");
+    auto goldMaterial = std::make_shared<Material>(shader, "GoldMaterial");
     goldMaterial->SetAlbedoColor(glm::vec3(1.0f, 0.8f, 0.2f));
     goldMaterial->SetMetallicValue(0.9f);
     goldMaterial->SetRoughnessValue(0.1f);
     m_ResourceManager->AddMaterial("GoldMaterial", goldMaterial);
 
     // White material
-    auto whiteMaterial = std::make_shared<Material>(basicShader, "WhiteMaterial");
+    auto whiteMaterial = std::make_shared<Material>(shader, "WhiteMaterial");
     whiteMaterial->SetAlbedoColor(glm::vec3(0.9f, 0.9f, 0.9f));
     whiteMaterial->SetMetallicValue(0.0f);
     whiteMaterial->SetRoughnessValue(0.9f);
     m_ResourceManager->AddMaterial("WhiteMaterial", whiteMaterial);
+
+    // Default material - simple metallic gray
+    auto defaultMaterial = std::make_shared<Material>(shader, "DefaultMaterial");
+    defaultMaterial->SetAlbedoColor(glm::vec3(0.7f, 0.7f, 0.7f));
+    defaultMaterial->SetMetallicValue(0.8f);
+    defaultMaterial->SetRoughnessValue(0.2f);
+    m_ResourceManager->AddMaterial("DefaultMaterial", defaultMaterial);
 
     std::cout << "Test materials created and registered.\n";
 }
@@ -269,7 +280,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     // Create a 10x10 grid of objects for instanced rendering
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
     
-    const int gridSize = 1;
+    const int gridSize = 3;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
     
@@ -285,9 +296,8 @@ void GraphicsTestDriver::SetupAdvancedScene()
             // Use uniform scale
             glm::vec3 scaleVec(1.0f);
             
-            // Cycle through materials based on position
-            int materialIndex = (x + z) % materials.size();
-            std::string material = materials[materialIndex];
+            // Use default material for all dragons to isolate the issue
+            std::string material = "DefaultMaterial";
 
             CreateModelInstance("tinbox", material, position, scaleVec);
         }

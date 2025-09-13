@@ -145,8 +145,9 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             continue;
         }
         
-        // Generate mesh ID from mesh pointer only (ignore material for batching)
-        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
+        // Generate mesh ID from mesh + material combination for proper batching
+        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get())) +
+                            "_" + std::to_string(reinterpret_cast<uintptr_t>(renderable.material.get()));
         
         /*std::cout << "Renderable[" << i << "]: meshId=" << meshId
                   << ", materialPtr=" << renderable.material.get()
@@ -253,7 +254,12 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     };
     m_Renderer->Submit(uniformsCmd, sortKey);
     
-    // 4. Apply PBR lighting using the actual material from the mesh instance
+    // 4. Apply material properties and PBR lighting
+    if (meshInstances.material) {
+        // Ensure material properties are applied to shader
+        meshInstances.material->ApplyPBRProperties();
+    }
+
     if (m_PBRLighting) {
         // Use the actual material from the mesh instance instead of hardcoded values
         m_PBRLighting->ApplyLightingToShader(shader, meshInstances.material.get());
