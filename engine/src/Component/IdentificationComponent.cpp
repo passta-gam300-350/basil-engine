@@ -1,5 +1,7 @@
 #include "Component/IdentificationComponent.hpp"
 
+#include "Manager/StringManager.hpp"
+
 IdentifierComponent::IdentifierComponent()
 {
 	handle = Handle{ "IdentifierComponent" };
@@ -20,18 +22,18 @@ Component::ComponentType IdentifierComponent::getType() const
 IdentifierComponent::IdentifierComponent(std::string&& name)
 {
 	handle = Handle{ "IdentifierComponent" };
-	identifier = std::move(name);
+	identifier = StringManager::GetInstance().Intern_String(std::move(name));
 	uuid = UUID<128>::Generate();
 }
 
 void IdentifierComponent::setName(std::string&& name)
 {
-	identifier = std::move(name);
+	identifier = StringManager::GetInstance().Intern_String(std::move(name));
 	uuid = UUID<128>::Generate();
 }
 
 std::string IdentifierComponent::getName()
 {
-	return identifier;
+	return std::string{ StringManager::GetInstance().Get_String(identifier) };
 }
 

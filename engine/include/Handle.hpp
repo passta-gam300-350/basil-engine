@@ -7,8 +7,8 @@
 
 struct Handle
 {
-	std::string handle_name;
 	UUID<128> id;
+	uint32_t handle_name;
 	Handle() = default;
 	Handle(std::string const& name);
 	Handle(std::string const& name, UUID<128> const& uuid);

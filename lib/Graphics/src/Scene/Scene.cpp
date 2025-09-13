@@ -2,7 +2,7 @@
 #include "Scene/Entity.h"
 #include "ECS/Components/TransformComponent.h"
 
-Scene::Scene(const std::string& name)
+Scene::Scene(std::string const& name)
     : m_Name(name)
 {
 }

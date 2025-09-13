@@ -5,7 +5,7 @@
 class IdentifierComponent : Component
 {
 
-	std::string identifier;
+	uint32_t identifier;
 	UUID<128> uuid;
 
 public:

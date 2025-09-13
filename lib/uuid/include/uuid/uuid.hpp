@@ -44,8 +44,6 @@ template <size_t N>
 class UUID
 {
 	std::bitset<N> bits;
-	uint64_t low;
-	uint64_t high;
 
 
 	static_assert(AllowedSize<N>, "UUID size must be either 64 or 128 bits");
@@ -99,8 +97,7 @@ UUID<N> UUID<N>::Generate()
 		uuid.bits[63] = 0;
 
 
-		uuid.low = part1;
-		uuid.high = part2;
+		
 
 	}
 	else if constexpr (N == 64)
@@ -117,10 +114,10 @@ UUID<N> UUID<N>::Generate()
 		uuid.bits[6] = 1;
 		uuid.bits[7] = 0;
 
-		uuid.low = part;
+		
 	}
 
-	uuid.high = 0;
+	
 	return uuid;
 }
 
@@ -158,29 +155,12 @@ UUID<N>& UUID<N>::operator=(const UUID<M>& other)
 		if constexpr (N == M)
 		{
 			bits = other.bits;
-			if constexpr (M == 64)
-			{
-				low = other.low;
-				high = 0;
-			} else
-			{
-				low = other.low;
-				high = (N == 128) ? (other.high) : 0;
-			}
+			
 		}
 		else
 		{
 			bits = std::bitset<N>(other.bits.to_ullong());
-			if constexpr (M == 64)
-			{
-				low = other.low;
-				high = 0;
-			}
-			else
-			{
-				low = other.low;
-				high = (N == 128) ? (other.high) : 0;
-			}
+			
 
 		}
 	}
@@ -262,12 +242,27 @@ std::string UUID<N>::ToString()
 template <size_t N> requires AllowedSize<N>
 uint64_t UUID<N>::getLow() const
 {
-	return low;
+	uint64_t low = 0;
+	for (size_t i = 0; i < 64 && i < N; ++i)
+	{
+		if (bits.test(i))
+		{
+			low |= (1ULL << i);
+		}
+	}
 }
 
 template <size_t N> requires AllowedSize<N>
 uint64_t UUID<N>::getHigh() const
 {
+	uint64_t high = 0;
+	for (size_t i = 64; i < N; ++i)
+	{
+		if (bits.test(i))
+		{
+			high |= (1ULL << (i - 64));
+		}
+	}
 	return high;
 }
 

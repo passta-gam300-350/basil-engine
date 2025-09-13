@@ -5,8 +5,8 @@
 
 struct SceneMetadata
 {
-	std::string name;
 	UUID<128> uuid;
+	uint32_t name;
 	bool loaded = false;
 };
 
@@ -14,10 +14,17 @@ struct SceneMetadata
 class Scene
 {
 	
-
+private:
 	SceneMetadata metadata;
 	ecs::world world;
+public:
+	Scene();
+	Scene(std::string const& name);
+	SceneMetadata const& GetMetadata() const;
 
+
+
+	
 
 };
 
