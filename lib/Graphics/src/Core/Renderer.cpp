@@ -3,16 +3,12 @@
 
 #include <glad/gl.h>
 
-Renderer* Renderer::s_Instance = nullptr;
-
 Renderer::Renderer() : m_CommandBuffer()
 {
-	s_Instance = this;
 }
 
 Renderer::~Renderer()
 {
-	s_Instance = nullptr;
 }
 
 void Renderer::Initialize(GLFWwindow* windowHandle)
@@ -20,6 +16,9 @@ void Renderer::Initialize(GLFWwindow* windowHandle)
 	// Create the graphics context
 	m_Context = std::make_unique<GraphicsContext>(windowHandle);
 	m_Context->Initialize();
+
+	// Initialize command buffer (after OpenGL context is ready)
+	m_CommandBuffer.Initialize();
 }
 
 void Renderer::Shutdown()

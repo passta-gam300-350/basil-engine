@@ -2,21 +2,12 @@
 #include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include "Utility/Light.h"
+#include "Resources/Material.h"
 #include <iostream>
-
-// Static instance for scene-wide access
-PBRLightingRenderer* PBRLightingRenderer::s_Instance = nullptr;
 
 PBRLightingRenderer::PBRLightingRenderer()
 {
-    // Set static instance for global access
-    s_Instance = this;
-    std::cout << "PBRLightingRenderer: Initialized as scene-wide lighting system" << std::endl;
-}
-
-PBRLightingRenderer* PBRLightingRenderer::GetInstance()
-{
-    return s_Instance;
+    std::cout << "PBRLightingRenderer: Initialized as lighting system" << std::endl;
 }
 
 void PBRLightingRenderer::ClearLights()
@@ -41,9 +32,9 @@ void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
     m_SpotLights.push_back(light);
 }
 
-void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader, 
-                                           const FrameData& frameData, 
-                                           const PBRMaterialProperties& material)
+void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
+                                           const FrameData& frameData,
+                                           const Material* material)
 {
     if (!shader) {
         std::cerr << "PBRLightingRenderer::SetupPBRLighting: NULL shader provided" << std::endl;
@@ -57,14 +48,18 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
     SetupPointLights(shader);
     SetupDirectionalLights(shader);
     SetupSpotLights(shader);
-    
-    // Set material properties
-    SetupMaterialProperties(shader, material);
+
+    // Set material properties - use Material's method if available, else use legacy method
+    if (material) {
+        const_cast<Material*>(material)->ApplyPBRProperties();
+    } else {
+        SetupMaterialProperties(shader, material);
+    }
 }
 
-void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader, 
-                                                 const FrameData& frameData, 
-                                                 const PBRMaterialProperties& material,
+void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
+                                                 const FrameData& frameData,
+                                                 const Material* material,
                                                  const RenderCommands::CommandSortKey& sortKey)
 {
     // For now, we'll use immediate setup since we don't have specific lighting commands yet
@@ -128,7 +123,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
     }
 }
 
-void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material)
+void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material)
 {
     if (!shader) {
         std::cerr << "PBRLightingRenderer::ApplyLightingToShader: NULL shader provided" << std::endl;
@@ -142,9 +137,13 @@ void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, 
     SetupPointLights(shader);
     SetupDirectionalLights(shader);
     SetupSpotLights(shader);
-    
-    // Set material properties
-    SetupMaterialProperties(shader, material);
+
+    // Set material properties - use Material's method if available, else use legacy method
+    if (material) {
+        const_cast<Material*>(material)->ApplyPBRProperties();
+    } else {
+        SetupMaterialProperties(shader, material);
+    }
 }
 
 void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
@@ -201,16 +200,21 @@ void PBRLightingRenderer::SetupSpotLights(std::shared_ptr<Shader> shader)
     }
 }
 
-void PBRLightingRenderer::SetupMaterialProperties(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material)
+void PBRLightingRenderer::SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material)
 {
-    // Set PBR material properties
-    shader->setVec3("u_AlbedoColor", material.albedoColor);
-    shader->setFloat("u_MetallicValue", material.metallicValue);
-    shader->setFloat("u_RoughnessValue", material.roughnessValue);
-    
-    // Set texture availability flag
-    shader->setBool("u_HasTexture0", material.hasTexture);
-    if (material.hasTexture) {
-        shader->setInt("u_Texture0", 0);  // Texture unit 0
+    if (!material) {
+        // Use default PBR properties if no material provided
+        shader->setVec3("u_AlbedoColor", glm::vec3(0.8f, 0.7f, 0.6f));
+        shader->setFloat("u_MetallicValue", 0.7f);
+        shader->setFloat("u_RoughnessValue", 0.3f);
+        return;
     }
+
+    // Use Material class methods - only set material properties, not texture flags
+    shader->setVec3("u_AlbedoColor", material->GetAlbedoColor());
+    shader->setFloat("u_MetallicValue", material->GetMetallicValue());
+    shader->setFloat("u_RoughnessValue", material->GetRoughnessValue());
+
+    // Note: Bindless texture system handles u_HasDiffuseMap, u_HasNormalMap, etc.
+    // and texture handle uploads to SSBO at binding point 1
 }

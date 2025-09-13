@@ -97,7 +97,3 @@ unsigned int TextureLoader::TextureFromFile(const char* path, const std::string&
     return CreateGPUTexture(textureData, gamma);
 }
 
-// Legacy function for backward compatibility
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma) {
-    return TextureLoader::TextureFromFile(path, directory, gamma);
-}

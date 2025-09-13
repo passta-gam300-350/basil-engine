@@ -59,18 +59,11 @@ bool GraphicsTestDriver::Initialize()
         return false;
     }
 
-    // Create and initialize renderer
-    static Renderer rendererInstance; // Create the singleton instance
-    m_Renderer = &Renderer::Get(); // Now Get() will work since s_Instance is set
-    m_Renderer->Initialize(m_Window->GetNativeWindow());
+    // Create scene renderer (owns all graphics systems now)
+    m_SceneRenderer = std::make_unique<SceneRenderer>(m_Window->GetNativeWindow());
 
-    // Create and initialize resource manager
-    static ResourceManager resourceManagerInstance; // Create the singleton instance
-    m_ResourceManager = &ResourceManager::Get(); // Now Get() will work since s_Instance is set
-    m_ResourceManager->Initialize();
-
-    // Create scene renderer
-    m_SceneRenderer = std::make_unique<SceneRenderer>();
+    // Get references to systems owned by SceneRenderer
+    m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
     // Setup camera
     m_Camera = std::make_unique<Camera>(CameraType::Perspective);
@@ -133,10 +126,9 @@ void GraphicsTestDriver::Run()
         // Process input
         ProcessInput();
 
-        // Begin frame
-        m_Renderer->BeginFrame();
+        // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
-        
+
         // Update camera data manually
         if (m_Camera) {
             auto& frameData = m_SceneRenderer->GetFrameData();
@@ -150,11 +142,8 @@ void GraphicsTestDriver::Run()
 
         // Static data submitted once during initialization - no need to resubmit
 
-        // Render scene
+        // Render scene (handles begin/end frame internally)
         m_SceneRenderer->Render();
-
-        // End frame
-        m_Renderer->EndFrame();
 
         // Poll events
         m_Window->PollEvents();
@@ -166,20 +155,20 @@ void GraphicsTestDriver::Run()
 void GraphicsTestDriver::Shutdown()
 {
     std::cout << "Shutting down graphics systems...\n";
-    
-    m_SceneRenderer.reset();
+
+    // Clear scene data first
+    m_SceneObjects.clear();
+    m_SceneLights.clear();
+
+    // Reset in proper order - SceneRenderer owns Renderer and ResourceManager now
+    m_SceneRenderer.reset();  // This will properly clean up all graphics systems
     m_Camera.reset();
-    
-    if (m_ResourceManager) {
-        m_ResourceManager->Shutdown();
-    }
-    
-    if (m_Renderer) {
-        m_Renderer->Shutdown();
-    }
-    
     m_Window.reset();
-    
+
+    // Clear pointers (they're just references now, not owners)
+    m_ResourceManager = nullptr;
+    m_Renderer = nullptr;
+
     std::cout << "Shutdown complete.\n";
 }
 
@@ -211,7 +200,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox", 
-            "assets/models/tinbox/tin_box.obj");
+            "assets/models/dragon/dragon.obj");
         
         if (!tinBoxModel) {
             std::cerr << "Failed to load tin box model!\n";
@@ -237,35 +226,40 @@ void GraphicsTestDriver::CreateTestMaterials()
 
     // Red material
     auto redMaterial = std::make_shared<Material>(basicShader, "RedMaterial");
-    redMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.2f, 0.2f));
-    redMaterial->SetFloat("u_Metallic", 0.1f);
-    redMaterial->SetFloat("u_Roughness", 0.8f);
+    redMaterial->SetAlbedoColor(glm::vec3(0.8f, 0.2f, 0.2f));
+    redMaterial->SetMetallicValue(0.1f);
+    redMaterial->SetRoughnessValue(0.8f);
+    m_ResourceManager->AddMaterial("RedMaterial", redMaterial);
 
     // Green material
     auto greenMaterial = std::make_shared<Material>(basicShader, "GreenMaterial");
-    greenMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.8f, 0.2f));
-    greenMaterial->SetFloat("u_Metallic", 0.3f);
-    greenMaterial->SetFloat("u_Roughness", 0.6f);
+    greenMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.8f, 0.2f));
+    greenMaterial->SetMetallicValue(0.3f);
+    greenMaterial->SetRoughnessValue(0.6f);
+    m_ResourceManager->AddMaterial("GreenMaterial", greenMaterial);
 
     // Blue material
     auto blueMaterial = std::make_shared<Material>(basicShader, "BlueMaterial");
-    blueMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.2f, 0.8f));
-    blueMaterial->SetFloat("u_Metallic", 0.5f);
-    blueMaterial->SetFloat("u_Roughness", 0.4f);
+    blueMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.2f, 0.8f));
+    blueMaterial->SetMetallicValue(0.5f);
+    blueMaterial->SetRoughnessValue(0.4f);
+    m_ResourceManager->AddMaterial("BlueMaterial", blueMaterial);
 
     // Metallic gold material
     auto goldMaterial = std::make_shared<Material>(basicShader, "GoldMaterial");
-    goldMaterial->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.8f, 0.2f));
-    goldMaterial->SetFloat("u_Metallic", 0.9f);
-    goldMaterial->SetFloat("u_Roughness", 0.1f);
+    goldMaterial->SetAlbedoColor(glm::vec3(1.0f, 0.8f, 0.2f));
+    goldMaterial->SetMetallicValue(0.9f);
+    goldMaterial->SetRoughnessValue(0.1f);
+    m_ResourceManager->AddMaterial("GoldMaterial", goldMaterial);
 
     // White material
     auto whiteMaterial = std::make_shared<Material>(basicShader, "WhiteMaterial");
-    whiteMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.9f, 0.9f, 0.9f));
-    whiteMaterial->SetFloat("u_Metallic", 0.0f);
-    whiteMaterial->SetFloat("u_Roughness", 0.9f);
+    whiteMaterial->SetAlbedoColor(glm::vec3(0.9f, 0.9f, 0.9f));
+    whiteMaterial->SetMetallicValue(0.0f);
+    whiteMaterial->SetRoughnessValue(0.9f);
+    m_ResourceManager->AddMaterial("WhiteMaterial", whiteMaterial);
 
-    std::cout << "Test materials created.\n";
+    std::cout << "Test materials created and registered.\n";
 }
 
 void GraphicsTestDriver::SetupAdvancedScene()
@@ -275,7 +269,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     // Create a 10x10 grid of objects for instanced rendering
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
     
-    const int gridSize = 10;
+    const int gridSize = 1;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
     
@@ -294,8 +288,8 @@ void GraphicsTestDriver::SetupAdvancedScene()
             // Cycle through materials based on position
             int materialIndex = (x + z) % materials.size();
             std::string material = materials[materialIndex];
-            
-            CreateModelInstance("tinbox", "DefaultMaterial", position, scaleVec);
+
+            CreateModelInstance("tinbox", material, position, scaleVec);
         }
     }
     
@@ -400,15 +394,23 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
         renderable.visible = true;
         
-        // Use the mesh's original material if it exists, otherwise create a simple one
-        auto shader = m_ResourceManager->GetShader("instanced_bindless");
-        if (!shader) {
-            shader = m_ResourceManager->GetShader("basic");
-        }
-        
-        if (shader) {
-            // Create a simple material wrapper - the mesh may already have texture/material data
-            renderable.material = std::make_shared<Material>(shader, "MeshMaterial_" + std::to_string(meshIndex));
+        // Try to get the requested material first
+        renderable.material = m_ResourceManager->GetMaterial(materialName);
+
+        if (!renderable.material) {
+            // Fallback: create a simple material if the requested one doesn't exist
+            auto shader = m_ResourceManager->GetShader("instanced_bindless");
+            if (!shader) {
+                shader = m_ResourceManager->GetShader("basic");
+            }
+
+            if (shader) {
+                renderable.material = std::make_shared<Material>(shader, "MeshMaterial_" + std::to_string(meshIndex));
+                // Set default PBR properties
+                renderable.material->SetAlbedoColor(glm::vec3(0.8f, 0.7f, 0.6f));
+                renderable.material->SetMetallicValue(0.7f);
+                renderable.material->SetRoughnessValue(0.3f);
+            }
         }
         
         m_SceneObjects.push_back(renderable);
@@ -416,85 +418,6 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 }
 
 
-RenderableData GraphicsTestDriver::CreateRenderable(const std::string& modelName, const std::string& materialName, 
-                                                  const glm::vec3& position, const glm::vec3& scale, int meshIndex)
-{
-    // This method is deprecated - use CreateModelInstance instead
-    RenderableData renderable;
-    
-    auto model = m_ResourceManager->GetModel(modelName);
-    if (model && !model->meshes.empty()) {
-        // Share the same mesh object instead of creating new ones  
-        static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
-        
-        auto it = s_MeshCache.find(modelName);
-        if (it != s_MeshCache.end()) {
-            // Reuse existing mesh
-            renderable.mesh = it->second;
-        } else {
-            // Create new mesh and cache it using first mesh only
-            auto newMesh = std::make_shared<Mesh>(model->meshes[0]);
-            s_MeshCache[modelName] = newMesh;
-            renderable.mesh = newMesh;
-        }
-    }
-    
-    // Try to use bindless shader first, fall back to basic shader
-    auto shader = m_ResourceManager->GetShader("instanced_bindless");
-    if (!shader) {
-        shader = m_ResourceManager->GetShader("basic");
-    }
-    
-    if (shader) {
-        // Reuse existing materials instead of creating new ones
-        // This ensures all renderables with the same material name share the same material pointer
-        static std::unordered_map<std::string, std::shared_ptr<Material>> s_MaterialCache;
-        
-        auto it = s_MaterialCache.find(materialName);
-        if (it != s_MaterialCache.end()) {
-            // Reuse existing material
-            renderable.material = it->second;
-        } else {
-            // Create new material and cache it
-            auto newMaterial = std::make_shared<Material>(shader, materialName);
-            
-            // Set material properties based on name
-            if (materialName == "RedMaterial") {
-                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.2f, 0.2f));
-                newMaterial->SetFloat("u_Metallic", 0.1f);
-                newMaterial->SetFloat("u_Roughness", 0.8f);
-            }
-            else if (materialName == "GreenMaterial") {
-                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.8f, 0.2f));
-                newMaterial->SetFloat("u_Metallic", 0.3f);
-                newMaterial->SetFloat("u_Roughness", 0.6f);
-            }
-            else if (materialName == "BlueMaterial") {
-                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.2f, 0.2f, 0.8f));
-                newMaterial->SetFloat("u_Metallic", 0.5f);
-                newMaterial->SetFloat("u_Roughness", 0.4f);
-            }
-            else if (materialName == "GoldMaterial") {
-                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.8f, 0.2f));
-                newMaterial->SetFloat("u_Metallic", 0.9f);
-                newMaterial->SetFloat("u_Roughness", 0.1f);
-            }
-            else if (materialName == "WhiteMaterial") {
-                newMaterial->SetVec3("u_AlbedoColor", glm::vec3(0.9f, 0.9f, 0.9f));
-                newMaterial->SetFloat("u_Metallic", 0.0f);
-                newMaterial->SetFloat("u_Roughness", 0.9f);
-            }
-            
-            s_MaterialCache[materialName] = newMaterial;
-            renderable.material = newMaterial;
-        }
-    }
-    
-    renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
-    renderable.visible = true;
-    
-    return renderable;
-}
 
 SubmittedLightData GraphicsTestDriver::CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity)
 {

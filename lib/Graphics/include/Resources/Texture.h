@@ -42,5 +42,3 @@ public:
     static unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false);
 };
 
-// Legacy function for backward compatibility
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);

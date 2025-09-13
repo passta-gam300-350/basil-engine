@@ -7,7 +7,15 @@
 #include "Buffer/FrameBuffer.h"
 #include <glad/gl.h>
 
-SceneRenderer::SceneRenderer() {
+SceneRenderer::SceneRenderer(GLFWwindow* window) {
+    // Initialize core systems first
+    m_Renderer = std::make_unique<Renderer>();
+    m_Renderer->Initialize(window);
+
+    m_ResourceManager = std::make_unique<ResourceManager>();
+    m_ResourceManager->Initialize();
+
+    // Initialize rendering coordinators with dependencies
     InitializeRenderingCoordinators();
     InitializeDefaultPipelines();
 }
@@ -117,14 +125,17 @@ void SceneRenderer::InitializeDefaultPipelines() {
 }
 
 void SceneRenderer::InitializeRenderingCoordinators() {
-    // Create rendering coordinators - graphics-specific, not ECS systems
+    // Create rendering coordinators with explicit dependencies
     m_PBRLightingRenderer = std::make_unique<PBRLightingRenderer>();  // Initialize lighting first
-    m_MeshRenderer = std::make_unique<MeshRenderer>();
+    m_MeshRenderer = std::make_unique<MeshRenderer>(m_Renderer.get());
     m_FrustumCuller = std::make_unique<FrustumCuller>();
-    m_InstancedRenderer = std::make_unique<InstancedRenderer>();
+    m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_Renderer.get(), m_PBRLightingRenderer.get());
 }
 
 void SceneRenderer::Render() {
+    // Begin frame
+    m_Renderer->BeginFrame();
+
     // Update shared frame data
     UpdateFrameData();
 
@@ -139,5 +150,8 @@ void SceneRenderer::Render() {
     }
 
     m_FrameData.frameNumber++;
+
+    // End frame
+    m_Renderer->EndFrame();
 }
 

@@ -2,6 +2,8 @@
 
 #include "../Pipeline/RenderPipeline.h"
 #include "../Utility/RenderData.h"
+#include "../Core/Renderer.h"
+#include "../Resources/ResourceManager.h"
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -38,7 +40,7 @@ class PBRLightingRenderer;
 
 class SceneRenderer {
 public:
-    SceneRenderer();
+    SceneRenderer(GLFWwindow* window);
     ~SceneRenderer();
     
     // Data submission API - application pushes data each frame
@@ -71,6 +73,7 @@ public:
     // Access to rendering coordinators for advanced usage
     InstancedRenderer* GetInstancedRenderer() const { return m_InstancedRenderer.get(); }
     PBRLightingRenderer* GetPBRLightingRenderer() const { return m_PBRLightingRenderer.get(); }
+    ResourceManager* GetResourceManager() const { return m_ResourceManager.get(); }
 
 private:
     //void InitializePipeline();
@@ -98,7 +101,11 @@ private:
 
     // Shared frame data
     FrameData m_FrameData;
-    
+
+    // Core systems - SceneRenderer owns these
+    std::unique_ptr<Renderer> m_Renderer;
+    std::unique_ptr<ResourceManager> m_ResourceManager;
+
     // Rendering coordinators - SceneRenderer owns these
     std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;

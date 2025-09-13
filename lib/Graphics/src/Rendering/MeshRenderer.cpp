@@ -5,6 +5,10 @@
 #include "Core/Renderer.h"
 #include <iostream>
 
+MeshRenderer::MeshRenderer(Renderer* renderer) : m_Renderer(renderer)
+{
+}
+
 void MeshRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     if (renderables.empty())
@@ -48,7 +52,7 @@ void MeshRenderer::GenerateDrawCommand(const RenderableData& renderable,
     
     // 1. Bind shader (can be sorted and deduplicated)
     RenderCommands::BindShaderData bindShaderCmd{shader};
-    Renderer::Get().Submit(bindShaderCmd, sortKey);
+    m_Renderer->Submit(bindShaderCmd, sortKey);
     
     // 2. Set uniforms (per-object, cannot be deduplicated)
     RenderCommands::SetUniformsData uniformsCmd{
@@ -58,16 +62,16 @@ void MeshRenderer::GenerateDrawCommand(const RenderableData& renderable,
         projectionMatrix,          // Projection matrix
         cameraPosition             // Camera position
     };
-    Renderer::Get().Submit(uniformsCmd, sortKey);
+    m_Renderer->Submit(uniformsCmd, sortKey);
     
     // 3. Bind textures (can be sorted and deduplicated by material)
     RenderCommands::BindTexturesData texturesCmd{renderable.mesh->textures, shader};
-    Renderer::Get().Submit(texturesCmd, sortKey);
+    m_Renderer->Submit(texturesCmd, sortKey);
     
     // 4. Draw geometry (pure drawing, no state setup)
     RenderCommands::DrawElementsData drawCmd{
         renderable.mesh->GetVertexArray()->GetVAOHandle(), 
         renderable.mesh->GetIndexCount()
     };
-    Renderer::Get().Submit(drawCmd, sortKey);
+    m_Renderer->Submit(drawCmd, sortKey);
 }

@@ -2,6 +2,7 @@
 
 #include "../Buffer/ShaderStorageBuffer.h"
 #include "../Core/Renderer.h"
+#include "PBRLightingRenderer.h"
 #include "../Core/RenderCommandBuffer.h"
 #include <memory>
 #include <vector>
@@ -31,7 +32,7 @@ public:
     
     
 public:
-    InstancedRenderer();
+    InstancedRenderer(Renderer* renderer, PBRLightingRenderer* lighting);
     ~InstancedRenderer();
     
     // Instance management
@@ -72,7 +73,11 @@ private:
     uint32_t m_MaxInstances;
     uint32_t m_TotalInstances;
     bool m_BatchActive;
-    
+
+    // Injected dependencies
+    Renderer* m_Renderer;
+    PBRLightingRenderer* m_PBRLighting;
+
     void UpdateInstanceSSBO(const std::string& meshId);
     void RenderInstancedMesh(const std::string& meshId, const FrameData& frameData);
 };

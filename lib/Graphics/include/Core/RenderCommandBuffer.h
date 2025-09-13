@@ -103,7 +103,10 @@ public:
     void Clear();
     void Sort();    // Sort commands for optimal rendering
     void Execute(); // Execute all commands
-    
+
+    // Initialization (call after OpenGL context is ready)
+    void Initialize();
+
     // Texture binding system configuration
     void SetTextureBindingSystem(std::unique_ptr<ITextureBindingSystem> bindingSystem);
     

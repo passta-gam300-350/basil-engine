@@ -6,8 +6,8 @@
 #include "Resources/Material.h"
 #include <iostream>
 
-InstancedRenderer::InstancedRenderer()
-    : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false)
+InstancedRenderer::InstancedRenderer(Renderer* renderer, PBRLightingRenderer* lighting)
+    : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false), m_Renderer(renderer), m_PBRLighting(lighting)
 {
 }
 
@@ -234,14 +234,14 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     
     // 1. Bind shader
     RenderCommands::BindShaderData bindShaderCmd{shader};
-    Renderer::Get().Submit(bindShaderCmd, sortKey);
+    m_Renderer->Submit(bindShaderCmd, sortKey);
     
     // 2. Bind instance SSBO
     RenderCommands::BindSSBOData bindSSBOCmd{
         ssboIt->second->GetSSBOHandle(),
         INSTANCE_SSBO_BINDING
     };
-    Renderer::Get().Submit(bindSSBOCmd, sortKey);
+    m_Renderer->Submit(bindSSBOCmd, sortKey);
     
     // 3. Set camera uniforms
     RenderCommands::SetUniformsData uniformsCmd{
@@ -251,27 +251,19 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
         frameData.projectionMatrix,
         frameData.cameraPosition
     };
-    Renderer::Get().Submit(uniformsCmd, sortKey);
+    m_Renderer->Submit(uniformsCmd, sortKey);
     
-    // 4. Apply PBR lighting using the independent lighting system
-    auto* pbrLighting = PBRLightingRenderer::GetInstance();
-    if (pbrLighting) {
-        // Create material properties from mesh data
-        PBRLightingRenderer::PBRMaterialProperties material;
-        material.albedoColor = glm::vec3(0.8f, 0.7f, 0.6f);  // Warm metallic base
-        material.metallicValue = 0.7f;                       // More metallic for better reflections
-        material.roughnessValue = 0.3f;                      // Smoother for better light interaction
-        material.hasTexture = !meshInstances.mesh->textures.empty();
-        
-        // Apply lighting to shader
-        pbrLighting->ApplyLightingToShader(shader, material);
+    // 4. Apply PBR lighting using the actual material from the mesh instance
+    if (m_PBRLighting) {
+        // Use the actual material from the mesh instance instead of hardcoded values
+        m_PBRLighting->ApplyLightingToShader(shader, meshInstances.material.get());
     } else {
         std::cerr << "Warning: PBRLightingRenderer not available for lighting setup" << std::endl;
     }
     
     // 5. Bind textures (if any)
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
-    Renderer::Get().Submit(texturesCmd, sortKey);
+    m_Renderer->Submit(texturesCmd, sortKey);
     
     // 5. Draw all instances
     RenderCommands::DrawElementsInstancedData drawCmd{
@@ -280,7 +272,7 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
         static_cast<uint32_t>(meshInstances.instances.size()),
         0  // Base instance
     };
-    Renderer::Get().Submit(drawCmd, sortKey);
+    m_Renderer->Submit(drawCmd, sortKey);
     
     /*std::cout << "InstancedRenderer: Submitted instanced draw for '" << meshId 
               << "' with " << meshInstances.instances.size() << " instances" << std::endl;*/

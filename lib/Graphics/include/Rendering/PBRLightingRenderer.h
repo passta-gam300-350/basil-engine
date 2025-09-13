@@ -10,6 +10,7 @@
 // Forward declarations
 struct SubmittedLightData;
 struct FrameData;
+class Material;
 
 /**
  * PBR Lighting Renderer - Independent Lighting System
@@ -54,13 +55,6 @@ public:
         float quadratic;
     };
     
-    // PBR Material properties (simplified since PBRMaterial was removed)
-    struct PBRMaterialProperties {
-        glm::vec3 albedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
-        float metallicValue = 0.7f;
-        float roughnessValue = 0.3f;
-        bool hasTexture = false;
-    };
 
 public:
     PBRLightingRenderer();
@@ -73,18 +67,16 @@ public:
     void AddSpotLight(const SpotLight& light);
     
     // PBR lighting setup for any shader
-    void SetupPBRLighting(std::shared_ptr<Shader> shader, 
-                          const FrameData& frameData, 
-                          const PBRMaterialProperties& material = PBRMaterialProperties{});
-    
+    void SetupPBRLighting(std::shared_ptr<Shader> shader,
+                          const FrameData& frameData,
+                          const Material* material = nullptr);
+
     // Command-based lighting setup (integrates with render pipeline)
-    void SubmitLightingCommands(std::shared_ptr<Shader> shader, 
-                                const FrameData& frameData, 
-                                const PBRMaterialProperties& material,
+    void SubmitLightingCommands(std::shared_ptr<Shader> shader,
+                                const FrameData& frameData,
+                                const Material* material,
                                 const RenderCommands::CommandSortKey& sortKey);
     
-    // Static access for other renderers to query lighting data
-    static PBRLightingRenderer* GetInstance();
     
     // Getters for light data (used by other renderers)
     const std::vector<PointLight>& GetPointLights() const { return m_PointLights; }
@@ -101,7 +93,7 @@ public:
                        const glm::vec3& ambientLight, const FrameData& frameData);
     
     // Helper method for any renderer to apply lighting to their shader
-    void ApplyLightingToShader(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material = PBRMaterialProperties{});
+    void ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material = nullptr);
 
 private:
     // Light storage (moved from InstancedRenderer)
@@ -109,12 +101,9 @@ private:
     std::vector<DirectionalLight> m_DirectionalLights;
     std::vector<SpotLight> m_SpotLights;
     
-    // Static instance for scene-wide access
-    static PBRLightingRenderer* s_Instance;
-    
     // Helper methods for setting up specific light types
     void SetupPointLights(std::shared_ptr<Shader> shader);
     void SetupDirectionalLights(std::shared_ptr<Shader> shader);
     void SetupSpotLights(std::shared_ptr<Shader> shader);
-    void SetupMaterialProperties(std::shared_ptr<Shader> shader, const PBRMaterialProperties& material);
+    void SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material);
 };

@@ -70,8 +70,6 @@ private:
     // Utility functions
     void CreateModelInstance(const std::string& modelName, const std::string& materialName,
                            const glm::vec3& position, const glm::vec3& scale = glm::vec3(1.0f));
-    RenderableData CreateRenderable(const std::string& modelName, const std::string& materialName, 
-                                  const glm::vec3& position, const glm::vec3& scale = glm::vec3(1.0f), int meshIndex = 0);
     SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity = 1.0f);
     SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity = 1.0f, float range = 10.0f);
     SubmittedLightData CreateSpotLight(const glm::vec3& position, const glm::vec3& direction, 

@@ -2,17 +2,28 @@
 #include "Resources/TextureBindingSystem.h"
 #include <glad/gl.h>
 #include <algorithm>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 RenderCommandBuffer::RenderCommandBuffer() {
-    // Defer texture binding system creation until first use
-    // This ensures OpenGL context is valid when checking for bindless support
+    // Texture binding system will be initialized explicitly via Initialize()
     m_TextureBindingSystem = nullptr;
 }
 
 void RenderCommandBuffer::Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey)
 {
     m_Commands.emplace_back(SortableCommand{command, sortKey});
+}
+
+void RenderCommandBuffer::Initialize()
+{
+    if (!m_TextureBindingSystem) {
+        spdlog::info("[RenderCommandBuffer] Initializing texture binding system...");
+        m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Bindless);
+        if (!m_TextureBindingSystem) {
+            spdlog::warn("[RenderCommandBuffer] Failed to create bindless system, using traditional");
+            m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Traditional);
+        }
+    }
 }
 
 void RenderCommandBuffer::SetTextureBindingSystem(std::unique_ptr<ITextureBindingSystem> bindingSystem)
@@ -97,15 +108,10 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexturesData&
 {
     if (!cmd.shader) return;
     
-    // Lazy initialization of texture binding system
+    // Ensure texture binding system is initialized
     if (!m_TextureBindingSystem) {
-        // Now OpenGL context should be valid since we're in a render call
-        std::cout << "[RenderCommandBuffer] Initializing texture binding system..." << std::endl;
-        m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Bindless);
-        if (!m_TextureBindingSystem) {
-            std::cout << "[RenderCommandBuffer] Failed to create binding system, using traditional" << std::endl;
-            m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Traditional);
-        }
+        spdlog::error("[RenderCommandBuffer] Texture binding system not initialized! Call Initialize() first.");
+        return;
     }
     
     // Use abstracted texture binding system

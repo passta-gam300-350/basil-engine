@@ -45,3 +45,18 @@ void Material::SetMat4(const std::string& name, const glm::mat4& value)
         m_Shader->setMat4(name, value);
     }
 }
+
+void Material::ApplyPBRProperties()
+{
+    if (!m_Shader) return;
+
+    m_Shader->use();
+
+    // Apply PBR material properties to shader
+    m_Shader->setVec3("u_AlbedoColor", m_AlbedoColor);
+    m_Shader->setFloat("u_MetallicValue", m_MetallicValue);
+    m_Shader->setFloat("u_RoughnessValue", m_RoughnessValue);
+
+    // Note: Texture flags (u_HasDiffuseMap, etc.) are handled by bindless texture system
+    // The bindless system uploads texture handles to SSBO and sets the appropriate flags
+}
