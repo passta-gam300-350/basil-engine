@@ -20,10 +20,13 @@ file(GLOB_RECURSE RESOURCE_ADDITIONAL_EXT_FILES
 
 set(RESOURCE_CORE_DEP_LIBS
     PUBLIC glm
+    PUBLIC tinyddsloader
 )
 
 set(RESOURCE_EXT_DEP_LIBS
     PUBLIC assimp::assimp
+    PUBLIC meshoptimizer
+    PUBLIC DirectXTex
     ${RESOURCE_CORE_DEP_LIBS}
 )
 
@@ -39,6 +42,8 @@ add_library("${PROJECT_NAME}_ext" STATIC ${RESOURCE_EXT_FILES})
 
 target_include_directories("${PROJECT_NAME}_core" PUBLIC "${RESOURCE_CORE_DIR}/include")
 
-target_include_directories("${PROJECT_NAME}_ext" PUBLIC "${RESOURCE_EXT_DIR}/include")
+target_include_directories("${PROJECT_NAME}_ext" PUBLIC "${RESOURCE_EXT_DIR}/include" PUBLIC "${RESOURCE_CORE_DIR}/include")
+
+target_link_libraries("${PROJECT_NAME}_core" ${RESOURCE_CORE_DEP_LIBS})
 
 target_link_libraries("${PROJECT_NAME}_ext" ${RESOURCE_EXT_DEP_LIBS})
