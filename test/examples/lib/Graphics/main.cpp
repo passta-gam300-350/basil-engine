@@ -296,8 +296,9 @@ void GraphicsTestDriver::SetupAdvancedScene()
             // Use uniform scale
             glm::vec3 scaleVec(1.0f);
             
-            // Use default material for all dragons to isolate the issue
-            std::string material = "DefaultMaterial";
+            // Cycle through materials based on position - now with per-instance support
+            int materialIndex = (x + z) % materials.size();
+            std::string material = materials[materialIndex];
 
             CreateModelInstance("tinbox", material, position, scaleVec);
         }
@@ -404,18 +405,38 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
         renderable.visible = true;
         
-        // Try to get the requested material first
-        renderable.material = m_ResourceManager->GetMaterial(materialName);
+        // Check if this mesh has textures (indicating we should preserve them)
+        if (mesh->textures.size() > 0) {
+            std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
 
-        if (!renderable.material) {
-            // Fallback: create a simple material if the requested one doesn't exist
+            // Create a material that will work with the existing textures
             auto shader = m_ResourceManager->GetShader("instanced_bindless");
             if (!shader) {
                 shader = m_ResourceManager->GetShader("basic");
             }
 
             if (shader) {
-                renderable.material = std::make_shared<Material>(shader, "MeshMaterial_" + std::to_string(meshIndex));
+                renderable.material = std::make_shared<Material>(shader, "TexturedMaterial_" + std::to_string(meshIndex));
+                // Use white/neutral colors so textures show through properly
+                renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
+                renderable.material->SetMetallicValue(0.0f);
+                renderable.material->SetRoughnessValue(0.5f);
+            }
+        } else {
+            // No textures - use our custom colored material
+            std::cout << "Mesh " << meshIndex << " has no textures, using custom material: " << materialName << std::endl;
+            renderable.material = m_ResourceManager->GetMaterial(materialName);
+        }
+
+        // Fallback: create a simple material if nothing worked
+        if (!renderable.material) {
+            auto shader = m_ResourceManager->GetShader("instanced_bindless");
+            if (!shader) {
+                shader = m_ResourceManager->GetShader("basic");
+            }
+
+            if (shader) {
+                renderable.material = std::make_shared<Material>(shader, "FallbackMaterial_" + std::to_string(meshIndex));
                 // Set default PBR properties
                 renderable.material->SetAlbedoColor(glm::vec3(0.8f, 0.7f, 0.6f));
                 renderable.material->SetMetallicValue(0.7f);

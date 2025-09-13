@@ -12,6 +12,11 @@ in VS_OUT {
     vec3 Tangent;
     vec3 Bitangent;
     mat3 TBN;
+
+    // Per-instance material data from vertex shader
+    vec4 InstanceColor;
+    float InstanceMetallic;
+    float InstanceRoughness;
 } fs_in;
 
 // Output
@@ -93,8 +98,8 @@ vec4 SampleTexture(int index, vec2 coords) {
     if (index >= 0 && index < textureData.handles.length()) {
         if ((textureData.flags[index] & 1u) != 0u) {
             // Reconstruct 64-bit handle from two 32-bit parts
-            uint64_t handle = packUint2x32(textureData.handles[index]);
-            return texture(sampler2D(handle), coords);
+            uvec2 handleParts = textureData.handles[index];
+            return texture(sampler2D(handleParts), coords);
         }
     }
     return vec4(1.0); // Default white
@@ -288,17 +293,17 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
 
 void main() {
     // Sample bindless textures using handles
-    vec3 albedo = u_AlbedoColor;
+    vec3 albedo = fs_in.InstanceColor.rgb;
     if (u_HasDiffuseMap && u_DiffuseIndex >= 0) {
-        albedo = SampleTexture(u_DiffuseIndex, fs_in.TexCoords).rgb;
+        albedo *= SampleTexture(u_DiffuseIndex, fs_in.TexCoords).rgb;
     }
     
-    float metallic = u_MetallicValue;
+    float metallic = fs_in.InstanceMetallic;
     if (u_HasMetallicMap && u_MetallicIndex >= 0) {
         metallic = SampleTexture(u_MetallicIndex, fs_in.TexCoords).r;
     }
     
-    float roughness = u_RoughnessValue;
+    float roughness = fs_in.InstanceRoughness;
     if (u_HasRoughnessMap && u_RoughnessIndex >= 0) {
         roughness = SampleTexture(u_RoughnessIndex, fs_in.TexCoords).r;
     }

@@ -87,29 +87,24 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
         return;
     }
     
-    // Extract only the transform matrices
-    std::vector<glm::mat4> matrices;
-    matrices.reserve(meshInstances.instances.size());
-    
-    for (const auto& instance : meshInstances.instances) {
-        matrices.push_back(instance.modelMatrix);
-    }
-    
-    // Create or get existing SSBO for matrices only
+    // Upload full InstanceData (not just matrices)
+    const auto& instances = meshInstances.instances;
+    uint32_t instanceDataSize = instances.size() * sizeof(InstanceData);
+
+    // Create or get existing SSBO for full instance data
     auto& ssbo = m_InstanceSSBOs[meshId];
-    uint32_t matrixDataSize = matrices.size() * sizeof(glm::mat4);
-    
+
     if (!ssbo) {
-        ssbo = std::make_unique<ShaderStorageBuffer>(matrices.data(), matrixDataSize, GL_DYNAMIC_DRAW);
+        ssbo = std::make_unique<ShaderStorageBuffer>(instances.data(), instanceDataSize, GL_DYNAMIC_DRAW);
     } else {
-        // Update existing SSBO with matrices only
-        ssbo->SetData(matrices.data(), matrixDataSize, 0);
+        // Update existing SSBO with full instance data
+        ssbo->SetData(instances.data(), instanceDataSize, 0);
     }
     
     meshInstances.dirty = false;
     
-    /*std::cout << "InstancedRenderer: Updated SSBO for '" << meshId << "' with " 
-              << matrices.size() << " transform matrices" << std::endl;*/
+    /*std::cout << "InstancedRenderer: Updated SSBO for '" << meshId << "' with "
+              << instances.size() << " full instance data entries" << std::endl;*/
 }
 
 void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
@@ -145,22 +140,21 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             continue;
         }
         
-        // Generate mesh ID from mesh + material combination for proper batching
-        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get())) +
-                            "_" + std::to_string(reinterpret_cast<uintptr_t>(renderable.material.get()));
+        // Generate mesh ID from mesh only (materials are now per-instance)
+        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
         
         /*std::cout << "Renderable[" << i << "]: meshId=" << meshId
                   << ", materialPtr=" << renderable.material.get()
                   << ", materialName=" << renderable.material->GetName() << std::endl;*/
         
-        // Add instance data
+        // Add instance data with actual material properties
         InstanceData instanceData;
         instanceData.modelMatrix = renderable.transform;
-        instanceData.color = glm::vec4(1.0f); // Default color
-        instanceData.materialId = 0; // Default material ID
+        instanceData.color = glm::vec4(renderable.material->GetAlbedoColor(), 1.0f);
+        instanceData.materialId = 0; // Not used yet, could be used for texture indexing
         instanceData.flags = 0;
-        instanceData.metallic = 0.5f; // Default PBR values
-        instanceData.roughness = 0.5f;
+        instanceData.metallic = renderable.material->GetMetallicValue();
+        instanceData.roughness = renderable.material->GetRoughnessValue();
         
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
@@ -254,15 +248,10 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     };
     m_Renderer->Submit(uniformsCmd, sortKey);
     
-    // 4. Apply material properties and PBR lighting
-    if (meshInstances.material) {
-        // Ensure material properties are applied to shader
-        meshInstances.material->ApplyPBRProperties();
-    }
-
+    // 4. Apply lighting setup (material properties are now per-instance in SSBO)
     if (m_PBRLighting) {
-        // Use the actual material from the mesh instance instead of hardcoded values
-        m_PBRLighting->ApplyLightingToShader(shader, meshInstances.material.get());
+        // Apply lighting uniforms only (no per-instance material data)
+        m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
     } else {
         std::cerr << "Warning: PBRLightingRenderer not available for lighting setup" << std::endl;
     }
