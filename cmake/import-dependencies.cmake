@@ -130,6 +130,16 @@ macro(import_tinyddsloader)
     target_include_directories(tinyddsloader INTERFACE $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
 endmacro()
 
+macro(import_yaml_cpp)
+    FetchContent_Declare(
+        yaml_cpp
+        GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+        GIT_TAG 0.8.0
+    )
+
+    FetchContent_MakeAvailable(yaml_cpp)
+endmacro()
+
 macro(import_imgui)
     FetchContent_Declare(
       imgui
@@ -225,6 +235,7 @@ macro(import_dependencies)
     import_imgui()
     import_spdlog()
     import_catch()
+    import_yaml_cpp()
     #import_zlib()
 
     set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)

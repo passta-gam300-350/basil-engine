@@ -74,6 +74,8 @@ int main() {
 	//auto entt5 = wrld.add_entity();
 	//auto entt6 = wrld.add_entity();
 
+	entt::exclude<b>;
+
 	int i{};
 
 	wrld.add_system([&i](world w) {

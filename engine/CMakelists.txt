@@ -8,11 +8,12 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 set(ALL_LIBS
   PRIVATE glad
   PRIVATE glfw
-  PRIVATE EnTT::EnTT
+  PUBLIC glm
+  public ecs_lib
   PRIVATE assimp::assimp
 )
 
-add_library(${PROJECT_NAME} SHARED ${ALL_FILES})
+add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
