@@ -63,6 +63,16 @@ macro(import_glfw)
     FetchContent_MakeAvailable(glfw)
 endmacro()
 
+macro(import_mesh_optimiser)
+    FetchContent_Declare(
+      mesh_optimiser
+      GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
+      GIT_TAG v0.25
+    )
+
+    FetchContent_MakeAvailable(mesh_optimiser)
+endmacro()
+
 macro(import_glm)
     FetchContent_Declare(
       glm
@@ -83,16 +93,6 @@ macro(import_assimp)
     FetchContent_MakeAvailable(assimp)
 endmacro()
 
-macro(import_reflect)
-    FetchContent_Declare(
-        reflect
-        GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
-        GIT_TAG v0.20.0
-    )
-
-    FetchContent_MakeAvailable(reflect)
-endmacro()
-
 macro(import_entt)
     FetchContent_Declare(
         entt
@@ -101,6 +101,32 @@ macro(import_entt)
     )
 
     FetchContent_MakeAvailable(entt)
+endmacro()
+
+macro(import_zlib)
+    FetchContent_Declare(
+        zlib
+        GIT_REPOSITORY https://github.com/madler/zlib.git
+        GIT_TAG v1.3.1
+    )
+
+    FetchContent_MakeAvailable(zlib)
+endmacro()
+
+macro(import_tinyddsloader)
+    FetchContent_Declare(
+        tinyddsloader
+        GIT_REPOSITORY https://github.com/benikabocha/tinyddsloader.git
+        GIT_TAG 49654013d03aaf38e527f0ae0e179d1a811e67b7
+    )
+    
+    set(GLFW_INCLUDE_DIR "${glfw_SOURCE_DIR}/include" CACHE PATH "" FORCE)
+    set(GLFW_LIBRARIES glfw CACHE STRING "" FORCE)
+
+    FetchContent_MakeAvailable(tinyddsloader)
+    add_library(tinyddsloader INTERFACE)
+    target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
+    target_include_directories(tinyddsloader INTERFACE $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
 endmacro()
 
 macro(import_imgui)
@@ -150,17 +176,55 @@ macro(import_imgui)
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 endmacro()
 
+macro(import_stb)
+    set(STB_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/stb)
+    set(STB_SRC_FILES
+        ${STB_DIR}/stb_image.cpp
+    )
+    add_library(stb STATIC
+        ${STB_SRC_FILES}
+    )
+    target_include_directories(stb PUBLIC ${STB_DIR})
+endmacro()
+
+macro(import_compressonator)
+    FetchContent_Declare(
+      compressonator
+      GIT_REPOSITORY https://github.com/GPUOpen-Tools/compressonator.git
+      GIT_TAG V4.5.52
+    )
+
+    FetchContent_MakeAvailable(compressonator)
+endmacro()
+
+macro(import_directxtex)
+    FetchContent_Declare(
+      directxtex
+      GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
+      GIT_TAG jul2025
+    )
+
+    FetchContent_MakeAvailable(directxtex)
+endmacro()
+
 # Macro to import all dependencies
 macro(import_dependencies)
+    if (NOT EXISTS "${CMAKE_SOURCE_DIR}/out/_dep")
+        make_directory("${CMAKE_SOURCE_DIR}/out/_dep")
+    endif()
+    set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/out/_dep")
     import_glad()
     import_glfw()
     import_glm()
     import_entt()
     import_assimp()
-    import_reflect()
+    import_mesh_optimiser()
+    import_tinyddsloader()
+    import_directxtex()
     import_imgui()
     import_spdlog()
     import_catch()
+    #import_zlib()
 
     set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
 endmacro()
