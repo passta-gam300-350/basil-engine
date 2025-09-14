@@ -209,6 +209,8 @@ macro(import_directxtex)
     )
 
     FetchContent_MakeAvailable(directxtex)
+endmacro()
+
 # Import Mono
 macro(import_mono)
     set(MONO_IMPORT_DIR "${CMAKE_SOURCE_DIR}/dep/vendor/mono")
