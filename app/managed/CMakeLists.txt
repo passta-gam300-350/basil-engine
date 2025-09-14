@@ -1,0 +1,38 @@
+set(ASM_NAME EngineAPI)
+
+set(CSPROJPath ${ASM_NAME}/${ASM_NAME}.csproj)
+
+# Engine API Side
+file(GLOB_RECURSE MANAGED_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/*.cs
+)
+
+set(DOTNET_BUILDCONFIG Debug)
+
+execute_process(
+    COMMAND ${TOOL_DOTNET} msbuild ${CSPROJPath}
+    -nologo -getProperty:TargetPath
+    -p:Configuration=${DOTNET_BUILDCONFIG}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE DOTNET_OUTPUT
+
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+message(STATUS "Managed output: ${DOTNET_OUTPUT}")
+
+add_custom_command(
+  OUTPUT "${DOTNET_OUTPUT}.timestamp"
+  COMMAND ${TOOL_DOTNET} build ${CSPROJPath} -c ${DOTNET_BUILDCONFIG}
+  COMMAND ${TOOL_CSBRIDGE} ${DOTNET_OUTPUT} -o ${CMAKE_CURRENT_SOURCE_DIR}/cpp_glue
+  COMMAND ${CMAKE_COMMAND} -E touch ${DOTNET_OUTPUT}.timestamp
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${CSPROJPath} ${MANAGED_FILES}
+  COMMENT "Build EngineAPI.dll and run CSBridge"
+  VERBATIM USES_TERMINAL
+)
+
+add_custom_target(EngineAPI_Managed ALL
+  DEPENDS "${DOTNET_OUTPUT}.timestamp"
+)
+

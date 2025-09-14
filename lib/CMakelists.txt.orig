@@ -1,0 +1,10 @@
+<<<<<<< HEAD
+# add_subdirectory(Platform)
+add_subdirectory(Graphics)
+add_subdirectory(Scripting)
+
+
+=======
+add_subdirectory(Graphics)
+add_subdirectory(common)
+>>>>>>> main

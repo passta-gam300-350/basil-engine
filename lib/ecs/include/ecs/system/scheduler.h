@@ -300,7 +300,7 @@ namespace ecs {
 
     template <ecs_system_callback ecs_system_callback_t>
     auto world::add_system(ecs_system_callback_t sys_fn) {
-        return impl.get_scheduler.add_system(sys_fn);
+        return impl.get_scheduler().add_system(sys_fn);
     }
     template<typename ...requires_t>
     template<typename ...excludes_t>

@@ -20,6 +20,12 @@ struct d {
 };
 
 
+struct Example
+{
+	int a, b, c;
+};
+
+
 int main() {
 	init_ecs();
 	world wrld{ world::new_world_instance() };
@@ -96,6 +102,13 @@ int main() {
 
 	wrld.impl.get_scheduler().add_system([&i](world w) {
 		std::cout << "im asys";
+		for (ecs::entity e : w.filter_entities<entity::entity_name_t>()) {
+			bool a1 =  w.has_any_components_in_entity<a>(e);
+			if (a1)
+			{
+				w.get_component_from_entity<a>(e).aa += 10;
+			}
+		}
 		}).set_name("asys").write<a>();
 
 	wrld.impl.get_scheduler().add_system([&i](world w) {
@@ -104,12 +117,13 @@ int main() {
 
 	wrld.impl.get_scheduler().add_system([&i](world w) {
 		std::cout << "f a im asys";
-		}).set_name("aa sys").read<a>();
+		}).set_name("aa sys").write<Example>();
 
 	wrld.impl.get_scheduler().compile();
 
 	wrld.update(0.f);
 
+	
 	shutdown_ecs();
 	return 0;
 }

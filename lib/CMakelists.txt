@@ -1,4 +1,9 @@
+
+add_subdirectory(common)
 add_subdirectory(Graphics)
 add_subdirectory(common)
 add_subdirectory(ecs)
 add_subdirectory(resource)
+add_subdirectory(Scripting)
+#add_subdirectory(memory)
+add_subdirectory(uuid)

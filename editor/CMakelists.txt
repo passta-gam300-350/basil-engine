@@ -1,0 +1,57 @@
+project(editor)
+
+file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+    ${CMAKE_CURRENT_LIST_DIR}/*.[ch]pp
+    ${CMAKE_CURRENT_LIST_DIR}/*.h
+)
+
+
+file(GLOB PROJECT_DIRS_HEADER_E RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/include/*")
+foreach(dir ${PROJECT_DIRS_HEADER_E})
+    set(dirFull "${CMAKE_CURRENT_SOURCE_DIR}/${dir}")    
+    if((IS_DIRECTORY "${dirFull}"))
+    # Get folder name
+    set(DIR_NAME)
+    get_filename_component(DIR_NAME "${dirFull}" NAME)
+    file(GLOB headerFiles "${dirFull}" 
+        "${dirFull}/*.h"
+        "${dirFull}/*.[ch]pp"
+    )
+    source_group("Header Files/${DIR_NAME}" FILES ${headerFiles})
+
+    endif()
+endforeach()
+
+file(GLOB PROJECT_DIRS_SRC_E RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/*")
+foreach(dir ${PROJECT_DIRS_SRC_E})
+    set(dirFull "${CMAKE_CURRENT_SOURCE_DIR}/${dir}")    
+    if((IS_DIRECTORY "${dirFull}"))
+    # Get folder name
+    set(DIR_NAME)
+    get_filename_component(DIR_NAME "${dirFull}" NAME)
+    file(GLOB srcFiles "${dirFull}" 
+        "${dirFull}/*.cpp"
+        "${dirFull}/*.c"
+    )
+    source_group("Source Files/${DIR_NAME}" FILES ${srcFiles})
+
+    endif()
+endforeach()
+
+
+set(ALL_LIBS
+  #PRIVATE EnTT::EnTT
+  #PRIVATE assimp::assimp
+  PUBLIC engine
+  PUBLIC imgui
+)
+
+
+
+add_executable(${PROJECT_NAME} ${ALL_FILES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})

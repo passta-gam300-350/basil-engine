@@ -61,3 +61,11 @@ out/
 .git/
 build/
 _deps/
+
+# Mono Folder
+dep/vendor/mono/
+# Negation
+!tool/
+!tool/*
+!tool/bin/
+!tool/bin/*

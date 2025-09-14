@@ -2,9 +2,9 @@ include(FetchContent)
 
 macro(import_catch)
     FetchContent_Declare(
-       catch
-       GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-       GIT_TAG v3.9.1
+        catch
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.9.1
     )
 
     FetchContent_MakeAvailable(catch)
@@ -12,9 +12,9 @@ endmacro()
 
 macro(import_gtest)
     FetchContent_Declare(
-       gtest
-       GIT_REPOSITORY https://github.com/google/googletest.git
-       GIT_TAG v1.17.0
+        gtest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.17.0
     )
 
     FetchContent_MakeAvailable(gtest)
@@ -22,9 +22,9 @@ endmacro()
 
 macro(import_spdlog)
     FetchContent_Declare(
-       spdlog
-       GIT_REPOSITORY https://github.com/gabime/spdlog.git
-       GIT_TAG v1.15.3
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.15.3
     )
 
     FetchContent_MakeAvailable(spdlog)
@@ -32,10 +32,10 @@ endmacro()
 
 macro(import_glad)
     # FetchContent_Declare(
-    #   glad
-    #   GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-    #   GIT_TAG v2.0.8
-    #   SOURCE_SUBDIR cmake
+    # glad
+    # GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+    # GIT_TAG v2.0.8
+    # SOURCE_SUBDIR cmake
     # )
 
     # need python interpretor (need install) to generate glad on the fly
@@ -46,8 +46,11 @@ macro(import_glad)
     set(GLAD_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/glad)
     file(GLOB_RECURSE GLAD_SRC_FILES
         ${GLAD_DIR}/src/*.c
-        ${GLAD_DIR}/src/*.cpp
+        
     )
+    # set(GLAD_SRC_FILES
+    #     ${GLAD_DIR}/src/gl.c
+    # )
     add_library(glad STATIC
         ${GLAD_SRC_FILES}
     )
@@ -56,9 +59,9 @@ endmacro()
 
 macro(import_glfw)
     FetchContent_Declare(
-      glfw
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG 3.4
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.4
     )
 
     FetchContent_MakeAvailable(glfw)
@@ -76,9 +79,9 @@ endmacro()
 
 macro(import_glm)
     FetchContent_Declare(
-      glm
-      GIT_REPOSITORY https://github.com/g-truc/glm.git
-      GIT_TAG release-1.0.2
+        glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG release-1.0.2
     )
 
     FetchContent_MakeAvailable(glm)
@@ -86,9 +89,9 @@ endmacro()
 
 macro(import_assimp)
     FetchContent_Declare(
-	    assimp
-	    GIT_REPOSITORY	https://github.com/assimp/assimp.git
-	    GIT_TAG			v6.0.2
+        assimp
+        GIT_REPOSITORY https://github.com/assimp/assimp.git
+        GIT_TAG v6.0.2
     )
 
     FetchContent_MakeAvailable(assimp)
@@ -142,9 +145,9 @@ endmacro()
 
 macro(import_imgui)
     FetchContent_Declare(
-      imgui
-      GIT_REPOSITORY https://github.com/ocornut/imgui.git
-      GIT_TAG docking
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG docking
     )
 
     FetchContent_MakeAvailable(imgui)
@@ -179,7 +182,7 @@ macro(import_imgui)
     file(GLOB FONTS_FILES ${imgui_SOURCE_DIR}/misc/fonts/*.ttf)
 
     set(IMGUI_FILES ${IMGUI_SOURCE} ${IMGUI_HEADER} ${IMGUI_MISC} ${FONTS_FILES})
- 
+
     add_library(imgui STATIC
         ${IMGUI_FILES}
     )
@@ -198,16 +201,6 @@ macro(import_stb)
     target_include_directories(stb PUBLIC ${STB_DIR})
 endmacro()
 
-macro(import_compressonator)
-    FetchContent_Declare(
-      compressonator
-      GIT_REPOSITORY https://github.com/GPUOpen-Tools/compressonator.git
-      GIT_TAG V4.5.52
-    )
-
-    FetchContent_MakeAvailable(compressonator)
-endmacro()
-
 macro(import_directxtex)
     FetchContent_Declare(
       directxtex
@@ -216,6 +209,68 @@ macro(import_directxtex)
     )
 
     FetchContent_MakeAvailable(directxtex)
+# Import Mono
+macro(import_mono)
+    set(MONO_IMPORT_DIR "${CMAKE_SOURCE_DIR}/dep/vendor/mono")
+    set(MONO_IMPORT_INCLUDE_DIR "${MONO_IMPORT_DIR}/include/mono-2.0")
+    set(MONO_IMPORT_LIB_DIR "${MONO_IMPORT_DIR}/lib")
+    set(MONO_IMPORT_SUCCESS TRUE)
+
+
+    set(MONO_ASSEMBLY_PATH "${MONO_IMPORT_DIR}/lib/")
+    set(MONO_CONFIG_PATH "${MONO_IMPORT_DIR}/etc/")
+    if(NOT EXISTS "${MONO_IMPORT_DIR}")
+        message(STATUS "MONO not found in MONO/ folder")
+        set(MONO_IMPORT_SUCCESS FALSE)
+    endif()
+
+    if(NOT EXISTS "${MONO_IMPORT_INCLUDE_DIR}")
+        message(STATUS "MONO include directory not found in mono/ folder")
+        set(MONO_IMPORT_SUCCESS FALSE)
+    endif()
+
+    if(NOT EXISTS "${MONO_IMPORT_LIB_DIR}")
+        message(STATUS "MONO lib directory not found in mono/ folder")
+        set(MONO_IMPORT_SUCCESS FALSE)
+    endif()
+
+    IF(${MONO_IMPORT_SUCCESS})
+        message(STATUS "${MONO_IMPORT_LIB_DIR} HERE")
+        find_library(MONO_LIBRARY mono-2.0-sgen PATHS ${MONO_IMPORT_LIB_DIR})
+        find_library(MONO_POSIX_LIBRARY MonoPosixHelper PATHS ${MONO_IMPORT_LIB_DIR})
+
+        # Collect necessary bin files
+        set(MONO_DLL_PATH "${MONO_IMPORT_DIR}/bin/mono-2.0-sgen.dll")
+        set(MONO_DLL_STATIC "${MONO_IMPORT_DIR}/bin/libmono-btls-shared")
+        set(MONO_DLL_POSIX "${MONO_IMPORT_DIR}/bin/MonoPosixHelper.dll")
+
+        if(NOT MONO_LIBRARY)
+            message(STATUS "MONO library not found in MONO/ folder")
+            set(MONO_IMPORT_SUCCESS FALSE)
+        endif()
+
+        set(CMAKE_CSharp_COMPILER "${MONO_IMPORT_DIR}/bin/csc")
+        set(MONO_BIN_PATH "${MONO_IMPORT_DIR}/bin/")
+        add_library(mono SHARED IMPORTED)
+        message(STATUS "Mono: ${MONO_LIBRARY}")
+        set_target_properties(mono PROPERTIES
+            IMPORTED_IMPLIB_RELEASE "${MONO_LIBRARY}"
+            IMPORTED_IMPLIB_DEBUG "${MONO_LIBRARY}"
+            IMPORTED_IMPLIB_MINSIZEREL "${MONO_LIBRARY}"
+            IMPORTED_IMPLIB_RELWITHDEBINFO "${MONO_LIBRARY}"
+            IMPORTED_IMPLIB_INSTALLER "${MONO_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES ${MONO_IMPORT_INCLUDE_DIR}
+        )
+
+        add_library(mono_interface INTERFACE)
+
+        target_link_libraries(mono_interface
+            INTERFACE mono
+            ${MONO_POSIX_LIBRARY}
+        )
+    ELSE()
+        message(STATUS "MONO Import Failed.")
+    ENDIF()
 endmacro()
 
 # Macro to import all dependencies
@@ -233,10 +288,41 @@ macro(import_dependencies)
     import_tinyddsloader()
     import_directxtex()
     import_imgui()
+    import_stb()
+
     import_spdlog()
     import_catch()
     import_yaml_cpp()
     #import_zlib()
 
-    set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+    import_mono()
+
+    set_target_properties(glad glfw glm assimp EnTT imgui mono_interface UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+endmacro()
+
+macro(mono_postimport target)
+    if(DEFINED MONO_DLL_PATH AND EXISTS "${MONO_DLL_PATH}")
+        add_custom_command(TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MONO_DLL_PATH}" "$<TARGET_FILE_DIR:${target}>"
+        )
+    endif()
+
+    if(NOT WIN32)
+        if(DEFINED MONO_DLL_POSIX AND EXISTS "${MONO_DLL_POSIX}")
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MONO_DLL_POSIX}" "$<TARGET_FILE_DIR:${target}>"
+            )
+        endif()
+    endif()
+
+    target_compile_definitions(${target} PUBLIC MONO_ASSEMBLY_PATH="${MONO_ASSEMBLY_PATH}")
+    target_compile_definitions(${target} PUBLIC MONO_CONFIG_PATH="${MONO_CONFIG_PATH}")
+    target_compile_definitions(${target} PUBLIC MONO_PATH="${MONO_IMPORT_DIR}")
+    target_compile_definitions(${target} PUBLIC MONO_CSC_COMPILER_PATH="${CMAKE_CSharp_COMPILER}")
+    target_compile_definitions(${target} PUBLIC MONO_BIN_PATH="${MONO_BIN_PATH}")
+    target_compile_definitions(${target} PUBLIC MONO_COMPILER="${TOOL_DLL_CSCOMPILER}")
+    endmacro(mono_postimport target)
+
+macro(postimport_dll targetName)
+    mono_postimport(${targetName})
 endmacro()
