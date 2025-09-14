@@ -53,7 +53,10 @@ void compile_callback(std::string_view sparam){
 	if (cproc._s != CommandProcessor::Status::ERROR) {
 		for (std::string_view& sv : tokenised) {
 			if (sv.substr(sv.size() - 4) == "desc") {
-				//die serialised descriptor is not handled at the moment -to do
+				Resource::ResourceDescriptor rdesc{ Resource::ResourceDescriptor::load_descriptor(sv) };
+				cproc.Log((std::string("Compiling resource ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::INFO);
+				Resource::compile_descriptor(rdesc);
+				cproc.Log((std::string("Compiled resource ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::INFO);
 			}
 			else {
 				if (sv.front() == '\"') {
