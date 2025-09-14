@@ -8,6 +8,7 @@
 #include "descriptors/descriptors.h"
 #include "compiler/intermediate.h"
 #include "texture/texture.h"
+#include <yaml-cpp/yaml.h>
 
 namespace Resource {
 	std::map<std::string, ResourceDescriptor> virtual_descriptors{};
@@ -59,11 +60,21 @@ namespace {
 
 	Resource::ResourceDescriptor get_descriptor(std::string const& file_name) {
 		Resource::ResourceDescriptor rdesc;
-		std::ifstream ifs{ file_name, std::ios::binary };
 		auto& vdesc{Resource::get_virtual_descriptors()};
 		auto& gdesc{ Resource::guid_descriptors };
-		if (ifs) {
-			//gets descriptor from file
+		if (std::filesystem::exists(file_name)) {
+			if (file_name.substr(file_name.find_last_of(".") + 1) == "desc") {
+				rdesc = Resource::ResourceDescriptor::load_descriptor(file_name);
+				gdesc[rdesc.m_guid] = rdesc;
+			}
+			else {
+				rdesc = Resource::ResourceDescriptor::load_descriptor(file_name.substr(0, file_name.find_last_of(".")) + ".desc");
+				gdesc[rdesc.m_guid] = rdesc;
+			}
+		}
+		else if (std::string descfile{ file_name + ".desc" }; std::filesystem::exists(descfile)) {
+			rdesc = Resource::ResourceDescriptor::load_descriptor(descfile);
+			gdesc[rdesc.m_guid] = rdesc;
 		}
 		else if (vdesc.find(file_name) != vdesc.end()) {
 			rdesc = vdesc[file_name];
@@ -103,6 +114,78 @@ namespace Resource {
 		return output_dir;
 	}
 
+	void generate_material_resource_descriptor_dependencies(const aiScene* aiscene, aiMaterial* aimaterial, ResourceDescriptor& rparent) {
+		aiString texPath{ aimaterial->GetName() };
+		ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+		if (aiscene->mNumTextures > 0) {
+			assert(0 && "importer does not support embedded textures at the moment");
+		}
+		else {
+			if (aimaterial->GetTextureCount(aiTextureType_DIFFUSE)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_DIFFUSE, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_BASE_COLOR)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_NORMALS)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_NORMALS, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_HEIGHT)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_HEIGHT, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_METALNESS)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_METALNESS, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+			if (aimaterial->GetTextureCount(aiTextureType_EMISSIVE)) {
+				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_EMISSIVE, 0, &texPath)) {
+					ResourceDescriptor(get_parent_directory_delimited(rparent.m_intermediate_files) + narrow_to_wstring(texPath.C_Str())).save_descriptor();
+				}
+			}
+
+		}
+	}
+
+	void generate_model_resource_descriptor_dependencies(ResourceDescriptor& rdesc) {
+		Assimp::Importer importer{};
+		std::string narrow_name{ std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(rdesc.m_intermediate_files) };
+		const aiScene* fscene{ importer.ReadFile(narrow_name, assimp_import_flags) };
+		assert(fscene && "file error");
+		for (std::uint32_t i{}; i < fscene->mNumMaterials; i++) {
+			aiMaterial* aimaterial{ fscene->mMaterials[i] };
+			generate_material_resource_descriptor_dependencies(fscene, aimaterial, rdesc);
+		}
+		for (std::uint32_t i{}; i < fscene->mNumMeshes; i++) {
+			aiMesh* aimesh{ fscene->mMeshes[i] };
+			ResourceDescriptor(get_parent_directory_delimited(rdesc.m_intermediate_files) + narrow_to_wstring(aimesh->mName.C_Str())).save_descriptor();
+		}
+	}
+
+	void ResourceDescriptor::generate_resource_descriptor_dependencies() {
+		if (m_resource_type == ResourceType::MODEL) {
+			generate_model_resource_descriptor_dependencies(*this);
+		}
+	}
+
 	void compile_geometry(ResourceDescriptor const& rdesc) {
 		auto mesh{ load_mesh(std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(rdesc.m_intermediate_files)) };
 		std::ofstream outp(get_output_dir() + rdesc.m_guid.to_hex_no_delimiter() + ".mesh", std::ios::binary);
@@ -131,35 +214,35 @@ namespace Resource {
 			mat_outp.close();
 			
 			if (mat.m_color_tex) {
-				gdesc[mat.m_color_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_color_tex].m_intermediate_files;
+				//gdesc[mat.m_color_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_color_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_color_tex]);
 			}
 			if (mat.m_diffuse_tex) {
-				gdesc[mat.m_diffuse_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_diffuse_tex].m_intermediate_files;
+				//gdesc[mat.m_diffuse_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_diffuse_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_diffuse_tex]);
 			}
 			if (mat.m_emissive_tex) {
-				gdesc[mat.m_emissive_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_emissive_tex].m_intermediate_files;
+				//gdesc[mat.m_emissive_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_emissive_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_emissive_tex]);
 			}
 			if (mat.m_height_tex) {
-				gdesc[mat.m_height_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_height_tex].m_intermediate_files;
+				//gdesc[mat.m_height_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_height_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_height_tex]);
 			}
 			if (mat.m_metallic_tex) {
-				gdesc[mat.m_metallic_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_metallic_tex].m_intermediate_files;
+				//gdesc[mat.m_metallic_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_metallic_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_metallic_tex]);
 			}
 			if (mat.m_normal_tex) {
-				gdesc[mat.m_normal_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_normal_tex].m_intermediate_files;
+				//gdesc[mat.m_normal_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_normal_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_normal_tex]);
 			}
 			if (mat.m_occlusion_tex) {
-				gdesc[mat.m_occlusion_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_occlusion_tex].m_intermediate_files;
+				//gdesc[mat.m_occlusion_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_occlusion_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_occlusion_tex]);
 			}
 			if (mat.m_roughness_tex) {
-				gdesc[mat.m_roughness_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_roughness_tex].m_intermediate_files;
+				//gdesc[mat.m_roughness_tex].m_intermediate_files = get_parent_directory_delimited(rdesc.m_intermediate_files) + gdesc[mat.m_roughness_tex].m_intermediate_files;
 				compile_texture(gdesc[mat.m_roughness_tex]);
 			}
 		}
@@ -184,10 +267,10 @@ namespace Resource {
 		return Resource::virtual_descriptors;
 	}
 
-	MeshResource load_mesh(aiMesh* aimesh) {
+	MeshResource load_mesh(aiMesh* aimesh, std::string path = {}) {
 		constexpr std::uint32_t BONE_VERTEX_CT{ 4 };
 		MeshResource mres;
-		mres.m_guid = get_descriptor(aimesh->mName.C_Str()).m_guid;
+		mres.m_guid = get_descriptor(path + aimesh->mName.C_Str()).m_guid;
 		mres.m_properties.m_mat_idx = aimesh->mMaterialIndex;
 		reserve_mesh_resource_buffer(mres, aimesh->mNumVertices, aimesh->mNumFaces, aimesh->HasNormals(), aimesh->HasVertexColors(0), aimesh->HasTextureCoords(0), aimesh->HasTangentsAndBitangents(), aimesh->HasTangentsAndBitangents());
 		for (std::uint32_t j{}; j < aimesh->mNumVertices; j++) {
@@ -234,11 +317,11 @@ namespace Resource {
 		return mres;
 	}
 
-	MaterialResource load_material(const aiScene* aiscene, const aiMaterial* aimaterial) {
+	MaterialResource load_material(const aiScene* aiscene, const aiMaterial* aimaterial, std::string const& path = {}) {
 		MaterialResource matres;
 		aiString name;
 		aimaterial->Get(AI_MATKEY_NAME, name);
-		matres.m_guid = get_descriptor(name.C_Str()).m_guid;
+		matres.m_guid = get_descriptor(path + name.C_Str()).m_guid;
 		aiColor4D diff; 
 		if (AI_SUCCESS == aimaterial->Get(AI_MATKEY_COLOR_DIFFUSE, diff)) {
 			matres.m_color = { diff.r,diff.g,diff.b };
@@ -261,42 +344,42 @@ namespace Resource {
 			aiString texPath;
 			if (aimaterial->GetTextureCount(aiTextureType_DIFFUSE)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_DIFFUSE, 0, &texPath)) {
-					matres.m_diffuse_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_diffuse_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_BASE_COLOR)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath)) {
-					matres.m_color_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_color_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_NORMALS)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_NORMALS, 0, &texPath)) {
-					matres.m_normal_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_normal_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_HEIGHT)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_HEIGHT, 0, &texPath)) {
-					matres.m_height_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_height_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_METALNESS)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_METALNESS, 0, &texPath)) {
-					matres.m_metallic_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_metallic_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &texPath)) {
-					matres.m_roughness_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_roughness_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath)) {
-					matres.m_occlusion_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_occlusion_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 			if (aimaterial->GetTextureCount(aiTextureType_EMISSIVE)) {
 				if (AI_SUCCESS == aimaterial->GetTexture(aiTextureType_EMISSIVE, 0, &texPath)) {
-					matres.m_emissive_tex = get_descriptor(texPath.C_Str()).m_guid;
+					matres.m_emissive_tex = get_descriptor(path + texPath.C_Str()).m_guid;
 				}
 			}
 
@@ -316,17 +399,18 @@ namespace Resource {
 		const aiScene* fscene{ importer.ReadFile(file_path, assimp_import_flags) };
 		ModelResource mdlres;
 		assert(fscene && "file error");
+		std::string parent_dir{ get_parent_directory_delimited(file_path) };
 
 		//mdlres.m_skel = load_skeleton(fscene);
 
 		for (std::uint32_t i{}; i < fscene->mNumMaterials; i++) {
 			aiMaterial* aimaterial{ fscene->mMaterials[i] };
-			mdlres.m_mats.emplace_back(load_material(fscene, aimaterial));
+			mdlres.m_mats.emplace_back(load_material(fscene, aimaterial,parent_dir));
 		}
 
 		for (std::uint32_t i{}; i < fscene->mNumMeshes; i++) {
 			aiMesh* aimesh{ fscene->mMeshes[i] };
-			mdlres.m_meshes.emplace_back(load_mesh(aimesh));
+			mdlres.m_meshes.emplace_back(load_mesh(aimesh, parent_dir));
 		}
 
 		return mdlres;

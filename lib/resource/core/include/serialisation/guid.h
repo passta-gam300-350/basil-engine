@@ -25,6 +25,20 @@ namespace Resource {
             return Guid{get_time64(), get_rng64()};
         }
         
+        static Guid to_guid(std::string const& str) {
+            Guid tmp;
+            if (str.size() > 16) {
+                std::uint64_t rchar{ str.size() - 16 };
+                std::from_chars(str.data(), str.data() + rchar, tmp.m_high, 16);
+                std::from_chars(str.data() + rchar, str.data() + str.size(), tmp.m_low, 16);
+            }
+            else{
+                std::from_chars(str.data(), str.data() + str.size(), tmp.m_low, 16);
+                tmp.m_high = 0;
+            }
+            return tmp;
+        }
+
         std::string to_hex() const {
             return std::format("0x{:x}{:x}", m_high, m_low);
         }
