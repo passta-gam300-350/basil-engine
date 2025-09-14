@@ -131,7 +131,7 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     Clear();
     BeginInstanceBatch();
 
-    std::cout << "BuildDynamicInstanceData: Processing " << renderables.size() << " renderables" << std::endl;
+    //std::cout << "BuildDynamicInstanceData: Processing " << renderables.size() << " renderables" << std::endl;
 
     // Group renderables by mesh for instancing
     for (size_t i = 0; i < renderables.size(); ++i) {

@@ -259,9 +259,9 @@ void GraphicsTestDriver::CreateTestMaterials()
 
     // White material
     auto whiteMaterial = std::make_shared<Material>(shader, "WhiteMaterial");
-    whiteMaterial->SetAlbedoColor(glm::vec3(0.9f, 0.9f, 0.9f));
+    whiteMaterial->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
     whiteMaterial->SetMetallicValue(0.0f);
-    whiteMaterial->SetRoughnessValue(0.9f);
+    whiteMaterial->SetRoughnessValue(0.0f);
     m_ResourceManager->AddMaterial("WhiteMaterial", whiteMaterial);
 
     // Default material - simple metallic gray
@@ -286,7 +286,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     // Add ground plane to scene using GreenMaterial
     RenderableData ground;
     ground.mesh = planeMesh;
-    ground.material = m_ResourceManager->GetMaterial("GreenMaterial");
+    ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
     ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
     ground.visible = true;
     m_SceneObjects.push_back(ground);
@@ -407,12 +407,12 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         if (it != s_MeshCache.end()) {
             // Reuse existing mesh
             mesh = it->second;
-            std::cout << "  REUSING cached mesh for " << meshKey << std::endl;
+            //std::cout << "  REUSING cached mesh for " << meshKey << std::endl;
         } else {
             // Create new mesh and cache it
             mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
             s_MeshCache[meshKey] = mesh;
-            std::cout << "  CREATED new mesh for " << meshKey << std::endl;
+           // std::cout << "  CREATED new mesh for " << meshKey << std::endl;
         }
 
         
@@ -424,7 +424,7 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         
         // Check if this mesh has textures (indicating we should preserve them)
         if (mesh->textures.size() > 0) {
-            std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
+            //std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
 
             // Create a material that will work with the existing textures
             auto shader = m_ResourceManager->GetShader("instanced_bindless");
