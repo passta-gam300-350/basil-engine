@@ -61,6 +61,8 @@ void VertexArray::SetIndexBuffer(std::shared_ptr<IndexBuffer> const &indexBuffer
 {
 	Bind();
 	indexBuffer->Bind();
-
 	m_IndexBuffer = indexBuffer;
+
+	// Properly clean up OpenGL state to prevent corruption
+	Unbind();
 }

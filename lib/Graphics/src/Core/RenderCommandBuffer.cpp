@@ -141,7 +141,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
 {
     // Instanced drawing - assumes SSBO and state are already set up
     glBindVertexArray(cmd.vao);
-    glDrawElementsInstanced(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr, 
+    glDrawElementsInstanced(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
                            cmd.instanceCount);
     glBindVertexArray(0);
     

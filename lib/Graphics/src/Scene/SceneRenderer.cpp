@@ -110,11 +110,11 @@ void SceneRenderer::InitializeDefaultPipelines() {
                 m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
 
                 // 2. Frustum culling on submitted renderables
-                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
+                // auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
                 //auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
 
                 // 3. Forward instanced rendering with visible renderables
-                m_InstancedRenderer->Render(visibleRenderables, m_FrameData);
+                m_InstancedRenderer->Render(m_SubmittedRenderables, m_FrameData);
             }
 
             // Store main color buffer

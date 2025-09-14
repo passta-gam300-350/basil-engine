@@ -29,6 +29,9 @@ public:
     std::vector<unsigned int> indices;
     std::vector<Texture>      textures;
 
+    // Mesh ordering for deterministic sorting (hack until proper solution)
+    uint16_t meshSortIndex = 0;
+
     // constructor
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
 

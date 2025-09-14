@@ -4,6 +4,7 @@
 #include <Resources/Mesh.h>
 #include <Resources/Model.h>
 #include <Resources/Shader.h>
+#include <Resources/PrimitiveGenerator.h>
 #include <Utility/Light.h>
 
 #include <iostream>
@@ -200,7 +201,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox", 
-            "assets/models/dragon/dragon.obj");
+            "assets/models/tinbox/tin_box.obj");
         
         if (!tinBoxModel) {
             std::cerr << "Failed to load tin box model!\n";
@@ -276,14 +277,27 @@ void GraphicsTestDriver::CreateTestMaterials()
 void GraphicsTestDriver::SetupAdvancedScene()
 {
     std::cout << "Setting up Advanced Graphics Demo...\n";
-    
+
+    // Create ground plane
+    auto planeMesh = std::make_shared<Mesh>(
+        PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
+    );
+
+    // Add ground plane to scene using GreenMaterial
+    RenderableData ground;
+    ground.mesh = planeMesh;
+    ground.material = m_ResourceManager->GetMaterial("GreenMaterial");
+    ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    ground.visible = true;
+    m_SceneObjects.push_back(ground);
+
     // Create a 10x10 grid of objects for instanced rendering
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
-    
+
     const int gridSize = 3;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
-    
+
     // Create 10x10 grid (100 objects total) using both meshes
     for (int x = 0; x < gridSize; ++x) {
         for (int z = 0; z < gridSize; ++z) {
@@ -292,10 +306,10 @@ void GraphicsTestDriver::SetupAdvancedScene()
                 0.0f,
                 startOffset + z * spacing
             );
-            
+
             // Use uniform scale
             glm::vec3 scaleVec(1.0f);
-            
+
             // Cycle through materials based on position - now with per-instance support
             int materialIndex = (x + z) % materials.size();
             std::string material = materials[materialIndex];
@@ -360,10 +374,10 @@ void GraphicsTestDriver::SetupAdvancedScene()
     ));
     
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
-    
-    std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, " 
+
+    std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, "
               << m_SceneLights.size() << " dynamic lights\n";
-              
+
     // Debug: verify all objects were created
     std::cout << "Debug: Created " << m_SceneObjects.size() << " scene objects" << std::endl;
 }
@@ -385,19 +399,22 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
     for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
         // Share the same mesh objects instead of creating new ones
         static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
-        
+
         std::string meshKey = modelName + "_mesh" + std::to_string(meshIndex);
         auto it = s_MeshCache.find(meshKey);
-        
+
         std::shared_ptr<Mesh> mesh;
         if (it != s_MeshCache.end()) {
             // Reuse existing mesh
             mesh = it->second;
+            std::cout << "  REUSING cached mesh for " << meshKey << std::endl;
         } else {
             // Create new mesh and cache it
             mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
             s_MeshCache[meshKey] = mesh;
+            std::cout << "  CREATED new mesh for " << meshKey << std::endl;
         }
+
         
         // Create renderable for this mesh
         RenderableData renderable;

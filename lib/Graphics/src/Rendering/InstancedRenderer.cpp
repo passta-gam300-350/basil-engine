@@ -130,9 +130,9 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     // Clear and rebuild instance data based on currently visible renderables
     Clear();
     BeginInstanceBatch();
-    
-    // Debug output removed for performance
-    
+
+    std::cout << "BuildDynamicInstanceData: Processing " << renderables.size() << " renderables" << std::endl;
+
     // Group renderables by mesh for instancing
     for (size_t i = 0; i < renderables.size(); ++i) {
         const auto& renderable = renderables[i];
@@ -140,12 +140,14 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             continue;
         }
         
-        // Generate mesh ID from mesh only (materials are now per-instance)
+        // Generate mesh ID from mesh pointer only (like it worked with dragon model)
+        // Materials are per-instance, textures are per-mesh
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
-        
+
         /*std::cout << "Renderable[" << i << "]: meshId=" << meshId
-                  << ", materialPtr=" << renderable.material.get()
-                  << ", materialName=" << renderable.material->GetName() << std::endl;*/
+                  << ", materialName=" << renderable.material->GetName()
+                  << ", textureCount=" << renderable.mesh->textures.size()
+                  << ", vertices=" << renderable.mesh->vertices.size() << std::endl;*/
         
         // Add instance data with actual material properties
         InstanceData instanceData;
@@ -224,6 +226,10 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     sortKey.material = reinterpret_cast<uintptr_t>(meshInstances.material.get()) & 0xFFFFFF;
     sortKey.mesh = reinterpret_cast<uintptr_t>(meshInstances.mesh.get()) & 0xFFFF;
     sortKey.instance = 0;  // All instances rendered together
+
+    /*std::cout << "RenderInstancedMesh: '" << meshId << "' vertices=" << meshInstances.mesh->vertices.size()
+              << " sortIndex=" << meshInstances.mesh->meshSortIndex
+              << " sortKey.mesh=" << sortKey.mesh << std::endl;*/
     
     // Submit commands using existing architecture
     
@@ -261,9 +267,13 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     m_Renderer->Submit(texturesCmd, sortKey);
     
     // 5. Draw all instances
+    uint32_t indexCount = meshInstances.mesh->GetIndexCount();
+    /*std::cout << "DrawElementsInstanced: mesh with " << meshInstances.mesh->vertices.size()
+              << " vertices, " << indexCount << " indices (" << indexCount/3 << " triangles)" << std::endl;*/
+
     RenderCommands::DrawElementsInstancedData drawCmd{
         meshInstances.mesh->GetVertexArray()->GetVAOHandle(),
-        meshInstances.mesh->GetIndexCount(),
+        indexCount,
         static_cast<uint32_t>(meshInstances.instances.size()),
         0  // Base instance
     };
