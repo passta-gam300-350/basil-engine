@@ -13,8 +13,14 @@ map_Kd dalgona_standardSurface1_AlbedoTransparency.1001.png
 Ni 1.00
 newmtl pin:lambert1SG
 illum 4
-Kd 0.00 0.00 0.00
-Ka 0.00 0.00 0.00
+Kd 0.50 0.50 0.50
+Ka 0.10 0.10 0.10
+Ks 0.50 0.50 0.50
+Ns 96.0
 Tf 1.00 1.00 1.00
 map_Kd tin_can_lambert1_BaseColor.png
+map_Ks tin_can_lambert1_Metallic.png
+bump tin_can_lambert1_Normal.png
+map_Ns tin_can_lambert1_Roughness.png
+disp tin_can_lambert1_Height.png
 Ni 1.00

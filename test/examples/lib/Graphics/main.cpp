@@ -1,121 +1,628 @@
-// test/examples/lib/graphics/main.cpp
-#include "Application.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include "main.h"
 
-class GraphicsTestApp : public Application
+#include <Resources/Material.h>
+#include <Resources/Mesh.h>
+#include <Resources/Model.h>
+#include <Resources/Shader.h>
+#include <Utility/Light.h>
+
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+#include <random>
+
+#ifdef _WIN32
+// NVIDIA Optimus - force discrete GPU
+extern "C" {
+    __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+}
+
+// AMD PowerXpress - force discrete GPU  
+extern "C" {
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
+// Static instance for callbacks
+GraphicsTestDriver* GraphicsTestDriver::s_Instance = nullptr;
+
+GraphicsTestDriver::GraphicsTestDriver()
+    : m_Window(nullptr)
+    , m_Renderer(nullptr)
+    , m_SceneRenderer(nullptr)
+    , m_ResourceManager(nullptr)
+    , m_Camera(nullptr)
+    , m_Time(0.0f)
+    , m_DeltaTime(0.0f)
+    , m_CameraEnabled(true)
+    , m_FirstMouse(true)
+    , m_LastX(640.0f)
+    , m_LastY(360.0f)
 {
-public:
-    GraphicsTestApp() : Application("Graphics Engine Test", 1280, 720)
-    {
+    s_Instance = this;
+}
+
+GraphicsTestDriver::~GraphicsTestDriver()
+{
+    s_Instance = nullptr;
+}
+
+bool GraphicsTestDriver::Initialize()
+{
+    std::cout << "=== Graphics Library Test Driver ===\n";
+    std::cout << "Initializing graphics systems...\n\n";
+
+    // Create window
+    m_Window = std::make_unique<Window>("Graphics Library Test Driver", 1280, 720);
+    if (!m_Window->GetNativeWindow()) {
+        std::cerr << "Failed to create window!\n";
+        return false;
     }
 
-    void LoadResources() override
-    {
-        std::cout << "Loading resources..." << std::endl;
+    // Create scene renderer (owns all graphics systems now)
+    m_SceneRenderer = std::make_unique<SceneRenderer>(m_Window->GetNativeWindow());
 
-        // Load shader using clean graphics lib interface
-        LoadShader("basic", 
+    // Get references to systems owned by SceneRenderer
+    m_ResourceManager = m_SceneRenderer->GetResourceManager();
+
+    // Setup camera
+    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
+    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    m_Camera->SetPosition(glm::vec3(0.0f, 2.0f, 8.0f));
+    m_Camera->SetRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
+    
+    // We'll manually update the scene renderer's frame data with camera matrices
+
+    // Setup input callbacks
+    glfwSetKeyCallback(m_Window->GetNativeWindow(), KeyCallback);
+    glfwSetCursorPosCallback(m_Window->GetNativeWindow(), MouseCallback);
+    glfwSetScrollCallback(m_Window->GetNativeWindow(), ScrollCallback);
+    glfwSetInputMode(m_Window->GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // Load resources
+    if (!LoadTestResources()) {
+        std::cerr << "Failed to load test resources!\n";
+        return false;
+    }
+
+    // Setup the advanced demo scene
+    SetupAdvancedScene();
+    
+    // Submit static data once during initialization
+    for (const auto& light : m_SceneLights) {
+        m_SceneRenderer->SubmitLight(light);
+    }
+    for (const auto& renderable : m_SceneObjects) {
+        m_SceneRenderer->SubmitRenderable(renderable);
+    }
+
+    // Print system info
+    PrintSystemInfo();
+
+    m_LastFrameTime = std::chrono::steady_clock::now();
+
+    std::cout << "Graphics system initialized successfully!\n\n";
+    return true;
+}
+
+void GraphicsTestDriver::Run()
+{
+    std::cout << "Starting render loop...\n";
+    std::cout << "Advanced Graphics Demo - Instanced + Bindless + PBR\n";
+    std::cout << "Controls:\n";
+    std::cout << "  - WASD: Move camera\n";
+    std::cout << "  - Mouse: Look around\n";
+    std::cout << "  - ESC: Exit\n";
+    std::cout << "  - F1: Toggle camera controls\n";
+    std::cout << "  - F2: Print scene info\n\n";
+
+    while (!m_Window->ShouldClose()) {
+        // Calculate delta time
+        auto currentTime = std::chrono::steady_clock::now();
+        m_DeltaTime = std::chrono::duration<float>(currentTime - m_LastFrameTime).count();
+        m_LastFrameTime = currentTime;
+        m_Time += m_DeltaTime;
+
+        // Process input
+        ProcessInput();
+
+        // Begin frame - no direct renderer access needed
+        m_SceneRenderer->ClearFrame();
+
+        // Update camera data manually
+        if (m_Camera) {
+            auto& frameData = m_SceneRenderer->GetFrameData();
+            frameData.viewMatrix = m_Camera->GetViewMatrix();
+            frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+            frameData.cameraPosition = m_Camera->GetPosition();
+        }
+
+        // Update the advanced scene
+        UpdateAdvancedScene();
+
+        // Static data submitted once during initialization - no need to resubmit
+
+        // Render scene (handles begin/end frame internally)
+        m_SceneRenderer->Render();
+
+        // Poll events
+        m_Window->PollEvents();
+    }
+
+    std::cout << "Render loop ended.\n";
+}
+
+void GraphicsTestDriver::Shutdown()
+{
+    std::cout << "Shutting down graphics systems...\n";
+
+    // Clear scene data first
+    m_SceneObjects.clear();
+    m_SceneLights.clear();
+
+    // Reset in proper order - SceneRenderer owns Renderer and ResourceManager now
+    m_SceneRenderer.reset();  // This will properly clean up all graphics systems
+    m_Camera.reset();
+    m_Window.reset();
+
+    // Clear pointers (they're just references now, not owners)
+    m_ResourceManager = nullptr;
+    m_Renderer = nullptr;
+
+    std::cout << "Shutdown complete.\n";
+}
+
+bool GraphicsTestDriver::LoadTestResources()
+{
+    std::cout << "Loading test resources...\n";
+
+    try {
+        // Load shaders
+        auto basicShader = m_ResourceManager->LoadShader("basic", 
             "assets/shaders/basic.vert", 
             "assets/shaders/basic.frag");
-
-        // Load model using clean graphics lib interface  
-        LoadModel("tinbox", "assets/models/tinbox/tin_box.obj");
-
-        // Set up camera position
-        SetCameraPosition(glm::vec3(0.0f, 0.0f, 3.0f));
         
-        std::cout << "Resources loaded successfully!" << std::endl;
+        if (!basicShader) {
+            std::cerr << "Failed to load basic shader!\n";
+            return false;
+        }
+
+        // Load advanced bindless shaders for maximum visual quality
+        auto instancedShader = m_ResourceManager->LoadShader("instanced_bindless",
+            "assets/shaders/instanced_bindless.vert",
+            "assets/shaders/instanced_bindless.frag");
+        
+        if (instancedShader) {
+            std::cout << "Advanced bindless shaders loaded successfully!\n";
+        } else {
+            std::cout << "Warning: Could not load bindless shaders, will use basic shaders for fallback\n";
+        }
+
+        // Load models
+        auto tinBoxModel = m_ResourceManager->LoadModel("tinbox", 
+            "assets/models/dragon/dragon.obj");
+        
+        if (!tinBoxModel) {
+            std::cerr << "Failed to load tin box model!\n";
+            return false;
+        }
+
+        // Create test materials
+        CreateTestMaterials();
+
+        std::cout << "Resources loaded successfully!\n";
+        return true;
     }
+    catch (const std::exception& e) {
+        std::cerr << "Exception while loading resources: " << e.what() << "\n";
+        return false;
+    }
+}
 
-    void Update(float deltaTime) override
-    {
-        // Rotate the model over time
-        m_ModelRotation += deltaTime * 50.0f; // 50 degrees per second
-        
-        // Optional: Move camera in a circle around the model
-        if (m_CircleCamera) {
-            float radius = 5.0f;
-            float x = sin(deltaTime * m_CameraSpeed) * radius;
-            float z = cos(deltaTime * m_CameraSpeed) * radius;
-            SetCameraPosition(glm::vec3(x, 0.0f, z));
+void GraphicsTestDriver::CreateTestMaterials()
+{
+    // Use the instanced bindless shader for materials (fallback to basic if needed)
+    auto shader = m_ResourceManager->GetShader("instanced_bindless");
+    if (!shader) {
+        shader = m_ResourceManager->GetShader("basic");
+    }
+    if (!shader) return;
+
+    // Red material
+    auto redMaterial = std::make_shared<Material>(shader, "RedMaterial");
+    redMaterial->SetAlbedoColor(glm::vec3(0.8f, 0.2f, 0.2f));
+    redMaterial->SetMetallicValue(0.1f);
+    redMaterial->SetRoughnessValue(0.8f);
+    m_ResourceManager->AddMaterial("RedMaterial", redMaterial);
+
+    // Green material
+    auto greenMaterial = std::make_shared<Material>(shader, "GreenMaterial");
+    greenMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.8f, 0.2f));
+    greenMaterial->SetMetallicValue(0.3f);
+    greenMaterial->SetRoughnessValue(0.6f);
+    m_ResourceManager->AddMaterial("GreenMaterial", greenMaterial);
+
+    // Blue material
+    auto blueMaterial = std::make_shared<Material>(shader, "BlueMaterial");
+    blueMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.2f, 0.8f));
+    blueMaterial->SetMetallicValue(0.5f);
+    blueMaterial->SetRoughnessValue(0.4f);
+    m_ResourceManager->AddMaterial("BlueMaterial", blueMaterial);
+
+    // Metallic gold material
+    auto goldMaterial = std::make_shared<Material>(shader, "GoldMaterial");
+    goldMaterial->SetAlbedoColor(glm::vec3(1.0f, 0.8f, 0.2f));
+    goldMaterial->SetMetallicValue(0.9f);
+    goldMaterial->SetRoughnessValue(0.1f);
+    m_ResourceManager->AddMaterial("GoldMaterial", goldMaterial);
+
+    // White material
+    auto whiteMaterial = std::make_shared<Material>(shader, "WhiteMaterial");
+    whiteMaterial->SetAlbedoColor(glm::vec3(0.9f, 0.9f, 0.9f));
+    whiteMaterial->SetMetallicValue(0.0f);
+    whiteMaterial->SetRoughnessValue(0.9f);
+    m_ResourceManager->AddMaterial("WhiteMaterial", whiteMaterial);
+
+    // Default material - simple metallic gray
+    auto defaultMaterial = std::make_shared<Material>(shader, "DefaultMaterial");
+    defaultMaterial->SetAlbedoColor(glm::vec3(0.7f, 0.7f, 0.7f));
+    defaultMaterial->SetMetallicValue(0.8f);
+    defaultMaterial->SetRoughnessValue(0.2f);
+    m_ResourceManager->AddMaterial("DefaultMaterial", defaultMaterial);
+
+    std::cout << "Test materials created and registered.\n";
+}
+
+void GraphicsTestDriver::SetupAdvancedScene()
+{
+    std::cout << "Setting up Advanced Graphics Demo...\n";
+    
+    // Create a 10x10 grid of objects for instanced rendering
+    std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
+    
+    const int gridSize = 3;
+    const float spacing = 3.0f;
+    const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
+    
+    // Create 10x10 grid (100 objects total) using both meshes
+    for (int x = 0; x < gridSize; ++x) {
+        for (int z = 0; z < gridSize; ++z) {
+            glm::vec3 position(
+                startOffset + x * spacing,
+                0.0f,
+                startOffset + z * spacing
+            );
+            
+            // Use uniform scale
+            glm::vec3 scaleVec(1.0f);
+            
+            // Cycle through materials based on position - now with per-instance support
+            int materialIndex = (x + z) % materials.size();
+            std::string material = materials[materialIndex];
+
+            CreateModelInstance("tinbox", material, position, scaleVec);
         }
     }
+    
+    // Complex PBR lighting setup
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(0.2f, -0.8f, 0.3f),
+        glm::vec3(1.0f, 0.95f, 0.85f),
+        1.0f
+    ));
+    
+    // Point lights at the four corners of the 10x10 grid
+    // Grid spans from -13.5 to +13.5 (with 3.0f spacing)
+    float cornerOffset = 13.5f; // Half of (gridSize-1) * spacing
+    float lightHeight = 8.0f;
+    
+    // Top-left corner (red light)
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(-cornerOffset, lightHeight, -cornerOffset),
+        glm::vec3(1.0f, 0.2f, 0.2f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Top-right corner (green light)
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(cornerOffset, lightHeight, -cornerOffset),
+        glm::vec3(0.2f, 1.0f, 0.2f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Bottom-left corner (blue light)
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(-cornerOffset, lightHeight, cornerOffset),
+        glm::vec3(0.2f, 0.2f, 1.0f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Bottom-right corner (yellow light)
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(cornerOffset, lightHeight, cornerOffset),
+        glm::vec3(1.0f, 1.0f, 0.2f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Single spotlight in center above the grid
+    m_SceneLights.push_back(CreateSpotLight(
+        glm::vec3(0.0f, 20.0f, 0.0f),        // Position: centered above grid
+        glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
+        glm::vec3(1.0f, 1.0f, 0.8f),         // Color: warm white light
+        6.0f,                                // Intensity
+        40.0f,                               // Range
+        15.0f,                               // Inner cone angle
+        30.0f                                // Outer cone angle
+    ));
+    
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
+    
+    std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, " 
+              << m_SceneLights.size() << " dynamic lights\n";
+              
+    // Debug: verify all objects were created
+    std::cout << "Debug: Created " << m_SceneObjects.size() << " scene objects" << std::endl;
+}
 
-    void OnKeyboard(int key, int action, float deltaTime) override
-    {
-        // Handle additional key inputs
-        if (action == GLFW_PRESS) {
-            switch (key) {
-                case GLFW_KEY_R:
-                    // Reset camera position
-                    SetCameraPosition(glm::vec3(0.0f, 0.0f, 3.0f));
-                    SetCameraRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-                    std::cout << "Camera reset" << std::endl;
-                    break;
-                case GLFW_KEY_C:
-                    // Toggle camera circle mode
-                    m_CircleCamera = !m_CircleCamera;
-                    std::cout << "Circle camera: " << (m_CircleCamera ? "ON" : "OFF") << std::endl;
-                    break;
-                case GLFW_KEY_SPACE:
-                    // Toggle model rotation
-                    m_RotateModel = !m_RotateModel;
-                    std::cout << "Model rotation: " << (m_RotateModel ? "ON" : "OFF") << std::endl;
-                    break;
+void GraphicsTestDriver::UpdateAdvancedScene()
+{
+    // Completely static scene - no animations for instances or lights
+    // Objects and lights remain in their original positions with initial properties
+}
+void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
+                                            const glm::vec3& position, const glm::vec3& scale)
+{
+    auto model = m_ResourceManager->GetModel(modelName);
+    if (!model || model->meshes.empty()) {
+        return;
+    }
+    
+    // Create a renderable for each mesh in the model
+    for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
+        // Share the same mesh objects instead of creating new ones
+        static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
+        
+        std::string meshKey = modelName + "_mesh" + std::to_string(meshIndex);
+        auto it = s_MeshCache.find(meshKey);
+        
+        std::shared_ptr<Mesh> mesh;
+        if (it != s_MeshCache.end()) {
+            // Reuse existing mesh
+            mesh = it->second;
+        } else {
+            // Create new mesh and cache it
+            mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
+            s_MeshCache[meshKey] = mesh;
+        }
+        
+        // Create renderable for this mesh
+        RenderableData renderable;
+        renderable.mesh = mesh;
+        renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
+        renderable.visible = true;
+        
+        // Check if this mesh has textures (indicating we should preserve them)
+        if (mesh->textures.size() > 0) {
+            std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
+
+            // Create a material that will work with the existing textures
+            auto shader = m_ResourceManager->GetShader("instanced_bindless");
+            if (!shader) {
+                shader = m_ResourceManager->GetShader("basic");
+            }
+
+            if (shader) {
+                renderable.material = std::make_shared<Material>(shader, "TexturedMaterial_" + std::to_string(meshIndex));
+                // Use white/neutral colors so textures show through properly
+                renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
+                renderable.material->SetMetallicValue(0.0f);
+                renderable.material->SetRoughnessValue(0.5f);
+            }
+        } else {
+            // No textures - use our custom colored material
+            std::cout << "Mesh " << meshIndex << " has no textures, using custom material: " << materialName << std::endl;
+            renderable.material = m_ResourceManager->GetMaterial(materialName);
+        }
+
+        // Fallback: create a simple material if nothing worked
+        if (!renderable.material) {
+            auto shader = m_ResourceManager->GetShader("instanced_bindless");
+            if (!shader) {
+                shader = m_ResourceManager->GetShader("basic");
+            }
+
+            if (shader) {
+                renderable.material = std::make_shared<Material>(shader, "FallbackMaterial_" + std::to_string(meshIndex));
+                // Set default PBR properties
+                renderable.material->SetAlbedoColor(glm::vec3(0.8f, 0.7f, 0.6f));
+                renderable.material->SetMetallicValue(0.7f);
+                renderable.material->SetRoughnessValue(0.3f);
             }
         }
-    }
-
-    void OnMouseScroll(double yoffset) override
-    {
-        // Additional scroll handling if needed
-        std::cout << "Scroll: " << yoffset << std::endl;
-    }
-
-    void Render() override
-    {
-        // Render the model using clean graphics lib interface
         
-        // Create transformation matrix
-        glm::mat4 model = glm::mat4(1.0f);
-        
-        if (m_RotateModel) {
-            model = glm::rotate(model, glm::radians(m_ModelRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+        m_SceneObjects.push_back(renderable);
+    }
+}
+
+
+
+SubmittedLightData GraphicsTestDriver::CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity)
+{
+    SubmittedLightData light;
+    light.type = Light::Type::Directional;
+    light.direction = glm::normalize(direction);
+    light.color = color;
+    light.intensity = intensity;
+    light.enabled = true;
+    return light;
+}
+
+SubmittedLightData GraphicsTestDriver::CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity, float range)
+{
+    SubmittedLightData light;
+    light.type = Light::Type::Point;
+    light.position = position;
+    light.color = color;
+    light.intensity = intensity;
+    light.range = range;
+    light.enabled = true;
+    return light;
+}
+
+SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position, const glm::vec3& direction,
+                                                     const glm::vec3& color, float intensity, float range,
+                                                     float innerCone, float outerCone)
+{
+    SubmittedLightData light;
+    light.type = Light::Type::Spot;
+    light.position = position;
+    light.direction = glm::normalize(direction);
+    light.color = color;
+    light.intensity = intensity;
+    light.range = range;
+    light.innerCone = innerCone;
+    light.outerCone = outerCone;
+    light.enabled = true;
+    return light;
+}
+
+void GraphicsTestDriver::ProcessInput()
+{
+    if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(m_Window->GetNativeWindow(), true);
+    }
+    
+    // No scene switching - single advanced demo
+    
+    // Camera movement
+    if (m_CameraEnabled && m_Camera) {
+        if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_W) == GLFW_PRESS) {
+            m_Camera->ProcessKeyboard(CameraMovement::FORWARD, m_DeltaTime);
         }
-        
-        // Scale down the model a bit
-        model = glm::scale(model, glm::vec3(0.5f));
-        
-        // Render using graphics lib - handles all OpenGL calls internally
-        RenderModel("tinbox", "basic", model);
+        if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_S) == GLFW_PRESS) {
+            m_Camera->ProcessKeyboard(CameraMovement::BACKWARD, m_DeltaTime);
+        }
+        if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_A) == GLFW_PRESS) {
+            m_Camera->ProcessKeyboard(CameraMovement::LEFT, m_DeltaTime);
+        }
+        if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_D) == GLFW_PRESS) {
+            m_Camera->ProcessKeyboard(CameraMovement::RIGHT, m_DeltaTime);
+        }
+        if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_SPACE) == GLFW_PRESS) {
+            m_Camera->ProcessKeyboard(CameraMovement::UP, m_DeltaTime);
+        }
+        if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            m_Camera->ProcessKeyboard(CameraMovement::DOWN, m_DeltaTime);
+        }
     }
+}
 
-private:
-    float m_ModelRotation = 0.0f;
-    bool m_RotateModel = true;
-    bool m_CircleCamera = false;
-    float m_CameraSpeed = 0.5f;
-};
+void GraphicsTestDriver::UpdateCamera()
+{
+    // Camera update is handled in ProcessInput
+}
 
+void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (!s_Instance) return;
+    
+    if (action == GLFW_PRESS) {
+        switch (key) {
+            case GLFW_KEY_F1:
+                s_Instance->m_CameraEnabled = !s_Instance->m_CameraEnabled;
+                if (s_Instance->m_CameraEnabled) {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                    s_Instance->m_FirstMouse = true;
+                    std::cout << "Camera controls enabled\n";
+                } else {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                    std::cout << "Camera controls disabled\n";
+                }
+                break;
+                
+            case GLFW_KEY_F2:
+                s_Instance->PrintSceneInfo();
+                break;
+        }
+    }
+}
+
+void GraphicsTestDriver::MouseCallback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (!s_Instance || !s_Instance->m_CameraEnabled) return;
+    
+    if (s_Instance->m_FirstMouse) {
+        s_Instance->m_LastX = static_cast<float>(xpos);
+        s_Instance->m_LastY = static_cast<float>(ypos);
+        s_Instance->m_FirstMouse = false;
+    }
+    
+    float xoffset = static_cast<float>(xpos) - s_Instance->m_LastX;
+    float yoffset = s_Instance->m_LastY - static_cast<float>(ypos); // Reversed since y-coordinates go from bottom to top
+    
+    s_Instance->m_LastX = static_cast<float>(xpos);
+    s_Instance->m_LastY = static_cast<float>(ypos);
+    
+    if (s_Instance->m_Camera) {
+        s_Instance->m_Camera->ProcessMouseMovement(xoffset, yoffset);
+    }
+}
+
+void GraphicsTestDriver::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (!s_Instance || !s_Instance->m_Camera) return;
+    
+    s_Instance->m_Camera->ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void GraphicsTestDriver::PrintSystemInfo()
+{
+    std::cout << "=== Graphics System Information ===\n";
+    std::cout << "Window Size: " << m_Window->GetWidth() << "x" << m_Window->GetHeight() << "\n";
+    std::cout << "Resource Manager Status: " << (m_ResourceManager ? "Active" : "Inactive") << "\n";
+    if (m_ResourceManager) {
+        std::cout << "Loaded Shaders: " << m_ResourceManager->GetShaderCount() << "\n";
+        std::cout << "Loaded Models: " << m_ResourceManager->GetModelCount() << "\n";
+    }
+    std::cout << "=====================================\n\n";
+}
+
+void GraphicsTestDriver::PrintSceneInfo()
+{
+    std::cout << "\n=== Current Scene Information ===\n";
+    std::cout << "Objects: " << m_SceneObjects.size() << "\n";
+    std::cout << "Lights: " << m_SceneLights.size() << "\n";
+    
+    if (m_Camera) {
+        auto pos = m_Camera->GetPosition();
+        auto rot = m_Camera->GetRotation();
+        std::cout << "Camera Position: (" << std::fixed << std::setprecision(2) 
+                  << pos.x << ", " << pos.y << ", " << pos.z << ")\n";
+        std::cout << "Camera Rotation: (" << std::fixed << std::setprecision(1)
+                  << rot.x << "°, " << rot.y << "°, " << rot.z << "°)\n";
+    }
+    
+    std::cout << "Frame Time: " << std::fixed << std::setprecision(3) << m_DeltaTime * 1000.0f << "ms"
+              << " (FPS: " << std::fixed << std::setprecision(1) << 1.0f / m_DeltaTime << ")\n";
+    std::cout << "===============================\n\n";
+}
+
+// Main entry point
 int main()
 {
-    try
-    {
-        std::cout << "=== Starting Graphics Engine Test ===" << std::endl;
-        
-        // Create and run application - graphics lib handles everything internally
-        GraphicsTestApp app;
-        app.Run();
-        
-        std::cout << "=== Graphics Engine Test Complete ===" << std::endl;
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "Application error: " << e.what() << std::endl;
+    GraphicsTestDriver driver;
+    
+    if (!driver.Initialize()) {
+        std::cerr << "Failed to initialize graphics test driver!\n";
         return -1;
     }
-
+    
+    driver.Run();
+    driver.Shutdown();
+    
     return 0;
 }

@@ -2,6 +2,7 @@
 
 #include <Resources/Shader.h>
 #include <Resources/Model.h>
+#include <Resources/Material.h>
 #include <unordered_map>
 #include <string>
 #include <memory>
@@ -27,16 +28,16 @@ public:
     std::shared_ptr<Model> GetModel(const std::string& name);
     bool HasModel(const std::string& name) const;
 
+    // Material management
+    void AddMaterial(const std::string& name, std::shared_ptr<Material> material);
+    std::shared_ptr<Material> GetMaterial(const std::string& name);
+    bool HasMaterial(const std::string& name) const;
+
     // Debug/Information
     void PrintResourceInfo() const;
     size_t GetShaderCount() const;
     size_t GetModelCount() const;
-
-    // Singleton access
-    static ResourceManager& Get()
-    {
-        return *s_Instance;
-    }
+    size_t GetMaterialCount() const;
 
 private:
     void LoadDefaultResources();
@@ -44,6 +45,7 @@ private:
     // Resource storage - simplified
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
     std::unordered_map<std::string, std::shared_ptr<Model>> m_Models;
+    std::unordered_map<std::string, std::shared_ptr<Material>> m_Materials;
 
-    static ResourceManager* s_Instance;
+    bool m_IsShutdown = false;
 };

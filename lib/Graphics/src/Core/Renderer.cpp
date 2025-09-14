@@ -1,17 +1,14 @@
 #include "../../include/Core/Renderer.h"
+#include "../../include/Core/RenderCommandBuffer.h"
 
 #include <glad/gl.h>
 
-Renderer* Renderer::s_Instance = nullptr;
-
-Renderer::Renderer() : m_RenderQueue()
+Renderer::Renderer() : m_CommandBuffer()
 {
-	s_Instance = this;
 }
 
 Renderer::~Renderer()
 {
-	s_Instance = nullptr;
 }
 
 void Renderer::Initialize(GLFWwindow* windowHandle)
@@ -19,6 +16,9 @@ void Renderer::Initialize(GLFWwindow* windowHandle)
 	// Create the graphics context
 	m_Context = std::make_unique<GraphicsContext>(windowHandle);
 	m_Context->Initialize();
+
+	// Initialize command buffer (after OpenGL context is ready)
+	m_CommandBuffer.Initialize();
 }
 
 void Renderer::Shutdown()
@@ -29,8 +29,8 @@ void Renderer::Shutdown()
 
 void Renderer::BeginFrame()
 {
-	// Clear the render queue
-	m_RenderQueue.Clear();
+	// Clear the command buffer
+	m_CommandBuffer.Clear();
 
 	// Clear the screen
 	m_Context->Clear();
@@ -38,15 +38,22 @@ void Renderer::BeginFrame()
 
 void Renderer::EndFrame()
 {
-	// Execute all commands in the render queue
-	m_RenderQueue.Execute();
+	// Sort and execute command buffer for optimal performance
+	m_CommandBuffer.Sort();
+	m_CommandBuffer.Execute();
 	
 	// Swap buffers
 	m_Context->SwapBuffers();
 }
 
-void Renderer::Submit(const RenderCommand& command)
+void Renderer::Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey)
 {
-	// Clone the command and submit it to the render queue
-	m_RenderQueue.Submit(command);
+	// Submit to efficient command buffer
+	m_CommandBuffer.Submit(command, sortKey);
+}
+
+void Renderer::SortCommands()
+{
+	// Explicitly sort commands for optimal rendering
+	m_CommandBuffer.Sort();
 }

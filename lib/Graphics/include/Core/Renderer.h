@@ -1,8 +1,7 @@
 #pragma once
 
 #include "GraphicsContext.h"
-#include "RenderCommand.h"
-#include "RenderQueue.h"
+#include "RenderCommandBuffer.h"
 #include <memory>
 
 class Renderer
@@ -16,14 +15,14 @@ public:
 
 	void BeginFrame();
 	void EndFrame();
-	void Submit(const RenderCommand& command);
+	
+	// Modern command buffer API
+	void Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey = {});
+	void SortCommands();  // Sort commands for optimal rendering
 
-	static Renderer& Get() { return *s_Instance; }
 	GraphicsContext* GetContext() const { return m_Context.get(); }
 
 private:
 	std::unique_ptr<GraphicsContext> m_Context;
-	RenderQueue m_RenderQueue;
-	
-	static Renderer* s_Instance;
+	RenderCommandBuffer m_CommandBuffer; // Modern efficient command buffer
 };

@@ -1,24 +1,115 @@
 #pragma once
 
-#include "Scene.h"
 #include "../Pipeline/RenderPipeline.h"
-#include "../Utility/Camera.h"
+#include "../Utility/RenderData.h"
+#include "../Core/Renderer.h"
+#include "../Resources/ResourceManager.h"
 #include <memory>
+#include <unordered_map>
+#include <string>
+#include <vector>
+
+struct FrameData
+{
+    // Shadow mapping data
+    std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
+    std::vector<glm::mat4> shadowMatrices;
+
+
+    // Main rendering output
+    std::shared_ptr<FrameBuffer> mainColorBuffer;
+
+    // Post-processing chain
+    std::shared_ptr<FrameBuffer> postProcessBuffer;
+
+    // Camera data (shared across all pipelines)
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
+    glm::mat4 projectionMatrix = glm::mat4(1.0f);
+    glm::vec3 cameraPosition = glm::vec3(0.0f);
+
+    // Timing data
+    float deltaTime = 0.0f;
+    uint32_t frameNumber = 0;
+};
+
+// Forward declarations for rendering coordinators
+class MeshRenderer;
+class FrustumCuller;
+class InstancedRenderer;
+class PBRLightingRenderer;
 
 class SceneRenderer {
 public:
-    SceneRenderer();
+    SceneRenderer(GLFWwindow* window);
     ~SceneRenderer();
+    
+    // Data submission API - application pushes data each frame
+    void SubmitRenderable(const RenderableData& renderable);
+    void SubmitLight(const SubmittedLightData& light);
+    void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
+    
+    // Clear submitted data (call at start of frame)
+    void ClearFrame();
 
-    void SetScene(const std::shared_ptr<Scene>& scene) { m_Scene = scene; }
-    void SetCamera(const std::shared_ptr<Camera>& camera) { m_Camera = camera; }
-
+    // High-level scene rendering coordination
     void Render();
 
-private:
-    void InitializePipeline();
+    // Multi pipeline support
+    void AddPipeline(std::string const &name, std::unique_ptr<RenderPipeline> pipeline);
+    void RemovePipeline(std::string const &name);
+    void SetPipelineOrder(std::vector<std::string> const &order);
+    RenderPipeline *GetPipeline(std::string const &name);
 
-    std::shared_ptr<Scene> m_Scene;
-    std::shared_ptr<Camera> m_Camera;
-    std::unique_ptr<RenderPipeline> m_Pipeline;
+    // Pipeline state mgmt
+    void EnablePipeline(std::string const &name, bool enabled = true);
+    bool IsPipelineEnabled(std::string const &name) const;
+
+    //Access to frame data for custom pipeline setup
+    FrameData &GetFrameData()
+    {
+        return m_FrameData;
+    }
+    
+    // Access to rendering coordinators for advanced usage
+    InstancedRenderer* GetInstancedRenderer() const { return m_InstancedRenderer.get(); }
+    PBRLightingRenderer* GetPBRLightingRenderer() const { return m_PBRLightingRenderer.get(); }
+    ResourceManager* GetResourceManager() const { return m_ResourceManager.get(); }
+
+private:
+    //void InitializePipeline();
+    void InitializeRenderingCoordinators();
+
+    // Multi pipelines methods
+    void InitializeDefaultPipelines();
+    
+    void UpdateFrameData()
+    {
+        // Camera data is now set directly by applications via GetFrameData()
+        // This method can be used for other frame-level updates if needed
+    }
+
+    // Frame-submitted data
+    std::vector<RenderableData> m_SubmittedRenderables;
+    std::vector<SubmittedLightData> m_SubmittedLights;
+    glm::vec3 m_AmbientLight = glm::vec3(0.1f);
+    
+
+    // NEW: Multiple pipelines with order
+    std::unordered_map<std::string, std::unique_ptr<RenderPipeline>> m_Pipelines;
+    std::vector<std::string> m_PipelineOrder;
+    std::unordered_map<std::string, bool> m_PipelineEnabled;
+
+    // Shared frame data
+    FrameData m_FrameData;
+
+    // Core systems - SceneRenderer owns these
+    std::unique_ptr<Renderer> m_Renderer;
+    std::unique_ptr<ResourceManager> m_ResourceManager;
+
+    // Rendering coordinators - SceneRenderer owns these
+    std::unique_ptr<MeshRenderer> m_MeshRenderer;
+    std::unique_ptr<FrustumCuller> m_FrustumCuller;
+    std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
+    std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;
+    
 };

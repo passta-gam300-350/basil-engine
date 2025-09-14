@@ -31,7 +31,7 @@ void Camera::SetOrthographic(float size, float aspectRatio, float nearClip, floa
 
 void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 {
-	float velocity = MovementSpeed * deltaTime;
+	float velocity = m_MovementSpeed * deltaTime;
 	
 	switch(direction)
 	{
@@ -60,8 +60,8 @@ void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
 {
-	xoffset *= MouseSensitivity;
-	yoffset *= MouseSensitivity;
+	xoffset *= m_MouseSensitivity;
+	yoffset *= m_MouseSensitivity;
 
 	// Update rotation (Yaw = Y rotation, Pitch = X rotation)
 	m_Rotation.y += xoffset;  // Yaw
@@ -78,12 +78,11 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPi
 
 void Camera::ProcessMouseScroll(float yoffset)
 {
-	Zoom -= yoffset;
-	Zoom = std::clamp(Zoom, 1.0f, 45.0f);
-	
+	m_FOV -= yoffset;
+	m_FOV = std::clamp(m_FOV, 1.0f, 45.0f);
+
 	if (m_Type == CameraType::Perspective)
 	{
-		m_FOV = Zoom;
 		RecalculateProjection();
 	}
 }

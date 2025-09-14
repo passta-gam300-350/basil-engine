@@ -1,0 +1,220 @@
+#include "Rendering/PBRLightingRenderer.h"
+#include "Scene/SceneRenderer.h"
+#include "Utility/RenderData.h"
+#include "Utility/Light.h"
+#include "Resources/Material.h"
+#include <iostream>
+
+PBRLightingRenderer::PBRLightingRenderer()
+{
+    std::cout << "PBRLightingRenderer: Initialized as lighting system" << std::endl;
+}
+
+void PBRLightingRenderer::ClearLights()
+{
+    m_PointLights.clear();
+    m_DirectionalLights.clear();
+    m_SpotLights.clear();
+}
+
+void PBRLightingRenderer::AddPointLight(const PointLight& light)
+{
+    m_PointLights.push_back(light);
+}
+
+void PBRLightingRenderer::AddDirectionalLight(const DirectionalLight& light)
+{
+    m_DirectionalLights.push_back(light);
+}
+
+void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
+{
+    m_SpotLights.push_back(light);
+}
+
+void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
+                                           const FrameData& frameData,
+                                           const Material* material)
+{
+    if (!shader) {
+        std::cerr << "PBRLightingRenderer::SetupPBRLighting: NULL shader provided" << std::endl;
+        return;
+    }
+
+    // Ensure shader is active for uniform setting
+    shader->use();
+    
+    // Set light counts
+    SetupPointLights(shader);
+    SetupDirectionalLights(shader);
+    SetupSpotLights(shader);
+
+    // Set material properties - use Material's method if available, else use legacy method
+    if (material) {
+        const_cast<Material*>(material)->ApplyPBRProperties();
+    } else {
+        SetupMaterialProperties(shader, material);
+    }
+}
+
+void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
+                                                 const FrameData& frameData,
+                                                 const Material* material,
+                                                 const RenderCommands::CommandSortKey& sortKey)
+{
+    // For now, we'll use immediate setup since we don't have specific lighting commands yet
+    // TODO: Add dedicated lighting commands to RenderCommandBuffer
+    SetupPBRLighting(shader, frameData, material);
+}
+
+void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
+                                         const glm::vec3& ambientLight, const FrameData& frameData)
+{
+    // Clear existing lights
+    ClearLights();
+    
+    // Convert submitted light data to internal format
+    for (const auto& submittedLight : submittedLights)
+    {
+        if (!submittedLight.enabled)
+            continue;
+            
+        switch (submittedLight.type)
+        {
+            case Light::Type::Directional:
+            {
+                DirectionalLight dirLight;
+                dirLight.direction = submittedLight.direction;
+                dirLight.color = submittedLight.color;
+                dirLight.intensity = submittedLight.intensity;
+                AddDirectionalLight(dirLight);
+                break;
+            }
+            case Light::Type::Point:
+            {
+                PointLight pointLight;
+                pointLight.position = submittedLight.position;
+                pointLight.color = submittedLight.color;
+                pointLight.intensity = submittedLight.intensity;
+                // Default attenuation values - could be configurable
+                pointLight.constant = 1.0f;
+                pointLight.linear = 0.09f;
+                pointLight.quadratic = 0.032f;
+                AddPointLight(pointLight);
+                break;
+            }
+            case Light::Type::Spot:
+            {
+                SpotLight spotLight;
+                spotLight.position = submittedLight.position;
+                spotLight.direction = submittedLight.direction;
+                spotLight.color = submittedLight.color;
+                spotLight.intensity = submittedLight.intensity;
+                spotLight.cutOff = glm::cos(glm::radians(submittedLight.innerCone));
+                spotLight.outerCutOff = glm::cos(glm::radians(submittedLight.outerCone));
+                // Default attenuation values
+                spotLight.constant = 1.0f;
+                spotLight.linear = 0.09f;
+                spotLight.quadratic = 0.032f;
+                AddSpotLight(spotLight);
+                break;
+            }
+        }
+    }
+}
+
+void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material)
+{
+    if (!shader) {
+        std::cerr << "PBRLightingRenderer::ApplyLightingToShader: NULL shader provided" << std::endl;
+        return;
+    }
+
+    // Ensure shader is active for uniform setting
+    shader->use();
+    
+    // Set light data
+    SetupPointLights(shader);
+    SetupDirectionalLights(shader);
+    SetupSpotLights(shader);
+
+    // Set material properties - use Material's method if available, else use legacy method
+    if (material) {
+        const_cast<Material*>(material)->ApplyPBRProperties();
+    } else {
+        SetupMaterialProperties(shader, material);
+    }
+}
+
+void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
+{
+    // Set point light count
+    shader->setInt("u_NumPointLights", static_cast<int>(m_PointLights.size()));
+    
+    // Set up point lights
+    for (size_t i = 0; i < m_PointLights.size(); ++i) {
+        const auto& light = m_PointLights[i];
+        std::string prefix = "u_PointLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "position", light.position);
+        shader->setVec3(prefix + "color", light.color);
+        shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "constant", light.constant);
+        shader->setFloat(prefix + "linear", light.linear);
+        shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+}
+
+void PBRLightingRenderer::SetupDirectionalLights(std::shared_ptr<Shader> shader)
+{
+    // Set directional light count
+    shader->setInt("u_NumDirectionalLights", static_cast<int>(m_DirectionalLights.size()));
+    
+    // Set up directional lights
+    for (size_t i = 0; i < m_DirectionalLights.size(); ++i) {
+        const auto& light = m_DirectionalLights[i];
+        std::string prefix = "u_DirectionalLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "direction", light.direction);
+        shader->setVec3(prefix + "color", light.color);
+        shader->setFloat(prefix + "intensity", light.intensity);
+    }
+}
+
+void PBRLightingRenderer::SetupSpotLights(std::shared_ptr<Shader> shader)
+{
+    // Set spot light count
+    shader->setInt("u_NumSpotLights", static_cast<int>(m_SpotLights.size()));
+    
+    // Set up spot lights
+    for (size_t i = 0; i < m_SpotLights.size(); ++i) {
+        const auto& light = m_SpotLights[i];
+        std::string prefix = "u_SpotLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "position", light.position);
+        shader->setVec3(prefix + "direction", light.direction);
+        shader->setVec3(prefix + "color", light.color);
+        shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "cutOff", light.cutOff);
+        shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
+        shader->setFloat(prefix + "constant", light.constant);
+        shader->setFloat(prefix + "linear", light.linear);
+        shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+}
+
+void PBRLightingRenderer::SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material)
+{
+    if (!material) {
+        // Use default PBR properties if no material provided
+        shader->setVec3("u_AlbedoColor", glm::vec3(0.8f, 0.7f, 0.6f));
+        shader->setFloat("u_MetallicValue", 0.7f);
+        shader->setFloat("u_RoughnessValue", 0.3f);
+        return;
+    }
+
+    // Use Material class methods - only set material properties, not texture flags
+    shader->setVec3("u_AlbedoColor", material->GetAlbedoColor());
+    shader->setFloat("u_MetallicValue", material->GetMetallicValue());
+    shader->setFloat("u_RoughnessValue", material->GetRoughnessValue());
+
+    // Note: Bindless texture system handles u_HasDiffuseMap, u_HasNormalMap, etc.
+    // and texture handle uploads to SSBO at binding point 1
+}

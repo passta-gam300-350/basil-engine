@@ -1,57 +1,161 @@
 #include "Scene/SceneRenderer.h"
-#include "ECS/Components/MeshComponent.h"
-#include "ECS/Components/MaterialComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "ECS/Components/LightComponent.h"
-#include "Core/RenderCommand.h"
-#include "Core/Renderer.h"
+#include "Rendering/MeshRenderer.h"
+#include "Rendering/FrustumCuller.h"
+#include "Rendering/InstancedRenderer.h"
+#include "Rendering/PBRLightingRenderer.h"
+#include "Pipeline/RenderPass.h"
+#include "Buffer/FrameBuffer.h"
+#include <glad/gl.h>
 
-SceneRenderer::SceneRenderer() {
-    InitializePipeline();
+SceneRenderer::SceneRenderer(GLFWwindow* window) {
+    // Initialize core systems first
+    m_Renderer = std::make_unique<Renderer>();
+    m_Renderer->Initialize(window);
+
+    m_ResourceManager = std::make_unique<ResourceManager>();
+    m_ResourceManager->Initialize();
+
+    // Initialize rendering coordinators with dependencies
+    InitializeRenderingCoordinators();
+    InitializeDefaultPipelines();
 }
 
 SceneRenderer::~SceneRenderer() {
-    // Pipeline will be cleaned up by unique_ptr
+    // Pipeline and coordinators will be cleaned up by unique_ptr
 }
 
-void SceneRenderer::InitializePipeline() {
-    // Create a basic rendering pipeline
-    m_Pipeline = std::make_unique<RenderPipeline>("MainPipeline");
+void SceneRenderer::SubmitRenderable(const RenderableData& renderable) {
+    m_SubmittedRenderables.push_back(renderable);
+}
 
-    // Create geometry pass
-    auto geometryPass = std::make_shared<RenderPass>("GeometryPass", FBOSpecs{
-        1280, 720, // Default size, will be resized later
-        {
-            { FBOTextureFormat::RGBA8 },     // Color
-            { FBOTextureFormat::RGBA8 },     // Normal
-            { FBOTextureFormat::RED_INTEGER },// Entity ID
-            { FBOTextureFormat::DEPTH24STENCIL8 } // Depth
-        }
-        });
+void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
+    m_SubmittedLights.push_back(light);
+}
 
-    // Set up render function for geometry pass
-    geometryPass->SetRenderFunction([this]()
+void SceneRenderer::ClearFrame() {
+    // Don't clear renderables or lights - they are static and submitted once during initialization
+}
+
+void SceneRenderer::AddPipeline(std::string const &name, std::unique_ptr<RenderPipeline> pipeline)
+{
+    m_Pipelines[name] = std::move(pipeline);
+    m_PipelineEnabled[name] = true;
+
+    // Add to order if not already there
+    if (std::find(m_PipelineOrder.begin(), m_PipelineOrder.end(), name) == m_PipelineOrder.end())
     {
-        // Clear the framebuffer
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        m_PipelineOrder.push_back(name);
+    }
+}
 
-        // The actual rendering will be handled by RenderSystem
-        // which submits commands to the RenderQueue
-        // This pass just sets up the framebuffer and clears it
+void SceneRenderer::RemovePipeline(std::string const &name)
+{
+    m_Pipelines.erase(name);
+    m_PipelineEnabled.erase(name);
+    m_PipelineOrder.erase(
+        std::remove(m_PipelineOrder.begin(), m_PipelineOrder.end(), name),
+        m_PipelineOrder.end()
+    );
+}
+
+void SceneRenderer::SetPipelineOrder(std::vector<std::string> const &order)
+{
+    m_PipelineOrder = order;
+}
+
+RenderPipeline *SceneRenderer::GetPipeline(std::string const &name)
+{
+    auto it = m_Pipelines.find(name);
+    return it != m_Pipelines.end() ? it->second.get() : nullptr;
+}
+
+void SceneRenderer::EnablePipeline(std::string const &name, bool enabled)
+{
+    m_PipelineEnabled[name] = enabled;
+}
+
+bool SceneRenderer::IsPipelineEnabled(std::string const &name) const
+{
+    auto it = m_PipelineEnabled.find(name);
+    return it != m_PipelineEnabled.end() ? it->second : false;
+}
+
+void SceneRenderer::InitializeDefaultPipelines() {
+    // Default forward rendering pipeline
+    auto mainPipeline = std::make_unique<RenderPipeline>("MainRendering");
+
+    // Single forward rendering pass
+    auto mainPass = std::make_shared<RenderPass>("MainPass", FBOSpecs{
+        1280, 720,
+        {
+            { FBOTextureFormat::RGBA8 },
+            { FBOTextureFormat::DEPTH24STENCIL8 }
+        }
     });
 
-    // Add the geometry pass to the pipeline
-    m_Pipeline->AddPass(geometryPass);
+    mainPass->SetRenderFunction([this, mainPass]()
+        {
+            // Clear color and depth buffers using command buffer
+            RenderCommands::ClearData clearCmd{
+                0.7f, 0.7f, 0.7f, 0.5f,  // r, g, b, a
+                true,                      // clearColor
+                true                       // clearDepth
+            };
+            m_Renderer->Submit(clearCmd);
 
-    // Add other passes as needed (e.g., lighting, post-processing)
+            // Standard forward rendering with submitted data
+            if (!m_SubmittedRenderables.empty())
+            {
+                // 1. Update scene-wide lighting with submitted lights
+                m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
+
+                // 2. Frustum culling on submitted renderables
+                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
+                //auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
+
+                // 3. Forward instanced rendering with visible renderables
+                m_InstancedRenderer->Render(visibleRenderables, m_FrameData);
+            }
+
+            // Store main color buffer
+            m_FrameData.mainColorBuffer = mainPass->GetFramebuffer();
+        });
+
+    mainPipeline->AddPass(mainPass);
+    AddPipeline("MainRendering", std::move(mainPipeline));
+
+    // Set pipeline order
+    SetPipelineOrder({ "MainRendering" });
+}
+
+void SceneRenderer::InitializeRenderingCoordinators() {
+    // Create rendering coordinators with explicit dependencies
+    m_PBRLightingRenderer = std::make_unique<PBRLightingRenderer>();  // Initialize lighting first
+    m_MeshRenderer = std::make_unique<MeshRenderer>(m_Renderer.get());
+    m_FrustumCuller = std::make_unique<FrustumCuller>();
+    m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_Renderer.get(), m_PBRLightingRenderer.get());
 }
 
 void SceneRenderer::Render() {
-    if (!m_Scene || !m_Camera) {
-        return;
+    // Begin frame
+    m_Renderer->BeginFrame();
+
+    // Update shared frame data
+    UpdateFrameData();
+
+    // Execute pipelines in order
+    for (const auto &pipelineName : m_PipelineOrder)
+    {
+        auto pipelineIt = m_Pipelines.find(pipelineName);
+        if (pipelineIt != m_Pipelines.end() && IsPipelineEnabled(pipelineName))
+        {
+            pipelineIt->second->Execute();
+        }
     }
 
-    // Execute the rendering pipeline
-    m_Pipeline->Execute();
+    m_FrameData.frameNumber++;
+
+    // End frame
+    m_Renderer->EndFrame();
 }
+
