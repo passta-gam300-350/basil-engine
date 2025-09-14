@@ -95,9 +95,13 @@ void SceneRenderer::InitializeDefaultPipelines() {
 
     mainPass->SetRenderFunction([this, mainPass]()
         {
-            // Clear color and depth buffers
-            glClearColor(0.7f, 0.7f, 0.7f, 0.5f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            // Clear color and depth buffers using command buffer
+            RenderCommands::ClearData clearCmd{
+                0.7f, 0.7f, 0.7f, 0.5f,  // r, g, b, a
+                true,                      // clearColor
+                true                       // clearDepth
+            };
+            m_Renderer->Submit(clearCmd);
 
             // Standard forward rendering with submitted data
             if (!m_SubmittedRenderables.empty())
