@@ -58,6 +58,10 @@ namespace ecs {
 			return entity_range(world_handle, rhs.entities | entities);
 		}
 
+		operator bool() {
+			return entities.begin()!=entities.end();
+		}
+
 		std::uint32_t world_handle;
 		range_based_container_t entities;
 	};

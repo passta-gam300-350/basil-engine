@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <future>
 #include <iostream>
+#include <jobsystem.hpp>
 
 #include "ecs/fwd.h"
 #include "ecs/internal/world.h"
@@ -83,8 +84,9 @@ namespace ecs {
         void run(world wrld);
 
         Scheduler() = default;
-        Scheduler(Scheduler const& other) : m_nodes{ other.m_nodes }, m_schedule{ other.m_schedule }, m_compiled{ other.m_compiled } {}
-        Scheduler(Scheduler&& other) noexcept : m_nodes{ std::move(other.m_nodes) }, m_schedule{ std::move(other.m_schedule) }, m_compiled{ other.m_compiled } {}
+        Scheduler(std::uint32_t job_thread_ct) : m_nodes{}, m_schedule{}, m_jobsystem{ job_thread_ct }, m_compiled{} {};
+        Scheduler(Scheduler const& other) : m_nodes{other.m_nodes}, m_schedule{other.m_schedule}, m_jobsystem{ other.m_jobsystem.getWorkerCount()}, m_compiled{other.m_compiled} {};
+        //Scheduler(Scheduler&& other) noexcept : m_nodes{ std::move(other.m_nodes) }, m_schedule{ std::move(other.m_schedule) }, m_jobsystem{ std::move(other.m_jobsystem) }, m_compiled{ other.m_compiled } {}
 
         void debug_print_schedule();
 
@@ -109,6 +111,8 @@ namespace ecs {
         // The compiled execution plan. Each inner vector is a "stage" of system
         // indices that can be executed in parallel.
         std::vector<std::vector<size_t>> m_schedule;
+
+        JobSystem m_jobsystem;
 
         bool m_compiled = false;
 
@@ -270,9 +274,8 @@ namespace ecs {
 
                 for (const size_t system_index : stage) {
                     // Launch each system in the stage asynchronously.
-                    futures.push_back(std::async(std::launch::async, [&, system_index]() {
-                        this->m_nodes[system_index].function(wrld);
-                        }));
+                    auto [job_handle, job_future]{ m_jobsystem.schedule(this->m_nodes[system_index].function, wrld) }; //TODO:: full implementation of job system with dependencies
+                    futures.emplace_back(std::move(job_future));
                 }
 
                 // Create a synchronization barrier: wait for all systems in the current stage to complete.

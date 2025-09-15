@@ -64,6 +64,7 @@ namespace ecs {
 
 		void destroy_world();
 		void update(float);
+		void update();
 
 		entity migrate_entity(entity);
 		entity add_entity();
