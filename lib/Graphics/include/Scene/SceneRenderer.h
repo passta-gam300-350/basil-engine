@@ -1,36 +1,15 @@
 #pragma once
 
 #include "../Pipeline/RenderPipeline.h"
+#include "../Pipeline/MainRenderingPipeline.h"
 #include "../Utility/RenderData.h"
+#include "../Utility/FrameData.h"
 #include "../Core/Renderer.h"
 #include "../Resources/ResourceManager.h"
 #include <memory>
 #include <unordered_map>
 #include <string>
 #include <vector>
-
-struct FrameData
-{
-    // Shadow mapping data
-    std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
-    std::vector<glm::mat4> shadowMatrices;
-
-
-    // Main rendering output
-    std::shared_ptr<FrameBuffer> mainColorBuffer;
-
-    // Post-processing chain
-    std::shared_ptr<FrameBuffer> postProcessBuffer;
-
-    // Camera data (shared across all pipelines)
-    glm::mat4 viewMatrix = glm::mat4(1.0f);
-    glm::mat4 projectionMatrix = glm::mat4(1.0f);
-    glm::vec3 cameraPosition = glm::vec3(0.0f);
-
-    // Timing data
-    float deltaTime = 0.0f;
-    uint32_t frameNumber = 0;
-};
 
 // Forward declarations for rendering coordinators
 class MeshRenderer;

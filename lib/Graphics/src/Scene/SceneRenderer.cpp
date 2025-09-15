@@ -4,6 +4,7 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/RenderPass.h"
+#include "Pipeline/MainRenderingPipeline.h"
 #include "Buffer/FrameBuffer.h"
 #include <glad/gl.h>
 
@@ -81,47 +82,13 @@ bool SceneRenderer::IsPipelineEnabled(std::string const &name) const
 }
 
 void SceneRenderer::InitializeDefaultPipelines() {
-    // Default forward rendering pipeline
-    auto mainPipeline = std::make_unique<RenderPipeline>("MainRendering");
+    // Create main rendering pipeline using dedicated class
+    auto mainPipeline = std::make_unique<MainRenderingPipeline>(
+        m_Renderer.get(),
+        m_InstancedRenderer.get(),
+        m_PBRLightingRenderer.get()
+    );
 
-    // Single forward rendering pass
-    auto mainPass = std::make_shared<RenderPass>("MainPass", FBOSpecs{
-        1280, 720,
-        {
-            { FBOTextureFormat::RGBA8 },
-            { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
-    });
-
-    mainPass->SetRenderFunction([this, mainPass]()
-        {
-            // Clear color and depth buffers using command buffer
-            RenderCommands::ClearData clearCmd{
-                0.7f, 0.7f, 0.7f, 0.5f,  // r, g, b, a
-                true,                      // clearColor
-                true                       // clearDepth
-            };
-            m_Renderer->Submit(clearCmd);
-
-            // Standard forward rendering with submitted data
-            if (!m_SubmittedRenderables.empty())
-            {
-                // 1. Update scene-wide lighting with submitted lights
-                m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
-
-                // 2. Frustum culling on submitted renderables
-                // auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
-                //auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
-
-                // 3. Forward instanced rendering with visible renderables
-                m_InstancedRenderer->Render(m_SubmittedRenderables, m_FrameData);
-            }
-
-            // Store main color buffer
-            m_FrameData.mainColorBuffer = mainPass->GetFramebuffer();
-        });
-
-    mainPipeline->AddPass(mainPass);
     AddPipeline("MainRendering", std::move(mainPipeline));
 
     // Set pipeline order
@@ -143,6 +110,15 @@ void SceneRenderer::Render() {
     // Update shared frame data
     UpdateFrameData();
 
+    // Pass data to main pipeline
+    auto mainPipeline = static_cast<MainRenderingPipeline*>(GetPipeline("MainRendering"));
+    if (mainPipeline) {
+        mainPipeline->SetRenderables(m_SubmittedRenderables);
+        mainPipeline->SetLights(m_SubmittedLights);
+        mainPipeline->SetAmbientLight(m_AmbientLight);
+        mainPipeline->UpdateFrameData(m_FrameData);
+    }
+
     // Execute pipelines in order
     for (const auto &pipelineName : m_PipelineOrder)
     {
@@ -151,6 +127,11 @@ void SceneRenderer::Render() {
         {
             pipelineIt->second->Execute();
         }
+    }
+
+    // Update frame data with any changes from main pipeline
+    if (mainPipeline) {
+        m_FrameData = mainPipeline->GetFrameData();
     }
 
     m_FrameData.frameNumber++;
