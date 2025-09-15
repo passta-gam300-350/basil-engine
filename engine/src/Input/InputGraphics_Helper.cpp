@@ -11,6 +11,9 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 ***************************************************************************/
 #pragma once
+
+#ifndef ENGINE_INPUT_USE_HELPER_IMPL
+#else
 #include "./Input/InputGraphics_Helper.h"
 #include "./Input/InputManager.h"
 
@@ -201,3 +204,4 @@ void GLHelper::Interpolate_Color(float t, const float color1[3], const float col
     result[1] = (1.0f - t) * color1[1] + t * color2[1]; // Green
     result[2] = (1.0f - t) * color1[2] + t * color2[2]; // Blue
 }
+#endif
