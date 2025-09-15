@@ -12,6 +12,8 @@ set(ALL_LIBS
   PRIVATE assimp::assimp
   PUBLIC mono_interface
   PUBLIC engine
+  PUBLIC resource_lib_core
+  PUBLIC tinyddsloader
 )
 
 
