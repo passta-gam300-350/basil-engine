@@ -13,6 +13,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 // #include "ECS/Components.h"
 
+#include <string>
+#include <memory>
+#include <vector>
+
 /**
  * @brief Enumerates the types of messages that can be sent in the system.
  *

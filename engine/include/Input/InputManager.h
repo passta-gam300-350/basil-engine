@@ -16,7 +16,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <GLFW/glfw3.h>
 #include <string>
 #include <unordered_map>
-#include <string>
 #include <iostream>
 
 #include "./Input/InputGraphics_Helper.h"
