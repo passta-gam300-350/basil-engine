@@ -1,3 +1,5 @@
+#define TINYDDSLOADER_IMPLEMENTATION
+
 #include "native/mesh.h"
 #include "native/model.h"
 #include "native/texture.h"
