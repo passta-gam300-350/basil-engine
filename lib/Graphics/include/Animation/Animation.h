@@ -65,7 +65,11 @@ public:
     {
         return m_id;
     }
-    void update(float time); // interpolate all the key frames;
+    glm::mat4 getLocalTransform() const
+    {
+        return localTransform;
+    }
+    void update(float time); // interpolate all the key frames
 
 private:
     std::string m_name;
@@ -73,7 +77,7 @@ private:
     std::vector<keyFramePosition> m_positions;
     std::vector<keyFrameRotation> m_rotations;
     std::vector<keyFrameScale> m_scales;
-    glm::mat4 localTransform{ 1.0f };
+    glm::mat4 localTransform { 1.0f };
 };
 
 // contains all those channels for one clips
@@ -90,4 +94,10 @@ struct animator
     float currentTime = 0.0f;
     // final matrices (one per bone, sent to GPU)
     std::vector<glm::mat4> finalBoneMatrices;
+    animator(std::unique_ptr<animationContainer> theAnimation, int numberOfBones) : currentAnimation(std::move(theAnimation))
+    {
+        finalBoneMatrices.resize(numberOfBones);
+    }
+    void updateAnimation(float deltaTime, const skeleton& theSkeleton);
 };
+
