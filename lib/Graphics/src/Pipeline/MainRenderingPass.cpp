@@ -1,13 +1,12 @@
 #include "../../include/Pipeline/MainRenderingPass.h"
+#include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/Renderer.h"
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
 
-MainRenderingPass::MainRenderingPass(Renderer* renderer,
-                                   InstancedRenderer* instancedRenderer,
-                                   PBRLightingRenderer* lightingRenderer)
+MainRenderingPass::MainRenderingPass()
     : RenderPass("MainPass", FBOSpecs{
         1280, 720,
         {
@@ -15,29 +14,14 @@ MainRenderingPass::MainRenderingPass(Renderer* renderer,
             { FBOTextureFormat::DEPTH24STENCIL8 }
         }
     })
-    , m_Renderer(renderer)
-    , m_InstancedRenderer(instancedRenderer)
-    , m_PBRLightingRenderer(lightingRenderer)
 {
 }
 
-void MainRenderingPass::SetRenderData(const std::vector<RenderableData>& renderables,
-                                     const std::vector<SubmittedLightData>& lights,
-                                     const glm::vec3& ambientLight,
-                                     const FrameData& frameData)
-{
-    m_Renderables = renderables;
-    m_Lights = lights;
-    m_AmbientLight = ambientLight;
-    m_FrameData = frameData;
-}
 
-void MainRenderingPass::Execute()
+void MainRenderingPass::Execute(RenderContext& context)
 {
-    // Call base class Begin() to bind framebuffer and set viewport
+    // New context-based execution - use references instead of copies!
     Begin();
-
-    // Main rendering logic extracted from SceneRenderer::InitializeDefaultPipelines()
 
     // Clear color and depth buffers using command buffer
     RenderCommands::ClearData clearCmd{
@@ -45,26 +29,23 @@ void MainRenderingPass::Execute()
         true,                      // clearColor
         true                       // clearDepth
     };
-    m_Renderer->Submit(clearCmd);
+    context.renderer.Submit(clearCmd);
 
-    // Standard forward rendering with submitted data
-    if (!m_Renderables.empty())
+    // Standard forward rendering with context data (no copies!)
+    if (!context.renderables.empty())
     {
         // 1. Update scene-wide lighting with submitted lights
-        m_PBRLightingRenderer->UpdateLighting(m_Lights, m_AmbientLight, m_FrameData);
+        context.pbrLighting.UpdateLighting(context.lights, context.ambientLight, context.frameData);
 
         // 2. Frustum culling on submitted renderables (currently skipped)
-        // auto visibleRenderables = m_FrustumCuller->CullRenderables(m_Renderables, m_FrameData);
-        // auto visibleRenderables = m_Renderables; // Skip culling - render all objects
+        // auto visibleRenderables = m_FrustumCuller->CullRenderables(context.renderables, context.frameData);
 
         // 3. Forward instanced rendering with visible renderables
-        m_InstancedRenderer->Render(m_Renderables, m_FrameData);
+        context.instancedRenderer.Render(context.renderables, context.frameData);
     }
 
-    // Store main color buffer in frame data
-    // Note: This updates our local copy - the pipeline should handle propagating this back
-    m_FrameData.mainColorBuffer = GetFramebuffer();
+    // Store main color buffer in frame data (direct update via reference!)
+    context.frameData.mainColorBuffer = GetFramebuffer();
 
-    // Call base class End() to unbind framebuffer
     End();
 }

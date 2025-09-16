@@ -1,4 +1,5 @@
 #include "../../include/Pipeline/RenderPass.h"
+#include "../../include/Pipeline/RenderContext.h"
 
 RenderPass::RenderPass(const std::string& name, const FBOSpecs& spec)
 	: m_Name(name), m_Framebuffer(std::make_shared<FrameBuffer>(spec)), m_Viewport(0, 0, spec.Width, spec.Height)
@@ -19,7 +20,7 @@ void RenderPass::Begin()
 	m_Viewport.Apply();
 }
 
-void RenderPass::Execute()
+void RenderPass::Execute(RenderContext& context)
 {
 	Begin();
 
@@ -29,7 +30,6 @@ void RenderPass::Execute()
 		m_RenderFunction();
 	}
 
-	// End the render pass
 	End();
 }
 

@@ -1,4 +1,5 @@
 #include "Scene/SceneRenderer.h"
+#include "Pipeline/RenderContext.h"
 #include "Rendering/MeshRenderer.h"
 #include "Rendering/FrustumCuller.h"
 #include "Rendering/InstancedRenderer.h"
@@ -82,12 +83,8 @@ bool SceneRenderer::IsPipelineEnabled(std::string const &name) const
 }
 
 void SceneRenderer::InitializeDefaultPipelines() {
-    // Create main rendering pipeline using dedicated class
-    auto mainPipeline = std::make_unique<MainRenderingPipeline>(
-        m_Renderer.get(),
-        m_InstancedRenderer.get(),
-        m_PBRLightingRenderer.get()
-    );
+    // Create main rendering pipeline - no system references needed!
+    auto mainPipeline = std::make_unique<MainRenderingPipeline>();
 
     AddPipeline("MainRendering", std::move(mainPipeline));
 
@@ -110,29 +107,30 @@ void SceneRenderer::Render() {
     // Update shared frame data
     UpdateFrameData();
 
-    // Pass data to main pipeline
-    auto mainPipeline = static_cast<MainRenderingPipeline*>(GetPipeline("MainRendering"));
-    if (mainPipeline) {
-        mainPipeline->SetRenderables(m_SubmittedRenderables);
-        mainPipeline->SetLights(m_SubmittedLights);
-        mainPipeline->SetAmbientLight(m_AmbientLight);
-        mainPipeline->UpdateFrameData(m_FrameData);
-    }
+    // Create context with references to our data - NO COPYING!
+    RenderContext context(
+        m_SubmittedRenderables,  // const ref to renderables
+        m_SubmittedLights,       // const ref to lights
+        m_AmbientLight,          // const ref to ambient light
+        m_FrameData,             // mutable ref to frame data
+        *m_Renderer,             // ref to renderer
+        *m_InstancedRenderer,    // ref to instanced renderer
+        *m_PBRLightingRenderer   // ref to PBR lighting
+    );
 
-    // Execute pipelines in order
+    // Execute pipelines in order with shared context
     for (const auto &pipelineName : m_PipelineOrder)
     {
         auto pipelineIt = m_Pipelines.find(pipelineName);
         if (pipelineIt != m_Pipelines.end() && IsPipelineEnabled(pipelineName))
         {
-            pipelineIt->second->Execute();
+            // Use new context-based execution - no data copying!
+            pipelineIt->second->Execute(context);
         }
     }
 
-    // Update frame data with any changes from main pipeline
-    if (mainPipeline) {
-        m_FrameData = mainPipeline->GetFrameData();
-    }
+    // Frame data updates happened automatically through context reference
+    // No manual synchronization needed!
 
     m_FrameData.frameNumber++;
 

@@ -6,6 +6,9 @@
 #include <string>
 #include <functional>
 
+// Forward declaration
+struct RenderContext;
+
 class RenderPass
 {
 public:
@@ -15,7 +18,7 @@ public:
 	virtual ~RenderPass();
 
 	virtual void Begin();
-	virtual void Execute();
+	virtual void Execute(RenderContext& context);
 	virtual void End();
 
 	void SetRenderFunction(const RenderFunction& func) { m_RenderFunction = func; }

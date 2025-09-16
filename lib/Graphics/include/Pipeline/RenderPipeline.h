@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+// Forward declaration
+struct RenderContext;
+
 class RenderPipeline
 {
 public:
@@ -13,7 +16,7 @@ public:
 
 	void AddPass(const std::shared_ptr<RenderPass>& pass);
 	void RemovePass(const std::string& name);
-	virtual void Execute();
+	virtual void Execute(RenderContext& context);
 
 	std::shared_ptr<RenderPass> GetPass(const std::string& name);
 	const std::string& GetName() const { return m_Name; }

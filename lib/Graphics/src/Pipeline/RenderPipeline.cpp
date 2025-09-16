@@ -1,4 +1,5 @@
 #include "../../include/Pipeline/RenderPipeline.h"
+#include "../../include/Pipeline/RenderContext.h"
 #include <algorithm>
 
 RenderPipeline::RenderPipeline(const std::string& name)
@@ -27,11 +28,11 @@ void RenderPipeline::RemovePass(const std::string& name)
 	}
 }
 
-void RenderPipeline::Execute()
+void RenderPipeline::Execute(RenderContext& context)
 {
 	for (const auto& pass : m_Passes)
 	{
-		pass->Execute();
+		pass->Execute(context);
 	}
 }
 

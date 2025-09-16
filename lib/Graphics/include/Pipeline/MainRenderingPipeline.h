@@ -20,34 +20,12 @@ class PBRLightingRenderer;
  */
 class MainRenderingPipeline : public RenderPipeline {
 public:
-    MainRenderingPipeline(Renderer* renderer,
-                         InstancedRenderer* instancedRenderer,
-                         PBRLightingRenderer* lightingRenderer);
+    MainRenderingPipeline();
     ~MainRenderingPipeline() = default;
 
-    // Data submission API - called each frame by SceneRenderer
-    void SetRenderables(const std::vector<RenderableData>& renderables);
-    void SetLights(const std::vector<SubmittedLightData>& lights);
-    void SetAmbientLight(const glm::vec3& ambient);
-    void UpdateFrameData(const FrameData& frameData);
-
-    // Access to updated frame data after rendering
-    const FrameData& GetFrameData() const { return m_FrameData; }
-
-    // Override Execute to handle frame data updates
-    void Execute();
+    // Context-based execution
+    void Execute(RenderContext& context) override;
 
 private:
     void InitializeMainPass();
-
-    // Rendering system references (not owned)
-    Renderer* m_Renderer;
-    InstancedRenderer* m_InstancedRenderer;
-    PBRLightingRenderer* m_PBRLightingRenderer;
-
-    // Frame data (updated each frame)
-    std::vector<RenderableData> m_Renderables;
-    std::vector<SubmittedLightData> m_Lights;
-    glm::vec3 m_AmbientLight = glm::vec3(0.1f);
-    FrameData m_FrameData;
 };
