@@ -1,6 +1,7 @@
 #include "../../include/Pipeline/MainRenderingPipeline.h"
 #include "../../include/Pipeline/MainRenderingPass.h"
 #include "../../include/Pipeline/ShadowMappingPass.h"
+#include "../../include/Pipeline/PresentPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/Renderer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
@@ -35,4 +36,8 @@ void MainRenderingPipeline::InitializePasses()
     // 2. Add main rendering pass (executes second with pass ID 1)
     auto mainPass = std::make_shared<MainRenderingPass>();
     AddPass(mainPass);
+
+    // 3. Add present pass (executes third with pass ID 2)
+    auto presentPass = std::make_shared<PresentPass>();
+    AddPass(presentPass);
 }

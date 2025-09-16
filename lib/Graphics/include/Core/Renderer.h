@@ -19,6 +19,7 @@ public:
 	// Modern command buffer API
 	void Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey = {});
 	void SortCommands();  // Sort commands for optimal rendering
+	void ExecuteGlobalCommands();  // Manually execute global command buffer
 
 	GraphicsContext* GetContext() const { return m_Context.get(); }
 

@@ -57,6 +57,7 @@ public:
 
 	uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const;
 	uint32_t GetDepthAttachmentRendererID() const { return m_DepthAttachment; }
+	uint32_t GetFBOHandle() const { return m_FBOHandle; }
 	const FBOSpecs &GetSpecification() const
 	{
 		return m_Specifications;

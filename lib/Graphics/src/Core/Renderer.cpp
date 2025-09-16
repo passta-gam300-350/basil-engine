@@ -38,10 +38,10 @@ void Renderer::BeginFrame()
 
 void Renderer::EndFrame()
 {
-	// Sort and execute command buffer for optimal performance
-	m_CommandBuffer.Sort();
-	m_CommandBuffer.Execute();
-	
+	// NOTE: Commands are now executed by individual passes for better state isolation
+	// Global command buffer is kept for backward compatibility but not automatically executed
+	// If you need to execute global commands, call ExecuteGlobalCommands() manually
+
 	// Swap buffers
 	m_Context->SwapBuffers();
 }
@@ -56,4 +56,12 @@ void Renderer::SortCommands()
 {
 	// Explicitly sort commands for optimal rendering
 	m_CommandBuffer.Sort();
+}
+
+void Renderer::ExecuteGlobalCommands()
+{
+	// Sort and execute global command buffer (for legacy/direct rendering)
+	m_CommandBuffer.Sort();
+	m_CommandBuffer.Execute();
+	m_CommandBuffer.Clear();
 }

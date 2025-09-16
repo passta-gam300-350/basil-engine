@@ -60,6 +60,15 @@ namespace RenderCommands {
         int shadowMapUnit;
     };
 
+    struct BlitFramebufferData {
+        uint32_t srcFBO;
+        uint32_t dstFBO;
+        int srcX0, srcY0, srcX1, srcY1;
+        int dstX0, dstY0, dstX1, dstY1;
+        uint32_t mask;  // GL_COLOR_BUFFER_BIT, etc.
+        uint32_t filter; // GL_NEAREST, GL_LINEAR
+    };
+
     // Sort keys for command ordering
     struct CommandSortKey {
         uint8_t pass;          // Rendering pass (0-255)
@@ -85,7 +94,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::DrawElementsData,
     RenderCommands::BindSSBOData,
     RenderCommands::DrawElementsInstancedData,
-    RenderCommands::SetShadowUniformsData
+    RenderCommands::SetShadowUniformsData,
+    RenderCommands::BlitFramebufferData
 >;
 
 // Sortable command with metadata
@@ -135,4 +145,5 @@ private:
     void ExecuteCommand(const RenderCommands::BindSSBOData& cmd);
     void ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd);
     void ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd);
+    void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
 };

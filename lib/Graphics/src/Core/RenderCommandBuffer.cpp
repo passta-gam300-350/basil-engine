@@ -53,6 +53,26 @@ void RenderCommandBuffer::Execute()
     for (const auto& sortableCmd : m_Commands) {
         // Use std::visit for efficient type-based dispatch
         std::visit([this](const auto& cmd) {
+            using T = std::decay_t<decltype(cmd)>;
+            if constexpr (std::is_same_v<T, RenderCommands::ClearData>) {
+                std::cout << "ExecuteCommand: ClearData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::BindShaderData>) {
+                std::cout << "ExecuteCommand: BindShaderData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::SetUniformsData>) {
+                std::cout << "ExecuteCommand: SetUniformsData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::BindTexturesData>) {
+                std::cout << "ExecuteCommand: BindTexturesData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::DrawElementsData>) {
+                std::cout << "ExecuteCommand: DrawElementsData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::BindSSBOData>) {
+                std::cout << "ExecuteCommand: BindSSBOData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::DrawElementsInstancedData>) {
+                std::cout << "ExecuteCommand: DrawElementsInstancedData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::SetShadowUniformsData>) {
+                std::cout << "ExecuteCommand: SetShadowUniformsData" << std::endl;
+            } else if constexpr (std::is_same_v<T, RenderCommands::BlitFramebufferData>) {
+                std::cout << "ExecuteCommand: BlitFramebufferData" << std::endl;
+            }
             this->ExecuteCommand(cmd);
         }, sortableCmd.command);
     }
@@ -158,9 +178,6 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniforms
         return;
     }
 
-    std::cout << "ExecuteCommand: Setting shadow uniforms - TextureID=" << cmd.shadowMapTexture
-              << ", Unit=" << cmd.shadowMapUnit << std::endl;
-
     // Ensure shader is active
     cmd.shader->use();
 
@@ -171,4 +188,23 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniforms
     glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
     glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
     cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd)
+{
+
+    // Bind source and destination framebuffers
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, cmd.srcFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, cmd.dstFBO);
+
+    // Perform the blit operation
+    glBlitFramebuffer(
+        cmd.srcX0, cmd.srcY0, cmd.srcX1, cmd.srcY1,  // Source rectangle
+        cmd.dstX0, cmd.dstY0, cmd.dstX1, cmd.dstY1,  // Destination rectangle
+        cmd.mask,    // Buffer mask (GL_COLOR_BUFFER_BIT, etc.)
+        cmd.filter   // Filter (GL_NEAREST, GL_LINEAR)
+    );
+
+    // Restore default framebuffer binding
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

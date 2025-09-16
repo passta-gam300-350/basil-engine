@@ -15,6 +15,7 @@ struct RenderableData;
 struct FrameData;
 class Mesh;
 class Material;
+class RenderPass;
 
 // GPU Instanced Rendering using SSBO - integrates with existing architecture
 class InstancedRenderer {
@@ -43,7 +44,10 @@ public:
     
     // Rendering using existing command buffer system
     void Render(const std::vector<RenderableData>& renderables, const FrameData& frameData);
-    
+
+    // Rendering using pass-isolated command buffers
+    void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData);
+
     // Build dynamic instance data based on visible renderables
     void BuildDynamicInstanceData(const std::vector<RenderableData>& renderables);
     
@@ -80,4 +84,5 @@ private:
 
     void UpdateInstanceSSBO(const std::string& meshId);
     void RenderInstancedMesh(const std::string& meshId, const FrameData& frameData);
+    void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData);
 };

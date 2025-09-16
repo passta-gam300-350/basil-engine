@@ -1,6 +1,7 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
 #include "Scene/SceneRenderer.h"
+#include "Pipeline/RenderPass.h"
 #include "Utility/RenderData.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
@@ -112,15 +113,40 @@ void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, c
     if (renderables.empty()) {
         return;
     }
-    
+
     // Always rebuild instance data based on currently visible renderables
     // This handles dynamic frustum culling as camera moves
     BuildDynamicInstanceData(renderables);
-    
+
     // Render the instance batches
     for (const auto& pair : m_MeshInstances) {
         if (!pair.second.instances.empty()) {
             RenderInstancedMesh(pair.first, frameData);
+        }
+    }
+}
+
+void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
+{
+    if (renderables.empty()) {
+        std::cout << "InstancedRenderer::RenderToPass: No renderables provided!" << std::endl;
+        return;
+    }
+
+    std::cout << "InstancedRenderer::RenderToPass: Processing " << renderables.size() << " renderables" << std::endl;
+
+    // Always rebuild instance data based on currently visible renderables
+    // This handles dynamic frustum culling as camera moves
+    BuildDynamicInstanceData(renderables);
+
+    std::cout << "InstancedRenderer::RenderToPass: Built " << m_MeshInstances.size() << " mesh groups" << std::endl;
+
+    // Render the instance batches to the specified pass
+    for (const auto& pair : m_MeshInstances) {
+        if (!pair.second.instances.empty()) {
+            std::cout << "InstancedRenderer::RenderToPass: Rendering mesh '" << pair.first << "' with "
+                      << pair.second.instances.size() << " instances" << std::endl;
+            RenderInstancedMeshToPass(renderPass, pair.first, frameData);
         }
     }
 }
@@ -301,22 +327,144 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
               << "' with " << meshInstances.instances.size() << " instances" << std::endl;*/
 }
 
+void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData)
+{
+    //std::cout << "InstancedRenderer::RenderInstancedMeshToPass called for '" << meshId << "'" << std::endl;
+
+    auto meshIt = m_MeshInstances.find(meshId);
+    if (meshIt == m_MeshInstances.end()) {
+        //std::cerr << "Error: No mesh instances found for '" << meshId << "'" << std::endl;
+        return;
+    }
+
+    if (meshIt->second.instances.empty()) {
+        //std::cerr << "Error: No instances for mesh '" << meshId << "'" << std::endl;
+        return;
+    }
+
+    const auto& meshInstances = meshIt->second;
+    //std::cout << "Found " << meshInstances.instances.size() << " instances for '" << meshId << "'" << std::endl;
+
+    auto ssboIt = m_InstanceSSBOs.find(meshId);
+    if (ssboIt == m_InstanceSSBOs.end()) {
+        std::cerr << "Error: No SSBO for mesh '" << meshId << "'" << std::endl;
+        return;
+    }
+
+    // Get mesh and material (these should be set from Scene data)
+    if (!meshInstances.mesh) {
+        std::cerr << "Error: Missing mesh for '" << meshId << "'" << std::endl;
+        return;
+    }
+
+    if (!meshInstances.material) {
+        std::cerr << "Error: Missing material for '" << meshId << "'" << std::endl;
+        return;
+    }
+
+    auto shader = meshInstances.material->GetShader();
+    if (!shader) {
+        std::cerr << "Error: No shader for material in '" << meshId << "'" << std::endl;
+        return;
+    }
+
+    // Generate sort key for command batching
+    RenderCommands::CommandSortKey sortKey;
+    sortKey.pass = 1;  // Main opaque pass (MAIN_PASS_ID)
+    sortKey.material = reinterpret_cast<uintptr_t>(meshInstances.material.get()) & 0xFFFFFF;
+    sortKey.mesh = reinterpret_cast<uintptr_t>(meshInstances.mesh.get()) & 0xFFFF;
+    sortKey.instance = 0;  // All instances rendered together
+
+    // Submit commands to the pass's isolated command buffer
+
+    // 1. Bind shader
+    RenderCommands::BindShaderData bindShaderCmd{shader};
+    renderPass.Submit(bindShaderCmd, sortKey);
+    std::cout << "RenderInstancedMeshToPass: Submitted bind shader command" << std::endl;
+
+    // 2. Bind instance SSBO
+    RenderCommands::BindSSBOData bindSSBOCmd{
+        ssboIt->second->GetSSBOHandle(),
+        INSTANCE_SSBO_BINDING
+    };
+    renderPass.Submit(bindSSBOCmd, sortKey);
+    std::cout << "RenderInstancedMeshToPass: Submitted bind SSBO command" << std::endl;
+
+    // 3. Set camera uniforms
+    RenderCommands::SetUniformsData uniformsCmd{
+        shader,
+        glm::mat4(1.0f),  // Identity model matrix (instances have their own transforms)
+        frameData.viewMatrix,
+        frameData.projectionMatrix,
+        frameData.cameraPosition
+    };
+    renderPass.Submit(uniformsCmd, sortKey);
+    std::cout << "RenderInstancedMeshToPass: Submitted uniforms command" << std::endl;
+
+    // 4. Apply lighting setup (material properties are now per-instance in SSBO)
+    if (m_PBRLighting) {
+        // Apply lighting uniforms only (no per-instance material data)
+        m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
+    } else {
+        std::cerr << "Warning: PBRLightingRenderer not available for lighting setup" << std::endl;
+    }
+
+    // 5. Set shadow mapping uniforms if available
+    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
+        uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
+        std::cout << "InstancedRenderer: Setting shadow uniforms - TextureID=" << shadowTexID << ", Unit=15" << std::endl;
+
+        RenderCommands::SetShadowUniformsData shadowCmd{
+            shader,
+            frameData.shadowMatrices[0],
+            shadowTexID,
+            15  // Use texture unit 15 for shadow map
+        };
+        renderPass.Submit(shadowCmd, sortKey);
+    } else {
+        std::cout << "InstancedRenderer: No shadow data available - Maps:" << frameData.shadowMaps.size()
+                  << " Matrices:" << frameData.shadowMatrices.size() << std::endl;
+    }
+
+
+    // 6. Bind textures (if any)
+    RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
+    renderPass.Submit(texturesCmd, sortKey);
+    std::cout << "RenderInstancedMeshToPass: Submitted bind textures command" << std::endl;
+
+    // 7. Draw all instances
+    uint32_t indexCount = meshInstances.mesh->GetIndexCount();
+
+    RenderCommands::DrawElementsInstancedData drawCmd{
+        meshInstances.mesh->GetVertexArray()->GetVAOHandle(),
+        indexCount,
+        static_cast<uint32_t>(meshInstances.instances.size()),
+        0  // Base instance
+    };
+    renderPass.Submit(drawCmd, sortKey);
+    std::cout << "RenderInstancedMeshToPass: Submitted draw command for " << meshInstances.instances.size()
+              << " instances with " << indexCount << " indices" << std::endl;
+
+    /*std::cout << "InstancedRenderer: Submitted instanced draw to pass for '" << meshId
+              << "' with " << meshInstances.instances.size() << " instances" << std::endl;*/
+}
+
 void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
 {
     if (!mesh) {
         std::cerr << "InstancedRenderer::SetMeshData: NULL mesh provided for '" << meshId << "'" << std::endl;
         return;
     }
-    
+
     if (!material) {
         std::cerr << "InstancedRenderer::SetMeshData: NULL material provided for '" << meshId << "'" << std::endl;
         return;
     }
-    
+
     auto& meshInstances = m_MeshInstances[meshId];
     meshInstances.mesh = mesh;
     meshInstances.material = material;
-    
+
 }
 
 

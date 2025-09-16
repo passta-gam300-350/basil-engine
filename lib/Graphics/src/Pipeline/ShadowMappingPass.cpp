@@ -48,6 +48,8 @@ void ShadowMappingPass::Execute(RenderContext& context)
     glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
+    // Light setup complete
+
     // Store shadow matrix in frame data for main pass
     if (context.frameData.shadowMaps.size() == 0) {
         context.frameData.shadowMaps.resize(1);
@@ -70,15 +72,11 @@ void ShadowMappingPass::Execute(RenderContext& context)
     shadowSortKey.mesh = 0;
     shadowSortKey.instance = 0;
 
-    context.renderer.Submit(clearCmd, shadowSortKey);
+    Submit(clearCmd, shadowSortKey);
 
     // Render shadow casters (all visible objects) with depth-only shader
     if (!context.renderables.empty()) {
         std::cout << "ShadowMappingPass: Rendering " << context.renderables.size() << " shadow casters" << std::endl;
-
-        // TODO: We need a depth-only shader here
-        // For now, we'll create a simplified render without proper shader
-        // This will be implemented in the next step
 
         // Load depth-only shader for shadow mapping
         auto shadowShader = context.resourceManager.GetShader("shadow_depth");
@@ -94,6 +92,12 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
             shadowSortKey.mesh = reinterpret_cast<uintptr_t>(renderable.mesh.get()) & 0xFFFF;
 
+            // Using depth-only shader for shadow casting
+
+            // Bind depth-only shader first
+            RenderCommands::BindShaderData bindShaderCmd{shadowShader};
+            Submit(bindShaderCmd, shadowSortKey);
+
             // Set light-space uniforms for depth-only shader
             RenderCommands::SetUniformsData uniformsCmd{
                 shadowShader,                      // Use depth-only shader
@@ -102,19 +106,24 @@ void ShadowMappingPass::Execute(RenderContext& context)
                 lightProjection,                   // Light projection matrix
                 glm::vec3(0.0f)                   // Camera position (not needed for shadows)
             };
-            context.renderer.Submit(uniformsCmd, shadowSortKey);
+            Submit(uniformsCmd, shadowSortKey);
 
             // Submit draw command
             RenderCommands::DrawElementsData drawCmd{
                 renderable.mesh->GetVertexArray()->GetVAOHandle(),
                 renderable.mesh->GetIndexCount()
             };
-            context.renderer.Submit(drawCmd, shadowSortKey);
+            Submit(drawCmd, shadowSortKey);
         }
     }
 
+    // Execute all commands submitted to this pass's command buffer
+    ExecuteCommands();
+
     std::cout << "ShadowMappingPass: Shadow map stored in FrameData::shadowMaps[0]" << std::endl;
     std::cout << "ShadowMappingPass: Shadow map texture ID = " << GetFramebuffer()->GetDepthAttachmentRendererID() << std::endl;
+
+    // Shadow map generation complete
 
     // End shadow pass
     End();
@@ -123,10 +132,18 @@ void ShadowMappingPass::Execute(RenderContext& context)
 glm::mat4 ShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter)
 {
     // Position light far away in the opposite direction
-    glm::vec3 lightPosition = sceneCenter - normalize(lightDirection) * 50.0f;
+    glm::vec3 normalizedDir = glm::normalize(lightDirection);
+    glm::vec3 lightPosition = sceneCenter - normalizedDir * 20.0f;  // Closer light
 
-    // Look towards the scene center
-    glm::vec3 up = abs(lightDirection.y) > 0.9f ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+    // Better up vector calculation to avoid singularities
+    glm::vec3 up;
+    if (abs(normalizedDir.y) > 0.9f) {
+        up = glm::vec3(1.0f, 0.0f, 0.0f);  // If light points mostly up/down, use X as up
+    } else {
+        up = glm::vec3(0.0f, 1.0f, 0.0f);  // Otherwise use Y as up
+    }
+
+    // Light view matrix calculated
 
     return glm::lookAt(lightPosition, sceneCenter, up);
 }
@@ -136,7 +153,11 @@ glm::mat4 ShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lig
     // Create orthographic projection that covers the scene
     // For a 2x2 grid with spacing 3.0f, scene spans roughly -1.5 to +1.5 in X/Z
     // Add margin for ground plane and light angle
-    float orthoSize = 10.0f;  // Covers scene + margin
+    float orthoSize = 8.0f;  // Smaller, tighter bounds
+    float nearPlane = 1.0f;
+    float farPlane = 50.0f;
 
-    return glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 100.0f);
+    // Orthographic projection calculated
+
+    return glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
 }
