@@ -9,6 +9,7 @@
 class Renderer;
 class InstancedRenderer;
 class PBRLightingRenderer;
+class ResourceManager;
 
 /**
  * RenderContext - Single source of truth for all rendering data
@@ -36,6 +37,7 @@ struct RenderContext {
     Renderer& renderer;
     InstancedRenderer& instancedRenderer;
     PBRLightingRenderer& pbrLighting;
+    ResourceManager& resourceManager;
 
     // Constructor
     RenderContext(
@@ -45,14 +47,16 @@ struct RenderContext {
         FrameData& frameData_,
         Renderer& renderer_,
         InstancedRenderer& instancedRenderer_,
-        PBRLightingRenderer& pbrLighting_
+        PBRLightingRenderer& pbrLighting_,
+        ResourceManager& resourceManager_
     ) : renderables(renderables_)
       , lights(lights_)
       , ambientLight(ambientLight_)
       , frameData(frameData_)
       , renderer(renderer_)
       , instancedRenderer(instancedRenderer_)
-      , pbrLighting(pbrLighting_) {}
+      , pbrLighting(pbrLighting_)
+      , resourceManager(resourceManager_) {}
 
     // Delete copy constructor and assignment to prevent accidental copying
     RenderContext(const RenderContext&) = delete;

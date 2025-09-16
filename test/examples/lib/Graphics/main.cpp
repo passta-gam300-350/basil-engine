@@ -192,11 +192,22 @@ bool GraphicsTestDriver::LoadTestResources()
         auto instancedShader = m_ResourceManager->LoadShader("instanced_bindless",
             "assets/shaders/instanced_bindless.vert",
             "assets/shaders/instanced_bindless.frag");
-        
+
         if (instancedShader) {
             std::cout << "Advanced bindless shaders loaded successfully!\n";
         } else {
             std::cout << "Warning: Could not load bindless shaders, will use basic shaders for fallback\n";
+        }
+
+        // Load shadow mapping depth-only shader
+        auto shadowShader = m_ResourceManager->LoadShader("shadow_depth",
+            "assets/shaders/shadow_depth.vert",
+            "assets/shaders/shadow_depth.frag");
+
+        if (shadowShader) {
+            std::cout << "Shadow mapping shader loaded successfully!\n";
+        } else {
+            std::cout << "Warning: Could not load shadow mapping shader\n";
         }
 
         // Load models

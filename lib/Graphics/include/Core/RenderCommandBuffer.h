@@ -53,6 +53,13 @@ namespace RenderCommands {
         uint32_t baseInstance;
     };
 
+    struct SetShadowUniformsData {
+        std::shared_ptr<Shader> shader;
+        glm::mat4 lightSpaceMatrix;
+        uint32_t shadowMapTexture;
+        int shadowMapUnit;
+    };
+
     // Sort keys for command ordering
     struct CommandSortKey {
         uint8_t pass;          // Rendering pass (0-255)
@@ -77,7 +84,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BindTexturesData,
     RenderCommands::DrawElementsData,
     RenderCommands::BindSSBOData,
-    RenderCommands::DrawElementsInstancedData
+    RenderCommands::DrawElementsInstancedData,
+    RenderCommands::SetShadowUniformsData
 >;
 
 // Sortable command with metadata
@@ -126,4 +134,5 @@ private:
     void ExecuteCommand(const RenderCommands::DrawElementsData& cmd);
     void ExecuteCommand(const RenderCommands::BindSSBOData& cmd);
     void ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd);
+    void ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd);
 };

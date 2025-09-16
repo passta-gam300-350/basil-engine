@@ -115,7 +115,8 @@ void SceneRenderer::Render() {
         m_FrameData,             // mutable ref to frame data
         *m_Renderer,             // ref to renderer
         *m_InstancedRenderer,    // ref to instanced renderer
-        *m_PBRLightingRenderer   // ref to PBR lighting
+        *m_PBRLightingRenderer,  // ref to PBR lighting
+        *m_ResourceManager       // ref to resource manager
     );
 
     // Execute pipelines in order with shared context

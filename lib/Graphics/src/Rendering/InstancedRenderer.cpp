@@ -222,7 +222,7 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     
     // Generate sort key for command batching
     RenderCommands::CommandSortKey sortKey;
-    sortKey.pass = 0;  // Main opaque pass
+    sortKey.pass = 1;  // Main opaque pass (MAIN_PASS_ID)
     sortKey.material = reinterpret_cast<uintptr_t>(meshInstances.material.get()) & 0xFFFFFF;
     sortKey.mesh = reinterpret_cast<uintptr_t>(meshInstances.mesh.get()) & 0xFFFF;
     sortKey.instance = 0;  // All instances rendered together
@@ -261,8 +261,26 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     } else {
         std::cerr << "Warning: PBRLightingRenderer not available for lighting setup" << std::endl;
     }
+
+    // 5. Set shadow mapping uniforms if available
+    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
+        uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
+        std::cout << "InstancedRenderer: Setting shadow uniforms - TextureID=" << shadowTexID << ", Unit=15" << std::endl;
+
+        RenderCommands::SetShadowUniformsData shadowCmd{
+            shader,
+            frameData.shadowMatrices[0],
+            shadowTexID,
+            15  // Use texture unit 15 for shadow map
+        };
+        m_Renderer->Submit(shadowCmd, sortKey);
+    } else {
+        std::cout << "InstancedRenderer: No shadow data available - Maps:" << frameData.shadowMaps.size()
+                  << " Matrices:" << frameData.shadowMatrices.size() << std::endl;
+    }
     
-    // 5. Bind textures (if any)
+
+    // 6. Bind textures (if any)
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
     m_Renderer->Submit(texturesCmd, sortKey);
     

@@ -1,5 +1,6 @@
 #include "../../include/Pipeline/MainRenderingPipeline.h"
 #include "../../include/Pipeline/MainRenderingPass.h"
+#include "../../include/Pipeline/ShadowMappingPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/Renderer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
@@ -9,7 +10,7 @@
 MainRenderingPipeline::MainRenderingPipeline()
     : RenderPipeline("MainRendering")
 {
-    InitializeMainPass();
+    InitializePasses();
 }
 
 
@@ -25,10 +26,13 @@ void MainRenderingPipeline::Execute(RenderContext& context)
     // No need for manual synchronization!
 }
 
-void MainRenderingPipeline::InitializeMainPass()
+void MainRenderingPipeline::InitializePasses()
 {
-    // Create the main rendering pass - no system references needed in constructor
-    auto mainPass = std::make_shared<MainRenderingPass>();
+    // 1. Add shadow mapping pass (executes first with pass ID 0)
+    auto shadowPass = std::make_shared<ShadowMappingPass>();
+    AddPass(shadowPass);
 
+    // 2. Add main rendering pass (executes second with pass ID 1)
+    auto mainPass = std::make_shared<MainRenderingPass>();
     AddPass(mainPass);
 }

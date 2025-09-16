@@ -56,6 +56,7 @@ public:
 	void ClearAttachment(uint32_t attachmentIndex, int value);
 
 	uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const;
+	uint32_t GetDepthAttachmentRendererID() const { return m_DepthAttachment; }
 	const FBOSpecs &GetSpecification() const
 	{
 		return m_Specifications;

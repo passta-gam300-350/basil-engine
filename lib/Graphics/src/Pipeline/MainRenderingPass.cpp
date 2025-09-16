@@ -29,7 +29,15 @@ void MainRenderingPass::Execute(RenderContext& context)
         true,                      // clearColor
         true                       // clearDepth
     };
-    context.renderer.Submit(clearCmd);
+
+    // Create sort key for main pass - use pass ID 1 to execute after shadow pass
+    RenderCommands::CommandSortKey mainSortKey;
+    mainSortKey.pass = MAIN_PASS_ID;
+    mainSortKey.material = 0;
+    mainSortKey.mesh = 0;
+    mainSortKey.instance = 0;
+
+    context.renderer.Submit(clearCmd, mainSortKey);
 
     // Standard forward rendering with context data (no copies!)
     if (!context.renderables.empty())

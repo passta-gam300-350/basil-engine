@@ -25,4 +25,7 @@ public:
 
     // Context-based execution
     void Execute(RenderContext& context) override;
+
+private:
+    static constexpr uint8_t MAIN_PASS_ID = 1;  // Execute after shadow pass (ID 0)
 };

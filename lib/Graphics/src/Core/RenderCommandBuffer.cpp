@@ -144,9 +144,31 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
     glDrawElementsInstanced(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
                            cmd.instanceCount);
     glBindVertexArray(0);
-    
+
     // Reset texture state using abstraction
     if (m_TextureBindingSystem) {
         m_TextureBindingSystem->UnbindAll();
     }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd)
+{
+    if (!cmd.shader) {
+        std::cout << "ExecuteCommand: SetShadowUniformsData - NULL shader!" << std::endl;
+        return;
+    }
+
+    std::cout << "ExecuteCommand: Setting shadow uniforms - TextureID=" << cmd.shadowMapTexture
+              << ", Unit=" << cmd.shadowMapUnit << std::endl;
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set light space matrix uniform
+    cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
+
+    // Bind shadow map texture
+    glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
+    glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
+    cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
 }

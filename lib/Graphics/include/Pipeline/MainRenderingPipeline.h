@@ -27,5 +27,5 @@ public:
     void Execute(RenderContext& context) override;
 
 private:
-    void InitializeMainPass();
+    void InitializePasses();
 };
