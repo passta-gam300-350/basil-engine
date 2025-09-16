@@ -10,21 +10,21 @@ PresentPass::PresentPass()
 
 void PresentPass::Execute(RenderContext& context)
 {
-    std::cout << "PresentPass: Starting presentation to screen" << std::endl;
+    // std::cout << "PresentPass: Starting presentation to screen" << std::endl;
 
     // Begin pass (clears command buffer, no FBO binding since we have empty spec)
     Begin();
 
     // Check if we have a main color buffer to present
     if (!context.frameData.mainColorBuffer) {
-        std::cout << "PresentPass: No main color buffer to present!" << std::endl;
+        // std::cout << "PresentPass: No main color buffer to present!" << std::endl;
         End();
         return;
     }
 
     auto mainFBO = context.frameData.mainColorBuffer;
-    std::cout << "PresentPass: Presenting FBO " << mainFBO->GetFBOHandle()
-              << " (color texture " << mainFBO->GetColorAttachmentRendererID(0) << ") to screen" << std::endl;
+    /*std::cout << "PresentPass: Presenting FBO " << mainFBO->GetFBOHandle()
+              << " (color texture " << mainFBO->GetColorAttachmentRendererID(0) << ") to screen" << std::endl;*/
 
     // Create blit command to copy main FBO to screen
     RenderCommands::BlitFramebufferData blitCmd{
@@ -45,12 +45,12 @@ void PresentPass::Execute(RenderContext& context)
 
     // Submit blit command to pass command buffer
     Submit(blitCmd, presentSortKey);
-    std::cout << "PresentPass: Submitted blit command" << std::endl;
+    //std::cout << "PresentPass: Submitted blit command" << std::endl;
 
     // Execute commands for this pass
     ExecuteCommands();
 
-    std::cout << "PresentPass: Presentation complete" << std::endl;
+    //std::cout << "PresentPass: Presentation complete" << std::endl;
 
     // End pass
     End();
