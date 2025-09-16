@@ -57,7 +57,7 @@ void RenderPass::Submit(const VariantRenderCommand& command, const RenderCommand
 void RenderPass::ExecuteCommands()
 {
 	// Sort commands for optimal rendering within this pass
-	m_PassCommandBuffer->Sort();
+	//m_PassCommandBuffer->Sort();
 
 	// Execute all commands for this pass
 	m_PassCommandBuffer->Execute();

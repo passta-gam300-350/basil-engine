@@ -37,8 +37,6 @@ void ShadowMappingPass::Execute(RenderContext& context)
         return;
     }
 
-    std::cout << "ShadowMappingPass: Rendering shadows for directional light" << std::endl;
-
     // Begin shadow pass - bind depth framebuffer
     Begin();
 
@@ -47,8 +45,6 @@ void ShadowMappingPass::Execute(RenderContext& context)
     glm::mat4 lightView = CalculateLightViewMatrix(directionalLight->direction, sceneCenter);
     glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-
-    // Light setup complete
 
     // Store shadow matrix in frame data for main pass
     if (context.frameData.shadowMaps.size() == 0) {
@@ -76,12 +72,9 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
     // Render shadow casters (all visible objects) with depth-only shader
     if (!context.renderables.empty()) {
-        std::cout << "ShadowMappingPass: Rendering " << context.renderables.size() << " shadow casters" << std::endl;
-
         // Load depth-only shader for shadow mapping
         auto shadowShader = context.resourceManager.GetShader("shadow_depth");
         if (!shadowShader) {
-            std::cout << "Warning: shadow_depth shader not found, skipping shadow mapping" << std::endl;
             End();
             return;
         }
@@ -119,11 +112,6 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
-
-    std::cout << "ShadowMappingPass: Shadow map stored in FrameData::shadowMaps[0]" << std::endl;
-    std::cout << "ShadowMappingPass: Shadow map texture ID = " << GetFramebuffer()->GetDepthAttachmentRendererID() << std::endl;
-
-    // Shadow map generation complete
 
     // End shadow pass
     End();

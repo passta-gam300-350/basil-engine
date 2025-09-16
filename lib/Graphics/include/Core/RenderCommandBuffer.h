@@ -146,4 +146,7 @@ private:
     void ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd);
     void ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd);
     void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
+
+    // GPU state cleanup
+    void CleanupGPUState();
 };

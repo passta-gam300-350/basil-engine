@@ -129,23 +129,16 @@ void InstancedRenderer::Render(const std::vector<RenderableData>& renderables, c
 void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     if (renderables.empty()) {
-        std::cout << "InstancedRenderer::RenderToPass: No renderables provided!" << std::endl;
         return;
     }
-
-    std::cout << "InstancedRenderer::RenderToPass: Processing " << renderables.size() << " renderables" << std::endl;
 
     // Always rebuild instance data based on currently visible renderables
     // This handles dynamic frustum culling as camera moves
     BuildDynamicInstanceData(renderables);
 
-    std::cout << "InstancedRenderer::RenderToPass: Built " << m_MeshInstances.size() << " mesh groups" << std::endl;
-
     // Render the instance batches to the specified pass
     for (const auto& pair : m_MeshInstances) {
         if (!pair.second.instances.empty()) {
-            std::cout << "InstancedRenderer::RenderToPass: Rendering mesh '" << pair.first << "' with "
-                      << pair.second.instances.size() << " instances" << std::endl;
             RenderInstancedMeshToPass(renderPass, pair.first, frameData);
         }
     }
@@ -291,7 +284,6 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
     // 5. Set shadow mapping uniforms if available
     if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
         uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
-        std::cout << "InstancedRenderer: Setting shadow uniforms - TextureID=" << shadowTexID << ", Unit=15" << std::endl;
 
         RenderCommands::SetShadowUniformsData shadowCmd{
             shader,
@@ -300,9 +292,6 @@ void InstancedRenderer::RenderInstancedMesh(const std::string& meshId, const Fra
             15  // Use texture unit 15 for shadow map
         };
         m_Renderer->Submit(shadowCmd, sortKey);
-    } else {
-        std::cout << "InstancedRenderer: No shadow data available - Maps:" << frameData.shadowMaps.size()
-                  << " Matrices:" << frameData.shadowMatrices.size() << std::endl;
     }
     
 
@@ -380,7 +369,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     // 1. Bind shader
     RenderCommands::BindShaderData bindShaderCmd{shader};
     renderPass.Submit(bindShaderCmd, sortKey);
-    std::cout << "RenderInstancedMeshToPass: Submitted bind shader command" << std::endl;
 
     // 2. Bind instance SSBO
     RenderCommands::BindSSBOData bindSSBOCmd{
@@ -388,7 +376,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         INSTANCE_SSBO_BINDING
     };
     renderPass.Submit(bindSSBOCmd, sortKey);
-    std::cout << "RenderInstancedMeshToPass: Submitted bind SSBO command" << std::endl;
 
     // 3. Set camera uniforms
     RenderCommands::SetUniformsData uniformsCmd{
@@ -399,7 +386,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         frameData.cameraPosition
     };
     renderPass.Submit(uniformsCmd, sortKey);
-    std::cout << "RenderInstancedMeshToPass: Submitted uniforms command" << std::endl;
 
     // 4. Apply lighting setup (material properties are now per-instance in SSBO)
     if (m_PBRLighting) {
@@ -412,7 +398,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     // 5. Set shadow mapping uniforms if available
     if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
         uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
-        std::cout << "InstancedRenderer: Setting shadow uniforms - TextureID=" << shadowTexID << ", Unit=15" << std::endl;
 
         RenderCommands::SetShadowUniformsData shadowCmd{
             shader,
@@ -421,16 +406,12 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
             15  // Use texture unit 15 for shadow map
         };
         renderPass.Submit(shadowCmd, sortKey);
-    } else {
-        std::cout << "InstancedRenderer: No shadow data available - Maps:" << frameData.shadowMaps.size()
-                  << " Matrices:" << frameData.shadowMatrices.size() << std::endl;
     }
 
 
     // 6. Bind textures (if any)
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
     renderPass.Submit(texturesCmd, sortKey);
-    std::cout << "RenderInstancedMeshToPass: Submitted bind textures command" << std::endl;
 
     // 7. Draw all instances
     uint32_t indexCount = meshInstances.mesh->GetIndexCount();
@@ -442,8 +423,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         0  // Base instance
     };
     renderPass.Submit(drawCmd, sortKey);
-    std::cout << "RenderInstancedMeshToPass: Submitted draw command for " << meshInstances.instances.size()
-              << " instances with " << indexCount << " indices" << std::endl;
 
     /*std::cout << "InstancedRenderer: Submitted instanced draw to pass for '" << meshId
               << "' with " << meshInstances.instances.size() << " instances" << std::endl;*/

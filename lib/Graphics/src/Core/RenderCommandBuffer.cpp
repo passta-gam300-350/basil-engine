@@ -53,26 +53,6 @@ void RenderCommandBuffer::Execute()
     for (const auto& sortableCmd : m_Commands) {
         // Use std::visit for efficient type-based dispatch
         std::visit([this](const auto& cmd) {
-            using T = std::decay_t<decltype(cmd)>;
-            if constexpr (std::is_same_v<T, RenderCommands::ClearData>) {
-                std::cout << "ExecuteCommand: ClearData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::BindShaderData>) {
-                std::cout << "ExecuteCommand: BindShaderData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::SetUniformsData>) {
-                std::cout << "ExecuteCommand: SetUniformsData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::BindTexturesData>) {
-                std::cout << "ExecuteCommand: BindTexturesData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::DrawElementsData>) {
-                std::cout << "ExecuteCommand: DrawElementsData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::BindSSBOData>) {
-                std::cout << "ExecuteCommand: BindSSBOData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::DrawElementsInstancedData>) {
-                std::cout << "ExecuteCommand: DrawElementsInstancedData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::SetShadowUniformsData>) {
-                std::cout << "ExecuteCommand: SetShadowUniformsData" << std::endl;
-            } else if constexpr (std::is_same_v<T, RenderCommands::BlitFramebufferData>) {
-                std::cout << "ExecuteCommand: BlitFramebufferData" << std::endl;
-            }
             this->ExecuteCommand(cmd);
         }, sortableCmd.command);
     }
@@ -81,6 +61,9 @@ void RenderCommandBuffer::Execute()
     if (m_TextureBindingSystem) {
         m_TextureBindingSystem->EndBatch();
     }
+
+    // Final GPU state cleanup
+    CleanupGPUState();
 }
 
 size_t RenderCommandBuffer::GetMemoryUsage() const
@@ -169,12 +152,14 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
     if (m_TextureBindingSystem) {
         m_TextureBindingSystem->UnbindAll();
     }
+
+    // Unbind SSBO binding points to prevent state leakage
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd)
 {
     if (!cmd.shader) {
-        std::cout << "ExecuteCommand: SetShadowUniformsData - NULL shader!" << std::endl;
         return;
     }
 
@@ -184,10 +169,13 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniforms
     // Set light space matrix uniform
     cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
 
-    // Bind shadow map texture
+    // Bind shadow map texture to specified unit
     glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
     glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
     cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
+
+    // Note: Shadow map texture will remain bound until explicitly unbound
+    // This is intentional as it needs to stay bound for the entire rendering pass
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd)
@@ -207,4 +195,27 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferDa
 
     // Restore default framebuffer binding
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderCommandBuffer::CleanupGPUState()
+{
+    // Reset shadow map texture units that may have been bound during shadow mapping
+    // This prevents texture unit state leakage between frames
+    glActiveTexture(GL_TEXTURE15);  // Shadow map typically uses unit 15
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Reset to default texture unit
+    glActiveTexture(GL_TEXTURE0);
+
+    // Ensure all SSBO binding points are unbound
+    // This prevents SSBO state leakage between frames
+    for (int i = 0; i < 4; ++i) {  // Common SSBO binding points 0-3
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i, 0);
+    }
+
+    // Reset VAO binding to prevent state leakage
+    glBindVertexArray(0);
+
+    // Reset shader program to prevent state leakage
+    glUseProgram(0);
 }

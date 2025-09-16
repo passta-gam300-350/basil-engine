@@ -38,13 +38,10 @@ void MainRenderingPass::Execute(RenderContext& context)
     mainSortKey.instance = 0;
 
     Submit(clearCmd, mainSortKey);
-    std::cout << "MainRenderingPass: Submitted clear command" << std::endl;
 
     // Standard forward rendering with context data (no copies!)
     if (!context.renderables.empty())
     {
-        std::cout << "MainRenderingPass: Processing " << context.renderables.size() << " renderables" << std::endl;
-
         // 1. Update scene-wide lighting with submitted lights
         context.pbrLighting.UpdateLighting(context.lights, context.ambientLight, context.frameData);
 
@@ -53,18 +50,10 @@ void MainRenderingPass::Execute(RenderContext& context)
 
         // 3. Forward instanced rendering with visible renderables using pass-local buffer
         context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData);
-    } else {
-        std::cout << "MainRenderingPass: No renderables to process!" << std::endl;
     }
 
     // Execute all commands submitted to this pass's command buffer
-    std::cout << "MainRenderingPass: Executing " << m_PassCommandBuffer->GetCommandCount() << " commands" << std::endl;
     ExecuteCommands();
-
-    // DEBUG: Check if FBO has rendered content
-    std::cout << "MainPass: Rendered to FBO handle = " << GetFramebuffer()->GetFBOHandle() << std::endl;
-    std::cout << "MainPass: Color texture ID = " << GetFramebuffer()->GetColorAttachmentRendererID(0) << std::endl;
-    std::cout << "MainPass: Depth texture ID = " << GetFramebuffer()->GetDepthAttachmentRendererID() << std::endl;
 
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
