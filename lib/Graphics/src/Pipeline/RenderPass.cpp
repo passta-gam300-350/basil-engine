@@ -9,15 +9,10 @@ RenderPass::RenderPass(const std::string& name, const FBOSpecs& spec)
 	m_PassCommandBuffer->Initialize();
 }
 
-RenderPass::~RenderPass()
-{
-	// Framebuffer and command buffer will be cleaned up by unique_ptr/shared_ptr
-}
-
 void RenderPass::Begin()
 {
 	// Clear pass command buffer for new frame
-	m_PassCommandBuffer->Clear();
+	ClearCommands();
 
 	// Bind the framebuffer
 	m_Framebuffer->Bind();
@@ -26,39 +21,20 @@ void RenderPass::Begin()
 	m_Viewport.Apply();
 }
 
-void RenderPass::Execute(RenderContext& context)
-{
-	Begin();
-
-	// Execute the render function if set
-	if (m_RenderFunction)
-	{
-		m_RenderFunction();
-	}
-
-	// Execute all commands submitted to this pass's command buffer
-	ExecuteCommands();
-
-	End();
-}
-
 void RenderPass::End()
 {
 	// Unbind the framebuffer
 	m_Framebuffer->Unbind();
 }
 
-void RenderPass::Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey)
+void RenderPass::Submit(const VariantRenderCommand& command)
 {
 	// Submit command to this pass's isolated command buffer
-	m_PassCommandBuffer->Submit(command, sortKey);
+	m_PassCommandBuffer->Submit(command);
 }
 
-void RenderPass::ExecuteCommands()
+void RenderPass::ExecuteCommands() const
 {
-	// Sort commands for optimal rendering within this pass
-	//m_PassCommandBuffer->Sort();
-
 	// Execute all commands for this pass
 	m_PassCommandBuffer->Execute();
 }

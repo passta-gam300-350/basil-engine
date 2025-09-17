@@ -1,8 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
 #include <string>
-#include <memory>
 
 // CPU-side texture data (decoupled from GPU)
 struct TextureData {

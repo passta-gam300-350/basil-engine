@@ -34,7 +34,6 @@ struct RenderContext {
     FrameData& frameData;
 
     // Rendering systems (non-owning references)
-    Renderer& renderer;
     InstancedRenderer& instancedRenderer;
     PBRLightingRenderer& pbrLighting;
     ResourceManager& resourceManager;
@@ -45,7 +44,6 @@ struct RenderContext {
         const std::vector<SubmittedLightData>& lights_,
         const glm::vec3& ambientLight_,
         FrameData& frameData_,
-        Renderer& renderer_,
         InstancedRenderer& instancedRenderer_,
         PBRLightingRenderer& pbrLighting_,
         ResourceManager& resourceManager_
@@ -53,7 +51,6 @@ struct RenderContext {
       , lights(lights_)
       , ambientLight(ambientLight_)
       , frameData(frameData_)
-      , renderer(renderer_)
       , instancedRenderer(instancedRenderer_)
       , pbrLighting(pbrLighting_)
       , resourceManager(resourceManager_) {}

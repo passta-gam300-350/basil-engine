@@ -3,7 +3,6 @@
 #include <Resources/Material.h>
 #include <Resources/Mesh.h>
 #include <Resources/Model.h>
-#include <Resources/Shader.h>
 #include <Resources/PrimitiveGenerator.h>
 #include <Utility/Light.h>
 
@@ -29,7 +28,6 @@ GraphicsTestDriver* GraphicsTestDriver::s_Instance = nullptr;
 
 GraphicsTestDriver::GraphicsTestDriver()
     : m_Window(nullptr)
-    , m_Renderer(nullptr)
     , m_SceneRenderer(nullptr)
     , m_ResourceManager(nullptr)
     , m_Camera(nullptr)
@@ -61,7 +59,7 @@ bool GraphicsTestDriver::Initialize()
     }
 
     // Create scene renderer (owns all graphics systems now)
-    m_SceneRenderer = std::make_unique<SceneRenderer>(m_Window->GetNativeWindow());
+    m_SceneRenderer = std::make_unique<SceneRenderer>();
 
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
@@ -89,13 +87,7 @@ bool GraphicsTestDriver::Initialize()
     // Setup the advanced demo scene
     SetupAdvancedScene();
     
-    // Submit static data once during initialization
-    for (const auto& light : m_SceneLights) {
-        m_SceneRenderer->SubmitLight(light);
-    }
-    for (const auto& renderable : m_SceneObjects) {
-        m_SceneRenderer->SubmitRenderable(renderable);
-    }
+    
 
     // Print system info
     PrintSystemInfo();
@@ -130,6 +122,14 @@ void GraphicsTestDriver::Run()
         // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
 
+        // Submit static data once during initialization
+        for (const auto& light : m_SceneLights) {
+            m_SceneRenderer->SubmitLight(light);
+        }
+        for (const auto& renderable : m_SceneObjects) {
+            m_SceneRenderer->SubmitRenderable(renderable);
+        }
+
         // Update camera data manually
         if (m_Camera) {
             auto& frameData = m_SceneRenderer->GetFrameData();
@@ -138,13 +138,11 @@ void GraphicsTestDriver::Run()
             frameData.cameraPosition = m_Camera->GetPosition();
         }
 
-        // Update the advanced scene
-        UpdateAdvancedScene();
-
-        // Static data submitted once during initialization - no need to resubmit
-
         // Render scene (handles begin/end frame internally)
         m_SceneRenderer->Render();
+
+		// Swap buffers
+		m_Window->SwapBuffers();
 
         // Poll events
         m_Window->PollEvents();
@@ -168,7 +166,6 @@ void GraphicsTestDriver::Shutdown()
 
     // Clear pointers (they're just references now, not owners)
     m_ResourceManager = nullptr;
-    m_Renderer = nullptr;
 
     std::cout << "Shutdown complete.\n";
 }
@@ -393,11 +390,6 @@ void GraphicsTestDriver::SetupAdvancedScene()
     std::cout << "Debug: Created " << m_SceneObjects.size() << " scene objects" << std::endl;
 }
 
-void GraphicsTestDriver::UpdateAdvancedScene()
-{
-    // Completely static scene - no animations for instances or lights
-    // Objects and lights remain in their original positions with initial properties
-}
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
                                             const glm::vec3& position, const glm::vec3& scale)
 {
@@ -547,11 +539,6 @@ void GraphicsTestDriver::ProcessInput()
             m_Camera->ProcessKeyboard(CameraMovement::DOWN, m_DeltaTime);
         }
     }
-}
-
-void GraphicsTestDriver::UpdateCamera()
-{
-    // Camera update is handled in ProcessInput
 }
 
 void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

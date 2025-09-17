@@ -1,10 +1,8 @@
 #pragma once
 
 #include "../Pipeline/RenderPipeline.h"
-#include "../Pipeline/MainRenderingPipeline.h"
 #include "../Utility/RenderData.h"
 #include "../Utility/FrameData.h"
-#include "../Core/Renderer.h"
 #include "../Resources/ResourceManager.h"
 #include <memory>
 #include <unordered_map>
@@ -12,14 +10,18 @@
 #include <vector>
 
 // Forward declarations for rendering coordinators
-class MeshRenderer;
+//class MeshRenderer;
 class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
 
 class SceneRenderer {
 public:
-    SceneRenderer(GLFWwindow* window);
+    SceneRenderer();
+	SceneRenderer(const SceneRenderer&) = delete;
+	SceneRenderer& operator=(const SceneRenderer&) = delete;
+	SceneRenderer(SceneRenderer&&) = delete;
+	SceneRenderer& operator=(SceneRenderer&&) = delete;
     ~SceneRenderer();
     
     // Data submission API - application pushes data each frame
@@ -60,12 +62,6 @@ private:
 
     // Multi pipelines methods
     void InitializeDefaultPipelines();
-    
-    void UpdateFrameData()
-    {
-        // Camera data is now set directly by applications via GetFrameData()
-        // This method can be used for other frame-level updates if needed
-    }
 
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
@@ -82,11 +78,10 @@ private:
     FrameData m_FrameData;
 
     // Core systems - SceneRenderer owns these
-    std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<ResourceManager> m_ResourceManager;
 
     // Rendering coordinators - SceneRenderer owns these
-    std::unique_ptr<MeshRenderer> m_MeshRenderer;
+    //std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;

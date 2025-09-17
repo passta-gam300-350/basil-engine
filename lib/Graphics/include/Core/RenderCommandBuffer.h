@@ -68,21 +68,6 @@ namespace RenderCommands {
         uint32_t mask;  // GL_COLOR_BUFFER_BIT, etc.
         uint32_t filter; // GL_NEAREST, GL_LINEAR
     };
-
-    // Sort keys for command ordering
-    struct CommandSortKey {
-        uint8_t pass;          // Rendering pass (0-255)
-        uint32_t material;     // Material ID for batching
-        uint16_t mesh;         // Mesh ID
-        uint16_t instance;     // Instance ID
-        
-        uint64_t GetSortKey() const {
-            return ((uint64_t)pass << 56) |
-                   ((uint64_t)material << 24) |
-                   ((uint64_t)mesh << 8) |
-                   ((uint64_t)instance);
-        }
-    };
 }
 
 // Command variant - no virtual function calls, cache-friendly
@@ -98,16 +83,6 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BlitFramebufferData
 >;
 
-// Sortable command with metadata
-struct SortableCommand {
-    VariantRenderCommand command;
-    RenderCommands::CommandSortKey sortKey;
-    
-    bool operator<(const SortableCommand& other) const {
-        return sortKey.GetSortKey() < other.sortKey.GetSortKey();
-    }
-};
-
 // Modern command buffer with efficient storage and sorting
 class RenderCommandBuffer {
 public:
@@ -115,11 +90,10 @@ public:
     ~RenderCommandBuffer() = default;
     
     // Command submission
-    void Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey = {});
+    void Submit(const VariantRenderCommand& command);
     
     // Efficient batch operations
     void Clear();
-    void Sort();    // Sort commands for optimal rendering
     void Execute(); // Execute all commands
 
     // Initialization (call after OpenGL context is ready)
@@ -133,7 +107,7 @@ public:
     size_t GetMemoryUsage() const;
 
 private:
-    std::vector<SortableCommand> m_Commands;
+    std::vector<VariantRenderCommand> m_Commands;
     std::unique_ptr<ITextureBindingSystem> m_TextureBindingSystem;
     
     // Command execution visitors

@@ -1,7 +1,4 @@
 #pragma once
-
-#include "../Core/Renderer.h"
-#include "../Core/RenderCommandBuffer.h"
 #include "../Resources/Shader.h"
 #include <memory>
 #include <vector>
@@ -74,8 +71,7 @@ public:
     // Command-based lighting setup (integrates with render pipeline)
     void SubmitLightingCommands(std::shared_ptr<Shader> shader,
                                 const FrameData& frameData,
-                                const Material* material,
-                                const RenderCommands::CommandSortKey& sortKey);
+                                const Material* material);
     
     
     // Getters for light data (used by other renderers)

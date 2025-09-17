@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Buffer/ShaderStorageBuffer.h"
-#include "../Core/Renderer.h"
 #include "PBRLightingRenderer.h"
 #include "../Core/RenderCommandBuffer.h"
 #include <memory>
@@ -33,7 +32,7 @@ public:
     
     
 public:
-    InstancedRenderer(Renderer* renderer, PBRLightingRenderer* lighting);
+    InstancedRenderer(PBRLightingRenderer* lighting);
     ~InstancedRenderer();
     
     // Instance management
@@ -41,9 +40,6 @@ public:
     void AddInstance(const std::string& meshId, const InstanceData& instance);
     void EndInstanceBatch();
     void Clear();
-    
-    // Rendering using existing command buffer system
-    void Render(const std::vector<RenderableData>& renderables, const FrameData& frameData);
 
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData);
@@ -73,16 +69,16 @@ private:
     
     std::unordered_map<std::string, MeshInstances> m_MeshInstances;
     std::unordered_map<std::string, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
-    
+
+
+
     uint32_t m_MaxInstances;
     uint32_t m_TotalInstances;
     bool m_BatchActive;
 
     // Injected dependencies
-    Renderer* m_Renderer;
     PBRLightingRenderer* m_PBRLighting;
 
     void UpdateInstanceSSBO(const std::string& meshId);
-    void RenderInstancedMesh(const std::string& meshId, const FrameData& frameData);
     void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData);
 };

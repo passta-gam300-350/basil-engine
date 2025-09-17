@@ -9,9 +9,9 @@ RenderCommandBuffer::RenderCommandBuffer() {
     m_TextureBindingSystem = nullptr;
 }
 
-void RenderCommandBuffer::Submit(const VariantRenderCommand& command, const RenderCommands::CommandSortKey& sortKey)
+void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
 {
-    m_Commands.emplace_back(SortableCommand{command, sortKey});
+    m_Commands.emplace_back(command);
 }
 
 void RenderCommandBuffer::Initialize()
@@ -36,12 +36,6 @@ void RenderCommandBuffer::Clear()
     m_Commands.clear();
 }
 
-void RenderCommandBuffer::Sort()
-{
-    // Sort commands by sort key for optimal rendering performance
-    std::sort(m_Commands.begin(), m_Commands.end());
-}
-
 void RenderCommandBuffer::Execute()
 {
     // Begin batch operations for texture binding
@@ -54,7 +48,7 @@ void RenderCommandBuffer::Execute()
         // Use std::visit for efficient type-based dispatch
         std::visit([this](const auto& cmd) {
             this->ExecuteCommand(cmd);
-        }, sortableCmd.command);
+        }, sortableCmd);
     }
     
     // End batch operations
@@ -68,7 +62,7 @@ void RenderCommandBuffer::Execute()
 
 size_t RenderCommandBuffer::GetMemoryUsage() const
 {
-    return m_Commands.size() * sizeof(SortableCommand);
+    return m_Commands.size() * sizeof(VariantRenderCommand);
 }
 
 // Command execution implementations
@@ -89,7 +83,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ClearData& cmd)
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindShaderData& cmd)
 {
-    if (cmd.shader) {
+    if (cmd.shader)
+    {
         cmd.shader->use();
     }
 }

@@ -28,7 +28,7 @@ void RenderPipeline::RemovePass(const std::string& name)
 	}
 }
 
-void RenderPipeline::Execute(RenderContext& context)
+void RenderPipeline::Execute(RenderContext& context) const
 {
 	for (const auto& pass : m_Passes)
 	{

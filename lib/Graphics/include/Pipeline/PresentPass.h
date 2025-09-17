@@ -1,9 +1,6 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "../Utility/FrameData.h"
-#include <memory>
-#include <glad/gl.h>
 
 /**
  * Present Pass - Blits main render target to screen
@@ -17,7 +14,11 @@
 class PresentPass : public RenderPass {
 public:
     PresentPass();
-    ~PresentPass() = default;
+	PresentPass(const PresentPass&) = delete;
+	PresentPass& operator=(const PresentPass&) = delete;
+	PresentPass(PresentPass&&) = delete;
+	PresentPass& operator=(PresentPass&&) = delete;
+    ~PresentPass() override = default;
 
     // Context-based execution
     void Execute(RenderContext& context) override;

@@ -10,13 +10,15 @@
 struct Texture;
 class Shader;
 
+
+
 // Abstract binding interface for future bindless support
 class ITextureBindingSystem {
 public:
     virtual ~ITextureBindingSystem() = default;
     
     // Core binding interface
-    virtual void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) = 0;
+    virtual void BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) = 0;
     virtual void UnbindAll() = 0;
     
     // Batch operations for efficiency
@@ -27,7 +29,7 @@ public:
 // Traditional OpenGL binding (current implementation)
 class TraditionalTextureBinding : public ITextureBindingSystem {
 public:
-    void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) override;
+    void BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) override;
     void UnbindAll() override;
     
     // Batch operations (no-op for traditional binding)
@@ -35,8 +37,8 @@ public:
     void EndBatch() override {}
     
 private:
-    void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader);
-    void BindTextureSlots(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader);
+    void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
+    void BindTextureSlots(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
 };
 
 // Bindless texture implementation using SSBO
@@ -45,7 +47,7 @@ public:
     BindlessTextureBinding();
     ~BindlessTextureBinding();
     
-    void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) override;
+    void BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) override;
     void UnbindAll() override;
     
     // Efficient batch operations for bindless

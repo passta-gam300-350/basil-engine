@@ -1,8 +1,6 @@
 #include "../../include/Pipeline/ShadowMappingPass.h"
 #include "../../include/Pipeline/RenderContext.h"
-#include "../../include/Core/Renderer.h"
 #include "../../include/Core/RenderCommandBuffer.h"
-#include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Utility/Light.h"
 #include "../../include/Resources/ResourceManager.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,35 +59,28 @@ void ShadowMappingPass::Execute(RenderContext& context)
         true                      // clear depth
     };
 
-    // Create sort key for shadow pass - use pass ID 0 to execute first
-    RenderCommands::CommandSortKey shadowSortKey;
-    shadowSortKey.pass = SHADOW_PASS_ID;
-    shadowSortKey.material = 0;
-    shadowSortKey.mesh = 0;
-    shadowSortKey.instance = 0;
-
-    Submit(clearCmd, shadowSortKey);
+    Submit(clearCmd);
 
     // Render shadow casters (all visible objects) with depth-only shader
-    if (!context.renderables.empty()) {
+    if (!context.renderables.empty())
+    {
         // Load depth-only shader for shadow mapping
         auto shadowShader = context.resourceManager.GetShader("shadow_depth");
-        if (!shadowShader) {
+        if (!shadowShader)
+        {
             End();
             return;
         }
 
         // Render each object individually with light-space transformation
-        for (const auto& renderable : context.renderables) {
+        for (const auto& renderable : context.renderables)
+        {
             if (!renderable.visible || !renderable.mesh) continue;
 
-            shadowSortKey.mesh = reinterpret_cast<uintptr_t>(renderable.mesh.get()) & 0xFFFF;
-
             // Using depth-only shader for shadow casting
-
             // Bind depth-only shader first
             RenderCommands::BindShaderData bindShaderCmd{shadowShader};
-            Submit(bindShaderCmd, shadowSortKey);
+            Submit(bindShaderCmd);
 
             // Set light-space uniforms for depth-only shader
             RenderCommands::SetUniformsData uniformsCmd{
@@ -99,14 +90,14 @@ void ShadowMappingPass::Execute(RenderContext& context)
                 lightProjection,                   // Light projection matrix
                 glm::vec3(0.0f)                   // Camera position (not needed for shadows)
             };
-            Submit(uniformsCmd, shadowSortKey);
+            Submit(uniformsCmd);
 
             // Submit draw command
             RenderCommands::DrawElementsData drawCmd{
                 renderable.mesh->GetVertexArray()->GetVAOHandle(),
                 renderable.mesh->GetIndexCount()
             };
-            Submit(drawCmd, shadowSortKey);
+            Submit(drawCmd);
         }
     }
 

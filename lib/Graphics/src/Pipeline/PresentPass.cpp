@@ -37,14 +37,9 @@ void PresentPass::Execute(RenderContext& context)
     };
 
     // Create sort key for present pass - use pass ID 2 to execute after main pass
-    RenderCommands::CommandSortKey presentSortKey;
-    presentSortKey.pass = PRESENT_PASS_ID;
-    presentSortKey.material = 0;
-    presentSortKey.mesh = 0;
-    presentSortKey.instance = 0;
 
     // Submit blit command to pass command buffer
-    Submit(blitCmd, presentSortKey);
+    Submit(blitCmd);
     //std::cout << "PresentPass: Submitted blit command" << std::endl;
 
     // Execute commands for this pass

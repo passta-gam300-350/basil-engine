@@ -1,22 +1,21 @@
 #include "../../include/Pipeline/MainRenderingPass.h"
 #include "../../include/Pipeline/RenderContext.h"
-#include "../../include/Core/Renderer.h"
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
 
 MainRenderingPass::MainRenderingPass()
-    : RenderPass("MainPass", FBOSpecs{
+    : RenderPass("MainPass", FBOSpecs
+	{
         1280, 720,
-        {
+{
             { FBOTextureFormat::RGBA8 },
             { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
+		}
     })
 {
 }
-
 
 void MainRenderingPass::Execute(RenderContext& context)
 {
@@ -30,14 +29,7 @@ void MainRenderingPass::Execute(RenderContext& context)
         true                       // clearDepth
     };
 
-    // Create sort key for main pass - use pass ID 1 to execute after shadow pass
-    RenderCommands::CommandSortKey mainSortKey;
-    mainSortKey.pass = MAIN_PASS_ID;
-    mainSortKey.material = 0;
-    mainSortKey.mesh = 0;
-    mainSortKey.instance = 0;
-
-    Submit(clearCmd, mainSortKey);
+    Submit(clearCmd);
 
     // Standard forward rendering with context data (no copies!)
     if (!context.renderables.empty())
