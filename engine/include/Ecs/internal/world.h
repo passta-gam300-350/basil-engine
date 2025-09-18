@@ -110,15 +110,19 @@ namespace ecs {
 
 	struct WorldRegistry {
 	private:
-		std::vector<entt::registry> m_packed_worlds;
-		std::vector<std::uint64_t> m_sparse_handles; //no paging, unlikely to have too many worlds
-		WorldRegistry() = default; //pseudo singleton
+		std::vector<std::pair<std::uint32_t, entt::registry>> m_packed_worlds;
+		std::vector<std::pair<std::uint32_t, std::uint32_t>> m_sparse_handles; //no paging, unlikely to have too many worlds //first handle, second freelist next
+		std::uint32_t m_FreeList;
+
+		WorldRegistry() : m_packed_worlds{}, m_sparse_handles{}, m_FreeList{null_handle32} {}; //pseudo singleton
 		
 	public:
 		static WorldRegistry& Instance();
 		static world NewWorld();
-		static void EraseWorld();
+		static void EraseWorld(world);
 		static void Clear();
+		
+		entt::registry& operator[](int);
 
 		~WorldRegistry();
 	};

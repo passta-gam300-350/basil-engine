@@ -13,7 +13,7 @@
 #include <utility>
 #include <string_view>
 #include <spdlog/spdlog.h>
-
+#include <yaml-cpp/yaml.h>
 
 #include <windows.h>
 
@@ -369,8 +369,8 @@ struct ResourceSystem {
         return m_JobSystem.schedule(std::forward<Fn>(fn), std::forward<Args>(args)...);
     }
 
-    void LoadFileLists(std::string_view filelist);
-    void LoadConfig(std::string_view cfg);
+    static void LoadFileLists(std::string_view filelist);
+    static void LoadConfig(YAML::Node& cfg);
 
 private:
     hashtable<Resource::Guid, FileEntry> m_FileEntries;

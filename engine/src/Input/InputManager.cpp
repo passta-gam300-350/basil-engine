@@ -18,6 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "./Messaging/Message.h"
 #include "./Messaging/Messaging_System.h"
 #include "./Messaging/Subscriber.h"
+#include "Engine.hpp"
+#include <Core/Window.h>
 
 InputManager* InputManager::instance = nullptr;
 const float DEAD_ZONE = 0.25f; //  Adjustable
@@ -29,12 +31,12 @@ void InputManager::Setup_Callbacks()
         instance = new InputManager();
     }
 
-    glfwSetKeyCallback(GLHelper::ptr_window, InputManager::Key_Callback);
-    glfwSetCharCallback(GLHelper::ptr_window, InputManager::Char_Callback);
-    glfwSetMouseButtonCallback(GLHelper::ptr_window, InputManager::Mouse_Callback);
-    glfwSetCursorPosCallback(GLHelper::ptr_window, InputManager::CursorPosition_Callback);
-    glfwSetScrollCallback(GLHelper::ptr_window, InputManager::Scroll_Callback);
-    glfwSetFramebufferSizeCallback(GLHelper::ptr_window, InputManager::FramebufferSize_Callback);
+    glfwSetKeyCallback(Engine::GetWindowInstance().GetNativeWindow(), InputManager::Key_Callback);
+    glfwSetCharCallback(Engine::GetWindowInstance().GetNativeWindow(), InputManager::Char_Callback);
+    glfwSetMouseButtonCallback(Engine::GetWindowInstance().GetNativeWindow(), InputManager::Mouse_Callback);
+    glfwSetCursorPosCallback(Engine::GetWindowInstance().GetNativeWindow(), InputManager::CursorPosition_Callback);
+    glfwSetScrollCallback(Engine::GetWindowInstance().GetNativeWindow(), InputManager::Scroll_Callback);
+    glfwSetFramebufferSizeCallback(Engine::GetWindowInstance().GetNativeWindow(), InputManager::FramebufferSize_Callback);
 }
 
 void InputManager::Key_Callback(GLFWwindow*, int key, int , int action, int)
