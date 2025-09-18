@@ -143,7 +143,8 @@ vec4 SampleTexture(int index, vec2 coords) {
         if ((textureData.flags[index] & 1u) != 0u) {
             // Reconstruct 64-bit handle from two 32-bit parts
             uvec2 handleParts = textureData.handles[index];
-            return texture(sampler2D(handleParts), coords);
+            uint64_t handle = packUint2x32(handleParts);
+            return texture(sampler2D(handle), coords);
         }
     }
     return vec4(1.0); // Default white
@@ -339,7 +340,8 @@ void main() {
     // Sample bindless textures using handles
     vec3 albedo = fs_in.InstanceColor.rgb;
     if (u_HasDiffuseMap && u_DiffuseIndex >= 0) {
-        albedo *= SampleTexture(u_DiffuseIndex, fs_in.TexCoords).rgb;
+        vec4 texSample = SampleTexture(u_DiffuseIndex, fs_in.TexCoords);
+        albedo *= texSample.rgb;
     }
     
     float metallic = fs_in.InstanceMetallic;

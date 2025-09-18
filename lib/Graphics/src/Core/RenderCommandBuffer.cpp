@@ -1,5 +1,5 @@
 #include "Core/RenderCommandBuffer.h"
-#include "Resources/TextureBindingSystem.h"
+#include "Resources/BindlessTextureManager.h"
 #include <glad/glad.h>
 #include <algorithm>
 #include <spdlog/spdlog.h>
@@ -17,19 +17,15 @@ void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
 void RenderCommandBuffer::Initialize()
 {
     if (!m_TextureBindingSystem) {
-        spdlog::info("[RenderCommandBuffer] Initializing texture binding system...");
-        m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Bindless);
-        if (!m_TextureBindingSystem) {
-            spdlog::warn("[RenderCommandBuffer] Failed to create bindless system, using traditional");
-            m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Traditional);
+        spdlog::info("[RenderCommandBuffer] Initializing bindless texture system...");
+        if (BindlessTextureManager::IsSupported()) {
+            m_TextureBindingSystem = std::make_unique<BindlessTextureManager>();
+        } else {
+            spdlog::error("[RenderCommandBuffer] Bindless textures not supported!");
         }
     }
 }
 
-void RenderCommandBuffer::SetTextureBindingSystem(std::unique_ptr<ITextureBindingSystem> bindingSystem)
-{
-    m_TextureBindingSystem = std::move(bindingSystem);
-}
 
 void RenderCommandBuffer::Clear()
 {
@@ -38,22 +34,11 @@ void RenderCommandBuffer::Clear()
 
 void RenderCommandBuffer::Execute()
 {
-    // Begin batch operations for texture binding
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->BeginBatch();
-    }
-    
-    // Execute commands in order (after sorting)
+    // Execute commands in order without batching to ensure proper per-object texture uniforms
     for (const auto& sortableCmd : m_Commands) {
-        // Use std::visit for efficient type-based dispatch
         std::visit([this](const auto& cmd) {
             this->ExecuteCommand(cmd);
         }, sortableCmd);
-    }
-    
-    // End batch operations
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->EndBatch();
     }
 
     // Final GPU state cleanup
@@ -112,7 +97,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexturesData&
         return;
     }
     
-    // Use abstracted texture binding system
+    // Use bindless texture system
     m_TextureBindingSystem->BindTextures(cmd.textures, cmd.shader);
 }
 
@@ -124,7 +109,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
     glBindVertexArray(0);
     
     // Reset texture state using abstraction
-    if (m_TextureBindingSystem) {
+    if (m_TextureBindingSystem)
+    {
         m_TextureBindingSystem->UnbindAll();
     }
 }
@@ -144,7 +130,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
     glBindVertexArray(0);
 
     // Reset texture state using abstraction
-    if (m_TextureBindingSystem) {
+    if (m_TextureBindingSystem)
+    {
         m_TextureBindingSystem->UnbindAll();
     }
 
@@ -202,9 +189,11 @@ void RenderCommandBuffer::CleanupGPUState()
     // Reset to default texture unit
     glActiveTexture(GL_TEXTURE0);
 
-    // Ensure all SSBO binding points are unbound
+    // Ensure SSBO binding points are unbound (except binding point 1 for texture SSBO)
     // This prevents SSBO state leakage between frames
-    for (int i = 0; i < 4; ++i) {  // Common SSBO binding points 0-3
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO
+    // Note: Binding point 1 (texture SSBO) is left bound for persistent bindless textures
+    for (int i = 2; i < 4; ++i) {  // Unbind binding points 2-3
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i, 0);
     }
 

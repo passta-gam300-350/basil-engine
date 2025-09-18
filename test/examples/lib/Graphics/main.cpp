@@ -208,11 +208,19 @@ bool GraphicsTestDriver::LoadTestResources()
         }
 
         // Load models
-        auto tinBoxModel = m_ResourceManager->LoadModel("tinbox", 
+        auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
             "assets/models/tinbox/tin_box.obj");
-        
+
         if (!tinBoxModel) {
             std::cerr << "Failed to load tin box model!\n";
+            return false;
+        }
+
+        auto backpackModel = m_ResourceManager->LoadModel("backpack",
+            "assets/models/backpack/backpack.obj");
+
+        if (!backpackModel) {
+            std::cerr << "Failed to load backpack model!\n";
             return false;
         }
 
@@ -299,18 +307,18 @@ void GraphicsTestDriver::SetupAdvancedScene()
     ground.visible = true;
     m_SceneObjects.push_back(ground);
 
-    // Create a 10x10 grid of objects for instanced rendering
+    // Create grids of objects for instanced rendering
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
 
     const int gridSize = 3;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
 
-    // Create 10x10 grid (100 objects total) using both meshes
+    // Create tinbox grid (left side)
     for (int x = 0; x < gridSize; ++x) {
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(
-                startOffset + x * spacing,
+                startOffset + x * spacing - 8.0f, // Offset to the left
                 0.0f,
                 startOffset + z * spacing
             );
@@ -318,11 +326,31 @@ void GraphicsTestDriver::SetupAdvancedScene()
             // Use uniform scale
             glm::vec3 scaleVec(1.0f);
 
-            // Cycle through materials based on position - now with per-instance support
+            // Cycle through materials based on position
             int materialIndex = (x + z) % materials.size();
             std::string material = materials[materialIndex];
 
             CreateModelInstance("tinbox", material, position, scaleVec);
+        }
+    }
+
+    // Create backpack grid (right side)
+    for (int x = 0; x < gridSize; ++x) {
+        for (int z = 0; z < gridSize; ++z) {
+            glm::vec3 position(
+                startOffset + x * spacing + 8.0f, // Offset to the right
+                0.0f,
+                startOffset + z * spacing
+            );
+
+            // Use uniform scale (backpack might need different scaling)
+            glm::vec3 scaleVec(0.5f); // Scale down backpack a bit
+
+            // Cycle through materials based on position
+            int materialIndex = (x + z + 2) % materials.size(); // Offset material selection
+            std::string material = materials[materialIndex];
+
+            CreateModelInstance("backpack", material, position, scaleVec);
         }
     }
     

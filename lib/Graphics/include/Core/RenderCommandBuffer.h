@@ -5,7 +5,7 @@
 #include <memory>
 #include <Resources/Shader.h>
 #include <Resources/Texture.h>
-#include <Resources/TextureBindingSystem.h>
+#include <Resources/BindlessTextureManager.h>
 #include <Buffer/ShaderStorageBuffer.h>
 #include <glm/glm.hpp>
 
@@ -99,8 +99,6 @@ public:
     // Initialization (call after OpenGL context is ready)
     void Initialize();
 
-    // Texture binding system configuration
-    void SetTextureBindingSystem(std::unique_ptr<ITextureBindingSystem> bindingSystem);
     
     // Statistics
     size_t GetCommandCount() const { return m_Commands.size(); }
@@ -108,7 +106,7 @@ public:
 
 private:
     std::vector<VariantRenderCommand> m_Commands;
-    std::unique_ptr<ITextureBindingSystem> m_TextureBindingSystem;
+    std::unique_ptr<BindlessTextureManager> m_TextureBindingSystem;
     
     // Command execution visitors
     void ExecuteCommand(const RenderCommands::ClearData& cmd);
