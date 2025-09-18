@@ -1,4 +1,4 @@
-project(engine)
+project(engine CXX)
 
 add_subdirectory(managed)
 
@@ -66,6 +66,7 @@ set(ALL_LIBS
     PUBLIC resource_lib_core
     PUBLIC mono_interface
     PUBLIC job_system_lib
+    PUBLIC data_structure_lib
 )
 
 
