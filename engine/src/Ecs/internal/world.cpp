@@ -1,19 +1,11 @@
 #include <vector>
 #include "ecs/internal/world.h"
 #include "ecs/internal/entity.h"
+#include "ecs/internal/reflection.h"
 #include "ecs/utility/utility.h"
 #include "ecs/system/scheduler.h"
 
-namespace ecs {
-	struct world_registry {
-		std::unique_ptr<std::vector<entt::registry>> packed_worlds;
-		std::vector<std::uint64_t> sparse_handles;
-		std::uint64_t head;
-
-		world new_world();
-		void destroy_world(world);
-	} world_reg;
-}
+#include <entt/entity/snapshot.hpp>
 
 namespace ecs {
 
@@ -73,6 +65,30 @@ namespace ecs {
 	void world::destroy_world()
 	{
 
+	}
+
+	void world::serialise_world_bin(std::string const& outputFilename) {
+		std::ofstream out(outputFilename, std::ios::binary);
+		entt::snapshot snap{ impl.get_registry() };
+		auto out_archive{ [&out](auto value) {
+			out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+			} };
+		snap.template get<entt::entity>(out_archive);
+		for (auto& ser : ReflectionRegistry::BinSerializerRegistryInstance()) {
+			ser.m_Saver(snap, out);
+		}
+	}
+
+	void world::deserialise_world_bin(std::string const& inputFilename) {
+		std::ifstream in(inputFilename, std::ios::binary);
+		entt::snapshot_loader loader{ impl.get_registry()};
+		auto in_archive{ [&in](auto value) {
+			in.read(reinterpret_cast<char*>(&value), sizeof(value));
+			} };
+		loader.template get<entt::entity>(in_archive);
+		for (auto& ser : ReflectionRegistry::BinSerializerRegistryInstance()) {
+			ser.m_Loader(loader, in);
+		}
 	}
 
 	entity world::add_entity()

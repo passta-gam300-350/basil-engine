@@ -78,7 +78,7 @@ void SerializeType(const entt::meta_any &obj, Node&out) {
 
 //templated serialiser, Node must overload[](std::string const&)
 template <typename Node>
-Node serialize_entity(entt::registry& reg, entt::entity e) {
+Node SerializeEntity(entt::registry& reg, entt::entity e) {
     Node entity_node;
 
     for (auto& [type_id, meta_type] : ReflectionRegistry::types()) {
