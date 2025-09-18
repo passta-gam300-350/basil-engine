@@ -46,10 +46,10 @@ macro(import_glad)
     set(GLAD_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/glad)
     file(GLOB_RECURSE GLAD_SRC_FILES
         ${GLAD_DIR}/src/*.c
-        
     )
+
     # set(GLAD_SRC_FILES
-    #     ${GLAD_DIR}/src/gl.c
+    # ${GLAD_DIR}/src/gl.c
     # )
     add_library(glad STATIC
         ${GLAD_SRC_FILES}
@@ -121,8 +121,6 @@ macro(import_imgui)
         ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/imgui_tables.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     )
 
     set(IMGUI_MISC
@@ -139,8 +137,15 @@ macro(import_imgui)
         ${imgui_SOURCE_DIR}/imstb_rectpack.h
         ${imgui_SOURCE_DIR}/imstb_textedit.h
         ${imgui_SOURCE_DIR}/imstb_truetype.h
+    )
+
+    set(BACKENDS_HEADER
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
+    )
+    set(IMGUI_BACKENDS
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     )
 
     file(GLOB FONTS_FILES ${imgui_SOURCE_DIR}/misc/fonts/*.ttf)
@@ -150,9 +155,16 @@ macro(import_imgui)
     add_library(imgui STATIC
         ${IMGUI_FILES}
     )
+    add_library(imgui_backends STATIC
+        ${IMGUI_BACKENDS}
+        ${BACKENDS_HEADER}
+    )
 
+
+    target_include_directories(imgui_backends PUBLIC ${imgui_SOURCE_DIR}/backends)
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
-endmacro()
+    target_link_libraries(imgui_backends PRIVATE glfw glad imgui)
+    endmacro()
 
 macro(import_stb)
     set(STB_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/stb)
@@ -172,9 +184,9 @@ macro(import_mono)
     set(MONO_IMPORT_LIB_DIR "${MONO_IMPORT_DIR}/lib")
     set(MONO_IMPORT_SUCCESS TRUE)
 
-
     set(MONO_ASSEMBLY_PATH "${MONO_IMPORT_DIR}/lib/")
     set(MONO_CONFIG_PATH "${MONO_IMPORT_DIR}/etc/")
+
     if(NOT EXISTS "${MONO_IMPORT_DIR}")
         message(STATUS "MONO not found in MONO/ folder")
         set(MONO_IMPORT_SUCCESS FALSE)
@@ -229,6 +241,15 @@ macro(import_mono)
     ENDIF()
 endmacro()
 
+macro(import_xml)
+    FetchContent_Declare(
+        pugixml
+        GIT_REPOSITORY https://github.com/zeux/pugixml.git
+        GIT_TAG v1.15
+    )
+    FetchContent_MakeAvailable(pugixml)
+endmacro()
+
 # Macro to import all dependencies
 macro(import_dependencies)
     import_glad()
@@ -244,6 +265,7 @@ macro(import_dependencies)
     import_catch()
 
     import_mono()
+    import_xml()
 
     set_target_properties(glad glfw glm assimp EnTT imgui mono_interface UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
 endmacro()
@@ -269,7 +291,7 @@ macro(mono_postimport target)
     target_compile_definitions(${target} PUBLIC MONO_CSC_COMPILER_PATH="${CMAKE_CSharp_COMPILER}")
     target_compile_definitions(${target} PUBLIC MONO_BIN_PATH="${MONO_BIN_PATH}")
     target_compile_definitions(${target} PUBLIC MONO_COMPILER="${TOOL_DLL_CSCOMPILER}")
-    endmacro(mono_postimport target)
+endmacro(mono_postimport target)
 
 macro(postimport_dll targetName)
     mono_postimport(${targetName})

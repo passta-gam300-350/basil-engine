@@ -1,0 +1,30 @@
+<window height="1200" width="1080" name="test.xml" screenx="100" screeny="100">
+    <button text="Click Me!" onClick="handleClick" color="red" screenx="150" screeny="200"/>
+    <label text="Hello, World!" fontSize="16" color="green" screenx="300" screeny="400"/>
+    <frame>
+        <button text="Nested Button" onClick="nestedClick" screenx="50" screeny="50"/>
+        <label text="Nested Label" screenx="70" screeny="80"/>
+    </frame>
+    <frame>
+        <button text="Another Button" onClick="anotherClick" color="yellow" screenx="200" screeny="250"/>
+        <label text="Another Label" fontSize="14" color="purple" screenx="220" screeny="260"/>
+    </frame>
+    <label text="Footer Label" screenx="500" screeny="1100"/>
+    <button text="Submit" onClick="submitForm" screenx="800" screeny="1150"/>
+    <frame>
+        <label text="Frame Label" fontSize="18" color="orange" screenx="400" screeny="300"/>
+        <button text="Frame Button" onClick="frameButtonClick" color="pink" screenx="450" screeny="350"/>
+        <frame>
+            <label text="Deeply Nested Label" screenx="600" screeny="700"/>
+            <button text="Deep Button" onClick="deepButtonClick" screenx="650" screeny="750"/>
+            <frame>
+                <label text="Very Deep Label" fontSize="20" color="cyan" screenx="700" screeny="800"/>
+                <button text="Very Deep Button" onClick="veryDeepButtonClick" color="magenta" screenx="750" screeny="850"/>
+            </frame>
+        </frame>
+    </frame>
+    <frame>
+        <button text="Outer Frame Button" onClick="outerFrameClick" screenx="100" screeny="150"/>
+        <label text="Outer Frame Label" fontSize="15" color="brown" screenx="120" screeny="180"/>
+    </frame>
+</window>

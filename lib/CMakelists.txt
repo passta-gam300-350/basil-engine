@@ -1,5 +1,6 @@
 
 add_subdirectory(common)
+add_subdirectory(ImXML)
 add_subdirectory(Graphics)
 add_subdirectory(Scripting)
 #add_subdirectory(memory)

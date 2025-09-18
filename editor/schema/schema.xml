@@ -1,0 +1,23 @@
+<schema version="1.0">
+    <tag name="window">
+        <attribute name="name" type="string"/>
+        <attribute name="width" type="int" default="800"/>
+        <attribute name="height" type="int" default="600"/>
+        <attribute name="screenx" type="int"/>
+        <attribute name="screeny" type="int"/>
+    </tag>
+    <tag name="button">
+        <attribute name="text" type="string"/>
+        <attribute name="onClick" type="string"/>
+        <attribute name="color" type="string" default="blue"/>
+        <attribute name="screenx" type="int"/>
+        <attribute name="screeny" type="int"/>
+    </tag>
+    <tag name="label">
+        <attribute name="text" type="string"/>
+        <attribute name="fontSize" type="int" default="12"/>
+        <attribute name="color" type="string" default="black"/>
+        <attribute name="screenx" type="int"/>
+        <attribute name="screeny" type="int"/>
+    </tag>
+</schema>
