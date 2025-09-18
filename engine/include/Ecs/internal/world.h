@@ -39,6 +39,14 @@ namespace ecs {
 			world_id_t handle;
 		};
 
+		struct Scene {
+
+		};
+
+		//this for world dump. binary format use scene serialiser for friendly format
+		void serialise_world_bin(std::string const& outputFilename);
+		void deserialise_world_bin(std::string const& inputFilename);
+
 		static world new_world_instance();
 		consteval world() = default;
 		world(std::uint32_t hdl) : impl(hdl) {}
@@ -96,9 +104,20 @@ namespace ecs {
 		world::detail impl;
 	};
 
-	void init_ecs();
-	void shutdown_ecs();
+	struct WorldRegistry {
+	private:
+		std::vector<entt::registry> m_packed_worlds;
+		std::vector<std::uint64_t> m_sparse_handles; //no paging, unlikely to have too many worlds
+		WorldRegistry() = default; //pseudo singleton
+		
+	public:
+		static WorldRegistry& Instance();
+		static world NewWorld();
+		static void EraseWorld();
+		static void Clear();
 
+		~WorldRegistry();
+	};
 
 	template<typename component_t, typename ...c_args>
 	inline component_t& world::add_component_to_entity(entity enty, c_args&&... cargs)
