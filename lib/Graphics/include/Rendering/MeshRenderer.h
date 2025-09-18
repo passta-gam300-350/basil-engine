@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
-#include "../Core/Renderer.h"
 
 // Forward declarations
 struct RenderableData;
@@ -11,10 +10,10 @@ struct FrameData;
 
 // Rendering coordinator - generates render commands from submitted data
 // Owned by SceneRenderer - this is graphics-specific
-class MeshRenderer
+/*class MeshRenderer
 {
 public:
-    MeshRenderer(Renderer* renderer);
+    MeshRenderer();
     ~MeshRenderer() = default;
 
     // Rendering coordination - takes renderable data and generates render commands
@@ -26,6 +25,4 @@ private:
                            const glm::mat4& viewMatrix,
                            const glm::mat4& projectionMatrix,
                            const glm::vec3& cameraPosition);
-
-    Renderer* m_Renderer;
-};
+};*/

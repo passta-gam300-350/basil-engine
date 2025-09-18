@@ -1,17 +1,14 @@
 #include "Scene/SceneRenderer.h"
-#include "Rendering/MeshRenderer.h"
+#include "Pipeline/MainRenderingPass.h"
+#include "Pipeline/RenderContext.h"
 #include "Rendering/FrustumCuller.h"
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
-#include "Pipeline/RenderPass.h"
-#include "Buffer/FrameBuffer.h"
-#include <glad/gl.h>
+#include "Pipeline/PresentPass.h"
+#include "Pipeline/ShadowMappingPass.h"
 
-SceneRenderer::SceneRenderer(GLFWwindow* window) {
-    // Initialize core systems first
-    m_Renderer = std::make_unique<Renderer>();
-    m_Renderer->Initialize(window);
-
+SceneRenderer::SceneRenderer()
+{
     m_ResourceManager = std::make_unique<ResourceManager>();
     m_ResourceManager->Initialize();
 
@@ -32,8 +29,10 @@ void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
 
-void SceneRenderer::ClearFrame() {
-    // Don't clear renderables or lights - they are static and submitted once during initialization
+void SceneRenderer::ClearFrame()
+{
+    m_SubmittedRenderables.clear();
+	m_SubmittedLights.clear();
 }
 
 void SceneRenderer::AddPipeline(std::string const &name, std::unique_ptr<RenderPipeline> pipeline)
@@ -65,7 +64,7 @@ void SceneRenderer::SetPipelineOrder(std::vector<std::string> const &order)
 
 RenderPipeline *SceneRenderer::GetPipeline(std::string const &name)
 {
-    auto it = m_Pipelines.find(name);
+    const auto it = m_Pipelines.find(name);
     return it != m_Pipelines.end() ? it->second.get() : nullptr;
 }
 
@@ -80,82 +79,62 @@ bool SceneRenderer::IsPipelineEnabled(std::string const &name) const
     return it != m_PipelineEnabled.end() ? it->second : false;
 }
 
-void SceneRenderer::InitializeDefaultPipelines() {
-    // Default forward rendering pipeline
-    auto mainPipeline = std::make_unique<RenderPipeline>("MainRendering");
+void SceneRenderer::InitializeDefaultPipelines()
+{
+    // Create main rendering pipeline
+    auto mainPipeline = std::make_unique<RenderPipeline>();
 
-    // Single forward rendering pass
-    auto mainPass = std::make_shared<RenderPass>("MainPass", FBOSpecs{
-        1280, 720,
-        {
-            { FBOTextureFormat::RGBA8 },
-            { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
-    });
+    // 1. Add shadow mapping pass (executes first with pass ID 0)
+    auto shadowPass = std::make_shared<ShadowMappingPass>();
+    mainPipeline->AddPass(shadowPass);
 
-    mainPass->SetRenderFunction([this, mainPass]()
-        {
-            // Clear color and depth buffers using command buffer
-            RenderCommands::ClearData clearCmd{
-                0.7f, 0.7f, 0.7f, 0.5f,  // r, g, b, a
-                true,                      // clearColor
-                true                       // clearDepth
-            };
-            m_Renderer->Submit(clearCmd);
-
-            // Standard forward rendering with submitted data
-            if (!m_SubmittedRenderables.empty())
-            {
-                // 1. Update scene-wide lighting with submitted lights
-                m_PBRLightingRenderer->UpdateLighting(m_SubmittedLights, m_AmbientLight, m_FrameData);
-
-                // 2. Frustum culling on submitted renderables
-                auto visibleRenderables = m_FrustumCuller->CullRenderables(m_SubmittedRenderables, m_FrameData);
-                //auto visibleRenderables = m_SubmittedRenderables; // Skip culling - render all objects
-
-                // 3. Forward instanced rendering with visible renderables
-                m_InstancedRenderer->Render(visibleRenderables, m_FrameData);
-            }
-
-            // Store main color buffer
-            m_FrameData.mainColorBuffer = mainPass->GetFramebuffer();
-        });
-
+    // 2. Add main rendering pass (executes second with pass ID 1)
+    auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
-    AddPipeline("MainRendering", std::move(mainPipeline));
 
-    // Set pipeline order
+    // 3. Add present pass (executes third with pass ID 2)
+    auto presentPass = std::make_shared<PresentPass>();
+    mainPipeline->AddPass(presentPass);
+
+    AddPipeline("MainRendering", std::move(mainPipeline));
     SetPipelineOrder({ "MainRendering" });
 }
 
-void SceneRenderer::InitializeRenderingCoordinators() {
+void SceneRenderer::InitializeRenderingCoordinators()
+{
     // Create rendering coordinators with explicit dependencies
     m_PBRLightingRenderer = std::make_unique<PBRLightingRenderer>();  // Initialize lighting first
-    m_MeshRenderer = std::make_unique<MeshRenderer>(m_Renderer.get());
+    //m_MeshRenderer = std::make_unique<MeshRenderer>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
-    m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_Renderer.get(), m_PBRLightingRenderer.get());
+    m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_PBRLightingRenderer.get());
 }
 
-void SceneRenderer::Render() {
-    // Begin frame
-    m_Renderer->BeginFrame();
+void SceneRenderer::Render()
+{
 
-    // Update shared frame data
-    UpdateFrameData();
+    // Create context with references to our data - NO COPYING!
+    RenderContext context(
+        m_SubmittedRenderables,  // const ref to renderables
+        m_SubmittedLights,       // const ref to lights
+        m_AmbientLight,          // const ref to ambient light
+        m_FrameData,             // mutable ref to frame data
+        *m_InstancedRenderer,    // ref to instanced renderer
+        *m_PBRLightingRenderer,  // ref to PBR lighting
+        *m_ResourceManager       // ref to resource manager
+    );
 
-    // Execute pipelines in order
+    // Execute pipelines in order with shared context
     for (const auto &pipelineName : m_PipelineOrder)
     {
         auto pipelineIt = m_Pipelines.find(pipelineName);
         if (pipelineIt != m_Pipelines.end() && IsPipelineEnabled(pipelineName))
         {
-            pipelineIt->second->Execute();
+            // Use new context-based execution - no data copying!
+            pipelineIt->second->Execute(context);
         }
     }
 
-    m_FrameData.frameNumber++;
-
-    // End frame
-    m_Renderer->EndFrame();
+    // Frame data updates happened automatically through context reference
+    // No manual synchronization needed!
+    ++m_FrameData.frameNumber;
 }
-

@@ -1,5 +1,4 @@
 #include <Resources/Mesh.h>
-#include <iostream>
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
 {
@@ -18,7 +17,9 @@ void Mesh::setupMesh()
 {
     // create buffers/arrays using existing buffer classes
     m_VertexArray = std::make_shared<VertexArray>();
-    m_VertexBuffer = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+
+    uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
+    m_VertexBuffer = std::make_shared<VertexBuffer>(vertices.data(), vertexBufferSize);
     m_IndexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
 
     // Set up vertex buffer layout

@@ -1,26 +1,19 @@
 #pragma once
 
-#include <glad/gl.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include <Resources/Mesh.h>
-#include <Resources/Shader.h>
 
 #include <string>
-#include <fstream>
-#include <sstream>
 #include <iostream>
-#include <map>
 #include <vector>
 
 class Model 
 {
 public:
-    // model data 
+    // model data
     std::vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     std::vector<Mesh>    meshes;
     std::string directory;
@@ -28,9 +21,6 @@ public:
 
     // constructor, expects a filepath to a 3D model.
     Model(std::string const &path, bool gamma = false);
-
-    // Note: Removed Draw() method - rendering is now handled by ECS system
-    // Model is now pure data container
     
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.

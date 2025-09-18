@@ -13,6 +13,9 @@ in VS_OUT {
     vec3 Bitangent;
     mat3 TBN;
 
+    // Shadow mapping
+    vec4 FragPosLightSpace;
+
     // Per-instance material data from vertex shader
     vec4 InstanceColor;
     float InstanceMetallic;
@@ -85,6 +88,9 @@ uniform SpotLight u_SpotLights[4];
 // Camera
 uniform vec3 u_ViewPos;
 
+// Shadow mapping
+uniform sampler2D u_ShadowMap;
+
 // Material properties (fallback when no textures available)
 uniform vec3 u_AlbedoColor = vec3(0.8, 0.8, 0.8);
 uniform float u_MetallicValue = 0.0;
@@ -92,6 +98,44 @@ uniform float u_RoughnessValue = 0.5;
 
 // PBR constants
 const float PI = 3.14159265359;
+
+// Shadow mapping function
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // Perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    // Transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Check if we're outside the shadow map
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // Get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(u_ShadowMap, projCoords.xy).r;
+
+    // Get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // Calculate bias to reduce shadow acne
+    float bias = 0.005;
+
+    // Check whether current frag pos is in shadow with PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(u_ShadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(u_ShadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
+}
 
 // Helper function to sample bindless texture safely
 vec4 SampleTexture(int index, vec2 coords) {
@@ -321,9 +365,16 @@ void main() {
     // Get normal from bindless normal map
     vec3 normal = getNormalFromMap();
     
+    // Calculate shadow factor
+    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+
     // Calculate multi-light PBR lighting
     vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao);
-    
+
+    // Apply shadows (reduce lighting by shadow factor)
+    // Note: This is a simplified approach - ideally shadows should only affect direct lighting
+    color = color * (1.0 - shadow * 0.7); // Reduce shadow intensity to 70%
+
     // Add emissive
     color += emissive;
     

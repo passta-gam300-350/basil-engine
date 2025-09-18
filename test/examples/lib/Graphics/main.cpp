@@ -3,7 +3,7 @@
 #include <Resources/Material.h>
 #include <Resources/Mesh.h>
 #include <Resources/Model.h>
-#include <Resources/Shader.h>
+#include <Resources/PrimitiveGenerator.h>
 #include <Utility/Light.h>
 
 #include <iostream>
@@ -28,7 +28,6 @@ GraphicsTestDriver* GraphicsTestDriver::s_Instance = nullptr;
 
 GraphicsTestDriver::GraphicsTestDriver()
     : m_Window(nullptr)
-    , m_Renderer(nullptr)
     , m_SceneRenderer(nullptr)
     , m_ResourceManager(nullptr)
     , m_Camera(nullptr)
@@ -60,7 +59,7 @@ bool GraphicsTestDriver::Initialize()
     }
 
     // Create scene renderer (owns all graphics systems now)
-    m_SceneRenderer = std::make_unique<SceneRenderer>(m_Window->GetNativeWindow());
+    m_SceneRenderer = std::make_unique<SceneRenderer>();
 
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
@@ -88,13 +87,7 @@ bool GraphicsTestDriver::Initialize()
     // Setup the advanced demo scene
     SetupAdvancedScene();
     
-    // Submit static data once during initialization
-    for (const auto& light : m_SceneLights) {
-        m_SceneRenderer->SubmitLight(light);
-    }
-    for (const auto& renderable : m_SceneObjects) {
-        m_SceneRenderer->SubmitRenderable(renderable);
-    }
+    
 
     // Print system info
     PrintSystemInfo();
@@ -129,6 +122,14 @@ void GraphicsTestDriver::Run()
         // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
 
+        // Submit static data once during initialization
+        for (const auto& light : m_SceneLights) {
+            m_SceneRenderer->SubmitLight(light);
+        }
+        for (const auto& renderable : m_SceneObjects) {
+            m_SceneRenderer->SubmitRenderable(renderable);
+        }
+
         // Update camera data manually
         if (m_Camera) {
             auto& frameData = m_SceneRenderer->GetFrameData();
@@ -137,13 +138,11 @@ void GraphicsTestDriver::Run()
             frameData.cameraPosition = m_Camera->GetPosition();
         }
 
-        // Update the advanced scene
-        UpdateAdvancedScene();
-
-        // Static data submitted once during initialization - no need to resubmit
-
         // Render scene (handles begin/end frame internally)
         m_SceneRenderer->Render();
+
+		// Swap buffers
+		m_Window->SwapBuffers();
 
         // Poll events
         m_Window->PollEvents();
@@ -167,7 +166,6 @@ void GraphicsTestDriver::Shutdown()
 
     // Clear pointers (they're just references now, not owners)
     m_ResourceManager = nullptr;
-    m_Renderer = nullptr;
 
     std::cout << "Shutdown complete.\n";
 }
@@ -191,16 +189,27 @@ bool GraphicsTestDriver::LoadTestResources()
         auto instancedShader = m_ResourceManager->LoadShader("instanced_bindless",
             "assets/shaders/instanced_bindless.vert",
             "assets/shaders/instanced_bindless.frag");
-        
+
         if (instancedShader) {
             std::cout << "Advanced bindless shaders loaded successfully!\n";
         } else {
             std::cout << "Warning: Could not load bindless shaders, will use basic shaders for fallback\n";
         }
 
+        // Load shadow mapping depth-only shader
+        auto shadowShader = m_ResourceManager->LoadShader("shadow_depth",
+            "assets/shaders/shadow_depth.vert",
+            "assets/shaders/shadow_depth.frag");
+
+        if (shadowShader) {
+            std::cout << "Shadow mapping shader loaded successfully!\n";
+        } else {
+            std::cout << "Warning: Could not load shadow mapping shader\n";
+        }
+
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox", 
-            "assets/models/dragon/dragon.obj");
+            "assets/models/tinbox/tin_box.obj");
         
         if (!tinBoxModel) {
             std::cerr << "Failed to load tin box model!\n";
@@ -258,9 +267,9 @@ void GraphicsTestDriver::CreateTestMaterials()
 
     // White material
     auto whiteMaterial = std::make_shared<Material>(shader, "WhiteMaterial");
-    whiteMaterial->SetAlbedoColor(glm::vec3(0.9f, 0.9f, 0.9f));
+    whiteMaterial->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
     whiteMaterial->SetMetallicValue(0.0f);
-    whiteMaterial->SetRoughnessValue(0.9f);
+    whiteMaterial->SetRoughnessValue(0.0f);
     m_ResourceManager->AddMaterial("WhiteMaterial", whiteMaterial);
 
     // Default material - simple metallic gray
@@ -276,14 +285,27 @@ void GraphicsTestDriver::CreateTestMaterials()
 void GraphicsTestDriver::SetupAdvancedScene()
 {
     std::cout << "Setting up Advanced Graphics Demo...\n";
-    
+
+    // Create ground plane
+    auto planeMesh = std::make_shared<Mesh>(
+        PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
+    );
+
+    // Add ground plane to scene using GreenMaterial
+    RenderableData ground;
+    ground.mesh = planeMesh;
+    ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+    ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    ground.visible = true;
+    m_SceneObjects.push_back(ground);
+
     // Create a 10x10 grid of objects for instanced rendering
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
-    
+
     const int gridSize = 3;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
-    
+
     // Create 10x10 grid (100 objects total) using both meshes
     for (int x = 0; x < gridSize; ++x) {
         for (int z = 0; z < gridSize; ++z) {
@@ -292,10 +314,10 @@ void GraphicsTestDriver::SetupAdvancedScene()
                 0.0f,
                 startOffset + z * spacing
             );
-            
+
             // Use uniform scale
             glm::vec3 scaleVec(1.0f);
-            
+
             // Cycle through materials based on position - now with per-instance support
             int materialIndex = (x + z) % materials.size();
             std::string material = materials[materialIndex];
@@ -360,19 +382,14 @@ void GraphicsTestDriver::SetupAdvancedScene()
     ));
     
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
-    
-    std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, " 
+
+    std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, "
               << m_SceneLights.size() << " dynamic lights\n";
-              
+
     // Debug: verify all objects were created
     std::cout << "Debug: Created " << m_SceneObjects.size() << " scene objects" << std::endl;
 }
 
-void GraphicsTestDriver::UpdateAdvancedScene()
-{
-    // Completely static scene - no animations for instances or lights
-    // Objects and lights remain in their original positions with initial properties
-}
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
                                             const glm::vec3& position, const glm::vec3& scale)
 {
@@ -385,19 +402,22 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
     for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
         // Share the same mesh objects instead of creating new ones
         static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
-        
+
         std::string meshKey = modelName + "_mesh" + std::to_string(meshIndex);
         auto it = s_MeshCache.find(meshKey);
-        
+
         std::shared_ptr<Mesh> mesh;
         if (it != s_MeshCache.end()) {
             // Reuse existing mesh
             mesh = it->second;
+            //std::cout << "  REUSING cached mesh for " << meshKey << std::endl;
         } else {
             // Create new mesh and cache it
             mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
             s_MeshCache[meshKey] = mesh;
+           // std::cout << "  CREATED new mesh for " << meshKey << std::endl;
         }
+
         
         // Create renderable for this mesh
         RenderableData renderable;
@@ -407,7 +427,7 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         
         // Check if this mesh has textures (indicating we should preserve them)
         if (mesh->textures.size() > 0) {
-            std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
+            //std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
 
             // Create a material that will work with the existing textures
             auto shader = m_ResourceManager->GetShader("instanced_bindless");
@@ -519,11 +539,6 @@ void GraphicsTestDriver::ProcessInput()
             m_Camera->ProcessKeyboard(CameraMovement::DOWN, m_DeltaTime);
         }
     }
-}
-
-void GraphicsTestDriver::UpdateCamera()
-{
-    // Camera update is handled in ProcessInput
 }
 
 void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

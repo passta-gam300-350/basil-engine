@@ -3,20 +3,23 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <string>
 
 // Forward declarations
 struct Texture;
 class Shader;
 
+
+
 // Abstract binding interface for future bindless support
-class ITextureBindingSystem {
+class ITextureBindingSystem
+{
 public:
     virtual ~ITextureBindingSystem() = default;
     
     // Core binding interface
-    virtual void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) = 0;
+    virtual void BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) = 0;
     virtual void UnbindAll() = 0;
     
     // Batch operations for efficiency
@@ -25,9 +28,10 @@ public:
 };
 
 // Traditional OpenGL binding (current implementation)
-class TraditionalTextureBinding : public ITextureBindingSystem {
+class TraditionalTextureBinding : public ITextureBindingSystem
+{
 public:
-    void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) override;
+    void BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) override;
     void UnbindAll() override;
     
     // Batch operations (no-op for traditional binding)
@@ -35,17 +39,18 @@ public:
     void EndBatch() override {}
     
 private:
-    void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader);
-    void BindTextureSlots(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader);
+    void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
+    void BindTextureSlots(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
 };
 
 // Bindless texture implementation using SSBO
-class BindlessTextureBinding : public ITextureBindingSystem {
+class BindlessTextureBinding : public ITextureBindingSystem
+{
 public:
     BindlessTextureBinding();
     ~BindlessTextureBinding();
     
-    void BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) override;
+    void BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) override;
     void UnbindAll() override;
     
     // Efficient batch operations for bindless
@@ -58,14 +63,14 @@ public:
     
 private:
     // Texture handle data for SSBO (std430 aligned)
-    struct TextureHandleData {
+    struct TextureHandleData
+	{
         GLuint64 handle;        // 8 bytes - bindless texture handle
         uint32_t type;          // 4 bytes - texture type (0=diffuse, 1=normal, etc.)
         uint32_t flags;         // 4 bytes - texture flags
         // Total: 16 bytes per handle (properly aligned)
     };
-    
-    std::vector<GLuint64> m_TextureHandles;
+
     std::unordered_map<unsigned int, GLuint64> m_HandleCache;
     std::vector<TextureHandleData> m_HandleData;
     GLuint m_HandlesSSBO;
@@ -74,7 +79,6 @@ private:
     bool m_Initialized;
     
     // Extension function pointers
-    bool LoadBindlessExtensions();
     bool IsBindlessSupported();
     
     // Handle management
@@ -89,11 +93,6 @@ private:
     uint32_t GetTextureTypeIndex(const std::string& type);
 
     void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader);
-    
-    // Extension function pointers (loaded at runtime)
-    void* m_GetTextureHandleARB;
-    void* m_MakeTextureHandleResidentARB;
-    void* m_MakeTextureHandleNonResidentARB;
 };
 
 // Factory for texture binding systems

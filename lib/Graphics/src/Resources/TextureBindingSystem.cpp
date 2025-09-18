@@ -7,7 +7,8 @@
 #include <GLFW/glfw3.h>
 
 // Traditional OpenGL binding implementation
-void TraditionalTextureBinding::BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
+void TraditionalTextureBinding::BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader)
+{
     if (!shader) return;
     
     // Set texture availability flags
@@ -17,12 +18,14 @@ void TraditionalTextureBinding::BindTextures(const std::vector<Texture>& texture
     BindTextureSlots(textures, shader);
 }
 
-void TraditionalTextureBinding::UnbindAll() {
+void TraditionalTextureBinding::UnbindAll()
+{
     // Reset to texture unit 0
     glActiveTexture(GL_TEXTURE0);
 }
 
-void TraditionalTextureBinding::SetTextureAvailabilityFlags(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
+void TraditionalTextureBinding::SetTextureAvailabilityFlags(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader)
+{
     // Analyze textures and set availability flags
     bool hasDiffuse = false, hasNormal = false, hasMetallic = false, 
          hasRoughness = false, hasAO = false, hasEmissive = false;
@@ -45,7 +48,8 @@ void TraditionalTextureBinding::SetTextureAvailabilityFlags(const std::vector<Te
     shader->setBool("u_HasEmissiveMap", hasEmissive);
 }
 
-void TraditionalTextureBinding::BindTextureSlots(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
+void TraditionalTextureBinding::BindTextureSlots(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader)
+{
     // Bind textures to texture units
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -77,46 +81,44 @@ BindlessTextureBinding::BindlessTextureBinding()
     , m_BatchActive(false)
     , m_SSBODirty(false)
     , m_Initialized(false)
-    , m_GetTextureHandleARB(nullptr)
-    , m_MakeTextureHandleResidentARB(nullptr)
-    , m_MakeTextureHandleNonResidentARB(nullptr) {
-    
-    // Delay initialization until first use to ensure OpenGL context is ready
-    // This prevents null pointer exceptions during construction
+{
 }
 
-BindlessTextureBinding::~BindlessTextureBinding() {
+BindlessTextureBinding::~BindlessTextureBinding()
+{
     if (!m_Initialized) {
         return;
     }
     
     // Make all handles non-resident
-    if (m_MakeTextureHandleNonResidentARB) {
-        auto makeNonResident = reinterpret_cast<void(*)(GLuint64)>(m_MakeTextureHandleNonResidentARB);
-        for (const auto& pair : m_HandleCache) {
-            makeNonResident(pair.second);
-        }
+    for (const auto& pair : m_HandleCache)
+    {
+        glMakeImageHandleNonResidentARB(pair.second);
     }
     
     // Clean up SSBO
-    if (m_HandlesSSBO != 0) {
+    if (m_HandlesSSBO != 0)
+    {
         glDeleteBuffers(1, &m_HandlesSSBO);
     }
 }
 
-void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
+void BindlessTextureBinding::BindTextures(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader)
+{
     // Lazy initialization - only initialize when first used
-    if (!m_Initialized) {
+    if (!m_Initialized)
+    {
         bool extensionSupported = IsBindlessSupported();
-        bool extensionsLoaded = LoadBindlessExtensions();
         
-        if (extensionSupported && extensionsLoaded) {
+        if (extensionSupported)
+        {
             InitializeSSBO();
             m_Initialized = true;
         }
     }
     
-    if (!m_Initialized || !shader) {
+    if (!m_Initialized || !shader)
+    {
         // Fallback to traditional binding
         TraditionalTextureBinding traditional;
         traditional.BindTextures(textures, shader);
@@ -178,17 +180,6 @@ void BindlessTextureBinding::EndBatch() {
     }
 }
 
-bool BindlessTextureBinding::LoadBindlessExtensions() {
-    // Load OpenGL extension functions
-    m_GetTextureHandleARB = glfwGetProcAddress("glGetTextureHandleARB");
-    m_MakeTextureHandleResidentARB = glfwGetProcAddress("glMakeTextureHandleResidentARB");
-    m_MakeTextureHandleNonResidentARB = glfwGetProcAddress("glMakeTextureHandleNonResidentARB");
-    
-    return (m_GetTextureHandleARB != nullptr && 
-            m_MakeTextureHandleResidentARB != nullptr && 
-            m_MakeTextureHandleNonResidentARB != nullptr);
-}
-
 bool BindlessTextureBinding::IsBindlessSupported() {
     // Check if we have a valid OpenGL context
     if (!glGetIntegerv || !glGetString || !glGetStringi) {
@@ -237,20 +228,18 @@ bool BindlessTextureBinding::IsBindlessSupported() {
     return false;
 }
 
-GLuint64 BindlessTextureBinding::GetOrCreateHandle(unsigned int textureId) {
-    if (!m_GetTextureHandleARB) {
-        return 0;
-    }
+GLuint64 BindlessTextureBinding::GetOrCreateHandle(unsigned int textureId)
+{
     
     // Check cache first
     auto it = m_HandleCache.find(textureId);
-    if (it != m_HandleCache.end()) {
+    if (it != m_HandleCache.end())
+    {
         return it->second;
     }
     
     // Create new handle
-    auto getHandle = reinterpret_cast<GLuint64(*)(GLuint)>(m_GetTextureHandleARB);
-    GLuint64 handle = getHandle(textureId);
+    GLuint64 handle = glGetTextureHandleARB(textureId);
     
     if (handle != 0) {
         // Make handle resident
@@ -264,20 +253,21 @@ GLuint64 BindlessTextureBinding::GetOrCreateHandle(unsigned int textureId) {
 }
 
 void BindlessTextureBinding::MakeHandleResident(GLuint64 handle) {
-    if (m_MakeTextureHandleResidentARB && handle != 0) {
-        auto makeResident = reinterpret_cast<void(*)(GLuint64)>(m_MakeTextureHandleResidentARB);
-        makeResident(handle);
+    if (handle != 0)
+    {
+        glMakeTextureHandleResidentARB(handle);
     }
 } 
 
 void BindlessTextureBinding::MakeHandleNonResident(GLuint64 handle) {
-    if (m_MakeTextureHandleNonResidentARB && handle != 0) {
-        auto makeNonResident = reinterpret_cast<void(*)(GLuint64)>(m_MakeTextureHandleNonResidentARB);
-        makeNonResident(handle);
+    if (handle != 0)
+    {
+        glMakeTextureHandleNonResidentARB(handle);
     }
 }
 
-void BindlessTextureBinding::InitializeSSBO() {
+void BindlessTextureBinding::InitializeSSBO()
+{
     // Create SSBO for texture handles
     glGenBuffers(1, &m_HandlesSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_HandlesSSBO);
@@ -295,8 +285,10 @@ void BindlessTextureBinding::InitializeSSBO() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void BindlessTextureBinding::UpdateSSBO() {
-    if (!m_SSBODirty || m_HandleData.empty()) {
+void BindlessTextureBinding::UpdateSSBO()
+{
+    if (!m_SSBODirty || m_HandleData.empty())
+    {
         return;
     }
     
@@ -308,7 +300,8 @@ void BindlessTextureBinding::UpdateSSBO() {
     std::vector<uint32_t> flags(MAX_BINDLESS_TEXTURES, 0);            // Initialize to 0
     
     // Fill arrays with actual data
-    for (size_t i = 0; i < m_HandleData.size() && i < MAX_BINDLESS_TEXTURES; ++i) {
+    for (size_t i = 0; i < m_HandleData.size() && i < MAX_BINDLESS_TEXTURES; ++i)
+    {
         const auto& data = m_HandleData[i];
         
         // Convert GLuint64 to uvec2 (2x32-bit) format for shader
@@ -339,7 +332,8 @@ void BindlessTextureBinding::UpdateSSBO() {
     m_SSBODirty = false;
 }
 
-void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textures) {
+void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textures)
+{
     m_HandleData.clear();
     m_HandleData.reserve(textures.size());
     
@@ -359,7 +353,8 @@ void BindlessTextureBinding::UpdateHandleData(const std::vector<Texture>& textur
     m_SSBODirty = true;
 }
 
-uint32_t BindlessTextureBinding::GetTextureTypeIndex(const std::string& type) {
+uint32_t BindlessTextureBinding::GetTextureTypeIndex(const std::string& type)
+{
     if (type == "texture_diffuse") return 0;
     if (type == "texture_normal") return 1;
     if (type == "texture_metallic") return 2;
@@ -371,10 +366,12 @@ uint32_t BindlessTextureBinding::GetTextureTypeIndex(const std::string& type) {
     return 0; // Default to diffuse
 }
 
-void BindlessTextureBinding::SetTextureAvailabilityFlags(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader) {
+void BindlessTextureBinding::SetTextureAvailabilityFlags(const std::vector<Texture>& textures, std::shared_ptr<Shader> shader)
+{
     // Same logic as traditional binding for compatibility
     bool hasDiffuse = false, hasNormal = false, hasMetallic = false, 
-         hasRoughness = false, hasAO = false, hasEmissive = false;
+         hasRoughness = false, hasAO = false, hasEmissive = false,
+		hasSpecular = false, hasHeight = false;
     
     for (const auto& texture : textures) {
         if (texture.type == "texture_diffuse") hasDiffuse = true;
@@ -383,6 +380,8 @@ void BindlessTextureBinding::SetTextureAvailabilityFlags(const std::vector<Textu
         else if (texture.type == "texture_roughness") hasRoughness = true;
         else if (texture.type == "texture_ao") hasAO = true;
         else if (texture.type == "texture_emissive") hasEmissive = true;
+		else if (texture.type == "texture_specular") hasSpecular = true;
+		else if (texture.type == "texture_height") hasHeight = true;
     }
     
     shader->setBool("u_HasDiffuseMap", hasDiffuse);
@@ -391,10 +390,13 @@ void BindlessTextureBinding::SetTextureAvailabilityFlags(const std::vector<Textu
     shader->setBool("u_HasRoughnessMap", hasRoughness);
     shader->setBool("u_HasAOMap", hasAO);
     shader->setBool("u_HasEmissiveMap", hasEmissive);
+	shader->setBool("u_HasSpecularMap", hasSpecular);
+	shader->setBool("u_HasHeightMap", hasHeight);
 }
 
 // Factory implementation
-std::unique_ptr<ITextureBindingSystem> TextureBindingFactory::Create(BindingType type) {
+std::unique_ptr<ITextureBindingSystem> TextureBindingFactory::Create(BindingType type)
+{
     switch (type) {
         case BindingType::Traditional:
             return std::make_unique<TraditionalTextureBinding>();
@@ -407,9 +409,11 @@ std::unique_ptr<ITextureBindingSystem> TextureBindingFactory::Create(BindingType
     }
 }
 
-bool TextureBindingFactory::IsBindlessSupported() {
+bool TextureBindingFactory::IsBindlessSupported()
+{
     // Check if we have a valid OpenGL context by checking if glGetIntegerv is loaded
-    if (!glGetIntegerv) {
+    if (!glGetIntegerv)
+    {
         return false;
     }
     

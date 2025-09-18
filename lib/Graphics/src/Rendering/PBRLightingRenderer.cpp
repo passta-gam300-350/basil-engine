@@ -7,7 +7,7 @@
 
 PBRLightingRenderer::PBRLightingRenderer()
 {
-    std::cout << "PBRLightingRenderer: Initialized as lighting system" << std::endl;
+    std::cout << "PBRLightingRenderer: Initialized as lighting system\n";
 }
 
 void PBRLightingRenderer::ClearLights()
@@ -59,8 +59,7 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
 
 void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
                                                  const FrameData& frameData,
-                                                 const Material* material,
-                                                 const RenderCommands::CommandSortKey& sortKey)
+                                                 const Material* material)
 {
     // For now, we'll use immediate setup since we don't have specific lighting commands yet
     // TODO: Add dedicated lighting commands to RenderCommandBuffer

@@ -2,45 +2,26 @@
 
 #include "../Pipeline/RenderPipeline.h"
 #include "../Utility/RenderData.h"
-#include "../Core/Renderer.h"
+#include "../Utility/FrameData.h"
 #include "../Resources/ResourceManager.h"
 #include <memory>
 #include <unordered_map>
 #include <string>
 #include <vector>
 
-struct FrameData
-{
-    // Shadow mapping data
-    std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
-    std::vector<glm::mat4> shadowMatrices;
-
-
-    // Main rendering output
-    std::shared_ptr<FrameBuffer> mainColorBuffer;
-
-    // Post-processing chain
-    std::shared_ptr<FrameBuffer> postProcessBuffer;
-
-    // Camera data (shared across all pipelines)
-    glm::mat4 viewMatrix = glm::mat4(1.0f);
-    glm::mat4 projectionMatrix = glm::mat4(1.0f);
-    glm::vec3 cameraPosition = glm::vec3(0.0f);
-
-    // Timing data
-    float deltaTime = 0.0f;
-    uint32_t frameNumber = 0;
-};
-
 // Forward declarations for rendering coordinators
-class MeshRenderer;
+//class MeshRenderer;
 class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
 
 class SceneRenderer {
 public:
-    SceneRenderer(GLFWwindow* window);
+    SceneRenderer();
+	SceneRenderer(const SceneRenderer&) = delete;
+	SceneRenderer& operator=(const SceneRenderer&) = delete;
+	SceneRenderer(SceneRenderer&&) = delete;
+	SceneRenderer& operator=(SceneRenderer&&) = delete;
     ~SceneRenderer();
     
     // Data submission API - application pushes data each frame
@@ -81,12 +62,6 @@ private:
 
     // Multi pipelines methods
     void InitializeDefaultPipelines();
-    
-    void UpdateFrameData()
-    {
-        // Camera data is now set directly by applications via GetFrameData()
-        // This method can be used for other frame-level updates if needed
-    }
 
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
@@ -103,11 +78,10 @@ private:
     FrameData m_FrameData;
 
     // Core systems - SceneRenderer owns these
-    std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<ResourceManager> m_ResourceManager;
 
     // Rendering coordinators - SceneRenderer owns these
-    std::unique_ptr<MeshRenderer> m_MeshRenderer;
+    //std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;

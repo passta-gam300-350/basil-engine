@@ -1,13 +1,7 @@
-#include "Rendering/MeshRenderer.h"
+/*#include "Rendering/MeshRenderer.h"
 #include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include "Core/RenderCommandBuffer.h"
-#include "Core/Renderer.h"
-#include <iostream>
-
-MeshRenderer::MeshRenderer(Renderer* renderer) : m_Renderer(renderer)
-{
-}
 
 void MeshRenderer::Render(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
@@ -39,20 +33,14 @@ void MeshRenderer::GenerateDrawCommand(const RenderableData& renderable,
 {
     auto shader = renderable.material->GetShader();
     
-    if (!shader) {
+    if (!shader)
+    {
         return;
     }
 
-    // Generate sort key for efficient batching
-    RenderCommands::CommandSortKey sortKey;
-    sortKey.pass = renderable.renderLayer;  // Use render layer as pass
-    sortKey.material = reinterpret_cast<uintptr_t>(renderable.material.get()) & 0xFFFFFF;
-    sortKey.mesh = reinterpret_cast<uintptr_t>(renderable.mesh.get()) & 0xFFFF;
-    sortKey.instance = 0;  // Could use entity ID if available
-    
     // 1. Bind shader (can be sorted and deduplicated)
     RenderCommands::BindShaderData bindShaderCmd{shader};
-    m_Renderer->Submit(bindShaderCmd, sortKey);
+    m_Renderer->Submit(bindShaderCmd);
     
     // 2. Set uniforms (per-object, cannot be deduplicated)
     RenderCommands::SetUniformsData uniformsCmd{
@@ -62,16 +50,16 @@ void MeshRenderer::GenerateDrawCommand(const RenderableData& renderable,
         projectionMatrix,          // Projection matrix
         cameraPosition             // Camera position
     };
-    m_Renderer->Submit(uniformsCmd, sortKey);
+    m_Renderer->Submit(uniformsCmd);
     
     // 3. Bind textures (can be sorted and deduplicated by material)
     RenderCommands::BindTexturesData texturesCmd{renderable.mesh->textures, shader};
-    m_Renderer->Submit(texturesCmd, sortKey);
+    m_Renderer->Submit(texturesCmd);
     
     // 4. Draw geometry (pure drawing, no state setup)
     RenderCommands::DrawElementsData drawCmd{
         renderable.mesh->GetVertexArray()->GetVAOHandle(), 
         renderable.mesh->GetIndexCount()
     };
-    m_Renderer->Submit(drawCmd, sortKey);
-}
+    m_Renderer->Submit(drawCmd);
+}*/

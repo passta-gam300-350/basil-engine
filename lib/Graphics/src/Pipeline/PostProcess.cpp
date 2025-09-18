@@ -1,5 +1,5 @@
 #include "../../include/Pipeline/PostProcess.h"
-#include <glad/gl.h>
+#include <glad/glad.h>
 
 PostProcessEffect::PostProcessEffect(const std::string& name, const std::shared_ptr<Shader>& shader)
 	: m_Name(name), m_Shader(shader)

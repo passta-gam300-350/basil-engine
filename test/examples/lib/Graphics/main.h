@@ -1,13 +1,10 @@
 #pragma once
 
 #include <Core/Window.h>
-#include <Core/Renderer.h>
 #include <Scene/SceneRenderer.h>
 #include <Resources/ResourceManager.h>
 #include <Utility/Camera.h>
-#include <Rendering/InstancedRenderer.h>
-#include <Rendering/PBRLightingRenderer.h>
-
+#include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,7 +12,6 @@
 #include <vector>
 #include <string>
 #include <chrono>
-#include <unordered_map>
 
 class GraphicsTestDriver 
 {
@@ -30,7 +26,6 @@ public:
 private:
     // Core systems
     std::unique_ptr<Window> m_Window;
-    Renderer* m_Renderer;
     std::unique_ptr<SceneRenderer> m_SceneRenderer;
     ResourceManager* m_ResourceManager;
     std::unique_ptr<Camera> m_Camera;
@@ -57,11 +52,9 @@ private:
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
     
     void ProcessInput();
-    void UpdateCamera();
 
     // Advanced demo scene
     void SetupAdvancedScene();
-    void UpdateAdvancedScene();
 
     // Resource loading
     bool LoadTestResources();
