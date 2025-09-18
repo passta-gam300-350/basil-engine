@@ -50,7 +50,7 @@ namespace detail {
     };
     constexpr std::uint32_t NOT_MARKED{ 0ul };
     constexpr std::uint32_t MARKED{ 1ul };
-    constexpr std::uint64_t DEFAULT_BUCKET_SIZE{ 16 };
+    constexpr std::uint64_t DEFAULT_BUCKET_SIZE{ 32 };
 }
 
 //lock free hash table
@@ -68,6 +68,7 @@ struct hashtable {
     struct iterator {};
 
     static_assert(std::is_trivially_copyable<markedptr>::value, "markedptr_t must be trivially copyable");
+    static_assert(std::is_default_constructible<detail::node<K,T>>::value, "supplied key type and value type must be default constructible");
 
 public:
     hashtable(std::uint64_t size = detail::DEFAULT_BUCKET_SIZE) : _allocator{}, _bucket_list{ new std::atomic<markedptr>[size] {} }, _bucket_size{size} {}
@@ -108,6 +109,9 @@ public:
     iterator find(key key_v);
     iterator begin();
     iterator end();
+    bool exist(key key_v) {
+        return hash_search(key_v);
+    }
 
     void emplace(key key_v) {
         hash_insert(key_v);

@@ -18,6 +18,10 @@
 // Job graph node definitions
 //------------------------------------------------------------------------------
 
+namespace Detail {
+    constexpr int _DepTerminated{-4};
+}
+
 struct JobNodeBase {
     struct DepNode {
         std::weak_ptr<JobNodeBase> child;
@@ -25,6 +29,7 @@ struct JobNodeBase {
     };
 
     std::function<void()>                    run;
+    std::function<void()>                    kill;
     std::atomic<DepNode*>                    out{ nullptr };
     std::atomic<int>                         pending{ 0 };
     std::atomic<bool>                        enqueued{ false };
@@ -65,13 +70,14 @@ public:
     }
 
     // Pop a cell; blocks until a cell is available or shutdown is signaled
-    JobCell* pop() {
+    std::pair<bool, JobCell*> pop() {
         std::unique_lock<std::mutex> lk(_mtx);
-        _cv.wait(lk, [&] { return !_q.empty() || _shutdown; });
-        if (_q.empty()) return nullptr;
+        bool _should_kill{false};
+        _cv.wait(lk, [&] { _should_kill = _shutdown; return !_q.empty() || _should_kill; });
+        if (_q.empty()) return { _should_kill, nullptr };
         JobCell* cell = _q.front();
         _q.pop_front();
-        return cell;
+        return { _should_kill, cell };
     }
 
     // Wake all waiting threads (on shutdown)
@@ -105,6 +111,28 @@ private:
 
 class JobSystem {
 public:
+    struct JobException : public std::exception {
+        JobException() = default;
+        explicit JobException(char const* const msg) noexcept
+            : m_Msg(msg)
+        {}
+        JobException(JobException const& _Other) = default;
+        JobException& operator=(JobException const& _Other) noexcept
+        {
+            m_Msg = _Other.m_Msg;
+            return *this;
+        }
+        ~JobException() = default;
+
+        char const* what() const
+        {
+            return m_Msg.c_str();
+        }
+
+        std::string m_Msg;
+    };
+
+
     explicit JobSystem(size_t numThreads = std::thread::hardware_concurrency()) {
         if (numThreads == 0) numThreads = 1;
         for (size_t i = 0; i < numThreads; ++i) {
@@ -172,6 +200,7 @@ public:
             }
         }
         raw->pending.store(cnt, std::memory_order_relaxed);
+        raw->kill = [raw]() { static_cast<JobNode<R>*>(raw)->prom.set_exception(std::make_exception_ptr(JobException("Job Terminated"))); };
 
         // 5) Prepare handle + future
         JobHandle handle{ node_sp };
@@ -192,7 +221,7 @@ public:
 
         // Drain + run leftover jobs so all promises are satisfied
         _queue.drain([&](JobCell* cell) {
-            runCell(cell);
+            killCell(cell);
             });
     }
 
@@ -207,9 +236,10 @@ private:
     // Worker thread body
     void workerLoop() {
         while (true) {
-            JobCell* cell = _queue.pop();
+            auto result = _queue.pop();
+            JobCell* cell = result.second;
             if (!cell) break;   // shutdown signaled
-            runCell(cell);
+            result.first || cell->node->pending.load(std::memory_order_acquire) == Detail::_DepTerminated ? killCell(cell) : runCell(cell);
         }
     }
 
@@ -237,6 +267,27 @@ private:
                 if (prev == 1) {
                     enqueue(dep.get());
                 }
+            }
+            std::atomic_thread_fence(std::memory_order_release);
+            node_sp->out.store(dep_node->next, std::memory_order_relaxed);
+            delete dep_node;
+        }
+    }
+
+    //killcell and terminate the job returns  joberrro sys termrinate
+    void killCell(JobCell* cell) {
+        auto node_sp = cell->node;  // keep node alive
+        delete cell;                // destroys the only shared_ptr
+
+        // Run the task and set the promise
+        node_sp->kill();
+
+        // Trigger dependent jobs
+        while (node_sp->out) {
+            auto dep_node = node_sp->out.load(std::memory_order_relaxed);
+            if (auto dep = dep_node->child.lock()) {
+                dep->pending.store(Detail::_DepTerminated, std::memory_order_relaxed);
+                enqueue(dep.get());
             }
             std::atomic_thread_fence(std::memory_order_release);
             node_sp->out.store(dep_node->next, std::memory_order_relaxed);
