@@ -50,13 +50,11 @@ template <typename Node>
 void SerializeType(const entt::meta_any &obj, Node&out) {
     auto type = obj.type();
 
-    for (auto data : type.data()) {
-        auto name_prop = data.prop("name"_tn);
-        std::string field_name = name_prop ? name_prop.value().cast<std::string>()
-                                           : std::string(data.id().data());
-
-        auto value = data.get(obj);
+    for (auto [id, data] : type.data()) {
+        std::string field_name{ data.type().info().name().data() };
         
+        auto value = data.get(obj);
+
         if (value.type().data().begin() != value.type().data().end()) {
             Node nested;
             SerializeType(value, nested);
@@ -94,6 +92,71 @@ Node SerializeEntity(entt::registry& reg, entt::entity e) {
     return entity_node;
 }
 
+//templated deserialiser, Node must overload[](std::string const&)
+template<typename Node>
+void DeserializeType(const Node& in, entt::meta_any& obj) {
+    const auto type = obj.type();
+
+    // Iterate over all reflected data members
+    for (auto [id, data] : type.data()) {
+        std::string field_name{ data.type().info().name().data()};
+
+        // Skip if YAML doesn't have this field
+        if (!in[field_name]) {
+            continue;
+        }
+
+        const auto member_type = data.type();
+        const auto mid = member_type.id();
+
+        // If the member type itself has reflected members, recurse
+        if (member_type.data().begin() != member_type.data().end()) {
+            entt::meta_any nested = member_type.construct();
+            DeserializeType(in[field_name], nested);
+            data.set(obj, nested);
+            continue;
+        }
+
+        // Handle primitive types by type_hash ID
+        if (mid == entt::type_hash<int>::value()) {
+            data.set(obj, in[field_name].template as<int>());
+        }
+        else if (mid == entt::type_hash<float>::value()) {
+            data.set(obj, in[field_name].template as<float>());
+        }
+        else if (mid == entt::type_hash<double>::value()) {
+            data.set(obj, in[field_name].template as<double>());
+        }
+        else if (mid == entt::type_hash<std::string>::value()) {
+            data.set(obj, in[field_name].template as<std::string>());
+        }
+        else if (mid == entt::type_hash<bool>::value()) {
+            data.set(obj, in[field_name].template as<bool>());
+        }
+    }
+}
+
+
+
+//templated deserialiser, Node must overload[](std::string const&)
+template<typename Node>
+void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
+    auto e = reg.create();
+    const auto& components = entity_node["Entity"];
+
+    for (auto& [type_id, meta_type] : ReflectionRegistry::types()) {
+        std::string comp_name = meta_type.info().name().data();
+        if (components[comp_name]) {
+            entt::meta_any comp = meta_type.construct();
+            DeserializeType(components[comp_name], comp);
+
+            // Call the registered emplace function
+            meta_type.func("emplace"_tn).invoke({}, std::ref(reg), e, comp);
+        }
+    }
+}
+
+
 
 /***********************/
 /*        usage        */
@@ -106,6 +169,7 @@ namespace {                                                                     
     struct COMPONENT_TYPE##{                                                                                             \
         COMPONENT_TYPE##() {                                                                                             \
             entt::meta<COMPONENT_TYPE>().type(#COMPONENT_TYPE##_tn) __VA_ARGS__;                                         \
+            entt::meta<COMPONENT_TYPE>().func<&entt::registry::emplace<COMPONENT_TYPE>, entt::as_void_t>("emplace"_tn);  \
             ReflectionRegistry::BinSerializerRegistryInstance().push_back(                                               \
                 [](entt::snapshot& snap, std::ostream& os) { snap.component<COMPONENT_TYPE>(os); },                      \
                 [](entt::snapshot_loader& loader, std::istream& is) { loader.component<COMPONENT_TYPE>(is); }            \
@@ -119,6 +183,7 @@ template<typename T, typename... MemberPairs>
 void RegisterReflectionComponent(std::string_view name, MemberPairs&&... members) {
     auto meta_type = entt::meta<T>().type(entt::hashed_string{ name.data() });
     (meta_type.data(members.first, members.second), ...);
+    meta_type.func<&entt::registry::emplace<T>, entt::as_void_t>("emplace"_tn);
     ReflectionRegistry::types()[entt::type_hash<T>::value()] = meta_type;
     ReflectionRegistry::BinSerializerRegistryInstance().push_back({
         [](entt::snapshot& snap, std::ostream& os) { 

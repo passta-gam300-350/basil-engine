@@ -47,6 +47,10 @@ namespace ecs {
 		void serialise_world_bin(std::string const& outputFilename);
 		void deserialise_world_bin(std::string const& inputFilename);
 
+		void LoadYAML(std::string const&);
+		void UnloadNonGlobals();
+		void UnloadAll();
+
 		static world new_world_instance();
 		consteval world() = default;
 		world(std::uint32_t hdl) : impl(hdl) {}
