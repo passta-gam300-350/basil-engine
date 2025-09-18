@@ -7,6 +7,8 @@
 
 #include <entt/entity/snapshot.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 namespace ecs {
 
 	std::unique_ptr<std::vector<entt::registry>> worlds{};
@@ -123,6 +125,20 @@ namespace ecs {
 	{
 		worlds.reset();
 		world_systems.reset();
+	}
+
+	void world::LoadYAML(std::string const& path) {
+		YAML::Node root{YAML::LoadFile(path)};
+		for (const auto& entity_node : root) {
+			DeserializeEntity(impl.get_registry(), entity_node);
+		}
+	}
+
+	void world::UnloadNonGlobals() {
+		
+	}
+	void world::UnloadAll() {
+		impl.get_registry().clear();
 	}
 
 }
