@@ -1,5 +1,5 @@
 #include <Buffer/FrameBuffer.h>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <iostream>
 
 namespace Utils

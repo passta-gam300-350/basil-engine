@@ -1,5 +1,5 @@
 #include "../../include/Core/Window.h"
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <iostream>
 
 Window::Window(const std::string& title, uint32_t width, uint32_t height)
@@ -28,7 +28,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	// Make this window's context current (moved from Window class)
 	glfwMakeContextCurrent(m_Window);
 
-	if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+	if (!gladLoadGL())
 	{
 		std::cerr << "Failed to initialize GLAD2\n";
 		return;

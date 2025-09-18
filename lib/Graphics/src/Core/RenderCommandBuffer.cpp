@@ -1,6 +1,6 @@
 #include "Core/RenderCommandBuffer.h"
 #include "Resources/TextureBindingSystem.h"
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <algorithm>
 #include <spdlog/spdlog.h>
 

@@ -2,7 +2,6 @@
 #include "Scene/SceneRenderer.h"
 #include "Utility/RenderData.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 
 std::vector<RenderableData> FrustumCuller::CullRenderables(const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
