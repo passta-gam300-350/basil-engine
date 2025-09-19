@@ -7,5 +7,6 @@
 #include "ecs/internal/query.h"
 #include "ecs/system/scheduler.h"
 #include "ecs/system/system.h"
+#include "ecs/internal/reflection.h"
 
 #endif;
