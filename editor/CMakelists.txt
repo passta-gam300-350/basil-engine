@@ -40,11 +40,12 @@ endforeach()
 
 
 set(ALL_LIBS
-  #PRIVATE EnTT::EnTT
-  #PRIVATE assimp::assimp
-  PUBLIC engine
-  PUBLIC imgui
-PUBLIC imgui_backends
+    #PRIVATE EnTT::EnTT
+    PRIVATE assimp::assimp
+    PUBLIC imxml_lib
+    PUBLIC engine
+    PUBLIC imgui
+    PUBLIC imgui_backends
 )
 
 
