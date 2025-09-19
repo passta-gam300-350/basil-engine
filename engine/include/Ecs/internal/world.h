@@ -14,7 +14,7 @@ namespace ecs {
 
 	struct world {
 		using world_id_t = uint32_t;
-		static constexpr world_id_t invalid_handle{ ~0x0UL };
+		static constexpr world_id_t invalid_handle{ null_handle31 };
 
 		//Do not use. struct for implementation use only
 		struct detail {
@@ -24,7 +24,7 @@ namespace ecs {
 			static std::uint32_t entity_id_cast(entt::entity);
 			ecs::entity entity_cast(entt::entity) const;
 
-			consteval detail() : handle{ world::invalid_handle } {}
+			detail() : handle{ world::invalid_handle } {}
 			detail(world_id_t hdl) : handle{ hdl } {}
 			detail(detail const& dt) : handle{ dt.handle } {}
 			~detail() {}
@@ -48,18 +48,17 @@ namespace ecs {
 		void deserialise_world_bin(std::string const& inputFilename);
 
 		void LoadYAML(std::string const&);
+		void SaveYAML(std::string const&);
 		void UnloadNonGlobals();
 		void UnloadAll();
 
 		static world new_world_instance();
-		consteval world() = default;
+		world() = default;
 		world(std::uint32_t hdl) : impl(hdl) {}
 		world(world const& wrld) : impl(wrld.impl) {}
 
-		operator bool() {
-			return impl.handle != invalid_handle;
-		}
-		operator std::uint32_t() {
+		operator bool() const;
+		operator std::uint32_t() const {
 			return impl.handle;
 		}
 
@@ -105,26 +104,44 @@ namespace ecs {
 
 		auto disable_system();
 
+		bool is_valid(entity);
+
 		world::detail impl;
 	};
 
 	struct WorldRegistry {
 	private:
+		struct HandleEntry {
+			std::uint32_t m_Idx : 31;
+			std::uint32_t m_Destroy : 1;
+			
+			HandleEntry() = default;
+			HandleEntry(std::uint32_t id) : m_Idx{ id }, m_Destroy{} {}
+
+			operator bool() const {
+				return m_Destroy ^ 1;
+			}
+			operator std::uint32_t() const {
+				return m_Idx;
+			}
+		};
 		std::vector<std::pair<std::uint32_t, entt::registry>> m_packed_worlds;
-		std::vector<std::pair<std::uint32_t, std::uint32_t>> m_sparse_handles; //no paging, unlikely to have too many worlds //first handle, second freelist next
+		std::vector<HandleEntry> m_sparse_handles; //no paging, unlikely to have too many worlds
 		std::uint32_t m_FreeList;
 
-		WorldRegistry() : m_packed_worlds{}, m_sparse_handles{}, m_FreeList{null_handle32} {}; //pseudo singleton
+		WorldRegistry() : m_packed_worlds{}, m_sparse_handles{}, m_FreeList{null_handle31} {}; //pseudo singleton
 		
 	public:
 		static WorldRegistry& Instance();
 		static world NewWorld();
 		static void EraseWorld(world);
 		static void Clear();
+
+		static bool Exists(world);
 		
 		entt::registry& operator[](int);
 
-		~WorldRegistry();
+		~WorldRegistry() = default;
 	};
 
 	template<typename component_t, typename ...c_args>
@@ -142,7 +159,7 @@ namespace ecs {
 	template<typename ...component_ts>
 	inline void world::remove_component_from_entity(entity enty)
 	{
-		impl.get_registry().remove<component_ts...>(enty);
+		impl.get_registry().remove<component_ts...>(detail::entt_entity_cast(enty));
 	}
 
 	template<typename ...component_ts>

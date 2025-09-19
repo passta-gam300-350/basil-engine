@@ -53,6 +53,24 @@ namespace ecs {
 			return iterator(world_handle, entities.end());
 		}
 
+		//this is not accurate bte, its an estimate
+		std::size_t size_hint() {
+			return entities.size_hint();
+		}
+
+		//some overhead
+		std::size_t size() {
+			std::size_t sz{};
+			for (auto i = entities.begin(); i != entities.end(); i++) {
+				sz++;
+			}
+			return sz;
+		}
+
+		entity front() {
+			return *begin();
+		}
+
 		entity_range operator|(entity_range const& rhs) {
 			assert(rhs.world_handle == world_handle && "disjoint set of entities. entities are not from the same world!");
 			return entity_range(world_handle, rhs.entities | entities);

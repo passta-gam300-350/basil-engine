@@ -14,12 +14,12 @@ Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
+#include <Core/Window.h>
 #include "./Input/InputManager.h"
 #include "./Messaging/Message.h"
 #include "./Messaging/Messaging_System.h"
 #include "./Messaging/Subscriber.h"
 #include "Engine.hpp"
-#include <Core/Window.h>
 
 InputManager* InputManager::instance = nullptr;
 const float DEAD_ZONE = 0.25f; //  Adjustable

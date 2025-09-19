@@ -66,26 +66,41 @@ namespace ecs {
 		WorldRegistry::EraseWorld(*this);
 	}
 
+	world::operator bool() const {
+		return impl.handle != invalid_handle && WorldRegistry::Exists(*this);
+	}
+
+	bool world::is_valid(entity e) {
+		return impl.get_registry().valid(detail::entt_entity_cast(e.get_uid()));
+	}
+
 	WorldRegistry& WorldRegistry::Instance() {
 		static WorldRegistry reg_instance{};
 		return reg_instance;
 	}
 
+	bool WorldRegistry::Exists(world w) {
+		WorldRegistry& wreg{ Instance() };
+		return w.impl.handle < wreg.m_sparse_handles.size() && wreg.m_sparse_handles[w.impl.handle];
+	}
+
 	world WorldRegistry::NewWorld() {
 		WorldRegistry& wreg{ Instance() };
-		if (wreg.m_FreeList == null_handle32) {
+		if (wreg.m_FreeList == null_handle31) {
 			std::uint32_t internal_id{ static_cast<std::uint32_t>(wreg.m_packed_worlds.size()) };
 			std::uint32_t hdl{ static_cast<std::uint32_t>(wreg.m_sparse_handles.size()) };
 			wreg.m_packed_worlds.emplace_back(hdl, entt::registry());
-			wreg.m_sparse_handles.emplace_back(internal_id, null_handle32);
+			wreg.m_sparse_handles.emplace_back(internal_id);
 			return world(hdl);
 		}
 		else {
 			std::uint32_t hdl{ wreg.m_FreeList };
 			std::uint32_t internal_id{ static_cast<std::uint32_t>(wreg.m_packed_worlds.size()) };
-			wreg.m_FreeList = wreg.m_sparse_handles[wreg.m_FreeList].second;
+			wreg.m_FreeList = wreg.m_sparse_handles[wreg.m_FreeList].m_Idx;
 			wreg.m_packed_worlds.emplace_back(hdl, entt::registry());
-			wreg.m_sparse_handles[hdl] = std::make_pair(internal_id, null_handle32);
+			wreg.m_sparse_handles[hdl].m_Idx = internal_id;
+			wreg.m_sparse_handles[hdl].m_Destroy = 0;
+			return world(hdl);
 		}
 	}
 
@@ -95,24 +110,26 @@ namespace ecs {
 			wreg.m_packed_worlds.clear();
 		}
 		else {
-			wreg.m_sparse_handles[wreg.m_packed_worlds.back().first].first = wreg.m_sparse_handles[wrld.impl.handle].first;
-			std::swap(wreg.m_packed_worlds[wreg.m_sparse_handles[wrld.impl.handle].first], wreg.m_packed_worlds.back());
+			wreg.m_sparse_handles[wreg.m_packed_worlds.back().first].m_Idx = wreg.m_sparse_handles[wrld.impl.handle].m_Idx;
+			std::swap(wreg.m_packed_worlds[wreg.m_sparse_handles[wrld.impl.handle].m_Idx], wreg.m_packed_worlds.back());
 			wreg.m_packed_worlds.pop_back();
 		}
-		wreg.m_sparse_handles[wrld.impl.handle].second = wreg.m_FreeList;
+		wreg.m_sparse_handles[wrld.impl.handle].m_Idx = wreg.m_FreeList;
+		wreg.m_sparse_handles[wrld.impl.handle].m_Destroy = 1;
 		wreg.m_FreeList = wrld.impl.handle;
 	}
 
 	void WorldRegistry::Clear() {
 		WorldRegistry& wreg{ Instance() };
-		wreg.m_FreeList = null_handle32;
+		wreg.m_FreeList = null_handle31;
 		wreg.m_packed_worlds.clear();
 		wreg.m_sparse_handles.clear();
 	}
 
 	entt::registry& WorldRegistry::operator[](int idx) {
 		WorldRegistry& wreg{ Instance() };
-		return wreg.m_packed_worlds[wreg.m_sparse_handles[idx].first].second;
+		assert(wreg.m_sparse_handles[idx].m_Idx != null_handle31);
+		return wreg.m_packed_worlds[wreg.m_sparse_handles[idx].m_Idx].second;
 	}
 
 	void world::serialise_world_bin(std::string const& outputFilename) {
@@ -167,6 +184,15 @@ namespace ecs {
 		YAML::Node root{YAML::LoadFile(path)};
 		for (const auto& entity_node : root) {
 			DeserializeEntity(impl.get_registry(), entity_node);
+		}
+	}
+
+	void world::SaveYAML(std::string const& path) {
+		YAML::Node root{  };
+		entt::registry& reg{ impl.get_registry() };
+		auto allentities = reg.view<entt::entity>();
+		for (const auto& entity : allentities) {
+			root = SerializeEntity<YAML::Node>(reg, entity);
 		}
 	}
 

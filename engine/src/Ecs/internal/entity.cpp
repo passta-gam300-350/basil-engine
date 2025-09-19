@@ -20,6 +20,10 @@ namespace ecs {
 		invalidate();
 	}
 
+	entity::operator bool() const {
+		return WorldRegistry::Exists(world(get_world_handle())) && world(get_world_handle()).is_valid(*this);
+	}
+
 	std::string& entity::name() {
 		return get<entity_name_t>().m_name;
 	}
