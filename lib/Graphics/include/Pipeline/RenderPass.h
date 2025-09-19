@@ -19,6 +19,9 @@ public:
 	virtual void Execute(RenderContext& context) = 0;
 	void End();
 
+	// Setup the command buffer with required systems from context
+	void SetupCommandBuffer(RenderContext& context);
+
 	std::shared_ptr<FrameBuffer> GetFramebuffer() const { return m_Framebuffer; }
 	const std::string& GetName() const { return m_Name; }
 

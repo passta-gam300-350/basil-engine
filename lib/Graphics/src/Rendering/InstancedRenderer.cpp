@@ -5,7 +5,7 @@
 #include "Utility/RenderData.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 InstancedRenderer::InstancedRenderer(PBRLightingRenderer* lighting)
     : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false), m_PBRLighting(lighting)
@@ -20,7 +20,6 @@ InstancedRenderer::~InstancedRenderer()
 void InstancedRenderer::BeginInstanceBatch()
 {
     if (m_BatchActive) {
-        //std::cerr << "Warning: Instance batch already active" << std::endl;
         return;
     }
     
@@ -37,12 +36,12 @@ void InstancedRenderer::BeginInstanceBatch()
 void InstancedRenderer::AddInstance(const std::string& meshId, const InstanceData& instance)
 {
     if (!m_BatchActive) {
-        std::cerr << "Error: Must call BeginInstanceBatch() first" << std::endl;
+        spdlog::error("Must call BeginInstanceBatch() first");
         return;
     }
     
     if (m_TotalInstances >= m_MaxInstances) {
-        std::cerr << "Warning: Exceeded maximum instances (" << m_MaxInstances << ")" << std::endl;
+        spdlog::warn("Exceeded maximum instances ({})", m_MaxInstances);
         return;
     }
     
@@ -55,7 +54,7 @@ void InstancedRenderer::AddInstance(const std::string& meshId, const InstanceDat
 void InstancedRenderer::EndInstanceBatch()
 {
     if (!m_BatchActive) {
-        std::cerr << "Warning: No active instance batch" << std::endl;
+        spdlog::warn("No active instance batch");
         return;
     }
     
@@ -68,8 +67,6 @@ void InstancedRenderer::EndInstanceBatch()
         }
     }
     
-    /*std::cout << "InstancedRenderer: Batch completed with " << m_TotalInstances << " instances across " 
-              << m_MeshInstances.size() << " mesh types" << std::endl;*/
 }
 
 void InstancedRenderer::Clear()
@@ -104,8 +101,6 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
     
     meshInstances.dirty = false;
     
-    /*std::cout << "InstancedRenderer: Updated SSBO for '" << meshId << "' with "
-              << instances.size() << " full instance data entries" << std::endl;*/
 }
 
 void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
@@ -132,7 +127,6 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     Clear();
     BeginInstanceBatch();
 
-    //std::cout << "BuildDynamicInstanceData: Processing " << renderables.size() << " renderables" << std::endl;
 
     // Group renderables by mesh for instancing
     for (size_t i = 0; i < renderables.size(); ++i) {
@@ -145,10 +139,6 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         // Materials are per-instance, textures are per-mesh
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
 
-        /*std::cout << "Renderable[" << i << "]: meshId=" << meshId
-                  << ", materialName=" << renderable.material->GetName()
-                  << ", textureCount=" << renderable.mesh->textures.size()
-                  << ", vertices=" << renderable.mesh->vertices.size() << std::endl;*/
         
         // Add instance data with actual material properties
         InstanceData instanceData;
@@ -166,10 +156,6 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         AddInstance(meshId, instanceData);
     }
     
-    /*std::cout << "Final mesh groups: " << m_MeshInstances.size() << std::endl;
-    for (const auto& pair : m_MeshInstances) {
-        std::cout << "  MeshID " << pair.first << ": " << pair.second.instances.size() << " instances" << std::endl;
-    }*/
     
     // End instance batch to update SSBOs
     EndInstanceBatch();
@@ -177,42 +163,38 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
 
 void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData)
 {
-    //std::cout << "InstancedRenderer::RenderInstancedMeshToPass called for '" << meshId << "'" << std::endl;
 
     auto meshIt = m_MeshInstances.find(meshId);
     if (meshIt == m_MeshInstances.end()) {
-        //std::cerr << "Error: No mesh instances found for '" << meshId << "'" << std::endl;
         return;
     }
 
     if (meshIt->second.instances.empty()) {
-        //std::cerr << "Error: No instances for mesh '" << meshId << "'" << std::endl;
         return;
     }
 
     const auto& meshInstances = meshIt->second;
-    //std::cout << "Found " << meshInstances.instances.size() << " instances for '" << meshId << "'" << std::endl;
 
     auto ssboIt = m_InstanceSSBOs.find(meshId);
     if (ssboIt == m_InstanceSSBOs.end()) {
-        std::cerr << "Error: No SSBO for mesh '" << meshId << "'" << std::endl;
+        spdlog::error("No SSBO for mesh '{}'", meshId);
         return;
     }
 
     // Get mesh and material (these should be set from Scene data)
     if (!meshInstances.mesh) {
-        std::cerr << "Error: Missing mesh for '" << meshId << "'" << std::endl;
+        spdlog::error("Missing mesh for '{}'", meshId);
         return;
     }
 
     if (!meshInstances.material) {
-        std::cerr << "Error: Missing material for '" << meshId << "'" << std::endl;
+        spdlog::error("Missing material for '{}'", meshId);
         return;
     }
 
     auto shader = meshInstances.material->GetShader();
     if (!shader) {
-        std::cerr << "Error: No shader for material in '" << meshId << "'" << std::endl;
+        spdlog::error("No shader for material in '{}'", meshId);
         return;
     }
 
@@ -244,7 +226,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         // Apply lighting uniforms only (no per-instance material data)
         m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
     } else {
-        std::cerr << "Warning: PBRLightingRenderer not available for lighting setup" << std::endl;
+        spdlog::warn("PBRLightingRenderer not available for lighting setup");
     }
 
     // 5. Set shadow mapping uniforms if available
@@ -255,7 +237,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
             shader,
             frameData.shadowMatrices[0],
             shadowTexID,
-            15  // Use texture unit 15 for shadow map
+            8  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
         };
         renderPass.Submit(shadowCmd);
     }
@@ -276,19 +258,17 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     };
     renderPass.Submit(drawCmd);
 
-    /*std::cout << "InstancedRenderer: Submitted instanced draw to pass for '" << meshId
-              << "' with " << meshInstances.instances.size() << " instances" << std::endl;*/
 }
 
 void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
 {
     if (!mesh) {
-        std::cerr << "InstancedRenderer::SetMeshData: NULL mesh provided for '" << meshId << "'" << std::endl;
+        spdlog::error("InstancedRenderer::SetMeshData: NULL mesh provided for '{}'", meshId);
         return;
     }
 
     if (!material) {
-        std::cerr << "InstancedRenderer::SetMeshData: NULL material provided for '" << meshId << "'" << std::endl;
+        spdlog::error("InstancedRenderer::SetMeshData: NULL material provided for '{}'", meshId);
         return;
     }
 

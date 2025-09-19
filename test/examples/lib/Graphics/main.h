@@ -30,7 +30,7 @@ private:
     ResourceManager* m_ResourceManager;
     std::unique_ptr<Camera> m_Camera;
 
-    // Advanced Graphics Demo: Instanced + Bindless + PBR
+    // Advanced Graphics Demo: Instanced + Traditional Textures + PBR
 
     // Scene objects
     std::vector<RenderableData> m_SceneObjects;

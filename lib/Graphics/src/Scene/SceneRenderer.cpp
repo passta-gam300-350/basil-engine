@@ -12,6 +12,9 @@ SceneRenderer::SceneRenderer()
     m_ResourceManager = std::make_unique<ResourceManager>();
     m_ResourceManager->Initialize();
 
+    // Initialize texture slot manager
+    m_TextureSlotManager = std::make_unique<TextureSlotManager>();
+
     // Initialize rendering coordinators with dependencies
     InitializeRenderingCoordinators();
     InitializeDefaultPipelines();
@@ -120,7 +123,8 @@ void SceneRenderer::Render()
         m_FrameData,             // mutable ref to frame data
         *m_InstancedRenderer,    // ref to instanced renderer
         *m_PBRLightingRenderer,  // ref to PBR lighting
-        *m_ResourceManager       // ref to resource manager
+        *m_ResourceManager,      // ref to resource manager
+        *m_TextureSlotManager    // ref to texture slot manager
     );
 
     // Execute pipelines in order with shared context

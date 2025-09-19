@@ -1,5 +1,5 @@
 #include <Resources/Texture.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <glad/glad.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -54,7 +54,7 @@ TextureData TextureLoader::LoadFromFile(const char* path, const std::string& dir
     if (textureData.pixels) {
         textureData.isValid = true;
     } else {
-        std::cout << "Texture failed to load at path: " << filename << std::endl;
+        spdlog::error("Texture failed to load at path: {}", filename);
         textureData.isValid = false;
     }
     

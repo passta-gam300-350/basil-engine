@@ -1,5 +1,5 @@
 #include "Buffer/ShaderStorageBuffer.h"
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <cassert>
 
 ShaderStorageBuffer::ShaderStorageBuffer(const void* data, uint32_t size, GLenum usage)
@@ -101,7 +101,7 @@ void* ShaderStorageBuffer::Map(GLenum access)
     if (ptr) {
         m_IsMapped = true;
     } else {
-        std::cerr << "Failed to map SSBO" << std::endl;
+        spdlog::error("Failed to map SSBO");
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
     
@@ -116,7 +116,7 @@ void ShaderStorageBuffer::Unmap()
     if (glUnmapBuffer(GL_SHADER_STORAGE_BUFFER)) {
         m_IsMapped = false;
     } else {
-        std::cerr << "Failed to unmap SSBO - data corruption possible" << std::endl;
+        spdlog::error("Failed to unmap SSBO - data corruption possible");
     }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

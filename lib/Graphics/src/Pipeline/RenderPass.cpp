@@ -6,7 +6,13 @@ RenderPass::RenderPass(const std::string& name, const FBOSpecs& spec)
 {
 	// Create pass-isolated command buffer for state isolation
 	m_PassCommandBuffer = std::make_unique<RenderCommandBuffer>();
-	m_PassCommandBuffer->Initialize();
+	// TextureSlotManager will be set during Execute() from RenderContext
+}
+
+void RenderPass::SetupCommandBuffer(RenderContext& context)
+{
+	// Setup the command buffer's TextureSlotManager from the context
+	m_PassCommandBuffer->SetTextureSlotManager(&context.textureSlotManager);
 }
 
 void RenderPass::Begin()

@@ -6,7 +6,7 @@
 #include <Resources/PrimitiveGenerator.h>
 #include <Utility/Light.h>
 
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <iomanip>
 #include <cmath>
 #include <random>
@@ -48,13 +48,13 @@ GraphicsTestDriver::~GraphicsTestDriver()
 
 bool GraphicsTestDriver::Initialize()
 {
-    std::cout << "=== Graphics Library Test Driver ===\n";
-    std::cout << "Initializing graphics systems...\n\n";
+    spdlog::info("=== Graphics Library Test Driver ===");
+    spdlog::info("Initializing graphics systems...");
 
     // Create window
     m_Window = std::make_unique<Window>("Graphics Library Test Driver", 1280, 720);
     if (!m_Window->GetNativeWindow()) {
-        std::cerr << "Failed to create window!\n";
+        spdlog::error("Failed to create window!");
         return false;
     }
 
@@ -80,7 +80,7 @@ bool GraphicsTestDriver::Initialize()
 
     // Load resources
     if (!LoadTestResources()) {
-        std::cerr << "Failed to load test resources!\n";
+        spdlog::error("Failed to load test resources!");
         return false;
     }
 
@@ -94,20 +94,20 @@ bool GraphicsTestDriver::Initialize()
 
     m_LastFrameTime = std::chrono::steady_clock::now();
 
-    std::cout << "Graphics system initialized successfully!\n\n";
+    spdlog::info("Graphics system initialized successfully!");
     return true;
 }
 
 void GraphicsTestDriver::Run()
 {
-    std::cout << "Starting render loop...\n";
-    std::cout << "Advanced Graphics Demo - Instanced + Bindless + PBR\n";
-    std::cout << "Controls:\n";
-    std::cout << "  - WASD: Move camera\n";
-    std::cout << "  - Mouse: Look around\n";
-    std::cout << "  - ESC: Exit\n";
-    std::cout << "  - F1: Toggle camera controls\n";
-    std::cout << "  - F2: Print scene info\n\n";
+    spdlog::info("Starting render loop...");
+    spdlog::info("Advanced Graphics Demo - Instanced + Traditional Textures + PBR");
+    spdlog::info("Controls:");
+    spdlog::info("  - WASD: Move camera");
+    spdlog::info("  - Mouse: Look around");
+    spdlog::info("  - ESC: Exit");
+    spdlog::info("  - F1: Toggle camera controls");
+    spdlog::info("  - F2: Print scene info");
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -148,12 +148,12 @@ void GraphicsTestDriver::Run()
         m_Window->PollEvents();
     }
 
-    std::cout << "Render loop ended.\n";
+    spdlog::info("Render loop ended.");
 }
 
 void GraphicsTestDriver::Shutdown()
 {
-    std::cout << "Shutting down graphics systems...\n";
+    spdlog::info("Shutting down graphics systems...");
 
     // Clear scene data first
     m_SceneObjects.clear();
@@ -167,12 +167,12 @@ void GraphicsTestDriver::Shutdown()
     // Clear pointers (they're just references now, not owners)
     m_ResourceManager = nullptr;
 
-    std::cout << "Shutdown complete.\n";
+    spdlog::info("Shutdown complete.");
 }
 
 bool GraphicsTestDriver::LoadTestResources()
 {
-    std::cout << "Loading test resources...\n";
+    spdlog::info("Loading test resources...");
 
     try {
         // Load shaders
@@ -181,19 +181,19 @@ bool GraphicsTestDriver::LoadTestResources()
             "assets/shaders/basic.frag");
         
         if (!basicShader) {
-            std::cerr << "Failed to load basic shader!\n";
+            spdlog::error("Failed to load basic shader!");
             return false;
         }
 
-        // Load advanced bindless shaders for maximum visual quality
-        auto instancedShader = m_ResourceManager->LoadShader("instanced_bindless",
-            "assets/shaders/instanced_bindless.vert",
-            "assets/shaders/instanced_bindless.frag");
+        // Load advanced traditional texture binding shaders for maximum visual quality
+        auto instancedShader = m_ResourceManager->LoadShader("main_pbr",
+            "assets/shaders/main_pbr.vert",
+            "assets/shaders/main_pbr.frag");
 
         if (instancedShader) {
-            std::cout << "Advanced bindless shaders loaded successfully!\n";
+            spdlog::info("Advanced traditional texture shaders loaded successfully!");
         } else {
-            std::cout << "Warning: Could not load bindless shaders, will use basic shaders for fallback\n";
+            spdlog::warn("Could not load traditional texture shaders, will use basic shaders for fallback");
         }
 
         // Load shadow mapping depth-only shader
@@ -202,9 +202,9 @@ bool GraphicsTestDriver::LoadTestResources()
             "assets/shaders/shadow_depth.frag");
 
         if (shadowShader) {
-            std::cout << "Shadow mapping shader loaded successfully!\n";
+            spdlog::info("Shadow mapping shader loaded successfully!");
         } else {
-            std::cout << "Warning: Could not load shadow mapping shader\n";
+            spdlog::warn("Could not load shadow mapping shader");
         }
 
         // Load models
@@ -212,7 +212,7 @@ bool GraphicsTestDriver::LoadTestResources()
             "assets/models/tinbox/tin_box.obj");
 
         if (!tinBoxModel) {
-            std::cerr << "Failed to load tin box model!\n";
+            spdlog::error("Failed to load tin box model!");
             return false;
         }
 
@@ -220,26 +220,26 @@ bool GraphicsTestDriver::LoadTestResources()
             "assets/models/backpack/backpack.obj");
 
         if (!backpackModel) {
-            std::cerr << "Failed to load backpack model!\n";
+            spdlog::error("Failed to load backpack model!");
             return false;
         }
 
         // Create test materials
         CreateTestMaterials();
 
-        std::cout << "Resources loaded successfully!\n";
+        spdlog::info("Resources loaded successfully!");
         return true;
     }
     catch (const std::exception& e) {
-        std::cerr << "Exception while loading resources: " << e.what() << "\n";
+        spdlog::error("Exception while loading resources: {}", e.what());
         return false;
     }
 }
 
 void GraphicsTestDriver::CreateTestMaterials()
 {
-    // Use the instanced bindless shader for materials (fallback to basic if needed)
-    auto shader = m_ResourceManager->GetShader("instanced_bindless");
+    // Use the instanced traditional shader for materials (fallback to basic if needed)
+    auto shader = m_ResourceManager->GetShader("main_pbr");
     if (!shader) {
         shader = m_ResourceManager->GetShader("basic");
     }
@@ -287,12 +287,12 @@ void GraphicsTestDriver::CreateTestMaterials()
     defaultMaterial->SetRoughnessValue(0.2f);
     m_ResourceManager->AddMaterial("DefaultMaterial", defaultMaterial);
 
-    std::cout << "Test materials created and registered.\n";
+    spdlog::info("Test materials created and registered.");
 }
 
 void GraphicsTestDriver::SetupAdvancedScene()
 {
-    std::cout << "Setting up Advanced Graphics Demo...\n";
+    spdlog::info("Setting up Advanced Graphics Demo...");
 
     // Create ground plane
     auto planeMesh = std::make_shared<Mesh>(
@@ -411,11 +411,10 @@ void GraphicsTestDriver::SetupAdvancedScene()
     
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
 
-    std::cout << "Advanced scene created: " << m_SceneObjects.size() << " instances, "
-              << m_SceneLights.size() << " dynamic lights\n";
+    spdlog::info("Advanced scene created: {} instances, {} dynamic lights", m_SceneObjects.size(), m_SceneLights.size());
 
     // Debug: verify all objects were created
-    std::cout << "Debug: Created " << m_SceneObjects.size() << " scene objects" << std::endl;
+    spdlog::debug("Created {} scene objects", m_SceneObjects.size());
 }
 
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
@@ -438,12 +437,10 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         if (it != s_MeshCache.end()) {
             // Reuse existing mesh
             mesh = it->second;
-            //std::cout << "  REUSING cached mesh for " << meshKey << std::endl;
         } else {
             // Create new mesh and cache it
             mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
             s_MeshCache[meshKey] = mesh;
-           // std::cout << "  CREATED new mesh for " << meshKey << std::endl;
         }
 
         
@@ -455,10 +452,9 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         
         // Check if this mesh has textures (indicating we should preserve them)
         if (mesh->textures.size() > 0) {
-            //std::cout << "Mesh " << meshIndex << " has " << mesh->textures.size() << " textures, creating material to preserve them" << std::endl;
 
             // Create a material that will work with the existing textures
-            auto shader = m_ResourceManager->GetShader("instanced_bindless");
+            auto shader = m_ResourceManager->GetShader("main_pbr");
             if (!shader) {
                 shader = m_ResourceManager->GetShader("basic");
             }
@@ -472,13 +468,13 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
             }
         } else {
             // No textures - use our custom colored material
-            std::cout << "Mesh " << meshIndex << " has no textures, using custom material: " << materialName << std::endl;
+            spdlog::info("Mesh {} has no textures, using custom material: {}", meshIndex, materialName);
             renderable.material = m_ResourceManager->GetMaterial(materialName);
         }
 
         // Fallback: create a simple material if nothing worked
         if (!renderable.material) {
-            auto shader = m_ResourceManager->GetShader("instanced_bindless");
+            auto shader = m_ResourceManager->GetShader("main_pbr");
             if (!shader) {
                 shader = m_ResourceManager->GetShader("basic");
             }
@@ -580,10 +576,10 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                 if (s_Instance->m_CameraEnabled) {
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     s_Instance->m_FirstMouse = true;
-                    std::cout << "Camera controls enabled\n";
+                    spdlog::info("Camera controls enabled");
                 } else {
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                    std::cout << "Camera controls disabled\n";
+                    spdlog::info("Camera controls disabled");
                 }
                 break;
                 
@@ -624,34 +620,31 @@ void GraphicsTestDriver::ScrollCallback(GLFWwindow* window, double xoffset, doub
 
 void GraphicsTestDriver::PrintSystemInfo()
 {
-    std::cout << "=== Graphics System Information ===\n";
-    std::cout << "Window Size: " << m_Window->GetWidth() << "x" << m_Window->GetHeight() << "\n";
-    std::cout << "Resource Manager Status: " << (m_ResourceManager ? "Active" : "Inactive") << "\n";
+    spdlog::info("=== Graphics System Information ===");
+    spdlog::info("Window Size: {}x{}", m_Window->GetWidth(), m_Window->GetHeight());
+    spdlog::info("Resource Manager Status: {}", m_ResourceManager ? "Active" : "Inactive");
     if (m_ResourceManager) {
-        std::cout << "Loaded Shaders: " << m_ResourceManager->GetShaderCount() << "\n";
-        std::cout << "Loaded Models: " << m_ResourceManager->GetModelCount() << "\n";
+        spdlog::info("Loaded Shaders: {}", m_ResourceManager->GetShaderCount());
+        spdlog::info("Loaded Models: {}", m_ResourceManager->GetModelCount());
     }
-    std::cout << "=====================================\n\n";
+    spdlog::info("=====================================");
 }
 
 void GraphicsTestDriver::PrintSceneInfo()
 {
-    std::cout << "\n=== Current Scene Information ===\n";
-    std::cout << "Objects: " << m_SceneObjects.size() << "\n";
-    std::cout << "Lights: " << m_SceneLights.size() << "\n";
+    spdlog::info("=== Current Scene Information ===");
+    spdlog::info("Objects: {}", m_SceneObjects.size());
+    spdlog::info("Lights: {}", m_SceneLights.size());
     
     if (m_Camera) {
         auto pos = m_Camera->GetPosition();
         auto rot = m_Camera->GetRotation();
-        std::cout << "Camera Position: (" << std::fixed << std::setprecision(2) 
-                  << pos.x << ", " << pos.y << ", " << pos.z << ")\n";
-        std::cout << "Camera Rotation: (" << std::fixed << std::setprecision(1)
-                  << rot.x << "°, " << rot.y << "°, " << rot.z << "°)\n";
+        spdlog::info("Camera Position: ({:.2f}, {:.2f}, {:.2f})", pos.x, pos.y, pos.z);
+        spdlog::info("Camera Rotation: ({:.1f}°, {:.1f}°, {:.1f}°)", rot.x, rot.y, rot.z);
     }
     
-    std::cout << "Frame Time: " << std::fixed << std::setprecision(3) << m_DeltaTime * 1000.0f << "ms"
-              << " (FPS: " << std::fixed << std::setprecision(1) << 1.0f / m_DeltaTime << ")\n";
-    std::cout << "===============================\n\n";
+    spdlog::info("Frame Time: {:.3f}ms (FPS: {:.1f})", m_DeltaTime * 1000.0f, 1.0f / m_DeltaTime);
+    spdlog::info("===============================");
 }
 
 // Main entry point
@@ -660,7 +653,7 @@ int main()
     GraphicsTestDriver driver;
     
     if (!driver.Initialize()) {
-        std::cerr << "Failed to initialize graphics test driver!\n";
+        spdlog::error("Failed to initialize graphics test driver!");
         return -1;
     }
     

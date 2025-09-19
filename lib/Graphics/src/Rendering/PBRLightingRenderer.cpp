@@ -3,11 +3,11 @@
 #include "Utility/RenderData.h"
 #include "Utility/Light.h"
 #include "Resources/Material.h"
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 PBRLightingRenderer::PBRLightingRenderer()
 {
-    std::cout << "PBRLightingRenderer: Initialized as lighting system\n";
+    spdlog::info("PBRLightingRenderer: Initialized as lighting system");
 }
 
 void PBRLightingRenderer::ClearLights()
@@ -37,7 +37,7 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
                                            const Material* material)
 {
     if (!shader) {
-        std::cerr << "PBRLightingRenderer::SetupPBRLighting: NULL shader provided" << std::endl;
+        spdlog::error("PBRLightingRenderer::SetupPBRLighting: NULL shader provided");
         return;
     }
 
@@ -125,7 +125,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
 void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material)
 {
     if (!shader) {
-        std::cerr << "PBRLightingRenderer::ApplyLightingToShader: NULL shader provided" << std::endl;
+        spdlog::error("PBRLightingRenderer::ApplyLightingToShader: NULL shader provided");
         return;
     }
 

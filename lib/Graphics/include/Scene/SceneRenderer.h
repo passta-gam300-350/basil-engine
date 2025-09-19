@@ -4,6 +4,7 @@
 #include "../Utility/RenderData.h"
 #include "../Utility/FrameData.h"
 #include "../Resources/ResourceManager.h"
+#include "../Resources/TextureSlotManager.h"
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -55,6 +56,7 @@ public:
     InstancedRenderer* GetInstancedRenderer() const { return m_InstancedRenderer.get(); }
     PBRLightingRenderer* GetPBRLightingRenderer() const { return m_PBRLightingRenderer.get(); }
     ResourceManager* GetResourceManager() const { return m_ResourceManager.get(); }
+    TextureSlotManager* GetTextureSlotManager() const { return m_TextureSlotManager.get(); }
 
 private:
     //void InitializePipeline();
@@ -79,6 +81,7 @@ private:
 
     // Core systems - SceneRenderer owns these
     std::unique_ptr<ResourceManager> m_ResourceManager;
+    std::unique_ptr<TextureSlotManager> m_TextureSlotManager;
 
     // Rendering coordinators - SceneRenderer owns these
     //std::unique_ptr<MeshRenderer> m_MeshRenderer;

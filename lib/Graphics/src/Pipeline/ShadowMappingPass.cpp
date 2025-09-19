@@ -4,7 +4,7 @@
 #include "../../include/Utility/Light.h"
 #include "../../include/Resources/ResourceManager.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 ShadowMappingPass::ShadowMappingPass()
     : RenderPass("ShadowPass", FBOSpecs{
@@ -37,6 +37,9 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
     // Begin shadow pass - bind depth framebuffer
     Begin();
+
+    // Setup command buffer with systems from context
+    SetupCommandBuffer(context);
 
     // Calculate light-space matrices
     glm::vec3 sceneCenter(0.0f, 0.0f, 0.0f);  // Center of our 2x2 grid

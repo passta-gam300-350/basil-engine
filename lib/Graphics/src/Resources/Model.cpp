@@ -1,6 +1,6 @@
 #include <Resources/Model.h>
 #include <Resources/Texture.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 {
@@ -19,7 +19,7 @@ void Model::loadModel(std::string const &path)
     // check for errors
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
-        std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+        spdlog::error("ASSIMP:: {}", importer.GetErrorString());
         return;
     }
     // retrieve the directory path of the filepath

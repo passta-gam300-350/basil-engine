@@ -22,6 +22,9 @@ void MainRenderingPass::Execute(RenderContext& context)
     // New context-based execution - use references instead of copies!
     Begin();
 
+    // Setup command buffer with systems from context
+    SetupCommandBuffer(context);
+
     // Clear color and depth buffers using command buffer
     RenderCommands::ClearData clearCmd{
         0.7f, 0.7f, 0.7f, 0.5f,  // r, g, b, a
