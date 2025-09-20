@@ -62,7 +62,7 @@ namespace Logger {
             console_sink->set_level(lvl);
             std::vector<spdlog::sink_ptr> sinks;
 
-            if (file_path.empty()) {
+            if (!file_path.empty()) {
                 // File sink
                 auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(file_path, true);
                 file_sink->set_level(lvl);

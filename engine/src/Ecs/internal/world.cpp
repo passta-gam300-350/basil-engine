@@ -135,7 +135,7 @@ namespace ecs {
 	void world::serialise_world_bin(std::string const& outputFilename) {
 		std::ofstream out(outputFilename, std::ios::binary);
 		entt::snapshot snap{ impl.get_registry() };
-		auto out_archive{ [&out](auto value) {
+		auto out_archive{ [&out](auto const& value) {
 			out.write(reinterpret_cast<const char*>(&value), sizeof(value));
 			} };
 		snap.template get<entt::entity>(out_archive);
@@ -147,7 +147,7 @@ namespace ecs {
 	void world::deserialise_world_bin(std::string const& inputFilename) {
 		std::ifstream in(inputFilename, std::ios::binary);
 		entt::snapshot_loader loader{ impl.get_registry()};
-		auto in_archive{ [&in](auto value) {
+		auto in_archive{ [&in](auto& value) {
 			in.read(reinterpret_cast<char*>(&value), sizeof(value));
 			} };
 		loader.template get<entt::entity>(in_archive);
@@ -171,7 +171,7 @@ namespace ecs {
 
 	void world::update()
 	{
-		impl.get_scheduler().run(*this);
+		Scheduler::RunUntilCompletion(*this);
 	}
 
 	void shutdown_ecs()
@@ -182,7 +182,8 @@ namespace ecs {
 
 	void world::LoadYAML(std::string const& path) {
 		YAML::Node root{YAML::LoadFile(path)};
-		for (const auto& entity_node : root) {
+		YAML::Node entities{ root["entities"] };
+		for (const auto& entity_node : entities) {
 			DeserializeEntity(impl.get_registry(), entity_node);
 		}
 	}
@@ -192,8 +193,10 @@ namespace ecs {
 		entt::registry& reg{ impl.get_registry() };
 		auto allentities = reg.view<entt::entity>();
 		for (const auto& entity : allentities) {
-			root = SerializeEntity<YAML::Node>(reg, entity);
+			root["entities"].push_back(SerializeEntity<YAML::Node>(reg, entity));
 		}
+		std::ofstream outp{ path };
+		outp << root;
 	}
 
 	void world::UnloadNonGlobals() {
