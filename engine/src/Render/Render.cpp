@@ -10,7 +10,7 @@
 std::unique_ptr<RenderSystem> RenderSystem::s_Instance{};
 
 void RenderSystem::Init() {
-	m_SceneRenderer = std::make_unique<SceneRenderer>(Engine::GetWindowInstance().GetNativeWindow());
+	m_SceneRenderer = std::make_unique<SceneRenderer>();
 	m_ResourceManager = m_SceneRenderer->GetResourceManager();
 	m_Camera = std::make_unique<Camera>(CameraType::Perspective);
 	m_Camera->SetPerspective(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
@@ -46,7 +46,7 @@ void RenderSystem::Update(ecs::world& world) {
 	for (auto obj : sceneObjects) {
 		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformComponent, VisibilityComponent>()};
 		RenderableData renderData;
-		renderData.mesh = ResourceSystem::Get<ResourceTypeMesh>(mesh.m_MeshGuid)->m_ptr;
+		//renderData.mesh = ResourceSystem::Get<ResourceTypeMesh>(mesh.m_MeshGuid)->m_ptr;
 		//renderData.material = ResourceSystem::Get<Material>(mesh.m_MaterialGuid);
 		renderData.transform = transform.m_trans;
 		renderData.visible = visible.m_IsVisible;
@@ -79,7 +79,6 @@ void RenderSystem::Update(ecs::world& world) {
 void RenderSystem::FixedUpdate(ecs::world&) {
 }
 void RenderSystem::Exit() {
-	m_Renderer.reset();
 	m_SceneRenderer.reset();
 	m_Camera.reset();
 	s_Instance.reset();

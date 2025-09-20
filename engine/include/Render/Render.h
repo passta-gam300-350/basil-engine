@@ -2,7 +2,6 @@
 #define ENGINE_RENDER_H
 
 #include <memory>
-#include <Core/Renderer.h>
 #include <Scene/SceneRenderer.h>
 #include <Utility/Camera.h>
 #include <serialisation/guid.h>
@@ -16,7 +15,7 @@ struct MeshRendererComponent {
     Resource::Guid m_MaterialGuid;
 };
 
-struct ResourceTypeMesh : public BasicResource {
+struct ResourceTypeMesh {
     std::shared_ptr<Mesh> m_ptr;
     ResourceTypeMesh() = default;
     ResourceTypeMesh(Resource::MeshResource const& mr);
@@ -53,7 +52,6 @@ struct CameraComponent {
 
 struct RenderSystem {
     // graphics lib objects
-    std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<SceneRenderer> m_SceneRenderer;
     std::unique_ptr<Camera> m_Camera;
     ResourceManager* m_ResourceManager;
