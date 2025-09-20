@@ -1,9 +1,12 @@
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include "Engine.hpp"
 int main() {
-	Engine::Init("Name", 1920, 1080);
-	while (!Engine::WindowShouldClose()) {
-		Engine::Input();
-		Engine::Update();
-	}
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	Engine::Init("Default.yaml");
+	Engine::Update();
 	Engine::Exit();
+	return 0;
 }

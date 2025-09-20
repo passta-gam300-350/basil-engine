@@ -11,6 +11,7 @@ namespace ecs {
 	struct SystemBase {
 		virtual void Init() {};
         virtual void LoadConfig(YAML::Node& nd) {};
+        virtual YAML::Node GetDefaultConfig() { return YAML::Node(); };
 		virtual void Update(world&, float dt) {};
 		virtual void FixedUpdate(world&) {};
         virtual void Exit() {};
@@ -55,7 +56,7 @@ namespace ecs {
 
     struct SystemRegistry {
     public:
-        static SystemRegistry& instance() {
+        static SystemRegistry& Instance() {
             static SystemRegistry inst;
             return inst;
         }
@@ -68,6 +69,8 @@ namespace ecs {
             m_AllSystems.push_back(std::move(desc));
         }
 
+        static YAML::Node GetDefaultConfig();
+
         // Returns only enabled systems
         std::vector<SystemDescriptor> GetActiveSystems() const {
             std::vector<SystemDescriptor> out;
@@ -76,9 +79,13 @@ namespace ecs {
             return out;
         }
 
+        static SystemBase* GetSystem(std::uint64_t index) {
+            return Instance().m_ActiveSystems[index].get();
+        }
+
     private:
         std::vector<SystemDescriptor> m_AllSystems; //do not delete systems
-        std::unordered_map<std::uint64_t, std::unique_ptr<SystemBase*>> m_ActiveSystems;
+        std::unordered_map<std::uint64_t, std::unique_ptr<SystemBase>> m_ActiveSystems;
 
         SystemRegistry() = default;
     };
@@ -138,8 +145,11 @@ namespace ecs {
         static auto NAME##_SYSTEM_FACTORY = []()->SystemBase*{                                                 \
             return new TYPE{__VA_ARGS__};                                                               \
         };                                                                                              \
+        static auto NAME##_SYSTEM_CONFIG_GENERATOR = []()->YAML::Node{                                                 \
+            return new TYPE{__VA_ARGS__};                                                               \
+        };                                                                                              \
         auto NAME##_SYSTEM_REG = [&] {                                                                   \
-            SystemRegistry::instance().RegisterSystem({                                                 \
+            SystemRegistry::Instance().RegisterSystem({                                                 \
                #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), READS::GetSet(), WRITES::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                       \
                 });                                                                                     \
             return 0;                                                                                   \
@@ -154,7 +164,7 @@ namespace ecs {
             return new GenericSystem{ INIT_FN, LOAD_FN, UPDATE_FN, FIXED_UPDATE, EXIT_FN };                      \
         };                                                                                              \
         auto NAME##_SYSTEM_REG = [&]{                                                                    \
-            SystemRegistry::instance().RegisterSystem({                                                 \
+            SystemRegistry::Instance().RegisterSystem({                                                 \
                 #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), READS::GetSet(), WRITES::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                     \
             });                                                                                         \
             return 0;                                                                                   \

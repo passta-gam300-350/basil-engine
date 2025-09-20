@@ -1,0 +1,37 @@
+#include <Ecs/ecs.h>
+
+namespace {
+	constexpr std::uint64_t DEFAULT_SYSTEM_THREADS{ 4 };
+	constexpr bool DEFAULT_SYSTEM_STATE{ true };
+}
+
+namespace ecs {
+	void SystemRegistry::LoadConfig(YAML::Node& cfg) {
+		if (cfg["system threads"]){
+			Scheduler::SetSystemThreads(cfg["system threads"].as<std::uint64_t>());
+		}
+		if (cfg["enabled system"]) {
+			
+		}
+		if (cfg["system configurations"]) {
+
+		}
+	}
+
+	YAML::Node SystemRegistry::GetDefaultConfig() {
+		YAML::Node root{};
+		YAML::Node enabled{};
+		YAML::Node configs{};
+		root["system threads"] = DEFAULT_SYSTEM_THREADS;
+		for (auto system : SystemRegistry::Instance().m_AllSystems) {
+			enabled[system.m_Name] = DEFAULT_SYSTEM_STATE;
+		}
+		root["enabled system"] = enabled;
+		root["system configurations"] = configs;
+		return root;
+	}
+
+	void SystemRegistry::Exit() {
+
+	}
+}
