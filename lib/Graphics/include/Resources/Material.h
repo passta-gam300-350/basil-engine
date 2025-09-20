@@ -33,6 +33,7 @@ public:
     float GetRoughnessValue() const { return m_RoughnessValue; }
 
     void SetAlbedoColor(const glm::vec3& color) { m_AlbedoColor = color; }
+    void SetAlbedoColorSRGB(const glm::vec3& srgbColor);
     void SetMetallicValue(float metallic) { m_MetallicValue = metallic; }
     void SetRoughnessValue(float roughness) { m_RoughnessValue = roughness; }
 

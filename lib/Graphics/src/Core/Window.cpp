@@ -48,6 +48,10 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// Enable sRGB framebuffer for automatic linear-to-sRGB conversion
+	glEnable(GL_FRAMEBUFFER_SRGB);
+	spdlog::info("sRGB framebuffer enabled for linear color pipeline");
+
 	m_Initialized = true;
 
 	// Set up callbacks

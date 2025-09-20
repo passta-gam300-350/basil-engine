@@ -223,7 +223,9 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
         if(!skip)
         {   // if texture hasn't been loaded already, load it
             Texture texture;
-            texture.id = TextureLoader::TextureFromFile(str.C_Str(), this->directory);
+            // Use gamma correction for diffuse/albedo textures (sRGB), but not for normal/roughness/metallic maps (linear)
+            bool useGammaCorrection = (typeName == "texture_diffuse");
+            texture.id = TextureLoader::TextureFromFile(str.C_Str(), this->directory, useGammaCorrection);
             texture.type = typeName;
             texture.path = str.C_Str();
             textures.push_back(texture);
