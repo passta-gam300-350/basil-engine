@@ -32,8 +32,8 @@ namespace helperTools
         }
         float t = (currentTime - startTime) / totalDistanceInTime;
         t = glm::clamp(t, 0.0f, 1.0f);
+        return t;
     }
-
 }
 boneChannel::boneChannel(std::string const& boneName, int id)
     : m_name(boneName), m_id(id), localTransform(1.0f)
@@ -43,7 +43,66 @@ boneChannel::boneChannel(std::string const& boneName, int id)
 
 void boneChannel::update(float time)
 {
+    glm::mat4 translation = interpolatePosition(time);
+    glm::mat4 rotation = interpolateRotation(time);
+    glm::mat4 scale = interpolateScale(time);
+    // SRT
+    localTransform = translation * rotation * scale;
+}
 
+glm::mat4 boneChannel::interpolatePosition(float time)
+{
+    if (m_positions.size() == 0) // edge cases, no position frame
+    {
+        return glm::mat4(1.0f);
+    }
+    if (m_positions.size() == 1)
+    {
+        return glm::translate(glm::mat4(1.0f), m_positions.front().position);
+    }
+    // get current frame
+    int currentFrameIndex = helperTools::findKeyFrameIndex(m_positions, time);
+    // get time (interpolation factor)
+    float t = helperTools::clampT(m_positions, currentFrameIndex, time);
+    // linear interpolate between two position 
+    glm::vec3 finalPosition = glm::mix(m_positions[currentFrameIndex].position, m_positions[currentFrameIndex + 1].position, t);
+    return glm::translate(glm::mat4(1.0f), finalPosition); //return the matrix
+}
+
+glm::mat4 boneChannel::interpolateRotation(float time)
+{
+    if (m_rotations.size() == 0)
+    {
+        return glm::mat4(1.0f); // no rotations
+    }
+    if (m_rotations.size() == 1)
+    {
+        return glm::mat4_cast(m_rotations.front().rotation);
+    }
+    // get current frame
+    int currentFrameIndex = helperTools::findKeyFrameIndex(m_rotations, time);
+    // get time (interpolation factor)
+    float t = helperTools::clampT(m_rotations, currentFrameIndex, time);
+    glm::quat finalRotation = glm::slerp(m_rotations[currentFrameIndex].rotation, m_rotations[currentFrameIndex + 1].rotation, t);
+    return glm::mat4_cast(finalRotation);
+}
+
+glm::mat4 boneChannel::interpolateScale(float time)
+{
+    if (m_scales.size() == 0)
+    {
+        return glm::mat4(1.0f);
+    }
+    if (m_scales.size() == 1)
+    {
+        return glm::scale(glm::mat4(1.0f), m_scales.front().scale);
+    }
+    // get current frame
+    int currentFrameIndex = helperTools::findKeyFrameIndex(m_scales, time);
+    // get time (interpolation factor)
+    float t = helperTools::clampT(m_scales, currentFrameIndex, time);
+    glm::vec3 finalScale = glm::mix(m_scales[currentFrameIndex].scale, m_scales[currentFrameIndex + 1].scale, t);
+    return glm::scale(glm::mat4(1.0f), finalScale);
 }
 
 

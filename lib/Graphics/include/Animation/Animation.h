@@ -78,6 +78,10 @@ private:
     std::vector<keyFrameRotation> m_rotations;
     std::vector<keyFrameScale> m_scales;
     glm::mat4 localTransform { 1.0f };
+    // helper function for update to interpolate 
+    glm::mat4 interpolatePosition(float time);
+    glm::mat4 interpolateRotation(float time);
+    glm::mat4 interpolateScale(float time);
 };
 
 // contains all those channels for one clips
