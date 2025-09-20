@@ -13,6 +13,14 @@ void EditorMain::init()
 {
 	// Set window title
 	glfwSetWindowTitle(window, "YOUR WORKSPACE NAME HERE");
+	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+	// Set maximized
+	glfwMaximizeWindow(window);
+	
+
+	// Set decoration on
+	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
 
 
@@ -215,6 +223,10 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Console()
 {
 	ImGui::Begin("Console");
+	// Example log messages
+	ImGui::Text("Log Message 1");
+	ImGui::Text("Log Message 2");
+	ImGui::Text("Log Message 3");
 	ImGui::End();
 }
 

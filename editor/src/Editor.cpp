@@ -6,6 +6,7 @@
 #include "Screens/Screen.hpp"
 #include "Screens/SplashScreen.hpp"
 #include "GLFW/glfw3.h"
+#include "Screens/ProjectMenuScreen.hpp"
 
 void Editor::ChangeState(EditorState newState)
 {
@@ -40,11 +41,12 @@ void Editor::Init(GLFWwindow* _win)
 	// Initialize screens
 	screens[EditorState::EDITOR_SPLASHSCREEN] = std::make_unique<SplashScreen>(window);
 	screens[EditorState::EDITOR_MAIN] = std::make_unique<EditorMain>(window);
+	screens[EditorState::EDITOR_PROJECT] = std::make_unique<ProjectMenuScreen>(window);
 
 
 	
 
-	ChangeState(EditorState::EDITOR_MAIN);
+	ChangeState(EditorState::EDITOR_SPLASHSCREEN);
 
 
 }
@@ -64,3 +66,25 @@ bool Editor::ShouldClose()
 {
 	return screens[currentState]->isWindowClosed();
 }
+
+
+void Editor::Load()
+{
+	
+}
+
+void Editor::Unload()
+{
+
+}
+
+void Editor::Set_Working_Path(const char* path)
+{
+	configuration.project_workingDir = path;
+}
+
+void Editor::Set_Workspace_Name(const char* name)
+{
+	configuration.workspace_name = name;
+}
+

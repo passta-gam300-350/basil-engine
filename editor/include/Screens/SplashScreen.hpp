@@ -6,7 +6,7 @@
 
 class SplashScreen : public Screen
 {
-
+	float timer = 3.0f; // 5 seconds
 	
 public:
 	SplashScreen(GLFWwindow* window);
