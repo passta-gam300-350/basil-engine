@@ -13,6 +13,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #ifndef ENGINE_INPUT_USE_HELPER_IMPL
+#include "./Input/InputManager.h"
+GLint GLHelper::width;
+GLint GLHelper::height;
+GLFWwindow* GLHelper::ptr_window;
 #else
 #include "./Input/InputGraphics_Helper.h"
 #include "./Input/InputManager.h"

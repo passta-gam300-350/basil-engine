@@ -10,8 +10,11 @@ namespace {
 	constexpr std::uint64_t DEFAULT_RESOLUTION_HEIGHT{ 900ul };
 	constexpr bool DEFAULT_WINDOW_MODE{ false }; // false for windowed, true for fullscreen (borderless window is not support) //nvm both not supported// TODO: expand Core/Window.h Window interface
 	constexpr bool DEFAULT_VSYNC_OPTION{ false }; //true is toggle
+	constexpr std::uint32_t DEFAULT_LOG_SEVERITY{spdlog::level::info};
 	constexpr std::string_view DEFAULT_NAME{"Engine"};
 	constexpr std::string_view DEFAULT_SINK_NAME{ "Engine" };
+	constexpr std::string_view DEFAULT_OUTPUT_FILE{ "" };
+	constexpr std::string_view DEFAULT_CONFIG_NAME{ "Default.yaml"};
 }
 
 Engine& Engine::Instance() {
@@ -49,8 +52,10 @@ void Engine::Init(std::string const& cfg ) {
 	if (YAML::Node resource{ root["resource"] }; resource) {
 		ResourceSystem::LoadConfig(resource);
 	}
-	if (YAML::Node world_file{ root["world"] && root["world"]["file"]}; world_file) {
-		Instance().m_World.LoadYAML(world_file.as<std::string>());
+	if (root["world"]) {
+		if (YAML::Node world_file{ root["world"]["file"] }; world_file) {
+			Instance().m_World.LoadYAML(world_file.as<std::string>());
+		}
 	}
 	if (YAML::Node logger{ root["logger"] }; logger) {
 		std::string sink_name{ logger["name"] ? logger["name"].as<std::string>() : DEFAULT_SINK_NAME};
@@ -101,6 +106,10 @@ void Engine::Update() {
 	}
 }
 
+void Engine::ReportLastError() {
+	
+}
+
 void Engine::Exit() {
 	SystemRegistry::Exit();
 	WorldRegistry::Clear();
@@ -109,7 +118,23 @@ void Engine::Exit() {
 
 
 void Engine::GenerateDefaultConfig() {
-
+	YAML::Node root{  };
+	YAML::Node window{  };
+	YAML::Node logger{  };
+	window["width"] = DEFAULT_RESOLUTION_WIDTH;
+	window["height"] = DEFAULT_RESOLUTION_HEIGHT;
+	window["fullscreen"] = DEFAULT_WINDOW_MODE;
+	window["title"] = std::string(DEFAULT_NAME);
+	window["vsync"] = DEFAULT_VSYNC_OPTION;
+	logger["name"] = std::string(DEFAULT_SINK_NAME);
+	logger["output file"] = std::string(DEFAULT_OUTPUT_FILE);
+	logger["severity"] = DEFAULT_LOG_SEVERITY;
+	root["window"] = window;
+	root["system"] = SystemRegistry::GetDefaultConfig();
+	root["resource"] = ResourceSystem::GetDefaultConfig();
+	root["logger"] = logger;
+	std::ofstream ofs{ DEFAULT_CONFIG_NAME.data() };
+	ofs << root;
 }
 
 Window& Engine::GetWindowInstance() {

@@ -2,6 +2,13 @@
 #include "native/mesh.h"
 #include "Render/render.h"
 #include <yaml-cpp/yaml.h>
+#include <filesystem>
+
+namespace {
+    constexpr std::uint64_t DEFAULT_RESOURCE_THREADS{ 4 };
+    const std::string DEFAULT_RESOURCE_PATH{ std::filesystem::current_path().string() };
+    constexpr bool DEFAULT_IS_GLOBBING_ENABLED{false};
+}
 
 namespace YAML {
     template<>
@@ -45,4 +52,28 @@ void ResourceSystem::LoadFileLists(std::string_view filelist)
             rs.m_FileEntries[entry.m_Guid] = entry;
         }
     }
+}
+
+void ResourceSystem::LoadConfig(YAML::Node& cfg) {
+    if (auto res_thread_ct = cfg["resource threads"]; res_thread_ct) {
+        SetResourceThreads(res_thread_ct.as<std::uint64_t>());
+    }
+    if (auto resource_list = cfg["resource list"]; resource_list) {
+        LoadFileLists(resource_list.as<std::string>());
+    }
+    if (auto directory = cfg["root directory"]; directory) {
+        Instance().m_ResourceRootDirectory = directory.as<std::string>();
+    }
+    if (auto glob_val = cfg["enable globbing"]; glob_val) {
+        Instance().m_GlobFiles = glob_val.as<bool>();
+    }
+}
+
+YAML::Node ResourceSystem::GetDefaultConfig(){
+    YAML::Node root{};
+    root["resource threads"] = DEFAULT_RESOURCE_THREADS;
+    root["resource list"] = YAML::Node();
+    root["root directory"] = DEFAULT_RESOURCE_PATH;
+    root["enable globbing"] = DEFAULT_IS_GLOBBING_ENABLED;
+    return root;
 }

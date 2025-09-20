@@ -363,6 +363,14 @@ struct ResourceSystem {
         return inst;
     }
 
+    static ResourceSystem& SetResourceThreads(std::uint64_t thread_count) {
+        ResourceSystem& inst{ Instance() };
+        inst.m_JobSystem.shutdown();
+        inst.m_JobSystem.~JobSystem();
+        new (&inst.m_JobSystem) JobSystem{ thread_count };
+        return inst;
+    }
+
     const char* GetMappedFilePtr(Resource::Guid);
     template <typename Fn, typename ...Args>
     auto Dispatch(Fn&& fn, Args&&... args) {
@@ -371,10 +379,13 @@ struct ResourceSystem {
 
     static void LoadFileLists(std::string_view filelist);
     static void LoadConfig(YAML::Node& cfg);
+    static YAML::Node GetDefaultConfig();
 
 private:
     hashtable<Resource::Guid, FileEntry> m_FileEntries;
     hashtable<std::string, MemoryMappedFile> m_MappedIO;
+    std::string m_ResourceRootDirectory;
+    bool m_GlobFiles;
     JobSystem m_JobSystem;
 };
 
