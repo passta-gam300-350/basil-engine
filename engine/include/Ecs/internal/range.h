@@ -76,6 +76,10 @@ namespace ecs {
 			return entity_range(world_handle, rhs.entities | entities);
 		}
 
+		bool empty() {
+			return entities.begin() == entities.end();
+		}
+
 		operator bool() {
 			return entities.begin()!=entities.end();
 		}

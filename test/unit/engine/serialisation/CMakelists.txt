@@ -10,6 +10,6 @@ set(ALL_LIBS
   PRIVATE engine
 )
 
-add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
+add_library(${PROJECT_NAME} OBJECT ${ALL_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})

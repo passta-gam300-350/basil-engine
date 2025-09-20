@@ -80,7 +80,7 @@ struct ReflectionRegistry {
         return reg.m_Names[type_id];
     }
 
-    static std::vector<ComponentBinarySerializer> BinSerializerRegistryInstance() {
+    static std::vector<ComponentBinarySerializer>& BinSerializerRegistryInstance() {
         return Registry().m_BinRegistry;
     }
 
@@ -238,13 +238,13 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
     ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
     ReflectionRegistry::BinSerializerRegistryInstance().push_back({
         [](entt::snapshot& snap, std::ostream& os) {
-            auto out_archive{ [&os](auto value) {
+            auto out_archive{ [&os](auto const& value) {
                 os.write(reinterpret_cast<const char*>(&value), sizeof(value));
                 } };
             snap.template get<T>(out_archive); },
         [](entt::snapshot_loader& loader, std::istream& is) {
-            auto in_archive{ [&is](auto value) {
-            is.read(reinterpret_cast<char*>(&value), sizeof(value));
+            auto in_archive{ [&is](auto& value) {
+                is.read(reinterpret_cast<char*>(&value), sizeof(value));
             } };
             loader.template get<T>(in_archive);
         } });
