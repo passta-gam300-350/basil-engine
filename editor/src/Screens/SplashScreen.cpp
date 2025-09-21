@@ -17,7 +17,6 @@ void SplashScreen::init()
 	// Set window title
 	glfwSetWindowTitle(window, "Basil Editor - Splash Screen");
 	active = true;
-	timer = 5.0f; // Reset time
 
 	// Get primary monitor and its video mode
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();

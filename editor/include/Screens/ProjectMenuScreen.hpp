@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Screen.hpp"
+#include "Service/FileService.hpp"
 
 class ProjectMenuScreen : public Screen
 {
@@ -18,7 +19,7 @@ class ProjectMenuScreen : public Screen
 	std::vector<WorkspaceDetailUI> workspacesDetails;
 
 public:
-
+	FileService fileService;
 
 	char projectSearchBuf[256] = "";
 

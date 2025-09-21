@@ -123,14 +123,27 @@ void ProjectMenuScreen::render()
 	{
 		// Logic to open a project
 		// For demonstration, we'll just switch to the main editor state
-		Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
+		std::string path{};
+		bool openfile = fileService.OpenFileDialog(path);
+
+		if (openfile)
+		{
+		
+			Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
+		}
+		
 		
 	}
 	if (newPress)
 	{
 		// Logic to create a new project
 		// For demonstration, we'll just switch to the main editor state
-		Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
+		std::string p{};
+		bool openFolder = fileService.OpenFolderDialog(p);
+		if (openFolder)
+		{
+			Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
+		}
 	}
 
 	ImGui::BeginChild("##project_list", ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y-100), true);
