@@ -157,6 +157,9 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniforms
     // Always set the uniform to point to the correct texture unit
     cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
 
+    // Set the shadow enable flag
+    cmd.shader->setBool("u_EnableShadows", cmd.enableShadows);
+
     // Note: Shadow map texture will remain bound until explicitly unbound
     // This is intentional as it needs to stay bound for the entire rendering pass
 }

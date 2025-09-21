@@ -48,7 +48,7 @@ TextureData TextureLoader::LoadFromFile(const char* path, const std::string& dir
     TextureData textureData;
     std::string filename = directory + '/' + std::string(path);
 
-    stbi_set_flip_vertically_on_load(true);
+    //stbi_set_flip_vertically_on_load(true);
     
     textureData.pixels = stbi_load(filename.c_str(), &textureData.width, 
                                   &textureData.height, &textureData.channels, 0);

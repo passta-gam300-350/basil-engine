@@ -58,6 +58,7 @@ namespace RenderCommands {
         glm::mat4 lightSpaceMatrix;
         uint32_t shadowMapTexture;
         int shadowMapUnit;
+        bool enableShadows;
     };
 
     struct BlitFramebufferData {

@@ -237,9 +237,23 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
             shader,
             frameData.shadowMatrices[0],
             shadowTexID,
-            8  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
+            8,  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
+            true  // Enable shadows
         };
         renderPass.Submit(shadowCmd);
+    } else {
+        // No shadow data available - disable shadow mapping
+        // Bind a default/dummy shadow matrix and unbind shadow texture
+        glm::mat4 identityMatrix = glm::mat4(1.0f);
+
+        RenderCommands::SetShadowUniformsData disableShadowCmd{
+            shader,
+            identityMatrix,
+            0,  // Bind texture ID 0 (unbind)
+            8,  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
+            false  // Disable shadows
+        };
+        renderPass.Submit(disableShadowCmd);
     }
 
 

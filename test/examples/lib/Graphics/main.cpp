@@ -108,6 +108,10 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - ESC: Exit");
     spdlog::info("  - F1: Toggle camera controls");
     spdlog::info("  - F2: Print scene info");
+    spdlog::info("  - F3: Print render pass status");
+    spdlog::info("  - 1: Toggle shadow pass");
+    spdlog::info("  - 2: Toggle main pass");
+    spdlog::info("  - 3: Toggle post-process pass");
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -586,6 +590,14 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
             case GLFW_KEY_F2:
                 s_Instance->PrintSceneInfo();
                 break;
+
+            case GLFW_KEY_F3:
+                s_Instance->PrintRenderPassStatus();
+                break;
+
+            case GLFW_KEY_1:
+                s_Instance->ToggleRenderPass("ShadowPass");
+                break;
         }
     }
 }
@@ -618,7 +630,7 @@ void GraphicsTestDriver::ScrollCallback(GLFWwindow* window, double xoffset, doub
     s_Instance->m_Camera->ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-void GraphicsTestDriver::PrintSystemInfo()
+void GraphicsTestDriver::PrintSystemInfo() const
 {
     spdlog::info("=== Graphics System Information ===");
     spdlog::info("Window Size: {}x{}", m_Window->GetWidth(), m_Window->GetHeight());
@@ -630,21 +642,64 @@ void GraphicsTestDriver::PrintSystemInfo()
     spdlog::info("=====================================");
 }
 
-void GraphicsTestDriver::PrintSceneInfo()
+void GraphicsTestDriver::PrintSceneInfo() const
 {
     spdlog::info("=== Current Scene Information ===");
     spdlog::info("Objects: {}", m_SceneObjects.size());
     spdlog::info("Lights: {}", m_SceneLights.size());
-    
+
     if (m_Camera) {
         auto pos = m_Camera->GetPosition();
         auto rot = m_Camera->GetRotation();
         spdlog::info("Camera Position: ({:.2f}, {:.2f}, {:.2f})", pos.x, pos.y, pos.z);
         spdlog::info("Camera Rotation: ({:.1f}°, {:.1f}°, {:.1f}°)", rot.x, rot.y, rot.z);
     }
-    
+
     spdlog::info("Frame Time: {:.3f}ms (FPS: {:.1f})", m_DeltaTime * 1000.0f, 1.0f / m_DeltaTime);
     spdlog::info("===============================");
+}
+
+void GraphicsTestDriver::PrintRenderPassStatus() const
+{
+    spdlog::info("=== Render Pass Status ===");
+
+    if (m_SceneRenderer) {
+        auto* pipeline = m_SceneRenderer->GetPipeline();
+        if (pipeline) {
+            // Check status of common render passes
+            std::vector<std::string> passes = {"ShadowPass", "MainPass"};
+
+            for (const auto& passName : passes) {
+                bool enabled = pipeline->IsPassEnabled(passName);
+                spdlog::info("  {}: {}", passName, enabled ? "ENABLED" : "DISABLED");
+            }
+        } else {
+            spdlog::warn("Pipeline not found!");
+        }
+    } else {
+        spdlog::warn("Scene renderer not available!");
+    }
+
+    spdlog::info("==========================");
+}
+
+void GraphicsTestDriver::ToggleRenderPass(const std::string& passName)
+{
+    if (m_SceneRenderer) {
+        auto* pipeline = m_SceneRenderer->GetPipeline();
+        if (pipeline) {
+            bool currentlyEnabled = pipeline->IsPassEnabled(passName);
+            bool newState = !currentlyEnabled;
+
+            pipeline->EnablePass(passName, newState);
+
+            spdlog::info("Render pass '{}' {}", passName, newState ? "ENABLED" : "DISABLED");
+        } else {
+            spdlog::warn("Pipeline not found - cannot toggle pass '{}'", passName);
+        }
+    } else {
+        spdlog::warn("Scene renderer not available - cannot toggle pass '{}'", passName);
+    }
 }
 
 // Main entry point

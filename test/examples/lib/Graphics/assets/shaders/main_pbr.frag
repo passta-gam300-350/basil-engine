@@ -41,6 +41,7 @@ uniform bool u_HasAOMap = false;
 uniform bool u_HasEmissiveMap = false;
 uniform bool u_HasSpecularMap = false;
 uniform bool u_HasHeightMap = false;
+uniform bool u_EnableShadows = false;
 
 // Multi-light system for instanced rendering
 struct PointLight {
@@ -341,12 +342,11 @@ void main() {
     // Get normal from traditional normal map
     vec3 normal = getNormalFromMap();
 
-    // Calculate shadow factor
-    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
-
-    // DEBUG: Visualize shadow factor directly (comment out for normal rendering)
-    // FragColor = vec4(vec3(1.0 - shadow), 1.0);
-    // return;
+    // Calculate shadow factor only if shadows are enabled
+    float shadow = 0.0;
+    if (u_EnableShadows) {
+        shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+    }
 
     // Calculate multi-light PBR lighting with shadows
     vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao, shadow);

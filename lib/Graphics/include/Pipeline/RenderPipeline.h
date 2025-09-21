@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 // Forward declaration
 struct RenderContext;
@@ -11,7 +12,11 @@ struct RenderContext;
 class RenderPipeline
 {
 public:
-	RenderPipeline(const std::string& name = "DefaultPipeline");
+	RenderPipeline();
+	RenderPipeline(const RenderPipeline&) = delete;
+	RenderPipeline& operator=(const RenderPipeline&) = delete;
+	RenderPipeline(RenderPipeline&&) = delete;
+	RenderPipeline& operator=(RenderPipeline&&) = delete;
 	~RenderPipeline();
 
 	void AddPass(const std::shared_ptr<RenderPass>& pass);
@@ -19,9 +24,12 @@ public:
 	void Execute(RenderContext& context) const;
 
 	std::shared_ptr<RenderPass> GetPass(const std::string& name);
-	const std::string& GetName() const { return m_Name; }
+
+	// Pass-level enable/disable control
+	void EnablePass(const std::string& name, bool enabled = true);
+	bool IsPassEnabled(const std::string& name) const;
 
 private:
 	std::vector<std::shared_ptr<RenderPass>> m_Passes;
-	std::string m_Name;
+	std::unordered_map<std::string, bool> m_PassEnabled;
 };
