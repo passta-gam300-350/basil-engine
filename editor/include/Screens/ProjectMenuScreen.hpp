@@ -17,6 +17,7 @@ class ProjectMenuScreen : public Screen
 	};
 
 	std::vector<WorkspaceDetailUI> workspacesDetails;
+	bool newProjectModal = false;
 
 public:
 	FileService fileService;
@@ -36,6 +37,7 @@ public:
 
 
 	void render_project_list();
+	void render_new_project_modal();
 
 	void AddWorkspace(char const* name, const char* path, const char* lastOpened);
 	void ClearWorkspaces();

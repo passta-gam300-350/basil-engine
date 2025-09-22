@@ -1,5 +1,6 @@
 #include "Screens/EditorMain.hpp"
 
+#include "Editor.hpp"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "GLFW/glfw3.h"
@@ -12,7 +13,7 @@ EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 void EditorMain::init()
 {
 	// Set window title
-	glfwSetWindowTitle(window, "YOUR WORKSPACE NAME HERE");
+	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
 	// Set maximized

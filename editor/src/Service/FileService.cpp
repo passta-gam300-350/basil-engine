@@ -13,7 +13,13 @@ namespace
 #ifdef _WIN32
 	std::string ConvertWStrToStr(std::wstring const& s)
 	{
-		std::string n = WideCharToMultiByte(CP_UTF8, 0, s.c_str(), -1, nullptr, 0, nullptr, nullptr) ? std::string(WideCharToMultiByte(CP_UTF8, 0, s.c_str(), -1, nullptr, 0, nullptr, nullptr), '\0') : std::string();
+		int size_needed = WideCharToMultiByte(CP_UTF8, 0, s.c_str(), -1, nullptr, 0, nullptr, nullptr);
+
+		if (size_needed <= 0) return {};
+
+		std::string n(size_needed, '\0'); // allocate buffer
+		WideCharToMultiByte(CP_UTF8, 0, s.c_str(), -1, &n[0], size_needed, nullptr, nullptr);
+		n.resize(size_needed - 1); // remove the null terminator added by WideCharToMultiByte
 
 		return n;
 	}

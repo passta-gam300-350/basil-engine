@@ -1,12 +1,14 @@
 #include "Screens/ProjectMenuScreen.hpp"
 
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <__msvc_ostream.hpp>
 
 #include "Editor.hpp"
 #include "imgui_internal.h"
 #include "glfw/glfw3.h"
+#include "Manager/WorkplaceManager.hpp"
 
 
 bool ProjectMenuScreen::Activate()
@@ -45,25 +47,19 @@ void ProjectMenuScreen::init()
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
 
-	// Add some dummy workspaces for demonstration
-	// In a real application, you would load these from a configuration file or user settings
-	AddWorkspace("Sample Project 1", "/path/to/project1", "2024-10-01 10:00 AM");
-	AddWorkspace("Sample Project 2", "/path/to/project2", "2024-10-02 11:30 AM");
-	AddWorkspace("Sample Project 3", "/path/to/project3", "2024-10-03 02:15 PM");
 
-	AddWorkspace("Sample Project 1", "/path/to/project1", "2024-10-01 10:00 AM");
-	AddWorkspace("Sample Project 2", "/path/to/project2", "2024-10-02 11:30 AM");
-	AddWorkspace("Sample Project 3", "/path/to/project3", "2024-10-03 02:15 PM");
+	WorkplaceManager::GetInstance();
 
-	AddWorkspace("Sample Project 1", "/path/to/project1", "2024-10-01 10:00 AM");
-	AddWorkspace("Sample Project 2", "/path/to/project2", "2024-10-02 11:30 AM");
-	AddWorkspace("Sample Project 3", "/path/to/project3", "2024-10-03 02:15 PM");
+	auto list = WorkplaceManager::GetInstance().GetAllWorkplaces();
 
-	AddWorkspace("Sample Project 1", "/path/to/project1", "2024-10-01 10:00 AM");
-	AddWorkspace("Sample Project 2", "/path/to/project2", "2024-10-02 11:30 AM");
-	AddWorkspace("Sample Project 3", "/path/to/project3", "2024-10-03 02:15 PM");
+	for (const auto& wp : list)
+	{
+		AddWorkspace(wp.name.c_str(), wp.path.c_str(), std::asctime(std::localtime(&wp.lastOpened)));
+	}
 
-	AddWorkspace("Amprex Project Alpha", "/path/to/amprex_project_alpha", "2024-10-04 03:30 PM");
+
+
+	
 
 }
 
@@ -128,7 +124,7 @@ void ProjectMenuScreen::render()
 
 		if (openfile)
 		{
-		
+			
 			Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
 		}
 		
@@ -136,15 +132,28 @@ void ProjectMenuScreen::render()
 	}
 	if (newPress)
 	{
-		// Logic to create a new project
-		// For demonstration, we'll just switch to the main editor state
-		std::string p{};
-		bool openFolder = fileService.OpenFolderDialog(p);
-		if (openFolder)
-		{
-			Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
-		}
+		//// Logic to create a new project
+		//// For demonstration, we'll just switch to the main editor state
+		//std::string p{};
+		//bool openFolder = fileService.OpenFolderDialog(p);
+		//std::filesystem::path fp(p);
+
+		//
+		//if (openFolder)
+		//{
+		//	// Get the last part of the path as the project name
+		//	std::string projectName = fp.filename().string();
+		//	WorkplaceManager::GetInstance().AddWorkplace(projectName, p);
+		//	WorkplaceManager::Workplace& wp = (WorkplaceManager::GetInstance().GetWorkplace(projectName));
+		//	WorkplaceManager::GetInstance().SetupWorkspace(wp);
+
+		//	
+		//	Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
+		//}
+
+		newProjectModal = true;
 	}
+	
 
 	ImGui::BeginChild("##project_list", ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y-100), true);
 	render_project_list();
@@ -159,7 +168,15 @@ void ProjectMenuScreen::render()
 	}
 	ImGui::PopID();
 
+	if (newProjectModal)
+	{
+		
+		render_new_project_modal();
+	
+		ImGui::OpenPopup("Create a new project##MODAL_POP_NEW_PROJECT");
+	}
 	ImGui::End();
+
 }
 
 
@@ -173,6 +190,7 @@ void ProjectMenuScreen::AddWorkspace(char const* name, const char* path, const c
 	workspace.path = path;
 	workspace.lastOpened = lastOpened;
 	workspacesDetails.push_back(workspace);
+	
 }
 
 void ProjectMenuScreen::ClearWorkspaces()
@@ -235,4 +253,96 @@ void ProjectMenuScreen::render_project_list()
 
 		
 	}
+
+	
 }
+
+void ProjectMenuScreen::render_new_project_modal()
+{
+
+	ImGui::SetNextWindowSize({ 800,0 });
+	ImGui::SetNextWindowPos({ (ImGui::GetIO().DisplaySize.x - 800) * 0.5f, (ImGui::GetIO().DisplaySize.y - 200) * 0.5f });
+	if (!ImGui::BeginPopupModal("Create a new project##MODAL_POP_NEW_PROJECT", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+
+		return;
+	}
+	constexpr unsigned MAX_PATH_LEN = 2048;
+	// Modal content
+	static char projectNameBuf[MAX_PATH_LEN]{};
+	static char projectPathBuf[MAX_PATH_LEN]{};
+	ImGui::Text("Project Name:");
+	ImGui::SameLine();
+	ImGui::InputText("##PROJECT_INPUT_NAME", projectNameBuf, sizeof(projectNameBuf));
+
+	ImGui::Text("Project Folder:");
+	ImGui::SameLine();
+	ImGui::InputText("##PROJECT_INPUT_FDR", projectPathBuf, sizeof(projectPathBuf));
+	ImGui::SameLine();
+	
+	ImGui::PushID("BUTTON_BROWSE_FOLDER_NEW_PROJ");
+	if (ImGui::Button("Browse"))
+	{
+		std::string p{};
+		bool openFolder = fileService.OpenFolderDialog(p);
+		std::filesystem::path fp(p);
+		if (openFolder)
+		{
+			std::strncpy(projectPathBuf, p.c_str(), sizeof(projectPathBuf));
+			projectPathBuf[sizeof(projectPathBuf) - 1] = '\0'; // Ensure null-termination
+		}
+	}
+	ImGui::PopID();
+
+	ImGui::Separator();
+	ImGui::TextWrapped("Note: A new folder will be created inside the selected folder with the project name.");
+	ImGui::Separator();
+	ImGui::Text("Project Path: %s\\%s", projectPathBuf, projectNameBuf);
+	ImGui::Separator();
+	ImGui::PushID("MODAL_CREATE_PROJ_CANCEL");
+	bool cancelClicked = ImGui::Button("Cancel");
+	ImGui::PopID();
+	ImGui::SameLine();
+	ImGui::PushID("MODAL_PROJ_CREATE_GO");
+	bool createClicked = ImGui::Button("Create");
+	ImGui::PopID();
+
+	if (cancelClicked)
+		{
+		newProjectModal = false;
+		ImGui::CloseCurrentPopup();
+		// Clear buffers
+		std::ranges::fill(std::begin(projectNameBuf), std::end(projectNameBuf), 0);
+		std::ranges::fill(std::begin(projectPathBuf), std::end(projectPathBuf), 0);
+	}
+
+	if (createClicked)
+	{
+
+		// Create the new project here
+		std::string combi = std::string(projectPathBuf) + "\\" + std::string(projectNameBuf);
+		WorkplaceManager::GetInstance().AddWorkplace(projectNameBuf, combi.c_str());
+		WorkplaceManager::Workplace& wp = (WorkplaceManager::GetInstance().GetWorkplace(projectNameBuf));
+		WorkplaceManager::GetInstance().SetupWorkspace(wp);
+
+		std::time_t now = std::time(nullptr);
+		// ISO 8601 format
+		std::string iso = std::asctime(std::localtime(&now));
+		iso.pop_back(); // remove trailing newline
+		// Add to UI list
+		AddWorkspace(projectNameBuf, combi.c_str(), iso.c_str());
+		{
+			newProjectModal = false;
+			ImGui::CloseCurrentPopup();
+			// Clear buffers
+			std::ranges::fill(std::begin(projectNameBuf), std::end(projectNameBuf), 0);
+			std::ranges::fill(std::begin(projectPathBuf), std::end(projectPathBuf), 0);
+		}
+	}
+
+
+	ImGui::EndPopup();
+	
+	
+}
+
