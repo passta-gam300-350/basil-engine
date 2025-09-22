@@ -711,7 +711,7 @@ int main()
         spdlog::error("Failed to initialize graphics test driver!");
         return -1;
     }
-    
+
     driver.Run();
     driver.Shutdown();
     

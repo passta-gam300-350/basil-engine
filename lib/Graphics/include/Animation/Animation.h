@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-
+#include <iostream>
 // key frame for position, will need for interpolation
 struct keyFramePosition
 {

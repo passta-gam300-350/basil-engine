@@ -29,12 +29,6 @@ namespace helperTools
 
         if (totalDistanceInTime <= 0.0f)
         {
-            std::cerr << "[clampT ERROR] Keyframe times invalid at index "
-                << keyFrameIndex
-                << " start=" << startTime
-                << " end=" << endTime
-                << " current=" << currentTime
-                << std::endl;
             assert(false && "Keyframe timestamps must be strictly increasing, data wrong!");
         }
         float t = (currentTime - startTime) / totalDistanceInTime;
@@ -62,16 +56,10 @@ namespace skeletonHelper
         {
             if (theSkeleton.bones[i].parentIndex >= i && theSkeleton.bones[i].parentIndex != -1)
             {
-                std::cout << "ERROR: Bone " << theSkeleton.bones[i].name
-                    << " at index " << i
-                    << " has parent at index " << theSkeleton.bones[i].parentIndex
-                    << " (should be lower)" << std::endl;
                 return false;
             }
         }
-        std::cout << "Hierarchy valid!" << std::endl;
         return true;
-
     }
 
     void reorderHierarchy(skeleton& theSkeleton)
@@ -90,7 +78,6 @@ namespace skeletonHelper
                 bone.id = orderedBones.size();  // update bone ID to match new position
                 // parentIndex stays -1 (it's root)
                 orderedBones.push_back(bone);
-                std::cout << "Added root: " << bone.name << " at new index " << bone.id << std::endl;
             }
             // old index helps to track whats change to what
         }
@@ -123,30 +110,12 @@ namespace skeletonHelper
 
                     orderedBones.push_back(bone);
                     addedAny = true;  // We added something, continue while loop
-
-                    std::cout << "Added bone: " << bone.name
-                        << " (old index: " << i
-                        << ", new index: " << bone.id
-                        << ", parent new index: " << bone.parentIndex << ")" << std::endl;
                 }
             }
         }
         // step 4 verify if all processed
         if (orderedBones.size() != theSkeleton.bones.size())
         {
-            std::cout << "ERROR: Only reordered " << orderedBones.size()
-                << " out of " << theSkeleton.bones.size() << " bones!" << std::endl;
-
-            // debug: show which bones weren't processed
-            for (size_t i = 0; i < theSkeleton.bones.size(); i++)
-            {
-                if (oldToNew[i] == -1)
-                {
-                    std::cout << "  Bone not processed: " << theSkeleton.bones[i].name
-                        << " (index " << i
-                        << ", parent " << theSkeleton.bones[i].parentIndex << ")" << std::endl;
-                }
-            }
             return;  // do not modify skeleton if something went wrong
         }
         // all good, update the reordered to the original bones
@@ -261,7 +230,7 @@ void animator::updateAnimation(float deltaTime, const skeleton& theSkeleton)
         eachChannel.update(currentTime);
     }
     // create an array to store all local transformed bone
-    std::vector<glm::mat4> localBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f)); // store with identity matrix first
+    std::vector<glm::mat4> localBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));  // store with identity matrix first
     // loop all of them, map to its corresponding
     for (boneChannel const& eachChannel : currentAnimation->channels)
     {
