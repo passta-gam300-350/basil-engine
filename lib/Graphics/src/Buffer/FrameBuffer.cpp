@@ -1,5 +1,6 @@
 #include <Buffer/FrameBuffer.h>
 #include <glad/glad.h>
+#include <glfw/glfw3.h>
 #include <spdlog/spdlog.h>
 
 namespace Utils
@@ -212,6 +213,18 @@ void FrameBuffer::Bind()
 void FrameBuffer::Unbind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Restore viewport to current window size
+	int viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+
+	// Get current window size from GLFW
+	GLFWwindow* currentWindow = glfwGetCurrentContext();
+	if (currentWindow) {
+		int windowWidth, windowHeight;
+		glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
+		glViewport(0, 0, windowWidth, windowHeight);
+	}
 }
 
 void FrameBuffer::Resize(uint32_t width, uint32_t height)
