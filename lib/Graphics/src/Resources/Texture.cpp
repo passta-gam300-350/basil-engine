@@ -1,5 +1,5 @@
 #include <Resources/Texture.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <glad/glad.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -47,6 +47,8 @@ TextureData& TextureData::operator=(TextureData&& other) noexcept {
 TextureData TextureLoader::LoadFromFile(const char* path, const std::string& directory) {
     TextureData textureData;
     std::string filename = directory + '/' + std::string(path);
+
+    //stbi_set_flip_vertically_on_load(true);
     
     textureData.pixels = stbi_load(filename.c_str(), &textureData.width, 
                                   &textureData.height, &textureData.channels, 0);
@@ -54,7 +56,7 @@ TextureData TextureLoader::LoadFromFile(const char* path, const std::string& dir
     if (textureData.pixels) {
         textureData.isValid = true;
     } else {
-        std::cout << "Texture failed to load at path: " << filename << std::endl;
+        spdlog::error("Texture failed to load at path: {}", filename);
         textureData.isValid = false;
     }
     
@@ -70,18 +72,28 @@ unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma
     unsigned int textureID;
     glGenTextures(1, &textureID);
     
-    GLenum format;
-    if (data.channels == 1)
-        format = GL_RED;
-    else if (data.channels == 3)
-        format = GL_RGB;
-    else if (data.channels == 4)
-        format = GL_RGBA;
-    else
-        format = GL_RGB; // Default fallback
+    GLenum internalFormat, dataFormat;
+    if (data.channels == 1) {
+        internalFormat = GL_RED;
+        dataFormat = GL_RED;
+    }
+    else if (data.channels == 3) {
+        // Use sRGB format for gamma-encoded textures (albedo/diffuse)
+    	internalFormat = gamma ? GL_SRGB8 : GL_RGB;
+        dataFormat = GL_RGB;
+    }
+	else if (data.channels == 4) {
+        // Use sRGB format for gamma-encoded textures (albedo/diffuse with alpha)
+        internalFormat = gamma ? GL_SRGB8_ALPHA8 : GL_RGBA;
+        dataFormat = GL_RGBA;
+    }
+    else {
+        internalFormat = GL_RGB; // Default fallback
+    	dataFormat = GL_RGB;
+    }
     
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, data.width, data.height, 0, format, GL_UNSIGNED_BYTE, data.pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, data.width, data.height, 0, dataFormat, GL_UNSIGNED_BYTE, data.pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

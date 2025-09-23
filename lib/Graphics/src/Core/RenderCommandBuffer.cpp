@@ -1,11 +1,11 @@
 #include "Core/RenderCommandBuffer.h"
-#include "Resources/TextureBindingSystem.h"
+#include "Resources/TextureSlotManager.h"
 #include <glad/glad.h>
 #include <algorithm>
 #include <spdlog/spdlog.h>
 
 RenderCommandBuffer::RenderCommandBuffer() {
-    // Texture binding system will be initialized explicitly via Initialize()
+    // Texture binding system will be set via SetTextureSlotManager()
     m_TextureBindingSystem = nullptr;
 }
 
@@ -14,22 +14,6 @@ void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
     m_Commands.emplace_back(command);
 }
 
-void RenderCommandBuffer::Initialize()
-{
-    if (!m_TextureBindingSystem) {
-        spdlog::info("[RenderCommandBuffer] Initializing texture binding system...");
-        m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Bindless);
-        if (!m_TextureBindingSystem) {
-            spdlog::warn("[RenderCommandBuffer] Failed to create bindless system, using traditional");
-            m_TextureBindingSystem = TextureBindingFactory::Create(TextureBindingFactory::BindingType::Traditional);
-        }
-    }
-}
-
-void RenderCommandBuffer::SetTextureBindingSystem(std::unique_ptr<ITextureBindingSystem> bindingSystem)
-{
-    m_TextureBindingSystem = std::move(bindingSystem);
-}
 
 void RenderCommandBuffer::Clear()
 {
@@ -38,22 +22,11 @@ void RenderCommandBuffer::Clear()
 
 void RenderCommandBuffer::Execute()
 {
-    // Begin batch operations for texture binding
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->BeginBatch();
-    }
-    
-    // Execute commands in order (after sorting)
+    // Execute commands in order without batching to ensure proper per-object texture uniforms
     for (const auto& sortableCmd : m_Commands) {
-        // Use std::visit for efficient type-based dispatch
         std::visit([this](const auto& cmd) {
             this->ExecuteCommand(cmd);
         }, sortableCmd);
-    }
-    
-    // End batch operations
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->EndBatch();
     }
 
     // Final GPU state cleanup
@@ -105,14 +78,14 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformsData& 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexturesData& cmd)
 {
     if (!cmd.shader) return;
-    
-    // Ensure texture binding system is initialized
+
+    // Ensure texture binding system is available
     if (!m_TextureBindingSystem) {
-        spdlog::error("[RenderCommandBuffer] Texture binding system not initialized! Call Initialize() first.");
+        spdlog::error("[RenderCommandBuffer] Texture binding system not set! SceneRenderer should call SetTextureSlotManager().");
         return;
     }
-    
-    // Use abstracted texture binding system
+
+    // Use slot-based texture system
     m_TextureBindingSystem->BindTextures(cmd.textures, cmd.shader);
 }
 
@@ -123,9 +96,13 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
     glDrawElements(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
     
-    // Reset texture state using abstraction
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->UnbindAll();
+    // Reset material texture state (but preserve shadow map binding)
+    if (m_TextureBindingSystem)
+    {
+        // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
+        for (int i = 0; i < 8; ++i) {
+            m_TextureBindingSystem->UnbindTexture(i);
+        }
     }
 }
 
@@ -143,9 +120,13 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
                            cmd.instanceCount);
     glBindVertexArray(0);
 
-    // Reset texture state using abstraction
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->UnbindAll();
+    // Reset material texture state (but preserve shadow map binding)
+    if (m_TextureBindingSystem)
+    {
+        // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
+        for (int i = 0; i < 8; ++i) {
+            m_TextureBindingSystem->UnbindTexture(i);
+        }
     }
 
     // Unbind SSBO binding points to prevent state leakage
@@ -164,10 +145,20 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniforms
     // Set light space matrix uniform
     cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
 
-    // Bind shadow map texture to specified unit
-    glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
-    glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
+    // Bind shadow map texture to specified unit using TextureSlotManager
+    if (m_TextureBindingSystem) {
+        m_TextureBindingSystem->BindTextureID(cmd.shadowMapTexture, cmd.shadowMapUnit);
+    } else {
+        // Fallback to manual binding
+        glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
+        glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
+    }
+
+    // Always set the uniform to point to the correct texture unit
     cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
+
+    // Set the shadow enable flag
+    cmd.shader->setBool("u_EnableShadows", cmd.enableShadows);
 
     // Note: Shadow map texture will remain bound until explicitly unbound
     // This is intentional as it needs to stay bound for the entire rendering pass
@@ -194,17 +185,16 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferDa
 
 void RenderCommandBuffer::CleanupGPUState()
 {
-    // Reset shadow map texture units that may have been bound during shadow mapping
-    // This prevents texture unit state leakage between frames
-    glActiveTexture(GL_TEXTURE15);  // Shadow map typically uses unit 15
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // Note: We don't reset shadow map texture (slot 8) here since it should persist
+    // for the entire rendering pass. Shadow map will be reset at frame end.
 
     // Reset to default texture unit
     glActiveTexture(GL_TEXTURE0);
 
-    // Ensure all SSBO binding points are unbound
+    // Ensure SSBO binding points are unbound
     // This prevents SSBO state leakage between frames
-    for (int i = 0; i < 4; ++i) {  // Common SSBO binding points 0-3
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO
+    for (int i = 1; i < 4; ++i) {  // Unbind binding points 1-3
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i, 0);
     }
 

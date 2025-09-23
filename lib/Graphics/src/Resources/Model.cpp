@@ -1,10 +1,11 @@
 #include <Resources/Model.h>
 #include <Resources/Texture.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 {
     loadModel(path);
+
 }
 
 // Draw() method removed - Model is now pure data
@@ -18,7 +19,7 @@ void Model::loadModel(std::string const &path)
     // check for errors
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
-        std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+        spdlog::error("ASSIMP:: {}", importer.GetErrorString());
         return;
     }
     // retrieve the directory path of the filepath
@@ -26,6 +27,7 @@ void Model::loadModel(std::string const &path)
 
     // process ASSIMP's root node recursively
     processNode(scene->mRootNode, scene);
+
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene)
@@ -104,9 +106,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.push_back(face.mIndices[j]);        
     }
     // process materials
-    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];    
+    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+
     // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
-    // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
+    // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER.
     // Same applies to other texture as the following list summarizes:
     // diffuse: texture_diffuseN
     // specular: texture_specularN
@@ -121,11 +125,27 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     
     // Separate metallic and roughness based on filename
     for (auto& tex : allSpecularMaps) {
-        if (tex.path.find("Metallic") != std::string::npos) {
+        if (tex.path.find("Metallic") != std::string::npos ||
+            tex.path.find("metallic") != std::string::npos) {
             tex.type = "texture_metallic";
+            // Update the type in textures_loaded as well
+            for (auto& loadedTex : textures_loaded) {
+                if (loadedTex.path == tex.path) {
+                    loadedTex.type = "texture_metallic";
+                    break;
+                }
+            }
             textures.push_back(tex);
-        } else if (tex.path.find("Roughness") != std::string::npos) {
-            tex.type = "texture_roughness"; 
+        } else if (tex.path.find("Roughness") != std::string::npos ||
+                   tex.path.find("roughness") != std::string::npos) {
+            tex.type = "texture_roughness";
+            // Update the type in textures_loaded as well
+            for (auto& loadedTex : textures_loaded) {
+                if (loadedTex.path == tex.path) {
+                    loadedTex.type = "texture_roughness";
+                    break;
+                }
+            }
             textures.push_back(tex);
         } else {
             textures.push_back(tex); // Keep as specular
@@ -140,13 +160,22 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     
     // Separate normal and height based on filename if both are in HEIGHT type
     std::vector<Texture> separatedNormals, separatedHeights;
-    
+
     for (const auto& tex : heightMaps) {
-        if (tex.path.find("Normal") != std::string::npos) {
+        if (tex.path.find("Normal") != std::string::npos ||
+            tex.path.find("normal") != std::string::npos) {
             Texture normalTex = tex;
             normalTex.type = "texture_normal";
+            // Update the type in textures_loaded as well
+            for (auto& loadedTex : textures_loaded) {
+                if (loadedTex.path == tex.path) {
+                    loadedTex.type = "texture_normal";
+                    break;
+                }
+            }
             separatedNormals.push_back(normalTex);
-        } else if (tex.path.find("Height") != std::string::npos) {
+        } else if (tex.path.find("Height") != std::string::npos ||
+                   tex.path.find("height") != std::string::npos) {
             separatedHeights.push_back(tex);
         } else {
             separatedHeights.push_back(tex); // Default to height
@@ -168,6 +197,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_SHININESS, "texture_roughness");
     textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
     
+
     // return a mesh object created from the extracted mesh data
     return Mesh(vertices, indices, textures);
 }
@@ -193,7 +223,9 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
         if(!skip)
         {   // if texture hasn't been loaded already, load it
             Texture texture;
-            texture.id = TextureLoader::TextureFromFile(str.C_Str(), this->directory);
+            // Use gamma correction for diffuse/albedo textures (sRGB), but not for normal/roughness/metallic maps (linear)
+            bool useGammaCorrection = (typeName == "texture_diffuse");
+            texture.id = TextureLoader::TextureFromFile(str.C_Str(), this->directory, useGammaCorrection);
             texture.type = typeName;
             texture.path = str.C_Str();
             textures.push_back(texture);

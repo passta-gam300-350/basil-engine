@@ -100,9 +100,8 @@ void main()
         color += u_EmissiveColor;
     }
     
-    // Tone mapping and gamma correction
+    // Tone mapping only - hardware sRGB framebuffer handles gamma correction
     color = color / (color + vec3(1.0)); // Reinhard tone mapping
-    color = pow(color, vec3(1.0/2.2));   // Gamma correction
     
     FragColor = vec4(color, 1.0);
 }

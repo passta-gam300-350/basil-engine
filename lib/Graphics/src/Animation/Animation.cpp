@@ -1,6 +1,8 @@
 #include "Animation/Animation.h"
 #include <glm/gtx/compatibility.hpp>
 #include <algorithm>
+#include <iostream>
+#include <set>
 
 namespace helperTools
 {
@@ -28,13 +30,124 @@ namespace helperTools
         if (totalDistanceInTime <= 0.0f)
         {
             assert(false && "Keyframe timestamps must be strictly increasing, data wrong!");
-            return 0.0f;
         }
         float t = (currentTime - startTime) / totalDistanceInTime;
         t = glm::clamp(t, 0.0f, 1.0f);
+        return t;
     }
 
+    void printSkeleton(const skeleton& theSkeleton)
+    {
+        for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+        {
+            std::cout << "Bone " << i << ": " << theSkeleton.bones[i].name
+                << " parent=" << theSkeleton.bones[i].parentIndex
+                << std::endl;
+        }
+    }
 }
+
+namespace skeletonHelper
+{
+    bool validateHierarchy(const skeleton& theSkeleton)
+    {
+        // Check if parent indices are correct
+        for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+        {
+            if (theSkeleton.bones[i].parentIndex >= i && theSkeleton.bones[i].parentIndex != -1)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void reorderHierarchy(skeleton& theSkeleton)
+    {
+        // Reorder bones to ensure parents before children
+        // step 1: setup
+        std::vector<oneSkeletonBone> orderedBones;
+        std::vector<int> oldToNew(theSkeleton.bones.size(), -1); // -1 means havent sorted yet
+        // step 2: add all root bones first (parent always come first to make sure no )
+        for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+        {
+            if (theSkeleton.bones[i].parentIndex == -1) 
+            {
+                oldToNew[i] = orderedBones.size();  // remember: old index i to new index (current size)
+                oneSkeletonBone bone = theSkeleton.bones[i];
+                bone.id = orderedBones.size();  // update bone ID to match new position
+                // parentIndex stays -1 (it's root)
+                orderedBones.push_back(bone);
+            }
+            // old index helps to track whats change to what
+        }
+        // step 3: keep adding children whose parents are already added
+        bool addedAny = true;
+        while (addedAny && orderedBones.size() < theSkeleton.bones.size())
+        {
+            addedAny = false; // reset flag
+            for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+            {
+                if (oldToNew[i] != -1)
+                {
+                    continue;
+                }
+                // check if the current bone parent is added or is root
+                int oldBonesParentIndex = theSkeleton.bones[i].parentIndex;
+                if (oldBonesParentIndex == -1 || oldToNew[oldBonesParentIndex] != -1) // is this bone parent already in ordered list
+                {
+                    oldToNew[i] = orderedBones.size();
+                    oneSkeletonBone bone = theSkeleton.bones[i];
+                    bone.id = orderedBones.size();  // update bone ID to match new position
+                    if (oldBonesParentIndex != -1)
+                    {
+                        bone.parentIndex = oldToNew[oldBonesParentIndex];  // Parent's NEW position
+                    }
+                    else
+                    {
+                        bone.parentIndex = -1;  // Still root
+                    }
+
+                    orderedBones.push_back(bone);
+                    addedAny = true;  // We added something, continue while loop
+                }
+            }
+        }
+        // step 4 verify if all processed
+        if (orderedBones.size() != theSkeleton.bones.size())
+        {
+            return;  // do not modify skeleton if something went wrong
+        }
+        // all good, update the reordered to the original bones
+        theSkeleton.bones = orderedBones; 
+    }
+
+    bool hasCircularDependency(const skeleton& theSkeleton)
+    {
+        // check for loops in hierarchy
+        for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+        {
+            std::set<int> visited;  // track where we've been
+            int current = i;        // start from this bone
+
+            // follow the parent chain
+            while (current != -1)  // -1 means we reached the root
+            {
+                // have we seen this bone before?
+                if (visited.count(current) > 0)
+                {
+                    return true;
+                }
+                // mark that we've been here
+                visited.insert(current);
+                // move to parent
+                current = theSkeleton.bones[current].parentIndex;
+            }
+        }
+        return false;  // No loops found
+    }
+}
+
 boneChannel::boneChannel(std::string const& boneName, int id)
     : m_name(boneName), m_id(id), localTransform(1.0f)
 {
@@ -43,8 +156,106 @@ boneChannel::boneChannel(std::string const& boneName, int id)
 
 void boneChannel::update(float time)
 {
-
+    glm::mat4 translation = interpolatePosition(time);
+    glm::mat4 rotation = interpolateRotation(time);
+    glm::mat4 scale = interpolateScale(time);
+    // SRT
+    localTransform = translation * rotation * scale;
 }
 
+glm::mat4 boneChannel::interpolatePosition(float time)
+{
+    if (m_positions.size() == 0) // edge cases, no position frame
+    {
+        return glm::mat4(1.0f);
+    }
+    if (m_positions.size() == 1)
+    {
+        return glm::translate(glm::mat4(1.0f), m_positions.front().position);
+    }
+    // get current frame
+    int currentFrameIndex = helperTools::findKeyFrameIndex(m_positions, time);
+    // get time (interpolation factor)
+    float t = helperTools::clampT(m_positions, currentFrameIndex, time);
+    // linear interpolate between two position 
+    glm::vec3 finalPosition = glm::mix(m_positions[currentFrameIndex].position, m_positions[currentFrameIndex + 1].position, t);
+    return glm::translate(glm::mat4(1.0f), finalPosition); //return the matrix
+}
 
+glm::mat4 boneChannel::interpolateRotation(float time)
+{
+    if (m_rotations.size() == 0)
+    {
+        return glm::mat4(1.0f); // no rotations
+    }
+    if (m_rotations.size() == 1)
+    {
+        return glm::mat4_cast(m_rotations.front().rotation);
+    }
+    // get current frame
+    int currentFrameIndex = helperTools::findKeyFrameIndex(m_rotations, time);
+    // get time (interpolation factor)
+    float t = helperTools::clampT(m_rotations, currentFrameIndex, time);
+    glm::quat finalRotation = glm::slerp(m_rotations[currentFrameIndex].rotation, m_rotations[currentFrameIndex + 1].rotation, t);
+    return glm::mat4_cast(finalRotation);
+}
 
+glm::mat4 boneChannel::interpolateScale(float time)
+{
+    if (m_scales.size() == 0)
+    {
+        return glm::mat4(1.0f);
+    }
+    if (m_scales.size() == 1)
+    {
+        return glm::scale(glm::mat4(1.0f), m_scales.front().scale);
+    }
+    // get current frame
+    int currentFrameIndex = helperTools::findKeyFrameIndex(m_scales, time);
+    // get time (interpolation factor)
+    float t = helperTools::clampT(m_scales, currentFrameIndex, time);
+    glm::vec3 finalScale = glm::mix(m_scales[currentFrameIndex].scale, m_scales[currentFrameIndex + 1].scale, t);
+    return glm::scale(glm::mat4(1.0f), finalScale);
+}
+
+void animator::updateAnimation(float deltaTime, const skeleton& theSkeleton)
+{
+    // advance the time
+    currentTime += currentAnimation->ticksPerSecond * deltaTime;
+    // loop animation
+    currentTime = fmod(currentTime, currentAnimation->duration);
+    // update all bone channels
+    for (boneChannel& eachChannel : currentAnimation->channels)
+    {
+        eachChannel.update(currentTime);
+    }
+    // create an array to store all local transformed bone
+    std::vector<glm::mat4> localBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));  // store with identity matrix first
+    // loop all of them, map to its corresponding
+    for (boneChannel const& eachChannel : currentAnimation->channels)
+    {
+        int boneID = eachChannel.getID();
+        if (boneID >= 0 && boneID < localBoneTransforms.size()) // need to ensure i got the correct bone ID
+        {
+            localBoneTransforms[boneID] = eachChannel.getLocalTransform();
+        }
+    }
+     // create an array to store global transform (apply the bone hierarchy)
+    std::vector<glm::mat4> globalBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));
+    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+    {
+        oneSkeletonBone const& eachBone = theSkeleton.bones[i];
+        if (eachBone.parentIndex == -1)  // root bone (no parent)
+        {
+            globalBoneTransforms[i] = localBoneTransforms[i];
+        }
+        else
+        {
+            globalBoneTransforms[i] = globalBoneTransforms[eachBone.parentIndex] * localBoneTransforms[i];
+        }
+    }
+    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+    {
+        finalBoneMatrices[i] = globalBoneTransforms[i] * theSkeleton.bones[i].inverseBind;
+    }
+}

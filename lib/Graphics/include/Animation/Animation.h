@@ -4,12 +4,16 @@
 #include <vector>
 #include <string>
 #include <memory>
-
+#include <iostream>
 // key frame for position, will need for interpolation
 struct keyFramePosition
 {
     float timeStamp;
     glm::vec3 position;
+    keyFramePosition(float t, glm::vec3 const& p) : timeStamp(t), position(p)
+    {
+
+    }
 };
 
 // key frame for rotation, will need for interpolation
@@ -17,6 +21,10 @@ struct keyFrameRotation
 {
     float timeStamp;
     glm::quat rotation;
+    keyFrameRotation(float t, glm::quat const& r) : timeStamp(t), rotation(r)
+    {
+
+    }
 };
 
 // key frame for scaleA, will need for interpolation
@@ -24,6 +32,10 @@ struct keyFrameScale
 {
     float timeStamp;
     glm::vec3 scale;
+    keyFrameScale(float t, glm::vec3 const& s) : timeStamp(t), scale(s)
+    {
+
+    }
 };
 
 // assimp node data (check with steven is needed, did he parse for me or i parse myself)
@@ -70,6 +82,29 @@ public:
         return localTransform;
     }
     void update(float time); // interpolate all the key frames
+    // setter helper function
+    void addPositionKeyframe(float time, glm::vec3 const& position)
+    {
+        m_positions.push_back(keyFramePosition(time, position));
+    }
+
+    void addRotationKeyframe(float time, glm::quat const& rotation)
+    {
+        m_rotations.push_back(keyFrameRotation(time, rotation));
+    }
+
+    void addScaleKeyframe(float time, glm::vec3 const& scale)
+    {
+        m_scales.push_back(keyFrameScale(time, scale));
+    }
+
+    // Optional: Clear all keyframes
+    void clearKeyframes()
+    {
+        m_positions.clear();
+        m_rotations.clear();
+        m_scales.clear();
+    }
 
 private:
     std::string m_name;
@@ -78,11 +113,15 @@ private:
     std::vector<keyFrameRotation> m_rotations;
     std::vector<keyFrameScale> m_scales;
     glm::mat4 localTransform { 1.0f };
+    // helper function for update to interpolate 
+    glm::mat4 interpolatePosition(float time);
+    glm::mat4 interpolateRotation(float time);
+    glm::mat4 interpolateScale(float time);
 };
 
 // contains all those channels for one clips
 struct animationContainer
-{
+{ 
     float duration; // total length in ticks
     float ticksPerSecond; // how fast animation time runs (some files use 24fps, 30fps, or custom).
     std::vector<boneChannel> channels; // one channel per bone

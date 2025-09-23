@@ -1,5 +1,6 @@
 #include <Resources/Shader.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <spdlog/spdlog.h>
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
 {
@@ -47,7 +48,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
     }
     catch (std::ifstream::failure& e)
     {
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+        spdlog::error("SHADER::FILE_NOT_SUCCESSFULLY_READ: {}", e.what());
     }
     
     const char* vShaderCode = vertexCode.c_str();
@@ -170,7 +171,7 @@ void Shader::checkCompileErrors(GLuint shader, std::string type)
         if(!success)
         {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+            spdlog::error("SHADER_COMPILATION_ERROR of type: {}\n{}\n -- --------------------------------------------------- --", type, infoLog);
         }
     }
     else
@@ -179,7 +180,7 @@ void Shader::checkCompileErrors(GLuint shader, std::string type)
         if(!success)
         {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+            spdlog::error("PROGRAM_LINKING_ERROR of type: {}\n{}\n -- --------------------------------------------------- --", type, infoLog);
         }
     }
 }

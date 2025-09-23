@@ -30,7 +30,7 @@ private:
     ResourceManager* m_ResourceManager;
     std::unique_ptr<Camera> m_Camera;
 
-    // Advanced Graphics Demo: Instanced + Bindless + PBR
+    // Advanced Graphics Demo: Instanced + Traditional Textures + PBR
 
     // Scene objects
     std::vector<RenderableData> m_SceneObjects;
@@ -70,8 +70,12 @@ private:
                                      float innerCone = 30.0f, float outerCone = 45.0f);
 
     // Debug output
-    void PrintSystemInfo();
-    void PrintSceneInfo();
+    void PrintSystemInfo() const;
+    void PrintSceneInfo() const;
+    void PrintRenderPassStatus() const;
+
+    // Render pass controls
+    void ToggleRenderPass(const std::string& passName);
     //void RenderUI(); // For ImGui if available
 
     // Static pointer for callbacks

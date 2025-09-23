@@ -1,13 +1,13 @@
 #include "../../include/Core/Window.h"
 #include <glad/glad.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	: m_Width(width), m_Height(height), m_Window(nullptr)
 {
 	if (!glfwInit())
 	{
-		std::cerr << "Failed to initialize GLFW\n";
+		spdlog::error("Failed to initialize GLFW");
 		return;
 	}
 
@@ -20,7 +20,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	m_Window = glfwCreateWindow(m_Width, m_Height, title.c_str(), nullptr, nullptr);
 	if (!m_Window)
 	{
-		std::cerr << "Failed to create GLFW window\n";
+		spdlog::error("Failed to create GLFW window");
 		glfwTerminate();
 		return;
 	}
@@ -30,15 +30,15 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 
 	if (!gladLoadGL())
 	{
-		std::cerr << "Failed to initialize GLAD2\n";
+		spdlog::error("Failed to initialize GLAD2");
 		return;
 	}
 
 	// Print OpenGL info
-	std::cout << "OpenGL Vendor: " << glGetString(GL_VENDOR) << '\n';
-	std::cout << "OpenGL Renderer: " << glGetString(GL_RENDERER) << '\n';
-	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << '\n';
-	std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n';
+	spdlog::info("OpenGL Vendor: {}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+	spdlog::info("OpenGL Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+	spdlog::info("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+	spdlog::info("GLSL Version: {}", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
 	// Set default OpenGL state
 	glEnable(GL_DEPTH_TEST);
@@ -47,6 +47,10 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glEnable(GL_BLEND);
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Enable sRGB framebuffer for automatic linear-to-sRGB conversion
+	glEnable(GL_FRAMEBUFFER_SRGB);
+	spdlog::info("sRGB framebuffer enabled for linear color pipeline");
 
 	m_Initialized = true;
 

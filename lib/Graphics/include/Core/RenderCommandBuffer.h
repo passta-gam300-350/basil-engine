@@ -5,7 +5,7 @@
 #include <memory>
 #include <Resources/Shader.h>
 #include <Resources/Texture.h>
-#include <Resources/TextureBindingSystem.h>
+#include <Resources/TextureSlotManager.h>
 #include <Buffer/ShaderStorageBuffer.h>
 #include <glm/glm.hpp>
 
@@ -58,6 +58,7 @@ namespace RenderCommands {
         glm::mat4 lightSpaceMatrix;
         uint32_t shadowMapTexture;
         int shadowMapUnit;
+        bool enableShadows;
     };
 
     struct BlitFramebufferData {
@@ -88,27 +89,25 @@ class RenderCommandBuffer {
 public:
     RenderCommandBuffer();
     ~RenderCommandBuffer() = default;
-    
+
     // Command submission
     void Submit(const VariantRenderCommand& command);
-    
+
     // Efficient batch operations
     void Clear();
     void Execute(); // Execute all commands
 
-    // Initialization (call after OpenGL context is ready)
-    void Initialize();
+    // Set texture slot manager (should be called by SceneRenderer)
+    void SetTextureSlotManager(TextureSlotManager* textureManager) { m_TextureBindingSystem = textureManager; }
 
-    // Texture binding system configuration
-    void SetTextureBindingSystem(std::unique_ptr<ITextureBindingSystem> bindingSystem);
-    
+
     // Statistics
     size_t GetCommandCount() const { return m_Commands.size(); }
     size_t GetMemoryUsage() const;
 
 private:
     std::vector<VariantRenderCommand> m_Commands;
-    std::unique_ptr<ITextureBindingSystem> m_TextureBindingSystem;
+    TextureSlotManager* m_TextureBindingSystem;
     
     // Command execution visitors
     void ExecuteCommand(const RenderCommands::ClearData& cmd);

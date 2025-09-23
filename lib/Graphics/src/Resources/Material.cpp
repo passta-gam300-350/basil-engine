@@ -1,12 +1,13 @@
 #include <Resources/Material.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
+#include <cmath>
 
 Material::Material(std::shared_ptr<Shader> shader, const std::string& name)
     : m_Shader(shader), m_Name(name)
 {
     if (!shader)
     {
-        std::cerr << "Warning: Material '" << name << "' created with null shader!" << std::endl;
+        spdlog::warn("Material '{}' created with null shader!", name);
     }
 }
 
@@ -59,4 +60,9 @@ void Material::ApplyPBRProperties()
 
     // Note: Texture flags (u_HasDiffuseMap, etc.) are handled by bindless texture system
     // The bindless system uploads texture handles to SSBO and sets the appropriate flags
+}
+
+void Material::SetAlbedoColorSRGB(const glm::vec3& srgbColor) {
+    // Simple sRGB to linear conversion using gamma 2.2 approximation
+    m_AlbedoColor = glm::pow(srgbColor, glm::vec3(2.2f));
 }

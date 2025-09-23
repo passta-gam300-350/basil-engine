@@ -1,6 +1,7 @@
 #include <Buffer/FrameBuffer.h>
 #include <glad/glad.h>
-#include <iostream>
+#include <glfw/glfw3.h>
+#include <spdlog/spdlog.h>
 
 namespace Utils
 {
@@ -20,6 +21,15 @@ namespace Utils
 FrameBuffer::FrameBuffer(FBOSpecs const &spec)
 	: m_Specifications(spec)
 {
+	// Check for special case: empty framebuffer (used by PresentPass which blits to screen)
+	if (spec.Width == 0 && spec.Height == 0 && spec.Attachments.Attachments.empty())
+	{
+		spdlog::debug("Creating dummy framebuffer (0x0, no attachments) - likely for screen presentation");
+		// Don't create OpenGL framebuffer objects for this special case
+		m_FBOHandle = 0; // Use default framebuffer
+		return;
+	}
+
 	// Seperate the color attachment specs
 	for (auto format : spec.Attachments.Attachments)
 	{
@@ -35,7 +45,10 @@ FrameBuffer::FrameBuffer(FBOSpecs const &spec)
 FrameBuffer::~FrameBuffer()
 {
 	ClearAttachments();
-	glDeleteFramebuffers(1, &m_FBOHandle);
+	if (m_FBOHandle != 0) // Don't delete default framebuffer
+	{
+		glDeleteFramebuffers(1, &m_FBOHandle);
+	}
 }
 
 void FrameBuffer::Invalidate()
@@ -50,8 +63,7 @@ void FrameBuffer::Invalidate()
 	// Ensure valid dimensions
 	if (m_Specifications.Width == 0 || m_Specifications.Height == 0)
 	{
-		std::cerr << "Warning: Framebuffer dimensions are invalid (Width: " << m_Specifications.Width 
-				  << ", Height: " << m_Specifications.Height << ")" << std::endl;
+		spdlog::warn("Framebuffer dimensions are invalid (Width: {}, Height: {})", m_Specifications.Width, m_Specifications.Height);
 		m_Specifications.Width = 1280;
 		m_Specifications.Height = 720;
 	}
@@ -128,37 +140,50 @@ void FrameBuffer::Invalidate()
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		std::cerr << "Framebuffer is incomplete! Status: ";
+		// Log framebuffer specifications for debugging
+		spdlog::error("Framebuffer creation failed! Specs: {}x{}, ColorAttachments: {}, DepthAttachment: {}",
+			m_Specifications.Width, m_Specifications.Height,
+			m_ColorAttachments.size(),
+			(m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None) ? "Yes" : "No");
+
 		switch (status)
 		{
 		case GL_FRAMEBUFFER_UNDEFINED:
-			std::cerr << "GL_FRAMEBUFFER_UNDEFINED" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_UNDEFINED");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+			spdlog::error("This typically means the framebuffer has no color, depth, or stencil attachments!");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
 			break;
 		case GL_FRAMEBUFFER_UNSUPPORTED:
-			std::cerr << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_UNSUPPORTED");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-			std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS" << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS");
 			break;
 		default:
-			std::cerr << "Unknown error: 0x" << std::hex << status << std::endl;
+			spdlog::error("Framebuffer is incomplete! Status: Unknown error: 0x{:x}", status);
 			break;
 		}
+	}
+	else
+	{
+		spdlog::debug("Framebuffer created successfully: {}x{}, ColorAttachments: {}, DepthAttachment: {}",
+			m_Specifications.Width, m_Specifications.Height,
+			m_ColorAttachments.size(),
+			(m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None) ? "Yes" : "No");
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -188,13 +213,25 @@ void FrameBuffer::Bind()
 void FrameBuffer::Unbind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Restore viewport to current window size
+	int viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+
+	// Get current window size from GLFW
+	GLFWwindow* currentWindow = glfwGetCurrentContext();
+	if (currentWindow) {
+		int windowWidth, windowHeight;
+		glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
+		glViewport(0, 0, windowWidth, windowHeight);
+	}
 }
 
 void FrameBuffer::Resize(uint32_t width, uint32_t height)
 {
 	if (width == 0 || height == 0)
 	{
-		std::cerr << "Cannot resize framebuffer to zero dimensions!" << std::endl;
+		spdlog::error("Cannot resize framebuffer to zero dimensions!");
 		return;
 	}
 
@@ -208,7 +245,7 @@ void FrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 {
 	if (attachmentIndex >= m_ColorAttachments.size())
 	{
-		std::cerr << "Attachment index out of range!" << std::endl;
+		spdlog::error("Attachment index out of range!");
 		return;
 	}
 
@@ -221,7 +258,7 @@ uint32_t FrameBuffer::GetColorAttachmentRendererID(uint32_t index) const
 {
 	if (index >= m_ColorAttachments.size())
 	{
-		std::cerr << "Color attachment index out of range!" << std::endl;
+		spdlog::error("Color attachment index out of range!");
 		return 0;
 	}
 

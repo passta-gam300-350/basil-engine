@@ -4,7 +4,7 @@
 #include "../../include/Utility/Light.h"
 #include "../../include/Resources/ResourceManager.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 ShadowMappingPass::ShadowMappingPass()
     : RenderPass("ShadowPass", FBOSpecs{
@@ -37,6 +37,9 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
     // Begin shadow pass - bind depth framebuffer
     Begin();
+
+    // Setup command buffer with systems from context
+    SetupCommandBuffer(context);
 
     // Calculate light-space matrices
     glm::vec3 sceneCenter(0.0f, 0.0f, 0.0f);  // Center of our 2x2 grid
@@ -132,7 +135,7 @@ glm::mat4 ShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lig
     // Create orthographic projection that covers the scene
     // For a 2x2 grid with spacing 3.0f, scene spans roughly -1.5 to +1.5 in X/Z
     // Add margin for ground plane and light angle
-    float orthoSize = 8.0f;  // Smaller, tighter bounds
+    float orthoSize = 15.0f;  // Smaller, tighter bounds
     float nearPlane = 1.0f;
     float farPlane = 50.0f;
 
