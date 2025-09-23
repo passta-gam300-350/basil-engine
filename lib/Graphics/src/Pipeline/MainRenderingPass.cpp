@@ -4,6 +4,7 @@
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
+#include <glfw/glfw3.h>
 
 MainRenderingPass::MainRenderingPass()
     : RenderPass("MainPass", FBOSpecs
@@ -19,6 +20,9 @@ MainRenderingPass::MainRenderingPass()
 
 void MainRenderingPass::Execute(RenderContext& context)
 {
+    // Update framebuffer size to match current window before rendering
+    UpdateFramebufferSize();
+
     // New context-based execution - use references instead of copies!
     Begin();
 
@@ -54,4 +58,26 @@ void MainRenderingPass::Execute(RenderContext& context)
     context.frameData.mainColorBuffer = GetFramebuffer();
 
     End();
+}
+
+void MainRenderingPass::UpdateFramebufferSize()
+{
+    // Get current window size
+    GLFWwindow* currentWindow = glfwGetCurrentContext();
+    if (!currentWindow) return;
+
+    int windowWidth, windowHeight;
+    glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
+
+    // Check if we need to resize the framebuffer
+    auto currentSpecs = m_Framebuffer->GetSpecification();
+    if (currentSpecs.Width != static_cast<uint32_t>(windowWidth) ||
+        currentSpecs.Height != static_cast<uint32_t>(windowHeight)) {
+
+        // Resize the framebuffer to match window size
+        m_Framebuffer->Resize(static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
+
+        // Update the viewport to match the new framebuffer size
+        SetViewport(Viewport(0, 0, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight)));
+    }
 }
