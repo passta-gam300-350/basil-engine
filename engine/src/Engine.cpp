@@ -4,6 +4,7 @@
 #include "Manager/ResourceSystem.hpp"
 #include "Input/InputManager.h"
 #include "Ecs/ecs.h"
+#include "Manager/ObjectManager.hpp"
 
 namespace {
 	constexpr std::uint64_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -30,6 +31,7 @@ void Engine::Init(std::string const& cfg ) {
 	if (cfg.empty()) {
 		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
 		InputManager::Get_Instance()->Setup_Callbacks();
+		ObjectManager::GetInstance().CreateGameObject();
 		return;
 	}
 	YAML::Node root{YAML::LoadFile(cfg)};
@@ -67,8 +69,14 @@ void Engine::Init(std::string const& cfg ) {
 	else {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
+
+
+
+
 	InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
+
+	
 }
 
 void Engine::Update() {
