@@ -20,6 +20,21 @@ struct TypeInfo {
 
 using TypeInfo = entt::meta_type;
 
+struct TypeData {
+    void* m_Raw;
+    entt::meta_type m_TypeInfo;
+
+    TypeData& SetRaw(void*);
+    std::string TypeName();
+    entt::id_type TypeId();
+    bool IsPrimitive();
+    auto begin() { //lowercase for compatibility with std::ranges
+        entt::meta_any any = m_TypeInfo.from_void(m_Raw);
+        any.type().data().begin();
+    }
+    auto end(); //lowercase for compatibility with std::ranges
+};
+
 TypeInfo ResolveType(TypeName t_name);
 
 template<std::size_t N>

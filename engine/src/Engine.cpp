@@ -67,6 +67,7 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 	InputManager::Get_Instance()->Setup_Callbacks();
+	Scheduler::CompileJobSchedule();
 }
 
 void Engine::Update() {
