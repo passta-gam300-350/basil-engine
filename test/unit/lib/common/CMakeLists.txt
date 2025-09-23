@@ -1,1 +1,2 @@
 add_subdirectory(intrinsics/simd)
+add_subdirectory(structures)

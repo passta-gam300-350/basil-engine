@@ -53,10 +53,11 @@ public:
 	float GetFarClip() const { return m_FarClip; }
 	CameraType GetType() const { return m_Type; }
 
-	// Settings
-	float MovementSpeed = 2.5f;
-	float MouseSensitivity = 0.1f;
-	float Zoom = 45.0f;
+	// Settings accessors
+	float GetMovementSpeed() const { return m_MovementSpeed; }
+	float GetMouseSensitivity() const { return m_MouseSensitivity; }
+	void SetMovementSpeed(float speed) { m_MovementSpeed = speed; }
+	void SetMouseSensitivity(float sensitivity) { m_MouseSensitivity = sensitivity; }
 
 private:
 	void RecalculateProjection();
@@ -86,4 +87,8 @@ private:
 
 	// Orthographic
 	float m_OrthographicSize = 10.f;
+
+	// Settings (previously public)
+	float m_MovementSpeed = 2.5f;
+	float m_MouseSensitivity = 0.1f;
 };

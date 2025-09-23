@@ -7,6 +7,7 @@ enum class FBOTextureFormat
 {
 	None = 0,
 	RGBA8,
+	RGBA16F,        // 16-bit floating point for G-buffer precision
 	RED_INTEGER,
 	DEPTH24STENCIL8,
 	Depth = DEPTH24STENCIL8
@@ -55,6 +56,8 @@ public:
 	void ClearAttachment(uint32_t attachmentIndex, int value);
 
 	uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const;
+	uint32_t GetDepthAttachmentRendererID() const { return m_DepthAttachment; }
+	uint32_t GetFBOHandle() const { return m_FBOHandle; }
 	const FBOSpecs &GetSpecification() const
 	{
 		return m_Specifications;

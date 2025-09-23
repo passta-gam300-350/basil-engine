@@ -67,6 +67,16 @@ macro(import_glfw)
     FetchContent_MakeAvailable(glfw)
 endmacro()
 
+macro(import_mesh_optimiser)
+    FetchContent_Declare(
+      mesh_optimiser
+      GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
+      GIT_TAG v0.25
+    )
+
+    FetchContent_MakeAvailable(mesh_optimiser)
+endmacro()
+
 macro(import_glm)
     FetchContent_Declare(
         glm
@@ -87,16 +97,6 @@ macro(import_assimp)
     FetchContent_MakeAvailable(assimp)
 endmacro()
 
-macro(import_reflect)
-    FetchContent_Declare(
-        reflect
-        GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
-        GIT_TAG v0.20.0
-    )
-
-    FetchContent_MakeAvailable(reflect)
-endmacro()
-
 macro(import_entt)
     FetchContent_Declare(
         entt
@@ -105,6 +105,42 @@ macro(import_entt)
     )
 
     FetchContent_MakeAvailable(entt)
+endmacro()
+
+macro(import_zlib)
+    FetchContent_Declare(
+        zlib
+        GIT_REPOSITORY https://github.com/madler/zlib.git
+        GIT_TAG v1.3.1
+    )
+
+    FetchContent_MakeAvailable(zlib)
+endmacro()
+
+macro(import_tinyddsloader)
+    FetchContent_Declare(
+        tinyddsloader
+        GIT_REPOSITORY https://github.com/benikabocha/tinyddsloader.git
+        GIT_TAG 49654013d03aaf38e527f0ae0e179d1a811e67b7
+    )
+    
+    set(GLFW_INCLUDE_DIR "${glfw_SOURCE_DIR}/include" CACHE PATH "" FORCE)
+    set(GLFW_LIBRARIES glfw CACHE STRING "" FORCE)
+
+    FetchContent_MakeAvailable(tinyddsloader)
+    add_library(tinyddsloader INTERFACE)
+    target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
+    target_include_directories(tinyddsloader INTERFACE $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
+endmacro()
+
+macro(import_yaml_cpp)
+    FetchContent_Declare(
+        yaml_cpp
+        GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+        GIT_TAG 0.8.0
+    )
+
+    FetchContent_MakeAvailable(yaml_cpp)
 endmacro()
 
 macro(import_imgui)
@@ -175,6 +211,16 @@ macro(import_stb)
         ${STB_SRC_FILES}
     )
     target_include_directories(stb PUBLIC ${STB_DIR})
+endmacro()
+
+macro(import_directxtex)
+    FetchContent_Declare(
+      directxtex
+      GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
+      GIT_TAG jul2025
+    )
+
+    FetchContent_MakeAvailable(directxtex)
 endmacro()
 
 # Import Mono
@@ -252,17 +298,25 @@ endmacro()
 
 # Macro to import all dependencies
 macro(import_dependencies)
+    if (NOT EXISTS "${CMAKE_SOURCE_DIR}/out/_dep")
+        make_directory("${CMAKE_SOURCE_DIR}/out/_dep")
+    endif()
+    set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/out/_dep")
     import_glad()
     import_glfw()
     import_glm()
     import_entt()
     import_assimp()
-    import_reflect()
+    import_mesh_optimiser()
+    import_tinyddsloader()
+    import_directxtex()
     import_imgui()
     import_stb()
 
     import_spdlog()
     import_catch()
+    import_yaml_cpp()
+    #import_zlib()
 
     import_mono()
     import_xml()

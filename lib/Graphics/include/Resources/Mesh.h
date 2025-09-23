@@ -29,11 +29,13 @@ public:
     std::vector<unsigned int> indices;
     std::vector<Texture>      textures;
 
+    // Mesh ordering for deterministic sorting (hack until proper solution)
+    uint16_t meshSortIndex = 0;
+
     // constructor
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
 
-    // render the mesh
-    void Draw(Shader &shader);
+    // Note: Removed Draw() method - rendering is now handled by RenderCommand system
 
     // Getters for compatibility
     uint32_t GetVertexCount() const { return static_cast<uint32_t>(vertices.size()); }

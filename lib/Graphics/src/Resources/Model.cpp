@@ -1,16 +1,14 @@
 #include <Resources/Model.h>
 #include <Resources/Texture.h>
+#include <iostream>
 
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 {
     loadModel(path);
 }
 
-void Model::Draw(Shader &shader)
-{
-    for(unsigned int i = 0; i < meshes.size(); i++)
-        meshes[i].Draw(shader);
-}
+// Draw() method removed - Model is now pure data
+// Rendering is handled by ECS system through individual Mesh objects
 
 void Model::loadModel(std::string const &path)
 {
@@ -117,15 +115,58 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     // 1. diffuse maps
     std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-    // 2. specular maps
-    std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-    // 3. normal maps
-    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+    
+    // 2. Load all specular-type textures, but separate them by filename
+    std::vector<Texture> allSpecularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+    
+    // Separate metallic and roughness based on filename
+    for (auto& tex : allSpecularMaps) {
+        if (tex.path.find("Metallic") != std::string::npos) {
+            tex.type = "texture_metallic";
+            textures.push_back(tex);
+        } else if (tex.path.find("Roughness") != std::string::npos) {
+            tex.type = "texture_roughness"; 
+            textures.push_back(tex);
+        } else {
+            textures.push_back(tex); // Keep as specular
+        }
+    }
+    
+    // 3. normal maps - Try different Assimp types for normal maps
+    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+    
+    // 4. height maps - Load height textures separately 
+    std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_height");
+    
+    // Separate normal and height based on filename if both are in HEIGHT type
+    std::vector<Texture> separatedNormals, separatedHeights;
+    
+    for (const auto& tex : heightMaps) {
+        if (tex.path.find("Normal") != std::string::npos) {
+            Texture normalTex = tex;
+            normalTex.type = "texture_normal";
+            separatedNormals.push_back(normalTex);
+        } else if (tex.path.find("Height") != std::string::npos) {
+            separatedHeights.push_back(tex);
+        } else {
+            separatedHeights.push_back(tex); // Default to height
+        }
+    }
+    
+    // Combine normal maps from both sources
+    normalMaps.insert(normalMaps.end(), separatedNormals.begin(), separatedNormals.end());
+    
+    // Use separated heights, or try displacement type if none found
+    if (separatedHeights.empty()) {
+        separatedHeights = loadMaterialTextures(material, aiTextureType_DISPLACEMENT, "texture_height");
+    }
+    
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-    // 4. height maps
-    std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-    textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+    textures.insert(textures.end(), separatedHeights.begin(), separatedHeights.end());
+    
+    // 5. roughness maps - Check shininess type (Assimp maps roughness textures here sometimes)
+    std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_SHININESS, "texture_roughness");
+    textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
     
     // return a mesh object created from the extracted mesh data
     return Mesh(vertices, indices, textures);
@@ -152,7 +193,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
         if(!skip)
         {   // if texture hasn't been loaded already, load it
             Texture texture;
-            texture.id = TextureFromFile(str.C_Str(), this->directory);
+            texture.id = TextureLoader::TextureFromFile(str.C_Str(), this->directory);
             texture.type = typeName;
             texture.path = str.C_Str();
             textures.push_back(texture);

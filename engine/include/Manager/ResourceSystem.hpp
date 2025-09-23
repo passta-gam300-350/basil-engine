@@ -1,0 +1,441 @@
+#ifndef ENGINE_RESOURCE_SYSTEM_HPP
+#define ENGINE_RESOURCE_SYSTEM_HPP
+
+#include <memory>
+#include <jobsystem.hpp>
+#include <hashtable.hpp>
+#include <serialisation/guid.h>
+#include <cstdint>
+#include <cstddef>
+#include <unordered_map>
+#include <vector>
+#include <type_traits>
+#include <utility>
+#include <string_view>
+#include <spdlog/spdlog.h>
+#include <yaml-cpp/yaml.h>
+
+#include <windows.h>
+
+struct Handle {
+    std::uint32_t m_Index{};
+    std::uint32_t m_Generation{};
+    explicit operator bool() const noexcept { return m_Generation != 0; }
+};
+
+using ResourceTypeId_t = std::uintptr_t;
+
+template <typename T>
+struct ResourceTypeInitiation {
+    static constexpr std::int32_t m_TypeInstance{};
+};
+
+template <typename T>
+constexpr ResourceTypeId_t ResourceTypeId_v{ &ResourceTypeInitiation<T>::m_TypeInstance };
+
+template <typename T>
+constexpr ResourceTypeId_t ResourceType_Id() noexcept {
+    return ResourceTypeId_v<T>;
+}
+
+template <typename T>
+struct ResourceSlot {
+    Resource::Guid m_Guid{ Resource::null_guid };
+    std::uint32_t m_Generation{};
+    std::atomic<bool> m_Ready{};
+    bool m_Alive{};
+    alignas(T) unsigned char storage[sizeof(T)];
+    T& value() noexcept { return *std::launder(reinterpret_cast<T*>(storage)); }
+    const T& value() const noexcept { return *std::launder(reinterpret_cast<const T*>(storage)); }
+};
+
+template <typename T, stl_allocator_t<T> A = std::allocator<T>>
+class ResourcePool {
+public:
+    using LoaderFn = std::function<T&(const char*)>; //effectively the constructor of memory pool. throwable
+    using UnloaderFn = std::function<void(T&)>; //destructs only, deallocation happens lazily. throwable
+    using ValueType = T;
+    using Pointer = T*;
+
+    explicit ResourcePool(LoaderFn loadfn, UnloaderFn unloadfn)
+        : m_Loader(loadfn), m_Unloader(unloadfn) {
+    }
+
+    //get async, check handle, functionally equivalent of std::future but unlimited gets
+    Handle GetHandle(Resource::Guid id);
+
+    Pointer Ptr(Handle h) noexcept;
+
+    const Pointer* Ptr(Handle h) const noexcept {
+        if (h.m_Index >= m_Slots.size()) return nullptr;
+        auto& s = m_Slots[h.m_Index];
+        if (!s.m_Alive || s.m_Generation != h.m_Generation) return nullptr;
+        return &s.value();
+    }
+
+    Handle Find(Resource::Guid guid) const noexcept {
+        auto it = m_GuidSlots.find(guid);
+        if (it == m_GuidSlots.end()) return {};
+        return MakeHandle(it->second);
+    }
+
+    Resource::Guid GetGuid(Handle h) const noexcept {
+        if (h.m_Index >= m_Slots.size()) return 0;
+        auto& s = m_Slots[h.m_Index];
+        if (!s.m_Alive || s.m_Generation != h.m_Generation) return 0;
+        return s.m_Guid;
+    }
+
+    bool Unload(Resource::Guid id) {
+        auto it = m_GuidSlots.find(id);
+        if (it == m_GuidSlots.end()) return false;
+        const auto idx = it->second;
+        DestroySlot(idx);
+        m_GuidSlots.erase(it);
+        FreeSlot(idx);
+        return true;
+    }
+
+    void Clear() {
+        for (std::uint32_t i = 0; i < m_Slots.size(); ++i) {
+            if (m_Slots[i].m_Alive) {
+                DestroySlot(i);
+                FreeSlotNoBump(i);
+            }
+        }
+        m_GuidSlots.clear();
+        m_FreeList.clear();
+        m_Slots.clear();
+    }
+
+private:
+    Handle MakeHandle(std::uint32_t idx) const noexcept {
+        const auto& s = m_Slots[idx];
+        return Handle{ idx, s.m_Generation };
+    }
+
+    std::uint32_t AllocateSlot() {
+        if (!m_FreeList.empty()) {
+            auto idx = m_FreeList.back();
+            m_FreeList.pop_back();
+            // generation already bumped on free; reuse
+            return idx;
+        }
+        m_Slots.emplace_back();
+        return static_cast<std::uint32_t>(m_Slots.size() - 1);
+    }
+
+    void DestroySlot(std::uint32_t idx) noexcept {
+        auto& s = m_Slots[idx];
+        if (!s.m_Alive) return;
+        // Call unloader before dtor for external resources
+        Unloader(s.value());
+        s.value().~T();
+        s.m_Alive = false;
+    }
+
+    void FreeSlot(std::uint32_t idx) noexcept {
+        auto& s = m_Slots[idx];
+        ++s.m_Generation; // invalidate old handles
+        m_FreeList.push_back(idx);
+    }
+
+    void FreeSlotNoBump(std::uint32_t idx) noexcept {
+        // used by clear() after destroy; still safe to bump for consistency
+        ++m_Slots[idx].m_Generation;
+        m_FreeList.push_back(idx);
+    }
+
+    LoaderFn m_Loader;
+    UnloaderFn m_Unloader;
+    std::vector<ResourceSlot<T>> m_Slots;
+    std::vector<std::uint32_t> m_FreeList;
+    std::unordered_map<Resource::Guid, std::uint32_t> m_GuidSlots;
+};
+
+struct ResourceRegistry {
+    //type-erased vtable mapping for resource type
+    struct VTable {
+        std::function<Handle(void*, Resource::Guid)> m_Get;
+        std::function<void*()> m_GetPool;
+        std::function<Handle(void*, Resource::Guid)> m_Find;
+        std::function<Resource::Guid(void*, Handle)> m_GetGuid;
+        std::function<void* (void*, Handle)> m_Ptr;
+        std::function<const void* (const void*, Handle)> m_ConstPtr;
+        std::function<bool (void*, Resource::Guid)> m_Unload;
+    };
+
+    struct Entry {
+        void* m_Pool; //type erasure for ResourcePool<T>*
+        VTable m_Vt;
+        std::string_view m_TypeName;
+    };
+
+    static ResourceRegistry& Instance() {
+        static ResourceRegistry inst;
+        return inst;
+    }
+
+    template <typename T>
+    using PoolType = ResourcePool<T>;
+
+    template <typename T>
+    void RegisterType(typename PoolType<T>::LoaderFn loader, typename PoolType<T>::UnloaderFn unloader, std::string_view type_name = {})
+    {
+        const auto id = ResourceTypeId_v<T>;
+        if (m_Entries.find(id) != m_Entries.end()) return;
+
+        // Create per-type singleton pool lazily
+        static PoolType<T> pool(loader, unloader);
+
+        Entry e;
+        e.m_Pool = &pool;
+        e.m_TypeName = type_name.empty() ? std::string_view(typeid(T).name()) : type_name;
+
+        e.m_Vt = {
+            //get
+            [](void* p, Resource::Guid g) -> Handle {
+                return static_cast<PoolType<T>*>(p)->Get(g);
+            },
+            //get_pool
+            []() -> void* { return static_cast<void*>(&pool); },
+            //find
+            [](void* p, Resource::Guid g) -> Handle {
+                return static_cast<PoolType<T>*>(p)->Find(g);
+            },
+            //guid
+            [](void* p, Handle h) -> Resource::Guid {
+                return static_cast<PoolType<T>*>(p)->GetGuid(h);
+            },
+            //ptr
+            [](void* p, Handle h) -> void* {
+                return static_cast<void*>(static_cast<PoolType<T>*>(p)->Ptr(h));
+            },
+            //const ptr
+            [](const void* p, Handle h) -> const void* {
+                return static_cast<const void*>(static_cast<const PoolType<T>*>(p)->Ptr(h));
+            },
+            //unload
+            [](void* p, Resource::Guid g) -> bool {
+                return static_cast<PoolType<T>*>(p)->Unload(g);
+            }
+        };
+
+        m_Entries.emplace(id, e);
+    }
+
+    template <typename T>
+    PoolType<T>* Pool() {
+        auto it = m_Entries.find(ResourceType_Id<T>());
+        return it == m_Entries.end() ? nullptr : static_cast<PoolType<T>*>(it->second.m_Pool);
+    }
+
+    template <typename T>
+    T* Get(Resource::Guid guid, Handle* out_handle = nullptr) {
+        auto* pool = Pool<T>();
+        if (!pool) return nullptr;
+        Handle h = pool->Get(guid);
+        if (out_handle) *out_handle = h;
+        return pool->Ptr(h);
+    }
+
+    template <typename T>
+    Handle Find(Resource::Guid id) {
+        auto* pool = Pool<T>();
+        return pool ? pool->Find(id) : Handle{};
+    }
+
+    template <typename T>
+    Resource::Guid GetGuid(Handle h) {
+        auto* pool = Pool<T>();
+        return pool ? pool->GetGuid(h) : Resource::null_guid;
+    }
+
+    template <typename T>
+    bool Unload(Resource::Guid guid) {
+        auto* pool = Pool<T>();
+        return pool ? pool->Unload(guid) : false;
+    }
+
+private:
+    hashtable<ResourceTypeId_t, Entry> m_Entries;
+};
+
+class MemoryMappedFile {
+public:
+    MemoryMappedFile(const std::wstring& path)
+        : m_HFile(INVALID_HANDLE_VALUE), m_HMap(nullptr), m_Data(nullptr), m_Size(0)
+    {
+        // 1. Open the file
+        m_HFile = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (m_HFile == INVALID_HANDLE_VALUE) {
+            throw std::runtime_error("Failed to open file");
+        }
+
+        // 2. Get file size
+        LARGE_INTEGER fileSize;
+        if (!GetFileSizeEx(m_HFile, &fileSize)) {
+            CloseHandle(m_HFile);
+            throw std::runtime_error("Failed to get file size");
+        }
+        m_Size = static_cast<std::size_t>(fileSize.QuadPart);
+
+        // 3. Create file mapping
+        m_HMap = CreateFileMappingW(m_HFile, nullptr, PAGE_READONLY, 0, 0, nullptr);
+        if (!m_HMap) {
+            CloseHandle(m_HFile);
+            throw std::runtime_error("Failed to create file mapping");
+        }
+
+        // 4. Map view of file
+        m_Data = static_cast<const std::byte*>(MapViewOfFile(m_HMap, FILE_MAP_READ, 0, 0, 0));
+        if (!m_Data) {
+            CloseHandle(m_HMap);
+            CloseHandle(m_HFile);
+            throw std::runtime_error("Failed to map view of file");
+        }
+    }
+    MemoryMappedFile() = default;
+    ~MemoryMappedFile() {
+        if (m_Data) UnmapViewOfFile(m_Data);
+        if (m_HMap) CloseHandle(m_HMap);
+        if (m_HFile != INVALID_HANDLE_VALUE) CloseHandle(m_HFile);
+    }
+
+    // Prevent copying
+    MemoryMappedFile(const MemoryMappedFile&) = delete;
+    MemoryMappedFile& operator=(const MemoryMappedFile&) = delete;
+
+    // Allow moving
+    MemoryMappedFile(MemoryMappedFile&& other) noexcept
+        : m_HFile(other.m_HFile), m_HMap(other.m_HMap), m_Data(other.m_Data), m_Size(other.m_Size)
+    {
+        other.m_HFile = INVALID_HANDLE_VALUE;
+        other.m_HMap = nullptr;
+        other.m_Data = nullptr;
+        other.m_Size = 0;
+    }
+
+    MemoryMappedFile& operator=(MemoryMappedFile&& other) noexcept {
+        if (this != &other) {
+            this->~MemoryMappedFile();
+            m_HFile = other.m_HFile;
+            m_HMap = other.m_HMap;
+            m_Data = other.m_Data;
+            m_Size = other.m_Size;
+            other.m_HFile = INVALID_HANDLE_VALUE;
+            other.m_HMap = nullptr;
+            other.m_Data = nullptr;
+            other.m_Size = 0;
+        }
+        return *this;
+    }
+
+    const std::byte* data() const { return m_Data; }
+    std::size_t size() const { return m_Size; }
+
+    // Safe accessor
+    const std::byte* getRange(std::size_t offset, std::size_t length) const {
+        if (offset + length > m_Size) {
+            throw std::out_of_range("Requested range is out of bounds");
+        }
+        return m_Data + offset;
+    }
+
+private:
+    HANDLE m_HFile;
+    HANDLE m_HMap;
+    const std::byte* m_Data;
+    std::size_t m_Size;
+};
+
+
+struct ResourceSystem {
+    struct FileEntry {
+        Resource::Guid m_Guid;
+        std::string m_Path;
+        std::uint64_t m_Offset;
+        std::uint64_t m_Size;
+    };
+
+    static ResourceSystem& Instance() {
+        static ResourceSystem inst;
+        return inst;
+    }
+
+    static ResourceSystem& SetResourceThreads(std::uint64_t thread_count) {
+        ResourceSystem& inst{ Instance() };
+        inst.m_JobSystem.shutdown();
+        inst.m_JobSystem.~JobSystem();
+        new (&inst.m_JobSystem) JobSystem{ thread_count };
+        return inst;
+    }
+
+    const char* GetMappedFilePtr(Resource::Guid);
+    template <typename Fn, typename ...Args>
+    auto Dispatch(Fn&& fn, Args&&... args) {
+        return m_JobSystem.schedule(std::forward<Fn>(fn), std::forward<Args>(args)...);
+    }
+
+    static void LoadFileLists(std::string_view filelist);
+    static void LoadConfig(YAML::Node& cfg);
+    static YAML::Node GetDefaultConfig();
+
+private:
+    hashtable<Resource::Guid, FileEntry> m_FileEntries;
+    hashtable<std::string, MemoryMappedFile> m_MappedIO;
+    std::string m_ResourceRootDirectory;
+    bool m_GlobFiles;
+    JobSystem m_JobSystem;
+};
+
+#define REGISTER_RESOURCE_TYPE(T, loader_fn, unloader_fn)            \
+    namespace {                                                      \
+        struct T##_resource_registrar {                              \
+            T##_resource_registrar() {                               \
+                ResourceRegistry::instance().register_type<T>(       \
+                    loader_fn, unloader_fn, #T);                     \
+            }                                                        \
+        };                                                           \
+        static T##_resource_registrar g_##T##_resource_registrar;    \
+    }
+
+
+template <typename T, stl_allocator_t<T> A>
+Handle ResourcePool<T, A>::GetHandle(Resource::Guid guid) {
+    auto it = m_GuidSlots.find(guid);
+    if (it != m_GuidSlots.end()) {
+        return make_handle(it->second);
+    }
+
+    std::uint32_t idx = AllocateSlot();
+    auto& slot = m_Slots[idx];
+    slot.m_Guid = guid;
+    slot.m_Alive = true;
+
+    auto& mmio_ptr{ ResourceSystem::Instance().GetMappedFilestream(guid) };
+    auto async_dispatch_job_wrapper{ [&slot](auto loaderfn, const char* mmptr) {
+        try {
+            if constexpr (std::is_default_constructible_v<T>) {
+                new (slot.storage) T{ loaderfn(mmptr) };
+            }
+            else {
+                new (slot.storage) T(std::move(loaderfn(mmptr)));
+            }
+        }
+        catch (...) {
+            spdlog::error("[Resource System] Error loading file for guid {}", guid.to_hex_no_delimiter());
+            DestroySlot(idx);
+            FreeSlot(idx);
+            return;
+        }
+            slot.m_Ready = true;
+        }};
+
+    ResourceSystem::Instance().Dispatch(async_dispatch_job_wrapper, m_Loader, mmio_ptr);
+
+    m_GuidSlots.emplace(guid, idx);
+    return MakeHandle(idx);
+}
+
+#endif //!ENGINE_RESOURCE_SYSTEM_HPP

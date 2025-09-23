@@ -1,0 +1,50 @@
+project(resource_lib CXX)
+
+set(RESOURCE_CORE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/core"
+)
+
+set(RESOURCE_EXT_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/ext"
+)
+
+file(GLOB_RECURSE RESOURCE_CORE_FILES
+    ${RESOURCE_CORE_DIR}/src/*.[ch]pp
+    ${RESOURCE_CORE_DIR}/src/*.h
+)
+
+file(GLOB_RECURSE RESOURCE_ADDITIONAL_EXT_FILES
+    ${RESOURCE_EXT_DIR}/src/*.[ch]pp
+    ${RESOURCE_EXT_DIR}/src/*.h
+)
+
+set(RESOURCE_CORE_DEP_LIBS
+    PUBLIC glm
+    PUBLIC tinyddsloader
+    PUBLIC yaml-cpp::yaml-cpp
+)
+
+set(RESOURCE_EXT_DEP_LIBS
+    PUBLIC assimp::assimp
+    PUBLIC meshoptimizer
+    PUBLIC DirectXTex
+    ${RESOURCE_CORE_DEP_LIBS}
+)
+
+set(RESOURCE_EXT_FILES
+    ${RESOURCE_CORE_FILES}
+    ${RESOURCE_ADDITIONAL_EXT_FILES}
+)
+
+
+add_library("${PROJECT_NAME}_core" STATIC ${RESOURCE_CORE_FILES})
+
+add_library("${PROJECT_NAME}_ext" STATIC ${RESOURCE_EXT_FILES})
+
+target_include_directories("${PROJECT_NAME}_core" PUBLIC "${RESOURCE_CORE_DIR}/include")
+
+target_include_directories("${PROJECT_NAME}_ext" PUBLIC "${RESOURCE_EXT_DIR}/include" PUBLIC "${RESOURCE_CORE_DIR}/include")
+
+target_link_libraries("${PROJECT_NAME}_core" ${RESOURCE_CORE_DEP_LIBS})
+
+target_link_libraries("${PROJECT_NAME}_ext" ${RESOURCE_EXT_DEP_LIBS})

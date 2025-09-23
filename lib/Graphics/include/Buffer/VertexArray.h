@@ -92,7 +92,7 @@ public:
 
 private:
 	uint32_t m_VAOHandle;
-	std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers; // Vector of buffers since a buffer represent a type data like position/texCoord/normals
+	std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers;
 	std::shared_ptr<IndexBuffer> m_IndexBuffer;
 
 };
