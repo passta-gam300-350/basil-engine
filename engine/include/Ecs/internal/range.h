@@ -33,6 +33,10 @@ namespace ecs {
 			bool operator==(iterator rhs) {
 				return it == rhs.it;
 			}
+			pointer operator->() {
+				ref_physical_address = entity{ world_handle, static_cast<std::uint32_t>(*it) };
+				return &ref_physical_address;
+			}
 
 		private:
 			std::uint32_t world_handle;

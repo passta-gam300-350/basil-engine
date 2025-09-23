@@ -108,6 +108,9 @@ struct ReflectionRegistry {
         reg.m_BinRegistry.clear();
         entt::meta_reset();
     }
+
+    // registers native types, call once
+    static void SetupNativeTypes();
 };
 
 //templated serialiser, Node must overload[]
@@ -226,6 +229,8 @@ void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
     }
 }
 
+struct InterfaceRegistrationBasic {};
+
 template<auto Ptr, static_string Name>
 struct MemberRegistration {
     static constexpr auto ptr = Ptr;
@@ -233,8 +238,30 @@ struct MemberRegistration {
     static constexpr auto hash = ToTypeName(name);
 };
 
+template<auto SetPtr, auto GetPtr, static_string Name>
+struct InterfaceRegistration : public InterfaceRegistrationBasic {
+    static constexpr auto setptr = SetPtr;
+    static constexpr auto getptr = GetPtr;
+    static constexpr std::string_view name = Name.data;
+    static constexpr auto hash = ToTypeName(name);
+};
+
 template<auto Ptr, static_string Name>
 constexpr auto MemberRegistrationV = MemberRegistration<Ptr, Name>{};
+
+template<auto SetPtr, auto GetPtr, static_string Name>
+constexpr auto InterfaceRegistrationV = InterfaceRegistration<SetPtr, GetPtr, Name>{};
+
+template<typename T>
+void RegisterDataMember(auto& factory) {
+    if constexpr (std::is_base_of_v<InterfaceRegistrationBasic, T>) {
+        factory.data<T::setptr, T::getptr>(T::hash);
+    }
+    else {
+        factory.data<T::ptr>(T::hash);
+    }
+}
+
 
 template<typename T, typename... Refs>
 void RegisterReflectionComponent(std::string_view type_name, Refs...) {
@@ -246,7 +273,7 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
     (field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
    
     // For each Refs (each is a MemberRegistration<…, …>):
-    (factory.data<Refs::ptr>(Refs::hash), ...);
+    (RegisterDataMember<Refs>(factory), ...);
 
     factory.func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
     factory.func<[](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>());}>("emplace_meta_any"_tn);
