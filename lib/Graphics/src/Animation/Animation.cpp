@@ -256,6 +256,7 @@ void animator::updateAnimation(float deltaTime, const skeleton& theSkeleton)
     }
     for (size_t i = 0; i < theSkeleton.bones.size(); i++)
     {
-        finalBoneMatrices[i] = globalBoneTransforms[i] * theSkeleton.bones[i].inverseBind;
+        finalBoneMatrices[i] = globalBoneTransforms[i] * theSkeleton.bones[i].inverseBind; // inverse bind is the bridge between the models original shape and the animated shape
+        // original model space to animated model space
     }
 }

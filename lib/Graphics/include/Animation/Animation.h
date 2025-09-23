@@ -53,7 +53,7 @@ struct oneSkeletonBone
     std::string name; // bone name like arm, leg, shoulder
     int id; // index for GPU
     int parentIndex; // who is the bone parent, if it is root then -1
-    glm::mat4 inverseBind; // used for skinning, moves vertex from model space into bones space
+    glm::mat4 inverseBind; // used for skinning, moves vertex from model space into bones space (is like create a local coordinate system for each bone)
     // for eg We first move the vertex into elbow’s bind space (inverse bind) ? it becomes “1 unit away”.
 };
 
