@@ -9,7 +9,7 @@
  * to the screen framebuffer (FBO 0). Uses command buffer for proper
  * state management and no raw OpenGL calls.
  *
- * Uses pass ID 2 to ensure execution after main rendering pass (pass ID 1).
+ * Uses pass ID 3 to ensure execution after debug rendering pass (pass ID 2).
  */
 class PresentPass : public RenderPass {
 public:
@@ -24,5 +24,5 @@ public:
     void Execute(RenderContext& context) override;
 
 private:
-    static constexpr uint8_t PRESENT_PASS_ID = 2;  // Execute after main pass (ID 1)
+    static constexpr uint8_t PRESENT_PASS_ID = 3;  // Execute after debug pass (ID 2)
 };

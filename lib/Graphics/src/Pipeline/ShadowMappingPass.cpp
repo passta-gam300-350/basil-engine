@@ -48,7 +48,7 @@ void ShadowMappingPass::Execute(RenderContext& context)
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
     // Store shadow matrix in frame data for main pass
-    if (context.frameData.shadowMaps.size() == 0) {
+    if (context.frameData.shadowMaps.empty()) {
         context.frameData.shadowMaps.resize(1);
         context.frameData.shadowMatrices.resize(1);
     }

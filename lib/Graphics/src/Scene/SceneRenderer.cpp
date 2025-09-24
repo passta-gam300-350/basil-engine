@@ -1,5 +1,6 @@
 #include "Scene/SceneRenderer.h"
 #include "Pipeline/MainRenderingPass.h"
+#include "Pipeline/DebugRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/FrustumCuller.h"
 #include "Rendering/InstancedRenderer.h"
@@ -52,7 +53,11 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
 
-    // 3. Add present pass (executes third with pass ID 2)
+    // 3. Add debug rendering pass (executes third with pass ID 2)
+    auto debugPass = std::make_shared<DebugRenderPass>();
+    mainPipeline->AddPass(debugPass);
+
+    // 4. Add present pass (executes fourth with pass ID 3)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 

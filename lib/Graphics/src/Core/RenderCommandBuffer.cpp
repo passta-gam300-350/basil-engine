@@ -183,6 +183,29 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferDa
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd)
+{
+    if (!cmd.shader) {
+        return;
+    }
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Vec3 uniform
+    cmd.shader->setVec3(cmd.uniformName, cmd.value);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetBlendingData& cmd)
+{
+    if (cmd.enable) {
+        glEnable(GL_BLEND);
+        glBlendFunc(cmd.srcFactor, cmd.dstFactor);
+    } else {
+        glDisable(GL_BLEND);
+    }
+}
+
 void RenderCommandBuffer::CleanupGPUState()
 {
     // Note: We don't reset shadow map texture (slot 8) here since it should persist

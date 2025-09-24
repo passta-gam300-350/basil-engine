@@ -17,7 +17,7 @@ struct FrameData
     std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
     std::vector<glm::mat4> shadowMatrices;
 
-    // Main rendering output
+    // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 
     // Post-processing chain

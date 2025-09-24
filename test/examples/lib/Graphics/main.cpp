@@ -7,8 +7,6 @@
 #include <Utility/Light.h>
 
 #include <spdlog/spdlog.h>
-#include <iomanip>
-#include <cmath>
 #include <random>
 
 #ifdef _WIN32
@@ -179,13 +177,13 @@ bool GraphicsTestDriver::LoadTestResources()
     spdlog::info("Loading test resources...");
 
     try {
-        // Load shaders
-        auto basicShader = m_ResourceManager->LoadShader("basic", 
-            "assets/shaders/basic.vert", 
-            "assets/shaders/basic.frag");
-        
-        if (!basicShader) {
-            spdlog::error("Failed to load basic shader!");
+        // Load primitive shader for simple geometry rendering (light cubes, etc.)
+        auto primitiveShader = m_ResourceManager->LoadShader("primitive",
+            "assets/shaders/primitive.vert",
+            "assets/shaders/primitive.frag");
+
+        if (!primitiveShader) {
+            spdlog::error("Failed to load primitive shader!");
             return false;
         }
 
@@ -217,14 +215,6 @@ bool GraphicsTestDriver::LoadTestResources()
 
         if (!tinBoxModel) {
             spdlog::error("Failed to load tin box model!");
-            return false;
-        }
-
-        auto backpackModel = m_ResourceManager->LoadModel("backpack",
-            "assets/models/backpack/backpack.obj");
-
-        if (!backpackModel) {
-            spdlog::error("Failed to load backpack model!");
             return false;
         }
 
@@ -338,26 +328,6 @@ void GraphicsTestDriver::SetupAdvancedScene()
         }
     }
 
-    // Create backpack grid (right side)
-    for (int x = 0; x < gridSize; ++x) {
-        for (int z = 0; z < gridSize; ++z) {
-            glm::vec3 position(
-                startOffset + x * spacing + 8.0f, // Offset to the right
-                0.0f,
-                startOffset + z * spacing
-            );
-
-            // Use uniform scale (backpack might need different scaling)
-            glm::vec3 scaleVec(0.5f); // Scale down backpack a bit
-
-            // Cycle through materials based on position
-            int materialIndex = (x + z + 2) % materials.size(); // Offset material selection
-            std::string material = materials[materialIndex];
-
-            CreateModelInstance("backpack", material, position, scaleVec);
-        }
-    }
-    
     // Complex PBR lighting setup
     m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.2f, -0.8f, 0.3f),

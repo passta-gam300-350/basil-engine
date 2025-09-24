@@ -90,3 +90,297 @@ Mesh PrimitiveGenerator::CreatePlane(float width, float height,
     std::vector<Texture> textures;
     return Mesh(vertices, indices, textures);
 }
+
+Mesh PrimitiveGenerator::CreateCube(float size)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    float halfSize = size * 0.5f;
+
+    // Define the 6 faces of a cube with proper normals, texture coordinates, and tangents
+    // Each face consists of 4 vertices in counter-clockwise order when viewed from outside
+
+    // Front face (+Z)
+    vertices.push_back({
+        glm::vec3(-halfSize, -halfSize,  halfSize),  // Position
+        glm::vec3(0.0f, 0.0f, 1.0f),                // Normal
+        glm::vec2(0.0f, 0.0f),                      // TexCoords
+        glm::vec3(1.0f, 0.0f, 0.0f),                // Tangent
+        glm::vec3(0.0f, 1.0f, 0.0f),                // Bitangent
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f} // Bone data
+    });
+    vertices.push_back({
+        glm::vec3( halfSize, -halfSize,  halfSize),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize,  halfSize,  halfSize),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize,  halfSize,  halfSize),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Back face (-Z)
+    vertices.push_back({
+        glm::vec3( halfSize, -halfSize, -halfSize),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec2(0.0f, 0.0f),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize, -halfSize, -halfSize),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize,  halfSize, -halfSize),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize,  halfSize, -halfSize),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Left face (-X)
+    vertices.push_back({
+        glm::vec3(-halfSize, -halfSize, -halfSize),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec2(0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize, -halfSize,  halfSize),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize,  halfSize,  halfSize),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize,  halfSize, -halfSize),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Right face (+X)
+    vertices.push_back({
+        glm::vec3( halfSize, -halfSize,  halfSize),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec2(0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize, -halfSize, -halfSize),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize,  halfSize, -halfSize),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize,  halfSize,  halfSize),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Bottom face (-Y)
+    vertices.push_back({
+        glm::vec3(-halfSize, -halfSize, -halfSize),
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        glm::vec2(0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize, -halfSize, -halfSize),
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize, -halfSize,  halfSize),
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize, -halfSize,  halfSize),
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Top face (+Y)
+    vertices.push_back({
+        glm::vec3(-halfSize,  halfSize,  halfSize),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec2(0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize,  halfSize,  halfSize),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3( halfSize,  halfSize, -halfSize),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+    vertices.push_back({
+        glm::vec3(-halfSize,  halfSize, -halfSize),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Generate indices for 6 faces, 2 triangles per face
+    // Each face starts at index: faceIndex * 4
+    for (int face = 0; face < 6; ++face) {
+        int baseIndex = face * 4;
+
+        // First triangle (0, 1, 2)
+        indices.push_back(baseIndex + 0);
+        indices.push_back(baseIndex + 1);
+        indices.push_back(baseIndex + 2);
+
+        // Second triangle (2, 3, 0)
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 3);
+        indices.push_back(baseIndex + 0);
+    }
+
+    // Return mesh with no textures (textures will be bound via material)
+    std::vector<Texture> textures;
+    return Mesh(vertices, indices, textures);
+}
+
+Mesh PrimitiveGenerator::CreateFullscreenQuad()
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    // Create a quad that covers the entire screen in NDC space (-1 to 1)
+    // Vertices in NDC space for direct rendering without MVP matrices
+
+    // Bottom-left
+    vertices.push_back({
+        glm::vec3(-1.0f, -1.0f, 0.0f),  // Position
+        glm::vec3(0.0f, 0.0f, 1.0f),    // Normal (facing forward)
+        glm::vec2(0.0f, 0.0f),          // TexCoords (bottom-left)
+        glm::vec3(1.0f, 0.0f, 0.0f),    // Tangent
+        glm::vec3(0.0f, 1.0f, 0.0f),    // Bitangent
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f} // Bone data
+    });
+
+    // Bottom-right
+    vertices.push_back({
+        glm::vec3(1.0f, -1.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(1.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Top-right
+    vertices.push_back({
+        glm::vec3(1.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(1.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Top-left
+    vertices.push_back({
+        glm::vec3(-1.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(0.0f, 1.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Two triangles forming a quad (counter-clockwise winding)
+    indices = {
+        0, 1, 2,  // First triangle
+        2, 3, 0   // Second triangle
+    };
+
+    // Return mesh with no textures (textures will be bound manually)
+    std::vector<Texture> textures;
+    return Mesh(vertices, indices, textures);
+}

@@ -10,7 +10,6 @@ PresentPass::PresentPass()
 
 void PresentPass::Execute(RenderContext& context)
 {
-
     // Begin pass (clears command buffer, no FBO binding since we have empty spec)
     Begin();
 
@@ -37,24 +36,19 @@ void PresentPass::Execute(RenderContext& context)
     int srcWidth = static_cast<int>(mainFBOSpecs.Width);
     int srcHeight = static_cast<int>(mainFBOSpecs.Height);
 
-    // Create blit command to copy main FBO to screen
-    RenderCommands::BlitFramebufferData blitCmd{
-        mainFBO->GetFBOHandle(),  // Source FBO (main render target)
+    // Blit main scene to screen (already contains debug overlay)
+    RenderCommands::BlitFramebufferData mainBlitCmd{
+        mainFBO->GetFBOHandle(),  // Source FBO (main render target with debug composited)
         0,                        // Destination FBO (screen)
         0, 0, srcWidth, srcHeight,           // Source rectangle (full main FBO)
         0, 0, windowWidth, windowHeight,     // Destination rectangle (full screen)
         GL_COLOR_BUFFER_BIT,     // Copy color buffer
         GL_LINEAR                // Linear filtering for potential scaling
     };
-
-    // Create sort key for present pass - use pass ID 2 to execute after main pass
-
-    // Submit blit command to pass command buffer
-    Submit(blitCmd);
+    Submit(mainBlitCmd);
 
     // Execute commands for this pass
     ExecuteCommands();
-
 
     // End pass
     End();
