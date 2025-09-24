@@ -98,7 +98,8 @@ void ShadowMappingPass::Execute(RenderContext& context)
             // Submit draw command
             RenderCommands::DrawElementsData drawCmd{
                 renderable.mesh->GetVertexArray()->GetVAOHandle(),
-                renderable.mesh->GetIndexCount()
+                renderable.mesh->GetIndexCount(),
+                GL_TRIANGLES  // Shadow mapping uses standard triangle meshes
             };
             Submit(drawCmd);
         }

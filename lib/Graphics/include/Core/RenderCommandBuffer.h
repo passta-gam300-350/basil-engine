@@ -8,6 +8,7 @@
 #include <Resources/TextureSlotManager.h>
 #include <Buffer/ShaderStorageBuffer.h>
 #include <glm/glm.hpp>
+#include <glad/glad.h>
 
 // Value-based command types - no heap allocation, efficient copying
 namespace RenderCommands {
@@ -39,6 +40,7 @@ namespace RenderCommands {
     struct DrawElementsData {
         uint32_t vao;
         uint32_t indexCount;
+        uint32_t mode = GL_TRIANGLES;  // GL_TRIANGLES, GL_LINES, GL_POINTS, etc.
     };
 
     struct BindSSBOData {
@@ -51,6 +53,7 @@ namespace RenderCommands {
         uint32_t indexCount;
         uint32_t instanceCount;
         uint32_t baseInstance;
+        uint32_t mode = GL_TRIANGLES;  // GL_TRIANGLES, GL_LINES, GL_POINTS, etc.
     };
 
     struct SetShadowUniformsData {
@@ -81,6 +84,10 @@ namespace RenderCommands {
         uint32_t srcFactor = GL_SRC_ALPHA;      // Default: GL_SRC_ALPHA
         uint32_t dstFactor = GL_ONE_MINUS_SRC_ALPHA; // Default: GL_ONE_MINUS_SRC_ALPHA
     };
+
+    struct SetLineWidthData {
+        float width;
+    };
 }
 
 // Command variant - no virtual function calls, cache-friendly
@@ -95,7 +102,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetShadowUniformsData,
     RenderCommands::BlitFramebufferData,
     RenderCommands::SetUniformVec3Data,
-    RenderCommands::SetBlendingData
+    RenderCommands::SetBlendingData,
+    RenderCommands::SetLineWidthData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -135,6 +143,7 @@ private:
     void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
+    void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

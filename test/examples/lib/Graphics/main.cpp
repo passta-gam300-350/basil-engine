@@ -374,9 +374,9 @@ void GraphicsTestDriver::SetupAdvancedScene()
     
     // Single spotlight in center above the grid
     m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(0.0f, 20.0f, 0.0f),        // Position: centered above grid
+        glm::vec3(0.0f, 10.0f, 0.0f),        // Position: centered above grid
         glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
-        glm::vec3(1.0f, 1.0f, 0.8f),         // Color: warm white light
+        glm::vec3(0.8f, 0.0f, 0.8f),         // Color: purple light
         6.0f,                                // Intensity
         40.0f,                               // Range
         15.0f,                               // Inner cone angle
@@ -568,6 +568,10 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
             case GLFW_KEY_1:
                 s_Instance->ToggleRenderPass("ShadowPass");
                 break;
+
+            case GLFW_KEY_3:
+                s_Instance->ToggleRenderPass("DebugPass");
+                break;
         }
     }
 }
@@ -671,6 +675,7 @@ void GraphicsTestDriver::ToggleRenderPass(const std::string& passName)
         spdlog::warn("Scene renderer not available - cannot toggle pass '{}'", passName);
     }
 }
+
 
 // Main entry point
 int main()

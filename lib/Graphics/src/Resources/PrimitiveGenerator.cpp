@@ -1,6 +1,9 @@
 #include "Resources/PrimitiveGenerator.h"
 #include <vector>
 #include <algorithm>
+#include <glm/glm.hpp>
+
+#include "glm/ext/scalar_constants.hpp"
 
 Mesh PrimitiveGenerator::CreatePlane(float width, float height,
                                      int subdivisionsX, int subdivisionsZ)
@@ -384,3 +387,38 @@ Mesh PrimitiveGenerator::CreateFullscreenQuad()
     std::vector<Texture> textures;
     return Mesh(vertices, indices, textures);
 }
+
+Mesh PrimitiveGenerator::CreateDirectionalRay(float length)
+{
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+
+    // Start point (light position)
+    vertices.push_back({
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(0.5f, 0.5f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // End point (direction along negative Z axis)
+    vertices.push_back({
+        glm::vec3(0.0f, 0.0f, -length),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec2(0.5f, 0.5f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        {-1, -1, -1, -1}, {0.0f, 0.0f, 0.0f, 0.0f}
+    });
+
+    // Single line from start to end point
+    indices.push_back(0);
+    indices.push_back(1);
+
+    // Return mesh with single line (no textures needed for wireframe)
+    std::vector<Texture> textures;
+    return Mesh(vertices, indices, textures);
+}
+

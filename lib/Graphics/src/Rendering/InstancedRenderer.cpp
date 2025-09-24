@@ -268,7 +268,8 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         meshInstances.mesh->GetVertexArray()->GetVAOHandle(),
         indexCount,
         static_cast<uint32_t>(meshInstances.instances.size()),
-        0  // Base instance
+        0,  // Base instance
+        GL_TRIANGLES  // Instanced rendering uses standard triangle meshes
     };
     renderPass.Submit(drawCmd);
 

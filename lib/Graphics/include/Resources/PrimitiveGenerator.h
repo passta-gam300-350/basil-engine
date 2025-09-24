@@ -58,4 +58,16 @@ public:
      * @return Mesh object containing the fullscreen quad geometry
      */
     static Mesh CreateFullscreenQuad();
+
+    /**
+     * @brief Creates a single directional ray for light direction visualization
+     *
+     * Creates a simple line pointing along the negative Z-axis (forward direction).
+     * Used for both spot and directional light direction visualization.
+     *
+     * @param length Length of the ray (light range visualization)
+     * @return Mesh object containing single line geometry for direction visualization
+     */
+    static Mesh CreateDirectionalRay(float length = 5.0f);
+
 };

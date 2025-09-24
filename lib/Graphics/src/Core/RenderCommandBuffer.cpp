@@ -1,8 +1,8 @@
 #include "Core/RenderCommandBuffer.h"
 #include "Resources/TextureSlotManager.h"
-#include <glad/glad.h>
 #include <algorithm>
 #include <spdlog/spdlog.h>
+#include <glad/glad.h>
 
 RenderCommandBuffer::RenderCommandBuffer() {
     // Texture binding system will be set via SetTextureSlotManager()
@@ -93,7 +93,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
 {
     // Pure drawing - assumes state is already set up
     glBindVertexArray(cmd.vao);
-    glDrawElements(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
     
     // Reset material texture state (but preserve shadow map binding)
@@ -116,7 +116,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
 {
     // Instanced drawing - assumes SSBO and state are already set up
     glBindVertexArray(cmd.vao);
-    glDrawElementsInstanced(GL_TRIANGLES, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
+    glDrawElementsInstanced(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
                            cmd.instanceCount);
     glBindVertexArray(0);
 
@@ -204,6 +204,11 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetBlendingData& 
     } else {
         glDisable(GL_BLEND);
     }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetLineWidthData& cmd)
+{
+    glLineWidth(cmd.width);
 }
 
 void RenderCommandBuffer::CleanupGPUState()

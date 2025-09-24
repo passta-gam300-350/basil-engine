@@ -4,6 +4,7 @@
 #include "../../include/Resources/PrimitiveGenerator.h"
 #include "../../include/Resources/ResourceManager.h"
 #include <glm/ext.hpp>
+#include <glad/glad.h>
 #include <glfw/glfw3.h>
 
 DebugRenderPass::DebugRenderPass()
@@ -42,12 +43,15 @@ void DebugRenderPass::Execute(RenderContext& context)
         RenderLightCubes(context);
     }
 
+    // Render light rays for visualization
+    if (m_ShowLightRays && !context.lights.empty()) {
+        RenderLightRays(context);
+    }
+
     // Disable blending after debug rendering
     RenderCommands::SetBlendingData disableBlendCmd{ false };
     Submit(disableBlendCmd);
 
-    // Reset depth function to default
-    glDepthFunc(GL_LESS);
 
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
@@ -61,6 +65,10 @@ void DebugRenderPass::InitializeLightVisualization()
     // Create a unit cube mesh for light visualization (scaling will be done per-light)
     auto cube = PrimitiveGenerator::CreateCube(1.0f);
     m_LightCube = std::make_unique<Mesh>(cube);
+
+    // Create light ray mesh for directional visualization (single line for both spot and directional)
+    auto directionRay = PrimitiveGenerator::CreateDirectionalRay(m_RayLength);
+    m_DirectionalRay = std::make_unique<Mesh>(directionRay);
 }
 
 void DebugRenderPass::RenderLightCubes(RenderContext& context)
@@ -113,9 +121,149 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
             // Draw the cube using the available DrawElementsData command
             RenderCommands::DrawElementsData drawCmd{
                 cubeVAO->GetVAOHandle(),
-                static_cast<uint32_t>(m_LightCube->GetIndexCount())
+                static_cast<uint32_t>(m_LightCube->GetIndexCount()),
+                GL_TRIANGLES  // Light cubes are solid triangular meshes
             };
             Submit(drawCmd);
         }
     }
 }
+
+void DebugRenderPass::RenderLightRays(RenderContext& context)
+{
+    // Get the primitive shader for wireframe rendering
+    auto primitiveShader = context.resourceManager.GetShader("primitive");
+    if (!primitiveShader) return;
+
+    // Bind the shader
+    RenderCommands::BindShaderData bindShaderCmd{ primitiveShader };
+    Submit(bindShaderCmd);
+
+    // Set line width for better visibility
+    RenderCommands::SetLineWidthData lineWidthCmd{ 2.0f };
+    Submit(lineWidthCmd);
+
+    // Render each light with appropriate directional ray visualization
+    for (const auto& light : context.lights) {
+        std::unique_ptr<Mesh>* rayMesh = nullptr;
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+        // Only render rays for spot lights (remove directional light rays)
+        if (light.type == Light::Type::Spot && m_DirectionalRay) {
+            rayMesh = &m_DirectionalRay;
+
+            // Ray length directly represents light intensity
+            float intensityBasedLength = light.intensity * m_RayIntensityFactor;
+            intensityBasedLength = glm::clamp(intensityBasedLength, 0.5f, 15.0f);
+
+            // Spot lights have a specific position - draw single ray
+            glm::vec3 rayOrigin = light.position;
+            modelMatrix = glm::translate(modelMatrix, rayOrigin);
+
+            // Orient ray in light direction
+            glm::vec3 forward = glm::normalize(light.direction);
+            glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+            // Handle case where light direction is parallel to up vector
+            if (abs(glm::dot(forward, up)) > 0.99f) {
+                up = glm::vec3(1.0f, 0.0f, 0.0f);
+            }
+
+            glm::vec3 right = glm::normalize(glm::cross(up, forward));
+            up = glm::normalize(glm::cross(forward, right));
+
+            // Create rotation matrix to align -Z axis with light direction
+            glm::mat4 rotationMatrix = glm::mat4(1.0f);
+            rotationMatrix[0] = glm::vec4(right, 0.0f);
+            rotationMatrix[1] = glm::vec4(up, 0.0f);
+            rotationMatrix[2] = glm::vec4(-forward, 0.0f);  // -Z maps to light direction
+
+            modelMatrix = modelMatrix * rotationMatrix;
+            modelMatrix = glm::scale(modelMatrix, glm::vec3(intensityBasedLength));
+
+            // Render single spot light ray
+            RenderSingleRay(context, rayMesh, modelMatrix, light);
+
+            // Skip the common rendering code since we handled it above
+            continue;
+        }
+
+        if (rayMesh && *rayMesh) {
+            // Get the ray mesh VAO handle
+            auto rayVAO = (*rayMesh)->GetVertexArray();
+            if (!rayVAO) continue;
+
+            // Set uniforms using the available SetUniformsData command
+            RenderCommands::SetUniformsData uniformsCmd{
+                primitiveShader,
+                modelMatrix,
+                context.frameData.viewMatrix,
+                context.frameData.projectionMatrix,
+                context.frameData.cameraPosition
+            };
+            Submit(uniformsCmd);
+
+            // Set the light color (slightly dimmer for rays)
+            glm::vec3 rayColor = light.color * 0.7f;  // 70% intensity for rays
+            RenderCommands::SetUniformVec3Data colorCmd{
+                primitiveShader,
+                "u_Color",
+                rayColor
+            };
+            Submit(colorCmd);
+
+            // Draw the rays as lines
+            RenderCommands::DrawElementsData drawCmd{
+                rayVAO->GetVAOHandle(),
+                static_cast<uint32_t>((*rayMesh)->GetIndexCount()),
+                GL_LINES  // Use lines primitive mode
+            };
+            Submit(drawCmd);
+        }
+    }
+
+    // Restore normal line width
+    RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };
+    Submit(restoreLineWidthCmd);
+}
+
+void DebugRenderPass::RenderSingleRay(RenderContext& context, std::unique_ptr<Mesh>* rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light)
+{
+    if (!rayMesh || !*rayMesh) return;
+
+    // Get the primitive shader for wireframe rendering
+    auto primitiveShader = context.resourceManager.GetShader("primitive");
+    if (!primitiveShader) return;
+
+    // Get the ray mesh VAO handle
+    auto rayVAO = (*rayMesh)->GetVertexArray();
+    if (!rayVAO) return;
+
+    // Set uniforms using the available SetUniformsData command
+    RenderCommands::SetUniformsData uniformsCmd{
+        primitiveShader,
+        modelMatrix,
+        context.frameData.viewMatrix,
+        context.frameData.projectionMatrix,
+        context.frameData.cameraPosition
+    };
+    Submit(uniformsCmd);
+
+    // Set the light color (slightly dimmer for rays)
+    glm::vec3 rayColor = light.color * 0.7f;  // 70% intensity for rays
+    RenderCommands::SetUniformVec3Data colorCmd{
+        primitiveShader,
+        "u_Color",
+        rayColor
+    };
+    Submit(colorCmd);
+
+    // Draw the rays as lines
+    RenderCommands::DrawElementsData drawCmd{
+        rayVAO->GetVAOHandle(),
+        static_cast<uint32_t>((*rayMesh)->GetIndexCount()),
+        GL_LINES  // Use lines primitive mode
+    };
+    Submit(drawCmd);
+}
+
