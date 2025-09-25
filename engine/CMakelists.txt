@@ -83,13 +83,5 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CM
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 
-message(STATUS "Linking managed assembly: ${DOTNET_OUTPUT_G}")
-message(STATUS "Linking managed assembly dir: $<TARGET_FILE_DIR:${PROJECT_NAME}>")
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${DOTNET_OUTPUT}
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>
-)
 
 postimport_dll(${PROJECT_NAME})
