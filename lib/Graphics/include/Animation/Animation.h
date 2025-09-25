@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include <unordered_map>
+
 // key frame for position, will need for interpolation
 struct keyFramePosition
 {
@@ -127,16 +129,40 @@ struct animationContainer
     std::vector<boneChannel> channels; // one channel per bone
 };
 
+struct animationState
+{
+    bool isPlaying = true;
+    bool loop = true;
+    float playbackSpeed = 1.0f;
+    float startTime = 0.0f;
+    float endTime = -1.0f; // use full duration
+};
 struct animator
 {
-    std::unique_ptr<animationContainer> currentAnimation;
+    animationContainer* currentAnimation = nullptr; // current playing animation
     float currentTime = 0.0f;
     // final matrices (one per bone, sent to GPU)
     std::vector<glm::mat4> finalBoneMatrices;
-    animator(std::unique_ptr<animationContainer> theAnimation, int numberOfBones) : currentAnimation(std::move(theAnimation))
+    // the animation state
+    animationState state;
+    // all the animations need
+    std::unordered_map<std::string, animationContainer*> allAnimations;
+    // current animation name
+    std::string currentAnimationName; 
+    animator(int numberOfBones)
     {
         finalBoneMatrices.resize(numberOfBones);
     }
-    void updateAnimation(float deltaTime, const skeleton& theSkeleton);
+    void updateAnimation(float deltaTime, skeleton const& theSkeleton);
+    void play();
+    void pause();
+    void stop();
+    void setLoop(bool shouldLoop);
+    void setPlayBackSpeed(float speed);
+    bool isAnimationFinished() const;
+    void addAnimation(std::string const& animationName, animationContainer* animation);
+    bool playAnimation(std::string const& animationName, bool shouldLoop = true);
+    bool hasAnimation(std::string const& animationName) const;
+    std::string getCurrentAnimationName() const;
 };
 

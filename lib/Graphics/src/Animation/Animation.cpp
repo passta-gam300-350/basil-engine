@@ -218,12 +218,32 @@ glm::mat4 boneChannel::interpolateScale(float time)
     return glm::scale(glm::mat4(1.0f), finalScale);
 }
 
-void animator::updateAnimation(float deltaTime, const skeleton& theSkeleton)
+void animator::updateAnimation(float deltaTime, skeleton const& theSkeleton)
 {
+    if (currentAnimation == nullptr)
+    {
+        return; // dont play animation
+    }
+
+    if (state.isPlaying == false)
+    {
+        return; // animation is paused or stop, no need update
+    }
     // advance the time
-    currentTime += currentAnimation->ticksPerSecond * deltaTime;
-    // loop animation
-    currentTime = fmod(currentTime, currentAnimation->duration);
+    currentTime += currentAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;
+    // loop or not loop animation
+    if (state.loop == true)
+    {
+        currentTime = fmod(currentTime, currentAnimation->duration);
+    }
+    else
+    {
+        if (currentTime >= currentAnimation->duration)
+        {
+            currentTime = currentAnimation->duration; // fix the time at the end of the animation
+            state.isPlaying = false;
+        }
+    }
     // update all bone channels
     for (boneChannel& eachChannel : currentAnimation->channels)
     {
@@ -260,3 +280,79 @@ void animator::updateAnimation(float deltaTime, const skeleton& theSkeleton)
         // original model space to animated model space
     }
 }
+
+void animator::play()
+{
+    state.isPlaying = true;
+}
+
+void animator::pause()
+{
+    state.isPlaying = false;
+}
+
+void animator::stop()
+{
+    state.isPlaying = false;
+    currentTime = 0.0f;
+}
+
+void animator::setLoop(bool shouldLoop)
+{
+    state.loop = shouldLoop;
+}
+
+void animator::setPlayBackSpeed(float speed)
+{
+    state.playbackSpeed = speed;
+}
+
+bool animator::isAnimationFinished() const
+{
+    if (currentAnimation == nullptr)
+    {
+        return true; // no animation mean finished
+    }
+    return (!state.loop) && (currentTime >= currentAnimation->duration);
+}
+
+void animator::addAnimation(std::string const& animationName, animationContainer* animation)
+{
+    if (animation == nullptr)
+    {
+        return; // dont add useless animation
+    }
+    allAnimations[animationName] = animation;
+}
+
+bool animator::playAnimation(std::string const& animationName, bool shouldLoop)
+{
+    auto currentPtr = allAnimations.find(animationName);
+    if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
+    {
+        return false;
+    }
+    // can find, start playing
+    currentAnimation = currentPtr->second; // assign ptr
+    currentTime = 0.0f;
+    state.isPlaying = true;
+    state.loop = shouldLoop;
+    currentAnimationName = animationName;
+    return true;
+}
+
+bool animator::hasAnimation(std::string const& animationName) const
+{
+    auto currentPtr = allAnimations.find(animationName);
+    if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
+    {
+        return false;
+    }
+    return true;
+}
+
+std::string animator::getCurrentAnimationName() const
+{
+    return currentAnimationName;
+}
+
