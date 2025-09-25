@@ -65,7 +65,7 @@ _deps/
 # Mono Folder
 dep/vendor/mono/
 # Negation
-!tool/
-!tool/*
-!tool/bin/
-!tool/bin/*
+!tools/
+!tools/*
+!tools/bin/
+!tools/bin/*

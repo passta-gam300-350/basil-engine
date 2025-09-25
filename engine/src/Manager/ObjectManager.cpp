@@ -1,7 +1,8 @@
 #include "Manager/ObjectManager.hpp"
 
 #include "Engine.hpp"
-#include "Component/IdentificationComponent.hpp"
+#include "Component/Identification.hpp"
+#include "Component/RelationshipComponent.hpp"
 #include "components/transform.h"
 
 ObjectManager& ObjectManager::GetInstance()
@@ -16,16 +17,21 @@ ecs::entity ObjectManager::CreateGameObject()
 	ecs::world currentWorld = Engine::GetWorld();
 	ecs::entity gameObject = currentWorld.add_entity();
 
-	currentWorld.add_component_to_entity<IdentifierComponent>(gameObject, "DEFAULT_GO");
-	currentWorld.add_component_to_entity<TransformComponent>(gameObject);
-
 	// Add relevant components to the entity here
+	
+	
 
-	IdentifierComponent& d = currentWorld.get_component_from_entity<IdentifierComponent>(gameObject);
+	// Transformation group
+	gameObject.add<TransformComponent>();
+	gameObject.add<PositionComponent>();
+	/*gameObject.add<RelationshipComponent>(0);*/
+
+
+
 	
 
 
-	// Link with MONO here if needed
+	// Mono Initialization here
 
 	/*
 	 * 1. Create entity in mono world
@@ -37,4 +43,11 @@ ecs::entity ObjectManager::CreateGameObject()
 	 */
 	return gameObject;
 
+}
+
+
+void ObjectManager::DestroyGameObject(ecs::entity obj)
+{
+	ecs::world currentWorld = Engine::GetWorld();
+	currentWorld.remove_entity(obj);
 }

@@ -11,6 +11,7 @@ public:
 	void shutdown();
 
 	ecs::entity CreateGameObject();
+	void DestroyGameObject(ecs::entity obj);
 
 
 
