@@ -37,6 +37,7 @@ public:
 	static Engine& Instance();
 
 	static void Init(std::string const& cfg = {});
+	static void InitWithoutWindow(std::string const& cfg = {});
 	static void Update();
 	static void Exit();
 

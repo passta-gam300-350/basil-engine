@@ -20,6 +20,9 @@ struct FrameData
     // Main rendering output
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 
+    // Editor display copy (separate from main buffer used by PresentPass)
+    std::shared_ptr<FrameBuffer> editorColorBuffer;
+
     // Post-processing chain
     std::shared_ptr<FrameBuffer> postProcessBuffer;
 

@@ -27,8 +27,8 @@ void EditorMain::init()
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
 	// init engine
-	//Engine::GenerateDefaultConfig();
-	Engine::Init("Default.yaml");
+	Engine::GenerateDefaultConfig();
+	Engine::InitWithoutWindow("Default.yaml");
 
 	//std::jthread jth(&Engine::Update);
 }
@@ -84,6 +84,10 @@ void EditorMain::render()
 
 	ImGui::Begin("Inspector", nullptr);
 	ImGui::End();
+	glClearColor(1, 1, 1, 1);
+	// Update engine systems
+	ecs::world world = Engine::GetWorld();
+	RenderSystem::System().Update(world);
 
 	Render_SceneExplorer();
 	Render_Console();
@@ -243,8 +247,17 @@ void EditorMain::Render_Game()
 void EditorMain::Render_Scene()
 {
 	ImGui::Begin("Scene");
-	
-	ImGui::Image((ImTextureID)RenderSystem::Instance().m_SceneRenderer->GetFrameData().mainColorBuffer->GetFBOHandle(), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
+
+	// Check if editor framebuffer is available before trying to access it
+	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
+	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
+		ImGui::Image((ImTextureID)frameData.editorColorBuffer->GetFBOHandle(),
+		             {1280,720}, ImVec2(0, 1), ImVec2(1, 0));
+	} else {
+		// Show placeholder text when no framebuffer is available
+		ImGui::Text("Scene rendering not available - start engine render loop");
+	}
+
 	ImGui::End();
 }
 

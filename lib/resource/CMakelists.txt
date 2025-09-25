@@ -41,9 +41,16 @@ add_library("${PROJECT_NAME}_core" STATIC ${RESOURCE_CORE_FILES})
 
 add_library("${PROJECT_NAME}_ext" STATIC ${RESOURCE_EXT_FILES})
 
-target_include_directories("${PROJECT_NAME}_core" PUBLIC "${RESOURCE_CORE_DIR}/include")
+target_include_directories("${PROJECT_NAME}_core"
+    PUBLIC "${RESOURCE_CORE_DIR}/include"
+    PUBLIC "${directxtex_SOURCE_DIR}/DirectXTex"
+)
 
-target_include_directories("${PROJECT_NAME}_ext" PUBLIC "${RESOURCE_EXT_DIR}/include" PUBLIC "${RESOURCE_CORE_DIR}/include")
+target_include_directories("${PROJECT_NAME}_ext"
+    PUBLIC "${RESOURCE_EXT_DIR}/include"
+    PUBLIC "${RESOURCE_CORE_DIR}/include"
+    PUBLIC "${directxtex_SOURCE_DIR}/DirectXTex"
+)
 
 target_link_libraries("${PROJECT_NAME}_core" ${RESOURCE_CORE_DEP_LIBS})
 

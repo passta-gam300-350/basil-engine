@@ -321,7 +321,13 @@ macro(import_dependencies)
     import_mono()
     import_xml()
 
-    set_target_properties(glad glfw glm assimp EnTT imgui mono_interface UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+    # Set properties only for existing targets
+    set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+
+    # Only set properties for mono_interface if it was created
+    if(TARGET mono_interface)
+        set_target_properties(mono_interface PROPERTIES FOLDER dep)
+    endif()
 endmacro()
 
 macro(mono_postimport target)

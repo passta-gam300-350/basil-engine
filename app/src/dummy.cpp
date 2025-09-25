@@ -102,6 +102,7 @@ int main() {
 	auto ename = it->name();
 	glm::vec4 test = it->get<glm::vec4>();
 	*/
+	Engine::Update();
 	Engine::Exit();
 	return 0;
 }

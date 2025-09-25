@@ -4,7 +4,8 @@
 #include "Manager/ResourceSystem.hpp"
 #include "Input/InputManager.h"
 #include "Ecs/ecs.h"
-#include "Render/render.cpp"
+#include "Render/render.h"
+#include <stdexcept>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -42,7 +43,7 @@ void Engine::Init(std::string const& cfg ) {
 	ReflectionRegistry::SetupNativeTypes();
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
-		//Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
+		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
 		//InputManager::Get_Instance()->Setup_Callbacks();
 		//ObjectManager::GetInstance().CreateGameObject();
 		return;
@@ -56,11 +57,11 @@ void Engine::Init(std::string const& cfg ) {
 		bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
 		std::string win_name{ window["title"] ? window["title"].as<std::string>() : DEFAULT_NAME };
 		bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
-		//Instance().m_Window.reset(new Window(win_name, win_width, win_height));
+		Instance().m_Window.reset(new Window(win_name, win_width, win_height));
 		//Instance().m_Window->SetVSync(win_vsync);
 	}
 	else {
-		//Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
+		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
 	}
 	if (YAML::Node system{ root["system"] }; system) {
 		SystemRegistry::LoadConfig(system);
@@ -98,10 +99,10 @@ void Engine::Update() {
 		std::uint64_t& frame_log_rate{ instance.m_Info.m_FrameLogRate };
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
-				/*if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
+				if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
 					instance.m_Info.m_State = Info::State::Exit;
 					break;
-				}*/
+				}
 				
 				InputManager::Get_Instance()->Update();
 
@@ -109,7 +110,7 @@ void Engine::Update() {
 				//instance.m_World.update();
 				RenderSystem::System().Update(instance.m_World);
 				//PF_END_FRAME();
-				//Engine::GetWindowInstance().SwapBuffers();
+				Engine::GetWindowInstance().SwapBuffers();
 
 				/*
 				if (frame_log_rate && frame_counter >= frame_log_rate) {
@@ -132,6 +133,41 @@ void Engine::Update() {
 
 void Engine::ReportLastError() {
 	
+}
+
+void Engine::InitWithoutWindow(std::string const& cfg) {
+	ReflectionRegistry::SetupNativeTypes();
+	Instance().m_World = WorldRegistry::NewWorld();
+
+	if (!cfg.empty()) {
+		YAML::Node root{YAML::LoadFile(cfg)};
+
+		if (YAML::Node system{ root["system"] }; system) {
+			SystemRegistry::LoadConfig(system);
+		}
+		if (YAML::Node resource{ root["resource"] }; resource) {
+			ResourceSystem::LoadConfig(resource);
+		}
+		if (root["world"]) {
+			if (YAML::Node world_file{ root["world"]["file"] }; world_file) {
+				Instance().m_World.LoadYAML(world_file.as<std::string>());
+			}
+		}
+		if (YAML::Node logger{ root["logger"] }; logger) {
+			std::string sink_name{ logger["name"] ? logger["name"].as<std::string>() : DEFAULT_SINK_NAME};
+			std::string sink_file{ logger["output file"] ? logger["output file"].as<std::string>() : std::string{} };
+			spdlog::level::level_enum sink_severity{ logger["severity"] ? static_cast<spdlog::level::level_enum>(logger["severity"].as<int>()) : spdlog::level::info };
+			Instance().m_Sink.reset(new Logger::Sink{sink_name, sink_file, sink_severity});
+		}
+		else {
+			Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
+		}
+	} else {
+		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
+	}
+
+	RenderSystem::System().Init();
+	Scheduler::CompileJobSchedule();
 }
 
 void Engine::Exit() {
@@ -166,6 +202,9 @@ void Engine::GenerateDefaultConfig() {
 }
 
 Window& Engine::GetWindowInstance() {
+	if (!Instance().m_Window) {
+		throw std::runtime_error("Engine window not created - use Engine::Init() instead of InitWithoutWindow() for standalone applications");
+	}
 	return *Instance().m_Window;
 }
 
