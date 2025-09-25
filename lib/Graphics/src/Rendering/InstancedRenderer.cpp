@@ -3,13 +3,17 @@
 #include "Scene/SceneRenderer.h"
 #include "Pipeline/RenderPass.h"
 #include "Utility/RenderData.h"
+#include "Utility/AABB.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
 #include <spdlog/spdlog.h>
+#include <cassert>
 
 InstancedRenderer::InstancedRenderer(PBRLightingRenderer* lighting)
     : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false), m_PBRLighting(lighting)
 {
+    assert(lighting && "PBRLightingRenderer cannot be null");
+    assert(m_MaxInstances > 0 && "Max instances must be positive");
 }
 
 InstancedRenderer::~InstancedRenderer()
@@ -35,16 +39,20 @@ void InstancedRenderer::BeginInstanceBatch()
 
 void InstancedRenderer::AddInstance(const std::string& meshId, const InstanceData& instance)
 {
+    assert(m_BatchActive && "Must call BeginInstanceBatch() first");
+    assert(!meshId.empty() && "Mesh ID cannot be empty");
+    assert(m_TotalInstances < m_MaxInstances && "Cannot exceed maximum instances");
+
     if (!m_BatchActive) {
         spdlog::error("Must call BeginInstanceBatch() first");
         return;
     }
-    
+
     if (m_TotalInstances >= m_MaxInstances) {
         spdlog::warn("Exceeded maximum instances ({})", m_MaxInstances);
         return;
     }
-    
+
     auto& meshInstances = m_MeshInstances[meshId];
     meshInstances.instances.push_back(instance);
     meshInstances.dirty = true;
@@ -79,28 +87,34 @@ void InstancedRenderer::Clear()
 
 void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 {
+    assert(!meshId.empty() && "Mesh ID cannot be empty");
+    assert(m_MeshInstances.find(meshId) != m_MeshInstances.end() && "Mesh ID must exist in mesh instances");
+
     auto& meshInstances = m_MeshInstances[meshId];
-    
+
     if (meshInstances.instances.empty()) {
         return;
     }
-    
+
     // Upload full InstanceData (not just matrices)
     const auto& instances = meshInstances.instances;
     uint32_t instanceDataSize = instances.size() * sizeof(InstanceData);
+    assert(instanceDataSize > 0 && "Instance data size must be positive");
 
     // Create or get existing SSBO for full instance data
     auto& ssbo = m_InstanceSSBOs[meshId];
 
     if (!ssbo) {
         ssbo = std::make_unique<ShaderStorageBuffer>(instances.data(), instanceDataSize, GL_DYNAMIC_DRAW);
+        assert(ssbo && "Failed to create ShaderStorageBuffer");
+        assert(ssbo->GetSSBOHandle() != 0 && "SSBO handle must be valid after creation");
     } else {
         // Update existing SSBO with full instance data
+        assert(ssbo->GetSSBOHandle() != 0 && "Existing SSBO handle must be valid");
         ssbo->SetData(instances.data(), instanceDataSize, 0);
     }
-    
+
     meshInstances.dirty = false;
-    
 }
 
 void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
@@ -127,19 +141,17 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     Clear();
     BeginInstanceBatch();
 
-
     // Group renderables by mesh for instancing
     for (size_t i = 0; i < renderables.size(); ++i) {
         const auto& renderable = renderables[i];
         if (!renderable.visible || !renderable.mesh || !renderable.material) {
             continue;
         }
-        
+
         // Generate mesh ID from mesh pointer only (like it worked with dragon model)
         // Materials are per-instance, textures are per-mesh
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
 
-        
         // Add instance data with actual material properties
         InstanceData instanceData;
         instanceData.modelMatrix = renderable.transform;
@@ -148,15 +160,14 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         instanceData.flags = 0;
         instanceData.metallic = renderable.material->GetMetallicValue();
         instanceData.roughness = renderable.material->GetRoughnessValue();
-        
+
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
             SetMeshData(meshId, renderable.mesh, renderable.material);
         }
         AddInstance(meshId, instanceData);
     }
-    
-    
+
     // End instance batch to update SSBOs
     EndInstanceBatch();
 }
@@ -277,6 +288,13 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
 void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
 {
+    assert(!meshId.empty() && "Mesh ID cannot be empty");
+    assert(mesh && "Mesh cannot be null");
+    assert(material && "Material cannot be null");
+    assert(mesh->GetVertexArray() && "Mesh must have a valid vertex array");
+    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Mesh VAO handle must be valid");
+    assert(mesh->GetIndexCount() > 0 && "Mesh must have indices");
+
     if (!mesh) {
         spdlog::error("InstancedRenderer::SetMeshData: NULL mesh provided for '{}'", meshId);
         return;
@@ -290,7 +308,6 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<M
     auto& meshInstances = m_MeshInstances[meshId];
     meshInstances.mesh = mesh;
     meshInstances.material = material;
-
 }
 
 

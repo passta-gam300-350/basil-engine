@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Buffer/FrameBuffer.h"
+#include "AABB.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -27,6 +28,9 @@ struct FrameData
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
     glm::vec3 cameraPosition = glm::vec3(0.0f);
+
+    // Debug rendering data
+    std::vector<DebugAABB> debugAABBs;
 
     // Timing data
     float deltaTime = 0.0f;

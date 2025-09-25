@@ -7,14 +7,20 @@
 #include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/PresentPass.h"
 #include "Pipeline/ShadowMappingPass.h"
+#include "Resources/Shader.h"
+#include "Resources/Mesh.h"
+#include <cassert>
 
 SceneRenderer::SceneRenderer()
 {
     m_ResourceManager = std::make_unique<ResourceManager>();
+    assert(m_ResourceManager && "Failed to create ResourceManager");
+
     m_ResourceManager->Initialize();
 
     // Initialize texture slot manager
     m_TextureSlotManager = std::make_unique<TextureSlotManager>();
+    assert(m_TextureSlotManager && "Failed to create TextureSlotManager");
 
     // Initialize rendering coordinators with dependencies
     InitializeRenderingCoordinators();
@@ -46,6 +52,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto mainPipeline = std::make_unique<RenderPipeline>();
 
     // 1. Add shadow mapping pass (executes first with pass ID 0)
+    // Shadow pass will need shader to be set after creation by the application
     auto shadowPass = std::make_shared<ShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
 
@@ -68,13 +75,22 @@ void SceneRenderer::InitializeRenderingCoordinators()
 {
     // Create rendering coordinators with explicit dependencies
     m_PBRLightingRenderer = std::make_unique<PBRLightingRenderer>();  // Initialize lighting first
+    assert(m_PBRLightingRenderer && "Failed to create PBRLightingRenderer");
+
     //m_MeshRenderer = std::make_unique<MeshRenderer>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
+    assert(m_FrustumCuller && "Failed to create FrustumCuller");
+
     m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_PBRLightingRenderer.get());
+    assert(m_InstancedRenderer && "Failed to create InstancedRenderer");
 }
 
 void SceneRenderer::Render()
 {
+    assert(m_InstancedRenderer && "InstancedRenderer must be initialized before rendering");
+    assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized before rendering");
+    assert(m_ResourceManager && "ResourceManager must be initialized before rendering");
+    assert(m_TextureSlotManager && "TextureSlotManager must be initialized before rendering");
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
@@ -91,9 +107,84 @@ void SceneRenderer::Render()
     // Execute the single pipeline
     if (m_Pipeline) {
         m_Pipeline->Execute(context);
+    } else {
+        assert(false && "Render pipeline must be initialized before rendering");
     }
 
     // Frame data updates happened automatically through context reference
     // No manual synchronization needed!
     ++m_FrameData.frameNumber;
+}
+
+void SceneRenderer::SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Shadow depth shader cannot be null");
+    assert(shader->ID != 0 && "Shadow depth shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting shadow shader");
+
+    if (m_Pipeline) {
+        auto shadowPass = std::dynamic_pointer_cast<ShadowMappingPass>(m_Pipeline->GetPass("ShadowPass"));
+        if (shadowPass) {
+            shadowPass->SetShadowDepthShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Debug primitive shader cannot be null");
+    assert(shader->ID != 0 && "Debug primitive shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting debug shader");
+
+    if (m_Pipeline) {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass) {
+            debugPass->SetPrimitiveShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const
+{
+    assert(mesh && "Debug light cube mesh cannot be null");
+    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
+    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
+    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
+
+    if (m_Pipeline) {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass) {
+            debugPass->SetLightCubeMesh(mesh);
+        }
+    }
+}
+
+void SceneRenderer::SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const
+{
+    assert(mesh && "Debug directional ray mesh cannot be null");
+    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
+    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
+    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
+
+    if (m_Pipeline) {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass) {
+            debugPass->SetDirectionalRayMesh(mesh);
+        }
+    }
+}
+
+void SceneRenderer::SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const
+{
+    assert(mesh && "Debug AABB wireframe mesh cannot be null");
+    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
+    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
+    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
+
+    if (m_Pipeline) {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass) {
+            debugPass->SetAABBWireframeMesh(mesh);
+        }
+    }
 }

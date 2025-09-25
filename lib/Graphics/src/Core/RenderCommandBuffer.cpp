@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
+#include <cassert>
 
 RenderCommandBuffer::RenderCommandBuffer() {
     // Texture binding system will be set via SetTextureSlotManager()
@@ -56,34 +57,31 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ClearData& cmd)
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindShaderData& cmd)
 {
-    if (cmd.shader)
-    {
-        cmd.shader->use();
-    }
+    assert(cmd.shader && "BindShaderData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    cmd.shader->use();
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformsData& cmd)
 {
-    if (!cmd.shader) return;
-    
+    assert(cmd.shader && "SetUniformsData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
     // Set transform matrices
     cmd.shader->setMat4("u_Model", cmd.modelMatrix);
     cmd.shader->setMat4("u_View", cmd.viewMatrix);
     cmd.shader->setMat4("u_Projection", cmd.projectionMatrix);
-    
+
     // Set camera position for lighting
     cmd.shader->setVec3("u_ViewPos", cmd.cameraPosition);
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexturesData& cmd)
 {
-    if (!cmd.shader) return;
-
-    // Ensure texture binding system is available
-    if (!m_TextureBindingSystem) {
-        spdlog::error("[RenderCommandBuffer] Texture binding system not set! SceneRenderer should call SetTextureSlotManager().");
-        return;
-    }
+    assert(cmd.shader && "BindTexturesData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(m_TextureBindingSystem && "Texture binding system must be set before binding textures! Call SetTextureSlotManager()");
 
     // Use slot-based texture system
     m_TextureBindingSystem->BindTextures(cmd.textures, cmd.shader);
@@ -91,11 +89,15 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexturesData&
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData& cmd)
 {
-    // Pure drawing - assumes state is already set up
+    assert(cmd.vao != 0 && "DrawElementsData command must have a valid VAO handle");
+    assert(cmd.indexCount > 0 && "DrawElementsData command must have a positive index count");
+    assert(cmd.mode == GL_TRIANGLES || cmd.mode == GL_LINES || cmd.mode == GL_POINTS ||
+           cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawElementsData mode must be a valid OpenGL primitive type");
+
     glBindVertexArray(cmd.vao);
     glDrawElements(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
-    
+
     // Reset material texture state (but preserve shadow map binding)
     if (m_TextureBindingSystem)
     {
@@ -108,13 +110,21 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindSSBOData& cmd)
 {
+    assert(cmd.ssboHandle != 0 && "BindSSBOData command must have a valid SSBO handle");
+    assert(cmd.bindingPoint < GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS && "SSBO binding point must be within OpenGL limits");
+
     // Bind SSBO to specified binding point for shader access
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, cmd.bindingPoint, cmd.ssboHandle);
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd)
 {
-    // Instanced drawing - assumes SSBO and state are already set up
+    assert(cmd.vao != 0 && "DrawElementsInstancedData command must have a valid VAO handle");
+    assert(cmd.indexCount > 0 && "DrawElementsInstancedData command must have a positive index count");
+    assert(cmd.instanceCount > 0 && "DrawElementsInstancedData command must have a positive instance count");
+    assert(cmd.mode == GL_TRIANGLES || cmd.mode == GL_LINES || cmd.mode == GL_POINTS ||
+           cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawElementsInstancedData mode must be a valid OpenGL primitive type");
+
     glBindVertexArray(cmd.vao);
     glDrawElementsInstanced(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
                            cmd.instanceCount);
@@ -135,9 +145,10 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd)
 {
-    if (!cmd.shader) {
-        return;
-    }
+    assert(cmd.shader && "SetShadowUniformsData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(cmd.shadowMapUnit >= 0 && cmd.shadowMapUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS &&
+           "Shadow map texture unit must be within OpenGL limits");
 
     // Ensure shader is active
     cmd.shader->use();
@@ -185,9 +196,9 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferDa
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd)
 {
-    if (!cmd.shader) {
-        return;
-    }
+    assert(cmd.shader && "SetUniformVec3Data command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
 
     // Ensure shader is active
     cmd.shader->use();

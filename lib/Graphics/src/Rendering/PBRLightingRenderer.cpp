@@ -4,6 +4,7 @@
 #include "Utility/Light.h"
 #include "Resources/Material.h"
 #include <spdlog/spdlog.h>
+#include <cassert>
 
 PBRLightingRenderer::PBRLightingRenderer()
 {
@@ -36,6 +37,9 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
                                            const FrameData& frameData,
                                            const Material* material)
 {
+    assert(shader && "Shader cannot be null for PBR lighting setup");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
     if (!shader) {
         spdlog::error("PBRLightingRenderer::SetupPBRLighting: NULL shader provided");
         return;
@@ -43,7 +47,7 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
 
     // Ensure shader is active for uniform setting
     shader->use();
-    
+
     // Set light counts
     SetupPointLights(shader);
     SetupDirectionalLights(shader);
@@ -124,6 +128,9 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
 
 void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material)
 {
+    assert(shader && "Shader cannot be null for lighting application");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
     if (!shader) {
         spdlog::error("PBRLightingRenderer::ApplyLightingToShader: NULL shader provided");
         return;
@@ -131,7 +138,7 @@ void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, 
 
     // Ensure shader is active for uniform setting
     shader->use();
-    
+
     // Set light data
     SetupPointLights(shader);
     SetupDirectionalLights(shader);
@@ -147,12 +154,20 @@ void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, 
 
 void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
 {
+    assert(shader && "Shader cannot be null for point light setup");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
     // Set point light count
     shader->setInt("u_NumPointLights", static_cast<int>(m_PointLights.size()));
-    
+
     // Set up point lights
     for (size_t i = 0; i < m_PointLights.size(); ++i) {
         const auto& light = m_PointLights[i];
+        assert(light.intensity >= 0.0f && "Point light intensity must be non-negative");
+        assert(light.constant > 0.0f && "Point light constant attenuation must be positive");
+        assert(light.linear >= 0.0f && "Point light linear attenuation must be non-negative");
+        assert(light.quadratic >= 0.0f && "Point light quadratic attenuation must be non-negative");
+
         std::string prefix = "u_PointLights[" + std::to_string(i) + "].";
         shader->setVec3(prefix + "position", light.position);
         shader->setVec3(prefix + "color", light.color);
@@ -165,12 +180,18 @@ void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
 
 void PBRLightingRenderer::SetupDirectionalLights(std::shared_ptr<Shader> shader)
 {
+    assert(shader && "Shader cannot be null for directional light setup");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
     // Set directional light count
     shader->setInt("u_NumDirectionalLights", static_cast<int>(m_DirectionalLights.size()));
-    
+
     // Set up directional lights
     for (size_t i = 0; i < m_DirectionalLights.size(); ++i) {
         const auto& light = m_DirectionalLights[i];
+        assert(light.intensity >= 0.0f && "Directional light intensity must be non-negative");
+        assert(glm::length(light.direction) > 0.0f && "Directional light direction must be non-zero");
+
         std::string prefix = "u_DirectionalLights[" + std::to_string(i) + "].";
         shader->setVec3(prefix + "direction", light.direction);
         shader->setVec3(prefix + "color", light.color);

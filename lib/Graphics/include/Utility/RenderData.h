@@ -3,6 +3,7 @@
 #include "../Resources/Mesh.h"
 #include "../Resources/Material.h"
 #include "Light.h"
+#include "AABB.h"
 #include <memory>
 #include <glm/glm.hpp>
 

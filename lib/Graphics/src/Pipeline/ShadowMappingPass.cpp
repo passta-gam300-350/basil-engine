@@ -2,7 +2,7 @@
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Utility/Light.h"
-#include "../../include/Resources/ResourceManager.h"
+#include "../../include/Resources/Shader.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
@@ -13,7 +13,20 @@ ShadowMappingPass::ShadowMappingPass()
             // Depth-only framebuffer for shadow mapping
             { FBOTextureFormat::DEPTH24STENCIL8 }
         }
-    })
+    }),
+    m_ShadowDepthShader(nullptr)
+{
+}
+
+ShadowMappingPass::ShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
+    : RenderPass("ShadowPass", FBOSpecs{
+        SHADOW_MAP_SIZE, SHADOW_MAP_SIZE,
+        {
+            // Depth-only framebuffer for shadow mapping
+            { FBOTextureFormat::DEPTH24STENCIL8 }
+        }
+    }),
+    m_ShadowDepthShader(shadowDepthShader)
 {
 }
 
@@ -67,10 +80,10 @@ void ShadowMappingPass::Execute(RenderContext& context)
     // Render shadow casters (all visible objects) with depth-only shader
     if (!context.renderables.empty())
     {
-        // Load depth-only shader for shadow mapping
-        auto shadowShader = context.resourceManager.GetShader("shadow_depth");
-        if (!shadowShader)
+        // Use injected shadow depth shader
+        if (!m_ShadowDepthShader)
         {
+            spdlog::error("ShadowMappingPass: No shadow depth shader available. Skipping shadow rendering.");
             End();
             return;
         }
@@ -82,12 +95,12 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
             // Using depth-only shader for shadow casting
             // Bind depth-only shader first
-            RenderCommands::BindShaderData bindShaderCmd{shadowShader};
+            RenderCommands::BindShaderData bindShaderCmd{m_ShadowDepthShader};
             Submit(bindShaderCmd);
 
             // Set light-space uniforms for depth-only shader
             RenderCommands::SetUniformsData uniformsCmd{
-                shadowShader,                      // Use depth-only shader
+                m_ShadowDepthShader,               // Use injected depth-only shader
                 renderable.transform,              // Model matrix
                 lightView,                         // Light view matrix
                 lightProjection,                   // Light projection matrix

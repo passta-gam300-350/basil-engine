@@ -49,6 +49,18 @@ public:
     static Mesh CreateCube(float size = 1.0f);
 
     /**
+     * @brief Creates a wireframe cube mesh centered at the origin
+     *
+     * Creates a cube wireframe with 12 edges as line segments.
+     * Perfect for debug visualization of bounding boxes and volumes.
+     * Uses GL_LINES primitive type for rendering.
+     *
+     * @param size Side length of the cube (default 1.0f)
+     * @return Mesh object containing the wireframe cube geometry
+     */
+    static Mesh CreateWireframeCube(float size = 1.0f);
+
+    /**
      * @brief Creates a fullscreen quad for screen-space rendering
      *
      * Creates a quad covering the entire screen in NDC space (-1 to 1).

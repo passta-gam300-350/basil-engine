@@ -1,29 +1,43 @@
 #include "../../include/Pipeline/DebugRenderPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
-#include "../../include/Resources/PrimitiveGenerator.h"
-#include "../../include/Resources/ResourceManager.h"
+#include "../../include/Resources/Shader.h"
 #include <glm/ext.hpp>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
+#include <spdlog/spdlog.h>
+#include <cassert>
 
 DebugRenderPass::DebugRenderPass()
-    : RenderPass("DebugPass", FBOSpecs{0, 0, {}})  // No FBO - renders directly to main buffer
+    : RenderPass("DebugPass"),  // No framebuffer needed
+      m_PrimitiveShader(nullptr),
+      m_LightCube(nullptr),
+      m_DirectionalRay(nullptr),
+      m_AABBWireframe(nullptr)
 {
-    InitializeLightVisualization();
+}
+
+DebugRenderPass::DebugRenderPass(std::shared_ptr<Shader> primitiveShader)
+    : RenderPass("DebugPass"),  // No framebuffer needed
+      m_PrimitiveShader(primitiveShader),
+      m_LightCube(nullptr),
+      m_DirectionalRay(nullptr),
+      m_AABBWireframe(nullptr)
+{
 }
 
 void DebugRenderPass::Execute(RenderContext& context)
 {
-    ClearCommands();
-
     // Render directly to the main color buffer for proper alpha blending
     if (!context.frameData.mainColorBuffer)
     {
         return; // No main buffer to render to
     }
 
-    // Bind the main framebuffer instead of our own debug framebuffer
+    // Begin the pass (no framebuffer binding since we don't have one)
+    Begin();
+
+    // Bind the main framebuffer for rendering
     context.frameData.mainColorBuffer->Bind();
 
     // Set viewport to match main framebuffer
@@ -48,6 +62,11 @@ void DebugRenderPass::Execute(RenderContext& context)
         RenderLightRays(context);
     }
 
+    // Render AABB wireframes for visualization
+    if (m_ShowAABBs && !context.frameData.debugAABBs.empty()) {
+        RenderAABBs(context);
+    }
+
     // Disable blending after debug rendering
     RenderCommands::SetBlendingData disableBlendCmd{ false };
     Submit(disableBlendCmd);
@@ -56,31 +75,28 @@ void DebugRenderPass::Execute(RenderContext& context)
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
 
-    // No need to store debug buffer since we rendered directly to main buffer
-    // Main buffer already contains the composited result
-}
+    // Unbind the main framebuffer
+    context.frameData.mainColorBuffer->Unbind();
 
-void DebugRenderPass::InitializeLightVisualization()
-{
-    // Create a unit cube mesh for light visualization (scaling will be done per-light)
-    auto cube = PrimitiveGenerator::CreateCube(1.0f);
-    m_LightCube = std::make_unique<Mesh>(cube);
-
-    // Create light ray mesh for directional visualization (single line for both spot and directional)
-    auto directionRay = PrimitiveGenerator::CreateDirectionalRay(m_RayLength);
-    m_DirectionalRay = std::make_unique<Mesh>(directionRay);
+    // End the pass (no framebuffer unbinding since we don't have one)
+    End();
 }
 
 void DebugRenderPass::RenderLightCubes(RenderContext& context)
 {
-    if (!m_LightCube) return;
+    if (!m_LightCube) {
+        spdlog::warn("DebugRenderPass: No light cube mesh available for rendering.");
+        return;
+    }
 
-    // Get the primitive shader for simple colored rendering
-    auto primitiveShader = context.resourceManager.GetShader("primitive");
-    if (!primitiveShader) return;
+    // Use injected primitive shader
+    if (!m_PrimitiveShader) {
+        spdlog::error("DebugRenderPass: No primitive shader available for light cube rendering.");
+        return;
+    }
 
     // Bind the shader
-    RenderCommands::BindShaderData bindShaderCmd{ primitiveShader };
+    RenderCommands::BindShaderData bindShaderCmd{ m_PrimitiveShader };
     Submit(bindShaderCmd);
 
     // Get the cube's VAO handle
@@ -102,7 +118,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 
             // Set uniforms using the available SetUniformsData command
             RenderCommands::SetUniformsData uniformsCmd{
-                primitiveShader,
+                m_PrimitiveShader,
                 modelMatrix,
                 context.frameData.viewMatrix,
                 context.frameData.projectionMatrix,
@@ -112,7 +128,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 
             // Set the light color using the command buffer
             RenderCommands::SetUniformVec3Data colorCmd{
-                primitiveShader,
+                m_PrimitiveShader,
                 "u_Color",
                 light.color
             };
@@ -131,12 +147,14 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 
 void DebugRenderPass::RenderLightRays(RenderContext& context)
 {
-    // Get the primitive shader for wireframe rendering
-    auto primitiveShader = context.resourceManager.GetShader("primitive");
-    if (!primitiveShader) return;
+    // Use injected primitive shader
+    if (!m_PrimitiveShader) {
+        spdlog::error("DebugRenderPass: No primitive shader available for light ray rendering.");
+        return;
+    }
 
     // Bind the shader
-    RenderCommands::BindShaderData bindShaderCmd{ primitiveShader };
+    RenderCommands::BindShaderData bindShaderCmd{ m_PrimitiveShader };
     Submit(bindShaderCmd);
 
     // Set line width for better visibility
@@ -145,12 +163,12 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
 
     // Render each light with appropriate directional ray visualization
     for (const auto& light : context.lights) {
-        std::unique_ptr<Mesh>* rayMesh = nullptr;
+        std::shared_ptr<Mesh> rayMesh = nullptr;
         glm::mat4 modelMatrix = glm::mat4(1.0f);
 
         // Only render rays for spot lights (remove directional light rays)
         if (light.type == Light::Type::Spot && m_DirectionalRay) {
-            rayMesh = &m_DirectionalRay;
+            rayMesh = m_DirectionalRay;
 
             // Ray length directly represents light intensity
             float intensityBasedLength = light.intensity * m_RayIntensityFactor;
@@ -188,14 +206,14 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
             continue;
         }
 
-        if (rayMesh && *rayMesh) {
+        if (rayMesh) {
             // Get the ray mesh VAO handle
-            auto rayVAO = (*rayMesh)->GetVertexArray();
+            auto rayVAO = rayMesh->GetVertexArray();
             if (!rayVAO) continue;
 
             // Set uniforms using the available SetUniformsData command
             RenderCommands::SetUniformsData uniformsCmd{
-                primitiveShader,
+                m_PrimitiveShader,
                 modelMatrix,
                 context.frameData.viewMatrix,
                 context.frameData.projectionMatrix,
@@ -206,7 +224,7 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
             // Set the light color (slightly dimmer for rays)
             glm::vec3 rayColor = light.color * 0.7f;  // 70% intensity for rays
             RenderCommands::SetUniformVec3Data colorCmd{
-                primitiveShader,
+                m_PrimitiveShader,
                 "u_Color",
                 rayColor
             };
@@ -215,7 +233,7 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
             // Draw the rays as lines
             RenderCommands::DrawElementsData drawCmd{
                 rayVAO->GetVAOHandle(),
-                static_cast<uint32_t>((*rayMesh)->GetIndexCount()),
+                static_cast<uint32_t>(rayMesh->GetIndexCount()),
                 GL_LINES  // Use lines primitive mode
             };
             Submit(drawCmd);
@@ -227,21 +245,23 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
     Submit(restoreLineWidthCmd);
 }
 
-void DebugRenderPass::RenderSingleRay(RenderContext& context, std::unique_ptr<Mesh>* rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light)
+void DebugRenderPass::RenderSingleRay(RenderContext& context, const std::shared_ptr<Mesh>& rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light)
 {
-    if (!rayMesh || !*rayMesh) return;
+    if (!rayMesh) return;
 
-    // Get the primitive shader for wireframe rendering
-    auto primitiveShader = context.resourceManager.GetShader("primitive");
-    if (!primitiveShader) return;
+    // Use injected primitive shader
+    if (!m_PrimitiveShader) {
+        spdlog::error("DebugRenderPass: No primitive shader available for single ray rendering.");
+        return;
+    }
 
     // Get the ray mesh VAO handle
-    auto rayVAO = (*rayMesh)->GetVertexArray();
+    auto rayVAO = rayMesh->GetVertexArray();
     if (!rayVAO) return;
 
     // Set uniforms using the available SetUniformsData command
     RenderCommands::SetUniformsData uniformsCmd{
-        primitiveShader,
+        m_PrimitiveShader,
         modelMatrix,
         context.frameData.viewMatrix,
         context.frameData.projectionMatrix,
@@ -252,7 +272,7 @@ void DebugRenderPass::RenderSingleRay(RenderContext& context, std::unique_ptr<Me
     // Set the light color (slightly dimmer for rays)
     glm::vec3 rayColor = light.color * 0.7f;  // 70% intensity for rays
     RenderCommands::SetUniformVec3Data colorCmd{
-        primitiveShader,
+        m_PrimitiveShader,
         "u_Color",
         rayColor
     };
@@ -261,9 +281,113 @@ void DebugRenderPass::RenderSingleRay(RenderContext& context, std::unique_ptr<Me
     // Draw the rays as lines
     RenderCommands::DrawElementsData drawCmd{
         rayVAO->GetVAOHandle(),
-        static_cast<uint32_t>((*rayMesh)->GetIndexCount()),
+        static_cast<uint32_t>(rayMesh->GetIndexCount()),
         GL_LINES  // Use lines primitive mode
     };
     Submit(drawCmd);
+}
+
+void DebugRenderPass::RenderAABBs(RenderContext& context)
+{
+    assert(m_PrimitiveShader && "Primitive shader must be set for AABB rendering");
+
+    if (!m_AABBWireframe) {
+        spdlog::warn("DebugRenderPass: No AABB wireframe mesh available for rendering.");
+        return;
+    }
+
+    // Use injected primitive shader
+    if (!m_PrimitiveShader) {
+        spdlog::error("DebugRenderPass: No primitive shader available for AABB rendering.");
+        return;
+    }
+
+    // Bind the shader
+    RenderCommands::BindShaderData bindShaderCmd{ m_PrimitiveShader };
+    Submit(bindShaderCmd);
+
+    // Set line width for better visibility
+    RenderCommands::SetLineWidthData lineWidthCmd{ 1.5f };
+    Submit(lineWidthCmd);
+
+    // Get the wireframe mesh VAO handle
+    auto wireframeVAO = m_AABBWireframe->GetVertexArray();
+    if (!wireframeVAO) {
+        spdlog::error("DebugRenderPass: AABB wireframe mesh has no vertex array.");
+        return;
+    }
+
+    // Render each AABB wireframe
+    for (const auto& debugAABB : context.frameData.debugAABBs) {
+        if (!debugAABB.visible || !debugAABB.boundingBox.IsValid()) {
+            continue;
+        }
+
+        glm::mat4 modelMatrix;
+
+        if (debugAABB.isLocalAABB) {
+            // For local AABBs, apply the object's transform matrix to the local bounds
+            glm::vec3 center = debugAABB.boundingBox.GetCenter();
+            glm::vec3 size = debugAABB.boundingBox.GetSize();
+
+            // Create local AABB transform
+            glm::mat4 localAABBMatrix = glm::mat4(1.0f);
+            localAABBMatrix = glm::translate(localAABBMatrix, center);
+            localAABBMatrix = glm::scale(localAABBMatrix, size);
+
+            // Apply object transform to show local AABB in world space
+            modelMatrix = debugAABB.objectTransform * localAABBMatrix;
+        } else {
+            // For world AABBs, use the AABB bounds directly (already in world space)
+            glm::vec3 center = debugAABB.boundingBox.GetCenter();
+            glm::vec3 size = debugAABB.boundingBox.GetSize();
+
+            modelMatrix = glm::mat4(1.0f);
+            modelMatrix = glm::translate(modelMatrix, center);
+            modelMatrix = glm::scale(modelMatrix, size);
+        }
+
+        // Set uniforms using the available SetUniformsData command
+        RenderCommands::SetUniformsData uniformsCmd{
+            m_PrimitiveShader,
+            modelMatrix,
+            context.frameData.viewMatrix,
+            context.frameData.projectionMatrix,
+            context.frameData.cameraPosition
+        };
+        Submit(uniformsCmd);
+
+        // Set the AABB color with different line width for local vs world AABBs
+        if (debugAABB.isLocalAABB) {
+            // Local AABBs use thicker lines to distinguish them
+            RenderCommands::SetLineWidthData localLineWidthCmd{ 2.0f };
+            Submit(localLineWidthCmd);
+        }
+
+        RenderCommands::SetUniformVec3Data colorCmd{
+            m_PrimitiveShader,
+            "u_Color",
+            debugAABB.color
+        };
+        Submit(colorCmd);
+
+        // Draw the wireframe using lines
+        RenderCommands::DrawElementsData drawCmd{
+            wireframeVAO->GetVAOHandle(),
+            static_cast<uint32_t>(m_AABBWireframe->GetIndexCount()),
+            GL_LINES  // Use lines primitive mode for wireframe
+        };
+        Submit(drawCmd);
+
+        // Restore line width after local AABB
+        if (debugAABB.isLocalAABB) {
+            RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.5f };
+            Submit(restoreLineWidthCmd);
+        }
+    }
+
+    // Restore normal line width
+    RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };
+    Submit(restoreLineWidthCmd);
 }
 

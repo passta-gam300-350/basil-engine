@@ -4,7 +4,7 @@
 #include <glfw/glfw3.h>
 
 PresentPass::PresentPass()
-    : RenderPass("PresentPass", FBOSpecs{0, 0, {}})  // No FBO needed - we blit to screen
+    : RenderPass("PresentPass")  // No FBO needed - we blit to screen
 {
 }
 

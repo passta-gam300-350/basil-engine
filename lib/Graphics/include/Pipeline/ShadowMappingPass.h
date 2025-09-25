@@ -6,6 +6,9 @@
 #include <memory>
 #include <glm/glm.hpp>
 
+// Forward declaration
+class Shader;
+
 /**
  * Shadow Mapping Pass - Renders depth maps from light perspective
  *
@@ -18,15 +21,22 @@
 class ShadowMappingPass : public RenderPass {
 public:
     ShadowMappingPass();
+    ShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader);
     ~ShadowMappingPass() = default;
 
     // Context-based execution
     void Execute(RenderContext& context) override;
 
+    // Set shadow depth shader (alternative to constructor injection)
+    void SetShadowDepthShader(std::shared_ptr<Shader> shader) { m_ShadowDepthShader = shader; }
+
 private:
     // Helper methods
     glm::mat4 CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter);
     glm::mat4 CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData);
+
+    // Shader storage
+    std::shared_ptr<Shader> m_ShadowDepthShader;
 
     // Configuration
     static constexpr uint32_t SHADOW_MAP_SIZE = 2048;

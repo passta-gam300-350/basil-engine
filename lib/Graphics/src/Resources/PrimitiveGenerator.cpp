@@ -422,3 +422,72 @@ Mesh PrimitiveGenerator::CreateDirectionalRay(float length)
     return Mesh(vertices, indices, textures);
 }
 
+Mesh PrimitiveGenerator::CreateWireframeCube(float size)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    float halfSize = size * 0.5f;
+
+    // Define 8 cube vertices
+    std::vector<glm::vec3> positions = {
+        // Bottom face vertices (y = -halfSize)
+        glm::vec3(-halfSize, -halfSize, -halfSize),  // 0: bottom-back-left
+        glm::vec3( halfSize, -halfSize, -halfSize),  // 1: bottom-back-right
+        glm::vec3( halfSize, -halfSize,  halfSize),  // 2: bottom-front-right
+        glm::vec3(-halfSize, -halfSize,  halfSize),  // 3: bottom-front-left
+
+        // Top face vertices (y = halfSize)
+        glm::vec3(-halfSize,  halfSize, -halfSize),  // 4: top-back-left
+        glm::vec3( halfSize,  halfSize, -halfSize),  // 5: top-back-right
+        glm::vec3( halfSize,  halfSize,  halfSize),  // 6: top-front-right
+        glm::vec3(-halfSize,  halfSize,  halfSize)   // 7: top-front-left
+    };
+
+    // Create vertices
+    for (const auto& pos : positions) {
+        Vertex vertex;
+        vertex.Position = pos;
+        vertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);     // Dummy normal for wireframe
+        vertex.TexCoords = glm::vec2(0.0f, 0.0f);        // Dummy tex coords for wireframe
+        vertex.Tangent = glm::vec3(1.0f, 0.0f, 0.0f);    // Dummy tangent for wireframe
+        vertex.Bitangent = glm::vec3(0.0f, 0.0f, 1.0f);  // Dummy bitangent for wireframe
+
+        // Initialize bone data to zero
+        for (int i = 0; i < MAX_BONE_INFLUENCE; ++i) {
+            vertex.m_BoneIDs[i] = 0;
+            vertex.m_Weights[i] = 0.0f;
+        }
+
+        vertices.push_back(vertex);
+    }
+
+    // Define the 12 edges of the cube using line indices
+    // Each pair of indices represents one edge (line segment)
+    std::vector<unsigned int> edges = {
+        // Bottom face edges
+        0, 1,  // back edge
+        1, 2,  // right edge
+        2, 3,  // front edge
+        3, 0,  // left edge
+
+        // Top face edges
+        4, 5,  // back edge
+        5, 6,  // right edge
+        6, 7,  // front edge
+        7, 4,  // left edge
+
+        // Vertical edges connecting bottom to top
+        0, 4,  // back-left vertical
+        1, 5,  // back-right vertical
+        2, 6,  // front-right vertical
+        3, 7   // front-left vertical
+    };
+
+    indices = edges;
+
+    // Return wireframe mesh (no textures needed)
+    std::vector<Texture> textures;
+    return Mesh(vertices, indices, textures);
+}
+

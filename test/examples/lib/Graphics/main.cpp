@@ -5,9 +5,13 @@
 #include <Resources/Model.h>
 #include <Resources/PrimitiveGenerator.h>
 #include <Utility/Light.h>
+#include <Utility/AABB.h>
+#include <Pipeline/DebugRenderPass.h>
 
 #include <spdlog/spdlog.h>
 #include <random>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <map>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -35,6 +39,7 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_FirstMouse(true)
     , m_LastX(640.0f)
     , m_LastY(360.0f)
+    , m_RotationEnabled(true)
 {
     s_Instance = this;
 }
@@ -99,7 +104,8 @@ bool GraphicsTestDriver::Initialize()
 void GraphicsTestDriver::Run()
 {
     spdlog::info("Starting render loop...");
-    spdlog::info("Advanced Graphics Demo - Instanced + Traditional Textures + PBR");
+    spdlog::info("Advanced Graphics Demo - Instanced + Traditional Textures + PBR + AABB Debug");
+    spdlog::info("Note: First tinbox model (all meshes) will rotate to demonstrate AABB transformation");
     spdlog::info("Controls:");
     spdlog::info("  - WASD: Move camera");
     spdlog::info("  - Mouse: Look around");
@@ -110,6 +116,8 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - 1: Toggle shadow pass");
     spdlog::info("  - 2: Toggle main pass");
     spdlog::info("  - 3: Toggle post-process pass");
+    spdlog::info("  - 4: Toggle AABB wireframes");
+    spdlog::info("  - 5: Toggle object rotation");
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -139,6 +147,12 @@ void GraphicsTestDriver::Run()
             frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
             frameData.cameraPosition = m_Camera->GetPosition();
         }
+
+        // Update transformations (rotate one instance for AABB testing)
+        UpdateInstanceTransforms();
+
+        // Calculate and submit debug AABBs for visualization
+        CalculateAndSubmitAABBs();
 
         // Render scene (handles begin/end frame internally)
         m_SceneRenderer->Render();
@@ -187,6 +201,19 @@ bool GraphicsTestDriver::LoadTestResources()
             return false;
         }
 
+        // Configure the debug render pass with the loaded shader
+        m_SceneRenderer->SetDebugPrimitiveShader(primitiveShader);
+
+        // Create debug visualization meshes
+        auto lightCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+        auto lightRay = std::make_shared<Mesh>(PrimitiveGenerator::CreateDirectionalRay(3.0f));
+        auto wireframeCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateWireframeCube(1.0f));
+
+        // Configure debug meshes
+        m_SceneRenderer->SetDebugLightCubeMesh(lightCube);
+        m_SceneRenderer->SetDebugDirectionalRayMesh(lightRay);
+        m_SceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
+
         // Load advanced traditional texture binding shaders for maximum visual quality
         auto instancedShader = m_ResourceManager->LoadShader("main_pbr",
             "assets/shaders/main_pbr.vert",
@@ -205,6 +232,8 @@ bool GraphicsTestDriver::LoadTestResources()
 
         if (shadowShader) {
             spdlog::info("Shadow mapping shader loaded successfully!");
+            // Configure the shadow mapping pass with the loaded shader
+            m_SceneRenderer->SetShadowDepthShader(shadowShader);
         } else {
             spdlog::warn("Could not load shadow mapping shader");
         }
@@ -508,6 +537,119 @@ SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position
     return light;
 }
 
+void GraphicsTestDriver::CalculateAndSubmitAABBs()
+{
+    // Clear previous frame's debug AABBs
+    auto& frameData = m_SceneRenderer->GetFrameData();
+    frameData.debugAABBs.clear();
+
+    // Group meshes by model instance (based on position)
+    struct Vec3Compare {
+        bool operator()(const glm::vec3& a, const glm::vec3& b) const {
+            const float epsilon = 0.01f;
+            if (std::abs(a.x - b.x) > epsilon) return a.x < b.x;
+            if (std::abs(a.y - b.y) > epsilon) return a.y < b.y;
+            return a.z < b.z;
+        }
+    };
+
+    std::map<glm::vec3, std::vector<const RenderableData*>, Vec3Compare> modelInstances;
+
+    // Group all meshes by their position (model instance)
+    for (const auto& renderable : m_SceneObjects) {
+        if (!renderable.visible || !renderable.mesh) {
+            continue;
+        }
+
+        // Extract position from transform matrix
+        glm::vec3 position = glm::vec3(renderable.transform[3]);
+        modelInstances[position].push_back(&renderable);
+    }
+
+    // Calculate AABB per model instance
+    for (auto it = modelInstances.begin(); it != modelInstances.end(); ++it) {
+        const glm::vec3& instancePosition = it->first;
+        const std::vector<const RenderableData*>& meshes = it->second;
+
+        AABB modelAABB; // Start with invalid AABB
+        glm::mat4 instanceTransform = meshes[0]->transform; // All meshes should have same transform
+
+        // Combine all mesh AABBs to create model AABB
+        for (const auto* renderable : meshes) {
+            AABB meshAABB = AABB::CreateFromMesh(renderable->mesh);
+            modelAABB.ExpandToInclude(meshAABB);
+        }
+
+        // Create debug color based on instance position
+        glm::vec3 debugColor = glm::vec3(1.0f, 0.0f, 0.0f);
+
+        // Submit model instance AABB to frame data
+        frameData.debugAABBs.emplace_back(modelAABB, instanceTransform, debugColor);
+    }
+}
+
+void GraphicsTestDriver::UpdateInstanceTransforms()
+{
+    // Only rotate if rotation is enabled
+    if (!m_RotationEnabled || m_SceneObjects.empty()) {
+        return;
+    }
+
+    // Find the first tinbox instance position to use as the rotation center
+    glm::vec3 tinboxPosition;
+    bool foundTinboxPosition = false;
+
+    for (size_t i = 1; i < m_SceneObjects.size(); ++i) { // Start at 1 to skip ground plane
+        if (m_SceneObjects[i].mesh) {
+            // Extract position from the first tinbox mesh to use as rotation center
+            glm::vec3 translation, scale, skew;
+            glm::vec4 perspective;
+            glm::quat rotation;
+            glm::decompose(m_SceneObjects[i].transform, scale, rotation, translation, skew, perspective);
+
+            tinboxPosition = translation;
+            foundTinboxPosition = true;
+            break;
+        }
+    }
+
+    if (!foundTinboxPosition) {
+        return; // No suitable object found
+    }
+
+    // Create rotation based on time (combined rotations for interesting AABB changes)
+    float rotationSpeed = 0.8f; // Rotation speed in radians per second
+    glm::quat timeBasedRotation = glm::angleAxis(m_Time * rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f)) *
+                                  glm::angleAxis(m_Time * rotationSpeed * 0.6f, glm::vec3(1.0f, 0.0f, 0.0f)) *
+                                  glm::angleAxis(m_Time * rotationSpeed * 0.4f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Rotate ALL meshes of the first tinbox model together
+    for (size_t i = 1; i < m_SceneObjects.size(); ++i) { // Start at 1 to skip ground plane
+        if (m_SceneObjects[i].mesh) {
+            auto& targetObject = m_SceneObjects[i];
+
+            // Extract original position and scale from this mesh's transform
+            glm::vec3 translation, scale, skew;
+            glm::vec4 perspective;
+            glm::quat rotation;
+            glm::decompose(targetObject.transform, scale, rotation, translation, skew, perspective);
+
+            // Check if this mesh belongs to the same tinbox model (same position)
+            float distanceToTinboxCenter = glm::length(translation - tinboxPosition);
+            if (distanceToTinboxCenter < 0.1f) { // Meshes from the same model should be at the same position
+
+                // Rebuild the transform matrix with the new rotation
+                glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), translation);
+                glm::mat4 rotationMatrix = glm::mat4_cast(timeBasedRotation);
+                glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
+
+                // Apply transformations in order: Scale -> Rotate -> Translate
+                targetObject.transform = translationMatrix * rotationMatrix * scaleMatrix;
+            }
+        }
+    }
+}
+
 void GraphicsTestDriver::ProcessInput()
 {
     if (glfwGetKey(m_Window->GetNativeWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -571,6 +713,15 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_3:
                 s_Instance->ToggleRenderPass("DebugPass");
+                break;
+
+            case GLFW_KEY_4:
+                s_Instance->ToggleAABBVisualization();
+                break;
+
+            case GLFW_KEY_5:
+                s_Instance->m_RotationEnabled = !s_Instance->m_RotationEnabled;
+                spdlog::info("Object rotation {}", s_Instance->m_RotationEnabled ? "ENABLED" : "DISABLED");
                 break;
         }
     }
@@ -673,6 +824,30 @@ void GraphicsTestDriver::ToggleRenderPass(const std::string& passName)
         }
     } else {
         spdlog::warn("Scene renderer not available - cannot toggle pass '{}'", passName);
+    }
+}
+
+void GraphicsTestDriver::ToggleAABBVisualization()
+{
+    if (m_SceneRenderer) {
+        auto* pipeline = m_SceneRenderer->GetPipeline();
+        if (pipeline) {
+            auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
+            if (debugPass) {
+                bool currentlyEnabled = debugPass->GetShowAABBs();
+                bool newState = !currentlyEnabled;
+
+                debugPass->SetShowAABBs(newState);
+
+                spdlog::info("AABB wireframe visualization {}", newState ? "ENABLED" : "DISABLED");
+            } else {
+                spdlog::warn("Debug pass not found - cannot toggle AABB visualization");
+            }
+        } else {
+            spdlog::warn("Pipeline not found - cannot toggle AABB visualization");
+        }
+    } else {
+        spdlog::warn("Scene renderer not available - cannot toggle AABB visualization");
     }
 }
 
