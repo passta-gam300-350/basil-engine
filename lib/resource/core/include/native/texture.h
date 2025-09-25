@@ -8,14 +8,15 @@
 
 #include "serialisation/guid.h"
 #include <tinyddsloader.h>
+#include <DirectXTex.h>
 
 namespace Resource {
 
-	using TextureResource = tinyddsloader::DDSFile;
-
-	TextureResource load_dds_texture(std::uint32_t guid);
-	TextureResource load_dds_texture(std::string const& file_name);
-
+	using TextureAssetData = DirectX::ScratchImage;
+	/*
+	TextureAssetData load_dds_texture(std::uint32_t guid);
+	TextureAssetData load_dds_texture(std::string const& file_name);*/
+	TextureAssetData load_dds_texture_from_memory(const char* data);
 }
 
 #endif

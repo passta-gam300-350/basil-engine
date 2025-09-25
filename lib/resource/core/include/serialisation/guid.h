@@ -101,7 +101,7 @@ namespace Resource {
             return (m_high ^ other.m_high) | (m_low ^ other.m_low);
         }
         bool operator==(const Guid& other) const noexcept {
-            return !(*this==other);
+            return !(*this!=other);
         }
         operator bool() const {
             return (m_high | m_low);

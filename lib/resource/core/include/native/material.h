@@ -6,29 +6,23 @@
 #include "serialisation/guid.h"
 
 namespace Resource {
-	struct MaterialResource {
-		Guid m_guid;
-		glm::vec3 m_color;
-		glm::vec3 m_specular_color;
-		float m_opacity;
-		float m_metallic;
-		float m_shininess;
-		float m_roughness;
-		Guid m_color_tex = null_guid;
-		Guid m_diffuse_tex = null_guid;
-		Guid m_normal_tex = null_guid;
-		Guid m_height_tex = null_guid;
-		Guid m_metallic_tex = null_guid;
-		Guid m_roughness_tex = null_guid;
-		Guid m_occlusion_tex = null_guid;
-		Guid m_emissive_tex = null_guid;
+	struct MaterialAssetData {
+		Guid shader_guid;
+		std::string m_Name;
 
-		MaterialResource& operator>>(std::ofstream& outp);
-		MaterialResource const& operator>>(std::ofstream& outp) const;
+		// PBR Material Properties (previously in PBRMaterialProperties)
+		glm::vec3 m_AlbedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
+		float m_MetallicValue = 0.7f;
+		float m_RoughnessValue = 0.3f;
+
+		static constexpr uint64_t MATERIAL_MAGIC_VALUE{ iso8859ToBinary("E.MAT") };
+
+		MaterialAssetData& operator>>(std::ostream& outp);
+		MaterialAssetData const& operator>>(std::ostream& outp) const;
+
+		//rets remaining buffer size
+		std::uint64_t DumpToMemory(char* buff, std::uint64_t buffer_size) const;
 	};
-
-	MaterialResource load_native_material(std::uint32_t guid);
-	MaterialResource load_native_material(std::string const& mesh_name);
 }
 
 #endif

@@ -9,8 +9,8 @@
 namespace Resource {
 	struct ModelResource {
 		Guid m_guid;
-		std::vector<MeshResource> m_meshes;
-		std::vector<MaterialResource> m_mats;
+		std::vector<Guid> m_meshes;
+		std::vector<Guid> m_mats;
 		//SkeletalResource m_skel;
 
 		ModelResource& operator>>(std::ofstream& outp);

@@ -5,38 +5,38 @@
 #include <fstream>
 #include <string>
 #include "serialisation/guid.h"
+#include "utility.h"
 #include <glm/glm.hpp>
 
+#define MAX_BONE_INFLUENCE 4
+
 namespace Resource {
+    class MeshAssetData {
+    public:
+        struct Vertex {
+            glm::vec3 Position;
+            glm::vec3 Normal;
+            glm::vec2 TexCoords;
+            glm::vec3 Tangent;
+            glm::vec3 Bitangent;
+            int m_BoneIDs[MAX_BONE_INFLUENCE];
+            float m_Weights[MAX_BONE_INFLUENCE];
+        };
 
-	template <typename t>
-	using MeshVertexBuffer = std::vector<t>;
+        // mesh Data
+        std::vector<Vertex>       vertices;
+        std::vector<unsigned int> indices;
+        std::vector<Resource::Guid> textures;
+        std::vector<std::byte> texture_type; //this is easier to serialise and texture types are < 255 so no issues here.
 
-	struct MeshResource {
-		Guid m_guid;
-		MeshVertexBuffer<glm::vec3> m_positions;
-		MeshVertexBuffer<std::uint32_t> m_indices;
-		struct MeshVertexAttributes {
-			MeshVertexBuffer<glm::vec2> m_uvs;
-			MeshVertexBuffer<glm::vec4> m_color;
-			MeshVertexBuffer<glm::vec3> m_norms;
-			MeshVertexBuffer<glm::vec3> m_tangs;
-			MeshVertexBuffer<glm::vec3> m_bitangents;
-			MeshVertexBuffer<std::uint32_t> m_bone_indices;
-			MeshVertexBuffer<float> m_bone_influence;
-		} m_attributes;
-		struct MeshProperties {
-			std::uint32_t m_mat_idx;
-		} m_properties;
+        static constexpr uint64_t MESH_MAGIC_VALUE{ iso8859ToBinary("E.MESH") };
 
-		MeshResource& operator>>(std::ofstream& outp);
-		MeshResource const& operator>>(std::ofstream& outp) const;
-	};
+        MeshAssetData& operator>>(std::ofstream&);
+        MeshAssetData const& operator>>(std::ofstream&) const;
 
-	//guid not supported
-	MeshResource load_native_mesh(std::uint32_t guid);
-	MeshResource load_native_mesh(std::string const& mesh_name);
-
+        //rets remaining buffer size
+        std::uint64_t DumpToMemory(char* buff, std::uint64_t buffer_size) const;
+    };
 }
 
 #endif
