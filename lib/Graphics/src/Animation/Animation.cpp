@@ -156,6 +156,7 @@ boneChannel::boneChannel(std::string const& boneName, int id)
 
 void boneChannel::update(float time)
 {
+    assert(time >= 0.0f && "Animation time cannot be negative");
     glm::mat4 translation = interpolatePosition(time);
     glm::mat4 rotation = interpolateRotation(time);
     glm::mat4 scale = interpolateScale(time);
@@ -229,6 +230,12 @@ void animator::updateAnimation(float deltaTime, skeleton const& theSkeleton)
     {
         return; // animation is paused or stop, no need update
     }
+
+    assert(currentAnimation->duration > 0.0f && "Animation duration must be positive");
+    assert(currentAnimation->ticksPerSecond > 0.0f && "Animation ticks per second must be positive");
+    assert(deltaTime >= 0.0f && "Delta time cannot be negative");
+    assert(state.playbackSpeed > 0.0f && "Playback speed must be positive");
+
     // advance the time
     currentTime += currentAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;
     // loop or not loop animation
@@ -318,18 +325,25 @@ bool animator::isAnimationFinished() const
 
 void animator::addAnimation(std::string const& animationName, animationContainer* animation)
 {
+    assert(animationName.empty() == false && "Animation name should not be empty");
+    assert(animation != nullptr && "Null Animation should not be added");
     if (animation == nullptr)
     {
         return; // dont add useless animation
     }
+    assert(animation->duration > 0.0f && "Animation duration must be positive");
+    assert(animation->ticksPerSecond > 0.0f && "Animation ticks per second must be positive");
+    assert(!animation->channels.empty() && "Animation must have at least one bone channel");
     allAnimations[animationName] = animation;
 }
 
 bool animator::playAnimation(std::string const& animationName, bool shouldLoop)
 {
+    assert(animationName.empty() == false && "Animation name should not be empty");
     auto currentPtr = allAnimations.find(animationName);
     if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
     {
+        assert(false && ("Animation" + animationName + "not found or is null").c_str());
         return false;
     }
     // can find, start playing
@@ -343,9 +357,11 @@ bool animator::playAnimation(std::string const& animationName, bool shouldLoop)
 
 bool animator::hasAnimation(std::string const& animationName) const
 {
+    assert(animationName.empty() == false && "Animation name should not be empty");
     auto currentPtr = allAnimations.find(animationName);
     if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
     {
+        assert(false && ("Animation" + animationName + "not found or is null").c_str());
         return false;
     }
     return true;
