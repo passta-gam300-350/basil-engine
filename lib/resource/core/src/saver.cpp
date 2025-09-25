@@ -1,130 +1,156 @@
 #include "native/mesh.h"
 #include "native/material.h"
 #include "native/model.h"
+#include "native/shader.h"
+
+namespace {
+	//provides a std::istream like unsafe extraction, advances data param after extraction
+	template <typename t>
+	void MemWrite(char*& buff, t const& data) {
+		memcpy(reinterpret_cast<void*>(buff), reinterpret_cast<const void*>(&data), sizeof(t));
+		buff += sizeof(t);
+	}
+	//provides a std::istream like unsafe extraction, advances data param after extraction
+	void MemWrite(char*& buff, const char* data, std::size_t count) {
+		memcpy(reinterpret_cast<void*>(buff), reinterpret_cast<const void*>(data), count);
+		buff += count;
+	}
+}
 
 namespace Resource {
-	MeshResource& MeshResource::operator>>(std::ofstream& outp) {
+	MeshAssetData& MeshAssetData::operator>>(std::ofstream& outp) {
+		*reinterpret_cast<const MeshAssetData*>(this) >> outp;
+		return *this;
+	}
+
+	MeshAssetData const& MeshAssetData::operator>>(std::ofstream& outp) const {
 		assert(outp && "file error!");
 
-		std::uint64_t pos_ct{ m_positions.size() };
-		std::uint64_t idx_ct{ m_indices.size() };
-		std::uint64_t uv_ct{ m_attributes.m_uvs.size() };
-		std::uint64_t color_ct{ m_attributes.m_color.size() };
-		std::uint64_t norm_ct{ m_attributes.m_norms.size() };
-		std::uint64_t tang_ct{ m_attributes.m_tangs.size() };
-		std::uint64_t bitang_ct{ m_attributes.m_bitangents.size() };
-		std::uint64_t bone_index_ct{ m_attributes.m_bone_indices.size() };
-		std::uint64_t bone_influence_ct{ m_attributes.m_bone_influence.size() };
+		outp.write(reinterpret_cast<const char*>(&MeshAssetData::MESH_MAGIC_VALUE), sizeof(std::uint64_t));
 
-		outp.write(reinterpret_cast<const char*>(&m_guid), sizeof(m_guid));
-		outp.write(reinterpret_cast<const char*>(&pos_ct), sizeof(m_positions.size()));
-		outp.write(reinterpret_cast<const char*>(&idx_ct), sizeof(m_indices.size()));
-		outp.write(reinterpret_cast<const char*>(&uv_ct), sizeof(m_attributes.m_uvs.size()));
-		outp.write(reinterpret_cast<const char*>(&color_ct), sizeof(m_attributes.m_color.size()));
-		outp.write(reinterpret_cast<const char*>(&norm_ct), sizeof(m_attributes.m_norms.size()));
-		outp.write(reinterpret_cast<const char*>(&tang_ct), sizeof(m_attributes.m_uvs.size()));
-		outp.write(reinterpret_cast<const char*>(&bitang_ct), sizeof(m_attributes.m_bitangents.size()));
-		outp.write(reinterpret_cast<const char*>(&bone_index_ct), sizeof(m_attributes.m_bone_indices.size()));
-		outp.write(reinterpret_cast<const char*>(&bone_influence_ct), sizeof(m_attributes.m_bone_influence.size()));
-		outp.write(reinterpret_cast<const char*>(&m_properties.m_mat_idx), sizeof(m_properties.m_mat_idx));
+		std::uint64_t vsize{ vertices.size() };
+		std::uint64_t isize{ indices.size() };
+		std::uint64_t tsize{ textures.size() };
+		std::uint64_t ttsize{ texture_type.size() };
 
-		outp.write(reinterpret_cast<const char*>(m_positions.data()), m_positions.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_indices.data()), m_indices.size() * sizeof(std::uint32_t));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_uvs.data()), m_attributes.m_uvs.size() * sizeof(glm::vec2));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_color.data()), m_attributes.m_color.size() * sizeof(glm::vec4));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_norms.data()), m_attributes.m_norms.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_tangs.data()), m_attributes.m_tangs.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_bitangents.data()), m_attributes.m_bitangents.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_bone_indices.data()), m_attributes.m_bone_indices.size() * sizeof(std::uint32_t));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_bone_influence.data()), m_attributes.m_bone_influence.size() * sizeof(float));
+		outp.write(reinterpret_cast<const char*>(&vsize), sizeof(std::uint64_t));
+		outp.write(reinterpret_cast<const char*>(&isize), sizeof(std::uint64_t));
+		outp.write(reinterpret_cast<const char*>(&tsize), sizeof(std::uint64_t));
+		outp.write(reinterpret_cast<const char*>(&ttsize), sizeof(std::uint64_t));
+
+		outp.write(reinterpret_cast<const char*>(vertices.data()), vertices.size() * sizeof(MeshAssetData::Vertex));
+		outp.write(reinterpret_cast<const char*>(indices.data()), indices.size() * sizeof(unsigned int));
+		outp.write(reinterpret_cast<const char*>(textures.data()), textures.size() * sizeof(Resource::Guid));
+		outp.write(reinterpret_cast<const char*>(texture_type.data()), texture_type.size());
 
 		return *this;
 	}
 
-	MeshResource const& MeshResource::operator>>(std::ofstream& outp) const {
+	std::uint64_t MeshAssetData::DumpToMemory(char* buff, std::uint64_t size) const {
+		std::uint64_t dumpsize{ sizeof(MeshAssetData::MESH_MAGIC_VALUE) + sizeof(std::uint64_t)*3 + vertices.size() * sizeof(MeshAssetData::Vertex) + indices.size() * sizeof(unsigned int) + textures.size() * sizeof(Resource::Guid) };
+		std::uint64_t r_bytes{ size - dumpsize };
+		assert(buff && "invalid buffer!");
+		assert(size >= dumpsize && "buffer too small!");
+
+		MemWrite(buff, &MeshAssetData::MESH_MAGIC_VALUE);
+
+		MemWrite(buff, vertices.size());
+		MemWrite(buff, indices.size());
+		MemWrite(buff, textures.size());
+		MemWrite(buff, texture_type.size());
+
+		MemWrite(buff, reinterpret_cast<const char*>(vertices.data()), vertices.size() * sizeof(MeshAssetData::Vertex));
+		MemWrite(buff, reinterpret_cast<const char*>(indices.data()), indices.size() * sizeof(unsigned int));
+		MemWrite(buff, reinterpret_cast<const char*>(textures.data()), textures.size() * sizeof(Resource::Guid));
+		MemWrite(buff, reinterpret_cast<const char*>(texture_type.data()), texture_type.size());
+
+		return r_bytes;
+	}
+
+	MaterialAssetData& MaterialAssetData::operator>>(std::ostream& outp) {
+		*reinterpret_cast<const MaterialAssetData*>(this) >> outp;
+		return *this;
+	}
+
+	MaterialAssetData const& MaterialAssetData::operator>>(std::ostream& outp) const {
 		assert(outp && "file error!");
 
-		std::uint64_t pos_ct{ m_positions.size() };
-		std::uint64_t idx_ct{ m_indices.size() };
-		std::uint64_t uv_ct{ m_attributes.m_uvs.size() };
-		std::uint64_t color_ct{ m_attributes.m_color.size() };
-		std::uint64_t norm_ct{ m_attributes.m_norms.size() };
-		std::uint64_t tang_ct{ m_attributes.m_tangs.size() };
-		std::uint64_t bitang_ct{ m_attributes.m_bitangents.size() };
-		std::uint64_t bone_index_ct{ m_attributes.m_bone_indices.size() };
-		std::uint64_t bone_influence_ct{ m_attributes.m_bone_influence.size() };
+		outp.write(reinterpret_cast<const char*>(&MaterialAssetData::MATERIAL_MAGIC_VALUE), sizeof(MaterialAssetData::MATERIAL_MAGIC_VALUE));
+		outp.write(reinterpret_cast<const char*>(&shader_guid), sizeof(shader_guid));
 
-		outp.write(reinterpret_cast<const char*>(&m_guid), sizeof(m_guid));
-		outp.write(reinterpret_cast<const char*>(&pos_ct), sizeof(m_positions.size()));
-		outp.write(reinterpret_cast<const char*>(&idx_ct), sizeof(m_indices.size()));
-		outp.write(reinterpret_cast<const char*>(&uv_ct), sizeof(m_attributes.m_uvs.size()));
-		outp.write(reinterpret_cast<const char*>(&color_ct), sizeof(m_attributes.m_color.size()));
-		outp.write(reinterpret_cast<const char*>(&norm_ct), sizeof(m_attributes.m_norms.size()));
-		outp.write(reinterpret_cast<const char*>(&tang_ct), sizeof(m_attributes.m_uvs.size()));
-		outp.write(reinterpret_cast<const char*>(&bitang_ct), sizeof(m_attributes.m_bitangents.size()));
-		outp.write(reinterpret_cast<const char*>(&bone_index_ct), sizeof(m_attributes.m_bone_indices.size()));
-		outp.write(reinterpret_cast<const char*>(&bone_influence_ct), sizeof(m_attributes.m_bone_influence.size()));
-		outp.write(reinterpret_cast<const char*>(&m_properties.m_mat_idx), sizeof(m_properties.m_mat_idx));
+		std::uint64_t strsize{ m_Name.size() };
 
-		outp.write(reinterpret_cast<const char*>(m_positions.data()), m_positions.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_indices.data()), m_indices.size() * sizeof(std::uint32_t));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_uvs.data()), m_attributes.m_uvs.size() * sizeof(glm::vec2));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_color.data()), m_attributes.m_color.size() * sizeof(glm::vec4));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_norms.data()), m_attributes.m_norms.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_tangs.data()), m_attributes.m_tangs.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_bitangents.data()), m_attributes.m_bitangents.size() * sizeof(glm::vec3));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_bone_indices.data()), m_attributes.m_bone_indices.size() * sizeof(std::uint32_t));
-		outp.write(reinterpret_cast<const char*>(m_attributes.m_bone_influence.data()), m_attributes.m_bone_influence.size() * sizeof(float));
+		outp.write(reinterpret_cast<const char*>(&strsize), sizeof(strsize));
+		outp.write(reinterpret_cast<const char*>(m_Name.data()), m_Name.size());
+
+		outp.write(reinterpret_cast<const char*>(&m_AlbedoColor), sizeof(m_AlbedoColor));
+		outp.write(reinterpret_cast<const char*>(&m_MetallicValue), sizeof(m_MetallicValue));
+		outp.write(reinterpret_cast<const char*>(&m_RoughnessValue), sizeof(m_RoughnessValue));
 
 		return *this;
 	}
 
-	MaterialResource& MaterialResource::operator>>(std::ofstream& outp) {
-		/*
-		outp.write(reinterpret_cast<const char*>(&m_guid), sizeof(m_guid));
-		outp.write(reinterpret_cast<const char*>(&m_color), sizeof(m_color));
-		outp.write(reinterpret_cast<const char*>(&m_specular_color), sizeof(m_specular_color));
-		outp.write(reinterpret_cast<const char*>(&m_opacity), sizeof(m_opacity));
-		outp.write(reinterpret_cast<const char*>(&m_metallic), sizeof(m_metallic));
-		outp.write(reinterpret_cast<const char*>(&m_shininess), sizeof(m_shininess));
-		outp.write(reinterpret_cast<const char*>(&m_roughness), sizeof(m_roughness));
-		outp.write(reinterpret_cast<const char*>(&m_color_tex), sizeof(m_color_tex));
-		outp.write(reinterpret_cast<const char*>(&m_diffuse_tex), sizeof(m_diffuse_tex));
-		outp.write(reinterpret_cast<const char*>(&m_normal_tex), sizeof(m_normal_tex));
-		outp.write(reinterpret_cast<const char*>(&m_height_tex), sizeof(m_height_tex));
-		outp.write(reinterpret_cast<const char*>(&m_roughness_tex), sizeof(m_roughness_tex));
-		outp.write(reinterpret_cast<const char*>(&m_occlusion_tex), sizeof(m_occlusion_tex));
-		outp.write(reinterpret_cast<const char*>(&m_emissive_tex), sizeof(m_emissive_tex));
-		*/
+	std::uint64_t MaterialAssetData::DumpToMemory(char* buff, std::uint64_t size) const {
+		std::uint64_t dumpsize{ sizeof(MaterialAssetData::MATERIAL_MAGIC_VALUE) + sizeof(std::uint64_t) + m_Name.size() + sizeof(m_AlbedoColor) + sizeof(m_MetallicValue) + sizeof(m_RoughnessValue) };
+		std::uint64_t r_bytes{ size - dumpsize };
+		assert(buff && "invalid buffer!");
+		assert(size >= dumpsize && "buffer too small!");
 
-		//fast serialisation
-		outp.write(reinterpret_cast<const char*>(this), sizeof(*this));
+		MemWrite(buff, &MaterialAssetData::MATERIAL_MAGIC_VALUE);
+		MemWrite(buff, shader_guid);
+
+		MemWrite(buff, m_Name.size());
+		
+		MemWrite(buff, reinterpret_cast<const char*>(m_Name.data()), m_Name.size());
+		MemWrite(buff, reinterpret_cast<const char*>(&m_AlbedoColor), sizeof(m_AlbedoColor));
+		MemWrite(buff, reinterpret_cast<const char*>(&m_MetallicValue), sizeof(m_MetallicValue));
+		MemWrite(buff, reinterpret_cast<const char*>(&m_RoughnessValue), sizeof(m_RoughnessValue));
+
+		return r_bytes;
+	}
+
+	ShaderAssetData& ShaderAssetData::operator>>(std::ostream& outp) {
+		*reinterpret_cast<const ShaderAssetData*>(this) >> outp;
+		return *this;
+	}
+
+	ShaderAssetData const& ShaderAssetData::operator>>(std::ostream& outp) const {
+		assert(outp && "file error!");
+
+		outp.write(reinterpret_cast<const char*>(&ShaderAssetData::SHADER_MAGIC_VALUE), sizeof(ShaderAssetData::SHADER_MAGIC_VALUE));
+		
+		std::uint64_t strsize{ m_Name.size() };
+		std::uint64_t vstrsize{ m_VertPath.size() };
+		std::uint64_t fstrsize{ m_FragPath.size() };
+
+		outp.write(reinterpret_cast<const char*>(&strsize), sizeof(strsize));
+		outp.write(reinterpret_cast<const char*>(&vstrsize), sizeof(vstrsize));
+		outp.write(reinterpret_cast<const char*>(&fstrsize), sizeof(fstrsize));
+
+		outp.write(reinterpret_cast<const char*>(m_Name.data()), strsize);
+		outp.write(reinterpret_cast<const char*>(m_VertPath.data()), vstrsize);
+		outp.write(reinterpret_cast<const char*>(m_FragPath.data()), fstrsize);
 
 		return *this;
 	}
 
-	MaterialResource const& MaterialResource::operator>>(std::ofstream& outp) const {
-		/*
-		outp.write(reinterpret_cast<const char*>(&m_guid), sizeof(m_guid));
-		outp.write(reinterpret_cast<const char*>(&m_color), sizeof(m_color));
-		outp.write(reinterpret_cast<const char*>(&m_specular_color), sizeof(m_specular_color));
-		outp.write(reinterpret_cast<const char*>(&m_opacity), sizeof(m_opacity));
-		outp.write(reinterpret_cast<const char*>(&m_metallic), sizeof(m_metallic));
-		outp.write(reinterpret_cast<const char*>(&m_shininess), sizeof(m_shininess));
-		outp.write(reinterpret_cast<const char*>(&m_roughness), sizeof(m_roughness));
-		outp.write(reinterpret_cast<const char*>(&m_color_tex), sizeof(m_color_tex));
-		outp.write(reinterpret_cast<const char*>(&m_diffuse_tex), sizeof(m_diffuse_tex));
-		outp.write(reinterpret_cast<const char*>(&m_normal_tex), sizeof(m_normal_tex));
-		outp.write(reinterpret_cast<const char*>(&m_height_tex), sizeof(m_height_tex));
-		outp.write(reinterpret_cast<const char*>(&m_roughness_tex), sizeof(m_roughness_tex));
-		outp.write(reinterpret_cast<const char*>(&m_occlusion_tex), sizeof(m_occlusion_tex));
-		outp.write(reinterpret_cast<const char*>(&m_emissive_tex), sizeof(m_emissive_tex));
-		*/
+	std::uint64_t ShaderAssetData::DumpToMemory(char* buff, std::uint64_t size) const {
+		std::uint64_t dumpsize{ sizeof(ShaderAssetData::SHADER_MAGIC_VALUE) + sizeof(std::uint64_t)*3 + m_Name.size() + m_VertPath.size() + m_FragPath.size() };
+		std::uint64_t r_bytes{ size - dumpsize };
+		assert(buff && "invalid buffer!");
+		assert(size >= dumpsize && "buffer too small!");
 
-		//fast serialisation
-		outp.write(reinterpret_cast<const char*>(this), sizeof(*this));
+		MemWrite(buff, ShaderAssetData::SHADER_MAGIC_VALUE);
+		
+		MemWrite(buff, m_Name.size());
+		MemWrite(buff, m_VertPath.size());
+		MemWrite(buff, m_FragPath.size());
 
-		return *this;
+		MemWrite(buff, reinterpret_cast<const char*>(m_Name.data()), m_Name.size());
+		MemWrite(buff, reinterpret_cast<const char*>(m_VertPath.data()), sizeof(m_VertPath.size()));
+		MemWrite(buff, reinterpret_cast<const char*>(m_FragPath.data()), sizeof(m_FragPath.size()));
+
+		return r_bytes;
 	}
 
 	ModelResource const& ModelResource::operator>>(std::ofstream& outp) const {
@@ -136,11 +162,11 @@ namespace Resource {
 		outp.write(reinterpret_cast<const char*>(&material_ct), sizeof(material_ct));
 
 		for (auto const& mesres : m_meshes) {
-			outp.write(reinterpret_cast<const char*>(&mesres.m_guid), sizeof(mesres.m_guid));
+			outp.write(reinterpret_cast<const char*>(&mesres), sizeof(mesres));
 		}
 
 		for (auto const& matres : m_mats) {
-			outp.write(reinterpret_cast<const char*>(&matres.m_guid), sizeof(matres.m_guid));
+			outp.write(reinterpret_cast<const char*>(&matres), sizeof(matres));
 		}
 		return *this;
 	}
@@ -154,11 +180,11 @@ namespace Resource {
 		outp.write(reinterpret_cast<const char*>(&material_ct), sizeof(material_ct));
 
 		for (auto const& mesres : m_meshes) {
-			outp.write(reinterpret_cast<const char*>(&mesres.m_guid), sizeof(mesres.m_guid));
+			outp.write(reinterpret_cast<const char*>(&mesres), sizeof(mesres));
 		}
 
 		for (auto const& matres : m_mats) {
-			outp.write(reinterpret_cast<const char*>(&matres.m_guid), sizeof(matres.m_guid));
+			outp.write(reinterpret_cast<const char*>(&matres), sizeof(matres));
 		}
 		return *this;
 	}
