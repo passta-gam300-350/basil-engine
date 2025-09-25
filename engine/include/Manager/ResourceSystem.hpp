@@ -31,18 +31,18 @@ struct ResourceTypeInitiation {
 };
 
 template <typename T>
-constexpr ResourceTypeId_t ResourceTypeId_v{ &ResourceTypeInitiation<T>::m_TypeInstance };
+ResourceTypeId_t ResourceTypeId_v{ std::uintptr_t(&ResourceTypeInitiation<T>::m_TypeInstance) };
 
 template <typename T>
-constexpr ResourceTypeId_t ResourceType_Id() noexcept {
-    return ResourceTypeId_v<T>;
+ResourceTypeId_t ResourceType_Id() noexcept {
+    return reinterpret_cast<ResourceTypeId_t>(&ResourceTypeInitiation<T>::m_TypeInstance);
 }
 
 template <typename T>
 struct ResourceSlot {
     Resource::Guid m_Guid{ Resource::null_guid };
     std::uint32_t m_Generation{};
-    std::atomic<bool> m_Ready{};
+    bool m_Ready{};
     bool m_Alive{};
     alignas(T) unsigned char storage[sizeof(T)];
     T& value() noexcept { return *std::launder(reinterpret_cast<T*>(storage)); }
@@ -52,21 +52,31 @@ struct ResourceSlot {
 template <typename T, stl_allocator_t<T> A = std::allocator<T>>
 class ResourcePool {
 public:
-    using LoaderFn = std::function<T&(const char*)>; //effectively the constructor of memory pool. throwable
+    using LoaderFn = std::function<T(const char*)>; //effectively the constructor of memory pool. throwable
     using UnloaderFn = std::function<void(T&)>; //destructs only, deallocation happens lazily. throwable
     using ValueType = T;
     using Pointer = T*;
+    using ConstPointer = const T*;
 
     explicit ResourcePool(LoaderFn loadfn, UnloaderFn unloadfn)
         : m_Loader(loadfn), m_Unloader(unloadfn) {
     }
 
+    ~ResourcePool() {
+        Clear();
+    }
+
     //get async, check handle, functionally equivalent of std::future but unlimited gets
     Handle GetHandle(Resource::Guid id);
 
-    Pointer Ptr(Handle h) noexcept;
+    Pointer Ptr(Handle h) noexcept {
+        if (h.m_Index >= m_Slots.size()) return nullptr;
+        auto& s = m_Slots[h.m_Index];
+        if (!s.m_Alive || s.m_Generation != h.m_Generation) return nullptr;
+        return &s.value();
+    }
 
-    const Pointer* Ptr(Handle h) const noexcept {
+    ConstPointer Ptr(Handle h) const noexcept {
         if (h.m_Index >= m_Slots.size()) return nullptr;
         auto& s = m_Slots[h.m_Index];
         if (!s.m_Alive || s.m_Generation != h.m_Generation) return nullptr;
@@ -80,9 +90,9 @@ public:
     }
 
     Resource::Guid GetGuid(Handle h) const noexcept {
-        if (h.m_Index >= m_Slots.size()) return 0;
+        if (h.m_Index >= m_Slots.size()) return Resource::null_guid;
         auto& s = m_Slots[h.m_Index];
-        if (!s.m_Alive || s.m_Generation != h.m_Generation) return 0;
+        if (!s.m_Alive || s.m_Generation != h.m_Generation) return Resource::null_guid;
         return s.m_Guid;
     }
 
@@ -129,7 +139,7 @@ private:
         auto& s = m_Slots[idx];
         if (!s.m_Alive) return;
         // Call unloader before dtor for external resources
-        Unloader(s.value());
+        m_Unloader(s.value());
         s.value().~T();
         s.m_Alive = false;
     }
@@ -183,7 +193,8 @@ struct ResourceRegistry {
     void RegisterType(typename PoolType<T>::LoaderFn loader, typename PoolType<T>::UnloaderFn unloader, std::string_view type_name = {})
     {
         const auto id = ResourceTypeId_v<T>;
-        if (m_Entries.find(id) != m_Entries.end()) return;
+        if (m_Entries.find(id) != m_Entries.end()) 
+            return;
 
         // Create per-type singleton pool lazily
         static PoolType<T> pool(loader, unloader);
@@ -195,7 +206,7 @@ struct ResourceRegistry {
         e.m_Vt = {
             //get
             [](void* p, Resource::Guid g) -> Handle {
-                return static_cast<PoolType<T>*>(p)->Get(g);
+                return static_cast<PoolType<T>*>(p)->GetHandle(g);
             },
             //get_pool
             []() -> void* { return static_cast<void*>(&pool); },
@@ -234,7 +245,7 @@ struct ResourceRegistry {
     T* Get(Resource::Guid guid, Handle* out_handle = nullptr) {
         auto* pool = Pool<T>();
         if (!pool) return nullptr;
-        Handle h = pool->Get(guid);
+        Handle h = pool->GetHandle(guid);
         if (out_handle) *out_handle = h;
         return pool->Ptr(h);
     }
@@ -258,7 +269,7 @@ struct ResourceRegistry {
     }
 
 private:
-    hashtable<ResourceTypeId_t, Entry> m_Entries;
+    std::unordered_map<ResourceTypeId_t, Entry> m_Entries;
 };
 
 class MemoryMappedFile {
@@ -381,19 +392,30 @@ struct ResourceSystem {
     static void LoadConfig(YAML::Node& cfg);
     static YAML::Node GetDefaultConfig();
 
-private:
-    hashtable<Resource::Guid, FileEntry> m_FileEntries;
-    hashtable<std::string, MemoryMappedFile> m_MappedIO;
+    std::unordered_map<Resource::Guid, FileEntry> m_FileEntries;
+    std::unordered_map<std::string, MemoryMappedFile> m_MappedIO;
     std::string m_ResourceRootDirectory;
     bool m_GlobFiles;
     JobSystem m_JobSystem;
+private:
 };
+
+#define REGISTER_RESOURCE_TYPE_SHARED_PTR(T, loader_fn, unloader_fn)            \
+    namespace {                                                      \
+        struct T##_resource_registrar {                              \
+            T##_resource_registrar() {                               \
+                ResourceRegistry::Instance().RegisterType<std::shared_ptr<T>>(       \
+                    loader_fn, unloader_fn, #T);                     \
+            }                                                        \
+        };                                                           \
+        static T##_resource_registrar g_##T##_resource_registrar;    \
+    }
 
 #define REGISTER_RESOURCE_TYPE(T, loader_fn, unloader_fn)            \
     namespace {                                                      \
         struct T##_resource_registrar {                              \
             T##_resource_registrar() {                               \
-                ResourceRegistry::instance().register_type<T>(       \
+                ResourceRegistry::Instance().RegisterType<T>(       \
                     loader_fn, unloader_fn, #T);                     \
             }                                                        \
         };                                                           \
@@ -401,11 +423,12 @@ private:
     }
 
 
+
 template <typename T, stl_allocator_t<T> A>
 Handle ResourcePool<T, A>::GetHandle(Resource::Guid guid) {
     auto it = m_GuidSlots.find(guid);
     if (it != m_GuidSlots.end()) {
-        return make_handle(it->second);
+        return MakeHandle(it->second);
     }
 
     std::uint32_t idx = AllocateSlot();
@@ -413,10 +436,10 @@ Handle ResourcePool<T, A>::GetHandle(Resource::Guid guid) {
     slot.m_Guid = guid;
     slot.m_Alive = true;
 
-    auto& mmio_ptr{ ResourceSystem::Instance().GetMappedFilestream(guid) };
-    auto async_dispatch_job_wrapper{ [&slot](auto loaderfn, const char* mmptr) {
+    auto mmio_ptr{ ResourceSystem::Instance().GetMappedFilePtr(guid) };
+    auto async_dispatch_job_wrapper{ [&slot, guid, this, idx](auto loaderfn, const char* mmptr) {
         try {
-            if constexpr (std::is_default_constructible_v<T>) {
+            if constexpr (std::is_copy_constructible_v<T>) {
                 new (slot.storage) T{ loaderfn(mmptr) };
             }
             else {
@@ -432,8 +455,8 @@ Handle ResourcePool<T, A>::GetHandle(Resource::Guid guid) {
             slot.m_Ready = true;
         }};
 
-    ResourceSystem::Instance().Dispatch(async_dispatch_job_wrapper, m_Loader, mmio_ptr);
-
+    //ResourceSystem::Instance().Dispatch(async_dispatch_job_wrapper, m_Loader, mmio_ptr);
+    async_dispatch_job_wrapper(m_Loader, mmio_ptr);
     m_GuidSlots.emplace(guid, idx);
     return MakeHandle(idx);
 }

@@ -11,7 +11,11 @@ namespace ecs {
 			Scheduler::SetSystemThreads(cfg["system threads"].as<std::uint64_t>());
 		}
 		if (cfg["enabled system"]) {
-			
+			for (auto& s : Instance().m_AllSystems) {
+				s.m_Enabled = true;
+				Instance().m_ActiveSystems.emplace(s.m_Id, s.m_Factory());
+				Instance().m_ActiveSystems[s.m_Id]->Init();
+			}
 		}
 		if (cfg["system configurations"]) {
 
@@ -32,6 +36,8 @@ namespace ecs {
 	}
 
 	void SystemRegistry::Exit() {
-
+		for (auto& [id, s] : Instance().m_ActiveSystems) {
+			s->Exit();
+		}
 	}
 }

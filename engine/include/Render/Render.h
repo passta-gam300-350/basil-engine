@@ -8,17 +8,11 @@
 #include "Manager/ResourceSystem.hpp"
 #include <native/mesh.h>
 
-#include "System/System.hpp"
+#include "Ecs/ecs.h"
 
 struct MeshRendererComponent {
     Resource::Guid m_MeshGuid;
     Resource::Guid m_MaterialGuid;
-};
-
-struct ResourceTypeMesh {
-    std::shared_ptr<Mesh> m_ptr;
-    ResourceTypeMesh() = default;
-    ResourceTypeMesh(Resource::MeshResource const& mr);
 };
 
 struct VisibilityComponent{
@@ -50,23 +44,23 @@ struct CameraComponent {
     glm::vec3 m_Right;
 };
 
-struct RenderSystem {
-    // graphics lib objects
-    std::unique_ptr<SceneRenderer> m_SceneRenderer;
-    std::unique_ptr<Camera> m_Camera;
-    ResourceManager* m_ResourceManager;
-
-    // Scene objects
-    std::vector<RenderableData> m_SceneObjects;
-    std::vector<SubmittedLightData> m_SceneLights;
+struct RenderSystem : public ecs::SystemBase {
+    struct InstanceData {
+        // graphics lib objects
+        std::unique_ptr<SceneRenderer> m_SceneRenderer;
+        std::unique_ptr<Camera> m_Camera;
+        
+        void Acquire();
+        void Release();
+    };
 
 private:
-    // singleton
-    static std::unique_ptr<RenderSystem> s_Instance;
+    // singleton lazily initialised
+    static std::unique_ptr<InstanceData>& InstancePtr();
 
 public:
-    static RenderSystem& Instance();
-    static void NewInstance();
+    static InstanceData& Instance();
+    static RenderSystem System();
     //~RenderSystem() = default;
 
     void Init();

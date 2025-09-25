@@ -4,6 +4,19 @@
 #include "Manager/ResourceSystem.hpp"
 #include "Input/InputManager.h"
 #include "Ecs/ecs.h"
+#include "Render/render.cpp"
+
+#ifdef _WIN32
+// NVIDIA Optimus - force discrete GPU
+extern "C" {
+	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+}
+
+// AMD PowerXpress - force discrete GPU  
+extern "C" {
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
 
 namespace {
 	constexpr std::uint64_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -86,13 +99,20 @@ void Engine::Update() {
 				
 				InputManager::Get_Instance()->Update();
 
-				PF_BEGIN_FRAME(frame_number);
-				instance.m_World.update();
-				PF_END_FRAME();
+				//PF_BEGIN_FRAME(frame_number);
+				auto fn = [](world wrd) {
+					RenderSystem::System().Update(wrd);
+					};
+				std::jthread jt(fn, instance.m_World);
+				//instance.m_World.update();
+				//PF_END_FRAME();
+				jt.join();
+				Engine::GetWindowInstance().SwapBuffers();
 
+				/*
 				if (frame_log_rate && frame_counter >= frame_log_rate) {
 					Profiler::instance().printLastFrameSummary();
-				}
+				}*/
 
 				frame_number++;
 				frame_counter--;

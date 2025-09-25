@@ -28,21 +28,23 @@ namespace ecs {
 		bool m_Enabled;									// set by YAML
 
         SystemDescriptor() = default;
-        SystemDescriptor(std::string const& mname, std::uint64_t mid, std::unordered_set<entt::id_type> const& mr, std::unordered_set<entt::id_type> const& mw, float ur, bool e, std::function<SystemBase* (world&, float)> fn)
+        SystemDescriptor(std::string const& mname, std::uint64_t mid, std::unordered_set<entt::id_type> const& mr, std::unordered_set<entt::id_type> const& mw, float ur, bool e, std::function<SystemBase* ()> fn)
             :m_Name{mname}, m_Id{mid}, m_Reads{mr}, m_Writes{mw}, m_UpdateRate{ur}, m_Enabled{e}, m_Factory{fn} {
         }
 
+        friend struct SystemRegistry;
+
     private:
-        std::function<SystemBase*(world&, float)> m_Factory;   //creates an instance of system
+        std::function<SystemBase*()> m_Factory;   //creates an instance of system
 	};
 
     template <typename ...queries_t>
     struct QuerySetBasic {
         static std::unordered_set<entt::id_type> GetSet() {
-            std::unordered_set<entt::id_type> qset();
-            ([&qset]{
-                qset.insert(entt::type_hash<queries_t>::value());
-                }(),...);
+            std::unordered_set<entt::id_type> qset{};
+            ([](std::unordered_set<entt::id_type>& query_set){
+                query_set.insert(entt::type_hash<queries_t>::value());
+                }(qset),...);
             return qset;
         }
     };
@@ -115,19 +117,6 @@ namespace ecs {
         ExitFn exitFn;
     };
 
-
-    //move this struct to utility lib (more general)
-    //default
-    template <typename, template <typename...> class>
-    struct is_specialization_of : std::false_type {};
-
-    //true type
-    template <template <typename...> class Template, typename... Args>
-    struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
-    
-    template <typename T, template <typename...> class Template>
-    inline constexpr bool is_specialization_of_v = is_specialization_of<T, Template>::value;
-
     template <typename ... ComponentTypes>
     using ReadSet = QuerySetBasic<ComponentTypes...>;
 
@@ -136,21 +125,35 @@ namespace ecs {
 
 }
 
+//move this struct to utility lib (more general)
+//default
+template <typename, template <typename...> class>
+struct is_specialization_of : std::false_type {};
+
+//true type
+template <template <typename...> class Template, typename... Args>
+struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
+
+template <typename T, template <typename...> class Template>
+inline constexpr bool is_specialization_of_v = is_specialization_of<T, Template>::value;
+
+#define ESCAPE_PARENTHESIS(...) __VA_ARGS__
+
 #define RegisterSystemDerived(NAME, TYPE, READS, WRITES, UPDATE_PER_SEC, ...)                           \
     namespace {                                                                                         \
-        static_assert(std::is_base_of_v<SystemBase, TYPE> && #TYPE && "Type is not derived");                     \
+        static_assert(std::is_base_of_v<ecs::SystemBase, TYPE> && #TYPE && "Type is not derived");                     \
         static_assert(!std::is_abstract_v<TYPE> && #TYPE && "Type should not be abstract");                    \
-        static_assert(!std::is_specialization_of_v<READS, QuerySetBasic> && #READS && "Type should a query set");                    \
-        static_assert(!std::is_specialization_of_v<WRITES, QuerySetBasic> && #WRITES && "Type should a query set");                    \
-        static auto NAME##_SYSTEM_FACTORY = []()->SystemBase*{                                                 \
+        static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS READS, ecs::QuerySetBasic> && #READS && "Type should a query set");                    \
+        static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS WRITES, ecs::QuerySetBasic> && #WRITES && "Type should a query set");                    \
+        static auto NAME##_SYSTEM_FACTORY = []()->ecs::SystemBase*{                                                 \
             return new TYPE{__VA_ARGS__};                                                               \
         };                                                                                              \
         static auto NAME##_SYSTEM_CONFIG_GENERATOR = []()->YAML::Node{                                                 \
-            return new TYPE{__VA_ARGS__};                                                               \
+            return YAML::Node{};                                                               \
         };                                                                                              \
         auto NAME##_SYSTEM_REG = [&] {                                                                   \
-            SystemRegistry::Instance().RegisterSystem({                                                 \
-               #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), READS::GetSet(), WRITES::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                       \
+            ecs::SystemRegistry::Instance().RegisterSystem({                                                 \
+               #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), ESCAPE_PARENTHESIS READS ::GetSet(), ESCAPE_PARENTHESIS WRITES ::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                       \
                 });                                                                                     \
             return 0;                                                                                   \
         }();                                                                                            \
@@ -158,14 +161,14 @@ namespace ecs {
 
 #define RegisterSystemGeneric(NAME, INIT_FN, LOAD_FN, UPDATE_FN, FIXED_UPDATE, EXIT_FN, UPDATE_PER_SEC, READS, WRITES)  \
     namespace {                                                                                         \
-        static_assert(!std::is_specialization_of_v<READS, QuerySetBasic> && #READS && "Type should a query set");                    \
-        static_assert(!std::is_specialization_of_v<WRITES, QuerySetBasic> && #WRITES && "Type should a query set");                    \
-        static auto NAME##_SYSTEM_FACTORY = []()->SystemBase*{                                                 \
-            return new GenericSystem{ INIT_FN, LOAD_FN, UPDATE_FN, FIXED_UPDATE, EXIT_FN };                      \
+        static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS READS, ecs::QuerySetBasic> && #READS && "Type should a query set");                    \
+        static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS WRITES, ecs::QuerySetBasic> && #WRITES && "Type should a query set");                    \
+        static auto NAME##_SYSTEM_FACTORY = []()->ecs::SystemBase*{                                                 \
+            return new ecs::GenericSystem{ INIT_FN, LOAD_FN, UPDATE_FN, FIXED_UPDATE, EXIT_FN };                      \
         };                                                                                              \
         auto NAME##_SYSTEM_REG = [&]{                                                                    \
-            SystemRegistry::Instance().RegisterSystem({                                                 \
-                #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), READS::GetSet(), WRITES::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                     \
+            ecs::SystemRegistry::Instance().RegisterSystem({                                                 \
+                #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), ESCAPE_PARENTHESIS READS::GetSet(), ESCAPE_PARENTHESIS WRITES::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                     \
             });                                                                                         \
             return 0;                                                                                   \
         }();                                                                                            \

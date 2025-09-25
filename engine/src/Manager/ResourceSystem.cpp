@@ -36,7 +36,8 @@ namespace YAML {
 
 const char* ResourceSystem::GetMappedFilePtr(Resource::Guid guid)
 {
-    assert(m_FileEntries.exist(guid) && "File entry does not exist!");
+    assert(m_FileEntries.find(guid) != m_FileEntries.end() && "File entry does not exist!");
+    //assert(m_FileEntries.exist(guid) && "File entry does not exist!");
     FileEntry f_entry{ m_FileEntries[guid] };
     return reinterpret_cast<const char*>(m_MappedIO[f_entry.m_Path].getRange(f_entry.m_Offset, f_entry.m_Size));
 }

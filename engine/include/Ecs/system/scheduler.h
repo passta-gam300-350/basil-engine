@@ -132,6 +132,7 @@ namespace ecs {
         }
         static void RunUntilCompletion(world w) {
             Run(w).wait();
+            std::cout<<"schedule completed!\n";
         }
 
         static Scheduler& SetSystemThreads(std::uint64_t thread_count) {

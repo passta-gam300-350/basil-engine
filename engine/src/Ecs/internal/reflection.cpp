@@ -6,7 +6,7 @@ TypeInfo ResolveType(TypeName t_name) {
 }
 
 template<std::uint32_t r, std::uint32_t c>
-float GetMat4CellValue(glm::mat4& m) {
+float GetMat4CellValue(glm::mat4 const& m) {
     return m[c][r];
 }
 

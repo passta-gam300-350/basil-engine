@@ -19,7 +19,6 @@ file(GLOB_RECURSE MANAGED_FILES_CPP RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/CPPGLUE
     ${CMAKE_CURRENT_LIST_DIR}/*.cpp
 )
 
-
 source_group("Source Files/Managed Glue" FILES ${MANAGED_FILES_CPP})
 
 file(GLOB PROJECT_DIRS_HEADER RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/include/*")
@@ -67,6 +66,7 @@ set(ALL_LIBS
     PUBLIC mono_interface
     PUBLIC job_system_lib
     PUBLIC data_structure_lib
+    PUBLIC DirectXTex
 )
 
 

@@ -47,11 +47,11 @@ public:
 
 	static void GenerateDefaultConfig();
 	static void ReportLastError();
+	static ecs::world GetWorld();
 
 	//engine state management
 	void Coma();	//do not use recklessly, this will put the program into deadlock 
 	void Terminate();
-
 
 };
 
