@@ -1,5 +1,5 @@
 project(engine CXX)
-
+set(DOTNET_PATH_G "" CACHE STRING "Path to dotnet runtime" FORCE)
 add_subdirectory(managed)
 
 file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
@@ -67,6 +67,7 @@ set(ALL_LIBS
     PUBLIC job_system_lib
     PUBLIC data_structure_lib
     PUBLIC DirectXTex
+
 )
 
 
@@ -80,5 +81,7 @@ PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+
 
 postimport_dll(${PROJECT_NAME})

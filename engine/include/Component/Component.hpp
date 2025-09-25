@@ -9,6 +9,7 @@ class Component {
 protected:
 	Handle handle;
 public:
+	bool enabled = true;
 	Component() = default;
 
     enum class ComponentType : char
@@ -17,9 +18,14 @@ public:
 		UNKNOWN
     };
 
-	virtual bool inEditor() = 0;
+	virtual bool inEditor();
 	virtual ComponentType getType() const = 0;
 	virtual ~Component() = default;
+
+
+	virtual void Enable() { enabled = true; }
+	virtual void Disable() { enabled = false; }
+	bool isEnabled() const { return enabled; }
 };
 
 #endif //!COMPONENT_HPP

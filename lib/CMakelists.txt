@@ -1,5 +1,6 @@
 add_subdirectory(JobSystem)
 add_subdirectory(common)
+add_subdirectory(ImXML)
 add_subdirectory(Graphics)
 add_subdirectory(resource)
 add_subdirectory(Scripting)

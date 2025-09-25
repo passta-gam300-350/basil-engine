@@ -9,6 +9,7 @@ file(GLOB_RECURSE MANAGED_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 set(DOTNET_BUILDCONFIG Debug)
 
+
 execute_process(
     COMMAND ${TOOL_DOTNET} msbuild ${CSPROJPath}
     -nologo -getProperty:TargetPath
@@ -19,7 +20,20 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+add_custom_command(
+  COMMAND ${TOOL_DOTNET} msbuild ${CSPROJPath}
+    -nologo -getProperty:TargetPath
+    -p:Configuration=${DOTNET_BUILDCONFIG}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE DOTNET_OUTPUT
+
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 message(STATUS "Managed output: ${DOTNET_OUTPUT}")
+
+set(DOTNET_OUTPUT_G ${DOTNET_OUTPUT} CACHE STRING "Path to dotnet runtime" FORCE)
+
 
 add_custom_command(
   OUTPUT "${DOTNET_OUTPUT}.timestamp"

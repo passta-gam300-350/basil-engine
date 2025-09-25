@@ -93,6 +93,7 @@ int main() {
 
 	ResourceSystem::Instance().m_MappedIO.emplace("test/10.dds", MemoryMappedFile(L"test/10.dds"));
 
+	Engine::Init();
 	Engine::Update();
 	//Engine::GetWorld().LoadYAML("testscene.yaml");
 	/*

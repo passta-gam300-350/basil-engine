@@ -41,6 +41,7 @@ public:
 	static void Exit();
 
 	static Window& GetWindowInstance();
+	static ecs::world GetWorld();
 	static spdlog::stopwatch GetAppElapsedTime();
 	static Logger::Sink* GetSink();
 	static bool WindowShouldClose();
@@ -52,6 +53,7 @@ public:
 	//engine state management
 	void Coma();	//do not use recklessly, this will put the program into deadlock 
 	void Terminate();
+	
 
 };
 
