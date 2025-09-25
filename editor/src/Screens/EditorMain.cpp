@@ -1,3 +1,6 @@
+#include <Render/Render.h>
+#include <Engine.hpp>
+
 #include "Screens/EditorMain.hpp"
 
 #include "Editor.hpp"
@@ -23,10 +26,11 @@ void EditorMain::init()
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
+	// init engine
+	//Engine::GenerateDefaultConfig();
+	Engine::Init("Default.yaml");
 
-
-
-
+	//std::jthread jth(&Engine::Update);
 }
 
 void EditorMain::render()
@@ -35,8 +39,6 @@ void EditorMain::render()
 	if (!active) return;
 
 	Render_MenuBar();
-
-	
 
 
 	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
@@ -241,6 +243,8 @@ void EditorMain::Render_Game()
 void EditorMain::Render_Scene()
 {
 	ImGui::Begin("Scene");
+	
+	ImGui::Image((ImTextureID)RenderSystem::Instance().m_SceneRenderer->GetFrameData().mainColorBuffer->GetFBOHandle(), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 

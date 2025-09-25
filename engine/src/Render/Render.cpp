@@ -199,8 +199,3 @@ namespace Resource {
 	REGISTER_RESOURCE_TYPE(ShaderAssetData, load_native_shader_from_memory, [](ShaderAssetData&) {});
 	REGISTER_RESOURCE_TYPE(TextureAssetData, load_dds_texture_from_memory, [](TextureAssetData&) {});
 }
-
-namespace {
-	static_assert(std::is_base_of_v<ecs::SystemBase, RenderSystem> && "RenderSystem" && "Type is not derived"); static_assert(!std::is_abstract_v<RenderSystem> && "RenderSystem" && "Type should not be abstract"); static_assert(is_specialization_of_v<ecs::ReadSet<MeshRendererComponent, TransformComponent, VisibilityComponent, LightComponent, CameraComponent>, ecs::QuerySetBasic> && "(ecs::ReadSet<MeshRendererComponent, TransformComponent, VisibilityComponent, LightComponent, CameraComponent>)" && "Type should a query set"); static_assert(is_specialization_of_v<ecs::WriteSet<>, ecs::QuerySetBasic> && "(ecs::WriteSet<>)" && "Type should a query set"); static auto Render_SYSTEM_FACTORY = []()->ecs::SystemBase* { return new RenderSystem{}; }; static auto Render_SYSTEM_CONFIG_GENERATOR = []()->YAML::Node { return YAML::Node{}; }; 
-	auto Render_SYSTEM_REG = [&] { ecs::SystemRegistry::Instance().RegisterSystem({ "Render", std::uint64_t(&Render_SYSTEM_FACTORY), ecs::ReadSet<MeshRendererComponent, TransformComponent, VisibilityComponent, LightComponent, CameraComponent> ::GetSet(), ecs::WriteSet<> ::GetSet(), 60.f, false, Render_SYSTEM_FACTORY }); return 0; }();
-}

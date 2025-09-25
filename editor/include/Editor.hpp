@@ -21,6 +21,7 @@ struct EDITOR_CONFIG
 {
 	std::string project_workingDir;
 	std::string workspace_name;
+	std::string engine_configPath;
 };
 
 class Editor

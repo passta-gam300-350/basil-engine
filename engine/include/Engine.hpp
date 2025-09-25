@@ -41,7 +41,6 @@ public:
 	static void Exit();
 
 	static Window& GetWindowInstance();
-	static ecs::world GetWorld();
 	static spdlog::stopwatch GetAppElapsedTime();
 	static Logger::Sink* GetSink();
 	static bool WindowShouldClose();

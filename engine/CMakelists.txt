@@ -59,7 +59,7 @@ set(ALL_LIBS
     PUBLIC graphics_lib
     PUBLIC scripting_lib
     PUBLIC uuid_lib
-    PRIVATE spdlog
+    PUBLIC spdlog
     PUBLIC EnTT
     INTERFACE tinyddsloader
     PUBLIC resource_lib_core

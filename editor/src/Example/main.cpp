@@ -216,6 +216,14 @@ int main(int, char**)
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable)
+		{
+			auto ctx = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(ctx);
+		}
+
 		glfwSwapBuffers(window);
 	}
 #ifdef __EMSCRIPTEN__

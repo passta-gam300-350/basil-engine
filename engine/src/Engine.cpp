@@ -42,9 +42,9 @@ void Engine::Init(std::string const& cfg ) {
 	ReflectionRegistry::SetupNativeTypes();
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
-		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
-		InputManager::Get_Instance()->Setup_Callbacks();
-		ObjectManager::GetInstance().CreateGameObject();
+		//Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
+		//InputManager::Get_Instance()->Setup_Callbacks();
+		//ObjectManager::GetInstance().CreateGameObject();
 		return;
 	}
 	YAML::Node root{YAML::LoadFile(cfg)};
@@ -56,11 +56,11 @@ void Engine::Init(std::string const& cfg ) {
 		bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
 		std::string win_name{ window["title"] ? window["title"].as<std::string>() : DEFAULT_NAME };
 		bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
-		Instance().m_Window.reset(new Window(win_name, win_width, win_height));
-		Instance().m_Window->SetVSync(win_vsync);
+		//Instance().m_Window.reset(new Window(win_name, win_width, win_height));
+		//Instance().m_Window->SetVSync(win_vsync);
 	}
 	else {
-		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
+		//Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
 	}
 	if (YAML::Node system{ root["system"] }; system) {
 		SystemRegistry::LoadConfig(system);
@@ -83,10 +83,8 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-
-
-
-	InputManager::Get_Instance()->Setup_Callbacks();
+	RenderSystem::System().Init();
+	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 
 	
@@ -100,22 +98,18 @@ void Engine::Update() {
 		std::uint64_t& frame_log_rate{ instance.m_Info.m_FrameLogRate };
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
-				if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
+				/*if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
 					instance.m_Info.m_State = Info::State::Exit;
 					break;
-				}
+				}*/
 				
 				InputManager::Get_Instance()->Update();
 
 				//PF_BEGIN_FRAME(frame_number);
-				auto fn = [](world wrd) {
-					RenderSystem::System().Update(wrd);
-					};
-				std::jthread jt(fn, instance.m_World);
 				//instance.m_World.update();
+				RenderSystem::System().Update(instance.m_World);
 				//PF_END_FRAME();
-				jt.join();
-				Engine::GetWindowInstance().SwapBuffers();
+				//Engine::GetWindowInstance().SwapBuffers();
 
 				/*
 				if (frame_log_rate && frame_counter >= frame_log_rate) {
@@ -144,6 +138,7 @@ void Engine::Exit() {
 	SystemRegistry::Exit();
 	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
+	RenderSystem::System().Exit();
 }
 
 world Engine::GetWorld() {

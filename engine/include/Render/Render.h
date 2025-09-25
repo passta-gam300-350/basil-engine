@@ -1,5 +1,6 @@
 #ifndef ENGINE_RENDER_H
 #define ENGINE_RENDER_H
+#pragma once
 
 #include <memory>
 #include <Scene/SceneRenderer.h>

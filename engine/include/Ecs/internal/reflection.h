@@ -231,6 +231,15 @@ void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
 
 struct InterfaceRegistrationBasic {};
 
+template <typename Ret, typename ...Args>
+struct FunctionTraits;
+
+template <typename Ret, typename ...Args>
+struct FunctionTraits<Ret(*)(Args...)> {
+    using RetType = Ret;
+    using ArgType = std::tuple<Args...>;
+};
+
 template<auto Ptr, static_string Name>
 struct MemberRegistration {
     static constexpr auto ptr = Ptr;
@@ -244,6 +253,9 @@ struct InterfaceRegistration : public InterfaceRegistrationBasic {
     static constexpr auto getptr = GetPtr;
     static constexpr std::string_view name = Name.data;
     static constexpr auto hash = ToTypeName(name);
+    
+    //static_assert(FunctionTraits<decltype(SetPtr)>::);
+    //static_assert();
 };
 
 template<auto Ptr, static_string Name>
