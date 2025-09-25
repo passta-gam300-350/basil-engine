@@ -137,6 +137,30 @@ struct animationState
     float startTime = 0.0f;
     float endTime = -1.0f; // use full duration
 };
+
+struct blendState
+{
+    bool isActive = false;
+    float currentTime = 0.0f;
+    float duration = 0.3f;
+    animationContainer* sourceAnimation = nullptr;
+    float sourceAnimationTime = 0.0f;
+    float getBlendFactor() const
+    {
+        if(isActive == false || duration <= 0.0f)
+        {
+            return 1.0f;
+        }
+        float t = glm::clamp(currentTime / duration, 0.0f, 1.0f);
+        // smoothstep for nice ease-in-out
+        return t * t * (3.0f - 2.0f * t);
+    }
+    bool isComplete() const
+    {
+        return currentTime >= duration;
+    }
+};
+
 struct animator
 {
     animationContainer* currentAnimation = nullptr; // current playing animation
@@ -149,6 +173,8 @@ struct animator
     std::unordered_map<std::string, animationContainer*> allAnimations;
     // current animation name
     std::string currentAnimationName; 
+    blendState blend;
+    
     animator(int numberOfBones)
     {
         finalBoneMatrices.resize(numberOfBones);
@@ -164,5 +190,8 @@ struct animator
     bool playAnimation(std::string const& animationName, bool shouldLoop = true);
     bool hasAnimation(std::string const& animationName) const;
     std::string getCurrentAnimationName() const;
+private:
+    void updateSingleAnimation(float deltaTime, skeleton const& theSkeleton);
+    void updateBlendedAnimation(float deltaTime, skeleton const& theSkeleton);
+    void calculateFinalBoneMatrices(std::vector<glm::mat4> const& localBoneTransforms, skeleton const& theSkeleton);
 };
-

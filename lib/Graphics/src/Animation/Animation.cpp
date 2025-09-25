@@ -148,6 +148,40 @@ namespace skeletonHelper
     }
 }
 
+namespace blendingHelper
+{
+    glm::mat4 blendTransforms(glm::mat4 const& firstT, glm::mat4 const& secondT, float blendFactor)
+    {
+        // extract translation 
+        glm::vec3 firstPos = glm::vec3(firstT[3]);
+        glm::vec3 secondPos = glm::vec3(secondT[3]);
+        // extract rotation
+        glm::quat firstRot = glm::quat_cast(firstT);
+        glm::quat secondRot = glm::quat_cast(secondT);
+        // extract scale
+        glm::vec3 firstScale =
+        glm::vec3(
+            glm::length(glm::vec3(firstT[0])),
+            glm::length(glm::vec3(firstT[1])),
+            glm::length(glm::vec3(firstT[2]))
+        );
+        glm::vec3 secondScale = 
+        glm::vec3(
+            glm::length(glm::vec3(secondT[0])),
+            glm::length(glm::vec3(secondT[1])),
+            glm::length(glm::vec3(secondT[2]))
+        );
+        // blend all the components and reconstruct matrix
+        glm::vec3 finalPosition = glm::mix(firstPos, secondPos, blendFactor);
+        glm::quat finalRotation = glm::slerp(firstRot, secondRot, blendFactor);
+        glm::vec3 finalScale = glm::mix(firstScale, secondScale, blendFactor);
+        glm::mat4 matT = glm::translate(glm::mat4(1.0f), finalPosition);
+        glm::mat4 matR = glm::mat4_cast(finalRotation);
+        glm::mat4 matS = glm::scale(glm::mat4(1.0f), finalScale);
+        return matT * matR * matS;
+    }
+}
+
 boneChannel::boneChannel(std::string const& boneName, int id)
     : m_name(boneName), m_id(id), localTransform(1.0f)
 {
@@ -236,56 +270,15 @@ void animator::updateAnimation(float deltaTime, skeleton const& theSkeleton)
     assert(deltaTime >= 0.0f && "Delta time cannot be negative");
     assert(state.playbackSpeed > 0.0f && "Playback speed must be positive");
 
-    // advance the time
-    currentTime += currentAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;
-    // loop or not loop animation
-    if (state.loop == true)
+    if (blend.isActive == true)
     {
-        currentTime = fmod(currentTime, currentAnimation->duration);
+        updateBlendedAnimation(deltaTime, theSkeleton);
     }
     else
     {
-        if (currentTime >= currentAnimation->duration)
-        {
-            currentTime = currentAnimation->duration; // fix the time at the end of the animation
-            state.isPlaying = false;
-        }
+        updateSingleAnimation(deltaTime, theSkeleton);
     }
-    // update all bone channels
-    for (boneChannel& eachChannel : currentAnimation->channels)
-    {
-        eachChannel.update(currentTime);
-    }
-    // create an array to store all local transformed bone
-    std::vector<glm::mat4> localBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));  // store with identity matrix first
-    // loop all of them, map to its corresponding
-    for (boneChannel const& eachChannel : currentAnimation->channels)
-    {
-        int boneID = eachChannel.getID();
-        if (boneID >= 0 && boneID < localBoneTransforms.size()) // need to ensure i got the correct bone ID
-        {
-            localBoneTransforms[boneID] = eachChannel.getLocalTransform();
-        }
-    }
-     // create an array to store global transform (apply the bone hierarchy)
-    std::vector<glm::mat4> globalBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));
-    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
-    {
-        oneSkeletonBone const& eachBone = theSkeleton.bones[i];
-        if (eachBone.parentIndex == -1)  // root bone (no parent)
-        {
-            globalBoneTransforms[i] = localBoneTransforms[i];
-        }
-        else
-        {
-            globalBoneTransforms[i] = globalBoneTransforms[eachBone.parentIndex] * localBoneTransforms[i];
-        }
-    }
-    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
-    {
-        finalBoneMatrices[i] = globalBoneTransforms[i] * theSkeleton.bones[i].inverseBind; // inverse bind is the bridge between the models original shape and the animated shape
-        // original model space to animated model space
-    }
+   
 }
 
 void animator::play()
@@ -343,11 +336,19 @@ bool animator::playAnimation(std::string const& animationName, bool shouldLoop)
     auto currentPtr = allAnimations.find(animationName);
     if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
     {
-        assert(false && ("Animation" + animationName + "not found or is null").c_str());
+        assert(false && ("Animation " + animationName + " not found or is null").c_str());
         return false;
     }
-    // can find, start playing
-    currentAnimation = currentPtr->second; // assign ptr
+    animationContainer* newAnimation = currentPtr->second;
+    // check for blend BEFORE changing currentAnimation
+    if (currentAnimation != nullptr && state.isPlaying && currentAnimation != newAnimation)
+    {
+        blend.isActive = true;
+        blend.sourceAnimation = currentAnimation;  // save the OLD one
+        blend.sourceAnimationTime = currentTime;
+    }
+    // then change to new animation
+    currentAnimation = newAnimation;
     currentTime = 0.0f;
     state.isPlaying = true;
     state.loop = shouldLoop;
@@ -361,7 +362,6 @@ bool animator::hasAnimation(std::string const& animationName) const
     auto currentPtr = allAnimations.find(animationName);
     if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
     {
-        assert(false && ("Animation" + animationName + "not found or is null").c_str());
         return false;
     }
     return true;
@@ -372,3 +372,114 @@ std::string animator::getCurrentAnimationName() const
     return currentAnimationName;
 }
 
+void animator::updateSingleAnimation(float deltaTime, skeleton const& theSkeleton)
+{
+    // advance the time
+    currentTime += currentAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;
+    // loop or not loop animation
+    if (state.loop == true)
+    {
+        currentTime = fmod(currentTime, currentAnimation->duration);
+    }
+    else
+    {
+        if (currentTime >= currentAnimation->duration)
+        {
+            currentTime = currentAnimation->duration; // fix the time at the end of the animation
+            state.isPlaying = false;
+        }
+    }
+    // update all bone channels
+    //create an array to store all local transformed bone
+    std::vector<glm::mat4> localBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));  // store with identity matrix first
+    for (boneChannel& eachChannel : currentAnimation->channels)
+    {
+        eachChannel.update(currentTime);
+        int boneID = eachChannel.getID();
+        if (boneID >= 0 && boneID < localBoneTransforms.size()) // need to ensure i got the correct bone ID
+        {
+            localBoneTransforms[boneID] = eachChannel.getLocalTransform();
+        }
+    }
+    calculateFinalBoneMatrices(localBoneTransforms, theSkeleton);
+}
+
+void animator::updateBlendedAnimation(float deltaTime, skeleton const& theSkeleton)
+{
+    blend.currentTime += deltaTime;
+    float blendFactor = blend.getBlendFactor();
+    blend.sourceAnimationTime += blend.sourceAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;
+    if (state.loop == true)
+    {
+        blend.sourceAnimationTime = fmod(blend.sourceAnimationTime, blend.sourceAnimation->duration);
+    }
+    currentTime += currentAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;
+    if (state.loop == true)
+    {
+        currentTime = fmod(currentTime, currentAnimation->duration);
+    }
+    // Get source animation transforms
+    std::vector<glm::mat4>
+        sourceLocalTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));
+    for (boneChannel& channel : blend.sourceAnimation->channels)
+    {
+        channel.update(blend.sourceAnimationTime);
+        int boneID = channel.getID();
+        if (boneID >= 0 && boneID < sourceLocalTransforms.size())
+        {
+            sourceLocalTransforms[boneID] = channel.getLocalTransform();
+        }
+    }
+
+    // Get target animation transforms
+    std::vector<glm::mat4> targetLocalTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));
+    for (boneChannel& channel : currentAnimation->channels)
+    {
+        channel.update(currentTime);
+        int boneID = channel.getID();
+        if (boneID >= 0 && boneID < targetLocalTransforms.size())
+        {
+            targetLocalTransforms[boneID] = channel.getLocalTransform();
+        }
+    }
+
+    // blend the transforms
+    std::vector<glm::mat4> blendedLocalTransforms(theSkeleton.bones.size());
+    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+    {
+        blendedLocalTransforms[i] = blendingHelper::blendTransforms(sourceLocalTransforms[i], targetLocalTransforms[i], blendFactor);
+    }
+
+    // Calculate final matrices
+    calculateFinalBoneMatrices(blendedLocalTransforms, theSkeleton);
+
+    // Check if blend complete
+    if (blend.isComplete())
+    {
+        blend.isActive = false;
+        blend.sourceAnimation = nullptr;
+    }
+}
+
+void animator::calculateFinalBoneMatrices(std::vector<glm::mat4> const& localBoneTransforms, skeleton const& theSkeleton)
+{
+    // create an array to store global transform (apply the bone hierarchy)
+    std::vector<glm::mat4> globalBoneTransforms(theSkeleton.bones.size(), glm::mat4(1.0f));
+    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+    {
+        oneSkeletonBone const& eachBone = theSkeleton.bones[i];
+        if (eachBone.parentIndex == -1)  // root bone (no parent)
+        {
+            globalBoneTransforms[i] = localBoneTransforms[i];
+        }
+        else
+        {
+            globalBoneTransforms[i] = globalBoneTransforms[eachBone.parentIndex] * localBoneTransforms[i];
+        }
+    }
+    for (size_t i = 0; i < theSkeleton.bones.size(); i++)
+    {
+        finalBoneMatrices[i] = globalBoneTransforms[i] * theSkeleton.bones[i].inverseBind; // inverse bind is the bridge between the models original shape and the animated shape
+        // original model space to animated model space
+    }
+}
