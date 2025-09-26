@@ -1,3 +1,5 @@
+//THIS IS ONLY FOR EDITOR STARTING PART WHERE WE OPEN PROJECT
+
 #include "Editor.hpp"
 
 #include <stdexcept>
