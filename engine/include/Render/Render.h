@@ -46,6 +46,10 @@ struct CameraComponent {
 };
 
 struct RenderSystem : public ecs::SystemBase {
+public:
+    // Editor resource registration for in-memory assets
+    static void RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh);
+    static void RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material);
     struct InstanceData {
         // graphics lib objects
         std::unique_ptr<SceneRenderer> m_SceneRenderer;

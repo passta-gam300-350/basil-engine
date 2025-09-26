@@ -2,6 +2,11 @@
 
 #include <Render/Render.h>
 #include <Engine.hpp>
+#include <components/transform.h>
+#include <Resources/PrimitiveGenerator.h>
+#include <Resources/Material.h>
+#include <unordered_map>
+#include <spdlog/spdlog.h>
 
 #include "Screens/EditorMain.hpp"
 
@@ -31,6 +36,10 @@ void EditorMain::init()
 	// init engine
 	Engine::GenerateDefaultConfig();
 	Engine::InitWithoutWindow("Default.yaml");
+
+	// Create a basic light so we can see something
+	CreateLightEntity();
+	CreateCameraEntity();
 
 	//std::jthread jth(&Engine::Update);
 }
@@ -225,6 +234,78 @@ void EditorMain::Setup_Dockspace(unsigned id)
 void EditorMain::Render_SceneExplorer()
 {
 	ImGui::Begin("Hierarchy");
+
+	// Entity creation buttons
+	if (ImGui::Button("Create Empty")) {
+		CreateDefaultEntity();
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Create Plane")) {
+		CreateCubeEntity();
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Create Light")) {
+		CreateLightEntity();
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Create Camera")) {
+		CreateCameraEntity();
+	}
+
+	ImGui::Separator();
+
+	// List all entities in the world
+	ecs::world world = Engine::GetWorld();
+
+	// Get all entities with position component (basic entities)
+	auto entities = world.filter_entities<PositionComponent>();
+
+	ImGui::Text("Entities in scene:");
+	for (auto entity : entities) {
+		ImGui::PushID(static_cast<int>(entity.get_uid()));
+
+		// Display entity info
+		std::string entityName = "Entity " + std::to_string(entity.get_uid());
+
+		// Check what components this entity has
+		bool hasTransform = world.has_all_components_in_entity<TransformComponent>(entity);
+		bool hasMesh = world.has_all_components_in_entity<MeshRendererComponent>(entity);
+		bool hasLight = world.has_all_components_in_entity<LightComponent>(entity);
+		bool hasVisibility = world.has_all_components_in_entity<VisibilityComponent>(entity);
+
+		if (hasLight) entityName += " (Light)";
+		else if (hasMesh) entityName += " (Mesh)";
+		else entityName += " (Empty)";
+
+		if (ImGui::TreeNode(entityName.c_str())) {
+			// Show component info
+			if (world.has_all_components_in_entity<PositionComponent>(entity)) {
+				auto pos = world.get_component_from_entity<PositionComponent>(entity);
+				ImGui::Text("Position: %.2f, %.2f, %.2f", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
+			}
+
+			if (hasVisibility) {
+				auto vis = world.get_component_from_entity<VisibilityComponent>(entity);
+				ImGui::Text("Visible: %s", vis.m_IsVisible ? "Yes" : "No");
+			}
+
+			if (hasLight) {
+				auto light = world.get_component_from_entity<LightComponent>(entity);
+				ImGui::Text("Light Type: %d", static_cast<int>(light.m_Type));
+				ImGui::Text("Intensity: %.2f", light.m_Intensity);
+			}
+
+			// Delete button
+			if (ImGui::Button("Delete Entity")) {
+				world.remove_entity(entity);
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::PopID();
+	}
+
 	ImGui::End();
 }
 
@@ -260,6 +341,150 @@ void EditorMain::Render_Scene()
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
 
+	// Debug info below the viewport
+	ecs::world world = Engine::GetWorld();
+	auto allEntities = world.filter_entities<PositionComponent>();
+	auto meshEntities = world.filter_entities<MeshRendererComponent>();
+	auto lightEntities = world.filter_entities<LightComponent>();
+	auto cameraEntities = world.filter_entities<CameraComponent>();
+
+	int entityCount = 0, meshCount = 0, lightCount = 0, cameraCount = 0;
+	for (auto entity : allEntities) {
+		entityCount++;
+		// Debug: Check what components each entity has
+		bool hasMeshRenderer = world.has_all_components_in_entity<MeshRendererComponent>(entity);
+		if (hasMeshRenderer) {
+			spdlog::info("DEBUG: Entity {} has MeshRendererComponent", entity.get_uid());
+		}
+	}
+	for (auto entity : meshEntities) { meshCount++; }
+	for (auto entity : lightEntities) { lightCount++; }
+	for (auto entity : cameraEntities) { cameraCount++; }
+
+	ImGui::Text("Total entities: %d", entityCount);
+	ImGui::Text("Mesh entities: %d", meshCount);
+	ImGui::Text("Light entities: %d", lightCount);
+	ImGui::Text("Camera entities: %d", cameraCount);
+
+	// Show framebuffer status
+	//auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
+	ImGui::Text("Editor FBO: %s", frameData.editorColorBuffer ? "Valid" : "None");
+
 	ImGui::End();
 }
+
+void EditorMain::CreateDefaultEntity()
+{
+	ecs::world world = Engine::GetWorld();
+
+	// Create new entity
+	auto entity = world.add_entity();
+
+	// Add basic components
+	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
+	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
+	world.add_component_to_entity<VisibilityComponent>(entity, true);
+}
+
+void EditorMain::CreateCubeEntity()
+{
+	ecs::world world = Engine::GetWorld();
+
+	// Create new entity
+	auto entity = world.add_entity();
+
+	// Add transform components
+	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
+	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
+	world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+	// Create a simple plane using graphics library primitives
+	auto planeMesh = PrimitiveGenerator::CreatePlane(2.0f, 2.0f, 1, 1);
+
+	// Get the SceneRenderer to access ResourceManager
+	auto& renderSystem = RenderSystem::Instance();
+	auto* resourceManager = renderSystem.m_SceneRenderer->GetResourceManager();
+
+	// Try to create a basic shader
+	auto shader = resourceManager->LoadShader("test", "basic.vert", "basic.frag");
+
+	if (shader) {
+		// Create material with the shader
+		auto material = std::make_shared<Material>(shader, "PlaneMaterial");
+		material->SetAlbedoColor(glm::vec3(0.8f, 0.3f, 0.3f)); // Red color
+
+		// Create shared pointers for mesh and material
+		auto meshPtr = std::make_shared<Mesh>(std::move(planeMesh));
+
+		// Generate GUIDs for the resources
+		auto meshGuid = Resource::Guid::generate();
+		auto materialGuid = Resource::Guid::generate();
+
+		// Register resources with the RenderSystem's editor cache (proper way)
+		RenderSystem::RegisterEditorMesh(meshGuid, meshPtr);
+		RenderSystem::RegisterEditorMaterial(materialGuid, material);
+
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer;
+		meshRenderer.m_MeshGuid = meshGuid;
+		meshRenderer.m_MaterialGuid = materialGuid;
+
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+		// Debug: Confirm mesh component was added
+		spdlog::info("DEBUG: Added MeshRendererComponent to entity {}", entity.get_uid());
+	} else {
+		// Debug: Shader loading failed
+		spdlog::warn("DEBUG: Failed to load shader for cube entity");
+	}
+}
+
+void EditorMain::CreateLightEntity()
+{
+	ecs::world world = Engine::GetWorld();
+
+	// Create new entity
+	auto entity = world.add_entity();
+
+	// Add position
+	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 5.0f, 0.0f));
+
+	// Add light component
+	LightComponent light;
+	light.m_Type = Light::Type::Directional;
+	light.m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);
+	light.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
+	light.m_Intensity = 1.0f;
+	light.m_Range = 10.0f;
+	light.m_InnerCone = 30.0f;
+	light.m_OuterCone = 45.0f;
+	light.m_IsEnabled = true;
+
+	world.add_component_to_entity<LightComponent>(entity, light);
+}
+
+void EditorMain::CreateCameraEntity()
+{
+	ecs::world world = Engine::GetWorld();
+
+	// Create new entity
+	auto entity = world.add_entity();
+
+	// Add position component
+	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 2.0f, 5.0f));
+
+	// Add camera component
+	CameraComponent camera;
+	camera.m_Type = CameraComponent::CameraType::PERSPECTIVE;
+	camera.m_IsActive = true;
+	camera.m_Fov = 45.0f;
+	camera.m_AspectRatio = 16.0f / 9.0f;
+	camera.m_Near = 0.1f;
+	camera.m_Far = 100.0f;
+	camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
+	camera.m_Right = glm::vec3(1.0f, 0.0f, 0.0f);
+
+	world.add_component_to_entity<CameraComponent>(entity, camera);
+}
+
 

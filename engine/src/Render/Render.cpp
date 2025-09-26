@@ -10,6 +10,12 @@
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
 
+// Editor resource caches at file scope
+namespace {
+	std::unordered_map<Resource::Guid, std::shared_ptr<Mesh>> g_EditorMeshCache;
+	std::unordered_map<Resource::Guid, std::shared_ptr<Material>> g_EditorMaterialCache;
+}
+
 void RenderSystem::InstanceData::Acquire() {
 	m_SceneRenderer = std::make_unique<SceneRenderer>();
 	m_Camera = std::make_unique<Camera>(CameraType::Perspective);
@@ -99,15 +105,38 @@ void RenderSystem::Update(ecs::world& world) {
 	auto sceneLights = world.filter_entities<LightComponent, PositionComponent>();
 	for (auto obj : sceneObjects) {
 		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformComponent, VisibilityComponent>()};
-		RenderableData renderData;
-		//renderData.mesh = ResourceSystem::Get<ResourceTypeMesh>(mesh.m_MeshGuid)->m_ptr;
-		//renderData.material = ResourceSystem::Get<Material>(mesh.m_MaterialGuid);
-		renderData.mesh = *ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid);
-		renderData.material = *ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
-		renderData.transform = transform.m_trans;
-		renderData.visible = visible.m_IsVisible;
-		renderData.renderLayer = 1;
-		inst.m_SceneRenderer->SubmitRenderable(renderData);
+
+		// Try to get resources from ResourceRegistry first (file-based assets)
+		auto* meshPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid);
+		auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
+
+		// If not found in registry, try editor-created resource cache (use global caches)
+
+		std::shared_ptr<Mesh> meshResource;
+		std::shared_ptr<Material> materialResource;
+
+		if (meshPtr) {
+			meshResource = *meshPtr;
+		} else if (g_EditorMeshCache.contains(mesh.m_MeshGuid)) {
+			meshResource = g_EditorMeshCache[mesh.m_MeshGuid];
+		}
+
+		if (materialPtr) {
+			materialResource = *materialPtr;
+		} else if (g_EditorMaterialCache.contains(mesh.m_MaterialGuid)) {
+			materialResource = g_EditorMaterialCache[mesh.m_MaterialGuid];
+		}
+
+		// Only render if we have both mesh and material
+		if (meshResource && materialResource) {
+			RenderableData renderData;
+			renderData.mesh = meshResource;
+			renderData.material = materialResource;
+			renderData.transform = transform.m_trans;
+			renderData.visible = visible.m_IsVisible;
+			renderData.renderLayer = 1;
+			inst.m_SceneRenderer->SubmitRenderable(renderData);
+		}
 	}
 
 	for (auto light : sceneLights) {
@@ -147,6 +176,15 @@ RenderSystem::InstanceData& RenderSystem::Instance() {
 
 RenderSystem RenderSystem::System() {
 	return RenderSystem();
+}
+
+
+void RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh) {
+	g_EditorMeshCache[guid] = mesh;
+}
+
+void RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material) {
+	g_EditorMaterialCache[guid] = material;
 }
 
 auto load_mesh_lambda = [](const char* data)->std::shared_ptr<Mesh> {

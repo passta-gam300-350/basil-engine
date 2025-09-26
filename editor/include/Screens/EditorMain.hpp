@@ -46,5 +46,12 @@ public:
 
 	void Render_Scene();
 	void Render_Game();
+
+private:
+	// Entity management
+	void CreateDefaultEntity();
+	void CreateCubeEntity();
+	void CreateLightEntity();
+	void CreateCameraEntity();
 };
 #endif // EDITORMAIN_HPP
