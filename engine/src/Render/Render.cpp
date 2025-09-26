@@ -19,7 +19,7 @@ namespace {
 	std::unordered_map<Resource::Guid, std::shared_ptr<Material>> g_EditorMaterialCache;
 }
 
-// Static shader storage for cube system
+// Static PBR shader storage for scene objects
 std::shared_ptr<Shader> RenderSystem::s_CubeShader = nullptr;
 
 void RenderSystem::InstanceData::Acquire() {
@@ -51,61 +51,67 @@ void RenderSystem::Update(ecs::world& world) {
 
 	auto world_cameras = world.filter_entities<CameraComponent, PositionComponent>();
 	auto& frameData = inst.m_SceneRenderer->GetFrameData();
-	//no camera management yet. just pick the first entity
+
+	//camera management - pick the first entity if available, fallback to direct controls
 	if (world_cameras) {
 		auto [camera, camera_pos] {(*world_cameras.begin()).get<CameraComponent, PositionComponent>()};
 		inst.m_Camera->SetPosition(camera_pos.m_WorldPos);
-		//for testing only. remove this in the future
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_W)) 
+
+		// WASD Camera movement (corrected mapping)
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_W))
 		{
-			double x{};
-			double y{1};
-			inst.m_Camera->SetMouseSensitivity(0.1f);
-			inst.m_Camera->ProcessMouseMovement(x, y);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_A))
-		{
-			double x{1};
-			double y{};
-			inst.m_Camera->SetMouseSensitivity(0.1f);
-			inst.m_Camera->ProcessMouseMovement(x, y);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_D))
-		{
-			double x{-1};
-			double y{ };
-			inst.m_Camera->SetMouseSensitivity(0.1f);
-			inst.m_Camera->ProcessMouseMovement(x, y);
+			inst.m_Camera->ProcessKeyboard(CameraMovement::FORWARD, 0.016f);
 		}
 		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_S))
 		{
-			double x{  };
-			double y{ -1};
-			inst.m_Camera->SetMouseSensitivity(0.1f);
-			inst.m_Camera->ProcessMouseMovement(x, y);
+			inst.m_Camera->ProcessKeyboard(CameraMovement::BACKWARD, 0.016f);
 		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_RIGHT))
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_A))
 		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::RIGHT, 0.166f);
+			inst.m_Camera->ProcessKeyboard(CameraMovement::LEFT, 0.016f);
 		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_UP))
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_D))
 		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::UP, 0.166f);
+			inst.m_Camera->ProcessKeyboard(CameraMovement::RIGHT, 0.016f);
 		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_DOWN))
+		// Vertical movement
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_SPACE))
 		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::DOWN, 0.166f);
+			inst.m_Camera->ProcessKeyboard(CameraMovement::UP, 0.016f);
 		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_LEFT))
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_LEFT_CONTROL))
 		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::LEFT, 0.166f);
+			inst.m_Camera->ProcessKeyboard(CameraMovement::DOWN, 0.016f);
 		}
 
 		if (camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
 			inst.m_Camera->SetPerspective(camera.m_Fov, camera.m_AspectRatio, camera.m_Near, camera.m_Far);
 		}
-		else {
-			//m_Camera->SetPerspective(camera.m_Fov, camera.m_AspectRatio, camera.m_Near, camera.m_Far);
+	} else {
+		// Fallback: direct camera controls if no camera entity exists
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_W))
+		{
+			inst.m_Camera->ProcessKeyboard(CameraMovement::FORWARD, 0.016f);
+		}
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_S))
+		{
+			inst.m_Camera->ProcessKeyboard(CameraMovement::BACKWARD, 0.016f);
+		}
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_A))
+		{
+			inst.m_Camera->ProcessKeyboard(CameraMovement::LEFT, 0.016f);
+		}
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_D))
+		{
+			inst.m_Camera->ProcessKeyboard(CameraMovement::RIGHT, 0.016f);
+		}
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_SPACE))
+		{
+			inst.m_Camera->ProcessKeyboard(CameraMovement::UP, 0.016f);
+		}
+		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_LEFT_CONTROL))
+		{
+			inst.m_Camera->ProcessKeyboard(CameraMovement::DOWN, 0.016f);
 		}
 	}
 	frameData.viewMatrix = inst.m_Camera->GetViewMatrix();
@@ -207,18 +213,43 @@ void RenderSystem::LoadBasicShaders() {
 
 	assert(resourceManager && "ResourceManager must be initialized");
 
-	// Load primitive shader (available in bin directory)
-	s_CubeShader = resourceManager->LoadShader("engine_primitive",
-		"assets/shaders/primitive.vert",
-		"assets/shaders/primitive.frag");
+	// Load PBR shader for main scene objects (following GraphicsTestDriver pattern)
+	s_CubeShader = resourceManager->LoadShader("main_pbr",
+		"assets/shaders/main_pbr.vert",
+		"assets/shaders/main_pbr.frag");
 
 	if (!s_CubeShader) {
-		spdlog::error("Failed to load basic shader for engine cubes");
-		assert(false && "Basic shader is required for cube rendering");
+		spdlog::error("Failed to load PBR shader for engine cubes");
+		assert(false && "PBR shader is required for cube rendering");
 		return;
 	}
 
-	spdlog::info("Engine cube shader loaded successfully");
+	// Load primitive shader for debug visualization only
+	auto primitiveShader = resourceManager->LoadShader("primitive",
+		"assets/shaders/primitive.vert",
+		"assets/shaders/primitive.frag");
+
+	if (!primitiveShader) {
+		spdlog::warn("Failed to load primitive shader for debug visualization");
+	} else {
+		// Configure debug render pass with primitive shader
+		instance.m_SceneRenderer->SetDebugPrimitiveShader(primitiveShader);
+		spdlog::info("Debug primitive shader loaded successfully");
+	}
+
+	// Load shadow depth shader for shadow mapping
+	auto shadowShader = resourceManager->LoadShader("shadow_depth",
+		"assets/shaders/shadow_depth.vert",
+		"assets/shaders/shadow_depth.frag");
+
+	if (!shadowShader) {
+		spdlog::warn("Failed to load shadow depth shader - shadows will be disabled");
+	} else {
+		instance.m_SceneRenderer->SetShadowDepthShader(shadowShader);
+		spdlog::info("Shadow depth shader loaded successfully");
+	}
+
+	spdlog::info("Engine PBR shader system loaded successfully");
 }
 
 void RenderSystem::CreateDebugCube(const glm::vec3& position,
@@ -245,12 +276,11 @@ void RenderSystem::CreateDebugCube(const glm::vec3& position,
 	assert(cubeMesh && "Cube mesh generation failed");
 	assert(!cubeMesh->vertices.empty() && "Generated cube has no vertices");
 
-	// Create material with color for primitive shader
+	// Create PBR material (following GraphicsTestDriver pattern)
 	auto material = std::make_shared<Material>(s_CubeShader, "EngineCube_" + std::to_string(entity.get_uid()));
-	material->SetAlbedoColor(color);  // This sets PBR albedo
-	material->SetVec3("u_Color", color);  // This sets the primitive shader's color uniform
-	material->SetMetallicValue(0.1f);
-	material->SetRoughnessValue(0.8f);
+	material->SetAlbedoColor(color);      // PBR albedo color
+	material->SetMetallicValue(0.1f);     // Low metallic for non-metals
+	material->SetRoughnessValue(0.8f);    // High roughness for matte look
 
 	assert(material && "Material creation failed");
 
@@ -318,14 +348,14 @@ void RenderSystem::InitializeDebugCubes() {
 	auto& instance = RenderSystem::Instance();
 	auto* sceneRenderer = instance.m_SceneRenderer.get();
 
-	if (sceneRenderer && s_CubeShader) {
+	if (sceneRenderer) {
 		// Create debug visualization meshes
 		auto lightCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(5.0f));
 		auto lightRay = std::make_shared<Mesh>(PrimitiveGenerator::CreateDirectionalRay(3.0f));
 		auto wireframeCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateWireframeCube(1.0f));
 
-		// Configure debug meshes in SceneRenderer
-		sceneRenderer->SetDebugPrimitiveShader(s_CubeShader);
+		// Debug visualization uses primitive shader (already set in LoadBasicShaders)
+		// sceneRenderer->SetDebugPrimitiveShader() is called in LoadBasicShaders
 		sceneRenderer->SetDebugLightCubeMesh(lightCube);
 		sceneRenderer->SetDebugDirectionalRayMesh(lightRay);
 		sceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);

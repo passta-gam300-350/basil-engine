@@ -59,7 +59,7 @@ public:
                                const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f));
     static void CreateCubeGrid(int gridSize = 3, float spacing = 3.0f);
 
-    // Static shader storage for cubes
+    // Static PBR shader storage for scene objects
     static std::shared_ptr<Shader> s_CubeShader;
     struct InstanceData {
         // graphics lib objects
