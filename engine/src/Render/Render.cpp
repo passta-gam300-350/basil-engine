@@ -9,12 +9,18 @@
 
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
+#include <Resources/PrimitiveGenerator.h>
+#include <Resources/Material.h>
+#include <spdlog/spdlog.h>
 
 // Editor resource caches at file scope
 namespace {
 	std::unordered_map<Resource::Guid, std::shared_ptr<Mesh>> g_EditorMeshCache;
 	std::unordered_map<Resource::Guid, std::shared_ptr<Material>> g_EditorMaterialCache;
 }
+
+// Static shader storage for cube system
+std::shared_ptr<Shader> RenderSystem::s_CubeShader = nullptr;
 
 void RenderSystem::InstanceData::Acquire() {
 	m_SceneRenderer = std::make_unique<SceneRenderer>();
@@ -31,6 +37,11 @@ void RenderSystem::InstanceData::Release() {
 
 void RenderSystem::Init() {
 	Instance().Acquire();
+
+	// Automatically create debug cubes when render system initializes
+	InitializeDebugCubes();
+
+	spdlog::info("RenderSystem initialized with automatic cube generation");
 }
 
 void RenderSystem::Update(ecs::world& world) {
@@ -188,6 +199,161 @@ void RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh>
 
 void RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material) {
 	g_EditorMaterialCache[guid] = material;
+}
+
+void RenderSystem::LoadBasicShaders() {
+	auto& instance = RenderSystem::Instance();
+	auto* resourceManager = instance.m_SceneRenderer->GetResourceManager();
+
+	assert(resourceManager && "ResourceManager must be initialized");
+
+	// Load primitive shader (available in bin directory)
+	s_CubeShader = resourceManager->LoadShader("engine_primitive",
+		"assets/shaders/primitive.vert",
+		"assets/shaders/primitive.frag");
+
+	if (!s_CubeShader) {
+		spdlog::error("Failed to load basic shader for engine cubes");
+		assert(false && "Basic shader is required for cube rendering");
+		return;
+	}
+
+	spdlog::info("Engine cube shader loaded successfully");
+}
+
+void RenderSystem::CreateDebugCube(const glm::vec3& position,
+								  const glm::vec3& scale,
+								  const glm::vec3& color) {
+	assert(scale.x > 0 && scale.y > 0 && scale.z > 0 && "Scale must be positive");
+
+	// Ensure shader is loaded
+	if (!s_CubeShader) {
+		LoadBasicShaders();
+	}
+
+	auto world = Engine::GetWorld();
+	auto entity = world.add_entity();
+
+	// Add transform components (same as editor entity creation)
+	world.add_component_to_entity<PositionComponent>(entity, position);
+	world.add_component_to_entity<TransformComponent>(entity,
+		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
+	world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+	// Create cube mesh using PrimitiveGenerator (no models needed)
+	auto cubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+	assert(cubeMesh && "Cube mesh generation failed");
+	assert(!cubeMesh->vertices.empty() && "Generated cube has no vertices");
+
+	// Create material with color for primitive shader
+	auto material = std::make_shared<Material>(s_CubeShader, "EngineCube_" + std::to_string(entity.get_uid()));
+	material->SetAlbedoColor(color);  // This sets PBR albedo
+	material->SetVec3("u_Color", color);  // This sets the primitive shader's color uniform
+	material->SetMetallicValue(0.1f);
+	material->SetRoughnessValue(0.8f);
+
+	assert(material && "Material creation failed");
+
+	// Register in editor cache (same as current editor workflow)
+	auto meshGuid = Resource::Guid::generate();
+	auto materialGuid = Resource::Guid::generate();
+
+	RegisterEditorMesh(meshGuid, cubeMesh);
+	RegisterEditorMaterial(materialGuid, material);
+
+	// Add mesh renderer component
+	MeshRendererComponent meshRenderer;
+	meshRenderer.m_MeshGuid = meshGuid;
+	meshRenderer.m_MaterialGuid = materialGuid;
+
+	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	spdlog::info("Created engine cube at ({:.1f}, {:.1f}, {:.1f}) with color ({:.2f}, {:.2f}, {:.2f})",
+				 position.x, position.y, position.z, color.r, color.g, color.b);
+}
+
+void RenderSystem::CreateCubeGrid(int gridSize, float spacing) {
+	assert(gridSize > 0 && gridSize <= 10 && "Grid size must be between 1-10");
+	assert(spacing > 0.0f && "Spacing must be positive");
+
+	spdlog::info("Creating {}x{} cube grid (engine cubes)", gridSize, gridSize);
+
+	// Same colors as GraphicsTestDriver
+	std::vector<glm::vec3> colors = {
+		glm::vec3(0.8f, 0.2f, 0.2f),  // Red
+		glm::vec3(0.2f, 0.8f, 0.2f),  // Green
+		glm::vec3(0.2f, 0.2f, 0.8f),  // Blue
+		glm::vec3(1.0f, 0.8f, 0.2f),  // Gold
+		glm::vec3(1.0f, 1.0f, 1.0f),  // White
+	};
+
+	const float startOffset = -(gridSize - 1) * spacing * 0.5f;
+
+	for (int x = 0; x < gridSize; ++x) {
+		for (int z = 0; z < gridSize; ++z) {
+			glm::vec3 position(
+				startOffset + x * spacing,
+				0.0f,  // Ground level
+				startOffset + z * spacing
+			);
+
+			// Cycle through materials based on position (same as GraphicsTestDriver)
+			int colorIndex = (x + z) % colors.size();
+			glm::vec3 color = colors[colorIndex];
+
+			CreateDebugCube(position, glm::vec3(1.0f), color);
+		}
+	}
+
+	spdlog::info("Created {} engine cubes in grid", gridSize * gridSize);
+}
+
+void RenderSystem::InitializeDebugCubes() {
+	spdlog::info("=== Engine Cube System Initialization ===");
+
+	// Load shaders first
+	LoadBasicShaders();
+
+	// Set up debug visualization meshes (required for DebugRenderPass)
+	auto& instance = RenderSystem::Instance();
+	auto* sceneRenderer = instance.m_SceneRenderer.get();
+
+	if (sceneRenderer && s_CubeShader) {
+		// Create debug visualization meshes
+		auto lightCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(5.0f));
+		auto lightRay = std::make_shared<Mesh>(PrimitiveGenerator::CreateDirectionalRay(3.0f));
+		auto wireframeCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateWireframeCube(1.0f));
+
+		// Configure debug meshes in SceneRenderer
+		sceneRenderer->SetDebugPrimitiveShader(s_CubeShader);
+		sceneRenderer->SetDebugLightCubeMesh(lightCube);
+		sceneRenderer->SetDebugDirectionalRayMesh(lightRay);
+		sceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
+
+		spdlog::info("Debug visualization meshes configured");
+	}
+
+	// Create cube grid (emulating GraphicsTestDriver::SetupAdvancedScene)
+	CreateCubeGrid(3, 3.0f);
+
+	// Add basic lighting (same as GraphicsTestDriver)
+	auto world = Engine::GetWorld();
+
+	// Create directional light entity
+	auto lightEntity = world.add_entity();
+	world.add_component_to_entity<PositionComponent>(lightEntity, glm::vec3(0.0f, 5.0f, 0.0f));
+
+	LightComponent light;
+	light.m_Type = Light::Type::Directional;
+	light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
+	light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
+	light.m_Intensity = 1.0f;
+	light.m_IsEnabled = true;
+
+	world.add_component_to_entity<LightComponent>(lightEntity, light);
+
+	spdlog::info("Engine cube system initialized with {} cubes and lighting", 9);
+	spdlog::info("==========================================");
 }
 
 auto load_mesh_lambda = [](const char* data)->std::shared_ptr<Mesh> {

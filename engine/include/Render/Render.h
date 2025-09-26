@@ -50,6 +50,17 @@ public:
     // Editor resource registration for in-memory assets
     static void RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh);
     static void RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material);
+
+    // Cube system methods for emulating GraphicsTestDriver
+    static void InitializeDebugCubes();
+    static void LoadBasicShaders();
+    static void CreateDebugCube(const glm::vec3& position = glm::vec3(0.0f),
+                               const glm::vec3& scale = glm::vec3(1.0f),
+                               const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f));
+    static void CreateCubeGrid(int gridSize = 3, float spacing = 3.0f);
+
+    // Static shader storage for cubes
+    static std::shared_ptr<Shader> s_CubeShader;
     struct InstanceData {
         // graphics lib objects
         std::unique_ptr<SceneRenderer> m_SceneRenderer;
