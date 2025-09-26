@@ -106,25 +106,28 @@ void RenderSystem::Update(ecs::world& world) {
 	for (auto obj : sceneObjects) {
 		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformComponent, VisibilityComponent>()};
 
-		// Try to get resources from ResourceRegistry first (file-based assets)
-		auto* meshPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid);
-		auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
-
-		// If not found in registry, try editor-created resource cache (use global caches)
-
 		std::shared_ptr<Mesh> meshResource;
 		std::shared_ptr<Material> materialResource;
 
-		if (meshPtr) {
-			meshResource = *meshPtr;
-		} else if (g_EditorMeshCache.contains(mesh.m_MeshGuid)) {
+		// Try editor cache first (for runtime-created assets)
+		if (g_EditorMeshCache.contains(mesh.m_MeshGuid)) {
 			meshResource = g_EditorMeshCache[mesh.m_MeshGuid];
+		} else {
+			// Fall back to file-based registry
+			auto* meshPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid);
+			if (meshPtr) {
+				meshResource = *meshPtr;
+			}
 		}
 
-		if (materialPtr) {
-			materialResource = *materialPtr;
-		} else if (g_EditorMaterialCache.contains(mesh.m_MaterialGuid)) {
+		if (g_EditorMaterialCache.contains(mesh.m_MaterialGuid)) {
 			materialResource = g_EditorMaterialCache[mesh.m_MaterialGuid];
+		} else {
+			// Fall back to file-based registry
+			auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
+			if (materialPtr) {
+				materialResource = *materialPtr;
+			}
 		}
 
 		// Only render if we have both mesh and material

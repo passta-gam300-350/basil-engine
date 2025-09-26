@@ -50,7 +50,7 @@ public:
 private:
 	// Entity management
 	void CreateDefaultEntity();
-	void CreateCubeEntity();
+	void CreatePlaneEntity();
 	void CreateLightEntity();
 	void CreateCameraEntity();
 };

@@ -241,7 +241,7 @@ void EditorMain::Render_SceneExplorer()
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Create Plane")) {
-		CreateCubeEntity();
+		CreatePlaneEntity();
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Create Light")) {
@@ -386,7 +386,7 @@ void EditorMain::CreateDefaultEntity()
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 }
 
-void EditorMain::CreateCubeEntity()
+void EditorMain::CreatePlaneEntity()
 {
 	ecs::world world = Engine::GetWorld();
 
