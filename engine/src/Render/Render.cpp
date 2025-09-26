@@ -52,71 +52,35 @@ void RenderSystem::Update(ecs::world& world) {
 	auto world_cameras = world.filter_entities<CameraComponent, PositionComponent>();
 	auto& frameData = inst.m_SceneRenderer->GetFrameData();
 
-	//camera management - pick the first entity if available, fallback to direct controls
+	// Camera management - upload ECS camera data to graphics lib camera
 	if (world_cameras) {
 		auto [camera, camera_pos] {(*world_cameras.begin()).get<CameraComponent, PositionComponent>()};
+
+		// Update graphics camera from ECS camera entity
 		inst.m_Camera->SetPosition(camera_pos.m_WorldPos);
 
-		// WASD Camera movement (corrected mapping)
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_W))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::FORWARD, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_S))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::BACKWARD, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_A))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::LEFT, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_D))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::RIGHT, 0.016f);
-		}
-		// Vertical movement
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_SPACE))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::UP, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_LEFT_CONTROL))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::DOWN, 0.016f);
-		}
+		// Set camera orientation using Front, Up, Right vectors
+		glm::mat4 view = glm::lookAt(
+			camera_pos.m_WorldPos,
+			camera_pos.m_WorldPos + camera.m_Front,  // Look at position + front vector
+			camera.m_Up
+		);
+
+		// Set the view matrix directly instead of using SetRotation
+		frameData.viewMatrix = view;
 
 		if (camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
 			inst.m_Camera->SetPerspective(camera.m_Fov, camera.m_AspectRatio, camera.m_Near, camera.m_Far);
+			frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
 		}
+
+		frameData.cameraPosition = camera_pos.m_WorldPos;
 	} else {
-		// Fallback: direct camera controls if no camera entity exists
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_W))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::FORWARD, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_S))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::BACKWARD, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_A))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::LEFT, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_D))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::RIGHT, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_SPACE))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::UP, 0.016f);
-		}
-		if (InputManager::Get_Instance()->Is_KeyPressed(GLFW_KEY_LEFT_CONTROL))
-		{
-			inst.m_Camera->ProcessKeyboard(CameraMovement::DOWN, 0.016f);
-		}
+		// Fallback if no camera entity exists
+		frameData.viewMatrix = inst.m_Camera->GetViewMatrix();
+		frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
+		frameData.cameraPosition = inst.m_Camera->GetPosition();
 	}
-	frameData.viewMatrix = inst.m_Camera->GetViewMatrix();
-	frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
-	frameData.cameraPosition = inst.m_Camera->GetPosition();
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>();
 	auto sceneLights = world.filter_entities<LightComponent, PositionComponent>();

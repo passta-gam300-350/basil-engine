@@ -5,6 +5,7 @@
 #include <components/transform.h>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
+#include <Input/InputManager.h>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 
@@ -96,6 +97,10 @@ void EditorMain::render()
 	ImGui::Begin("Inspector", nullptr);
 	ImGui::End();
 	glClearColor(1, 1, 1, 1);
+
+	// Process camera input on ECS camera entity
+	ProcessCameraInput();
+
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
@@ -483,8 +488,119 @@ void EditorMain::CreateCameraEntity()
 	camera.m_Far = 100.0f;
 	camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
 	camera.m_Right = glm::vec3(1.0f, 0.0f, 0.0f);
+	camera.m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
+	camera.m_Yaw = -90.0f;  // Initially looking down -Z axis
+	camera.m_Pitch = 0.0f;
 
 	world.add_component_to_entity<CameraComponent>(entity, camera);
+}
+
+void EditorMain::ProcessCameraInput()
+{
+	ecs::world world = Engine::GetWorld();
+	auto cameras = world.filter_entities<CameraComponent, PositionComponent>();
+
+	if (!cameras) return;
+
+	// Get the first camera entity
+	auto [cameraComp, cameraPos] = (*cameras.begin()).get<CameraComponent, PositionComponent>();
+
+	// Try InputManager first (if available), fallback to direct GLFW
+	auto* inputManager = InputManager::Get_Instance();
+
+	// Check for camera control toggle (F1 key like GraphicsTestDriver)
+	static bool f1WasPressed = false;
+	bool f1IsPressed = (inputManager && inputManager->Is_KeyPressed(GLFW_KEY_F1)) ||
+	                   (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS);
+
+	if (f1IsPressed && !f1WasPressed) {
+		m_CameraControlEnabled = !m_CameraControlEnabled;
+		if (m_CameraControlEnabled) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			m_FirstMouse = true;
+		} else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+	}
+	f1WasPressed = f1IsPressed;
+
+	if (!m_CameraControlEnabled) return;
+
+	// Mouse look (when camera control is enabled)
+	double mouseX, mouseY;
+	if (inputManager) {
+		inputManager->Get_MousePosition(mouseX, mouseY);
+	} else {
+		glfwGetCursorPos(window, &mouseX, &mouseY);
+	}
+
+	if (m_FirstMouse) {
+		m_LastMouseX = static_cast<float>(mouseX);
+		m_LastMouseY = static_cast<float>(mouseY);
+		m_FirstMouse = false;
+	}
+
+	float xoffset = static_cast<float>(mouseX) - m_LastMouseX;
+	float yoffset = m_LastMouseY - static_cast<float>(mouseY); // Reversed since y-coordinates go from bottom to top
+	m_LastMouseX = static_cast<float>(mouseX);
+	m_LastMouseY = static_cast<float>(mouseY);
+
+	xoffset *= m_MouseSensitivity;
+	yoffset *= m_MouseSensitivity;
+
+	cameraComp.m_Yaw += xoffset;
+	cameraComp.m_Pitch += yoffset;
+
+	// Constrain pitch to prevent camera flipping
+	if (cameraComp.m_Pitch > 89.0f) cameraComp.m_Pitch = 89.0f;
+	if (cameraComp.m_Pitch < -89.0f) cameraComp.m_Pitch = -89.0f;
+
+	// Update camera vectors based on yaw and pitch
+	glm::vec3 front;
+	front.x = cos(glm::radians(cameraComp.m_Yaw)) * cos(glm::radians(cameraComp.m_Pitch));
+	front.y = sin(glm::radians(cameraComp.m_Pitch));
+	front.z = sin(glm::radians(cameraComp.m_Yaw)) * cos(glm::radians(cameraComp.m_Pitch));
+	cameraComp.m_Front = glm::normalize(front);
+
+	// Recalculate Right and Up vectors
+	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	cameraComp.m_Right = glm::normalize(glm::cross(cameraComp.m_Front, worldUp));
+	cameraComp.m_Up = glm::normalize(glm::cross(cameraComp.m_Right, cameraComp.m_Front));
+
+	// Camera movement parameters (matching GraphicsTestDriver)
+	float deltaTime = 0.016f; // ~60fps
+	float moveSpeed = 2.5f;   // Movement speed similar to GraphicsTestDriver
+
+	glm::vec3 position = cameraPos.m_WorldPos;
+
+	// Apply movement based on input using updated camera vectors
+	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_W)) ||
+	    glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		position += cameraComp.m_Front * moveSpeed * deltaTime;
+	}
+	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_S)) ||
+	    glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		position -= cameraComp.m_Front * moveSpeed * deltaTime;
+	}
+	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_A)) ||
+	    glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		position -= cameraComp.m_Right * moveSpeed * deltaTime;
+	}
+	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_D)) ||
+	    glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		position += cameraComp.m_Right * moveSpeed * deltaTime;
+	}
+	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_SPACE)) ||
+	    glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		position += cameraComp.m_Up * moveSpeed * deltaTime;
+	}
+	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_LEFT_CONTROL)) ||
+	    glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+		position -= cameraComp.m_Up * moveSpeed * deltaTime;
+	}
+
+	// Update the camera entity position - RenderSystem will read this and pass to graphics lib
+	cameraPos.m_WorldPos = position;
 }
 
 

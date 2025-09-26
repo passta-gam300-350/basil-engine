@@ -53,5 +53,15 @@ private:
 	void CreatePlaneEntity();
 	void CreateLightEntity();
 	void CreateCameraEntity();
+
+	// Camera controls (following GraphicsTestDriver pattern)
+	void ProcessCameraInput();
+
+	// Mouse camera controls
+	bool m_CameraControlEnabled = false;
+	bool m_FirstMouse = true;
+	float m_LastMouseX = 640.0f;
+	float m_LastMouseY = 360.0f;
+	float m_MouseSensitivity = 0.1f;
 };
 #endif // EDITORMAIN_HPP
