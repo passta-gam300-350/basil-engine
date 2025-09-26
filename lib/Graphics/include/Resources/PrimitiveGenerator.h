@@ -35,4 +35,51 @@ public:
         int subdivisionsX = 1,
         int subdivisionsZ = 1
     );
+
+    /**
+     * @brief Creates a cube mesh centered at the origin
+     *
+     * The cube is centered at the origin with faces aligned to the coordinate axes.
+     * All faces have outward-facing normals with counter-clockwise winding.
+     * Each face has proper texture coordinates and tangent vectors.
+     *
+     * @param size Side length of the cube (default 1.0f)
+     * @return Mesh object containing the cube geometry
+     */
+    static Mesh CreateCube(float size = 1.0f);
+
+    /**
+     * @brief Creates a wireframe cube mesh centered at the origin
+     *
+     * Creates a cube wireframe with 12 edges as line segments.
+     * Perfect for debug visualization of bounding boxes and volumes.
+     * Uses GL_LINES primitive type for rendering.
+     *
+     * @param size Side length of the cube (default 1.0f)
+     * @return Mesh object containing the wireframe cube geometry
+     */
+    static Mesh CreateWireframeCube(float size = 1.0f);
+
+    /**
+     * @brief Creates a fullscreen quad for screen-space rendering
+     *
+     * Creates a quad covering the entire screen in NDC space (-1 to 1).
+     * Perfect for post-processing, compositing, and screen-space effects.
+     * Texture coordinates map to (0,0) bottom-left to (1,1) top-right.
+     *
+     * @return Mesh object containing the fullscreen quad geometry
+     */
+    static Mesh CreateFullscreenQuad();
+
+    /**
+     * @brief Creates a single directional ray for light direction visualization
+     *
+     * Creates a simple line pointing along the negative Z-axis (forward direction).
+     * Used for both spot and directional light direction visualization.
+     *
+     * @param length Length of the ray (light range visualization)
+     * @return Mesh object containing single line geometry for direction visualization
+     */
+    static Mesh CreateDirectionalRay(float length = 5.0f);
+
 };

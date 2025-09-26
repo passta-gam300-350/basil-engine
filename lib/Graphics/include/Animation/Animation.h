@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include <unordered_map>
+
 // key frame for position, will need for interpolation
 struct keyFramePosition
 {
@@ -53,7 +55,7 @@ struct oneSkeletonBone
     std::string name; // bone name like arm, leg, shoulder
     int id; // index for GPU
     int parentIndex; // who is the bone parent, if it is root then -1
-    glm::mat4 inverseBind; // used for skinning, moves vertex from model space into bones space
+    glm::mat4 inverseBind; // used for skinning, moves vertex from model space into bones space (is like create a local coordinate system for each bone)
     // for eg We first move the vertex into elbow’s bind space (inverse bind) ? it becomes “1 unit away”.
 };
 
@@ -127,16 +129,69 @@ struct animationContainer
     std::vector<boneChannel> channels; // one channel per bone
 };
 
+struct animationState
+{
+    bool isPlaying = true;
+    bool loop = true;
+    float playbackSpeed = 1.0f;
+    float startTime = 0.0f;
+    float endTime = -1.0f; // use full duration
+};
+
+struct blendState
+{
+    bool isActive = false;
+    float currentTime = 0.0f;
+    float duration = 0.3f;
+    animationContainer* sourceAnimation = nullptr;
+    float sourceAnimationTime = 0.0f;
+    float getBlendFactor() const
+    {
+        if(isActive == false || duration <= 0.0f)
+        {
+            return 1.0f;
+        }
+        float t = glm::clamp(currentTime / duration, 0.0f, 1.0f);
+        // smoothstep for nice ease-in-out
+        return t * t * (3.0f - 2.0f * t);
+    }
+    bool isComplete() const
+    {
+        return currentTime >= duration;
+    }
+};
+
 struct animator
 {
-    std::unique_ptr<animationContainer> currentAnimation;
+    animationContainer* currentAnimation = nullptr; // current playing animation
     float currentTime = 0.0f;
     // final matrices (one per bone, sent to GPU)
     std::vector<glm::mat4> finalBoneMatrices;
-    animator(std::unique_ptr<animationContainer> theAnimation, int numberOfBones) : currentAnimation(std::move(theAnimation))
+    // the animation state
+    animationState state;
+    // all the animations need
+    std::unordered_map<std::string, animationContainer*> allAnimations;
+    // current animation name
+    std::string currentAnimationName; 
+    blendState blend;
+    
+    animator(int numberOfBones)
     {
         finalBoneMatrices.resize(numberOfBones);
     }
-    void updateAnimation(float deltaTime, const skeleton& theSkeleton);
+    void updateAnimation(float deltaTime, skeleton const& theSkeleton);
+    void play();
+    void pause();
+    void stop();
+    void setLoop(bool shouldLoop);
+    void setPlayBackSpeed(float speed);
+    bool isAnimationFinished() const;
+    void addAnimation(std::string const& animationName, animationContainer* animation);
+    bool playAnimation(std::string const& animationName, bool shouldLoop = true);
+    bool hasAnimation(std::string const& animationName) const;
+    std::string getCurrentAnimationName() const;
+private:
+    void updateSingleAnimation(float deltaTime, skeleton const& theSkeleton);
+    void updateBlendedAnimation(float deltaTime, skeleton const& theSkeleton);
+    void calculateFinalBoneMatrices(std::vector<glm::mat4> const& localBoneTransforms, skeleton const& theSkeleton);
 };
-

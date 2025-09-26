@@ -12,18 +12,22 @@ struct RenderContext;
 class RenderPass
 {
 public:
+	// Constructor for passes with framebuffers
 	RenderPass(const std::string& name, const FBOSpecs& spec);
+	// Constructor for passes without framebuffers (like debug passes)
+	RenderPass(const std::string& name);
 	virtual ~RenderPass() = default;
 
-	void Begin();
+	virtual void Begin();
 	virtual void Execute(RenderContext& context) = 0;
-	void End();
+	virtual void End();
 
 	// Setup the command buffer with required systems from context
 	void SetupCommandBuffer(RenderContext& context);
 
 	std::shared_ptr<FrameBuffer> GetFramebuffer() const { return m_Framebuffer; }
 	const std::string& GetName() const { return m_Name; }
+	bool HasFramebuffer() const { return m_Framebuffer != nullptr; }
 
 	// Viewport management
 	void SetViewport(const Viewport& viewport) { m_Viewport = viewport; }
@@ -36,7 +40,7 @@ public:
 
 protected:
 	std::string m_Name;
-	std::shared_ptr<FrameBuffer> m_Framebuffer;
+	std::shared_ptr<FrameBuffer> m_Framebuffer; // Optional - can be nullptr
 	Viewport m_Viewport;
 
 	// Pass-isolated command buffer for state isolation

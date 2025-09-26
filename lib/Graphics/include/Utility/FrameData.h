@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Buffer/FrameBuffer.h"
+#include "AABB.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -17,7 +18,7 @@ struct FrameData
     std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
     std::vector<glm::mat4> shadowMatrices;
 
-    // Main rendering output
+    // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 
     // Editor display copy (separate from main buffer used by PresentPass)
@@ -30,6 +31,9 @@ struct FrameData
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
     glm::vec3 cameraPosition = glm::vec3(0.0f);
+
+    // Debug rendering data
+    std::vector<DebugAABB> debugAABBs;
 
     // Timing data
     float deltaTime = 0.0f;

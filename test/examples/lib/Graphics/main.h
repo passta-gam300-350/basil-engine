@@ -46,6 +46,9 @@ private:
     bool m_FirstMouse;
     float m_LastX, m_LastY;
 
+    // Animation controls
+    bool m_RotationEnabled;
+
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -65,9 +68,13 @@ private:
                            const glm::vec3& position, const glm::vec3& scale = glm::vec3(1.0f));
     SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity = 1.0f);
     SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity = 1.0f, float range = 10.0f);
-    SubmittedLightData CreateSpotLight(const glm::vec3& position, const glm::vec3& direction, 
+    SubmittedLightData CreateSpotLight(const glm::vec3& position, const glm::vec3& direction,
                                      const glm::vec3& color, float intensity = 1.0f, float range = 10.0f,
                                      float innerCone = 30.0f, float outerCone = 45.0f);
+
+    // AABB calculation and debug rendering
+    void CalculateAndSubmitAABBs();
+    void UpdateInstanceTransforms();
 
     // Debug output
     void PrintSystemInfo() const;
@@ -76,6 +83,7 @@ private:
 
     // Render pass controls
     void ToggleRenderPass(const std::string& passName);
+    void ToggleAABBVisualization();
     //void RenderUI(); // For ImGui if available
 
     // Static pointer for callbacks
