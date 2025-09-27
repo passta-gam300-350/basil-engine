@@ -222,15 +222,47 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetLineWidthData&
     glLineWidth(cmd.width);
 }
 
-void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDepthTestData& cmd)
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDepthTestData &cmd)
 {
-    if (cmd.enable) {
+    if (cmd.enable)
+    {
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(cmd.depthFunc);
         glDepthMask(cmd.depthWrite ? GL_TRUE : GL_FALSE);
-    } else {
+    }
+    else
+    {
         glDisable(GL_DEPTH_TEST);
     }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetObjectIDData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for object ID");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Convert object ID to normalized color (R channel for simplicity)
+    // For 24-bit object IDs, we can use RGB channels if needed
+    float normalizedID = static_cast<float>(cmd.objectID) / 16777215.0f; // 2^24 - 1
+    cmd.shader->setFloat("u_ObjectID", normalizedID);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ReadPixelData& cmd)
+{
+    assert(cmd.outValue && "Output pointer cannot be null");
+
+    // Read a single pixel at the specified coordinates
+    // We read as RGBA since that's the typical framebuffer format
+    uint8_t pixel[4];
+    glReadPixels(cmd.x, cmd.y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+
+    // Convert back to object ID (assuming we stored it in R channel)
+    *cmd.outValue = static_cast<uint32_t>(pixel[0]) |
+                   (static_cast<uint32_t>(pixel[1]) << 8) |
+                   (static_cast<uint32_t>(pixel[2]) << 16);
 }
 
 void RenderCommandBuffer::CleanupGPUState()

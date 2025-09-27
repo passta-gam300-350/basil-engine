@@ -31,7 +31,7 @@ void MainRenderingPass::Execute(RenderContext& context)
 
     // Clear color and depth buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a (fully opaque background)
+        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a
         true,                      // clearColor
         true                       // clearDepth
     };
@@ -93,11 +93,11 @@ void MainRenderingPass::UpdateFramebufferSize()
     }
 }
 
-void MainRenderingPass::CreateEditorFBOCopy(RenderContext& context)
+void MainRenderingPass::CreateEditorFBOCopy(RenderContext &context)
 {
     // Create editor FBO if it doesn't exist or size changed
     auto mainFBO = GetFramebuffer();
-    const auto& mainSpec = mainFBO->GetSpecification();
+    const auto &mainSpec = mainFBO->GetSpecification();
 
     if (!context.frameData.editorColorBuffer ||
         context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||

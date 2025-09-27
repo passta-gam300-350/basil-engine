@@ -52,6 +52,7 @@ private:
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+    static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
     
     void ProcessInput();
@@ -85,6 +86,9 @@ private:
     void ToggleRenderPass(const std::string& passName);
     void ToggleAABBVisualization();
     //void RenderUI(); // For ImGui if available
+
+    // Object picking
+    void HandleObjectPicking(double mouseX, double mouseY);
 
     // Static pointer for callbacks
     static GraphicsTestDriver* s_Instance;

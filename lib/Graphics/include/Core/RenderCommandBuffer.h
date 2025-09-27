@@ -89,10 +89,21 @@ namespace RenderCommands {
         float width;
     };
 
-    struct SetDepthTestData {
+    struct SetDepthTestData
+    {
         bool enable;
         uint32_t depthFunc = GL_LESS;  // GL_LESS, GL_LEQUAL, GL_GREATER, etc.
         bool depthWrite = true;        // Enable/disable depth buffer writes
+    };
+
+    struct SetObjectIDData {
+        std::shared_ptr<Shader> shader;
+        uint32_t objectID;
+    };
+
+    struct ReadPixelData {
+        int x, y;                      // Screen coordinates to read
+        uint32_t* outValue;            // Pointer to store the read value
     };
 }
 
@@ -110,7 +121,9 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetUniformVec3Data,
     RenderCommands::SetBlendingData,
     RenderCommands::SetLineWidthData,
-    RenderCommands::SetDepthTestData
+    RenderCommands::SetDepthTestData,
+    RenderCommands::SetObjectIDData,
+    RenderCommands::ReadPixelData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -151,7 +164,9 @@ private:
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
-    void ExecuteCommand(const RenderCommands::SetDepthTestData& cmd);
+    void ExecuteCommand(const RenderCommands::SetDepthTestData &cmd);
+    void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
+    void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

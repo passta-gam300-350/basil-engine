@@ -28,7 +28,7 @@ DebugRenderPass::DebugRenderPass(std::shared_ptr<Shader> primitiveShader)
 
 void DebugRenderPass::Execute(RenderContext& context)
 {
-    // Render directly to the main color buffer for proper alpha blending
+    // Render to the main color buffer for proper alpha blending
     if (!context.frameData.mainColorBuffer)
     {
         return; // No main buffer to render to
@@ -52,6 +52,14 @@ void DebugRenderPass::Execute(RenderContext& context)
     RenderCommands::SetBlendingData enableBlendCmd{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
     Submit(enableBlendCmd);
 
+    // Disable depth writing but keep depth testing for proper overlay rendering
+    //RenderCommands::SetDepthTestData depthTestCmd{
+    //    true,           // enable depth testing (to respect scene depth)
+    //    GL_LEQUAL,      // depth function (allow equal depth for overlays)
+    //    false           // disable depth writing (preserve main pass depth)
+    //};
+    //Submit(depthTestCmd);
+
     // Render light cubes for visualization
     if (m_ShowLightCubes && !context.lights.empty()) {
         RenderLightCubes(context);
@@ -71,12 +79,14 @@ void DebugRenderPass::Execute(RenderContext& context)
     RenderCommands::SetBlendingData disableBlendCmd{ false };
     Submit(disableBlendCmd);
 
-
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
 
     // Unbind the main framebuffer
     context.frameData.mainColorBuffer->Unbind();
+
+    // Update editor FBO with debug overlays (similar to MainRenderingPass)
+    UpdateEditorFBOWithDebug(context);
 
     // End the pass (no framebuffer unbinding since we don't have one)
     End();
@@ -391,3 +401,41 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
     Submit(restoreLineWidthCmd);
 }
 
+void DebugRenderPass::UpdateEditorFBOWithDebug(RenderContext &context)
+{
+    // Only update editor FBO if it exists and debug rendering was enabled
+    if (!context.frameData.editorColorBuffer || !context.frameData.mainColorBuffer)
+    {
+        return;
+    }
+
+    auto mainFBO = context.frameData.mainColorBuffer;
+    auto editorFBO = context.frameData.editorColorBuffer;
+    const auto &mainSpec = mainFBO->GetSpecification();
+
+    // Ensure editor FBO is same size as main FBO
+    if (editorFBO->GetSpecification().Width != mainSpec.Width ||
+        editorFBO->GetSpecification().Height != mainSpec.Height)
+    {
+
+        // Create identical FBO specs for editor copy
+        FBOSpecs editorSpec = mainSpec;
+        context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
+        editorFBO = context.frameData.editorColorBuffer;
+    }
+
+    // Blit main FBO (with debug overlays) to editor FBO
+    // Use OpenGL blit directly since this is editor integration (similar to MainRenderingPass)
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
+
+    glBlitFramebuffer(
+        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
+        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
+        GL_COLOR_BUFFER_BIT, GL_NEAREST
+    );
+
+    // Restore framebuffer binding
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}

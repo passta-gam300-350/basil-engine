@@ -13,6 +13,7 @@
 class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
+class PickingRenderPass;
 
 class SceneRenderer {
 public:
@@ -55,6 +56,11 @@ public:
     void SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const;
+    void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
+
+    // Picking functionality
+    PickingResult QueryObjectPicking(const MousePickingQuery& query);
+    void EnablePicking(bool enable) const;
 
 private:
     //void InitializePipeline();
