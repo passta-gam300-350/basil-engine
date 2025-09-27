@@ -27,6 +27,11 @@ void PickingRenderPass::Execute(RenderContext& context)
         return; // Skip if disabled or no picking shader
     }
 
+    // Assert critical picking system requirements
+    assert(m_Framebuffer && "PickingRenderPass must have a valid framebuffer");
+    assert(m_PickingShader->ID != 0 && "Picking shader must be compiled and linked");
+    assert(!context.renderables.empty() && "No renderables submitted for picking - check entity submission");
+
     spdlog::info("PickingRenderPass::Execute - Starting picking render...");
 
     // Update framebuffer size to match main framebuffer
@@ -36,6 +41,12 @@ void PickingRenderPass::Execute(RenderContext& context)
             m_Framebuffer->GetSpecification().Height != mainSpec.Height) {
             m_Framebuffer->Resize(mainSpec.Width, mainSpec.Height);
             SetViewport(Viewport(0, 0, mainSpec.Width, mainSpec.Height));
+
+            // Assert framebuffer is complete after resize
+            m_Framebuffer->Bind();
+            GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            assert(status == GL_FRAMEBUFFER_COMPLETE && "Picking framebuffer must be complete after resize");
+            m_Framebuffer->Unbind();
         }
     }
 
@@ -80,18 +91,34 @@ void PickingRenderPass::RenderPickingData(RenderContext& context)
 
     spdlog::info("RenderPickingData - Processing {} renderables", context.renderables.size());
 
+    // Assert shader is bound before rendering
+    assert(m_PickingShader && "Picking shader must be valid");
+    assert(m_PickingShader->ID != 0 && "Picking shader must have valid OpenGL program");
+
     // Bind the picking shader
     RenderCommands::BindShaderData bindShaderCmd{ m_PickingShader };
     Submit(bindShaderCmd);
 
     // Render each visible object with its unique ID color
     uint32_t renderedCount = 0;
+    uint32_t validObjectIDCount = 0;
+
     for (const auto& renderable : context.renderables) {
+        // Count objects with valid picking IDs for debugging
+        if (renderable.objectID != 0) {
+            validObjectIDCount++;
+        }
+
         if (!renderable.visible || !renderable.mesh || renderable.objectID == 0) {
             spdlog::info("Skipping renderable: visible={}, mesh={}, objectID={}",
                         renderable.visible, (renderable.mesh != nullptr), renderable.objectID);
             continue; // Skip invisible objects or objects without picking IDs
         }
+
+        // Assert object can be properly rendered for picking
+        assert(renderable.objectID > 0 && renderable.objectID < 16777215 && "Object ID must be in valid 24-bit range");
+        assert(renderable.mesh->GetVertexArray() && "Renderable mesh must have valid VAO");
+        assert(renderable.mesh->GetIndexCount() > 0 && "Renderable mesh must have indices for drawing");
 
         spdlog::info("Rendering object with ID: {}", renderable.objectID);
         renderedCount++;
@@ -125,7 +152,11 @@ void PickingRenderPass::RenderPickingData(RenderContext& context)
         }
     }
 
-    spdlog::info("RenderPickingData - Rendered {} objects with valid IDs out of {} total renderables", renderedCount, context.renderables.size());
+    spdlog::info("RenderPickingData - Rendered {} objects with valid IDs out of {} total renderables ({} had valid object IDs)",
+                renderedCount, context.renderables.size(), validObjectIDCount);
+
+    // Assert that we actually rendered some objects for picking to work
+    assert(renderedCount > 0 && "No objects were rendered for picking - check entity visibility and object IDs");
 }
 
 PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, const RenderContext& context)
@@ -135,6 +166,11 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     if (!m_Enabled || !m_Framebuffer) {
         return result;
     }
+
+    // Assert picking query parameters are valid
+    assert(query.viewportWidth > 0 && query.viewportHeight > 0 && "Viewport dimensions must be positive");
+    assert(query.screenX >= 0 && query.screenY >= 0 && "Screen coordinates must be non-negative");
+    assert(query.screenX < query.viewportWidth && query.screenY < query.viewportHeight && "Screen coordinates must be within viewport");
 
     // Convert screen coordinates to framebuffer coordinates
     int fbX, fbY;
@@ -146,8 +182,18 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
                 query.screenX, query.screenY, fbX, fbY,
                 query.viewportWidth, query.viewportHeight);
 
+    // Assert framebuffer coordinates are valid
+    const auto& spec = m_Framebuffer->GetSpecification();
+    assert(fbX >= 0 && fbX < static_cast<int>(spec.Width) && "Framebuffer X coordinate out of bounds");
+    assert(fbY >= 0 && fbY < static_cast<int>(spec.Height) && "Framebuffer Y coordinate out of bounds");
+
     // Bind the picking framebuffer for reading
     m_Framebuffer->Bind();
+
+    // Assert framebuffer is bound correctly
+    GLint currentFB;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &currentFB);
+    assert(currentFB == static_cast<GLint>(m_Framebuffer->GetFBOHandle()) && "Picking framebuffer must be bound for reading");
 
     // Read pixel at the specified location
     uint32_t objectID = 0;
@@ -166,6 +212,20 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
                static_cast<uint32_t>(pixel[2]);
 
     spdlog::info("QueryPicking - Converted to object ID: {}", objectID);
+
+    // Debug: If we got all zeros, check if we're reading from the right place
+    if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
+        spdlog::warn("QueryPicking - Got all zeros! Possible issues:");
+        spdlog::warn("  1. No objects rendered at this pixel");
+        spdlog::warn("  2. Picking framebuffer not properly rendered to");
+        spdlog::warn("  3. Coordinate conversion error");
+        spdlog::warn("  4. Shader not outputting correct colors");
+
+        // Check framebuffer status
+        GLenum status = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
+        spdlog::warn("  Framebuffer status: 0x{:X} (GL_FRAMEBUFFER_COMPLETE = 0x{:X})",
+                    status, GL_FRAMEBUFFER_COMPLETE);
+    }
 
     // Read depth value for world position calculation
     float depth;

@@ -28,68 +28,15 @@ DebugRenderPass::DebugRenderPass(std::shared_ptr<Shader> primitiveShader)
 
 void DebugRenderPass::Execute(RenderContext& context)
 {
-    // Render to the main color buffer for proper alpha blending
+    // Check if we have a main buffer to copy to editor FBO
     if (!context.frameData.mainColorBuffer)
     {
-        return; // No main buffer to render to
+        return; // No main buffer to copy
     }
 
-    // Begin the pass (no framebuffer binding since we don't have one)
-    Begin();
-
-    // Bind the main framebuffer for rendering
-    context.frameData.mainColorBuffer->Bind();
-
-    // Set viewport to match main framebuffer
-    const auto &mainFBOSpecs = context.frameData.mainColorBuffer->GetSpecification();
-    glViewport(0, 0, static_cast<int>(mainFBOSpecs.Width), static_cast<int>(mainFBOSpecs.Height));
-
-    // Setup command buffer with systems from context
-    SetupCommandBuffer(context);
-
-    // Enable alpha blending for debug overlay rendering
-    // Make sure blending doesn't affect depth writes
-    RenderCommands::SetBlendingData enableBlendCmd{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
-    Submit(enableBlendCmd);
-
-    // Disable depth writing but keep depth testing for proper overlay rendering
-    //RenderCommands::SetDepthTestData depthTestCmd{
-    //    true,           // enable depth testing (to respect scene depth)
-    //    GL_LEQUAL,      // depth function (allow equal depth for overlays)
-    //    false           // disable depth writing (preserve main pass depth)
-    //};
-    //Submit(depthTestCmd);
-
-    // Render light cubes for visualization
-    if (m_ShowLightCubes && !context.lights.empty()) {
-        RenderLightCubes(context);
-    }
-
-    // Render light rays for visualization
-    if (m_ShowLightRays && !context.lights.empty()) {
-        RenderLightRays(context);
-    }
-
-    // Render AABB wireframes for visualization
-    if (m_ShowAABBs && !context.frameData.debugAABBs.empty()) {
-        RenderAABBs(context);
-    }
-
-    // Disable blending after debug rendering
-    RenderCommands::SetBlendingData disableBlendCmd{ false };
-    Submit(disableBlendCmd);
-
-    // Execute all commands submitted to this pass's command buffer
-    ExecuteCommands();
-
-    // Unbind the main framebuffer
-    context.frameData.mainColorBuffer->Unbind();
-
-    // Update editor FBO with debug overlays (similar to MainRenderingPass)
+    // Since this pass has no framebuffer, we just copy main scene to editor FBO
+    // Debug rendering will be re-implemented later with proper framebuffer setup
     UpdateEditorFBOWithDebug(context);
-
-    // End the pass (no framebuffer unbinding since we don't have one)
-    End();
 }
 
 void DebugRenderPass::RenderLightCubes(RenderContext& context)
@@ -403,29 +350,28 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
 
 void DebugRenderPass::UpdateEditorFBOWithDebug(RenderContext &context)
 {
-    // Only update editor FBO if it exists and debug rendering was enabled
-    if (!context.frameData.editorColorBuffer || !context.frameData.mainColorBuffer)
+    // Only update editor FBO if main buffer exists (we can create editor buffer if needed)
+    if (!context.frameData.mainColorBuffer)
     {
         return;
     }
 
     auto mainFBO = context.frameData.mainColorBuffer;
-    auto editorFBO = context.frameData.editorColorBuffer;
     const auto &mainSpec = mainFBO->GetSpecification();
 
-    // Ensure editor FBO is same size as main FBO
-    if (editorFBO->GetSpecification().Width != mainSpec.Width ||
-        editorFBO->GetSpecification().Height != mainSpec.Height)
+    // Create or update editor FBO to match main FBO size
+    if (!context.frameData.editorColorBuffer ||
+        context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||
+        context.frameData.editorColorBuffer->GetSpecification().Height != mainSpec.Height)
     {
-
         // Create identical FBO specs for editor copy
         FBOSpecs editorSpec = mainSpec;
         context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
-        editorFBO = context.frameData.editorColorBuffer;
     }
 
-    // Blit main FBO (with debug overlays) to editor FBO
-    // Use OpenGL blit directly since this is editor integration (similar to MainRenderingPass)
+    auto editorFBO = context.frameData.editorColorBuffer;
+
+    // Copy main scene content to editor FBO
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
 

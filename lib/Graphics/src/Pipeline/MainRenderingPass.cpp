@@ -6,6 +6,8 @@
 #include "../../include/Scene/SceneRenderer.h"
 #include <glfw/glfw3.h>
 
+#include "spdlog/spdlog.h"
+
 MainRenderingPass::MainRenderingPass()
     : RenderPass("MainPass", FBOSpecs
 	{
@@ -65,8 +67,20 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
 
-    // Create separate editor FBO copy to avoid conflicts with PresentPass
-    CreateEditorFBOCopy(context);
+    // Debug: Log framebuffer info
+    auto mainFBO = GetFramebuffer();
+    const auto& spec = mainFBO->GetSpecification();
+    static uint32_t lastWidth = 0, lastHeight = 0;
+    if (spec.Width != lastWidth || spec.Height != lastHeight) {
+        spdlog::info("MainRenderingPass: Framebuffer size {}x{}, Handle: {}",
+                    spec.Width, spec.Height, mainFBO->GetFBOHandle());
+        lastWidth = spec.Width;
+        lastHeight = spec.Height;
+    }
+
+    // Note: Editor FBO copy is now handled by DebugRenderPass (final visual pass)
+    // This ensures the editor sees the complete rendered result with all overlays
+    // CreateEditorFBOCopy(context);
 
     End();
 }

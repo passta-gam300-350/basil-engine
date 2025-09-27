@@ -12,6 +12,8 @@
 #include "Resources/Mesh.h"
 #include <cassert>
 
+#include "spdlog/spdlog.h"
+
 SceneRenderer::SceneRenderer()
 {
     m_ResourceManager = std::make_unique<ResourceManager>();
@@ -212,13 +214,20 @@ void SceneRenderer::SetPickingShader(const std::shared_ptr<Shader>& shader) cons
 PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
 {
     assert(m_Pipeline && "Pipeline must be initialized before querying picking");
+    assert(!m_SubmittedRenderables.empty() && "No renderables submitted - call SubmitRenderable before picking");
 
     if (m_Pipeline) {
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
-            // Create temporary context for picking query
+            // Create context for picking query
             RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager);
 
+            spdlog::info("QueryObjectPicking: Executing picking pass with {} renderables", m_SubmittedRenderables.size());
+
+            // CRITICAL FIX: Execute the picking pass first to render objects with ID colors
+            pickingPass->Execute(context);
+
+            // Now query the rendered picking framebuffer
             return pickingPass->QueryPicking(query, context);
         }
     }

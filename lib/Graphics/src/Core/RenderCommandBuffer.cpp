@@ -240,6 +240,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetObjectIDData& 
 {
     assert(cmd.shader && "Shader cannot be null for object ID");
     assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(cmd.objectID > 0 && "Object ID must be greater than 0 for picking to work");
+    assert(cmd.objectID < 16777215 && "Object ID exceeds 24-bit limit");
 
     // Ensure shader is active
     cmd.shader->use();
@@ -247,7 +249,15 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetObjectIDData& 
     // Convert object ID to normalized color (R channel for simplicity)
     // For 24-bit object IDs, we can use RGB channels if needed
     float normalizedID = static_cast<float>(cmd.objectID) / 16777215.0f; // 2^24 - 1
+
+    // Debug: Log the object ID being set
+    spdlog::info("SetObjectIDData: Setting object ID {} as normalized float {}", cmd.objectID, normalizedID);
+
     cmd.shader->setFloat("u_ObjectID", normalizedID);
+
+    // Assert uniform was set successfully
+    GLint location = glGetUniformLocation(cmd.shader->ID, "u_ObjectID");
+    assert(location != -1 && "u_ObjectID uniform not found in picking shader - check shader compilation");
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ReadPixelData& cmd)

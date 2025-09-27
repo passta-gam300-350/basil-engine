@@ -85,6 +85,21 @@ void RenderSystem::Update(ecs::world& world) {
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>();
 	auto sceneLights = world.filter_entities<LightComponent, PositionComponent>();
+
+	// Debug: Log entity counts
+	int objectCount = 0;
+	int lightCount = 0;
+	for (auto obj : sceneObjects) { objectCount++; }
+	for (auto light : sceneLights) { lightCount++; }
+
+	static int lastObjectCount = -1;
+	static int lastLightCount = -1;
+	if (objectCount != lastObjectCount || lightCount != lastLightCount) {
+		spdlog::info("RenderSystem: Processing {} renderable objects, {} lights", objectCount, lightCount);
+		lastObjectCount = objectCount;
+		lastLightCount = lightCount;
+	}
+
 	for (auto obj : sceneObjects) {
 		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformComponent, VisibilityComponent>()};
 
@@ -120,6 +135,27 @@ void RenderSystem::Update(ecs::world& world) {
 			renderData.transform = transform.m_trans;
 			renderData.visible = visible.m_IsVisible;
 			renderData.renderLayer = 1;
+
+			uint32_t entityUID = static_cast<uint32_t>(obj.get_uid());
+			renderData.objectID = entityUID;
+
+			// Debug: Log entity UID assignment for first few entities
+			static int debugCount = 0;
+			if (debugCount < 5) {
+				spdlog::info("RenderSystem: Entity UID assignment - Entity: {}, UID: {}, static_cast result: {}",
+				            debugCount, obj.get_uid(), entityUID);
+				debugCount++;
+			}
+
+			// Assert entity ID validity for debugging picking
+			assert(entityUID != 0 && "Entity UID should not be zero for picking to work");
+			assert(entityUID < 16777215 && "Entity UID exceeds 24-bit limit for picking system"); // 24-bit max for RGB encoding
+
+			// Assert mesh validity for rendering
+			assert(meshResource->GetVertexArray() && "Mesh must have valid VAO for rendering");
+			assert(meshResource->GetVertexArray()->GetVAOHandle() != 0 && "Mesh VAO must be bound to valid OpenGL handle");
+			assert(!meshResource->vertices.empty() && "Mesh must have vertices for rendering");
+
 			inst.m_SceneRenderer->SubmitRenderable(renderData);
 		}
 	}
@@ -236,6 +272,18 @@ void RenderSystem::LoadBasicShaders() {
 	} else {
 		instance.m_SceneRenderer->SetShadowDepthShader(shadowShader);
 		spdlog::info("Shadow depth shader loaded successfully");
+	}
+
+	// Load picking shader for object selection
+	auto pickingShader = resourceManager->LoadShader("picking",
+		"assets/shaders/picking.vert",
+		"assets/shaders/picking.frag");
+
+	if (!pickingShader) {
+		spdlog::warn("Failed to load picking shader - object picking will be disabled");
+	} else {
+		instance.m_SceneRenderer->SetPickingShader(pickingShader);
+		spdlog::info("Picking shader loaded successfully");
 	}
 
 	spdlog::info("Engine PBR shader system loaded successfully");
