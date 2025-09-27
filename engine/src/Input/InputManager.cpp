@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "./Messaging/Messaging_System.h"
 #include "./Messaging/Subscriber.h"
 #include "Engine.hpp"
+#include "Profiler/profiler.hpp"
 
 InputManager* InputManager::instance = nullptr;
 const float DEAD_ZONE = 0.25f; //  Adjustable
@@ -136,6 +137,7 @@ void InputManager::Error_Callback(int , char const* description)
 
 void InputManager::Update()
 {
+    PF_SYSTEM("Input System");
     typedText.clear();
     scrollXOffset = 0.0;
     scrollYOffset = 0.0;

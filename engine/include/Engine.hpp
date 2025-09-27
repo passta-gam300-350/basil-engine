@@ -19,6 +19,8 @@ class Engine
 	std::string m_WorkingDirectory;
 
 	struct Info {
+
+		double m_FPS;
 		std::uint64_t m_TotalFrameCt;
 		std::uint64_t m_FrameLogCounter;	//basically total (mod) rate
 		std::uint64_t m_FrameLogRate;
@@ -39,7 +41,13 @@ public:
 	static void Init(std::string const& cfg = {});
 	static void InitWithoutWindow(std::string const& cfg = {});
 	static void Update();
+	static void UpdateDebug();
 	static void Exit();
+
+
+
+	static void BeginFrame();
+	static void EndFrame();
 
 	static Window& GetWindowInstance();
 	static spdlog::stopwatch GetAppElapsedTime();
@@ -49,6 +57,9 @@ public:
 	static void GenerateDefaultConfig();
 	static void ReportLastError();
 	static ecs::world GetWorld();
+
+	Info const& GetInfo() const { return m_Info; }
+	Info& GetInfo() { return m_Info; }
 
 	//engine state management
 	void Coma();	//do not use recklessly, this will put the program into deadlock 

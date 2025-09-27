@@ -9,6 +9,7 @@
 #include <vector>
 #include <atomic>
 #include <iomanip>
+#include <deque>
 #include "sink.hpp"
 #include "Engine.hpp"
 
@@ -50,6 +51,9 @@ public:
         _currentFrameIndex = index;
         // Optional: clear per-frame aggregation
         _currentSystemTotals.clear();
+
+		std::lock_guard<std::mutex> lock(_eventsMutex);
+        _currentEvents.clear();
     }
 
     void endFrame() {
@@ -58,6 +62,8 @@ public:
         FrameAggregate agg;
         agg.frameIndex = _currentFrameIndex;
         agg.frameMs = frameNs / 1e6;
+
+		
 
         // finalize system totals for this frame (copy atomics snapshot)
         {
@@ -82,6 +88,7 @@ public:
         {
             std::lock_guard<std::mutex> lock(_eventsMutex);
             _events.push_back(e);
+            _currentEvents.push_back(e);
             if (_events.size() > _eventHistory)
                 _events.erase(_events.begin());
         }
@@ -99,11 +106,25 @@ public:
         return _events;
     }
 
+    std::vector<Event> getEventCurrentFrame()
+    {
+        std::lock_guard<std::mutex> lock(_eventsMutex);
+		return _currentEvents;
+
+    }
+
     // Optional: snapshot last N frame aggregates
     std::vector<FrameAggregate> getFramesSnapshot() const {
         std::lock_guard<std::mutex> lock(_framesMutex);
         return _frames;
     }
+
+    FrameAggregate Get_Last_Frame() const
+    {
+        std::lock_guard<std::mutex> lock(_framesMutex);
+        if (_frames.empty()) return FrameAggregate{};
+        return _frames.back();
+	}
 
     // Simple debug print (call occasionally)
     void printLastFrameSummary() const {
@@ -113,12 +134,66 @@ public:
             if (_frames.empty()) return;
             last = _frames.back();
         }
-        Engine::GetSink()->logger()->trace("Framw {} | {:.3}ms", last.frameIndex, last.frameMs);
+        const double fps = last.frameMs > 0.0 ? 1000.0 / last.frameMs : 0.0;
+        const double avgFps = getLastFps();
+        Engine::GetSink()->logger()->trace("Frame {} | {:.3f} ms | {:.1f} fps (avg {:.1f} fps)", last.frameIndex, last.frameMs, fps, avgFps);
+
         std::ostringstream oss{};
         for (auto& kv : last.systemMs) {
             oss << "  - " << kv.first << ": " << std::setprecision(3) << kv.second << " ms\n";
         }
         Engine::GetSink()->logger()->trace("{}", oss.view());
+    }
+
+    double getLastFps(size_t window = 60) const {
+        if (window == 0) {
+            window = 1;
+        }
+
+        std::lock_guard<std::mutex> lock(_framesMutex);
+        if (_frames.empty()) {
+            return 0.0;
+        }
+
+        if (_fpsWindowSize != window) {
+            _fpsWindowSize = window;
+            _fpsSamples.clear();
+            _fpsSum = 0.0;
+            _fpsInitialized = false;
+            _lastFpsFrameIndex = 0;
+        }
+
+        std::vector<const FrameAggregate*> pending;
+        pending.reserve(window);
+
+        for (auto it = _frames.rbegin(); it != _frames.rend(); ++it) {
+            if (_fpsInitialized && it->frameIndex <= _lastFpsFrameIndex) {
+                break;
+            }
+            pending.push_back(&(*it));
+        }
+
+        for (auto rit = pending.rbegin(); rit != pending.rend(); ++rit) {
+            double ms = (*rit)->frameMs;
+            _fpsSamples.push_back(ms);
+            _fpsSum += ms;
+
+            if (_fpsSamples.size() > _fpsWindowSize) {
+                _fpsSum -= _fpsSamples.front();
+                _fpsSamples.pop_front();
+            }
+
+            _lastFpsFrameIndex = (*rit)->frameIndex;
+            _fpsInitialized = true;
+        }
+
+        if (_fpsSamples.empty() || _fpsSum <= 0.0) {
+            double ms = _frames.back().frameMs;
+            return ms > 0.0 ? 1000.0 / ms : 0.0;
+        }
+
+        double avgMs = _fpsSum / static_cast<double>(_fpsSamples.size());
+        return avgMs > 0.0 ? 1000.0 / avgMs : 0.0;
     }
 
     // Configuration
@@ -134,6 +209,7 @@ public:
     void setFrameHistory(size_t) {}
     void setEventHistory(size_t) {}
     void printLastFrameSummary() const {}
+    double getLastFps(size_t) const { return 0.0; }
 #endif
 
 private:
@@ -152,12 +228,18 @@ private:
     // Event storage (ring-like behavior by truncation)
     mutable std::mutex _eventsMutex;
     std::vector<Event> _events;
+    std::vector<Event> _currentEvents;
     size_t _eventHistory = 100000;
 
     // Frame aggregates
     mutable std::mutex _framesMutex;
     std::vector<FrameAggregate> _frames;
     size_t _frameHistory = 240;
+    mutable std::deque<double> _fpsSamples;
+    mutable double _fpsSum = 0.0;
+    mutable size_t _fpsWindowSize = 60;
+    mutable bool _fpsInitialized = false;
+    mutable uint64_t _lastFpsFrameIndex = 0;
 
     // System aggregates for current frame
     mutable std::mutex _systemMutex;
