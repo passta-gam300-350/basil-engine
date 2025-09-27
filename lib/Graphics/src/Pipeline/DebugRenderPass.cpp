@@ -28,58 +28,15 @@ DebugRenderPass::DebugRenderPass(std::shared_ptr<Shader> primitiveShader)
 
 void DebugRenderPass::Execute(RenderContext& context)
 {
-    // Render directly to the main color buffer for proper alpha blending
+    // Check if we have a main buffer to copy to editor FBO
     if (!context.frameData.mainColorBuffer)
     {
-        return; // No main buffer to render to
+        return; // No main buffer to copy
     }
 
-    // Begin the pass (no framebuffer binding since we don't have one)
-    Begin();
-
-    // Bind the main framebuffer for rendering
-    context.frameData.mainColorBuffer->Bind();
-
-    // Set viewport to match main framebuffer
-    const auto &mainFBOSpecs = context.frameData.mainColorBuffer->GetSpecification();
-    glViewport(0, 0, static_cast<int>(mainFBOSpecs.Width), static_cast<int>(mainFBOSpecs.Height));
-
-    // Setup command buffer with systems from context
-    SetupCommandBuffer(context);
-
-    // Enable alpha blending for debug overlay rendering
-    // Make sure blending doesn't affect depth writes
-    RenderCommands::SetBlendingData enableBlendCmd{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
-    Submit(enableBlendCmd);
-
-    // Render light cubes for visualization
-    if (m_ShowLightCubes && !context.lights.empty()) {
-        RenderLightCubes(context);
-    }
-
-    // Render light rays for visualization
-    if (m_ShowLightRays && !context.lights.empty()) {
-        RenderLightRays(context);
-    }
-
-    // Render AABB wireframes for visualization
-    if (m_ShowAABBs && !context.frameData.debugAABBs.empty()) {
-        RenderAABBs(context);
-    }
-
-    // Disable blending after debug rendering
-    RenderCommands::SetBlendingData disableBlendCmd{ false };
-    Submit(disableBlendCmd);
-
-
-    // Execute all commands submitted to this pass's command buffer
-    ExecuteCommands();
-
-    // Unbind the main framebuffer
-    context.frameData.mainColorBuffer->Unbind();
-
-    // End the pass (no framebuffer unbinding since we don't have one)
-    End();
+    // Since this pass has no framebuffer, we just copy main scene to editor FBO
+    // Debug rendering will be re-implemented later with proper framebuffer setup
+    UpdateEditorFBOWithDebug(context);
 }
 
 void DebugRenderPass::RenderLightCubes(RenderContext& context)
@@ -391,3 +348,40 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
     Submit(restoreLineWidthCmd);
 }
 
+void DebugRenderPass::UpdateEditorFBOWithDebug(RenderContext &context)
+{
+    // Only update editor FBO if main buffer exists (we can create editor buffer if needed)
+    if (!context.frameData.mainColorBuffer)
+    {
+        return;
+    }
+
+    auto mainFBO = context.frameData.mainColorBuffer;
+    const auto &mainSpec = mainFBO->GetSpecification();
+
+    // Create or update editor FBO to match main FBO size
+    if (!context.frameData.editorColorBuffer ||
+        context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||
+        context.frameData.editorColorBuffer->GetSpecification().Height != mainSpec.Height)
+    {
+        // Create identical FBO specs for editor copy
+        FBOSpecs editorSpec = mainSpec;
+        context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
+    }
+
+    auto editorFBO = context.frameData.editorColorBuffer;
+
+    // Copy main scene content to editor FBO
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
+
+    glBlitFramebuffer(
+        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
+        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
+        GL_COLOR_BUFFER_BIT, GL_NEAREST
+    );
+
+    // Restore framebuffer binding
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}

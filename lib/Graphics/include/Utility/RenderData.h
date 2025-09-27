@@ -14,6 +14,7 @@ struct RenderableData {
     glm::mat4 transform = glm::mat4(1.0f);
     bool visible = true;
     uint32_t renderLayer = 0;
+    uint32_t objectID = 0;  // Unique ID for object picking (0 = no picking)
 };
 
 struct SubmittedLightData {
@@ -26,4 +27,17 @@ struct SubmittedLightData {
     float innerCone = 30.0f;
     float outerCone = 45.0f;
     bool enabled = true;
+};
+
+// Picking data structures
+struct PickingResult {
+    uint32_t objectID = 0;          // ID of picked object (0 = nothing picked)
+    glm::vec3 worldPosition = glm::vec3(0.0f);  // 3D world position of pick
+    float depth = 1.0f;             // Normalized depth value [0,1]
+    bool hasHit = false;            // Whether any object was picked
+};
+
+struct MousePickingQuery {
+    int screenX, screenY;           // Mouse screen coordinates
+    int viewportWidth, viewportHeight;  // Viewport dimensions
 };

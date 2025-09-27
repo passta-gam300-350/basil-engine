@@ -58,8 +58,8 @@ void EditorMain::init()
 	// We'll update it with EditorCamera data each frame
 	CreateCameraEntity();
 
-	// Create demo scene with cubes for testing (disabled by default)
-	// CreateDemoScene();
+	// Create demo scene with cubes for testing
+	CreateDemoScene();
 
 	//std::jthread jth(&Engine::Update);
 }
@@ -121,6 +121,88 @@ void EditorMain::render()
 
 
 	ImGui::Begin("Inspector", nullptr);
+
+	// Show selected entity information
+	if (m_SelectedEntityID != 0) {
+		ImGui::Text("Selected Entity");
+		ImGui::Separator();
+		ImGui::Text("Object ID: %u", m_SelectedEntityID);
+
+		// Try to find the entity in the world
+		ecs::world world = Engine::GetWorld();
+		auto entities = world.filter_entities<PositionComponent>();
+
+		bool entityFound = false;
+		for (auto entity : entities) {
+			if (static_cast<uint32_t>(entity.get_uid()) == m_SelectedEntityID) {
+				entityFound = true;
+
+				// Show entity components
+				ImGui::Text("Entity UID: %llu", entity.get_uid());
+
+				// Position Component
+				if (world.has_all_components_in_entity<PositionComponent>(entity)) {
+					auto& pos = world.get_component_from_entity<PositionComponent>(entity);
+					ImGui::Text("Position Component:");
+					ImGui::Text("  World Pos: (%.2f, %.2f, %.2f)", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
+				}
+
+				// Transform Component
+				if (world.has_all_components_in_entity<TransformComponent>(entity)) {
+					ImGui::Text("Transform Component: Present");
+				}
+
+				// Mesh Renderer Component
+				if (world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
+					auto& meshRenderer = world.get_component_from_entity<MeshRendererComponent>(entity);
+					ImGui::Text("Mesh Renderer Component:");
+					ImGui::Text("  Mesh GUID: %s", meshRenderer.m_MeshGuid.to_hex().c_str());
+					ImGui::Text("  Material GUID: %s", meshRenderer.m_MaterialGuid.to_hex().c_str());
+				}
+
+				// Light Component
+				if (world.has_all_components_in_entity<LightComponent>(entity)) {
+					auto& light = world.get_component_from_entity<LightComponent>(entity);
+					ImGui::Text("Light Component:");
+					ImGui::Text("  Type: %d", static_cast<int>(light.m_Type));
+					ImGui::Text("  Color: (%.2f, %.2f, %.2f)", light.m_Color.r, light.m_Color.g, light.m_Color.b);
+					ImGui::Text("  Intensity: %.2f", light.m_Intensity);
+					ImGui::Text("  Enabled: %s", light.m_IsEnabled ? "Yes" : "No");
+				}
+
+				// Camera Component
+				if (world.has_all_components_in_entity<CameraComponent>(entity)) {
+					auto& camera = world.get_component_from_entity<CameraComponent>(entity);
+					ImGui::Text("Camera Component:");
+					ImGui::Text("  Type: %s", camera.m_Type == CameraComponent::CameraType::PERSPECTIVE ? "Perspective" : "Orthographic");
+					ImGui::Text("  FOV: %.1f", camera.m_Fov);
+					ImGui::Text("  Active: %s", camera.m_IsActive ? "Yes" : "No");
+				}
+
+				ImGui::Separator();
+
+				// Action buttons
+				if (ImGui::Button("Clear Selection")) {
+					ClearEntitySelection();
+				}
+
+				break;
+			}
+		}
+
+		if (!entityFound) {
+			ImGui::Text("Selected entity not found in world!");
+			ImGui::Text("(Entity may have been deleted)");
+			if (ImGui::Button("Clear Selection")) {
+				ClearEntitySelection();
+			}
+		}
+	} else {
+		ImGui::Text("No entity selected");
+		ImGui::Text("Click on an entity in the Scene viewport");
+		ImGui::Text("or Hierarchy to select it.");
+	}
+
 	ImGui::End();
 	glClearColor(1, 1, 1, 1);
 
@@ -345,7 +427,11 @@ void EditorMain::Render_SceneExplorer()
 	for (auto entity : entities) {
 		ImGui::PushID(static_cast<int>(entity.get_uid()));
 
-		// Display entity info
+		// Check if this entity is currently selected
+		uint32_t entityUID = static_cast<uint32_t>(entity.get_uid());
+		bool isSelected = (m_SelectedEntityID == entityUID);
+
+		// Display entity info with selection highlighting
 		std::string entityName = "Entity " + std::to_string(entity.get_uid());
 
 		// Check what components this entity has
@@ -357,6 +443,11 @@ void EditorMain::Render_SceneExplorer()
 		if (hasLight) entityName += " (Light)";
 		else if (hasMesh) entityName += " (Mesh)";
 		else entityName += " (Empty)";
+
+		// Highlight selected entity with different color
+		if (isSelected) {
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow text for selected
+		}
 
 		if (ImGui::TreeNode(entityName.c_str())) {
 			// Show component info
@@ -382,6 +473,16 @@ void EditorMain::Render_SceneExplorer()
 			}
 
 			ImGui::TreePop();
+		}
+
+		// Pop the selection highlight color if it was applied
+		if (isSelected) {
+			ImGui::PopStyleColor();
+		}
+
+		// Allow clicking entity in hierarchy to select it
+		if (ImGui::IsItemClicked()) {
+			SelectEntity(entityUID);
 		}
 
 		ImGui::PopID();
@@ -517,7 +618,7 @@ void EditorMain::Render_CameraControls()
 
 void EditorMain::Render_Scene()
 {
-	// Update editor camera OUTSIDE of ImGui window - do this first
+	// Update editor camera - will be done inside the Scene window with proper input handling
 	if (!m_IsPlayMode && m_EditorCamera) {
 		// Get delta time
 		static auto lastTime = std::chrono::steady_clock::now();
@@ -525,33 +626,10 @@ void EditorMain::Render_Scene()
 		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 		lastTime = currentTime;
 
-		// Temporarily disable ImGui input capture to allow camera input
-		// We'll check viewport hover inside the Scene window
-		ImGuiIO& io = ImGui::GetIO();
-		bool originalWantCaptureMouse = io.WantCaptureMouse;
-		bool originalWantCaptureKeyboard = io.WantCaptureKeyboard;
-
-		// Always allow camera input - we'll handle viewport detection differently
-		io.WantCaptureMouse = false;
-		io.WantCaptureKeyboard = false;
-
-		// Update camera based on input
-		m_EditorCamera->Update(deltaTime);
-
-		// Restore original ImGui input capture state
-		io.WantCaptureMouse = originalWantCaptureMouse;
-		io.WantCaptureKeyboard = originalWantCaptureKeyboard;
-
-
-		// Handle scroll for zoom (basic implementation)
-		double scrollX, scrollY;
-		auto* input = InputManager::Get_Instance();
-		input->Get_ScrollOffset(scrollX, scrollY);
-		if (scrollY != 0) {
-			m_EditorCamera->OnMouseScroll(static_cast<float>(scrollY));
-		}
-
-		// Camera matrices are now updated in main render() after RenderSystem::Update
+		// Camera update will be moved inside the viewport handling to avoid input conflicts
+		// Store deltaTime for later use
+		static float s_deltaTime = deltaTime;
+		s_deltaTime = deltaTime;
 	}
 
 	ImGui::Begin("Scene");
@@ -566,15 +644,93 @@ void EditorMain::Render_Scene()
 		if (m_EditorCamera) {
 			m_EditorCamera->SetAspectRatio(m_ViewportWidth / m_ViewportHeight);
 		}
+
+		// Debug viewport size
+		static float lastWidth = 0, lastHeight = 0;
+		if (std::abs(lastWidth - viewportSize.x) > 1.0f || std::abs(lastHeight - viewportSize.y) > 1.0f) {
+			spdlog::info("Editor: Viewport size changed to ({:.0f}x{:.0f})", viewportSize.x, viewportSize.y);
+			lastWidth = viewportSize.x;
+			lastHeight = viewportSize.y;
+		}
 	}
 
 	// Check if editor framebuffer is available before trying to access it
 	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
 	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
-		ImGui::Image((ImTextureID)frameData.editorColorBuffer->GetFBOHandle(),
-			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-	}
-	else {
+		// Store viewport position for picking calculations
+		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
+
+		// Get the color attachment texture ID (not the FBO handle)
+		uint32_t textureID = frameData.editorColorBuffer->GetColorAttachmentRendererID(0);
+
+		// Render the scene viewport using the texture ID
+		ImGui::Image((ImTextureID)(uintptr_t)textureID,
+		             viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+
+		// Handle viewport picking - check if viewport was clicked
+		bool viewportClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+		bool viewportHovered = ImGui::IsItemHovered();
+
+		if (viewportClicked) {
+			spdlog::info("Editor: Viewport clicked detected by ImGui");
+
+			// Get mouse position relative to viewport
+			ImVec2 mousePos = ImGui::GetMousePos();
+			float relativeX = mousePos.x - viewportPos.x;
+			float relativeY = mousePos.y - viewportPos.y;
+
+			spdlog::info("Editor: Mouse pos ({:.0f}, {:.0f}), viewport pos ({:.0f}, {:.0f}), relative ({:.0f}, {:.0f})",
+			            mousePos.x, mousePos.y, viewportPos.x, viewportPos.y, relativeX, relativeY);
+
+			// Ensure click is within viewport bounds
+			if (relativeX >= 0 && relativeY >= 0 && relativeX < viewportSize.x && relativeY < viewportSize.y) {
+				spdlog::info("Editor: Click is within viewport bounds - performing picking");
+				PerformEntityPicking(relativeX, relativeY, viewportSize.x, viewportSize.y);
+			} else {
+				spdlog::warn("Editor: Click is outside viewport bounds");
+			}
+		}
+
+		// Debug: Log mouse states
+		static bool lastHovered = false;
+		if (viewportHovered != lastHovered) {
+			spdlog::info("Editor: Viewport hover state changed: {}", viewportHovered ? "entered" : "exited");
+			lastHovered = viewportHovered;
+		}
+
+		// Handle camera input only when viewport is hovered and not clicking
+		if (!m_IsPlayMode && m_EditorCamera && viewportHovered && !viewportClicked) {
+			// Get stored delta time
+			static auto lastTime = std::chrono::steady_clock::now();
+			auto currentTime = std::chrono::steady_clock::now();
+			float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+			lastTime = currentTime;
+
+			// Temporarily disable ImGui input capture for camera control
+			ImGuiIO& io = ImGui::GetIO();
+			bool originalWantCaptureMouse = io.WantCaptureMouse;
+			bool originalWantCaptureKeyboard = io.WantCaptureKeyboard;
+
+			// Disable ImGui input capture only when doing camera control
+			io.WantCaptureMouse = false;
+			io.WantCaptureKeyboard = false;
+
+			// Update camera based on input
+			m_EditorCamera->Update(deltaTime);
+
+			// Handle scroll for zoom
+			double scrollX, scrollY;
+			auto* input = InputManager::Get_Instance();
+			input->Get_ScrollOffset(scrollX, scrollY);
+			if (scrollY != 0) {
+				m_EditorCamera->OnMouseScroll(static_cast<float>(scrollY));
+			}
+
+			// Restore original ImGui input capture state
+			io.WantCaptureMouse = originalWantCaptureMouse;
+			io.WantCaptureKeyboard = originalWantCaptureKeyboard;
+		}
+	} else {
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
@@ -772,6 +928,9 @@ void EditorMain::CreateDemoScene()
 
 	world.add_component_to_entity<LightComponent>(lightEntity, light);
 
+	// Set stronger ambient light for better visibility
+	RenderSystem::Instance().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
+
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 }
 
@@ -800,11 +959,11 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	}
 	assert(shader && "PBR shader must be available");
 
-	// Create PBR material
+	// Create PBR material with enhanced properties for better visibility
 	auto material = std::make_shared<Material>(shader, "EditorCube_" + std::to_string(entity.get_uid()));
-	material->SetAlbedoColor(color);
-	material->SetMetallicValue(0.1f);
-	material->SetRoughnessValue(0.8f);
+	material->SetAlbedoColor(color * 1.2f); // Brighten the color slightly
+	material->SetMetallicValue(0.0f);       // Non-metallic for better color visibility
+	material->SetRoughnessValue(0.6f);      // Medium roughness
 
 	assert(material && "Material creation failed");
 
@@ -854,4 +1013,93 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 			CreateCube(position, glm::vec3(1.0f), color);
 		}
 	}
+}
+
+void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight)
+{
+	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
+	assert(sceneRenderer && "SceneRenderer must be available for entity picking");
+
+	// Assert input parameters are valid
+	assert(viewportWidth > 0.0f && viewportHeight > 0.0f && "Viewport dimensions must be positive");
+	assert(mouseX >= 0.0f && mouseY >= 0.0f && "Mouse coordinates must be non-negative");
+	assert(mouseX < viewportWidth && mouseY < viewportHeight && "Mouse coordinates must be within viewport");
+
+	spdlog::info("Editor: Performing entity picking at viewport position ({:.1f}, {:.1f}) in viewport ({:.1f}x{:.1f})",
+	            mouseX, mouseY, viewportWidth, viewportHeight);
+
+	// Debug: Check how many entities exist and have renderable components
+	ecs::world world = Engine::GetWorld();
+	auto allEntities = world.filter_entities<PositionComponent>();
+	auto renderableEntities = world.filter_entities<MeshRendererComponent, VisibilityComponent>();
+
+	int totalEntities = 0;
+	int renderableCount = 0;
+	for (auto entity : allEntities) { totalEntities++; }
+	for (auto entity : renderableEntities) { renderableCount++; }
+
+	spdlog::info("Editor: World has {} total entities, {} with renderable components", totalEntities, renderableCount);
+
+	// Assert we have entities to pick from
+	assert(renderableCount > 0 && "No renderable entities found - nothing to pick");
+	assert(totalEntities > 0 && "No entities found in world - check entity creation");
+
+	// Enable picking pass temporarily
+	sceneRenderer->EnablePicking(true);
+
+	// Create picking query with viewport-relative coordinates
+	MousePickingQuery query;
+	query.screenX = static_cast<int>(mouseX);
+	query.screenY = static_cast<int>(mouseY);
+	query.viewportWidth = static_cast<int>(viewportWidth);
+	query.viewportHeight = static_cast<int>(viewportHeight);
+
+	// Assert picking system is properly configured
+	auto* pipeline = sceneRenderer->GetPipeline();
+	assert(pipeline && "SceneRenderer must have a valid pipeline");
+	auto pickingPass = pipeline->GetPass("PickingPass");
+	assert(pickingPass && "Pipeline must have a PickingPass for object picking");
+	assert(pipeline->IsPassEnabled("PickingPass") && "PickingPass must be enabled for picking to work");
+
+	// Perform picking query
+	PickingResult result = sceneRenderer->QueryObjectPicking(query);
+
+	// Assert picking query executed successfully
+	assert(result.depth >= 0.0f && result.depth <= 1.0f && "Depth value must be in valid range [0,1]");
+
+	// Disable picking pass after use
+	sceneRenderer->EnablePicking(false);
+
+	// Handle picking result
+	if (result.hasHit && result.objectID != 0) {
+		spdlog::info("Editor: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+		            result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+		SelectEntity(result.objectID);
+	} else {
+		spdlog::info("Editor: No entity picked - clearing selection");
+		ClearEntitySelection();
+	}
+}
+
+void EditorMain::SelectEntity(uint32_t objectID)
+{
+	m_SelectedEntityID = objectID;
+	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
+
+	// TODO: Add visual feedback for selected entity (highlight, outline, etc.)
+	// This could involve setting a uniform or render state for the selected object
+}
+
+void EditorMain::ClearEntitySelection()
+{
+	if (m_SelectedEntityID != 0) {
+		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
+		m_SelectedEntityID = 0;
+	}
+}
+
+void EditorMain::HandleViewportPicking()
+{
+	// This function can be called to handle other picking-related logic
+	// For now, picking is handled directly in Render_Scene()
 }

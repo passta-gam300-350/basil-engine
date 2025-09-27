@@ -6,6 +6,8 @@
 #include "../../include/Scene/SceneRenderer.h"
 #include <glfw/glfw3.h>
 
+#include "spdlog/spdlog.h"
+
 MainRenderingPass::MainRenderingPass()
     : RenderPass("MainPass", FBOSpecs
 	{
@@ -31,7 +33,7 @@ void MainRenderingPass::Execute(RenderContext& context)
 
     // Clear color and depth buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a (fully opaque background)
+        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a
         true,                      // clearColor
         true                       // clearDepth
     };
@@ -65,8 +67,20 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
 
-    // Create separate editor FBO copy to avoid conflicts with PresentPass
-    CreateEditorFBOCopy(context);
+    // Debug: Log framebuffer info
+    auto mainFBO = GetFramebuffer();
+    const auto& spec = mainFBO->GetSpecification();
+    static uint32_t lastWidth = 0, lastHeight = 0;
+    if (spec.Width != lastWidth || spec.Height != lastHeight) {
+        spdlog::info("MainRenderingPass: Framebuffer size {}x{}, Handle: {}",
+                    spec.Width, spec.Height, mainFBO->GetFBOHandle());
+        lastWidth = spec.Width;
+        lastHeight = spec.Height;
+    }
+
+    // Note: Editor FBO copy is now handled by DebugRenderPass (final visual pass)
+    // This ensures the editor sees the complete rendered result with all overlays
+    // CreateEditorFBOCopy(context);
 
     End();
 }
@@ -93,11 +107,11 @@ void MainRenderingPass::UpdateFramebufferSize()
     }
 }
 
-void MainRenderingPass::CreateEditorFBOCopy(RenderContext& context)
+void MainRenderingPass::CreateEditorFBOCopy(RenderContext &context)
 {
     // Create editor FBO if it doesn't exist or size changed
     auto mainFBO = GetFramebuffer();
-    const auto& mainSpec = mainFBO->GetSpecification();
+    const auto &mainSpec = mainFBO->GetSpecification();
 
     if (!context.frameData.editorColorBuffer ||
         context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||

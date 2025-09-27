@@ -80,5 +80,15 @@ private:
 	// Viewport size tracking for aspect ratio
 	float m_ViewportWidth = 1280.0f;
 	float m_ViewportHeight = 720.0f;
+
+	// Entity selection management
+	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
+	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
+
+	// Viewport picking implementation
+	void HandleViewportPicking();
+	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
+	void SelectEntity(uint32_t objectID);
+	void ClearEntitySelection();
 };
 #endif // EDITORMAIN_HPP

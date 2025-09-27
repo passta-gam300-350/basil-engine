@@ -270,7 +270,7 @@ void InputManager::Get_MousePosition(double& xpos, double& ypos) const
     xpos = mouseXPosition;
     ypos = mouseYPosition;
     #ifdef _DEBUG
-        std::cout << "Mouse cursor position: (" << xpos << ", " << ypos << ")" << std::endl;
+        //std::cout << "Mouse cursor position: (" << xpos << ", " << ypos << ")" << std::endl;
     #endif
 }
 
@@ -279,7 +279,7 @@ void InputManager::Get_MousePosition(float& xpos, float& ypos) const
     xpos = static_cast<float>(mouseXPosition);
     ypos = static_cast<float>(mouseYPosition);
     #ifdef _DEBUG
-        std::cout << "Mouse cursor position: (" << xpos << ", " << ypos << ")" << std::endl;
+        //std::cout << "Mouse cursor position: (" << xpos << ", " << ypos << ")" << std::endl;
     #endif
 }
 

@@ -35,7 +35,7 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_Camera(nullptr)
     , m_Time(0.0f)
     , m_DeltaTime(0.0f)
-    , m_CameraEnabled(true)
+    , m_CameraEnabled(false)
     , m_FirstMouse(true)
     , m_LastX(640.0f)
     , m_LastY(360.0f)
@@ -78,8 +78,9 @@ bool GraphicsTestDriver::Initialize()
     // Setup input callbacks
     glfwSetKeyCallback(m_Window->GetNativeWindow(), KeyCallback);
     glfwSetCursorPosCallback(m_Window->GetNativeWindow(), MouseCallback);
+    glfwSetMouseButtonCallback(m_Window->GetNativeWindow(), MouseButtonCallback);
     glfwSetScrollCallback(m_Window->GetNativeWindow(), ScrollCallback);
-    glfwSetInputMode(m_Window->GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(m_Window->GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // Load resources
     if (!LoadTestResources()) {
@@ -238,6 +239,19 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load shadow mapping shader");
         }
 
+        // Load picking shader for object selection
+        auto pickingShader = m_ResourceManager->LoadShader("picking",
+            "assets/shaders/picking.vert",
+            "assets/shaders/picking.frag");
+
+        if (pickingShader) {
+            spdlog::info("Picking shader loaded successfully!");
+            // Configure the picking pass with the loaded shader
+            m_SceneRenderer->SetPickingShader(pickingShader);
+        } else {
+            spdlog::warn("Could not load picking shader");
+        }
+
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
             "assets/models/tinbox/tin_box.obj");
@@ -328,6 +342,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
     ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
     ground.visible = true;
+    ground.objectID = 1;  // Ground plane has object ID 1
     m_SceneObjects.push_back(ground);
 
     // Create grids of objects for instanced rendering
@@ -490,7 +505,12 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
                 renderable.material->SetRoughnessValue(0.3f);
             }
         }
-        
+
+        // Assign unique object ID (start from 100 for scene objects)
+        static uint32_t nextObjectID = 100;
+        renderable.objectID = nextObjectID++;
+        spdlog::info("Created object with ID: {}", renderable.objectID);
+
         m_SceneObjects.push_back(renderable);
     }
 }
@@ -723,6 +743,20 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                 s_Instance->m_RotationEnabled = !s_Instance->m_RotationEnabled;
                 spdlog::info("Object rotation {}", s_Instance->m_RotationEnabled ? "ENABLED" : "DISABLED");
                 break;
+
+            case GLFW_KEY_P:
+                if (s_Instance->m_SceneRenderer) {
+                    auto* pipeline = s_Instance->m_SceneRenderer->GetPipeline();
+                    if (pipeline) {
+                        bool isEnabled = pipeline->IsPassEnabled("PickingPass");
+                        spdlog::info("Picking mode {} (Left-click objects to test)",
+                                   isEnabled ? "already ENABLED" : "ENABLED");
+                        if (!isEnabled) {
+                            s_Instance->m_SceneRenderer->EnablePicking(true);
+                        }
+                    }
+                }
+                break;
         }
     }
 }
@@ -848,6 +882,69 @@ void GraphicsTestDriver::ToggleAABBVisualization()
         }
     } else {
         spdlog::warn("Scene renderer not available - cannot toggle AABB visualization");
+    }
+}
+
+void GraphicsTestDriver::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (!s_Instance) return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        // Get mouse position
+        double mouseX, mouseY;
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+
+        // Handle object picking
+        s_Instance->HandleObjectPicking(mouseX, mouseY);
+    }
+}
+
+void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
+{
+    if (!m_SceneRenderer) return;
+
+    // Get window size for viewport calculation
+    int windowWidth, windowHeight;
+    glfwGetWindowSize(m_Window->GetNativeWindow(), &windowWidth, &windowHeight);
+
+    spdlog::info("Attempting to pick at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
+
+    // Enable picking temporarily
+    m_SceneRenderer->EnablePicking(true);
+    spdlog::info("Picking enabled, rendering picking frame...");
+
+    // Render a picking frame (this will execute the picking pass)
+    m_SceneRenderer->Render();
+    spdlog::info("Picking frame rendered, querying result...");
+
+    // Create picking query
+    MousePickingQuery query;
+    query.screenX = static_cast<int>(mouseX);
+    query.screenY = static_cast<int>(mouseY);
+    query.viewportWidth = windowWidth;
+    query.viewportHeight = windowHeight;
+
+    // Query the picking result
+    PickingResult result = m_SceneRenderer->QueryObjectPicking(query);
+    spdlog::info("Query completed, object ID: {}, hasHit: {}", result.objectID, result.hasHit);
+
+    // Disable picking after use
+    m_SceneRenderer->EnablePicking(false);
+
+    // Handle the result
+    if (result.hasHit) {
+        spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
+                    result.objectID,
+                    result.worldPosition.x, result.worldPosition.y, result.worldPosition.z,
+                    result.depth);
+
+        // You could add additional logic here, such as:
+        // - Highlighting the selected object
+        // - Storing the selected object ID
+        // - Triggering editor actions
+
+    } else {
+        spdlog::info("No object picked at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
     }
 }
 
