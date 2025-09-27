@@ -40,6 +40,9 @@ Engine& Engine::Instance() {
 using namespace ecs; //lazy
 
 void Engine::Init(std::string const& cfg ) {
+
+	Instance().m_Info.m_FrameLogRate = 165;
+
 	ReflectionRegistry::SetupNativeTypes();
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
@@ -106,19 +109,16 @@ void Engine::Update() {
 				
 				InputManager::Get_Instance()->Update();
 
-				//PF_BEGIN_FRAME(frame_number);
+				PF_BEGIN_FRAME(frame_number);
 				//instance.m_World.update();
 				RenderSystem::System().Update(instance.m_World);
-				//PF_END_FRAME();
+				PF_END_FRAME();
 				Engine::GetWindowInstance().SwapBuffers();
 
-				/*
-				if (frame_log_rate && frame_counter >= frame_log_rate) {
-					Profiler::instance().printLastFrameSummary();
-				}*/
 
-				frame_number++;
-				frame_counter--;
+
+
+				UpdateDebug();
 			}
 		}
 		ReportLastError();					//this is the intended error handler
@@ -131,12 +131,33 @@ void Engine::Update() {
 	}
 }
 
+void Engine::UpdateDebug() {
+
+	Engine& instance{ Instance() };
+	std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt };
+	std::uint64_t& frame_counter{ instance.m_Info.m_FrameLogCounter };
+	std::uint64_t& frame_log_rate{ instance.m_Info.m_FrameLogRate };
+
+
+
+	if (frame_log_rate && frame_counter >= frame_log_rate) {
+		Profiler::instance().printLastFrameSummary();
+		Engine::Instance().GetInfo().m_FPS = Profiler::instance().getLastFps();
+
+	}
+
+	frame_number++;
+	frame_counter--;
+}
+
 void Engine::ReportLastError() {
 	
 }
 
 void Engine::InitWithoutWindow(std::string const& cfg) {
 	ReflectionRegistry::SetupNativeTypes();
+	Instance().m_Info.m_FrameLogRate = 165;
+	
 	Instance().m_World = WorldRegistry::NewWorld();
 
 	if (!cfg.empty()) {
@@ -214,4 +235,15 @@ bool Engine::WindowShouldClose() {
 
 Logger::Sink* Engine::GetSink() {
 	return Instance().m_Sink.get();
+}
+
+
+void Engine::BeginFrame()
+{
+	PF_BEGIN_FRAME(Instance().m_Info.m_TotalFrameCt);
+}
+
+void Engine::EndFrame()
+{
+	PF_END_FRAME();
 }

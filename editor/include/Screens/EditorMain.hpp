@@ -10,6 +10,11 @@ class EditorMain : public Screen
 {
 public:
 	bool showAboutModal = false;
+	bool showInspector = true;
+	bool showSceneExplorer = true;
+	bool showProfiler = false;
+	bool showConsole = true;
+
 
 
 
@@ -39,6 +44,8 @@ public:
 
 
 	void Render_SceneExplorer();
+
+	void Render_Profiler();
 
 
 

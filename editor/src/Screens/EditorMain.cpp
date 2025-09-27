@@ -16,6 +16,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "GLFW/glfw3.h"
+#include "Profiler/profiler.hpp"
 
 EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 {
@@ -65,6 +66,7 @@ void EditorMain::init()
 
 void EditorMain::render()
 {
+	Engine::BeginFrame();
 	// Menu Bar
 	if (!active) return;
 
@@ -72,7 +74,9 @@ void EditorMain::render()
 	auto* input = InputManager::Get_Instance();
 	input->Update();
 
-	Render_MenuBar();
+
+
+
 
 
 	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
@@ -150,12 +154,22 @@ void EditorMain::render()
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
+	Engine::EndFrame();
+	Engine::UpdateDebug();
 
-	Render_SceneExplorer();
-	Render_Console();
+	Render_MenuBar();
+
+	if (showSceneExplorer)
+		Render_SceneExplorer();
+	if (showConsole)
+		Render_Console();
+	if (showProfiler)
+		Render_Profiler();
 	Render_Scene();
 	Render_Game();
 	Render_CameraControls();
+
+
 
 }
 
@@ -220,6 +234,17 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Preferences");
 		ImGui::EndMenu();
 	}
+
+	if (ImGui::BeginMenu("View"))
+	{
+		ImGui::MenuItem("Inspector", nullptr, &showInspector);
+		ImGui::MenuItem("Scene Explorer", nullptr, &showSceneExplorer);
+		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
+		ImGui::MenuItem("Console", nullptr, &showConsole);
+
+		ImGui::EndMenu();
+	}
+
 	if (ImGui::BeginMenu("Help"))
 	{
 		ImGui::MenuItem("Documentation");
@@ -233,7 +258,7 @@ void EditorMain::Render_MenuBar()
 
 	Render_AboutUI();
 
-	
+
 }
 
 void EditorMain::Render_AboutUI()
@@ -366,6 +391,34 @@ void EditorMain::Render_SceneExplorer()
 }
 
 
+void EditorMain::Render_Profiler()
+{
+	ImGui::Begin("Profiler");
+	// Example profiling data
+	ImGui::Text("Frame Time: %.2fms", 16.67f);
+	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
+
+	auto events = Profiler::instance().getEventCurrentFrame();
+	auto last = Profiler::instance().Get_Last_Frame();
+	double frameMs = last.frameMs;
+
+	ImGui::Text("Frame Time: %.2f ms", frameMs);
+	ImGui::Text("FPS: %.2f", (frameMs > 0.0) ? 1000.0 / frameMs : 0.0);
+
+	double totalMs = 0.0;
+	for (auto& kv : last.systemMs) {
+		totalMs += kv.second;
+	}
+
+	for (auto& kv : last.systemMs) {
+		double sysMs = kv.second;
+		double pct = (totalMs > 0.0) ? (sysMs / totalMs) * 100.0 : 0.0;
+
+		ImGui::Text("%s: %.2f ms (%.1f%%)", kv.first.c_str(), sysMs, pct);
+	}
+
+	ImGui::End();
+}
 void EditorMain::Render_Console()
 {
 	ImGui::Begin("Console");
@@ -454,7 +507,8 @@ void EditorMain::Render_CameraControls()
 		if (ImGui::Button("Focus Origin")) {
 			m_EditorCamera->FocusOn(glm::vec3(0.0f), 10.0f);
 		}
-	} else {
+	}
+	else {
 		ImGui::Text("Camera not initialized");
 	}
 
@@ -518,8 +572,9 @@ void EditorMain::Render_Scene()
 	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
 	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
 		ImGui::Image((ImTextureID)frameData.editorColorBuffer->GetFBOHandle(),
-		             viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-	} else {
+			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+	}
+	else {
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}

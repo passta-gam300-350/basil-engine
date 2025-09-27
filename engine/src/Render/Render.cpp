@@ -13,6 +13,8 @@
 #include <Resources/Material.h>
 #include <spdlog/spdlog.h>
 
+#include "Profiler/profiler.hpp"
+
 // Editor resource caches at file scope
 namespace {
 	std::unordered_map<Resource::Guid, std::shared_ptr<Mesh>> g_EditorMeshCache;
@@ -47,6 +49,9 @@ void RenderSystem::Init() {
 
 void RenderSystem::Update(ecs::world& world) {
 	InstanceData& inst{ Instance() };
+
+	PF_SYSTEM("GraphicSystem");
+
 	//begin frame
 	inst.m_SceneRenderer->ClearFrame();
 
