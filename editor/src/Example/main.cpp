@@ -139,10 +139,10 @@ int main(int, char**)
 	});
 
 	glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
-		// Call ImGui first
-		ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
-		// Then call InputManager
+		// Call InputManager first to capture scroll
 		InputManager::Scroll_Callback(window, xoffset, yoffset);
+		// Then call ImGui
+		ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 	});
 
 	glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int c) {

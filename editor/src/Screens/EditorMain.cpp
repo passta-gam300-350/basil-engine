@@ -46,12 +46,16 @@ void EditorMain::init()
 	// Initialize Editor Camera
 	m_EditorCamera = std::make_unique<EditorCamera>();
 	m_EditorCamera->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
+	// Set rotation to look towards origin from (0,5,10): pitch down, yaw to face -Z direction
 	m_EditorCamera->SetRotation(glm::vec3(-25.0f, -90.0f, 0.0f));
+	// Set orbit target to origin so orbit mode works
+	m_EditorCamera->SetTarget(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Create a basic light so we can see something
 	CreateLightEntity();
-	// Note: We don't need CreateCameraEntity() in edit mode - using EditorCamera instead
-	// CreateCameraEntity() will be called when entering play mode
+	// Create an ECS camera entity for the RenderSystem to use
+	// We'll update it with EditorCamera data each frame
+	CreateCameraEntity();
 
 	//std::jthread jth(&Engine::Update);
 }
@@ -113,18 +117,36 @@ void EditorMain::render()
 	ImGui::End();
 	glClearColor(1, 1, 1, 1);
 
+	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
+	if (!m_IsPlayMode && m_EditorCamera) {
+		ecs::world world = Engine::GetWorld();
+		auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
+
+		if (cameraEntities) {
+			auto entity = *cameraEntities.begin();
+			auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
+			auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
+
+			// Update ECS camera with EditorCamera data
+			positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
+
+			// DEBUG: Check what vectors EditorCamera produces and only update position
+			glm::vec3 editorForward = m_EditorCamera->GetForward();
+			glm::vec3 editorUp = m_EditorCamera->GetUp();
+			glm::vec3 editorRight = m_EditorCamera->GetRight();
+
+
+			// Update ECS camera vectors with EditorCamera data
+			cameraComponent.m_Front = editorForward;
+			cameraComponent.m_Up = editorUp;
+			cameraComponent.m_Right = editorRight;
+			cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
+		}
+	}
+
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
-
-	// IMPORTANT: Update editor camera matrices AFTER RenderSystem::Update
-	// so we override any ECS camera that was processed
-	if (!m_IsPlayMode && m_EditorCamera) {
-		auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
-		frameData.viewMatrix = m_EditorCamera->GetViewMatrix();
-		frameData.projectionMatrix = m_EditorCamera->GetProjectionMatrix();
-		frameData.cameraPosition = m_EditorCamera->GetPosition();
-	}
 
 	Render_SceneExplorer();
 	Render_Console();
@@ -377,6 +399,10 @@ void EditorMain::Render_CameraControls()
 		glm::vec3 rot = m_EditorCamera->GetRotation();
 		ImGui::Text("Rotation: %.2f, %.2f, %.2f", rot.x, rot.y, rot.z);
 
+		glm::vec3 target = m_EditorCamera->GetTarget();
+		ImGui::Text("Target: %.2f, %.2f, %.2f", target.x, target.y, target.z);
+
+
 		ImGui::Separator();
 
 		// Camera settings
@@ -438,10 +464,25 @@ void EditorMain::Render_Scene()
 		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 		lastTime = currentTime;
 
+		// Temporarily disable ImGui input capture to allow camera input
+		// We'll check viewport hover inside the Scene window
+		ImGuiIO& io = ImGui::GetIO();
+		bool originalWantCaptureMouse = io.WantCaptureMouse;
+		bool originalWantCaptureKeyboard = io.WantCaptureKeyboard;
+
+		// Always allow camera input - we'll handle viewport detection differently
+		io.WantCaptureMouse = false;
+		io.WantCaptureKeyboard = false;
+
 		// Update camera based on input
 		m_EditorCamera->Update(deltaTime);
 
-		// Handle scroll for zoom
+		// Restore original ImGui input capture state
+		io.WantCaptureMouse = originalWantCaptureMouse;
+		io.WantCaptureKeyboard = originalWantCaptureKeyboard;
+
+
+		// Handle scroll for zoom (basic implementation)
 		double scrollX, scrollY;
 		auto* input = InputManager::Get_Instance();
 		input->Get_ScrollOffset(scrollX, scrollY);
@@ -501,9 +542,36 @@ void EditorMain::Render_Scene()
 	ImGui::Text("Light entities: %d", lightCount);
 	ImGui::Text("Camera entities: %d", cameraCount);
 
+	// Debug camera info
+	if (m_EditorCamera) {
+		glm::vec3 pos = m_EditorCamera->GetPosition();
+		glm::vec3 rot = m_EditorCamera->GetRotation();
+		ImGui::Text("Editor Cam Pos: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
+		ImGui::Text("Editor Cam Rot: %.2f, %.2f, %.2f", rot.x, rot.y, rot.z);
+
+		// Debug input state
+		auto* input = InputManager::Get_Instance();
+		bool rightMousePressed = input->Is_MousePressed(GLFW_MOUSE_BUTTON_RIGHT);
+		bool middleMousePressed = input->Is_MousePressed(GLFW_MOUSE_BUTTON_MIDDLE);
+		bool wPressed = input->Is_KeyPressed(GLFW_KEY_W);
+
+		// Debug scroll state
+		double scrollX, scrollY;
+		input->Get_ScrollOffset(scrollX, scrollY);
+
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui::Text("Right Mouse: %s, Middle Mouse: %s", rightMousePressed ? "Yes" : "No", middleMousePressed ? "Yes" : "No");
+		ImGui::Text("W Key: %s", wPressed ? "Yes" : "No");
+		ImGui::Text("Scroll Y: %.2f", scrollY);
+		ImGui::Text("ImGui wants mouse: %s, keyboard: %s", io.WantCaptureMouse ? "Yes" : "No", io.WantCaptureKeyboard ? "Yes" : "No");
+	}
+
 	// Show framebuffer status
-	//auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
 	ImGui::Text("Editor FBO: %s", frameData.editorColorBuffer ? "Valid" : "None");
+	if (frameData.editorColorBuffer) {
+		ImGui::Text("FBO Handle: %u", frameData.editorColorBuffer->GetFBOHandle());
+		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
+	}
 
 	ImGui::End();
 }
