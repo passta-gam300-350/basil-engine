@@ -222,6 +222,20 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetLineWidthData&
     glLineWidth(cmd.width);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDepthTestData &cmd)
+{
+    if (cmd.enable)
+    {
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(cmd.depthFunc);
+        glDepthMask(cmd.depthWrite ? GL_TRUE : GL_FALSE);
+    }
+    else
+    {
+        glDisable(GL_DEPTH_TEST);
+    }
+}
+
 void RenderCommandBuffer::CleanupGPUState()
 {
     // Note: We don't reset shadow map texture (slot 8) here since it should persist

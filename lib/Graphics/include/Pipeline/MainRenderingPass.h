@@ -30,5 +30,8 @@ private:
     // Update framebuffer to match current window size
     void UpdateFramebufferSize();
 
+    // Create separate FBO copy for editor display
+    void CreateEditorFBOCopy(RenderContext &context);
+
     static constexpr uint8_t MAIN_PASS_ID = 1;  // Execute after shadow pass (ID 0)
 };

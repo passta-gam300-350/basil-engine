@@ -148,8 +148,8 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             continue;
         }
 
-        // Generate mesh ID from mesh pointer only (like it worked with dragon model)
-        // Materials are per-instance, textures are per-mesh
+        // Generate mesh ID from mesh pointer for proper instancing
+        // Identical mesh pointers (shared meshes) will automatically be batched together
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
 
         // Add instance data with actual material properties
@@ -274,11 +274,17 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
     // 7. Draw all instances
     uint32_t indexCount = meshInstances.mesh->GetIndexCount();
+    uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
+    uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
+
+    assert(indexCount > 0 && "Index count must be positive for instanced drawing");
+    assert(instanceCount > 0 && "Instance count must be positive for instanced drawing");
+    assert(vaoHandle != 0 && "VAO handle must be valid for instanced drawing");
 
     RenderCommands::DrawElementsInstancedData drawCmd{
-        meshInstances.mesh->GetVertexArray()->GetVAOHandle(),
+        vaoHandle,
         indexCount,
-        static_cast<uint32_t>(meshInstances.instances.size()),
+        instanceCount,
         0,  // Base instance
         GL_TRIANGLES  // Instanced rendering uses standard triangle meshes
     };
