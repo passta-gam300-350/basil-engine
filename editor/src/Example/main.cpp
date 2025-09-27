@@ -22,6 +22,7 @@
 
 #include "Editor.hpp"
 #include "Screens/SplashScreen.hpp"
+#include "Input/InputManager.h"
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
 // Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
@@ -105,11 +106,51 @@ int main(int, char**)
 	style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
 	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	// Note: We pass false to prevent ImGui from installing callbacks automatically
+	// We'll chain them manually to work with InputManager
+	ImGui_ImplGlfw_InitForOpenGL(window, false);
 #ifdef __EMSCRIPTEN__
 	ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
 #endif
 	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	// Setup chained input callbacks to work with both ImGui and InputManager
+
+	// Set up chained callbacks
+	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+		// Call ImGui first
+		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+		// Then call InputManager
+		InputManager::Key_Callback(window, key, scancode, action, mods);
+	});
+
+	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+		// Call ImGui first
+		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+		// Then call InputManager
+		InputManager::Mouse_Callback(window, button, action, mods);
+	});
+
+	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
+		// Call ImGui first
+		ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+		// Then call InputManager
+		InputManager::CursorPosition_Callback(window, xpos, ypos);
+	});
+
+	glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
+		// Call ImGui first
+		ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+		// Then call InputManager
+		InputManager::Scroll_Callback(window, xoffset, yoffset);
+	});
+
+	glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int c) {
+		// Call ImGui first
+		ImGui_ImplGlfw_CharCallback(window, c);
+		// Then call InputManager
+		InputManager::Char_Callback(window, c);
+	});
 
 	// Load Fonts
 	// - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.

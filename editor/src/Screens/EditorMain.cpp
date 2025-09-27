@@ -39,20 +39,9 @@ void EditorMain::init()
 	Engine::GenerateDefaultConfig();
 	Engine::InitWithoutWindow("Default.yaml");
 
-	// Setup input callbacks for this window
-	// Note: We need to set up callbacks after engine init but before using InputManager
-	glfwSetKeyCallback(window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
-		InputManager::Key_Callback(win, key, scancode, action, mods);
-	});
-	glfwSetMouseButtonCallback(window, [](GLFWwindow* win, int button, int action, int mods) {
-		InputManager::Mouse_Callback(win, button, action, mods);
-	});
-	glfwSetCursorPosCallback(window, [](GLFWwindow* win, double xpos, double ypos) {
-		InputManager::CursorPosition_Callback(win, xpos, ypos);
-	});
-	glfwSetScrollCallback(window, [](GLFWwindow* win, double xoffset, double yoffset) {
-		InputManager::Scroll_Callback(win, xoffset, yoffset);
-	});
+	// Note: ImGui callbacks are already set up in main.cpp
+	// We need to chain our input handling with ImGui's callbacks
+	// InputManager will be updated manually in render() to avoid conflicts
 
 	// Initialize Editor Camera
 	m_EditorCamera = std::make_unique<EditorCamera>();
@@ -71,6 +60,10 @@ void EditorMain::render()
 {
 	// Menu Bar
 	if (!active) return;
+
+	// Update input manager ONCE per frame - at the very beginning
+	auto* input = InputManager::Get_Instance();
+	input->Update();
 
 	Render_MenuBar();
 
@@ -123,6 +116,15 @@ void EditorMain::render()
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
+
+	// IMPORTANT: Update editor camera matrices AFTER RenderSystem::Update
+	// so we override any ECS camera that was processed
+	if (!m_IsPlayMode && m_EditorCamera) {
+		auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
+		frameData.viewMatrix = m_EditorCamera->GetViewMatrix();
+		frameData.projectionMatrix = m_EditorCamera->GetProjectionMatrix();
+		frameData.cameraPosition = m_EditorCamera->GetPosition();
+	}
 
 	Render_SceneExplorer();
 	Render_Console();
@@ -436,25 +438,18 @@ void EditorMain::Render_Scene()
 		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 		lastTime = currentTime;
 
-		// Update input manager state (important for per-frame input state)
-		auto* input = InputManager::Get_Instance();
-		input->Update();
-
 		// Update camera based on input
 		m_EditorCamera->Update(deltaTime);
 
 		// Handle scroll for zoom
 		double scrollX, scrollY;
+		auto* input = InputManager::Get_Instance();
 		input->Get_ScrollOffset(scrollX, scrollY);
 		if (scrollY != 0) {
 			m_EditorCamera->OnMouseScroll(static_cast<float>(scrollY));
 		}
 
-		// Update render system's frame data with editor camera matrices
-		auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
-		frameData.viewMatrix = m_EditorCamera->GetViewMatrix();
-		frameData.projectionMatrix = m_EditorCamera->GetProjectionMatrix();
-		frameData.cameraPosition = m_EditorCamera->GetPosition();
+		// Camera matrices are now updated in main render() after RenderSystem::Update
 	}
 
 	ImGui::Begin("Scene");
