@@ -11,6 +11,7 @@
 #include <chrono>
 
 #include "Screens/EditorMain.hpp"
+#include <filesystem>
 
 #include "Editor.hpp"
 #include "imgui.h"
@@ -30,8 +31,8 @@ void EditorMain::init()
 	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
 	// Set maximized
 	glfwMaximizeWindow(window);
-
-
+	
+	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
@@ -156,12 +157,12 @@ void EditorMain::render()
 	Render_Scene();
 	Render_Game();
 	Render_CameraControls();
-
+	Render_AssetBrowser();
 }
 
 void EditorMain::cleanup()
 {
-
+	m_AssetManager.reset(nullptr);
 }
 
 void EditorMain::Show()
@@ -458,6 +459,135 @@ void EditorMain::Render_CameraControls()
 		ImGui::Text("Camera not initialized");
 	}
 
+	ImGui::End();
+}
+
+void EditorMain::Render_AssetBrowser()
+{
+	ImGui::Begin("Files");
+	ImGui::Text(m_AssetManager->GetCurrentPath().c_str());
+	if (m_AssetManager->GetCurrentPath() != m_AssetManager->GetRootPath())
+	{
+		if (ImGui::Button("Back"))
+		{
+			m_AssetManager->GoToParentDirectory();
+		}
+	}
+	std::vector<std::string> subdir = m_AssetManager->GetSubDirectories();
+
+	// Variables for spacing
+	static float padding = 5.0f;
+	static float thumbnailSize = 72.0f;
+	float cellSize = thumbnailSize + padding;
+
+	bool mClickDouble = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+	float panelWidth = ImGui::GetContentRegionAvail().x;
+	int columns = static_cast<int>(panelWidth / cellSize);
+
+	if (columns <= 0)
+	{
+		columns = 1;
+	}
+	ImGui::Columns(columns, 0, false);
+
+	for (std::string const& subd : subdir)
+	{
+		std::filesystem::path subpath{ subd };
+		std::string FolderName = subpath.filename().string();
+		ImGui::PushID(FolderName.c_str());
+		ImGui::Button("Folder", { thumbnailSize, thumbnailSize }); // Creates a button for the folders
+		if (ImGui::IsItemHovered() && mClickDouble) // Double Click into a folder 
+		{
+			m_AssetManager->GoToSubDirectory(subd);
+		}
+		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
+		{
+			if (ImGui::MenuItem("Import All")) // popup asking to import asset
+			{
+				m_AssetManager->ImportAssetDirectory(subd);
+			}
+			ImGui::EndPopup();
+		}
+		ImGui::TextWrapped(FolderName.c_str()); // Name of the asset
+
+		ImGui::NextColumn();
+		ImGui::PopID();
+	}
+
+
+	auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
+	for (auto it = files.first; it != files.second; ++it) {
+		std::filesystem::path filepath{ it->second.m_RawFileInfo.m_RawSourcePath };
+		std::string filename = filepath.filename().string();
+		ImGui::PushID(filename.c_str());
+		ImGui::Button(filename.c_str(), {thumbnailSize, thumbnailSize}); // Creates a button for the folders
+		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
+		{
+			/*
+			if (ImGui::MenuItem("Rename Asset")) // popup asking to rename asset
+			{
+				renameFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to rename
+				if (FileName.find_last_of('.') == std::string::npos)
+				{
+					renameFileExtention = "";
+				}
+				else
+				{
+					renameFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to rename
+				}
+				showPopup = true; // Start the rename pop up
+			}
+			if (ImGui::MenuItem("Delete Asset")) // popup asking to delete asset
+			{
+				deleteFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to delete
+				if (FileName.find_last_of('.') == std::string::npos)
+				{
+					deleteFileExtention = "";
+				}
+				else
+				{
+					deleteFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to delete
+				}
+
+				deleteFile = true; // starts the delete popup
+			}*/
+			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
+			{
+				m_AssetManager->ImportAsset(it->second);
+			}
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::BeginDragDropSource()) // If we start dragging
+		{
+			size_t pos = 0;
+			std::string itemPath = filepath.string();
+			char AssetPayload[] = "AssetDrop"; // Names any payload that starts from the asset browser to "AssetDrop"
+			ImGui::SetDragDropPayload(AssetPayload, itemPath.c_str(), strlen(itemPath.c_str()) + 1); // Actually load the payload with the data(the string name of the path)
+			ImGui::EndDragDropSource(); // Wraps up the payload package
+		}
+
+		ImGui::TextWrapped(filename.c_str()); // Name of the asset
+		ImGui::NextColumn();
+		ImGui::PopID();
+	}
+	ImGui::Columns(1);
+
+	ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32.0f, 256.0f); // Slider for thumbnail size
+	ImGui::SliderFloat("Padding Size", &padding, 0.0f, 24.0f); // Slider for how much padding between columns
+	ImGui::End();
+	
+	ImGui::Begin("Assets");
+	ImGui::Columns(columns, 0, false);
+	//this map is single threaded
+	for (auto[assetname, guid] : m_AssetManager->m_AssetNameGuid) {
+		ImGui::PushID(assetname.c_str());
+		ImGui::Button(assetname.c_str(), { thumbnailSize, thumbnailSize });
+		ImGui::TextWrapped(assetname.c_str()); // Name of the asset
+		ImGui::NextColumn();
+		ImGui::PopID();
+	}
+	ImGui::Columns(1);
 	ImGui::End();
 }
 
