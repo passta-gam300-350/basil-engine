@@ -216,6 +216,9 @@ void RenderSystem::LoadBasicShaders() {
 	spdlog::info("Engine PBR shader system loaded successfully");
 }
 
+// Shared cube mesh for all cubes to enable proper instancing
+static std::shared_ptr<Mesh> s_SharedCubeMesh = nullptr;
+
 void RenderSystem::CreateDebugCube(const glm::vec3& position,
 								  const glm::vec3& scale,
 								  const glm::vec3& color) {
@@ -235,10 +238,12 @@ void RenderSystem::CreateDebugCube(const glm::vec3& position,
 		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Create cube mesh using PrimitiveGenerator (no models needed)
-	auto cubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
-	assert(cubeMesh && "Cube mesh generation failed");
-	assert(!cubeMesh->vertices.empty() && "Generated cube has no vertices");
+	// Create shared cube mesh once for all cubes (enables proper instancing)
+	if (!s_SharedCubeMesh) {
+		s_SharedCubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+		assert(s_SharedCubeMesh && "Cube mesh generation failed");
+		assert(!s_SharedCubeMesh->vertices.empty() && "Generated cube has no vertices");
+	}
 
 	// Create PBR material (following GraphicsTestDriver pattern)
 	auto material = std::make_shared<Material>(s_CubeShader, "EngineCube_" + std::to_string(entity.get_uid()));
@@ -248,11 +253,11 @@ void RenderSystem::CreateDebugCube(const glm::vec3& position,
 
 	assert(material && "Material creation failed");
 
-	// Register in editor cache (same as current editor workflow)
+	// Register in editor cache (use shared mesh for all cubes!)
 	auto meshGuid = Resource::Guid::generate();
 	auto materialGuid = Resource::Guid::generate();
 
-	RegisterEditorMesh(meshGuid, cubeMesh);
+	RegisterEditorMesh(meshGuid, s_SharedCubeMesh);  // Use shared mesh
 	RegisterEditorMaterial(materialGuid, material);
 
 	// Add mesh renderer component

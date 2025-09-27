@@ -31,12 +31,20 @@ void MainRenderingPass::Execute(RenderContext& context)
 
     // Clear color and depth buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 0.5f,  // r, g, b, a
+        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a (fully opaque background)
         true,                      // clearColor
         true                       // clearDepth
     };
 
     Submit(clearCmd);
+
+    // Ensure proper depth testing state for opaque objects
+    RenderCommands::SetDepthTestData depthTestCmd{
+        true,           // enable depth testing
+        GL_LESS,        // depth function (objects closer to camera pass)
+        true            // enable depth writing
+    };
+    Submit(depthTestCmd);
 
     // Standard forward rendering with context data (no copies!)
     if (!context.renderables.empty())

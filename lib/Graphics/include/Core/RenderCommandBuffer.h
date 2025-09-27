@@ -88,6 +88,12 @@ namespace RenderCommands {
     struct SetLineWidthData {
         float width;
     };
+
+    struct SetDepthTestData {
+        bool enable;
+        uint32_t depthFunc = GL_LESS;  // GL_LESS, GL_LEQUAL, GL_GREATER, etc.
+        bool depthWrite = true;        // Enable/disable depth buffer writes
+    };
 }
 
 // Command variant - no virtual function calls, cache-friendly
@@ -103,7 +109,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BlitFramebufferData,
     RenderCommands::SetUniformVec3Data,
     RenderCommands::SetBlendingData,
-    RenderCommands::SetLineWidthData
+    RenderCommands::SetLineWidthData,
+    RenderCommands::SetDepthTestData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -144,6 +151,7 @@ private:
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
+    void ExecuteCommand(const RenderCommands::SetDepthTestData& cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

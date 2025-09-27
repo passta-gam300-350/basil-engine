@@ -359,7 +359,7 @@ void EditorMain::Render_Scene()
 		// Debug: Check what components each entity has
 		bool hasMeshRenderer = world.has_all_components_in_entity<MeshRendererComponent>(entity);
 		if (hasMeshRenderer) {
-			spdlog::info("DEBUG: Entity {} has MeshRendererComponent", entity.get_uid());
+			//spdlog::info("DEBUG: Entity {} has MeshRendererComponent", entity.get_uid());
 		}
 	}
 	for (auto entity : meshEntities) { meshCount++; }
