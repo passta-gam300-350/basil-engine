@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "Screens/Screen.hpp"
 #include "Camera/EditorCamera.hpp"
+#include "ecs/fwd.h"
 #include <memory>
 
 class EditorMain : public Screen
@@ -47,7 +48,7 @@ public:
 
 	void Render_Profiler();
 
-
+	void Render_Inspector();
 
 	void Render_Console();
 
@@ -56,6 +57,14 @@ public:
 	void Render_Scene();
 	void Render_Game();
 	void Render_CameraControls();
+
+
+	void Render_Transform_Group_Component(ecs::entity entity_handle);
+
+	void Render_Lighting_Group_Component(ecs::entity entity_handle);
+
+	void Render_Camera_Group_Component(ecs::entity entity_handle);
+	void Render_Mesh_Component(ecs::entity entity_handle);
 
 private:
 	// Entity management

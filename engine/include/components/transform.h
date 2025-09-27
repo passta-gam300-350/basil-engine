@@ -11,4 +11,12 @@ struct PositionComponent {
 	glm::vec3 m_WorldPos;
 };
 
+struct ScaleComponent {
+	glm::vec3 m_Scale;
+};
+
+struct RotationComponent {
+	glm::vec3 m_Rotation; // Euler angles in degrees
+};
+
 #endif
