@@ -3,6 +3,8 @@
 
 #include "imgui.h"
 #include "Screens/Screen.hpp"
+#include "Camera/EditorCamera.hpp"
+#include <memory>
 
 class EditorMain : public Screen
 {
@@ -46,6 +48,7 @@ public:
 
 	void Render_Scene();
 	void Render_Game();
+	void Render_CameraControls();
 
 private:
 	// Entity management
@@ -54,14 +57,14 @@ private:
 	void CreateLightEntity();
 	void CreateCameraEntity();
 
-	// Camera controls (following GraphicsTestDriver pattern)
-	void ProcessCameraInput();
+	// Editor Camera
+	std::unique_ptr<EditorCamera> m_EditorCamera;
 
-	// Mouse camera controls
-	bool m_CameraControlEnabled = false;
-	bool m_FirstMouse = true;
-	float m_LastMouseX = 640.0f;
-	float m_LastMouseY = 360.0f;
-	float m_MouseSensitivity = 0.1f;
+	// Play mode state
+	bool m_IsPlayMode = false;
+
+	// Viewport size tracking for aspect ratio
+	float m_ViewportWidth = 1280.0f;
+	float m_ViewportHeight = 720.0f;
 };
 #endif // EDITORMAIN_HPP

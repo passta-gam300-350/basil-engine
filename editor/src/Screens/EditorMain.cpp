@@ -1,4 +1,4 @@
-// THIS IS THE ACTUAL LEVEL EDITOR!!!, 
+// THIS IS THE ACTUAL LEVEL EDITOR!!!,
 
 #include <Render/Render.h>
 #include <Engine.hpp>
@@ -8,6 +8,7 @@
 #include <Input/InputManager.h>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
+#include <chrono>
 
 #include "Screens/EditorMain.hpp"
 
@@ -29,7 +30,7 @@ void EditorMain::init()
 	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
 	// Set maximized
 	glfwMaximizeWindow(window);
-	
+
 
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
@@ -38,9 +39,30 @@ void EditorMain::init()
 	Engine::GenerateDefaultConfig();
 	Engine::InitWithoutWindow("Default.yaml");
 
+	// Setup input callbacks for this window
+	// Note: We need to set up callbacks after engine init but before using InputManager
+	glfwSetKeyCallback(window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
+		InputManager::Key_Callback(win, key, scancode, action, mods);
+	});
+	glfwSetMouseButtonCallback(window, [](GLFWwindow* win, int button, int action, int mods) {
+		InputManager::Mouse_Callback(win, button, action, mods);
+	});
+	glfwSetCursorPosCallback(window, [](GLFWwindow* win, double xpos, double ypos) {
+		InputManager::CursorPosition_Callback(win, xpos, ypos);
+	});
+	glfwSetScrollCallback(window, [](GLFWwindow* win, double xoffset, double yoffset) {
+		InputManager::Scroll_Callback(win, xoffset, yoffset);
+	});
+
+	// Initialize Editor Camera
+	m_EditorCamera = std::make_unique<EditorCamera>();
+	m_EditorCamera->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
+	m_EditorCamera->SetRotation(glm::vec3(-25.0f, -90.0f, 0.0f));
+
 	// Create a basic light so we can see something
 	CreateLightEntity();
-	CreateCameraEntity();
+	// Note: We don't need CreateCameraEntity() in edit mode - using EditorCamera instead
+	// CreateCameraEntity() will be called when entering play mode
 
 	//std::jthread jth(&Engine::Update);
 }
@@ -98,9 +120,6 @@ void EditorMain::render()
 	ImGui::End();
 	glClearColor(1, 1, 1, 1);
 
-	// Process camera input on ECS camera entity
-	ProcessCameraInput();
-
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
@@ -109,6 +128,7 @@ void EditorMain::render()
 	Render_Console();
 	Render_Scene();
 	Render_Game();
+	Render_CameraControls();
 
 }
 
@@ -332,15 +352,130 @@ void EditorMain::Render_Game()
 	ImGui::End();
 }
 
+void EditorMain::Render_CameraControls()
+{
+	ImGui::Begin("Camera Controls");
+
+	if (m_EditorCamera) {
+		// Camera mode selection
+		ImGui::Text("Camera Mode:");
+		const char* modes[] = { "Fly", "Orbit", "Pan" };
+		static int currentMode = 0;
+
+		if (ImGui::Combo("Mode", &currentMode, modes, IM_ARRAYSIZE(modes))) {
+			m_EditorCamera->SetMode(static_cast<EditorCamera::Mode>(currentMode));
+		}
+
+		ImGui::Separator();
+
+		// Camera position info
+		glm::vec3 pos = m_EditorCamera->GetPosition();
+		ImGui::Text("Position: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
+
+		glm::vec3 rot = m_EditorCamera->GetRotation();
+		ImGui::Text("Rotation: %.2f, %.2f, %.2f", rot.x, rot.y, rot.z);
+
+		ImGui::Separator();
+
+		// Camera settings
+		float moveSpeed = m_EditorCamera->GetMoveSpeed();
+		if (ImGui::SliderFloat("Move Speed", &moveSpeed, 0.1f, 50.0f)) {
+			m_EditorCamera->SetMoveSpeed(moveSpeed);
+		}
+
+		float rotSpeed = m_EditorCamera->GetRotationSpeed();
+		if (ImGui::SliderFloat("Rotation Speed", &rotSpeed, 0.1f, 1.0f)) {
+			m_EditorCamera->SetRotationSpeed(rotSpeed);
+		}
+
+		ImGui::Separator();
+
+		// Control instructions
+		ImGui::Text("Controls:");
+		ImGui::BulletText("Fly Mode:");
+		ImGui::Text("  Right Click + Drag: Look around");
+		ImGui::Text("  WASD: Move horizontally");
+		ImGui::Text("  Q/E: Move up/down");
+		ImGui::Text("  Shift: Speed boost");
+		ImGui::Text("  Scroll: Adjust move speed");
+
+		ImGui::BulletText("Orbit Mode:");
+		ImGui::Text("  Middle Click + Drag: Orbit");
+		ImGui::Text("  Shift + Middle: Pan");
+		ImGui::Text("  Scroll: Zoom in/out");
+
+		ImGui::BulletText("Pan Mode:");
+		ImGui::Text("  Middle Click + Drag: Pan");
+
+		ImGui::Separator();
+
+		// Reset button
+		if (ImGui::Button("Reset Camera")) {
+			m_EditorCamera->Reset();
+		}
+
+		// Focus on origin button
+		ImGui::SameLine();
+		if (ImGui::Button("Focus Origin")) {
+			m_EditorCamera->FocusOn(glm::vec3(0.0f), 10.0f);
+		}
+	} else {
+		ImGui::Text("Camera not initialized");
+	}
+
+	ImGui::End();
+}
+
 void EditorMain::Render_Scene()
 {
+	// Update editor camera OUTSIDE of ImGui window - do this first
+	if (!m_IsPlayMode && m_EditorCamera) {
+		// Get delta time
+		static auto lastTime = std::chrono::steady_clock::now();
+		auto currentTime = std::chrono::steady_clock::now();
+		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+		lastTime = currentTime;
+
+		// Update input manager state (important for per-frame input state)
+		auto* input = InputManager::Get_Instance();
+		input->Update();
+
+		// Update camera based on input
+		m_EditorCamera->Update(deltaTime);
+
+		// Handle scroll for zoom
+		double scrollX, scrollY;
+		input->Get_ScrollOffset(scrollX, scrollY);
+		if (scrollY != 0) {
+			m_EditorCamera->OnMouseScroll(static_cast<float>(scrollY));
+		}
+
+		// Update render system's frame data with editor camera matrices
+		auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
+		frameData.viewMatrix = m_EditorCamera->GetViewMatrix();
+		frameData.projectionMatrix = m_EditorCamera->GetProjectionMatrix();
+		frameData.cameraPosition = m_EditorCamera->GetPosition();
+	}
+
 	ImGui::Begin("Scene");
+
+	// Get viewport size for aspect ratio
+	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+	if (viewportSize.x > 0 && viewportSize.y > 0) {
+		m_ViewportWidth = viewportSize.x;
+		m_ViewportHeight = viewportSize.y;
+
+		// Update aspect ratio if viewport size changed
+		if (m_EditorCamera) {
+			m_EditorCamera->SetAspectRatio(m_ViewportWidth / m_ViewportHeight);
+		}
+	}
 
 	// Check if editor framebuffer is available before trying to access it
 	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
 	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
 		ImGui::Image((ImTextureID)frameData.editorColorBuffer->GetFBOHandle(),
-		             {1280,720}, ImVec2(0, 1), ImVec2(1, 0));
+		             viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 	} else {
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
@@ -494,113 +629,3 @@ void EditorMain::CreateCameraEntity()
 
 	world.add_component_to_entity<CameraComponent>(entity, camera);
 }
-
-void EditorMain::ProcessCameraInput()
-{
-	ecs::world world = Engine::GetWorld();
-	auto cameras = world.filter_entities<CameraComponent, PositionComponent>();
-
-	if (!cameras) return;
-
-	// Get the first camera entity
-	auto [cameraComp, cameraPos] = (*cameras.begin()).get<CameraComponent, PositionComponent>();
-
-	// Try InputManager first (if available), fallback to direct GLFW
-	auto* inputManager = InputManager::Get_Instance();
-
-	// Check for camera control toggle (F1 key like GraphicsTestDriver)
-	static bool f1WasPressed = false;
-	bool f1IsPressed = (inputManager && inputManager->Is_KeyPressed(GLFW_KEY_F1)) ||
-	                   (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS);
-
-	if (f1IsPressed && !f1WasPressed) {
-		m_CameraControlEnabled = !m_CameraControlEnabled;
-		if (m_CameraControlEnabled) {
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			m_FirstMouse = true;
-		} else {
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
-	}
-	f1WasPressed = f1IsPressed;
-
-	if (!m_CameraControlEnabled) return;
-
-	// Mouse look (when camera control is enabled)
-	double mouseX, mouseY;
-	if (inputManager) {
-		inputManager->Get_MousePosition(mouseX, mouseY);
-	} else {
-		glfwGetCursorPos(window, &mouseX, &mouseY);
-	}
-
-	if (m_FirstMouse) {
-		m_LastMouseX = static_cast<float>(mouseX);
-		m_LastMouseY = static_cast<float>(mouseY);
-		m_FirstMouse = false;
-	}
-
-	float xoffset = static_cast<float>(mouseX) - m_LastMouseX;
-	float yoffset = m_LastMouseY - static_cast<float>(mouseY); // Reversed since y-coordinates go from bottom to top
-	m_LastMouseX = static_cast<float>(mouseX);
-	m_LastMouseY = static_cast<float>(mouseY);
-
-	xoffset *= m_MouseSensitivity;
-	yoffset *= m_MouseSensitivity;
-
-	cameraComp.m_Yaw += xoffset;
-	cameraComp.m_Pitch += yoffset;
-
-	// Constrain pitch to prevent camera flipping
-	if (cameraComp.m_Pitch > 89.0f) cameraComp.m_Pitch = 89.0f;
-	if (cameraComp.m_Pitch < -89.0f) cameraComp.m_Pitch = -89.0f;
-
-	// Update camera vectors based on yaw and pitch
-	glm::vec3 front;
-	front.x = cos(glm::radians(cameraComp.m_Yaw)) * cos(glm::radians(cameraComp.m_Pitch));
-	front.y = sin(glm::radians(cameraComp.m_Pitch));
-	front.z = sin(glm::radians(cameraComp.m_Yaw)) * cos(glm::radians(cameraComp.m_Pitch));
-	cameraComp.m_Front = glm::normalize(front);
-
-	// Recalculate Right and Up vectors
-	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	cameraComp.m_Right = glm::normalize(glm::cross(cameraComp.m_Front, worldUp));
-	cameraComp.m_Up = glm::normalize(glm::cross(cameraComp.m_Right, cameraComp.m_Front));
-
-	// Camera movement parameters (matching GraphicsTestDriver)
-	float deltaTime = 0.016f; // ~60fps
-	float moveSpeed = 2.5f;   // Movement speed similar to GraphicsTestDriver
-
-	glm::vec3 position = cameraPos.m_WorldPos;
-
-	// Apply movement based on input using updated camera vectors
-	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_W)) ||
-	    glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		position += cameraComp.m_Front * moveSpeed * deltaTime;
-	}
-	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_S)) ||
-	    glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		position -= cameraComp.m_Front * moveSpeed * deltaTime;
-	}
-	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_A)) ||
-	    glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		position -= cameraComp.m_Right * moveSpeed * deltaTime;
-	}
-	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_D)) ||
-	    glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		position += cameraComp.m_Right * moveSpeed * deltaTime;
-	}
-	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_SPACE)) ||
-	    glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		position += cameraComp.m_Up * moveSpeed * deltaTime;
-	}
-	if ((inputManager && inputManager->Is_KeyPressed(GLFW_KEY_LEFT_CONTROL)) ||
-	    glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-		position -= cameraComp.m_Up * moveSpeed * deltaTime;
-	}
-
-	// Update the camera entity position - RenderSystem will read this and pass to graphics lib
-	cameraPos.m_WorldPos = position;
-}
-
-
