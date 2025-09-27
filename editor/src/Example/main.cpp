@@ -276,6 +276,8 @@ int main(int, char**)
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
+	editor.Cleanup();
+
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
