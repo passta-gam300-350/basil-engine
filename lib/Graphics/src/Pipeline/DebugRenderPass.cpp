@@ -86,7 +86,7 @@ void DebugRenderPass::Execute(RenderContext& context)
     context.frameData.mainColorBuffer->Unbind();
 
     // Update editor FBO with debug overlays (similar to MainRenderingPass)
-    //UpdateEditorFBOWithDebug(context);
+    UpdateEditorFBOWithDebug(context);
 
     // End the pass (no framebuffer unbinding since we don't have one)
     End();
