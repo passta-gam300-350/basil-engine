@@ -56,6 +56,13 @@ private:
 	void CreatePlaneEntity();
 	void CreateLightEntity();
 	void CreateCameraEntity();
+	void CreateDemoScene();
+
+	// Demo scene creation utilities
+	void CreateCube(const glm::vec3& position = glm::vec3(0.0f),
+	               const glm::vec3& scale = glm::vec3(1.0f),
+	               const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f));
+	void CreateCubeGrid(int gridSize = 3, float spacing = 3.0f);
 
 	// Editor Camera
 	std::unique_ptr<EditorCamera> m_EditorCamera;

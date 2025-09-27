@@ -57,6 +57,9 @@ void EditorMain::init()
 	// We'll update it with EditorCamera data each frame
 	CreateCameraEntity();
 
+	// Create demo scene with cubes for testing (disabled by default)
+	// CreateDemoScene();
+
 	//std::jthread jth(&Engine::Update);
 }
 
@@ -291,6 +294,10 @@ void EditorMain::Render_SceneExplorer()
 	ImGui::SameLine();
 	if (ImGui::Button("Create Plane")) {
 		CreatePlaneEntity();
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Create Cube")) {
+		CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Create Light")) {
@@ -601,45 +608,40 @@ void EditorMain::CreatePlaneEntity()
 	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Create a simple plane using graphics library primitives
-	auto planeMesh = PrimitiveGenerator::CreatePlane(2.0f, 2.0f, 1, 1);
+	// Get shared plane mesh from RenderSystem
+	auto planeMesh = RenderSystem::GetSharedPlaneMesh();
+	assert(planeMesh && "Shared plane mesh must be available");
 
-	// Get the SceneRenderer to access ResourceManager
-	auto& renderSystem = RenderSystem::Instance();
-	auto* resourceManager = renderSystem.m_SceneRenderer->GetResourceManager();
-
-	// Try to create a basic shader
-	auto shader = resourceManager->LoadShader("test", "basic.vert", "basic.frag");
-
-	if (shader) {
-		// Create material with the shader
-		auto material = std::make_shared<Material>(shader, "PlaneMaterial");
-		material->SetAlbedoColor(glm::vec3(0.8f, 0.3f, 0.3f)); // Red color
-
-		// Create shared pointers for mesh and material
-		auto meshPtr = std::make_shared<Mesh>(std::move(planeMesh));
-
-		// Generate GUIDs for the resources
-		auto meshGuid = Resource::Guid::generate();
-		auto materialGuid = Resource::Guid::generate();
-
-		// Register resources with the RenderSystem's editor cache (proper way)
-		RenderSystem::RegisterEditorMesh(meshGuid, meshPtr);
-		RenderSystem::RegisterEditorMaterial(materialGuid, material);
-
-		// Add mesh renderer component
-		MeshRendererComponent meshRenderer;
-		meshRenderer.m_MeshGuid = meshGuid;
-		meshRenderer.m_MaterialGuid = materialGuid;
-
-		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
-
-		// Debug: Confirm mesh component was added
-		spdlog::info("DEBUG: Added MeshRendererComponent to entity {}", entity.get_uid());
-	} else {
-		// Debug: Shader loading failed
-		spdlog::warn("DEBUG: Failed to load shader for cube entity");
+	// Get PBR shader from RenderSystem
+	auto shader = RenderSystem::s_CubeShader;
+	if (!shader) {
+		RenderSystem::LoadBasicShaders();
+		shader = RenderSystem::s_CubeShader;
 	}
+	assert(shader && "PBR shader must be available");
+
+	// Create material with PBR shader
+	auto material = std::make_shared<Material>(shader, "PlaneMaterial_" + std::to_string(entity.get_uid()));
+	material->SetAlbedoColor(glm::vec3(0.8f, 0.3f, 0.3f)); // Red color
+	material->SetMetallicValue(0.1f);
+	material->SetRoughnessValue(0.8f);
+
+	assert(material && "Material creation failed");
+
+	// Generate GUIDs for the resources
+	auto meshGuid = Resource::Guid::generate();
+	auto materialGuid = Resource::Guid::generate();
+
+	// Register resources with the RenderSystem's editor cache
+	RenderSystem::RegisterEditorMesh(meshGuid, planeMesh);
+	RenderSystem::RegisterEditorMaterial(materialGuid, material);
+
+	// Add mesh renderer component
+	MeshRendererComponent meshRenderer;
+	meshRenderer.m_MeshGuid = meshGuid;
+	meshRenderer.m_MaterialGuid = materialGuid;
+
+	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 }
 
 void EditorMain::CreateLightEntity()
@@ -691,4 +693,110 @@ void EditorMain::CreateCameraEntity()
 	camera.m_Pitch = 0.0f;
 
 	world.add_component_to_entity<CameraComponent>(entity, camera);
+}
+
+void EditorMain::CreateDemoScene()
+{
+	spdlog::info("Creating demo scene with cubes and lighting");
+
+	// Create 3x3 cube grid using local utilities
+	CreateCubeGrid(3, 3.0f);
+
+	// Create additional directional light for better lighting
+	ecs::world world = Engine::GetWorld();
+
+	auto lightEntity = world.add_entity();
+	world.add_component_to_entity<PositionComponent>(lightEntity, glm::vec3(0.0f, 5.0f, 0.0f));
+
+	LightComponent light;
+	light.m_Type = Light::Type::Directional;
+	light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
+	light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
+	light.m_Intensity = 1.0f;
+	light.m_IsEnabled = true;
+
+	world.add_component_to_entity<LightComponent>(lightEntity, light);
+
+	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
+}
+
+void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, const glm::vec3& color)
+{
+	assert(scale.x > 0 && scale.y > 0 && scale.z > 0 && "Scale must be positive");
+
+	auto world = Engine::GetWorld();
+	auto entity = world.add_entity();
+
+	// Add transform components
+	world.add_component_to_entity<PositionComponent>(entity, position);
+	world.add_component_to_entity<TransformComponent>(entity,
+		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
+	world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+	// Get shared cube mesh from RenderSystem (enables proper instancing)
+	auto cubeMesh = RenderSystem::GetSharedCubeMesh();
+	assert(cubeMesh && "Shared cube mesh must be available");
+
+	// Get PBR shader from RenderSystem
+	auto shader = RenderSystem::s_CubeShader;
+	if (!shader) {
+		RenderSystem::LoadBasicShaders();
+		shader = RenderSystem::s_CubeShader;
+	}
+	assert(shader && "PBR shader must be available");
+
+	// Create PBR material
+	auto material = std::make_shared<Material>(shader, "EditorCube_" + std::to_string(entity.get_uid()));
+	material->SetAlbedoColor(color);
+	material->SetMetallicValue(0.1f);
+	material->SetRoughnessValue(0.8f);
+
+	assert(material && "Material creation failed");
+
+	// Register in editor cache (use shared mesh for all cubes!)
+	auto meshGuid = Resource::Guid::generate();
+	auto materialGuid = Resource::Guid::generate();
+
+	RenderSystem::RegisterEditorMesh(meshGuid, cubeMesh);
+	RenderSystem::RegisterEditorMaterial(materialGuid, material);
+
+	// Add mesh renderer component
+	MeshRendererComponent meshRenderer;
+	meshRenderer.m_MeshGuid = meshGuid;
+	meshRenderer.m_MaterialGuid = materialGuid;
+
+	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+}
+
+void EditorMain::CreateCubeGrid(int gridSize, float spacing)
+{
+	assert(gridSize > 0 && gridSize <= 10 && "Grid size must be between 1-10");
+	assert(spacing > 0.0f && "Spacing must be positive");
+
+	// Same colors as GraphicsTestDriver
+	std::vector<glm::vec3> colors = {
+		glm::vec3(0.8f, 0.2f, 0.2f),  // Red
+		glm::vec3(0.2f, 0.8f, 0.2f),  // Green
+		glm::vec3(0.2f, 0.2f, 0.8f),  // Blue
+		glm::vec3(1.0f, 0.8f, 0.2f),  // Gold
+		glm::vec3(1.0f, 1.0f, 1.0f),  // White
+	};
+
+	const float startOffset = -(gridSize - 1) * spacing * 0.5f;
+
+	for (int x = 0; x < gridSize; ++x) {
+		for (int z = 0; z < gridSize; ++z) {
+			glm::vec3 position(
+				startOffset + x * spacing,
+				0.0f,  // Ground level
+				startOffset + z * spacing
+			);
+
+			// Cycle through materials based on position
+			int colorIndex = (x + z) % colors.size();
+			glm::vec3 color = colors[colorIndex];
+
+			CreateCube(position, glm::vec3(1.0f), color);
+		}
+	}
 }

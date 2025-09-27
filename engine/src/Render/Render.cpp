@@ -38,10 +38,11 @@ void RenderSystem::InstanceData::Release() {
 void RenderSystem::Init() {
 	Instance().Acquire();
 
-	// Automatically create debug cubes when render system initializes
-	InitializeDebugCubes();
+	// Load shaders and setup debug visualization meshes only
+	LoadBasicShaders();
+	SetupDebugVisualization();
 
-	spdlog::info("RenderSystem initialized with automatic cube generation");
+	spdlog::info("RenderSystem initialized");
 }
 
 void RenderSystem::Update(ecs::world& world) {
@@ -171,6 +172,30 @@ void RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<M
 	g_EditorMaterialCache[guid] = material;
 }
 
+// Shared primitive meshes for instancing
+namespace {
+	std::shared_ptr<Mesh> g_SharedCubeMesh = nullptr;
+	std::shared_ptr<Mesh> g_SharedPlaneMesh = nullptr;
+}
+
+std::shared_ptr<Mesh> RenderSystem::GetSharedCubeMesh() {
+	if (!g_SharedCubeMesh) {
+		g_SharedCubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+		assert(g_SharedCubeMesh && "Cube mesh generation failed");
+		assert(!g_SharedCubeMesh->vertices.empty() && "Generated cube has no vertices");
+	}
+	return g_SharedCubeMesh;
+}
+
+std::shared_ptr<Mesh> RenderSystem::GetSharedPlaneMesh() {
+	if (!g_SharedPlaneMesh) {
+		g_SharedPlaneMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(2.0f, 2.0f, 1, 1));
+		assert(g_SharedPlaneMesh && "Plane mesh generation failed");
+		assert(!g_SharedPlaneMesh->vertices.empty() && "Generated plane has no vertices");
+	}
+	return g_SharedPlaneMesh;
+}
+
 void RenderSystem::LoadBasicShaders() {
 	auto& instance = RenderSystem::Instance();
 	auto* resourceManager = instance.m_SceneRenderer->GetResourceManager();
@@ -216,103 +241,8 @@ void RenderSystem::LoadBasicShaders() {
 	spdlog::info("Engine PBR shader system loaded successfully");
 }
 
-// Shared cube mesh for all cubes to enable proper instancing
-static std::shared_ptr<Mesh> s_SharedCubeMesh = nullptr;
 
-void RenderSystem::CreateDebugCube(const glm::vec3& position,
-								  const glm::vec3& scale,
-								  const glm::vec3& color) {
-	assert(scale.x > 0 && scale.y > 0 && scale.z > 0 && "Scale must be positive");
-
-	// Ensure shader is loaded
-	if (!s_CubeShader) {
-		LoadBasicShaders();
-	}
-
-	auto world = Engine::GetWorld();
-	auto entity = world.add_entity();
-
-	// Add transform components (same as editor entity creation)
-	world.add_component_to_entity<PositionComponent>(entity, position);
-	world.add_component_to_entity<TransformComponent>(entity,
-		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
-
-	// Create shared cube mesh once for all cubes (enables proper instancing)
-	if (!s_SharedCubeMesh) {
-		s_SharedCubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
-		assert(s_SharedCubeMesh && "Cube mesh generation failed");
-		assert(!s_SharedCubeMesh->vertices.empty() && "Generated cube has no vertices");
-	}
-
-	// Create PBR material (following GraphicsTestDriver pattern)
-	auto material = std::make_shared<Material>(s_CubeShader, "EngineCube_" + std::to_string(entity.get_uid()));
-	material->SetAlbedoColor(color);      // PBR albedo color
-	material->SetMetallicValue(0.1f);     // Low metallic for non-metals
-	material->SetRoughnessValue(0.8f);    // High roughness for matte look
-
-	assert(material && "Material creation failed");
-
-	// Register in editor cache (use shared mesh for all cubes!)
-	auto meshGuid = Resource::Guid::generate();
-	auto materialGuid = Resource::Guid::generate();
-
-	RegisterEditorMesh(meshGuid, s_SharedCubeMesh);  // Use shared mesh
-	RegisterEditorMaterial(materialGuid, material);
-
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer;
-	meshRenderer.m_MeshGuid = meshGuid;
-	meshRenderer.m_MaterialGuid = materialGuid;
-
-	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
-
-	spdlog::info("Created engine cube at ({:.1f}, {:.1f}, {:.1f}) with color ({:.2f}, {:.2f}, {:.2f})",
-				 position.x, position.y, position.z, color.r, color.g, color.b);
-}
-
-void RenderSystem::CreateCubeGrid(int gridSize, float spacing) {
-	assert(gridSize > 0 && gridSize <= 10 && "Grid size must be between 1-10");
-	assert(spacing > 0.0f && "Spacing must be positive");
-
-	spdlog::info("Creating {}x{} cube grid (engine cubes)", gridSize, gridSize);
-
-	// Same colors as GraphicsTestDriver
-	std::vector<glm::vec3> colors = {
-		glm::vec3(0.8f, 0.2f, 0.2f),  // Red
-		glm::vec3(0.2f, 0.8f, 0.2f),  // Green
-		glm::vec3(0.2f, 0.2f, 0.8f),  // Blue
-		glm::vec3(1.0f, 0.8f, 0.2f),  // Gold
-		glm::vec3(1.0f, 1.0f, 1.0f),  // White
-	};
-
-	const float startOffset = -(gridSize - 1) * spacing * 0.5f;
-
-	for (int x = 0; x < gridSize; ++x) {
-		for (int z = 0; z < gridSize; ++z) {
-			glm::vec3 position(
-				startOffset + x * spacing,
-				0.0f,  // Ground level
-				startOffset + z * spacing
-			);
-
-			// Cycle through materials based on position (same as GraphicsTestDriver)
-			int colorIndex = (x + z) % colors.size();
-			glm::vec3 color = colors[colorIndex];
-
-			CreateDebugCube(position, glm::vec3(1.0f), color);
-		}
-	}
-
-	spdlog::info("Created {} engine cubes in grid", gridSize * gridSize);
-}
-
-void RenderSystem::InitializeDebugCubes() {
-	spdlog::info("=== Engine Cube System Initialization ===");
-
-	// Load shaders first
-	LoadBasicShaders();
-
+void RenderSystem::SetupDebugVisualization() {
 	// Set up debug visualization meshes (required for DebugRenderPass)
 	auto& instance = RenderSystem::Instance();
 	auto* sceneRenderer = instance.m_SceneRenderer.get();
@@ -324,35 +254,12 @@ void RenderSystem::InitializeDebugCubes() {
 		auto wireframeCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateWireframeCube(1.0f));
 
 		// Debug visualization uses primitive shader (already set in LoadBasicShaders)
-		// sceneRenderer->SetDebugPrimitiveShader() is called in LoadBasicShaders
 		sceneRenderer->SetDebugLightCubeMesh(lightCube);
 		sceneRenderer->SetDebugDirectionalRayMesh(lightRay);
 		sceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
 
 		spdlog::info("Debug visualization meshes configured");
 	}
-
-	// Create cube grid (emulating GraphicsTestDriver::SetupAdvancedScene)
-	CreateCubeGrid(3, 3.0f);
-
-	// Add basic lighting (same as GraphicsTestDriver)
-	auto world = Engine::GetWorld();
-
-	// Create directional light entity
-	auto lightEntity = world.add_entity();
-	world.add_component_to_entity<PositionComponent>(lightEntity, glm::vec3(0.0f, 5.0f, 0.0f));
-
-	LightComponent light;
-	light.m_Type = Light::Type::Directional;
-	light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
-	light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-	light.m_Intensity = 1.0f;
-	light.m_IsEnabled = true;
-
-	world.add_component_to_entity<LightComponent>(lightEntity, light);
-
-	spdlog::info("Engine cube system initialized with {} cubes and lighting", 9);
-	spdlog::info("==========================================");
 }
 
 auto load_mesh_lambda = [](const char* data)->std::shared_ptr<Mesh> {
