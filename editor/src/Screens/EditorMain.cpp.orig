@@ -11,7 +11,6 @@
 #include <chrono>
 
 #include "Screens/EditorMain.hpp"
-#include <filesystem>
 
 #include "Editor.hpp"
 #include "imgui.h"
@@ -32,8 +31,8 @@ void EditorMain::init()
 	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
 	// Set maximized
 	glfwMaximizeWindow(window);
-	
-	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+
+
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
@@ -121,7 +120,90 @@ void EditorMain::render()
 	}
 
 
+	ImGui::Begin("Inspector", nullptr);
 
+	// Show selected entity information
+	if (m_SelectedEntityID != 0) {
+		ImGui::Text("Selected Entity");
+		ImGui::Separator();
+		ImGui::Text("Object ID: %u", m_SelectedEntityID);
+
+		// Try to find the entity in the world
+		ecs::world world = Engine::GetWorld();
+		auto entities = world.filter_entities<PositionComponent>();
+
+		bool entityFound = false;
+		for (auto entity : entities) {
+			if (static_cast<uint32_t>(entity.get_uid()) == m_SelectedEntityID) {
+				entityFound = true;
+
+				// Show entity components
+				ImGui::Text("Entity UID: %llu", entity.get_uid());
+
+				// Position Component
+				if (world.has_all_components_in_entity<PositionComponent>(entity)) {
+					auto& pos = world.get_component_from_entity<PositionComponent>(entity);
+					ImGui::Text("Position Component:");
+					ImGui::Text("  World Pos: (%.2f, %.2f, %.2f)", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
+				}
+
+				// Transform Component
+				if (world.has_all_components_in_entity<TransformComponent>(entity)) {
+					ImGui::Text("Transform Component: Present");
+				}
+
+				// Mesh Renderer Component
+				if (world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
+					auto& meshRenderer = world.get_component_from_entity<MeshRendererComponent>(entity);
+					ImGui::Text("Mesh Renderer Component:");
+					ImGui::Text("  Mesh GUID: %s", meshRenderer.m_MeshGuid.to_hex().c_str());
+					ImGui::Text("  Material GUID: %s", meshRenderer.m_MaterialGuid.to_hex().c_str());
+				}
+
+				// Light Component
+				if (world.has_all_components_in_entity<LightComponent>(entity)) {
+					auto& light = world.get_component_from_entity<LightComponent>(entity);
+					ImGui::Text("Light Component:");
+					ImGui::Text("  Type: %d", static_cast<int>(light.m_Type));
+					ImGui::Text("  Color: (%.2f, %.2f, %.2f)", light.m_Color.r, light.m_Color.g, light.m_Color.b);
+					ImGui::Text("  Intensity: %.2f", light.m_Intensity);
+					ImGui::Text("  Enabled: %s", light.m_IsEnabled ? "Yes" : "No");
+				}
+
+				// Camera Component
+				if (world.has_all_components_in_entity<CameraComponent>(entity)) {
+					auto& camera = world.get_component_from_entity<CameraComponent>(entity);
+					ImGui::Text("Camera Component:");
+					ImGui::Text("  Type: %s", camera.m_Type == CameraComponent::CameraType::PERSPECTIVE ? "Perspective" : "Orthographic");
+					ImGui::Text("  FOV: %.1f", camera.m_Fov);
+					ImGui::Text("  Active: %s", camera.m_IsActive ? "Yes" : "No");
+				}
+
+				ImGui::Separator();
+
+				// Action buttons
+				if (ImGui::Button("Clear Selection")) {
+					ClearEntitySelection();
+				}
+
+				break;
+			}
+		}
+
+		if (!entityFound) {
+			ImGui::Text("Selected entity not found in world!");
+			ImGui::Text("(Entity may have been deleted)");
+			if (ImGui::Button("Clear Selection")) {
+				ClearEntitySelection();
+			}
+		}
+	} else {
+		ImGui::Text("No entity selected");
+		ImGui::Text("Click on an entity in the Scene viewport");
+		ImGui::Text("or Hierarchy to select it.");
+	}
+
+	ImGui::End();
 	glClearColor(1, 1, 1, 1);
 
 	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
@@ -165,12 +247,9 @@ void EditorMain::render()
 		Render_Console();
 	if (showProfiler)
 		Render_Profiler();
-	if (showInspector)
-		Render_Inspector();
 	Render_Scene();
 	Render_Game();
 	Render_CameraControls();
-	Render_AssetBrowser();
 
 
 
@@ -178,7 +257,7 @@ void EditorMain::render()
 
 void EditorMain::cleanup()
 {
-	m_AssetManager.reset(nullptr);
+
 }
 
 void EditorMain::Show()
@@ -200,314 +279,6 @@ bool EditorMain::Activate()
 {
 	return true;
 }
-
-
-void EditorMain::Render_Inspector()
-{
-	ImGui::Begin("Inspector", nullptr);
-
-	// Show selected entity information
-	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
-
-
-
-		ImGui::Text("Selected Entity");
-		ImGui::Separator();
-		ImGui::Text("Object ID: %u", m_SelectedEntityID);
-
-		// Try to find the entity in the world
-		ecs::world world = Engine::GetWorld();
-		auto entities = world.filter_entities<PositionComponent>();
-
-		bool entityFound = false;
-		for (auto entity : entities) {
-			if (static_cast<uint32_t>(entity.get_uid()) == m_SelectedEntityID) {
-				entityFound = true;
-
-				// Show entity components
-				ImGui::Text("Entity UID: %llu", entity.get_uid());
-
-				//// Position Component
-				//if (world.has_all_components_in_entity<PositionComponent>(entity)) {
-				//	auto& pos = world.get_component_from_entity<PositionComponent>(entity);
-				//	ImGui::Text("Position Component:");
-				//	ImGui::Text("  World Pos: (%.2f, %.2f, %.2f)", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
-				//}
-
-				//// Transform Component
-				//if (world.has_all_components_in_entity<TransformComponent>(entity)) {
-				//	ImGui::Text("Transform Component: Present");
-				//}
-				Render_Transform_Group_Component(entity);
-
-				// Mesh Renderer Component
-				/*if (world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
-					auto& meshRenderer = world.get_component_from_entity<MeshRendererComponent>(entity);
-					ImGui::Text("Mesh Renderer Component:");
-					ImGui::Text("  Mesh GUID: %s", meshRenderer.m_MeshGuid.to_hex().c_str());
-					ImGui::Text("  Material GUID: %s", meshRenderer.m_MaterialGuid.to_hex().c_str());
-				}*/
-				Render_Mesh_Component(entity);
-
-				//// Light Component
-				//if (world.has_all_components_in_entity<LightComponent>(entity)) {
-				//	auto& light = world.get_component_from_entity<LightComponent>(entity);
-				//	ImGui::Text("Light Component:");
-				//	ImGui::Text("  Type: %d", static_cast<int>(light.m_Type));
-				//	ImGui::Text("  Color: (%.2f, %.2f, %.2f)", light.m_Color.r, light.m_Color.g, light.m_Color.b);
-				//	ImGui::Text("  Intensity: %.2f", light.m_Intensity);
-				//	ImGui::Text("  Enabled: %s", light.m_IsEnabled ? "Yes" : "No");
-				//}
-
-				Render_Lighting_Group_Component(entity);
-
-				// Camera Component
-				/*if (world.has_all_components_in_entity<CameraComponent>(entity)) {
-					auto& camera = world.get_component_from_entity<CameraComponent>(entity);
-					ImGui::Text("Camera Component:");
-					ImGui::Text("  Type: %s", camera.m_Type == CameraComponent::CameraType::PERSPECTIVE ? "Perspective" : "Orthographic");
-					ImGui::Text("  FOV: %.1f", camera.m_Fov);
-					ImGui::Text("  Active: %s", camera.m_IsActive ? "Yes" : "No");
-				}*/
-				Render_Camera_Group_Component(entity);
-
-				ImGui::Separator();
-
-				// Action buttons
-				if (ImGui::Button("Clear Selection")) {
-					ClearEntitySelection();
-				}
-
-				break;
-			}
-		}
-
-		if (!entityFound) {
-			ImGui::Text("Selected entity not found in world!");
-			ImGui::Text("(Entity may have been deleted)");
-			if (ImGui::Button("Clear Selection")) {
-				ClearEntitySelection();
-			}
-		}
-	}
-	else {
-		ImGui::Text("No entity selected");
-		ImGui::Text("Click on an entity in the Scene viewport");
-		ImGui::Text("or Hierarchy to select it.");
-	}
-
-	ImGui::End();
-}
-
-
-void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
-{
-
-	glm::vec3 pos{};
-	ecs::entity selected{};
-
-	TransformComponent* transformComponent = nullptr;
-	ScaleComponent* scaleComponent = nullptr;
-	PositionComponent* positionComponent = nullptr;
-
-	auto world = Engine::GetWorld();
-
-	bool containTransform = world.has_all_components_in_entity<TransformComponent>(entity_handle);
-	if (containTransform)
-	{
-		selected = entity_handle;
-
-
-		transformComponent = &world.get_component_from_entity<TransformComponent>(selected);
-
-
-	}
-
-
-
-
-
-
-
-	/*for (auto& ent : scaleFilter)
-	{
-		if (static_cast<uint32_t>(ent.get_uid()) == m_SelectedEntityID)
-		{
-			if (world.has_all_components_in_entity<ScaleComponent>(ent))
-			{
-				scaleComponent = &world.get_component_from_entity<ScaleComponent>(ent);
-
-			}
-
-		}
-	}*/
-
-
-	if (transformComponent)
-	{
-		bool containPos = world.has_all_components_in_entity<PositionComponent>(entity_handle);
-		bool containScale = world.has_all_components_in_entity<ScaleComponent>(entity_handle);
-		bool containRot = world.has_all_components_in_entity<RotationComponent>(entity_handle);
-		if (ImGui::CollapsingHeader("Transform"))
-		{
-			PositionComponent* posComp = nullptr;
-			ScaleComponent* scaleComp = nullptr;
-			RotationComponent* rotComp = nullptr;
-			glm::vec3 pos, scale{ 1 }, rot{};
-			bool edited{};
-			if (containPos) posComp = &world.get_component_from_entity<PositionComponent>(entity_handle);
-			if (containScale) scaleComp = &world.get_component_from_entity<ScaleComponent>(entity_handle);
-			if (containRot) rotComp = &world.get_component_from_entity<RotationComponent>(entity_handle);
-			if (posComp) pos = posComp->m_WorldPos;
-			if (scaleComp) scale = scaleComp->m_Scale;
-			if (rotComp) rot = rotComp->m_Rotation;
-
-			if (posComp) {
-				ImGui::PushID("POSITION_INSPECTOR_INPUT_LABEL");
-				ImGui::Text("Position");
-				ImGui::PopID();
-				ImGui::SameLine();
-				if (ImGui::DragFloat3("##POSITION_INSPECTOR", &pos.x))
-				{
-					posComp->m_WorldPos = pos;
-					edited = true;
-				}
-			}
-			if (scaleComp) {
-				ImGui::PushID("SCALE_INSPECTOR_INPUT_LABEL");
-				ImGui::Text("Scale");
-				ImGui::PopID();
-				ImGui::SameLine();
-				if (ImGui::DragFloat3("##SCALE_INSPECTOR", &scale.x))
-				{
-					scaleComp->m_Scale = scale;
-					edited = true;
-				}
-			}
-			if (rotComp) {
-				ImGui::PushID("ROTATION_INSPECTOR_INPUT_LABEL");
-				ImGui::Text("Rotation");
-				ImGui::PopID();
-				ImGui::SameLine();
-				if (ImGui::DragFloat3("##ROTATION_INSPECTOR", &rot.x))
-				{
-					rotComp->m_Rotation = rot;
-					edited = true;
-				}
-			}
-
-			if (edited)
-			{
-
-				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0)) ;
-				glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
-				glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
-				glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
-				transformComponent->m_trans = glm::translate(glm::mat4(1.0f), pos) * R * glm::scale(glm::mat4(1.0f), scale);
-			}
-
-
-
-		}
-	}
-
-}
-
-void EditorMain::Render_Lighting_Group_Component(ecs::entity handle)
-{
-
-
-	auto world = Engine::GetWorld();
-	ecs::entity selected{};
-
-	LightComponent* lightComponent = nullptr;
-
-	bool containLight = world.has_all_components_in_entity<LightComponent>(handle);
-	if (!containLight) return;
-	lightComponent = &world.get_component_from_entity<LightComponent>(handle);
-
-	if (lightComponent)
-	{
-		if (ImGui::CollapsingHeader("Lighting"))
-		{
-			const char* lightTypes[] = { "Directional", "Point", "Spotlight" };
-			int currentType = static_cast<int>(lightComponent->m_Type);
-			if (ImGui::Combo("Light Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes)))
-			{
-				lightComponent->m_Type = static_cast<Light::Type>(currentType);
-			}
-			ImGui::ColorEdit3("Color", &lightComponent->m_Color.r);
-			ImGui::InputFloat("Intensity", &lightComponent->m_Intensity);
-
-
-			ImGui::Checkbox("Enabled", &lightComponent->m_IsEnabled);
-
-		}
-	}
-}
-
-
-void EditorMain::Render_Camera_Group_Component(ecs::entity entity_handle)
-{
-	auto world = Engine::GetWorld();
-
-	CameraComponent* cameraComponent = nullptr;
-
-	if (world.has_all_components_in_entity<CameraComponent>(entity_handle))
-	{
-		cameraComponent = &world.get_component_from_entity<CameraComponent>(entity_handle);
-	}
-
-	if (cameraComponent)
-	{
-		float fov = cameraComponent->m_Fov;
-		bool isActive = cameraComponent->m_IsActive;
-		CameraComponent::CameraType type = cameraComponent->m_Type;
-
-		if (ImGui::CollapsingHeader("Camera"))
-		{
-			const char* cameraTypes[] = { "Orthographic", "Perspective" };
-			int currentType = static_cast<int>(type);
-			if (ImGui::Combo("Camera Type", &currentType, cameraTypes, IM_ARRAYSIZE(cameraTypes)))
-			{
-				cameraComponent->m_Type = static_cast<CameraComponent::CameraType>(currentType);
-			}
-			if (cameraComponent->m_Type == CameraComponent::CameraType::PERSPECTIVE)
-			{
-				if (ImGui::InputFloat("Field of View", &fov))
-				{
-					cameraComponent->m_Fov = fov;
-				}
-			}
-			else if (cameraComponent->m_Type == CameraComponent::CameraType::ORTHO)
-			{
-				// Orthographic-specific settings can go here
-			}
-			ImGui::Checkbox("Active", &isActive);
-			cameraComponent->m_IsActive = isActive;
-		}
-	}
-}
-
-void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
-{
-	auto world = Engine::GetWorld();
-	MeshRendererComponent* meshRendererComponent = nullptr;
-	if (world.has_all_components_in_entity<MeshRendererComponent>(entity_handle))
-	{
-		meshRendererComponent = &world.get_component_from_entity<MeshRendererComponent>(entity_handle);
-	}
-
-	if (!meshRendererComponent) return;
-	if (ImGui::CollapsingHeader("Mesh Renderer"))
-	{
-		ImGui::Text("  Mesh GUID: %s", meshRendererComponent->m_MeshGuid.to_hex().c_str());
-		ImGui::Text("  Material GUID: %s", meshRendererComponent->m_MaterialGuid.to_hex().c_str());
-	}
-
-}
-
-
 
 void EditorMain::Render_MenuBar()
 {
@@ -845,138 +616,6 @@ void EditorMain::Render_CameraControls()
 	ImGui::End();
 }
 
-void EditorMain::Render_AssetBrowser()
-{
-	ImGui::Begin("Files");
-	ImGui::Text(m_AssetManager->GetCurrentPath().c_str());
-	if (m_AssetManager->GetCurrentPath() != m_AssetManager->GetRootPath())
-	{
-		if (ImGui::Button("Back"))
-		{
-			m_AssetManager->GoToParentDirectory();
-		}
-	}
-	std::vector<std::string> subdir = m_AssetManager->GetSubDirectories();
-
-	// Variables for spacing
-	static float padding = 5.0f;
-	static float thumbnailSize = 72.0f;
-	float cellSize = thumbnailSize + padding;
-
-	bool mClickDouble = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-	float panelWidth = ImGui::GetContentRegionAvail().x;
-	int columns = static_cast<int>(panelWidth / cellSize);
-
-	if (columns <= 0)
-	{
-		columns = 1;
-	}
-	ImGui::Columns(columns, 0, false);
-
-	for (std::string const& subd : subdir)
-	{
-		std::filesystem::path subpath{ subd };
-		std::string FolderName = subpath.filename().string();
-		ImGui::PushID(FolderName.c_str());
-		ImGui::Button("Folder", { thumbnailSize, thumbnailSize }); // Creates a button for the folders
-		if (ImGui::IsItemHovered() && mClickDouble) // Double Click into a folder 
-		{
-			m_AssetManager->GoToSubDirectory(subd);
-		}
-		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
-		{
-			if (ImGui::MenuItem("Import All")) // popup asking to import asset
-			{
-				m_AssetManager->ImportAssetDirectory(subd);
-			}
-			ImGui::EndPopup();
-		}
-		ImGui::TextWrapped(FolderName.c_str()); // Name of the asset
-
-		ImGui::NextColumn();
-		ImGui::PopID();
-	}
-
-
-	auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
-	for (auto it = files.first; it != files.second; ++it) {
-		std::filesystem::path filepath{ it->second.m_RawFileInfo.m_RawSourcePath };
-		std::string filename = filepath.filename().string();
-
-		if (filename.empty()) continue;
-
-		ImGui::PushID(filename.c_str());
-		ImGui::Button(filename.c_str(), {thumbnailSize, thumbnailSize}); // Creates a button for the folders
-		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
-		{
-			/*
-			if (ImGui::MenuItem("Rename Asset")) // popup asking to rename asset
-			{
-				renameFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to rename
-				if (FileName.find_last_of('.') == std::string::npos)
-				{
-					renameFileExtention = "";
-				}
-				else
-				{
-					renameFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to rename
-				}
-				showPopup = true; // Start the rename pop up
-			}
-			if (ImGui::MenuItem("Delete Asset")) // popup asking to delete asset
-			{
-				deleteFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to delete
-				if (FileName.find_last_of('.') == std::string::npos)
-				{
-					deleteFileExtention = "";
-				}
-				else
-				{
-					deleteFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to delete
-				}
-
-				deleteFile = true; // starts the delete popup
-			}*/
-			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
-			{
-				m_AssetManager->ImportAsset(it->second);
-			}
-			ImGui::EndPopup();
-		}
-
-		if (ImGui::BeginDragDropSource()) // If we start dragging
-		{
-			size_t pos = 0;
-			std::string itemPath = filepath.string();
-			char AssetPayload[] = "AssetDrop"; // Names any payload that starts from the asset browser to "AssetDrop"
-			ImGui::SetDragDropPayload(AssetPayload, itemPath.c_str(), strlen(itemPath.c_str()) + 1); // Actually load the payload with the data(the string name of the path)
-			ImGui::EndDragDropSource(); // Wraps up the payload package
-		}
-
-		ImGui::TextWrapped(filename.c_str()); // Name of the asset
-		ImGui::NextColumn();
-		ImGui::PopID();
-	}
-	ImGui::Columns(1);
-
-	ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32.0f, 256.0f); // Slider for thumbnail size
-	ImGui::SliderFloat("Padding Size", &padding, 0.0f, 24.0f); // Slider for how much padding between columns
-	ImGui::End();
-	
-	ImGui::Begin("Assets");
-	ImGui::Columns(columns, 0, false);
-	//this map is single threaded
-	for (auto[assetname, guid] : m_AssetManager->m_AssetNameGuid) {
-		ImGui::PushID(assetname.c_str());
-		ImGui::Button(assetname.c_str(), { thumbnailSize, thumbnailSize });
-		ImGui::TextWrapped(assetname.c_str()); // Name of the asset
-		ImGui::NextColumn();
-		ImGui::PopID();
-	}
-	ImGui::Columns(1);
-	ImGui::End();
-}
-
 void EditorMain::Render_Scene()
 {
 	// Update editor camera - will be done inside the Scene window with proper input handling
@@ -1018,6 +657,12 @@ void EditorMain::Render_Scene()
 	// Check if editor framebuffer is available before trying to access it
 	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
 	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
+<<<<<<< HEAD
+		ImGui::Image((ImTextureID)frameData.editorColorBuffer->GetFBOHandle(),
+			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+	}
+	else {
+=======
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
 
@@ -1026,7 +671,7 @@ void EditorMain::Render_Scene()
 
 		// Render the scene viewport using the texture ID
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
-			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+		             viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
 		// Handle viewport picking - check if viewport was clicked
 		bool viewportClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
@@ -1041,14 +686,13 @@ void EditorMain::Render_Scene()
 			float relativeY = mousePos.y - viewportPos.y;
 
 			spdlog::info("Editor: Mouse pos ({:.0f}, {:.0f}), viewport pos ({:.0f}, {:.0f}), relative ({:.0f}, {:.0f})",
-				mousePos.x, mousePos.y, viewportPos.x, viewportPos.y, relativeX, relativeY);
+			            mousePos.x, mousePos.y, viewportPos.x, viewportPos.y, relativeX, relativeY);
 
 			// Ensure click is within viewport bounds
 			if (relativeX >= 0 && relativeY >= 0 && relativeX < viewportSize.x && relativeY < viewportSize.y) {
 				spdlog::info("Editor: Click is within viewport bounds - performing picking");
 				PerformEntityPicking(relativeX, relativeY, viewportSize.x, viewportSize.y);
-			}
-			else {
+			} else {
 				spdlog::warn("Editor: Click is outside viewport bounds");
 			}
 		}
@@ -1092,8 +736,8 @@ void EditorMain::Render_Scene()
 			io.WantCaptureMouse = originalWantCaptureMouse;
 			io.WantCaptureKeyboard = originalWantCaptureKeyboard;
 		}
-	}
-	else {
+	} else {
+>>>>>>> editor-and-engine-fixing
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
@@ -1179,8 +823,6 @@ void EditorMain::CreatePlaneEntity()
 
 	// Add transform components
 	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
-	world.add_component_to_entity<ScaleComponent>(entity, glm::vec3{ 1,1,1 });
-	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
 	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
@@ -1308,12 +950,8 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 
 	// Add transform components
 	world.add_component_to_entity<PositionComponent>(entity, position);
-	world.add_component_to_entity<ScaleComponent>(entity, scale);
 	world.add_component_to_entity<TransformComponent>(entity,
 		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
-
-	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
-
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 	// Get shared cube mesh from RenderSystem (enables proper instancing)
@@ -1395,7 +1033,7 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 	assert(mouseX < viewportWidth && mouseY < viewportHeight && "Mouse coordinates must be within viewport");
 
 	spdlog::info("Editor: Performing entity picking at viewport position ({:.1f}, {:.1f}) in viewport ({:.1f}x{:.1f})",
-		mouseX, mouseY, viewportWidth, viewportHeight);
+	            mouseX, mouseY, viewportWidth, viewportHeight);
 
 	// Debug: Check how many entities exist and have renderable components
 	ecs::world world = Engine::GetWorld();
@@ -1442,10 +1080,9 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 	// Handle picking result
 	if (result.hasHit && result.objectID != 0) {
 		spdlog::info("Editor: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-			result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+		            result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
 		SelectEntity(result.objectID);
-	}
-	else {
+	} else {
 		spdlog::info("Editor: No entity picked - clearing selection");
 		ClearEntitySelection();
 	}
@@ -1462,9 +1099,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 void EditorMain::ClearEntitySelection()
 {
-	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
+	if (m_SelectedEntityID != 0) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
-		m_SelectedEntityID = static_cast<uint32_t>(-1);
+		m_SelectedEntityID = 0;
 	}
 }
 
