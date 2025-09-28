@@ -501,7 +501,25 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 	if (!meshRendererComponent) return;
 	if (ImGui::CollapsingHeader("Mesh Renderer"))
 	{
-		ImGui::Text("  Mesh GUID: %s", meshRendererComponent->m_MeshGuid.to_hex().c_str());
+		std::string meshname = m_AssetManager->ResolveAssetName(meshRendererComponent->m_MeshGuid);
+		meshname.empty() ? meshname = meshRendererComponent->m_MeshGuid.to_hex() : meshname;
+
+		std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(Resource::ResourceType::MESH);
+		assetnames.emplace_back(meshname);
+		std::swap(assetnames.front(), assetnames.back());
+		static int current_item = 0;
+
+		ImGui::Text("  Mesh GUID: ");
+		ImGui::SameLine();
+		ImGui::Combo("##mesh selector", &current_item, [](void* data, int idx, const char** out_text) {
+			auto& vec = *static_cast<std::vector<std::string>*>(data);
+			if (idx < 0 || idx >= vec.size()) return false;
+			*out_text = vec[idx].c_str();
+			return true;
+			}, static_cast<void*>(&assetnames), assetnames.size());
+		if (current_item != 0) {
+			meshRendererComponent->m_MeshGuid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+		}
 		ImGui::Text("  Material GUID: %s", meshRendererComponent->m_MaterialGuid.to_hex().c_str());
 	}
 

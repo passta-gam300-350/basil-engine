@@ -40,14 +40,17 @@ namespace Resource {
 		std::uint64_t vertex_ct{ MemRead<std::uint64_t>(read_ptr) };
 		std::uint64_t idx_ct{ MemRead<std::uint64_t>(read_ptr) };
 		std::uint64_t texture_ct{ MemRead<std::uint64_t>(read_ptr) };
+		std::uint64_t textype_ct{ MemRead<std::uint64_t>(read_ptr) };
 
 		tmp.vertices.resize(vertex_ct);
 		tmp.indices.resize(idx_ct);
 		tmp.textures.resize(texture_ct);
+		tmp.texture_type.resize(textype_ct);
 
 		MemRead(read_ptr, reinterpret_cast<char*>(tmp.vertices.data()), sizeof(MeshAssetData::Vertex) * vertex_ct);
 		MemRead(read_ptr, reinterpret_cast<char*>(tmp.indices.data()), sizeof(unsigned int) * idx_ct);
 		MemRead(read_ptr, reinterpret_cast<char*>(tmp.textures.data()), sizeof(Resource::Guid) * texture_ct);
+		MemRead(read_ptr, reinterpret_cast<char*>(tmp.texture_type.data()), sizeof(std::byte) * textype_ct);
 
 		return tmp;
 	}
@@ -178,13 +181,22 @@ namespace Resource {
 	}
 
 	TextureAssetData load_dds_texture_from_memory(const char* data) {
-		DirectX::ScratchImage ddsfile;
-		DirectX::TexMetadata texmeta;
 		auto readptr{ data };
-		assert(MemRead<std::uint64_t>(readptr) == TextureAsset::TEXTURE_MAGIC_VALUE && "wrong file signature!");
+		assert(data && MemRead<std::uint64_t>(readptr) == TextureAsset::TEXTURE_MAGIC_VALUE && "wrong file signature!");
 		auto size = MemRead<std::uint64_t>(readptr);
-		DirectX::LoadFromDDSMemory(reinterpret_cast<const std::byte*>(readptr), size, DirectX::DDS_FLAGS_NONE, &texmeta, ddsfile);
-		//assert(tinyddsloader::Result::Success && "fail to load dds from memory from " && data);
+		tinyddsloader::DDSFile ddsfile{};
+		auto res = ddsfile.Load(reinterpret_cast<const std::uint8_t*>(readptr), size);
+
+		assert(res == tinyddsloader::Result::Success && "fail to load dds from memory from " && data);
 		return ddsfile;
+	}
+
+	std::vector<std::string>& GetTextureTypeVector() {
+		static std::vector<std::string> types{ "texture_diffuse","texture_specular","texture_metallic","texture_roughness","texture_normal","texture_height", "texture_emissive","texture_ao" };
+		return types;
+	}
+
+	std::string GetTextureTypeName(TextureType i) {
+		return GetTextureTypeVector()[static_cast<std::uint64_t>(i)];
 	}
 }

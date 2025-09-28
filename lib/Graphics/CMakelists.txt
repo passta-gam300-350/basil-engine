@@ -12,6 +12,7 @@ set(ALL_LIBS
   PUBLIC assimp::assimp
   PUBLIC stb
   PUBLIC spdlog
+  PUBLIC tinyddsloader
  )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})

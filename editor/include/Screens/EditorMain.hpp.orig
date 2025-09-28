@@ -99,7 +99,8 @@ private:
 
 	// Entity selection management
 	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
-	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
+	bool m_ShowSelectionInfo = true;         // Show selection info in 
+
 
 	// Viewport picking implementation
 	void HandleViewportPicking();

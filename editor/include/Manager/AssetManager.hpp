@@ -15,7 +15,8 @@ struct ResourceTypeGuid {
 
 struct AssetManager {
 	std::map<std::string, ResourceTypeGuid> m_AssetNameGuid; //potentially unsafe
-	std::map<Resource::Guid, std::string> m_AssetReverse; //reverse lookuo
+	std::map<Resource::Guid, std::string> m_AssetReverse; //reverse lookup
+
 	std::unordered_multimap<std::string, Resource::ResourceDescriptor> m_Descriptors;
 	std::string m_RootPath;
 	std::string m_CurrentPath;
@@ -46,6 +47,8 @@ struct AssetManager {
 	auto GetFiles(std::string const& dir) {
 		return m_Descriptors.equal_range(dir);
 	}
+
+	std::vector<std::string> GetAssetTypeNames(Resource::ResourceType);
 
 	void ExportAssetList();
 

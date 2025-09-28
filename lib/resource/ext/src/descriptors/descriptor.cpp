@@ -1,4 +1,5 @@
 #include <descriptors/descriptors.hpp>
+#include "descriptors/descriptor_registry.hpp"
 #include <chrono>
 #include <filesystem>
 #include <assimp/Importer.hpp>
@@ -29,7 +30,10 @@ namespace Resource {
 		ResourceDescriptor::ResourceMetadataInfo meta;
 		auto now = std::chrono::steady_clock::now().time_since_epoch();//unix epoch
 		meta.m_DateIndexed_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
-		meta.m_RawSourcePath = s;
+		std::filesystem::path p{ s };
+		meta.m_RawSourcePath = p.lexically_normal().make_preferred().string();
+		std::size_t pos = meta.m_RawSourcePath.find(DescriptorRegistry::GetDescriptorRootDirectory());
+		pos == std::string::npos ? meta.m_RawSourcePath : meta.m_RawSourcePath = meta.m_RawSourcePath.substr(DescriptorRegistry::GetDescriptorRootDirectory().size());
 		meta.m_FileChecksumHash = (static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(std::filesystem::last_write_time(s).time_since_epoch()).count()) << 32) | (std::filesystem::file_size(s) & BITMASK32);
 		return meta;
 	}
@@ -56,7 +60,7 @@ namespace Resource {
 		rdesc.m_RawFileInfo = GetFileMetadata(s);
 		ResourceDescriptor::ResourceDescriptorEntry entry{};
 		entry.m_Guid = Guid::generate();
-		entry.m_Name = s.substr(s.find_last_of("/")+1);
+		entry.m_Name = rdesc.m_RawFileInfo.m_RawSourcePath;
 		rdesc.m_DescriptorEntries.emplace(ResourceType::TEXTURE, entry);
 		return rdesc;
 	}
@@ -65,7 +69,7 @@ namespace Resource {
 		ResourceDescriptor rdesc{};
 		rdesc.m_RawFileInfo = GetFileMetadata(s);
 		Assimp::Importer importer;
-		const aiScene* scene{ importer.ReadFile(rdesc.m_RawFileInfo.m_RawSourcePath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace) };
+		const aiScene* scene{ importer.ReadFile(Resource::DescriptorRegistry::GetDescriptorRootDirectory() + rdesc.m_RawFileInfo.m_RawSourcePath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace) };
 		for (unsigned int i{}; i < scene->mNumMeshes; i++) {
 			ResourceDescriptor::ResourceDescriptorEntry entry{};
 			aiMesh* mesh = scene->mMeshes[i];

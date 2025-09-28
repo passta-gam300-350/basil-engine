@@ -8,6 +8,7 @@
 #include "serialisation/guid.h"
 #include <fstream>
 #include <unordered_map>
+#include "descriptors/descriptor_registry.hpp"
 
 #include <yaml-cpp/yaml.h>
 
@@ -88,7 +89,7 @@ namespace Resource {
 			file_info["file path"] = m_RawFileInfo.m_RawSourcePath;
 			root["file info"] = file_info;
 			root["resources"] = resource;
-			std::string s{ m_RawFileInfo.m_RawSourcePath.substr(0, m_RawFileInfo.m_RawSourcePath.find_last_of(".")) + ".desc"};
+			std::string s{ Resource::DescriptorRegistry::GetDescriptorRootDirectory() + m_RawFileInfo.m_RawSourcePath.substr(0, m_RawFileInfo.m_RawSourcePath.find_last_of(".")) + ".desc"};
 			std::ofstream ofs{ s };
 			ofs << root;
 		}

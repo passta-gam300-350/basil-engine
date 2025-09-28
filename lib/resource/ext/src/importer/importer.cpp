@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <ranges>
+#include <descriptors/descriptor_registry.hpp>
 
 #include <string>
 #include <locale>
@@ -172,14 +173,81 @@ namespace Resource {
 					count++;
 				}
 			}
+			type = aiTextureType_BASE_COLOR;
+			for (unsigned int i = 0; i < mat->GetTextureCount(aiTextureType_BASE_COLOR); i++)
+			{
+				aiString str;
+				mat->GetTexture(type, i, &str);
+				if (std::string fstr{ str.C_Str() }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc" }; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
+					handles.emplace_back(ResourceDescriptor::LoadDescriptor(fstr).m_DescriptorEntries.begin()->second.m_Guid);
+					count++;
+				}
+			}
 			break;
 		}
 		return count;
 	}
 
-	MeshAssetData GetNativeMesh(aiMesh* aimesh, aiMaterial* aimaterial) {
+	int ExtractMaterialTextures(aiMaterial* mat, TextureType textureType, std::vector<Resource::Guid>& texguid, std::string const& pdir) {
+		aiTextureType assimpType;
+		switch (textureType) {
+		case TextureType::DIFFUSE_BITMAP:    assimpType = aiTextureType_DIFFUSE; break;
+		case TextureType::SPECULAR_BITMAP:   assimpType = aiTextureType_SPECULAR; break;
+		case TextureType::METALLIC_BITMAP:   assimpType = aiTextureType_METALNESS; break;
+		case TextureType::ROUGHNESS_BITMAP:  assimpType = aiTextureType_DIFFUSE_ROUGHNESS; break;
+		case TextureType::NORMAL_BITMAP:     assimpType = aiTextureType_NORMALS; break;
+		case TextureType::HEIGHT_BITMAP:     assimpType = aiTextureType_HEIGHT; break;
+		default: return 0;
+		}
+		int bsize{ static_cast<int>(texguid.size()) };
+		int count = mat->GetTextureCount(assimpType);
+		for (int i = 0; i < count; ++i) {
+			aiString path;
+			if (mat->GetTexture(assimpType, i, &path) == AI_SUCCESS) {
+				std::string texPath = pdir + "/" + path.C_Str();
+
+				// Normalize path
+				std::transform(texPath.begin(), texPath.end(), texPath.begin(), ::tolower);
+
+				// Optional: filter based on keywords
+				if (textureType == TextureType::METALLIC_BITMAP && texPath.find("metal") == std::string::npos)
+					continue;
+				if (textureType == TextureType::ROUGHNESS_BITMAP && texPath.find("rough") == std::string::npos)
+					continue;
+				if (textureType == TextureType::NORMAL_BITMAP && texPath.find("normal") == std::string::npos)
+					continue;
+
+				// Optional: check if file exists
+				if (texPath[0] != '*' && !std::filesystem::exists(texPath))
+					continue;
+
+				if (std::string fstr{ texPath }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc" }; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
+					texguid.emplace_back(ResourceDescriptor::LoadDescriptor(dstr).m_DescriptorEntries.begin()->second.m_Guid);
+				}
+			}
+		}
+
+		return static_cast<int>(texguid.size()) - bsize;
+	}
+
+	void PrintMaterialTextures(aiMaterial* material) {
+		for (int type = aiTextureType_NONE; type <= aiTextureType_UNKNOWN; ++type) {
+			aiTextureType textureType = static_cast<aiTextureType>(type);
+			unsigned int count = material->GetTextureCount(textureType);
+
+			for (unsigned int i = 0; i < count; ++i) {
+				aiString path;
+				if (material->GetTexture(textureType, i, &path) == AI_SUCCESS) {
+					std::cout << "Texture Type: " << textureType << ", Path: " << path.C_Str() << std::endl;
+				}
+			}
+		}
+	}
+
+	MeshAssetData GetNativeMesh(aiMesh* aimesh, aiMaterial* aimaterial, std::string const& path) {
 		constexpr std::uint32_t BONE_VERTEX_CT{ 4 };
-		constexpr aiTextureType texture_type_list[] = { aiTextureType_DIFFUSE, };
+		std::filesystem::path p(path);
+		std::string parent_dir = p.lexically_normal().make_preferred().parent_path().string();
 		MeshAssetData m_data;
 		m_data.vertices.reserve(aimesh->mNumVertices);
 		m_data.indices.reserve(aimesh->mNumFaces * 3);
@@ -197,6 +265,7 @@ namespace Resource {
 			if (aimesh->HasTextureCoords(j)) {
 				vert.TexCoords = *reinterpret_cast<glm::vec2*>(&aimesh->mTextureCoords[j]);
 			}
+			m_data.vertices.emplace_back(vert);
 		}
 		for (std::uint32_t j{}; j < aimesh->mNumFaces; j++) {
 			aiFace aiface{ aimesh->mFaces[j] };
@@ -222,7 +291,7 @@ namespace Resource {
 
 		for (std::uint8_t i{}; i < static_cast<std::uint8_t>(TextureType::MAX_COUNT); i++) {
 			TextureType type = static_cast<TextureType>(i);
-			int count = get_material_texture_guid(aimaterial, type, m_data.textures);
+			int count = ExtractMaterialTextures(aimaterial, type, m_data.textures, parent_dir);
 			m_data.texture_type.insert(m_data.texture_type.end(), count, static_cast<std::byte>(type));
 		}
 
@@ -231,13 +300,13 @@ namespace Resource {
 
 	void ImportModel(ResourceDescriptor& rdesc) {
 		Assimp::Importer importer{};
-		const aiScene* scene{ importer.ReadFile(rdesc.m_RawFileInfo.m_RawSourcePath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace) };
+		const aiScene* scene{ importer.ReadFile(Resource::DescriptorRegistry::GetDescriptorRootDirectory() + rdesc.m_RawFileInfo.m_RawSourcePath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace) };
 		auto [mesh_begin, mesh_end] {rdesc.m_DescriptorEntries.equal_range(ResourceType::MESH) };
 		auto mesh_range{std::ranges::subrange(mesh_begin, mesh_end)};
 		for (unsigned int i{}; i < scene->mNumMeshes; i++) {
-			if (auto mesh_descriptor{ std::ranges::find_if(mesh_range, [&](auto const& entry) {return entry.second.m_Name == scene->mMeshes[i]->mName.C_Str();}) }; 
+			if (auto mesh_descriptor{std::ranges::find_if(mesh_range, [&](auto const& entry) {return entry.second.m_Name == scene->mMeshes[i]->mName.C_Str(); })};
 					mesh_descriptor != mesh_end) {
-				auto native_data{ GetNativeMesh(scene->mMeshes[i], scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]) };
+				auto native_data{ GetNativeMesh(scene->mMeshes[i], scene->mMaterials[scene->mMeshes[i]->mMaterialIndex], Resource::DescriptorRegistry::GetDescriptorRootDirectory() + rdesc.m_RawFileInfo.m_RawSourcePath) };
 				std::ofstream ofs(ImporterRegistry::GetImportDirectory() + "/" + mesh_descriptor->second.m_Guid.to_hex_no_delimiter() + ".mesh", std::ios::binary);
 				native_data >> ofs;
 				ofs.close();
@@ -251,9 +320,9 @@ namespace Resource {
 		DirectX::ScratchImage cimage;
 		DirectX::TexMetadata info;
 
-		auto hres = LoadFromWICFile(string_to_wstring(rdesc.m_RawFileInfo.m_RawSourcePath).c_str(), DirectX::WIC_FLAGS::WIC_FLAGS_NONE, &info, image);
+		auto hres = LoadFromWICFile(string_to_wstring(Resource::DescriptorRegistry::GetDescriptorRootDirectory() + rdesc.m_RawFileInfo.m_RawSourcePath).c_str(), DirectX::WIC_FLAGS::WIC_FLAGS_NONE, &info, image);
 		assert(!FAILED(hres) && "load fail");
-		hres = Compress(image.GetImages(), image.GetImageCount(), info, DXGI_FORMAT_BC7_UNORM, DirectX::TEX_COMPRESS_PARALLEL | DirectX::TEX_COMPRESS_BC7_QUICK, DirectX::TEX_THRESHOLD_DEFAULT, cimage);
+		hres = Compress(image.GetImages(), image.GetImageCount(), info, DXGI_FORMAT_BC3_UNORM, DirectX::TEX_COMPRESS_PARALLEL, DirectX::TEX_THRESHOLD_DEFAULT, cimage);
 		assert(!FAILED(hres) && "compress fail");
 		TextureAsset tasset{};
 		hres = DirectX::SaveToDDSMemory(cimage.GetImages(), cimage.GetImageCount(), cimage.GetMetadata(), DirectX::DDS_FLAGS_NONE, tasset.m_TexData);

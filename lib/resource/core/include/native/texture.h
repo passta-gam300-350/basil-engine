@@ -19,10 +19,12 @@ namespace Resource {
 		ROUGHNESS_BITMAP,
 		NORMAL_BITMAP,
 		HEIGHT_BITMAP,
+		EMISSIVE_BITMAP,
+		AO_BITMAP,
 		MAX_COUNT
 	};
 
-	using TextureAssetData = DirectX::ScratchImage;
+	using TextureAssetData = tinyddsloader::DDSFile;
 
 	struct TextureAsset {
 		static constexpr uint64_t TEXTURE_MAGIC_VALUE{ iso8859ToBinary("E.TEX") };
@@ -31,7 +33,8 @@ namespace Resource {
 		TextureAsset& operator>>(std::ofstream&);
 		TextureAsset const& operator>>(std::ofstream&) const;
 	};
-
+	std::vector<std::string>& GetTextureTypeVector();
+	std::string GetTextureTypeName(TextureType i);
 	TextureAssetData load_dds_texture_from_memory(const char* data);
 }
 

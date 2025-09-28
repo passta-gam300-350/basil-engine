@@ -318,25 +318,14 @@ void RenderSystem::SetupDebugVisualization() {
 auto load_mesh_lambda = [](const char* data)->std::shared_ptr<Mesh> {
 	Resource::MeshAssetData dat = Resource::load_native_mesh_from_memory(data);
 	std::vector<Texture> textures{};
+	int i{};
 	for (auto tex_guid : dat.textures) {
 		Resource::TextureAssetData& tex = *ResourceRegistry::Instance().Get<Resource::TextureAssetData>(tex_guid);
-		const DirectX::Image* img = tex.GetImage(0, 0, 0);
-		DirectX::ScratchImage decompressed;
-		if (DirectX::IsCompressed(img->format)) {
-			auto hr = DirectX::Decompress(*img, DXGI_FORMAT_R8G8B8A8_UNORM, decompressed);
-			assert(!FAILED(hr) && "decompress failed");
-			img = decompressed.GetImage(0, 0, 0);
-		}
-		TextureData tdata{};
-		size_t texelSize = img->rowPitch * img->height;
-		tdata.pixels = new unsigned char[texelSize];
-		tdata.width = img->rowPitch;
-		tdata.height = img->height;
-		memcpy((void*)(tdata.pixels), (const void*)(img->pixels), texelSize);
 		Texture texture;
-		texture.id = TextureLoader::CreateGPUTexture(tdata);
-		texture.type = "texture_diffuse";
+		texture.id = TextureLoader::CreateGPUTextureCompressed(tex);
+		texture.type = Resource::GetTextureTypeName(static_cast<Resource::TextureType>(dat.texture_type[i]));
 		textures.emplace_back(texture);
+		i++;
 	}
 	std::vector<Vertex> vert{};
 	vert.resize(dat.vertices.size());

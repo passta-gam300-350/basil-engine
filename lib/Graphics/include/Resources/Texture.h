@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <tinyddsloader.h>
 
 // CPU-side texture data (decoupled from GPU)
 struct TextureData {
@@ -35,6 +36,9 @@ public:
     
     // GPU resource creation (separated concern)
     static unsigned int CreateGPUTexture(const TextureData& data, bool gamma = false);
+
+    // GPU resource creation (separated concern). loads compressed bc1 bc3 bc4 bc5 files. bc7 not supported
+    static unsigned int CreateGPUTextureCompressed(tinyddsloader::DDSFile& ddsimg);
     
     // Legacy function for backward compatibility
     static unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false);

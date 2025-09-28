@@ -4,6 +4,22 @@
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
 
+#include <string>
+#include <locale>
+#include <codecvt>
+
+namespace {
+    std::wstring string_to_wstring(const std::string& str) {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+        return conv.from_bytes(str);
+    }
+
+    std::string wstring_to_string(const std::wstring& wstr) {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+        return conv.to_bytes(wstr);
+    }
+}
+
 namespace {
     constexpr std::uint64_t DEFAULT_RESOURCE_THREADS{ 4 };
     const std::string DEFAULT_RESOURCE_PATH{ std::filesystem::current_path().string() };
@@ -39,6 +55,9 @@ const char* ResourceSystem::GetMappedFilePtr(Resource::Guid guid)
     assert(m_FileEntries.find(guid) != m_FileEntries.end() && "File entry does not exist!");
     //assert(m_FileEntries.exist(guid) && "File entry does not exist!");
     FileEntry f_entry{ m_FileEntries[guid] };
+    if (m_MappedIO.find(f_entry.m_Path) == m_MappedIO.end()) {
+        m_MappedIO.emplace(f_entry.m_Path, string_to_wstring(f_entry.m_Path));
+    }
     return reinterpret_cast<const char*>(m_MappedIO[f_entry.m_Path].getRange(f_entry.m_Offset, f_entry.m_Size));
 }
 

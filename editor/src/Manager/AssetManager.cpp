@@ -7,6 +7,7 @@
 #include <codecvt>
 #include <importer/importer_registry.hpp>
 #include <Manager/ResourceSystem.hpp>
+#include <descriptors/descriptor_registry.hpp>
 
 namespace YAML {
 	template<>
@@ -134,6 +135,16 @@ std::string AssetManager::getFileExtension(std::string const& file) {
 	return path.extension().string();
 }
 
+std::vector<std::string> AssetManager::GetAssetTypeNames(Resource::ResourceType ty) {
+	std::vector<std::string> asstype{};
+	for (auto [name, typed] : m_AssetNameGuid) {
+		if (typed.m_Type == ty) {
+			asstype.emplace_back(name);
+		}
+	}
+	return asstype;
+}
+
 void AssetManager::ImportAsset(Resource::ResourceDescriptor& rdesc) {
 	Resource::ImporterRegistry::SetImportDirectory(m_ImportedAssetPath);
 	Resource::Import(rdesc);
@@ -196,6 +207,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 		return;
 	}
 
+	Resource::DescriptorRegistry::SetDescriptorRootDirectory(m_RootPath);
 	ImportAssetList();
 
 	try {
