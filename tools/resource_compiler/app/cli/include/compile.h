@@ -5,16 +5,19 @@
 #include <codecvt>
 #include <vector>
 #include "command.h"
-#include <compiler/compile.h>
+#include <importer/importer.hpp>
+#include <filesystem>
 
 enum compile_option_param : std::uint32_t { //stuff preceeding -Option <option params>, e.g -O "compiler/out/meshes"
 	OUTPUT_DIR
 };
 
+std::string OutputDir{std::filesystem::current_path().string()};
+
 void compile_callback(std::string_view sparam){
 	CommandProcessor& cproc{ CommandProcessor::Instance()};
 	std::vector<std::string_view> tokenised{tokenise_string_view(sparam, ' ')};
-	std::string out_dir{Resource::get_output_dir()};
+	std::string out_dir{ OutputDir };
 	std::uint32_t file_list_ct{};
 	bool file_list_end{};
 	bool is_output_directory{};
@@ -45,7 +48,7 @@ void compile_callback(std::string_view sparam){
 			if (sv.front() == '\"') {
 				sv = sv.substr(1, sv.size() - 2);
 			}
-			Resource::set_output_dir(sv.find_first_of(":") == sv.npos? std::string(sv.begin(), sv.end()) : out_dir + std::string(sv.begin(), sv.end()));
+			OutputDir = (sv.find_first_of(":") == sv.npos? std::string(sv.begin(), sv.end()) : out_dir + std::string(sv.begin(), sv.end()));
 		}
 	}
 	tokenised.resize(file_list_ct);
@@ -53,24 +56,17 @@ void compile_callback(std::string_view sparam){
 	if (cproc._s != CommandProcessor::Status::ERROR) {
 		for (std::string_view& sv : tokenised) {
 			if (sv.substr(sv.size() - 4) == "desc") {
-				Resource::ResourceDescriptor rdesc{ Resource::ResourceDescriptor::load_descriptor(sv) };
+				Resource::ResourceDescriptor rdesc{ Resource::ResourceDescriptor::LoadDescriptor(sv) };
 				cproc.Log((std::string("Compiling resource ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::INFO);
-				Resource::compile_descriptor(rdesc);
+				Resource::Import(rdesc);
 				cproc.Log((std::string("Compiled resource ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::INFO);
 			}
 			else {
-				if (sv.front() == '\"') {
-					sv = sv.substr(1, sv.size() - 2);
-				}
-				cproc.Log((std::string("Resource ") + std::string(sv.begin(), sv.end()) + " is not a descriptor! Auto generating descriptor data...").c_str(), CommandProcessor::SEVERITY::WARNING);
-				Resource::ResourceDescriptor rdesc{ std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(std::string(sv.begin(), sv.end())) };
-				cproc.Log((std::string("Compiling resource ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::INFO);
-				Resource::compile_descriptor(rdesc);
-				cproc.Log((std::string("Compiled resource ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::INFO);
+				cproc.Log((std::string("File is not a descriptor! file: ") + std::string(sv.begin(), sv.end())).c_str(), CommandProcessor::SEVERITY::ERROR);
 			}
 		}
 	}
-	Resource::set_output_dir(out_dir);
+	OutputDir = out_dir;
 }
 
 #endif

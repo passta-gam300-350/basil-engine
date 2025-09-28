@@ -2,6 +2,7 @@
 #include "native/material.h"
 #include "native/model.h"
 #include "native/shader.h"
+#include "native/texture.h"
 
 namespace {
 	//provides a std::istream like unsafe extraction, advances data param after extraction
@@ -186,6 +187,17 @@ namespace Resource {
 		for (auto const& matres : m_mats) {
 			outp.write(reinterpret_cast<const char*>(&matres), sizeof(matres));
 		}
+		return *this;
+	}
+	TextureAsset& TextureAsset::operator>>(std::ofstream& outp) {
+		*reinterpret_cast<const TextureAsset*>(this) >> outp;
+		return *this;
+	}
+	TextureAsset const& TextureAsset::operator>>(std::ofstream& outp) const {
+		outp.write(reinterpret_cast<const char*>(&TextureAsset::TEXTURE_MAGIC_VALUE), sizeof(TextureAsset::TEXTURE_MAGIC_VALUE));
+		std::size_t sz{ m_TexData.GetBufferSize() };
+		outp.write(reinterpret_cast<const char*>(&sz), sizeof(sz));
+		outp.write(reinterpret_cast<const char*>(m_TexData.GetConstBufferPointer()), m_TexData.GetBufferSize());
 		return *this;
 	}
 }

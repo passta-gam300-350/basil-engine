@@ -176,18 +176,12 @@ namespace Resource {
 
 		return tmp;
 	}
-	/*
-	TextureAssetData load_dds_texture(std::string const& file_name) {
-		tinyddsloader::DDSFile ddsfile;
-		ddsfile.Load(file_name.c_str());
-		assert(tinyddsloader::Result::Success && "fail to load dds for " && file_name.c_str());
-		return ddsfile;
-	}*/
 
 	TextureAssetData load_dds_texture_from_memory(const char* data) {
 		DirectX::ScratchImage ddsfile;
 		DirectX::TexMetadata texmeta;
 		auto readptr{ data };
+		assert(MemRead<std::uint64_t>(readptr) == TextureAsset::TEXTURE_MAGIC_VALUE && "wrong file signature!");
 		auto size = MemRead<std::uint64_t>(readptr);
 		DirectX::LoadFromDDSMemory(reinterpret_cast<const std::byte*>(readptr), size, DirectX::DDS_FLAGS_NONE, &texmeta, ddsfile);
 		//assert(tinyddsloader::Result::Success && "fail to load dds from memory from " && data);

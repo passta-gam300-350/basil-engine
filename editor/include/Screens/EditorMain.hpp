@@ -5,6 +5,7 @@
 #include "Screens/Screen.hpp"
 #include "Camera/EditorCamera.hpp"
 #include "ecs/fwd.h"
+#include "Manager/AssetManager.hpp"
 #include <memory>
 
 class EditorMain : public Screen
@@ -52,7 +53,7 @@ public:
 
 	void Render_Console();
 
-
+	void Render_AssetBrowser();
 
 	void Render_Scene();
 	void Render_Game();
@@ -82,6 +83,9 @@ private:
 
 	// Editor Camera
 	std::unique_ptr<EditorCamera> m_EditorCamera;
+
+	// Asset Manager
+	std::unique_ptr<AssetManager> m_AssetManager;
 
 	// Play mode state
 	bool m_IsPlayMode = false;

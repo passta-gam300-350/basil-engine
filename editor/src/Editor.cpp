@@ -60,7 +60,9 @@ void Editor::Render()
 
 void Editor::Cleanup()
 {
-	
+	for (auto const& kv : screens) {
+		kv.second->cleanup();
+	}
 }
 
 

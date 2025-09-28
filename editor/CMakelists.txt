@@ -46,6 +46,7 @@ set(ALL_LIBS
     PUBLIC engine
     PUBLIC imgui
     PUBLIC imgui_backends
+    PUBLIC resource_lib_ext
 )
 
 

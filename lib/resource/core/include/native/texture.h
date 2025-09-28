@@ -12,10 +12,26 @@
 
 namespace Resource {
 
+	enum class TextureType : std::uint8_t {
+		DIFFUSE_BITMAP,
+		SPECULAR_BITMAP,
+		METALLIC_BITMAP,
+		ROUGHNESS_BITMAP,
+		NORMAL_BITMAP,
+		HEIGHT_BITMAP,
+		MAX_COUNT
+	};
+
 	using TextureAssetData = DirectX::ScratchImage;
-	/*
-	TextureAssetData load_dds_texture(std::uint32_t guid);
-	TextureAssetData load_dds_texture(std::string const& file_name);*/
+
+	struct TextureAsset {
+		static constexpr uint64_t TEXTURE_MAGIC_VALUE{ iso8859ToBinary("E.TEX") };
+		DirectX::Blob m_TexData;
+
+		TextureAsset& operator>>(std::ofstream&);
+		TextureAsset const& operator>>(std::ofstream&) const;
+	};
+
 	TextureAssetData load_dds_texture_from_memory(const char* data);
 }
 
