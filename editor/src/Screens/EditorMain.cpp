@@ -343,31 +343,65 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 
 	if (transformComponent)
 	{
-		// Having a TransformComponent means we have a ScaleComponent and PositionComponent too
+		bool containPos = world.has_all_components_in_entity<PositionComponent>(entity_handle);
+		bool containScale = world.has_all_components_in_entity<ScaleComponent>(entity_handle);
+		bool containRot = world.has_all_components_in_entity<RotationComponent>(entity_handle);
 		if (ImGui::CollapsingHeader("Transform"))
 		{
-			PositionComponent& posComp = entity_handle.get<PositionComponent>();
-			ScaleComponent& scaleComp = entity_handle.get<ScaleComponent>();
-
-			glm::vec3 pos, scale;
+			PositionComponent* posComp = nullptr;
+			ScaleComponent* scaleComp = nullptr;
+			RotationComponent* rotComp = nullptr;
+			glm::vec3 pos, scale{ 1 }, rot{};
 			bool edited{};
-			pos = posComp.m_WorldPos;
-			scale = scaleComp.m_Scale;
-			if (ImGui::InputFloat3("Position", &pos.x))
-			{
-				posComp.m_WorldPos = pos;
-				edited = true;
-			}
+			if (containPos) posComp = &world.get_component_from_entity<PositionComponent>(entity_handle);
+			if (containScale) scaleComp = &world.get_component_from_entity<ScaleComponent>(entity_handle);
+			if (containRot) rotComp = &world.get_component_from_entity<RotationComponent>(entity_handle);
+			if (posComp) pos = posComp->m_WorldPos;
+			if (scaleComp) scale = scaleComp->m_Scale;
+			if (rotComp) rot = rotComp->m_Rotation;
 
-			if (ImGui::InputFloat3("Scale", &scale.x))
-			{
-				scaleComp.m_Scale = scale;
-				edited = true;
+			if (posComp) {
+				ImGui::PushID("POSITION_INSPECTOR_INPUT_LABEL");
+				ImGui::Text("Position");
+				ImGui::PopID();
+				ImGui::SameLine();
+				if (ImGui::DragFloat3("##POSITION_INSPECTOR", &pos.x))
+				{
+					posComp->m_WorldPos = pos;
+					edited = true;
+				}
+			}
+			if (scaleComp) {
+				ImGui::PushID("SCALE_INSPECTOR_INPUT_LABEL");
+				ImGui::Text("Scale");
+				ImGui::PopID();
+				ImGui::SameLine();
+				if (ImGui::DragFloat3("##SCALE_INSPECTOR", &scale.x))
+				{
+					scaleComp->m_Scale = scale;
+					edited = true;
+				}
+			}
+			if (rotComp) {
+				ImGui::PushID("ROTATION_INSPECTOR_INPUT_LABEL");
+				ImGui::Text("Rotation");
+				ImGui::PopID();
+				ImGui::SameLine();
+				if (ImGui::DragFloat3("##ROTATION_INSPECTOR", &rot.x))
+				{
+					rotComp->m_Rotation = rot;
+					edited = true;
+				}
 			}
 
 			if (edited)
 			{
-				transformComponent->m_trans = glm::translate(glm::mat4(1.0f), posComp.m_WorldPos) * glm::scale(glm::mat4(1.0f), scaleComp.m_Scale);
+
+				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0)) ;
+				glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
+				glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
+				glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
+				transformComponent->m_trans = glm::translate(glm::mat4(1.0f), pos) * R * glm::scale(glm::mat4(1.0f), scale);
 			}
 
 
@@ -1011,6 +1045,8 @@ void EditorMain::CreatePlaneEntity()
 
 	// Add transform components
 	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
+	world.add_component_to_entity<ScaleComponent>(entity, glm::vec3{ 1,1,1 });
+	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
 	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
@@ -1141,6 +1177,8 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	world.add_component_to_entity<ScaleComponent>(entity, scale);
 	world.add_component_to_entity<TransformComponent>(entity,
 		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
+
+	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
 
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
