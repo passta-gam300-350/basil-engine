@@ -37,6 +37,9 @@ public:
 	void SetCurrentWorkplace(const std::string& name);
 
 
+	void LoadWorkspace(std::string const& path);
+
+
 	void SetupWorkspace(Workplace& wp);
 
 	Workplace& GetWorkplace(const std::string& name)

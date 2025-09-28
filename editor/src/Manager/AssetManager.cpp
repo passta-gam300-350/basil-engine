@@ -175,7 +175,9 @@ void AssetManager::ImportAssetList() {
     if (!std::filesystem::exists(assetfilename))
         return;
     YAML::Node root{YAML::LoadFile(assetfilename)};
-    m_AssetNameGuid = root["asset list"].as<std::map<std::string, ResourceTypeGuid>>();
+    if (!root["asset list"].IsNull()) {
+        m_AssetNameGuid = root["asset list"].as<std::map<std::string, ResourceTypeGuid>>();
+    }
     for (auto [name, typed] : m_AssetNameGuid) {
         ResourceSystem::FileEntry fentry{};
         fentry.m_Guid = typed.m_Guid;

@@ -48,7 +48,7 @@ void Editor::Init(GLFWwindow* _win)
 
 	
 
-	ChangeState(EditorState::EDITOR_SPLASHSCREEN);
+	ChangeState(EditorState::EDITOR_PROJECT);
 
 
 }

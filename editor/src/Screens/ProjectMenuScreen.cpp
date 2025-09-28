@@ -124,7 +124,9 @@ void ProjectMenuScreen::render()
 
 		if (openfile)
 		{
-			
+			WorkplaceManager::GetInstance().LoadWorkspace(path);
+			Editor::GetInstance().Set_Workspace_Name(WorkplaceManager::GetInstance().GetCurrentWorkplace()->first.c_str());
+			Editor::GetInstance().Set_Working_Path(WorkplaceManager::GetInstance().GetCurrentWorkplace()->second.path.c_str());
 			Editor::GetInstance().ChangeState(EditorState::EDITOR_MAIN);
 		}
 		

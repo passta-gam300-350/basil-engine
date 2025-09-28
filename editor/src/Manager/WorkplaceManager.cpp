@@ -115,6 +115,55 @@ void WorkplaceManager::SetupWorkspace(Workplace& wp)
 
 }
 
+void WorkplaceManager::LoadWorkspace(std::string const& path)
+{
+	std::filesystem::path basilPath{ path };
+	std::ifstream workspaceFile(path);
+	if (!workspaceFile) return;
+
+	std::string bin{};
+	std::getline(workspaceFile, bin);
+	std::string name{};
+	std::getline(workspaceFile, name);
+	std::string workingDir{};
+	std::getline(workspaceFile, workingDir);
+	workspaceFile.close();
+
+	std::filesystem::path fp(workingDir);
+	
+	if (!std::filesystem::exists(fp))
+	{
+		RemoveWorkplace(name);
+		// edit .basil to remove this entry
+
+		
+
+		std::ofstream basilFile(path);
+		basilFile << UUID<128>::Generate().ToString() << "\n";
+		basilFile << name << "\n";
+		basilFile << std::filesystem::absolute(basilPath.parent_path()).string() << "\n";
+		basilFile.close();
+
+	}
+
+
+
+	std::ofstream configProjectRoot{ authProjectFile, std::ios::app };
+	if (!configProjectRoot)
+	{
+		// Handle error
+		return;
+	}
+	// Create new if DNE else amend
+	configProjectRoot << std::filesystem::absolute(basilPath.parent_path()).string() << "\n";
+	configProjectRoot.close();
+	AddWorkplace(name, std::filesystem::absolute(basilPath.parent_path()).string());
+	SetCurrentWorkplace(name);
+
+	
+}
+
+
 void WorkplaceManager::Prepare()
 {
 	// Load the project file
