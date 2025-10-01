@@ -6,6 +6,9 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
     this->indices = indices;
     this->textures = textures;
 
+    // Calculate AABB from vertices
+    calculateAABB();
+
     // now that we have all the required data, set the vertex buffers and its attribute pointers.
     setupMesh();
 }
@@ -34,4 +37,22 @@ void Mesh::setupMesh()
 
     m_VertexArray->AddVertexBuffer(m_VertexBuffer, layout);
     m_VertexArray->SetIndexBuffer(m_IndexBuffer);
+}
+
+void Mesh::calculateAABB()
+{
+    if (vertices.empty()) {
+        m_AABB = AABB(); // Default empty AABB
+        return;
+    }
+
+    glm::vec3 min = vertices[0].Position;
+    glm::vec3 max = vertices[0].Position;
+
+    for (const auto& vertex : vertices) {
+        min = glm::min(min, vertex.Position);
+        max = glm::max(max, vertex.Position);
+    }
+
+    m_AABB = AABB(min, max);
 }

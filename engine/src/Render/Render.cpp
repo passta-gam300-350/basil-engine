@@ -11,9 +11,12 @@
 #include "Input/InputManager.h"
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
+#include <Utility/AABB.h>
 #include <spdlog/spdlog.h>
-
 #include "Profiler/profiler.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext.hpp>
 
 // Editor resource caches at file scope
 namespace {
@@ -162,6 +165,12 @@ void RenderSystem::Update(ecs::world& world) {
 			assert(!meshResource->vertices.empty() && "Mesh must have vertices for rendering");
 
 			inst.m_SceneRenderer->SubmitRenderable(renderData);
+
+			// Submit AABB for debug visualization (using pre-calculated mesh AABB)
+			if (visible.m_IsVisible && meshResource->GetAABB().IsValid()) {
+				DebugAABB debugAABB(meshResource->GetAABB(), transform.m_trans, glm::vec3(1.0f, 0.0f, 0.0f));
+				frameData.debugAABBs.push_back(debugAABB);
+			}
 		}
 	}
 

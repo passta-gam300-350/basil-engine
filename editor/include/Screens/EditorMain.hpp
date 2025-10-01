@@ -98,10 +98,16 @@ private:
 	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
 	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
 
+	// Debug rendering controls
+	bool m_ShowAABBs = false;
+
 	// Viewport picking implementation
 	void HandleViewportPicking();
 	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
 	void SelectEntity(uint32_t objectID);
 	void ClearEntitySelection();
+
+	// Debug visualization control
+	void SetDebugVisualization(bool showAABBs);
 };
 #endif // EDITORMAIN_HPP

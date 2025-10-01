@@ -34,8 +34,25 @@ void DebugRenderPass::Execute(RenderContext& context)
         return; // No main buffer to copy
     }
 
-    // Since this pass has no framebuffer, we just copy main scene to editor FBO
-    // Debug rendering will be re-implemented later with proper framebuffer setup
+	// Render debug visualizations if enabled
+	if (m_ShowAABBs) {
+		// Clear any previous commands
+		ClearCommands();
+
+		// Bind the main color buffer to draw AABBs on top of the rendered scene
+		if (context.frameData.mainColorBuffer) {
+			context.frameData.mainColorBuffer->Bind();
+
+			RenderAABBs(context);
+
+			// Execute all submitted commands on the main color buffer
+			ExecuteCommands();
+
+			context.frameData.mainColorBuffer->Unbind();
+		}
+	}
+
+    // Copy main scene (now with AABBs drawn on it) to editor FBO
     UpdateEditorFBOWithDebug(context);
 }
 
@@ -254,8 +271,6 @@ void DebugRenderPass::RenderSingleRay(RenderContext& context, const std::shared_
 
 void DebugRenderPass::RenderAABBs(RenderContext& context)
 {
-    assert(m_PrimitiveShader && "Primitive shader must be set for AABB rendering");
-
     if (!m_AABBWireframe) {
         spdlog::warn("DebugRenderPass: No AABB wireframe mesh available for rendering.");
         return;

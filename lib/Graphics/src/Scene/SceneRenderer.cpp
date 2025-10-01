@@ -46,6 +46,7 @@ void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();
 	m_SubmittedLights.clear();
+	GetFrameData().debugAABBs.clear();
 }
 
 

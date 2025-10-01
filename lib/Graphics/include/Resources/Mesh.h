@@ -5,6 +5,7 @@
 #include <Buffer/IndexBuffer.h>
 #include <Resources/Shader.h>
 #include <Resources/Texture.h>
+#include <Utility/AABB.h>
 #include <memory>
 #include <vector>
 #include <string>
@@ -41,6 +42,7 @@ public:
     uint32_t GetVertexCount() const { return static_cast<uint32_t>(vertices.size()); }
     uint32_t GetIndexCount() const { return static_cast<uint32_t>(indices.size()); }
     std::shared_ptr<VertexArray> GetVertexArray() const { return m_VertexArray; }
+    const AABB& GetAABB() const { return m_AABB; }
 
 private:
     // OpenGL objects using existing buffer classes
@@ -48,6 +50,10 @@ private:
     std::shared_ptr<VertexBuffer> m_VertexBuffer;
     std::shared_ptr<IndexBuffer> m_IndexBuffer;
 
+    // Bounding box
+    AABB m_AABB;
+
     // initializes all the buffer objects/arrays
     void setupMesh();
+    void calculateAABB();
 };

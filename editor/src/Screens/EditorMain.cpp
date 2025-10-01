@@ -6,6 +6,7 @@
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
+#include <Pipeline/DebugRenderPass.h>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 #include <chrono>
@@ -571,6 +572,13 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
 
+		ImGui::Separator();
+
+		if (ImGui::MenuItem("Show Bounding Boxes", nullptr, &m_ShowAABBs))
+		{
+			SetDebugVisualization(m_ShowAABBs);
+		}
+
 		ImGui::EndMenu();
 	}
 
@@ -698,20 +706,9 @@ void EditorMain::Render_SceneExplorer()
 
 		if (ImGui::TreeNode(entityName.c_str())) {
 			// Show component info
-			if (world.has_all_components_in_entity<PositionComponent>(entity)) {
-				auto pos = world.get_component_from_entity<PositionComponent>(entity);
-				ImGui::Text("Position: %.2f, %.2f, %.2f", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
-			}
-
 			if (hasVisibility) {
 				auto vis = world.get_component_from_entity<VisibilityComponent>(entity);
 				ImGui::Text("Visible: %s", vis.m_IsVisible ? "Yes" : "No");
-			}
-
-			if (hasLight) {
-				auto light = world.get_component_from_entity<LightComponent>(entity);
-				ImGui::Text("Light Type: %d", static_cast<int>(light.m_Type));
-				ImGui::Text("Intensity: %.2f", light.m_Intensity);
 			}
 
 			// Delete button
@@ -791,7 +788,7 @@ void EditorMain::Render_CameraControls()
 	if (m_EditorCamera) {
 		// Camera mode selection
 		ImGui::Text("Camera Mode:");
-		const char* modes[] = { "Fly", "Orbit", "Pan" };
+		const char* modes[] = { "Fly" }; //, "Orbit", "Pan" };
 		static int currentMode = 0;
 
 		if (ImGui::Combo("Mode", &currentMode, modes, IM_ARRAYSIZE(modes))) {
@@ -1483,6 +1480,24 @@ void EditorMain::ClearEntitySelection()
 	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
 		m_SelectedEntityID = static_cast<uint32_t>(-1);
+	}
+}
+
+void EditorMain::SetDebugVisualization(bool showAABBs)
+{
+	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
+	if (sceneRenderer == nullptr) {
+		return;
+	}
+
+	auto* pipeline = sceneRenderer->GetPipeline();
+	if (pipeline == nullptr) {
+		return;
+	}
+
+	auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
+	if (debugPass) {
+		debugPass->SetShowAABBs(showAABBs);
 	}
 }
 

@@ -93,7 +93,7 @@ private:
     float m_RayIntensityFactor = 2.0f;     // Direct multiplier for intensity-to-length conversion
 
     // AABB settings
-    bool m_ShowAABBs = true;              // Toggle for AABB wireframe visualization
+    bool m_ShowAABBs = false;              // Toggle for AABB wireframe visualization
 
     // Debug buffer settings
     bool m_ClearColorBuffer = true;        // Whether to clear color buffer (enabled by default)
