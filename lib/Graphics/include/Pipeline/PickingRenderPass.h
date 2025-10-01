@@ -54,6 +54,4 @@ private:
 
     // Pass state
     bool m_Enabled = false;  // Disabled by default (only run when needed)
-
-    static constexpr uint8_t PICKING_PASS_ID = 10;  // Execute after main passes when needed
 };

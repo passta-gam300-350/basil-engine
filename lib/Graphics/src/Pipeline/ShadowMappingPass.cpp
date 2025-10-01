@@ -77,6 +77,13 @@ void ShadowMappingPass::Execute(RenderContext& context)
 
     Submit(clearCmd);
 
+    // Enable face culling for shadows (cull front faces to reduce peter panning)
+    RenderCommands::SetFaceCullingData cullingCmd{
+        true,      // enable face culling
+        GL_FRONT   // cull front faces for shadows (helps with shadow acne)
+    };
+    Submit(cullingCmd);
+
     // Render shadow casters (all visible objects) with depth-only shader
     if (!context.renderables.empty())
     {

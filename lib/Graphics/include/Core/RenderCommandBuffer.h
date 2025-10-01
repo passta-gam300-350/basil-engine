@@ -96,6 +96,12 @@ namespace RenderCommands {
         bool depthWrite = true;        // Enable/disable depth buffer writes
     };
 
+    struct SetFaceCullingData
+    {
+        bool enable;
+        uint32_t cullFace = GL_BACK;  // GL_FRONT, GL_BACK, GL_FRONT_AND_BACK
+    };
+
     struct SetObjectIDData {
         std::shared_ptr<Shader> shader;
         uint32_t objectID;
@@ -104,6 +110,14 @@ namespace RenderCommands {
     struct ReadPixelData {
         int x, y;                      // Screen coordinates to read
         uint32_t* outValue;            // Pointer to store the read value
+    };
+
+    struct BindCubemapData
+    {
+        unsigned int cubemapID;
+        uint32_t textureUnit;
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
     };
 }
 
@@ -122,8 +136,10 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetBlendingData,
     RenderCommands::SetLineWidthData,
     RenderCommands::SetDepthTestData,
+    RenderCommands::SetFaceCullingData,
     RenderCommands::SetObjectIDData,
-    RenderCommands::ReadPixelData
+    RenderCommands::ReadPixelData,
+    RenderCommands::BindCubemapData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -165,8 +181,10 @@ private:
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
     void ExecuteCommand(const RenderCommands::SetDepthTestData &cmd);
+    void ExecuteCommand(const RenderCommands::SetFaceCullingData &cmd);
     void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
     void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);
+    void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

@@ -97,6 +97,4 @@ private:
 
     // Debug buffer settings
     bool m_ClearColorBuffer = true;        // Whether to clear color buffer (enabled by default)
-
-    static constexpr uint8_t DEBUG_PASS_ID = 2;  // Execute after main pass (ID 1)
 };

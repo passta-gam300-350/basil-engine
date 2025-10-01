@@ -4,7 +4,11 @@
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
+#include "../../include/Resources/PrimitiveGenerator.h"
 #include <glfw/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <spdlog/spdlog.h>
 
 MainRenderingPass::MainRenderingPass()
     : RenderPass("MainPass", FBOSpecs
@@ -16,6 +20,8 @@ MainRenderingPass::MainRenderingPass()
 		}
     })
 {
+    // Create default skybox cube mesh
+    m_SkyboxMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
 }
 
 void MainRenderingPass::Execute(RenderContext& context)
@@ -37,6 +43,16 @@ void MainRenderingPass::Execute(RenderContext& context)
     };
 
     Submit(clearCmd);
+
+    // Render skybox first (after clear) if enabled
+    RenderSkybox(context);
+
+    // Re-enable face culling for normal scene objects
+    RenderCommands::SetFaceCullingData cullingReenableCmd{
+        true,     // enable face culling
+        GL_BACK   // cull back faces
+    };
+    Submit(cullingReenableCmd);
 
     // Ensure proper depth testing state for opaque objects
     RenderCommands::SetDepthTestData depthTestCmd{
@@ -124,4 +140,66 @@ void MainRenderingPass::CreateEditorFBOCopy(RenderContext &context)
     // Restore framebuffer binding
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+void MainRenderingPass::RenderSkybox(RenderContext& context)
+{
+    if (!m_SkyboxEnabled || !m_SkyboxShader || !m_SkyboxMesh || m_SkyboxCubemapID == 0)
+    {
+        spdlog::warn("Skybox not rendering - Enabled: {}, Shader: {}, Mesh: {}, CubemapID: {}",
+                     m_SkyboxEnabled, m_SkyboxShader != nullptr, m_SkyboxMesh != nullptr, m_SkyboxCubemapID);
+        return; // Skip if not properly configured
+    }
+
+    spdlog::info("Rendering skybox with cubemap ID: {}", m_SkyboxCubemapID);
+
+    // Disable face culling - we're inside the cube looking out
+    RenderCommands::SetFaceCullingData cullingCmd{
+        false  // disable face culling for skybox
+    };
+    Submit(cullingCmd);
+
+    // Configure depth testing for skybox
+    // Skybox should be rendered with depth = 1.0 (farthest)
+    // Use LEQUAL so skybox pixels pass when depth buffer is cleared to 1.0
+    RenderCommands::SetDepthTestData depthCmd{
+        true,           // enable depth testing
+        GL_LEQUAL,      // depth function (allow equal depth values)
+        false           // disable depth writing (skybox shouldn't update depth)
+    };
+    Submit(depthCmd);
+
+    // Bind skybox shader
+    RenderCommands::BindShaderData shaderCmd{ m_SkyboxShader };
+    Submit(shaderCmd);
+
+    // Bind skybox cubemap
+    RenderCommands::BindCubemapData cubemapCmd{
+        m_SkyboxCubemapID,
+        0,              // Texture unit 0
+        m_SkyboxShader,
+        "u_Skybox"
+    };
+    Submit(cubemapCmd);
+
+    // Set up matrices for skybox rendering
+    // Remove translation from view matrix so skybox appears infinitely far
+    glm::mat4 skyboxView = glm::mat4(glm::mat3(context.frameData.viewMatrix));
+
+    RenderCommands::SetUniformsData uniformCmd{
+        m_SkyboxShader,
+        glm::mat4(1.0f),                    // Identity model matrix
+        skyboxView,                         // View matrix without translation
+        context.frameData.projectionMatrix, // Normal projection matrix
+        context.frameData.cameraPosition    // Camera position (for potential effects)
+    };
+    Submit(uniformCmd);
+
+    // Draw skybox geometry
+    RenderCommands::DrawElementsData drawCmd{
+        m_SkyboxMesh->GetVertexArray()->GetVAOHandle(),
+        m_SkyboxMesh->GetIndexCount(),
+        GL_TRIANGLES
+    };
+    Submit(drawCmd);
 }

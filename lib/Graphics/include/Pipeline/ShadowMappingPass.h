@@ -40,5 +40,4 @@ private:
 
     // Configuration
     static constexpr uint32_t SHADOW_MAP_SIZE = 2048;
-    static constexpr uint8_t SHADOW_PASS_ID = 0;  // Execute before main pass (ID 1)
 };

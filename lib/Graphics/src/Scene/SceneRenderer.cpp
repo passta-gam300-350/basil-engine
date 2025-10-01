@@ -52,18 +52,19 @@ void SceneRenderer::InitializeDefaultPipeline()
     // Create main rendering pipeline
     auto mainPipeline = std::make_unique<RenderPipeline>();
 
-    // 1. Add shadow mapping pass (executes first with pass ID 0)
+    // 1. Add shadow mapping pass
     // Shadow pass will need shader to be set after creation by the application
     auto shadowPass = std::make_shared<ShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
 
-    // 2. Add main rendering pass (executes second with pass ID 1)
+    // 2. Add main rendering pass (now includes skybox rendering)
     auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
 
-    // 3. Add debug rendering pass (executes third with pass ID 2)
+    // 3. Add debug rendering pass
     auto debugPass = std::make_shared<DebugRenderPass>();
     mainPipeline->AddPass(debugPass);
+    mainPipeline->EnablePass("DebugPass", false);
 
     // 4. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
@@ -238,4 +239,62 @@ void SceneRenderer::EnablePicking(bool enable) const
             m_Pipeline->EnablePass("PickingPass", enable);
         }
     }
+}
+
+void SceneRenderer::SetSkyboxCubemap(unsigned int cubemapID)
+{
+    assert(cubemapID != 0 && "Skybox cubemap ID must be valid");
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxCubemap(cubemapID);
+        }
+    }
+}
+
+void SceneRenderer::SetSkyboxShader(const std::shared_ptr<Shader> &shader)
+{
+    assert(shader && "Skybox shader cannot be null");
+    assert(shader->ID != 0 && "Skybox shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox shader");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::EnableSkybox(bool enable)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before enabling skybox");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->EnableSkybox(enable);
+        }
+    }
+}
+
+bool SceneRenderer::IsSkyboxEnabled() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->IsSkyboxEnabled();
+        }
+    }
+    return false;
 }

@@ -110,3 +110,120 @@ unsigned int TextureLoader::TextureFromFile(const char* path, const std::string&
     return CreateGPUTexture(textureData, gamma);
 }
 
+CubemapTextureData::CubemapTextureData(CubemapTextureData &&other) noexcept
+    : faces(std::move(other.faces)), isValid(other.isValid)
+{
+    other.isValid = false;
+}
+
+CubemapTextureData &CubemapTextureData::operator=(CubemapTextureData &&other) noexcept
+{
+    if (this != &other)
+    {
+        faces = std::move(other.faces);
+        isValid = other.isValid;
+        other.isValid = false;
+    }
+    return *this;
+}
+
+CubemapTextureData TextureLoader::LoadCubemapFromFiles(
+    const std::array<std::string, 6> &facePaths,
+    const std::string &directory)
+{
+    CubemapTextureData cubemapData;
+
+    // Face Order: +X, -X, +Y, -Y, +Z, -Z
+    for (int i = 0; i < 6; ++i)
+    {
+        cubemapData.faces[i] = LoadFromFile(facePaths[i].c_str(), directory);
+        if (!cubemapData.faces[i].isValid)
+        {
+            spdlog::error("Failed to load cubemap face {}: {}", i, facePaths[i]);
+            cubemapData.isValid = false;
+            return cubemapData;
+        }
+    }
+
+    cubemapData.isValid = true;
+    return cubemapData;
+}
+
+
+unsigned int TextureLoader::CreateGPUCubemap(const CubemapTextureData &data, bool generateMipmaps)
+{
+    if (!data.isValid)
+    {
+        spdlog::error("Invalid cubemap data provided");
+        return 0;
+    }
+
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    //Load all 6 faces
+    for (int i = 0; i < 6; ++i)
+    {
+        const auto &face = data.faces[i];
+
+        if (!face.isValid || !face.pixels)
+        {
+            spdlog::error("Invalid face data for cubemap face {}", i);
+            glDeleteTextures(1, &textureID);
+            return 0;
+        }
+
+        GLenum internalFormat, dataFormat;
+        if (face.channels == 1)
+        {
+            internalFormat = GL_RED;
+            dataFormat = GL_RED;
+        }
+        else if (face.channels == 3)
+        {
+            internalFormat = GL_RGB;
+            dataFormat = GL_RGB;
+        }
+        else if (face.channels == 4)
+        {
+            internalFormat = GL_RGBA;
+            dataFormat = GL_RGBA;
+        }
+        else
+        {
+            internalFormat = GL_RGB;
+            dataFormat = GL_RGB;
+        }
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat,
+            face.width, face.height, 0, dataFormat, GL_UNSIGNED_BYTE, face.pixels);
+
+    }
+
+    // Set cubemap parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    if (generateMipmaps)
+    {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    }
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    return textureID;
+}
+
+
+unsigned int TextureLoader::CubemapFromFiles(
+    const std::array<std::string, 6> &facePaths,
+    const std::string &directory,
+    bool generateMipmaps)
+{
+    auto cubemapData = LoadCubemapFromFiles(facePaths, directory);
+    return CreateGPUCubemap(cubemapData, generateMipmaps);
+}

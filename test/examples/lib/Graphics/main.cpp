@@ -239,6 +239,45 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load shadow mapping shader");
         }
 
+        // Load skybox shader
+        auto skyboxShader = m_ResourceManager->LoadShader("skybox",
+            "assets/shaders/skybox.vert",
+            "assets/shaders/skybox.frag");
+
+        if (skyboxShader)
+        {
+            spdlog::info("Skybox shader loaded successfully!");
+            m_SceneRenderer->SetSkyboxShader(skyboxShader);
+        }
+        else
+        {
+            spdlog::warn("Could not load skybox shader");
+        }
+
+        // Load skybox cubemap
+        std::array<std::string, 6> skyboxFaces = {
+            "right.jpg",    // +X
+            "left.jpg",     // -X
+            "top.jpg",      // +Y
+            "bottom.jpg",   // -Y
+            "front.jpg",    // +Z
+            "back.jpg"      // -Z
+        };
+
+        unsigned int skyboxCubemap = TextureLoader::CubemapFromFiles(
+            skyboxFaces, "assets/skybox");
+
+        if (skyboxCubemap != 0)
+        {
+            spdlog::info("Skybox cubemap loaded successfully!");
+            m_SceneRenderer->SetSkyboxCubemap(skyboxCubemap);
+            m_SceneRenderer->EnableSkybox(true);
+        }
+        else
+        {
+            spdlog::warn("Could not load skybox cubemap");
+        }
+
         // Load picking shader for object selection
         auto pickingShader = m_ResourceManager->LoadShader("picking",
             "assets/shaders/picking.vert",
@@ -744,6 +783,10 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                 spdlog::info("Object rotation {}", s_Instance->m_RotationEnabled ? "ENABLED" : "DISABLED");
                 break;
 
+            case GLFW_KEY_6:
+                s_Instance->ToggleSkybox();
+                break;
+
             case GLFW_KEY_P:
                 if (s_Instance->m_SceneRenderer) {
                     auto* pipeline = s_Instance->m_SceneRenderer->GetPipeline();
@@ -882,6 +925,17 @@ void GraphicsTestDriver::ToggleAABBVisualization()
         }
     } else {
         spdlog::warn("Scene renderer not available - cannot toggle AABB visualization");
+    }
+}
+
+void GraphicsTestDriver::ToggleSkybox()
+{
+    if (m_SceneRenderer)
+    {
+        bool currentlyEnabled = m_SceneRenderer->IsSkyboxEnabled();
+        bool newState = !currentlyEnabled;
+        m_SceneRenderer->EnableSkybox(newState);
+        spdlog::info("Skybox {}", newState ? "ENABLED" : "DISABLED");
     }
 }
 

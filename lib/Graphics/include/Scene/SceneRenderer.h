@@ -62,6 +62,11 @@ public:
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
     void EnablePicking(bool enable) const;
 
+    void SetSkyboxCubemap(unsigned int cubemapID);
+    void SetSkyboxShader(const std::shared_ptr<Shader> &shader);
+    void EnableSkybox(bool enable);
+    bool IsSkyboxEnabled() const;
+
 private:
     //void InitializePipeline();
     void InitializeRenderingCoordinators();

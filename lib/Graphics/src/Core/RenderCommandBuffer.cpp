@@ -236,6 +236,19 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDepthTestData 
     }
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetFaceCullingData &cmd)
+{
+    if (cmd.enable)
+    {
+        glEnable(GL_CULL_FACE);
+        glCullFace(cmd.cullFace);
+    }
+    else
+    {
+        glDisable(GL_CULL_FACE);
+    }
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetObjectIDData& cmd)
 {
     assert(cmd.shader && "Shader cannot be null for object ID");
@@ -263,6 +276,25 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ReadPixelData& cm
     *cmd.outValue = static_cast<uint32_t>(pixel[0]) |
                    (static_cast<uint32_t>(pixel[1]) << 8) |
                    (static_cast<uint32_t>(pixel[2]) << 16);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &cmd)
+{
+    assert(cmd.shader && "BindCubemapData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(cmd.cubemapID != 0 && "Cubemap ID must be valid");
+    assert(cmd.textureUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS && "Texture unit must be within OpenGL limits");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Bind cubemap to specified texture unit
+    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapID);
+
+    // Set uniform sampler to point to the texture unit
+    cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
 }
 
 void RenderCommandBuffer::CleanupGPUState()

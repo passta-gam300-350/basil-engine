@@ -24,5 +24,4 @@ public:
     void Execute(RenderContext& context) override;
 
 private:
-    static constexpr uint8_t PRESENT_PASS_ID = 3;  // Execute after debug pass (ID 2)
 };

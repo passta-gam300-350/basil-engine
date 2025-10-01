@@ -85,6 +85,7 @@ private:
     // Render pass controls
     void ToggleRenderPass(const std::string& passName);
     void ToggleAABBVisualization();
+    void ToggleSkybox();
     //void RenderUI(); // For ImGui if available
 
     // Object picking
