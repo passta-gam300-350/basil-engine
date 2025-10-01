@@ -11,7 +11,7 @@ public:
     void Bind() const;
     void Unbind() const;
 
-    void SetData(const void *data, uint32_t size);
+    void SetData(const void *data, uint32_t size) const;
 
     uint32_t GetVAOHandle() const
     {

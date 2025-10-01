@@ -7,7 +7,7 @@
 
 // TextureData implementation
 TextureData::~TextureData() {
-    if (pixels) {
+    if (pixels != nullptr) {
         stbi_image_free(pixels);
         pixels = nullptr;
     }
@@ -25,7 +25,7 @@ TextureData::TextureData(TextureData&& other) noexcept
 
 TextureData& TextureData::operator=(TextureData&& other) noexcept {
     if (this != &other) {
-        if (pixels) {
+        if (pixels != nullptr) {
             stbi_image_free(pixels);
         }
         pixels = other.pixels;
@@ -50,10 +50,10 @@ TextureData TextureLoader::LoadFromFile(const char* path, const std::string& dir
 
     //stbi_set_flip_vertically_on_load(true);
     
-    textureData.pixels = stbi_load(filename.c_str(), &textureData.width, 
+    textureData.pixels = stbi_load(filename.c_str(), &textureData.width,
                                   &textureData.height, &textureData.channels, 0);
-    
-    if (textureData.pixels) {
+
+    if (textureData.pixels != nullptr) {
         textureData.isValid = true;
     } else {
         spdlog::error("Texture failed to load at path: {}", filename);
@@ -65,35 +65,33 @@ TextureData TextureLoader::LoadFromFile(const char* path, const std::string& dir
 
 // GPU resource creation (separated concern)
 unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma) {
-    if (!data.isValid || !data.pixels) {
+    if (!data.isValid || data.pixels == nullptr) {
         return 0;
     }
-    
-    unsigned int textureID;
+
+    unsigned int textureID = 0;
     glGenTextures(1, &textureID);
-    
-    GLenum internalFormat, dataFormat;
+
+    GLenum internalFormat = GL_RGB;
+    GLenum dataFormat = GL_RGB;
     if (data.channels == 1) {
         internalFormat = GL_RED;
         dataFormat = GL_RED;
-    }
-    else if (data.channels == 3) {
+    } else if (data.channels == 3) {
         // Use sRGB format for gamma-encoded textures (albedo/diffuse)
-    	internalFormat = gamma ? GL_SRGB8 : GL_RGB;
+        internalFormat = gamma ? GL_SRGB8 : GL_RGB;
         dataFormat = GL_RGB;
-    }
-	else if (data.channels == 4) {
+    } else if (data.channels == 4) {
         // Use sRGB format for gamma-encoded textures (albedo/diffuse with alpha)
         internalFormat = gamma ? GL_SRGB8_ALPHA8 : GL_RGBA;
         dataFormat = GL_RGBA;
-    }
-    else {
+    } else {
         internalFormat = GL_RGB; // Default fallback
-    	dataFormat = GL_RGB;
+        dataFormat = GL_RGB;
     }
     
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, data.width, data.height, 0, dataFormat, GL_UNSIGNED_BYTE, data.pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(internalFormat), data.width, data.height, 0, dataFormat, GL_UNSIGNED_BYTE, data.pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -107,7 +105,7 @@ unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma
 unsigned int TextureLoader::CreateGPUTextureCompressed(tinyddsloader::DDSFile& ddsimg) {
     const auto& img = ddsimg.GetImageData(0, 0);
 
-    GLenum glCompressedFormat;
+    GLenum glCompressedFormat = 0;
     
     // map block compression format, bc7 not support. too bad. its too expensive anyways
     switch (ddsimg.GetFormat()) {
@@ -122,7 +120,12 @@ unsigned int TextureLoader::CreateGPUTextureCompressed(tinyddsloader::DDSFile& d
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glCompressedTexImage2D(GL_TEXTURE_2D, 0, glCompressedFormat, ddsimg.GetWidth(), ddsimg.GetHeight(), 0, ddsimg.GetImageData(0,0)->m_memSlicePitch, ddsimg.GetImageData(0,0)->m_mem);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, glCompressedFormat,
+        static_cast<GLsizei>(ddsimg.GetWidth()),
+        static_cast<GLsizei>(ddsimg.GetHeight()),
+        0,
+        static_cast<GLsizei>(ddsimg.GetImageData(0,0)->m_memSlicePitch),
+        ddsimg.GetImageData(0,0)->m_mem);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

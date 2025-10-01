@@ -59,8 +59,9 @@ std::shared_ptr<Shader> ResourceManager::LoadShader(const std::string& name, con
 std::shared_ptr<Shader> ResourceManager::GetShader(const std::string& name)
 {
     auto it = m_Shaders.find(name);
-    if (it != m_Shaders.end())
+    if (it != m_Shaders.end()) {
         return it->second;
+    }
     
     spdlog::error("Shader not found: {}", name);
     return nullptr;
@@ -96,8 +97,9 @@ std::shared_ptr<Model> ResourceManager::LoadModel(const std::string& name, const
 std::shared_ptr<Model> ResourceManager::GetModel(const std::string& name)
 {
     auto it = m_Models.find(name);
-    if (it != m_Models.end())
+    if (it != m_Models.end()) {
         return it->second;
+    }
     
     spdlog::error("Model not found: {}", name);
     return nullptr;
@@ -108,7 +110,7 @@ bool ResourceManager::HasModel(const std::string& name) const
     return m_Models.find(name) != m_Models.end();
 }
 
-void ResourceManager::AddMaterial(const std::string& name, std::shared_ptr<Material> material)
+void ResourceManager::AddMaterial(const std::string& name, const std::shared_ptr<Material>& material)
 {
     if (!material) {
         spdlog::error("Cannot add null material: {}", name);

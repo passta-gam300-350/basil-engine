@@ -46,8 +46,8 @@ private:
                             int& fbX, int& fbY) const;
 
     // Convert object ID to color and vice versa
-    glm::vec3 ObjectIDToColor(uint32_t objectID) const;
-    uint32_t ColorToObjectID(const glm::vec3& color) const;
+    static glm::vec3 ObjectIDToColor(uint32_t objectID);
+    static uint32_t ColorToObjectID(const glm::vec3& color);
 
     // Shader storage
     std::shared_ptr<Shader> m_PickingShader;

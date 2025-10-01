@@ -29,7 +29,7 @@ public:
     bool HasModel(const std::string& name) const;
 
     // Material management
-    void AddMaterial(const std::string& name, std::shared_ptr<Material> material);
+    void AddMaterial(const std::string& name, const std::shared_ptr<Material>& material);
     std::shared_ptr<Material> GetMaterial(const std::string& name);
     bool HasMaterial(const std::string& name) const;
 

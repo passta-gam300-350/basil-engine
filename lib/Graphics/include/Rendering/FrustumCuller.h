@@ -28,5 +28,5 @@ private:
     };
     
     bool IsRenderableInFrustum(const RenderableData& renderable, const Frustum& frustum);
-    glm::vec3 ExtractPosition(const glm::mat4& transform) const;
+    glm::vec3 ExtractPosition(const glm::mat4& transform);
 };

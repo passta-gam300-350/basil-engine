@@ -26,8 +26,9 @@ void PresentPass::Execute(RenderContext& context)
 
     // Get current window size dynamically
     GLFWwindow* currentWindow = glfwGetCurrentContext();
-    int windowWidth = 1280, windowHeight = 720;  // Default fallback
-    if (currentWindow) {
+    int windowWidth = 1280;
+    int windowHeight = 720;  // Default fallback
+    if (currentWindow != nullptr) {
         glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
     }
 

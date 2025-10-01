@@ -9,7 +9,7 @@ public:
 	UniformBuffer(uint32_t size, uint32_t binding);
 	~UniformBuffer();
 
-    void SetData(const void *data, uint32_t size, uint32_t offset = 0);
+    void SetData(const void *data, uint32_t size, uint32_t offset = 0) const;
 
     template<typename T>
     void Set(uint32_t offset, const T &data);
@@ -21,6 +21,12 @@ private:
 	uint32_t m_UBOHandle;
 	uint32_t m_Binding;
 };
+
+template<typename T>
+inline void UniformBuffer::Set(uint32_t offset, const T& data)
+{
+    SetData(&data, sizeof(T), offset);
+}
 
 template<>
 inline void UniformBuffer::Set<float>(uint32_t offset, const float &data)

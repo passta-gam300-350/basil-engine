@@ -20,7 +20,7 @@ class DebugRenderPass : public RenderPass
 {
 public:
     DebugRenderPass();
-    DebugRenderPass(std::shared_ptr<Shader> primitiveShader);
+    explicit DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader);
     DebugRenderPass(const DebugRenderPass&) = delete;
     DebugRenderPass& operator=(const DebugRenderPass&) = delete;
     DebugRenderPass(DebugRenderPass&&) = delete;

@@ -153,7 +153,7 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
 
         // Add instance data with actual material properties
-        InstanceData instanceData;
+        InstanceData instanceData{};
         instanceData.modelMatrix = renderable.transform;
         instanceData.color = glm::vec4(renderable.material->GetAlbedoColor(), 1.0f);
         instanceData.materialId = 0; // Not used yet, could be used for texture indexing
@@ -233,7 +233,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     renderPass.Submit(uniformsCmd);
 
     // 4. Apply lighting setup (material properties are now per-instance in SSBO)
-    if (m_PBRLighting) {
+    if (m_PBRLighting != nullptr) {
         // Apply lighting uniforms only (no per-instance material data)
         m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
     } else {
@@ -292,7 +292,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
 }
 
-void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
+void InstancedRenderer::SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material)
 {
     assert(!meshId.empty() && "Mesh ID cannot be empty");
     assert(mesh && "Mesh cannot be null");

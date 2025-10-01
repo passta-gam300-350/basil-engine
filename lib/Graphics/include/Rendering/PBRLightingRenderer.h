@@ -64,12 +64,12 @@ public:
     void AddSpotLight(const SpotLight& light);
     
     // PBR lighting setup for any shader
-    void SetupPBRLighting(std::shared_ptr<Shader> shader,
+    void SetupPBRLighting(const std::shared_ptr<Shader>& shader,
                           const FrameData& frameData,
                           const Material* material = nullptr);
 
     // Command-based lighting setup (integrates with render pipeline)
-    void SubmitLightingCommands(std::shared_ptr<Shader> shader,
+    void SubmitLightingCommands(const std::shared_ptr<Shader>& shader,
                                 const FrameData& frameData,
                                 const Material* material);
     
@@ -89,7 +89,7 @@ public:
                        const glm::vec3& ambientLight, const FrameData& frameData);
     
     // Helper method for any renderer to apply lighting to their shader
-    void ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material = nullptr);
+    void ApplyLightingToShader(const std::shared_ptr<Shader>& shader, const Material* material = nullptr);
 
 private:
     // Light storage (moved from InstancedRenderer)
@@ -98,8 +98,8 @@ private:
     std::vector<SpotLight> m_SpotLights;
     
     // Helper methods for setting up specific light types
-    void SetupPointLights(std::shared_ptr<Shader> shader);
-    void SetupDirectionalLights(std::shared_ptr<Shader> shader);
-    void SetupSpotLights(std::shared_ptr<Shader> shader);
-    void SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material);
+    void SetupPointLights(const std::shared_ptr<Shader>& shader);
+    void SetupDirectionalLights(const std::shared_ptr<Shader>& shader);
+    void SetupSpotLights(const std::shared_ptr<Shader>& shader);
+    static void SetupMaterialProperties(const std::shared_ptr<Shader>& shader, const Material* material);
 };

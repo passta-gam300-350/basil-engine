@@ -25,7 +25,7 @@ Mesh PrimitiveGenerator::CreatePlane(float width, float height,
     // Generate vertices
     for (int z = 0; z < verticesZ; ++z) {
         for (int x = 0; x < verticesX; ++x) {
-            Vertex vertex;
+            Vertex vertex{};
 
             // Normalized coordinates [0,1]
             float u = static_cast<float>(x) / subdivisionsX;
@@ -446,7 +446,7 @@ Mesh PrimitiveGenerator::CreateWireframeCube(float size)
 
     // Create vertices
     for (const auto& pos : positions) {
-        Vertex vertex;
+        Vertex vertex{};
         vertex.Position = pos;
         vertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);     // Dummy normal for wireframe
         vertex.TexCoords = glm::vec2(0.0f, 0.0f);        // Dummy tex coords for wireframe

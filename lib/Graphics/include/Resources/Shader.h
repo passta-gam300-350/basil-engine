@@ -16,7 +16,7 @@ public:
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
     
     // Activate the shader
-    void use();
+    void use() const;
     
     // Utility uniform functions
     void setBool(const std::string &name, bool value) const;
@@ -34,5 +34,5 @@ public:
 
 private:
     // Utility function for checking shader compilation/linking errors
-    void checkCompileErrors(GLuint shader, std::string type);
+    static void checkCompileErrors(GLuint shader, std::string type);
 };

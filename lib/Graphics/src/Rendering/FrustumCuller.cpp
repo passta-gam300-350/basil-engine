@@ -7,11 +7,12 @@ std::vector<RenderableData> FrustumCuller::CullRenderables(const std::vector<Ren
 {
     std::vector<RenderableData> visibleRenderables;
     
-    if (renderables.empty())
+    if (renderables.empty()) {
         return visibleRenderables;
+    }
 
     // Extract frustum planes from frame data
-    Frustum frustum;
+    Frustum frustum{};
     glm::mat4 viewProj = frameData.projectionMatrix * frameData.viewMatrix;
     frustum.ExtractPlanes(viewProj);
     
@@ -19,8 +20,9 @@ std::vector<RenderableData> FrustumCuller::CullRenderables(const std::vector<Ren
     for (const auto& renderable : renderables)
     {
         // Skip if already marked invisible
-        if (!renderable.visible)
+        if (!renderable.visible) {
             continue;
+        }
             
         // Check if renderable is in camera frustum
         if (IsRenderableInFrustum(renderable, frustum))
@@ -43,7 +45,7 @@ bool FrustumCuller::IsRenderableInFrustum(const RenderableData& renderable, cons
     return frustum.IsSphereVisible(position, boundingSphereRadius);
 }
 
-glm::vec3 FrustumCuller::ExtractPosition(const glm::mat4& transform) const
+glm::vec3 FrustumCuller::ExtractPosition(const glm::mat4& transform)
 {
     return glm::vec3(transform[3]); // Translation component
 }
@@ -51,44 +53,45 @@ glm::vec3 FrustumCuller::ExtractPosition(const glm::mat4& transform) const
 void FrustumCuller::Frustum::ExtractPlanes(const glm::mat4& viewProj)
 {
     // Left plane
-    planes[Left].x = viewProj[0][3] + viewProj[0][0];
-    planes[Left].y = viewProj[1][3] + viewProj[1][0];
-    planes[Left].z = viewProj[2][3] + viewProj[2][0];
-    planes[Left].w = viewProj[3][3] + viewProj[3][0];
+    // NOLINT(cppcoreguidelines-pro-type-union-access)
+    planes[Left] = glm::vec4(viewProj[0][3] + viewProj[0][0],
+                             viewProj[1][3] + viewProj[1][0],
+                             viewProj[2][3] + viewProj[2][0],
+                             viewProj[3][3] + viewProj[3][0]);
 
     // Right plane
-    planes[Right].x = viewProj[0][3] - viewProj[0][0];
-    planes[Right].y = viewProj[1][3] - viewProj[1][0];
-    planes[Right].z = viewProj[2][3] - viewProj[2][0];
-    planes[Right].w = viewProj[3][3] - viewProj[3][0];
+    planes[Right] = glm::vec4(viewProj[0][3] - viewProj[0][0],
+                              viewProj[1][3] - viewProj[1][0],
+                              viewProj[2][3] - viewProj[2][0],
+                              viewProj[3][3] - viewProj[3][0]);
 
     // Bottom plane
-    planes[Bottom].x = viewProj[0][3] + viewProj[0][1];
-    planes[Bottom].y = viewProj[1][3] + viewProj[1][1];
-    planes[Bottom].z = viewProj[2][3] + viewProj[2][1];
-    planes[Bottom].w = viewProj[3][3] + viewProj[3][1];
+    planes[Bottom] = glm::vec4(viewProj[0][3] + viewProj[0][1],
+                               viewProj[1][3] + viewProj[1][1],
+                               viewProj[2][3] + viewProj[2][1],
+                               viewProj[3][3] + viewProj[3][1]);
 
     // Top plane
-    planes[Top].x = viewProj[0][3] - viewProj[0][1];
-    planes[Top].y = viewProj[1][3] - viewProj[1][1];
-    planes[Top].z = viewProj[2][3] - viewProj[2][1];
-    planes[Top].w = viewProj[3][3] - viewProj[3][1];
+    planes[Top] = glm::vec4(viewProj[0][3] - viewProj[0][1],
+                            viewProj[1][3] - viewProj[1][1],
+                            viewProj[2][3] - viewProj[2][1],
+                            viewProj[3][3] - viewProj[3][1]);
 
     // Near plane
-    planes[Near].x = viewProj[0][3] + viewProj[0][2];
-    planes[Near].y = viewProj[1][3] + viewProj[1][2];
-    planes[Near].z = viewProj[2][3] + viewProj[2][2];
-    planes[Near].w = viewProj[3][3] + viewProj[3][2];
+    planes[Near] = glm::vec4(viewProj[0][3] + viewProj[0][2],
+                             viewProj[1][3] + viewProj[1][2],
+                             viewProj[2][3] + viewProj[2][2],
+                             viewProj[3][3] + viewProj[3][2]);
 
     // Far plane
-    planes[Far].x = viewProj[0][3] - viewProj[0][2];
-    planes[Far].y = viewProj[1][3] - viewProj[1][2];
-    planes[Far].z = viewProj[2][3] - viewProj[2][2];
-    planes[Far].w = viewProj[3][3] - viewProj[3][2];
+    planes[Far] = glm::vec4(viewProj[0][3] - viewProj[0][2],
+                            viewProj[1][3] - viewProj[1][2],
+                            viewProj[2][3] - viewProj[2][2],
+                            viewProj[3][3] - viewProj[3][2]);
 
     // Normalize all planes
     for (int i = 0; i < Planes::Count; ++i) {
-        float length = glm::sqrt(planes[i].x * planes[i].x + planes[i].y * planes[i].y + planes[i].z * planes[i].z);
+        float length = glm::length(glm::vec3(planes[i]));
         planes[i] /= length;
     }
 }
@@ -96,7 +99,10 @@ void FrustumCuller::Frustum::ExtractPlanes(const glm::mat4& viewProj)
 bool FrustumCuller::Frustum::IsSphereVisible(const glm::vec3& center, float radius) const
 {
     for (int i = 0; i < Planes::Count; ++i) {
-        if (glm::dot(glm::vec3(planes[i]), center) + planes[i].w < -radius) {
+        // Extract plane normal (xyz) and distance (w)
+        glm::vec3 normal(planes[i][0], planes[i][1], planes[i][2]);
+        float distance = planes[i][3];
+        if (glm::dot(normal, center) + distance < -radius) {
             return false;
         }
     }

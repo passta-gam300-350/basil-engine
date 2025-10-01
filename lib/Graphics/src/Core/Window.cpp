@@ -5,7 +5,7 @@
 Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	: m_Width(width), m_Height(height), m_Window(nullptr)
 {
-	if (!glfwInit())
+	if (glfwInit() == GLFW_FALSE)
 	{
 		spdlog::error("Failed to initialize GLFW");
 		return;
@@ -17,8 +17,8 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	// Create the GLFW window
-	m_Window = glfwCreateWindow(m_Width, m_Height, title.c_str(), nullptr, nullptr);
-	if (!m_Window)
+	m_Window = glfwCreateWindow(static_cast<int>(m_Width), static_cast<int>(m_Height), title.c_str(), nullptr, nullptr);
+	if (m_Window == nullptr)
 	{
 		spdlog::error("Failed to create GLFW window");
 		glfwTerminate();
@@ -28,7 +28,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	// Make this window's context current (moved from Window class)
 	glfwMakeContextCurrent(m_Window);
 
-	if (!gladLoadGL())
+	if (gladLoadGL() == 0)
 	{
 		spdlog::error("Failed to initialize GLAD2");
 		return;
@@ -72,7 +72,7 @@ void Window::PollEvents()
 
 bool Window::ShouldClose() const
 {
-	return glfwWindowShouldClose(m_Window);
+	return glfwWindowShouldClose(m_Window) != 0;
 }
 
 void Window::SwapBuffers()

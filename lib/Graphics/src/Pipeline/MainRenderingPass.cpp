@@ -70,7 +70,8 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Debug: Log framebuffer info
     auto mainFBO = GetFramebuffer();
     const auto& spec = mainFBO->GetSpecification();
-    static uint32_t lastWidth = 0, lastHeight = 0;
+    static uint32_t lastWidth = 0;
+    static uint32_t lastHeight = 0;
     if (spec.Width != lastWidth || spec.Height != lastHeight) {
         spdlog::info("MainRenderingPass: Framebuffer size {}x{}, Handle: {}",
                     spec.Width, spec.Height, mainFBO->GetFBOHandle());
@@ -89,9 +90,12 @@ void MainRenderingPass::UpdateFramebufferSize()
 {
     // Get current window size
     GLFWwindow* currentWindow = glfwGetCurrentContext();
-    if (!currentWindow) return;
+    if (currentWindow == nullptr) {
+        return;
+    }
 
-    int windowWidth, windowHeight;
+    int windowWidth = 0;
+    int windowHeight = 0;
     glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
 
     // Check if we need to resize the framebuffer

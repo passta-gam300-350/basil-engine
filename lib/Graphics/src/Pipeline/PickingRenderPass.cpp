@@ -173,7 +173,8 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     assert(query.screenX < query.viewportWidth && query.screenY < query.viewportHeight && "Screen coordinates must be within viewport");
 
     // Convert screen coordinates to framebuffer coordinates
-    int fbX, fbY;
+    int fbX = 0;
+    int fbY = 0;
     ScreenToFramebuffer(query.screenX, query.screenY,
                        query.viewportWidth, query.viewportHeight,
                        fbX, fbY);
@@ -191,7 +192,7 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     m_Framebuffer->Bind();
 
     // Assert framebuffer is bound correctly
-    GLint currentFB;
+    GLint currentFB = 0;
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &currentFB);
     assert(currentFB == static_cast<GLint>(m_Framebuffer->GetFBOHandle()) && "Picking framebuffer must be bound for reading");
 
@@ -228,7 +229,7 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     }
 
     // Read depth value for world position calculation
-    float depth;
+    float depth = 0.0f;
     glReadPixels(fbX, fbY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
 
     spdlog::info("QueryPicking - Depth value: {}", depth);
@@ -243,8 +244,9 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     if (result.hasHit) {
         // Calculate world position from screen coordinates and depth
         // Convert screen coords to NDC
-        float ndcX = (2.0f * fbX) / m_Framebuffer->GetSpecification().Width - 1.0f;
-        float ndcY = 1.0f - (2.0f * fbY) / m_Framebuffer->GetSpecification().Height;
+        const auto& spec = m_Framebuffer->GetSpecification();
+        float ndcX = (2.0f * static_cast<float>(fbX)) / static_cast<float>(spec.Width) - 1.0f;
+        float ndcY = 1.0f - (2.0f * static_cast<float>(fbY)) / static_cast<float>(spec.Height);
         float ndcZ = 2.0f * depth - 1.0f;
 
         // Convert to clip space
@@ -253,9 +255,11 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
         // Convert to world space
         glm::mat4 invViewProj = glm::inverse(context.frameData.projectionMatrix * context.frameData.viewMatrix);
         glm::vec4 worldPos = invViewProj * clipPos;
-        worldPos /= worldPos.w;
+        // Extract w component without union warning
+        float w = worldPos[3];
+        worldPos /= w;
 
-        result.worldPosition = glm::vec3(worldPos);
+        result.worldPosition = glm::vec3(worldPos[0], worldPos[1], worldPos[2]);
     }
 
     return result;
@@ -276,20 +280,21 @@ void PickingRenderPass::ScreenToFramebuffer(int screenX, int screenY, int screen
     fbY = glm::clamp(fbY, 0, static_cast<int>(spec.Height) - 1);
 }
 
-glm::vec3 PickingRenderPass::ObjectIDToColor(uint32_t objectID) const
+glm::vec3 PickingRenderPass::ObjectIDToColor(uint32_t objectID)
 {
     // Convert 24-bit object ID to RGB color
-    float r = static_cast<float>((objectID >> 16) & 0xFF) / 255.0f;
-    float g = static_cast<float>((objectID >> 8) & 0xFF) / 255.0f;
-    float b = static_cast<float>(objectID & 0xFF) / 255.0f;
-    return glm::vec3(r, g, b);
+    float r = static_cast<float>((objectID >> 16U) & 0xFFU) / 255.0f;
+    float g = static_cast<float>((objectID >> 8U) & 0xFFU) / 255.0f;
+    float b = static_cast<float>(objectID & 0xFFU) / 255.0f;
+    return {r, g, b};
 }
 
-uint32_t PickingRenderPass::ColorToObjectID(const glm::vec3& color) const
+uint32_t PickingRenderPass::ColorToObjectID(const glm::vec3& color)
 {
     // Convert RGB color back to 24-bit object ID
-    uint32_t r = static_cast<uint32_t>(color.r * 255.0f) & 0xFF;
-    uint32_t g = static_cast<uint32_t>(color.g * 255.0f) & 0xFF;
-    uint32_t b = static_cast<uint32_t>(color.b * 255.0f) & 0xFF;
-    return (r << 16) | (g << 8) | b;
+    // Access via array indexing instead of .r, .g, .b to avoid union warnings
+    uint32_t r = static_cast<uint32_t>(color[0] * 255.0f) & 0xFFU;
+    uint32_t g = static_cast<uint32_t>(color[1] * 255.0f) & 0xFFU;
+    uint32_t b = static_cast<uint32_t>(color[2] * 255.0f) & 0xFFU;
+    return (r << 16U) | (g << 8U) | b;
 }

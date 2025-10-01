@@ -13,6 +13,7 @@ uint32_t VertexBufferLayout::Element::GetSizeOfType(uint32_t type)
 }
 
 VertexArray::VertexArray()
+	: m_VAOHandle(0)
 {
 	glGenVertexArrays(1, &m_VAOHandle);
 }
@@ -46,12 +47,12 @@ void VertexArray::AddVertexBuffer(std::shared_ptr<VertexBuffer> const &vertexBuf
 
 		glEnableVertexAttribArray(i);
 		glVertexAttribPointer(
-			i, element.count,
-			element.type, element.normalised ? GL_TRUE : GL_FALSE,
-			layout.GetStride(), (const void *)(intptr_t)offset
+			i, static_cast<GLint>(element.count),
+			element.type, element.normalised != 0 ? GL_TRUE : GL_FALSE,
+			static_cast<GLsizei>(layout.GetStride()), reinterpret_cast<const void *>(static_cast<intptr_t>(offset))
 		);
 
-		offset += element.count * element.GetSizeOfType(element.type);
+		offset += element.count * VertexBufferLayout::Element::GetSizeOfType(element.type);
 	}
 
 	m_VertexBuffers.push_back(vertexBuffer);

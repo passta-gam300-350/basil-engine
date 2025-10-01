@@ -47,8 +47,12 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ClearData& cmd)
     }
     
     GLbitfield mask = 0;
-    if (cmd.clearColor) mask |= GL_COLOR_BUFFER_BIT;
-    if (cmd.clearDepth) mask |= GL_DEPTH_BUFFER_BIT;
+    if (cmd.clearColor) {
+        mask |= GL_COLOR_BUFFER_BIT;
+    }
+    if (cmd.clearDepth) {
+        mask |= GL_DEPTH_BUFFER_BIT;
+    }
     
     if (mask != 0) {
         glClear(mask);
@@ -95,11 +99,11 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
            cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawElementsData mode must be a valid OpenGL primitive type");
 
     glBindVertexArray(cmd.vao);
-    glDrawElements(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(cmd.mode, static_cast<GLsizei>(cmd.indexCount), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
     // Reset material texture state (but preserve shadow map binding)
-    if (m_TextureBindingSystem)
+    if (m_TextureBindingSystem != nullptr)
     {
         // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
         for (int i = 0; i < 8; ++i) {
@@ -126,12 +130,12 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
            cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawElementsInstancedData mode must be a valid OpenGL primitive type");
 
     glBindVertexArray(cmd.vao);
-    glDrawElementsInstanced(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
-                           cmd.instanceCount);
+    glDrawElementsInstanced(cmd.mode, static_cast<GLsizei>(cmd.indexCount), GL_UNSIGNED_INT, nullptr,
+                           static_cast<GLsizei>(cmd.instanceCount));
     glBindVertexArray(0);
 
     // Reset material texture state (but preserve shadow map binding)
-    if (m_TextureBindingSystem)
+    if (m_TextureBindingSystem != nullptr)
     {
         // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
         for (int i = 0; i < 8; ++i) {
@@ -157,7 +161,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniforms
     cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
 
     // Bind shadow map texture to specified unit using TextureSlotManager
-    if (m_TextureBindingSystem) {
+    if (m_TextureBindingSystem != nullptr) {
         m_TextureBindingSystem->BindTextureID(cmd.shadowMapTexture, cmd.shadowMapUnit);
     } else {
         // Fallback to manual binding

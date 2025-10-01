@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
-Material::Material(std::shared_ptr<Shader> shader, const std::string& name)
+Material::Material(const std::shared_ptr<Shader>& shader, const std::string& name)
     : m_Shader(shader), m_Name(name)
 {
     if (!shader)
@@ -49,7 +49,9 @@ void Material::SetMat4(const std::string& name, const glm::mat4& value)
 
 void Material::ApplyPBRProperties()
 {
-    if (!m_Shader) return;
+    if (!m_Shader) {
+        return;
+    }
 
     // Note: Shader is already bound by the command buffer system, don't call use() here
 

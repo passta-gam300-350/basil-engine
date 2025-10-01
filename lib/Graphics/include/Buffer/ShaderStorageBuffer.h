@@ -25,7 +25,7 @@ public:
     void Unbind() const;
 
     // Update buffer data
-    void SetData(const void* data, uint32_t size, uint32_t offset = 0);
+    void SetData(const void* data, uint32_t size, uint32_t offset = 0) const;
     
     // Resize buffer (reallocates)
     void Resize(uint32_t newSize);

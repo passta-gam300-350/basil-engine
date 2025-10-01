@@ -3,7 +3,8 @@
 #include <spdlog/spdlog.h>
 #include <algorithm>
 
-TextureSlotManager::TextureSlotManager() {
+TextureSlotManager::TextureSlotManager()
+    : m_BoundTextures{}, m_SlotUsed{} {
     // Initialize all slots as unbound
     m_BoundTextures.fill(0);
     m_SlotUsed.fill(false);
@@ -84,14 +85,30 @@ void TextureSlotManager::UnbindAll() {
 }
 
 int TextureSlotManager::GetTextureSlot(const std::string& textureType) {
-    if (textureType == "texture_diffuse") return TEXTURE_SLOT_DIFFUSE;
-    if (textureType == "texture_normal") return TEXTURE_SLOT_NORMAL;
-    if (textureType == "texture_metallic") return TEXTURE_SLOT_METALLIC;
-    if (textureType == "texture_roughness") return TEXTURE_SLOT_ROUGHNESS;
-    if (textureType == "texture_ao") return TEXTURE_SLOT_AO;
-    if (textureType == "texture_emissive") return TEXTURE_SLOT_EMISSIVE;
-    if (textureType == "texture_specular") return TEXTURE_SLOT_SPECULAR;
-    if (textureType == "texture_height") return TEXTURE_SLOT_HEIGHT;
+    if (textureType == "texture_diffuse") {
+        return TEXTURE_SLOT_DIFFUSE;
+    }
+    if (textureType == "texture_normal") {
+        return TEXTURE_SLOT_NORMAL;
+    }
+    if (textureType == "texture_metallic") {
+        return TEXTURE_SLOT_METALLIC;
+    }
+    if (textureType == "texture_roughness") {
+        return TEXTURE_SLOT_ROUGHNESS;
+    }
+    if (textureType == "texture_ao") {
+        return TEXTURE_SLOT_AO;
+    }
+    if (textureType == "texture_emissive") {
+        return TEXTURE_SLOT_EMISSIVE;
+    }
+    if (textureType == "texture_specular") {
+        return TEXTURE_SLOT_SPECULAR;
+    }
+    if (textureType == "texture_height") {
+        return TEXTURE_SLOT_HEIGHT;
+    }
     return -1; // Unknown type
 }
 
@@ -147,19 +164,33 @@ void TextureSlotManager::SetShaderUniforms(const std::vector<Texture>& textures,
 }
 
 void TextureSlotManager::SetTextureAvailabilityFlags(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader) {
-    bool hasDiffuse = false, hasNormal = false, hasMetallic = false,
-         hasRoughness = false, hasAO = false, hasEmissive = false,
-         hasSpecular = false, hasHeight = false;
+    bool hasDiffuse = false;
+    bool hasNormal = false;
+    bool hasMetallic = false;
+    bool hasRoughness = false;
+    bool hasAO = false;
+    bool hasEmissive = false;
+    bool hasSpecular = false;
+    bool hasHeight = false;
 
     for (const auto& texture : textures) {
-        if (texture.type == "texture_diffuse") hasDiffuse = true;
-        else if (texture.type == "texture_normal") hasNormal = true;
-        else if (texture.type == "texture_metallic") hasMetallic = true;
-        else if (texture.type == "texture_roughness") hasRoughness = true;
-        else if (texture.type == "texture_ao") hasAO = true;
-        else if (texture.type == "texture_emissive") hasEmissive = true;
-        else if (texture.type == "texture_specular") hasSpecular = true;
-        else if (texture.type == "texture_height") hasHeight = true;
+        if (texture.type == "texture_diffuse") {
+            hasDiffuse = true;
+        } else if (texture.type == "texture_normal") {
+            hasNormal = true;
+        } else if (texture.type == "texture_metallic") {
+            hasMetallic = true;
+        } else if (texture.type == "texture_roughness") {
+            hasRoughness = true;
+        } else if (texture.type == "texture_ao") {
+            hasAO = true;
+        } else if (texture.type == "texture_emissive") {
+            hasEmissive = true;
+        } else if (texture.type == "texture_specular") {
+            hasSpecular = true;
+        } else if (texture.type == "texture_height") {
+            hasHeight = true;
+        }
     }
 
     shader->setBool("u_HasDiffuseMap", hasDiffuse);

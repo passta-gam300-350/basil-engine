@@ -82,8 +82,8 @@ void PostProcessStack::Apply(const std::shared_ptr<FrameBuffer>& source, std::sh
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, source->GetColorAttachmentRendererID());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, destination->GetColorAttachmentRendererID());
-        glBlitFramebuffer(0, 0, sourceSpec.Width, sourceSpec.Height,
-            0, 0, destSpec.Width, destSpec.Height,
+        glBlitFramebuffer(0, 0, static_cast<GLint>(sourceSpec.Width), static_cast<GLint>(sourceSpec.Height),
+            0, 0, static_cast<GLint>(destSpec.Width), static_cast<GLint>(destSpec.Height),
             GL_COLOR_BUFFER_BIT, GL_NEAREST);
         return;
     }

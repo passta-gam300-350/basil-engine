@@ -26,7 +26,7 @@ add_compile_options(/W4)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # static analysis (comment out to disable and adjust path to clang-tidy.exe accordingly)
-set(CMAKE_CXX_CLANG_TIDY "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-tidy.exe;-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor|app|tools|test)/.*")
+# set(CMAKE_CXX_CLANG_TIDY "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-tidy.exe;-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor|app|tools|test)/.*")
 
 #srcs
 add_subdirectory(lib)

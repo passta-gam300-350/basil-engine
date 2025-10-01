@@ -26,7 +26,7 @@ ShadowMappingPass::ShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
             { FBOTextureFormat::DEPTH24STENCIL8 }
         }
     }),
-    m_ShadowDepthShader(shadowDepthShader)
+    m_ShadowDepthShader(std::move(shadowDepthShader))
 {
 }
 
@@ -43,7 +43,7 @@ void ShadowMappingPass::Execute(RenderContext& context)
         }
     }
 
-    if (!directionalLight) {
+    if (directionalLight == nullptr) {
         // No directional light found - skip shadow mapping
         return;
     }
@@ -91,7 +91,9 @@ void ShadowMappingPass::Execute(RenderContext& context)
         // Render each object individually with light-space transformation
         for (const auto& renderable : context.renderables)
         {
-            if (!renderable.visible || !renderable.mesh) continue;
+            if (!renderable.visible || !renderable.mesh) {
+                continue;
+            }
 
             // Using depth-only shader for shadow casting
             // Bind depth-only shader first
@@ -133,7 +135,9 @@ glm::mat4 ShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDire
 
     // Better up vector calculation to avoid singularities
     glm::vec3 up;
-    if (abs(normalizedDir.y) > 0.9f) {
+    // Extract y component without union access warning
+    float dirY = normalizedDir[1];
+    if (glm::abs(dirY) > 0.9f) {
         up = glm::vec3(1.0f, 0.0f, 0.0f);  // If light points mostly up/down, use X as up
     } else {
         up = glm::vec3(0.0f, 1.0f, 0.0f);  // Otherwise use Y as up
@@ -144,7 +148,7 @@ glm::mat4 ShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDire
     return glm::lookAt(lightPosition, sceneCenter, up);
 }
 
-glm::mat4 ShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData)
+glm::mat4 ShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& /*lightDirection*/, const FrameData& /*frameData*/)
 {
     // Create orthographic projection that covers the scene
     // For a 2x2 grid with spacing 3.0f, scene spans roughly -1.5 to +1.5 in X/Z

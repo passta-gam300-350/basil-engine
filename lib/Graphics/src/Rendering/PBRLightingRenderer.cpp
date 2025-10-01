@@ -33,8 +33,8 @@ void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
     m_SpotLights.push_back(light);
 }
 
-void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
-                                           const FrameData& frameData,
+void PBRLightingRenderer::SetupPBRLighting(const std::shared_ptr<Shader>& shader,
+                                           const FrameData& /*frameData*/,
                                            const Material* material)
 {
     assert(shader && "Shader cannot be null for PBR lighting setup");
@@ -53,15 +53,19 @@ void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
     SetupDirectionalLights(shader);
     SetupSpotLights(shader);
 
-    // Set material properties - use Material's method if available, else use legacy method
-    if (material) {
-        const_cast<Material*>(material)->ApplyPBRProperties();
+    // Set material properties
+    if (material != nullptr) {
+        // Material properties are applied through the material's own methods
+        // Material::ApplyPBRProperties() should be const-correct in Material class
+        shader->setVec3("u_AlbedoColor", material->GetAlbedoColor());
+        shader->setFloat("u_MetallicValue", material->GetMetallicValue());
+        shader->setFloat("u_RoughnessValue", material->GetRoughnessValue());
     } else {
         SetupMaterialProperties(shader, material);
     }
 }
 
-void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
+void PBRLightingRenderer::SubmitLightingCommands(const std::shared_ptr<Shader>& shader,
                                                  const FrameData& frameData,
                                                  const Material* material)
 {
@@ -70,8 +74,8 @@ void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
     SetupPBRLighting(shader, frameData, material);
 }
 
-void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
-                                         const glm::vec3& ambientLight, const FrameData& frameData)
+void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
+                                         const glm::vec3& /*ambientLight*/, const FrameData& /*frameData*/)
 {
     // Clear existing lights
     ClearLights();
@@ -79,14 +83,15 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
     // Convert submitted light data to internal format
     for (const auto& submittedLight : submittedLights)
     {
-        if (!submittedLight.enabled)
+        if (!submittedLight.enabled) {
             continue;
+        }
             
         switch (submittedLight.type)
         {
             case Light::Type::Directional:
             {
-                DirectionalLight dirLight;
+                DirectionalLight dirLight{};
                 dirLight.direction = submittedLight.direction;
                 dirLight.color = submittedLight.color;
                 dirLight.intensity = submittedLight.intensity;
@@ -95,7 +100,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
             }
             case Light::Type::Point:
             {
-                PointLight pointLight;
+                PointLight pointLight{};
                 pointLight.position = submittedLight.position;
                 pointLight.color = submittedLight.color;
                 pointLight.intensity = submittedLight.intensity;
@@ -108,7 +113,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
             }
             case Light::Type::Spot:
             {
-                SpotLight spotLight;
+                SpotLight spotLight{};
                 spotLight.position = submittedLight.position;
                 spotLight.direction = submittedLight.direction;
                 spotLight.color = submittedLight.color;
@@ -126,7 +131,7 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
     }
 }
 
-void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material)
+void PBRLightingRenderer::ApplyLightingToShader(const std::shared_ptr<Shader>& shader, const Material* material)
 {
     assert(shader && "Shader cannot be null for lighting application");
     assert(shader->ID != 0 && "Shader program must be compiled and linked");
@@ -144,15 +149,19 @@ void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, 
     SetupDirectionalLights(shader);
     SetupSpotLights(shader);
 
-    // Set material properties - use Material's method if available, else use legacy method
-    if (material) {
-        const_cast<Material*>(material)->ApplyPBRProperties();
+    // Set material properties
+    if (material != nullptr) {
+        // Material properties are applied through the material's own methods
+        // Material::ApplyPBRProperties() should be const-correct in Material class
+        shader->setVec3("u_AlbedoColor", material->GetAlbedoColor());
+        shader->setFloat("u_MetallicValue", material->GetMetallicValue());
+        shader->setFloat("u_RoughnessValue", material->GetRoughnessValue());
     } else {
         SetupMaterialProperties(shader, material);
     }
 }
 
-void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
+void PBRLightingRenderer::SetupPointLights(const std::shared_ptr<Shader>& shader)
 {
     assert(shader && "Shader cannot be null for point light setup");
     assert(shader->ID != 0 && "Shader program must be compiled and linked");
@@ -178,7 +187,7 @@ void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
     }
 }
 
-void PBRLightingRenderer::SetupDirectionalLights(std::shared_ptr<Shader> shader)
+void PBRLightingRenderer::SetupDirectionalLights(const std::shared_ptr<Shader>& shader)
 {
     assert(shader && "Shader cannot be null for directional light setup");
     assert(shader->ID != 0 && "Shader program must be compiled and linked");
@@ -199,7 +208,7 @@ void PBRLightingRenderer::SetupDirectionalLights(std::shared_ptr<Shader> shader)
     }
 }
 
-void PBRLightingRenderer::SetupSpotLights(std::shared_ptr<Shader> shader)
+void PBRLightingRenderer::SetupSpotLights(const std::shared_ptr<Shader>& shader)
 {
     // Set spot light count
     shader->setInt("u_NumSpotLights", static_cast<int>(m_SpotLights.size()));
@@ -220,9 +229,9 @@ void PBRLightingRenderer::SetupSpotLights(std::shared_ptr<Shader> shader)
     }
 }
 
-void PBRLightingRenderer::SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material)
+void PBRLightingRenderer::SetupMaterialProperties(const std::shared_ptr<Shader>& shader, const Material* material)
 {
-    if (!material) {
+    if (material == nullptr) {
         // Use default PBR properties if no material provided
         shader->setVec3("u_AlbedoColor", glm::vec3(0.8f, 0.7f, 0.6f));
         shader->setFloat("u_MetallicValue", 0.7f);

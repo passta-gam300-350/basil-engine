@@ -11,7 +11,7 @@
 class Material
 {
 public:
-    Material(std::shared_ptr<Shader> shader, const std::string& name = "Material");
+    Material(const std::shared_ptr<Shader>& shader, const std::string& name = "Material");
     ~Material() = default;
 
     // Basic getters

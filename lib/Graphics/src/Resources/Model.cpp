@@ -17,7 +17,7 @@ void Model::loadModel(std::string const &path)
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
     // check for errors
-    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+    if(scene == nullptr || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != 0 || scene->mRootNode == nullptr) // if is Not Zero
     {
         spdlog::error("ASSIMP:: {}", importer.GetErrorString());
         return;
@@ -33,7 +33,7 @@ void Model::loadModel(std::string const &path)
 void Model::processNode(aiNode *node, const aiScene *scene)
 {
     // process each mesh located at the current node
-    for(unsigned int i = 0; i < node->mNumMeshes; i++)
+    for(unsigned int i = 0; i < node->mNumMeshes; ++i)
     {
         // the node object only contains indices to index the actual objects in the scene. 
         // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
@@ -41,7 +41,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
         meshes.push_back(processMesh(mesh, scene));
     }
     // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-    for(unsigned int i = 0; i < node->mNumChildren; i++)
+    for(unsigned int i = 0; i < node->mNumChildren; ++i)
     {
         processNode(node->mChildren[i], scene);
     }
@@ -55,16 +55,16 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     std::vector<Texture> textures;
 
     // walk through each of the mesh's vertices
-    for(unsigned int i = 0; i < mesh->mNumVertices; i++)
+    for(unsigned int i = 0; i < mesh->mNumVertices; ++i)
     {
-        Vertex vertex;
+        Vertex vertex{};
         glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-        // positions
-        vector.x = mesh->mVertices[i].x;
-        vector.y = mesh->mVertices[i].y;
-        vector.z = mesh->mVertices[i].z;
+        // positions - Assimp's aiVector3D uses union internally
+        vector.x = mesh->mVertices[i].x; // NOLINT(cppcoreguidelines-pro-type-union-access)
+        vector.y = mesh->mVertices[i].y; // NOLINT(cppcoreguidelines-pro-type-union-access)
+        vector.z = mesh->mVertices[i].z; // NOLINT(cppcoreguidelines-pro-type-union-access)
         vertex.Position = vector;
-        // normals
+        // normals - Assimp's aiVector3D uses union internally
         if (mesh->HasNormals())
         {
             vector.x = mesh->mNormals[i].x;
@@ -73,37 +73,40 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             vertex.Normal = vector;
         }
         // texture coordinates
-        if(mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+        if(mesh->mTextureCoords[0] != nullptr) // does the mesh contain texture coordinates?
         {
             glm::vec2 vec;
-            // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't 
+            // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
             // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
-            vec.x = mesh->mTextureCoords[0][i].x; 
+            // Assimp's aiVector3D uses union internally
+            vec.x = mesh->mTextureCoords[0][i].x;
             vec.y = mesh->mTextureCoords[0][i].y;
             vertex.TexCoords = vec;
-            // tangent
+            // tangent - Assimp's aiVector3D uses union internally
             vector.x = mesh->mTangents[i].x;
             vector.y = mesh->mTangents[i].y;
             vector.z = mesh->mTangents[i].z;
             vertex.Tangent = vector;
-            // bitangent
+            // bitangent - Assimp's aiVector3D uses union internally
             vector.x = mesh->mBitangents[i].x;
             vector.y = mesh->mBitangents[i].y;
             vector.z = mesh->mBitangents[i].z;
             vertex.Bitangent = vector;
         }
-        else
+        else {
             vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+        }
 
         vertices.push_back(vertex);
     }
     // now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
-    for(unsigned int i = 0; i < mesh->mNumFaces; i++)
+    for(unsigned int i = 0; i < mesh->mNumFaces; ++i)
     {
         aiFace face = mesh->mFaces[i];
         // retrieve all indices of the face and store them in the indices vector
-        for(unsigned int j = 0; j < face.mNumIndices; j++)
-            indices.push_back(face.mIndices[j]);        
+        for(unsigned int j = 0; j < face.mNumIndices; ++j) {
+            indices.push_back(face.mIndices[j]);
+        }        
     }
     // process materials
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -159,7 +162,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_height");
     
     // Separate normal and height based on filename if both are in HEIGHT type
-    std::vector<Texture> separatedNormals, separatedHeights;
+    std::vector<Texture> separatedNormals;
+    std::vector<Texture> separatedHeights;
 
     for (const auto& tex : heightMaps) {
         if (tex.path.find("Normal") != std::string::npos ||
@@ -174,11 +178,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
                 }
             }
             separatedNormals.push_back(normalTex);
-        } else if (tex.path.find("Height") != std::string::npos ||
-                   tex.path.find("height") != std::string::npos) {
-            separatedHeights.push_back(tex);
         } else {
-            separatedHeights.push_back(tex); // Default to height
+            // Default to height for both explicit Height/height filenames and unknown
+            separatedHeights.push_back(tex);
         }
     }
     
@@ -202,7 +204,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     return Mesh(vertices, indices, textures);
 }
 
-std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, const std::string& typeName)
 {
     std::vector<Texture> textures;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)

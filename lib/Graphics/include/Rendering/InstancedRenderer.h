@@ -48,7 +48,7 @@ public:
     void BuildDynamicInstanceData(const std::vector<RenderableData>& renderables);
     
     // Mesh and material setup
-    void SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
+    void SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
     
     
     // Configuration

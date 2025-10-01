@@ -17,7 +17,7 @@ DebugRenderPass::DebugRenderPass()
 {
 }
 
-DebugRenderPass::DebugRenderPass(std::shared_ptr<Shader> primitiveShader)
+DebugRenderPass::DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader)
     : RenderPass("DebugPass"),  // No framebuffer needed
       m_PrimitiveShader(primitiveShader),
       m_LightCube(nullptr),
@@ -47,7 +47,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
     }
 
     // Use injected primitive shader
-    if (!m_PrimitiveShader) {
+    if (m_PrimitiveShader == nullptr) {
         spdlog::error("DebugRenderPass: No primitive shader available for light cube rendering.");
         return;
     }
@@ -58,7 +58,9 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 
     // Get the cube's VAO handle
     auto cubeVAO = m_LightCube->GetVertexArray();
-    if (!cubeVAO) return;
+    if (!cubeVAO) {
+        return;
+    }
 
     // Render each point and spot light as a cube
     for (const auto& light : context.lights) {
@@ -105,7 +107,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 void DebugRenderPass::RenderLightRays(RenderContext& context)
 {
     // Use injected primitive shader
-    if (!m_PrimitiveShader) {
+    if (m_PrimitiveShader == nullptr) {
         spdlog::error("DebugRenderPass: No primitive shader available for light ray rendering.");
         return;
     }
@@ -166,7 +168,9 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
         if (rayMesh) {
             // Get the ray mesh VAO handle
             auto rayVAO = rayMesh->GetVertexArray();
-            if (!rayVAO) continue;
+            if (!rayVAO) {
+                continue;
+            }
 
             // Set uniforms using the available SetUniformsData command
             RenderCommands::SetUniformsData uniformsCmd{
@@ -204,17 +208,21 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
 
 void DebugRenderPass::RenderSingleRay(RenderContext& context, const std::shared_ptr<Mesh>& rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light)
 {
-    if (!rayMesh) return;
+    if (!rayMesh) {
+        return;
+    }
 
     // Use injected primitive shader
-    if (!m_PrimitiveShader) {
+    if (m_PrimitiveShader == nullptr) {
         spdlog::error("DebugRenderPass: No primitive shader available for single ray rendering.");
         return;
     }
 
     // Get the ray mesh VAO handle
     auto rayVAO = rayMesh->GetVertexArray();
-    if (!rayVAO) return;
+    if (!rayVAO) {
+        return;
+    }
 
     // Set uniforms using the available SetUniformsData command
     RenderCommands::SetUniformsData uniformsCmd{
@@ -254,7 +262,7 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
     }
 
     // Use injected primitive shader
-    if (!m_PrimitiveShader) {
+    if (m_PrimitiveShader == nullptr) {
         spdlog::error("DebugRenderPass: No primitive shader available for AABB rendering.");
         return;
     }

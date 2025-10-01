@@ -62,9 +62,9 @@ private:
     std::array<bool, MAX_TEXTURE_SLOTS> m_SlotUsed;
 
     // Helper methods
-    void SetShaderUniforms(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
-    void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
-    void SetTextureUniformSamplers(const std::shared_ptr<Shader>& shader);
+    static void SetShaderUniforms(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
+    static void SetTextureAvailabilityFlags(const std::vector<Texture>& textures, const std::shared_ptr<Shader>& shader);
+    static void SetTextureUniformSamplers(const std::shared_ptr<Shader>& shader);
 
     // Internal binding implementation
     void BindTextureToSlot(unsigned int textureID, int slot);

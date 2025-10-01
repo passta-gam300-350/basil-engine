@@ -33,10 +33,11 @@ FrameBuffer::FrameBuffer(FBOSpecs const &spec)
 	// Seperate the color attachment specs
 	for (auto format : spec.Attachments.Attachments)
 	{
-		if (format.TextureFormat != FBOTextureFormat::DEPTH24STENCIL8)
+		if (format.TextureFormat != FBOTextureFormat::DEPTH24STENCIL8) {
 			m_ColorAttachmentSpecs.emplace_back(format);
-		else
+		} else {
 			m_DepthAttachmentSpec = format;
+		}
 	}
 
 	Invalidate();
@@ -54,7 +55,7 @@ FrameBuffer::~FrameBuffer()
 void FrameBuffer::Invalidate()
 {
 	// If framebuffer already exists, we're resizing/recreating
-	if (m_FBOHandle)
+	if (m_FBOHandle != 0)
 	{
 		ClearAttachments();
 		glDeleteFramebuffers(1, &m_FBOHandle);
@@ -73,7 +74,7 @@ void FrameBuffer::Invalidate()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
 
 	// Create color attachments
-	if (m_ColorAttachmentSpecs.size() > 0)
+	if (!m_ColorAttachmentSpecs.empty())
 	{
 		m_ColorAttachments.resize(m_ColorAttachmentSpecs.size());
 		glGenTextures(static_cast<GLsizei>(m_ColorAttachments.size()), m_ColorAttachments.data());
@@ -83,7 +84,7 @@ void FrameBuffer::Invalidate()
 			glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[i]);
 			
 			// Use standard RGBA8 format for color attachments
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specifications.Width, m_Specifications.Height, 0,
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(m_Specifications.Width), static_cast<GLsizei>(m_Specifications.Height), 0,
 				GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -102,7 +103,7 @@ void FrameBuffer::Invalidate()
 		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 
 		// Use standard depth-stencil format
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(m_Specifications.Width), static_cast<GLsizei>(m_Specifications.Height), 0,
 			GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
 		
 		// Set texture parameters for depth texture
@@ -121,11 +122,12 @@ void FrameBuffer::Invalidate()
 	}
 
 	// Specify draw buffers
-	if (m_ColorAttachments.size() > 0)
+	if (!m_ColorAttachments.empty())
 	{
 		GLenum buffers[16] = { 0 }; // Max color attachments is typically 16
-		for (uint32_t i = 0; i < m_ColorAttachments.size(); i++)
+		for (uint32_t i = 0; i < m_ColorAttachments.size(); i++) {
 			buffers[i] = GL_COLOR_ATTACHMENT0 + i;
+		}
 
 		glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), buffers);
 	}
@@ -197,20 +199,20 @@ void FrameBuffer::ClearAttachments()
 		m_ColorAttachments.clear();
 	}
 
-	if (m_DepthAttachment)
+	if (m_DepthAttachment != 0)
 	{
 		glDeleteTextures(1, &m_DepthAttachment);
 		m_DepthAttachment = 0;
 	}
 }
 
-void FrameBuffer::Bind()
+void FrameBuffer::Bind() const
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
-	glViewport(0, 0, m_Specifications.Width, m_Specifications.Height);
+	glViewport(0, 0, static_cast<GLsizei>(m_Specifications.Width), static_cast<GLsizei>(m_Specifications.Height));
 }
 
-void FrameBuffer::Unbind()
+void FrameBuffer::Unbind() const
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -220,8 +222,9 @@ void FrameBuffer::Unbind()
 
 	// Get current window size from GLFW
 	GLFWwindow* currentWindow = glfwGetCurrentContext();
-	if (currentWindow) {
-		int windowWidth, windowHeight;
+	if (currentWindow != nullptr) {
+		int windowWidth = 0;
+		int windowHeight = 0;
 		glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
 		glViewport(0, 0, windowWidth, windowHeight);
 	}
@@ -249,7 +252,6 @@ void FrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 		return;
 	}
 
-	auto &spec = m_ColorAttachmentSpecs[attachmentIndex];
 	glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
 		GL_RGBA, GL_INT, &value);
 }

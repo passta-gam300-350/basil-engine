@@ -3,7 +3,7 @@
 #include <cassert>
 
 ShaderStorageBuffer::ShaderStorageBuffer(const void* data, uint32_t size, GLenum usage)
-    : m_Size(size), m_Usage(usage), m_IsMapped(false)
+    : m_SSBOHandle(0), m_Size(size), m_Usage(usage), m_IsMapped(false)
 {
     glGenBuffers(1, &m_SSBOHandle);
     
@@ -69,7 +69,7 @@ void ShaderStorageBuffer::Unbind() const
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void ShaderStorageBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
+void ShaderStorageBuffer::SetData(const void* data, uint32_t size, uint32_t offset) const
 {
     assert(!m_IsMapped && "Cannot set data while buffer is mapped");
     assert(offset + size <= m_Size && "Data exceeds buffer size");
@@ -83,7 +83,9 @@ void ShaderStorageBuffer::Resize(uint32_t newSize)
 {
     assert(!m_IsMapped && "Cannot resize while buffer is mapped");
     
-    if (newSize == m_Size) return;
+    if (newSize == m_Size) {
+        return;
+    }
     
     m_Size = newSize;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
@@ -98,7 +100,7 @@ void* ShaderStorageBuffer::Map(GLenum access)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
     void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, access);
     
-    if (ptr) {
+    if (ptr != nullptr) {
         m_IsMapped = true;
     } else {
         spdlog::error("Failed to map SSBO");

@@ -150,7 +150,7 @@ public:
 private:
     std::vector<VariantRenderCommand> m_Commands;
     TextureSlotManager* m_TextureBindingSystem;
-    
+
     // Command execution visitors
     void ExecuteCommand(const RenderCommands::ClearData& cmd);
     void ExecuteCommand(const RenderCommands::BindShaderData& cmd);
