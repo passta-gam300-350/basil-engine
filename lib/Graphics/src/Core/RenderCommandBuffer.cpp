@@ -297,6 +297,19 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointShadowUniformsData &cmd)
+{
+    assert(cmd.shader && "Shader cannot be null");
+    assert(cmd.shader->ID != 0 && "Shader must be compiled");
+    assert(cmd.farPlane > 0.0f && "Far plane must be positive");
+    assert(!cmd.lightPosUniform.empty() && "Light position uniform name cannot be empty");
+    assert(!cmd.farPlaneUniform.empty() && "Far plane uniform name cannot be empty");
+
+    cmd.shader->use();
+    cmd.shader->setVec3(cmd.lightPosUniform, cmd.lightPosition);
+    cmd.shader->setFloat(cmd.farPlaneUniform, cmd.farPlane);
+}
+
 void RenderCommandBuffer::CleanupGPUState()
 {
     // Note: We don't reset shadow map texture (slot 8) here since it should persist

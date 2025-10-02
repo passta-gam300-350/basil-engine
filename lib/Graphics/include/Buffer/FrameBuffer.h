@@ -10,7 +10,8 @@ enum class FBOTextureFormat
 	RGBA16F,        // 16-bit floating point for G-buffer precision
 	RED_INTEGER,
 	DEPTH24STENCIL8,
-	Depth = DEPTH24STENCIL8
+	Depth = DEPTH24STENCIL8,
+	DEPTH_CUBEMAP
 };
 
 struct FBOTextureSpecs
@@ -62,6 +63,12 @@ public:
 	{
 		return m_Specifications;
 	}
+
+	// NEW: Attach specific cubemap face for rendering
+	void AttachCubemapFace(uint32_t face, uint32_t mipLevel = 0);
+
+	// NEW: Get cubemap texture ID for shader binding
+	uint32_t GetDepthCubemapID() const;
 
 
 private:
