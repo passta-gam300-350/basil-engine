@@ -146,12 +146,8 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
 
     // Render scene geometry using commands
     if (!context.renderables.empty()) {
-        // Bind shader command
-        RenderCommands::BindShaderData bindShaderCmd{m_PointShadowShader};
-        Submit(bindShaderCmd);
-
-        // Set uniforms directly (acceptable pattern, like PBRLightingRenderer)
-        // This is uniform setup, not draw calls
+        // Set per-light uniforms directly (these are constant for all objects)
+        // This is acceptable since they don't change per-object
         m_PointShadowShader->use();
         for (size_t i = 0; i < 6; ++i) {
             std::string uniformName = "u_ShadowMatrices[" + std::to_string(i) + "]";
@@ -160,12 +156,24 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
         m_PointShadowShader->setVec3("u_LightPos", light.position);
         m_PointShadowShader->setFloat("u_FarPlane", m_ShadowFarPlane);
 
-        // Submit draw commands for each object
+        // Submit draw commands for each object with proper uniform submission
         for (const auto& renderable : context.renderables) {
             if (!renderable.visible || !renderable.mesh) continue;
 
-            // Set model matrix uniform directly (per-object setup)
-            m_PointShadowShader->setMat4("u_Model", renderable.transform);
+            // Bind shader command
+            RenderCommands::BindShaderData bindShaderCmd{m_PointShadowShader};
+            Submit(bindShaderCmd);
+
+            // Set per-object model matrix through command buffer
+            // This ensures each object renders with its own transform
+            RenderCommands::SetUniformsData uniformsCmd{
+                m_PointShadowShader,
+                renderable.transform,       // Model matrix (unique per object)
+                glm::mat4(1.0f),           // View matrix (not used - set in shadow matrices)
+                glm::mat4(1.0f),           // Projection matrix (not used - set in shadow matrices)
+                glm::vec3(0.0f)            // Camera position (not needed for shadows)
+            };
+            Submit(uniformsCmd);
 
             // Submit draw command (MUST go through command buffer!)
             RenderCommands::DrawElementsData drawCmd{

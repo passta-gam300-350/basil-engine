@@ -435,7 +435,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.3f, -0.7f, 0.5f),        // Direction: slightly angled
         glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm white
-        0.8f                                  // Intensity: reduced to see point light better
+        1.5f                                  // Intensity: increased to balance with point light
     ));
 
     // Single point light positioned to cast clear shadows
@@ -443,12 +443,12 @@ void GraphicsTestDriver::SetupAdvancedScene()
     m_SceneLights.push_back(CreatePointLight(
         glm::vec3(-8.0f, 4.0f, 3.0f),        // Position: near grid center, elevated, offset in Z
         glm::vec3(1.0f, 0.9f, 0.7f),         // Color: warm white/yellow
-        10.0f,                                // Intensity: very bright to see shadows clearly
+        3.0f,                                 // Intensity: reduced to balance with directional light
         20.0f                                 // Range: reduced since light is closer
     ));
 
     // Low ambient light to make shadows more visible
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.02f, 0.02f, 0.03f));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.05f, 0.06f));
 
     spdlog::info("Point shadow test scene created: {} objects, {} lights (1 directional, 1 point)",
                  m_SceneObjects.size(), m_SceneLights.size());
