@@ -27,6 +27,8 @@ struct FrameData
         float farPlane;                           // Shadow range
     };
 
+    std::vector<PointShadowData> pointShadows;  // One per point light with shadows
+
     // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 
