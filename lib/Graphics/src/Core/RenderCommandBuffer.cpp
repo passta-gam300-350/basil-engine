@@ -295,9 +295,6 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
-
-    spdlog::info("BindCubemapData: Bound cubemap ID {} to slot {}, uniform '{}'",
-                 cmd.cubemapID, cmd.textureUnit, cmd.uniformName);
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointShadowUniformsData &cmd)

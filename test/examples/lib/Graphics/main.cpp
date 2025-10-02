@@ -429,38 +429,64 @@ void GraphicsTestDriver::SetupAdvancedScene()
         }
     }
 
-    // DISABLED: Directional light (to see point shadows clearly)
-    // m_SceneLights.push_back(CreateDirectionalLight(
-    //     glm::vec3(0.2f, -0.8f, 0.3f),
-    //     glm::vec3(1.0f, 0.95f, 0.85f),
-    //     1.0f
-    // ));
-
-    // Single white point light above the center - WITH SHADOWS
-    // This makes it easy to see point shadow behavior
-    auto centerLight = CreatePointLight(
-        glm::vec3(0.0f, 5.0f, 0.0f),        // Position: centered above tinboxes
-        glm::vec3(1.0f, 1.0f, 1.0f),        // Color: white light
-        15.0f,                               // Intensity: bright enough to see shadows
-        30.0f                                // Range: covers entire scene
+    // Complex PBR lighting setup
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(0.2f, -0.8f, 0.3f),
+        glm::vec3(1.0f, 0.95f, 0.85f),
+        1.0f
+    ));
+    
+    // Point lights at the four corners of the 10x10 grid
+    // Grid spans from -13.5 to +13.5 (with 3.0f spacing)
+    float cornerOffset = 13.5f; // Half of (gridSize-1) * spacing
+    float lightHeight = 8.0f;
+    
+    // Top-left corner (red light) - WITH SHADOWS
+    auto redLight = CreatePointLight(
+        glm::vec3(-cornerOffset, lightHeight, -cornerOffset),
+        glm::vec3(1.0f, 0.2f, 0.2f),
+        4.0f,
+        25.0f
     );
-    centerLight.castShadows = true;  // Enable shadows
-    m_SceneLights.push_back(centerLight);
+    redLight.castShadows = true;  // Enable shadows for this light
+    m_SceneLights.push_back(redLight);
 
-    // DISABLED: Additional point lights (to isolate shadow testing)
-    // float cornerOffset = 13.5f;
-    // float lightHeight = 8.0f;
+    // Top-right corner (green light) - WITH SHADOWS
+    auto greenLight = CreatePointLight(
+        glm::vec3(cornerOffset, lightHeight, -cornerOffset),
+        glm::vec3(0.2f, 1.0f, 0.2f),
+        4.0f,
+        25.0f
+    );
+    greenLight.castShadows = true;  // Enable shadows for this light
+    m_SceneLights.push_back(greenLight);
 
-    // DISABLED: Spotlight
-    // m_SceneLights.push_back(CreateSpotLight(
-    //     glm::vec3(0.0f, 10.0f, 0.0f),
-    //     glm::vec3(0.0f, -1.0f, 0.0f),
-    //     glm::vec3(0.8f, 0.0f, 0.8f),
-    //     6.0f,
-    //     40.0f,
-    //     15.0f,
-    //     30.0f
-    // ));
+    // Bottom-left corner (blue light) - NO SHADOWS
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(-cornerOffset, lightHeight, cornerOffset),
+        glm::vec3(0.2f, 0.2f, 1.0f),
+        4.0f,
+        25.0f
+    ));
+
+    // Bottom-right corner (yellow light) - NO SHADOWS
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(cornerOffset, lightHeight, cornerOffset),
+        glm::vec3(1.0f, 1.0f, 0.2f),
+        4.0f,
+        25.0f
+    ));
+    
+    // Single spotlight in center above the grid
+    m_SceneLights.push_back(CreateSpotLight(
+        glm::vec3(0.0f, 10.0f, 0.0f),        // Position: centered above grid
+        glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
+        glm::vec3(0.8f, 0.0f, 0.8f),         // Color: purple light
+        6.0f,                                // Intensity
+        40.0f,                               // Range
+        15.0f,                               // Inner cone angle
+        30.0f                                // Outer cone angle
+    ));
     
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
 

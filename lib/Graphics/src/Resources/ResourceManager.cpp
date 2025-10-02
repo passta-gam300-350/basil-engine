@@ -71,8 +71,8 @@ std::shared_ptr<Shader> ResourceManager::LoadShader(
 
     // Create and compile shader with geometry shader
     auto shader = std::make_shared<Shader>(vertexPath.c_str(),
-        fragmentPath.c_str(),
-        geometryPath.c_str());
+        geometryPath.c_str(),
+        fragmentPath.c_str());
 
     if (shader->ID == 0)
     {

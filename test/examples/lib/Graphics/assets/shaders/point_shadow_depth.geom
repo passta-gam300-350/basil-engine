@@ -1,7 +1,7 @@
-#version 400 core
+#version 330 core
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 18) out;  // 6 faces ï¿½ 3 vertices
+layout (triangle_strip, max_vertices = 18) out;  // 6 faces × 3 vertices
 
 uniform mat4 u_ShadowMatrices[6];  // 6 shadow matrices (projection * view for each face)
 
@@ -14,15 +14,9 @@ void main() {
         gl_Layer = face;  // Built-in variable: selects cubemap face
 
         for(int i = 0; i < 3; ++i) {
-            // Get world position from vertex shader output
-            vec4 worldPos = gl_in[i].gl_Position;
-
-            // Pass world position to fragment shader for distance calculation
-            g_FragPos = worldPos;
-
-            // Transform to clip space for this cubemap face
-            gl_Position = u_ShadowMatrices[face] * worldPos;
-
+            // Transform vertex to light space for this face
+            g_FragPos = gl_in[i].gl_Position;  // World position
+            gl_Position = u_ShadowMatrices[face] * g_FragPos;
             EmitVertex();
         }
         EndPrimitive();

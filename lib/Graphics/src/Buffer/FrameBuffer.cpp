@@ -123,8 +123,8 @@ void FrameBuffer::Invalidate()
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-			// For layered rendering with geometry shader, attach the entire cubemap
-			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthAttachment, 0);
+			// Note: We don't attach the cubemap to the FBO here
+			// Individual faces will be attached in RenderToCubemapFace() using AttachCubemapFace()
 		}
 		else
 		{
