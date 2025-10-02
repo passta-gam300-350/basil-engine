@@ -4,6 +4,8 @@
 #include "Utility/Light.h"
 #include "Resources/Material.h"
 #include <spdlog/spdlog.h>
+#include <glad/glad.h>
+#include <glm/gtc/constants.hpp>
 #include <cassert>
 
 PBRLightingRenderer::PBRLightingRenderer()
@@ -237,4 +239,92 @@ void PBRLightingRenderer::SetupMaterialProperties(std::shared_ptr<Shader> shader
 
     // Note: Bindless texture system handles u_HasDiffuseMap, u_HasNormalMap, etc.
     // and texture handle uploads to SSBO at binding point 1
+}
+
+void PBRLightingRenderer::SetupShadowMaps(std::shared_ptr<Shader> shader, const FrameData& frameData)
+{
+    assert(shader && "Shader cannot be null for shadow setup");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
+    if (!shader) {
+        spdlog::error("PBRLightingRenderer::SetupShadowMaps: NULL shader provided");
+        return;
+    }
+
+    // Ensure shader is active
+    shader->use();
+
+    // Set shadow intensity parameters
+    shader->setFloat("u_DirectionalShadowIntensity", m_DirectionalShadowIntensity);
+    shader->setFloat("u_PointShadowIntensity", m_PointShadowIntensity);
+
+    // Setup directional shadows
+    SetupDirectionalShadows(shader, frameData);
+
+    // Setup point shadows
+    SetupPointShadows(shader, frameData);
+}
+
+void PBRLightingRenderer::SetupDirectionalShadows(std::shared_ptr<Shader> shader, const FrameData& frameData)
+{
+    // No directional shadow data available - disable shadow mapping
+    if (frameData.shadowMaps.empty() || frameData.shadowMatrices.empty() || !frameData.shadowMaps[0]) {
+        // Bind a default/dummy shadow matrix and unbind shadow texture
+        glm::mat4 identityMatrix = glm::mat4(1.0f);
+        shader->setMat4("u_LightSpaceMatrix", identityMatrix);
+        shader->setBool("u_EnableShadows", false);
+        return;
+    }
+
+    // Directional shadow data is available
+    uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
+    shader->setMat4("u_LightSpaceMatrix", frameData.shadowMatrices[0]);
+    shader->setBool("u_EnableShadows", true);
+
+    // Bind shadow map texture to slot 8
+    const int SHADOW_MAP_SLOT = 8;
+    glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_SLOT);
+    glBindTexture(GL_TEXTURE_2D, shadowTexID);
+    shader->setInt("u_ShadowMap", SHADOW_MAP_SLOT);
+}
+
+void PBRLightingRenderer::SetupPointShadows(std::shared_ptr<Shader> shader, const FrameData& frameData)
+{
+    // Always initialize ALL 4 samplerCube uniforms to prevent undefined behavior
+    // Even unused samplers must be bound to valid texture units
+    const int MAX_POINT_SHADOW_MAPS = 4;
+    const int POINT_SHADOW_START_SLOT = 9;
+
+    int activeShadowMaps = (!frameData.pointShadowCubemaps.empty() && !frameData.pointShadowFarPlanes.empty())
+                           ? static_cast<int>(frameData.pointShadowCubemaps.size())
+                           : 0;
+
+    shader->setInt("u_NumPointShadowMaps", activeShadowMaps);
+
+    for (int i = 0; i < MAX_POINT_SHADOW_MAPS; ++i) {
+        uint32_t textureUnit = POINT_SHADOW_START_SLOT + static_cast<uint32_t>(i);
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+
+        if (i < activeShadowMaps) {
+            // Bind actual shadow cubemap
+            glBindTexture(GL_TEXTURE_CUBE_MAP, frameData.pointShadowCubemaps[i]);
+
+            // Set far plane uniform
+            std::string farPlaneName = "u_PointShadowFarPlanes[" + std::to_string(i) + "]";
+            shader->setFloat(farPlaneName, frameData.pointShadowFarPlanes[i]);
+        } else {
+            // Bind dummy cubemap (texture ID 0) for unused slots
+            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        }
+
+        // Always set sampler uniform to proper texture unit
+        std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
+        shader->setInt(samplerName, static_cast<int>(textureUnit));
+    }
+}
+
+void PBRLightingRenderer::SetShadowIntensity(float directionalIntensity, float pointIntensity)
+{
+    m_DirectionalShadowIntensity = glm::clamp(directionalIntensity, 0.0f, 1.0f);
+    m_PointShadowIntensity = glm::clamp(pointIntensity, 0.0f, 1.0f);
 }

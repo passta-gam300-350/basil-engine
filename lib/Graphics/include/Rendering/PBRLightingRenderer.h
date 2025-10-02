@@ -91,15 +91,31 @@ public:
     // Helper method for any renderer to apply lighting to their shader
     void ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material = nullptr);
 
+    // Shadow mapping setup (moved from InstancedRenderer)
+    void SetupShadowMaps(std::shared_ptr<Shader> shader, const FrameData& frameData);
+
+    // Shadow intensity configuration
+    void SetShadowIntensity(float directionalIntensity, float pointIntensity);
+    float GetDirectionalShadowIntensity() const { return m_DirectionalShadowIntensity; }
+    float GetPointShadowIntensity() const { return m_PointShadowIntensity; }
+
 private:
     // Light storage (moved from InstancedRenderer)
     std::vector<PointLight> m_PointLights;
     std::vector<DirectionalLight> m_DirectionalLights;
     std::vector<SpotLight> m_SpotLights;
-    
+
+    // Shadow intensity parameters
+    float m_DirectionalShadowIntensity = 0.8f;
+    float m_PointShadowIntensity = 0.8f;
+
     // Helper methods for setting up specific light types
     void SetupPointLights(std::shared_ptr<Shader> shader);
     void SetupDirectionalLights(std::shared_ptr<Shader> shader);
     void SetupSpotLights(std::shared_ptr<Shader> shader);
     void SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material);
+
+    // Shadow setup helpers
+    void SetupDirectionalShadows(std::shared_ptr<Shader> shader, const FrameData& frameData);
+    void SetupPointShadows(std::shared_ptr<Shader> shader, const FrameData& frameData);
 };

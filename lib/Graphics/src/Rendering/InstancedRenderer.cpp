@@ -237,72 +237,11 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     if (m_PBRLighting) {
         // Apply lighting uniforms only (no per-instance material data)
         m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
+
+        // 5. Setup all shadow maps (directional + point) via PBRLightingRenderer
+        m_PBRLighting->SetupShadowMaps(shader, frameData);
     } else {
         spdlog::warn("PBRLightingRenderer not available for lighting setup");
-    }
-
-    // 5. Set directional shadow mapping uniforms if available
-    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
-        uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
-
-        RenderCommands::SetShadowUniformsData shadowCmd{
-            shader,
-            frameData.shadowMatrices[0],
-            shadowTexID,
-            8,  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
-            true  // Enable shadows
-        };
-        renderPass.Submit(shadowCmd);
-    } else {
-        // No shadow data available - disable shadow mapping
-        // Bind a default/dummy shadow matrix and unbind shadow texture
-        glm::mat4 identityMatrix = glm::mat4(1.0f);
-
-        RenderCommands::SetShadowUniformsData disableShadowCmd{
-            shader,
-            identityMatrix,
-            0,  // Bind texture ID 0 (unbind)
-            8,  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
-            false  // Disable shadows
-        };
-        renderPass.Submit(disableShadowCmd);
-    }
-
-    // 5b. Set point shadow cubemaps if available
-    shader->use();  // Ensure shader is active
-
-    // Set shadow intensity parameters (can be made configurable later)
-    shader->setFloat("u_DirectionalShadowIntensity", 0.8f);  // 80% shadow intensity
-    shader->setFloat("u_PointShadowIntensity", 0.8f);        // 80% shadow intensity
-
-    // Always initialize ALL 4 samplerCube uniforms to prevent undefined behavior
-    // Even unused samplers must be bound to valid texture units
-    const int MAX_POINT_SHADOW_MAPS = 4;
-    int activeShadowMaps = (!frameData.pointShadowCubemaps.empty() && !frameData.pointShadowFarPlanes.empty())
-                           ? static_cast<int>(frameData.pointShadowCubemaps.size())
-                           : 0;
-
-    shader->setInt("u_NumPointShadowMaps", activeShadowMaps);
-
-    for (int i = 0; i < MAX_POINT_SHADOW_MAPS; ++i) {
-        uint32_t textureUnit = 9 + static_cast<uint32_t>(i);
-        glActiveTexture(GL_TEXTURE0 + textureUnit);
-
-        if (i < activeShadowMaps) {
-            // Bind actual shadow cubemap
-            glBindTexture(GL_TEXTURE_CUBE_MAP, frameData.pointShadowCubemaps[i]);
-
-            // Set far plane uniform
-            std::string farPlaneName = "u_PointShadowFarPlanes[" + std::to_string(i) + "]";
-            shader->setFloat(farPlaneName, frameData.pointShadowFarPlanes[i]);
-        } else {
-            // Bind dummy cubemap (texture ID 0) for unused slots
-            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        }
-
-        // Always set sampler uniform to proper texture unit
-        std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
-        shader->setInt(samplerName, static_cast<int>(textureUnit));
     }
 
 
