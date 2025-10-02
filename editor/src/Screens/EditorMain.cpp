@@ -180,6 +180,7 @@ void EditorMain::render()
 void EditorMain::cleanup()
 {
 	m_AssetManager.reset(nullptr);
+	Engine::Exit();
 }
 
 void EditorMain::Show()
