@@ -30,7 +30,14 @@ uniform sampler2D u_AOMap;         // Slot 4
 uniform sampler2D u_EmissiveMap;   // Slot 5
 uniform sampler2D u_SpecularMap;   // Slot 6
 uniform sampler2D u_HeightMap;     // Slot 7
-uniform sampler2D u_ShadowMap;     // Slot 8
+uniform sampler2D u_ShadowMap;     // Slot 8 (directional shadows)
+
+// NEW: Point shadow uniforms (slots 9, 10, 11, 12 for up to 4 point lights)
+uniform samplerCube u_PointShadowMaps[4];  // Cubemap depth textures
+uniform vec3 u_PointShadowLightPositions[4];
+uniform float u_PointShadowFarPlanes[4];
+uniform int u_NumPointShadows = 0;
+uniform bool u_EnablePointShadows = false;
 
 // Texture availability flags (set by texture slot system)
 uniform bool u_HasDiffuseMap = false;
@@ -129,6 +136,34 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     return shadow;
 }
 
+// Point shadow calculation function (omnidirectional)
+float PointShadowCalculation(int shadowIndex, vec3 fragPos) {
+    // Get vector from fragment to light
+    vec3 fragToLight = fragPos - u_PointShadowLightPositions[shadowIndex];
+
+    // Sample the cubemap using the direction vector
+    float closestDepth = texture(u_PointShadowMaps[shadowIndex], fragToLight).r;
+
+    // Convert back to world-space distance
+    closestDepth *= u_PointShadowFarPlanes[shadowIndex];
+
+    // Calculate current fragment's distance from light
+    float currentDepth = length(fragToLight);
+
+    // Bias to prevent shadow acne
+    float bias = 0.05;
+
+    // Simple shadow test
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    // Fade shadows at the edge of the shadow range
+    if (currentDepth > u_PointShadowFarPlanes[shadowIndex]) {
+        shadow = 0.0;
+    }
+
+    return shadow;
+}
+
 // Enhanced normal mapping helper for traditional textures
 vec3 getNormalFromMap() {
     if (!u_HasNormalMap) {
@@ -183,7 +218,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 }
 
 // Calculate contribution from a single point light
-vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0)
+vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, float shadowFactor)
 {
     vec3 N = normalize(normal);
     vec3 L = normalize(light.position - fragPos);
@@ -209,7 +244,9 @@ vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPo
     float denominator = 4.0 * max(dot(N, viewDir), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
 
-    return (kD * albedo / PI + specular) * radiance * NdotL;
+    // Apply shadow factor (80% shadow intensity, same as directional shadows)
+    vec3 lightContribution = (kD * albedo / PI + specular) * radiance * NdotL;
+    return lightContribution * (1.0 - shadowFactor * 0.8);
 }
 
 // Calculate contribution from a directional light
@@ -277,85 +314,93 @@ vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos,
     return (kD * albedo / PI + specular) * radiance * NdotL;
 }
 
-// Multi-light PBR lighting calculation
-vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao, float shadowFactor)
-{
-    vec3 N = normalize(normal);
-    vec3 V = normalize(u_ViewPos - fs_in.FragPos);
-
-    // Calculate reflectance at normal incidence
-    vec3 F0 = vec3(0.04);
-    F0 = mix(F0, albedo, metallic);
-
-    // Accumulate lighting contribution
-    vec3 Lo = vec3(0.0);
-
-    // Point lights (no shadows for now)
-    for (int i = 0; i < u_NumPointLights && i < 8; ++i) {
-        Lo += calculatePointLight(u_PointLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0);
-    }
-
-    // Directional lights (with shadows)
-    for (int i = 0; i < u_NumDirectionalLights && i < 4; ++i) {
-        Lo += calculateDirectionalLight(u_DirectionalLights[i], albedo, normal, V, metallic, roughness, F0, shadowFactor);
-    }
-
-    // Spot lights (no shadows for now)
-    for (int i = 0; i < u_NumSpotLights && i < 4; ++i) {
-        Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0);
-    }
-
-    // Ambient lighting (not affected by shadows)
-    vec3 ambient = vec3(0.03) * albedo * ao;
-
-    return ambient + Lo;
-}
-
 void main() {
-    // Sample traditional textures
-    vec3 albedo = fs_in.InstanceColor.rgb;
-    if (u_HasDiffuseMap) {
-        vec4 texSample = texture(u_DiffuseMap, fs_in.TexCoords);
-        albedo *= texSample.rgb;
-    }
+      // Sample traditional textures
+      vec3 albedo = fs_in.InstanceColor.rgb;
+      if (u_HasDiffuseMap) {
+          vec4 texSample = texture(u_DiffuseMap, fs_in.TexCoords);
+          albedo *= texSample.rgb;
+      }
 
-    float metallic = fs_in.InstanceMetallic;
-    if (u_HasMetallicMap) {
-        metallic = texture(u_MetallicMap, fs_in.TexCoords).r;
-    }
+      float metallic = fs_in.InstanceMetallic;
+      if (u_HasMetallicMap) {
+          metallic = texture(u_MetallicMap, fs_in.TexCoords).r;
+      }
 
-    float roughness = fs_in.InstanceRoughness;
-    if (u_HasRoughnessMap) {
-        roughness = texture(u_RoughnessMap, fs_in.TexCoords).r;
-    }
+      float roughness = fs_in.InstanceRoughness;
+      if (u_HasRoughnessMap) {
+          roughness = texture(u_RoughnessMap, fs_in.TexCoords).r;
+      }
 
-    float ao = 1.0;
-    if (u_HasAOMap) {
-        ao = texture(u_AOMap, fs_in.TexCoords).r;
-    }
+      float ao = 1.0;
+      if (u_HasAOMap) {
+          ao = texture(u_AOMap, fs_in.TexCoords).r;
+      }
 
-    vec3 emissive = vec3(0.0);
-    if (u_HasEmissiveMap) {
-        emissive = texture(u_EmissiveMap, fs_in.TexCoords).rgb;
-    }
+      vec3 emissive = vec3(0.0);
+      if (u_HasEmissiveMap) {
+          emissive = texture(u_EmissiveMap, fs_in.TexCoords).rgb;
+      }
 
-    // Get normal from traditional normal map
-    vec3 normal = getNormalFromMap();
+      // Get normal from traditional normal map
+      vec3 normal = getNormalFromMap();
 
-    // Calculate shadow factor only if shadows are enabled
-    float shadow = 0.0;
-    if (u_EnableShadows) {
-        shadow = ShadowCalculation(fs_in.FragPosLightSpace);
-    }
+      // Calculate directional shadow factor
+      float dirShadow = 0.0;
+      if (u_EnableShadows) {
+          dirShadow = ShadowCalculation(fs_in.FragPosLightSpace);
+      }
 
-    // Calculate multi-light PBR lighting with shadows
-    vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao, shadow);
+      // NEW: Calculate point shadows for each shadow-casting point light
+      float pointShadows[8];  // Max 8 point lights
+      for (int i = 0; i < 8; ++i) {
+          pointShadows[i] = 0.0;
+      }
 
-    // Add emissive
-    color += emissive;
+      if (u_EnablePointShadows) {
+          for (int i = 0; i < u_NumPointShadows && i < 4; ++i) {
+              pointShadows[i] = PointShadowCalculation(i, fs_in.FragPos);
+          }
+      }
 
-    // Tone mapping only - hardware sRGB framebuffer handles gamma correction
-    color = color / (color + vec3(1.0)); // Reinhard tone mapping
+      // PBR lighting setup
+      vec3 N = normalize(normal);
+      vec3 V = normalize(u_ViewPos - fs_in.FragPos);
+      vec3 F0 = vec3(0.04);
+      F0 = mix(F0, albedo, metallic);
 
-    FragColor = vec4(color, 1.0);
-}
+      // Accumulate lighting contribution
+      vec3 Lo = vec3(0.0);
+
+      // Point lights WITH shadows
+      for (int i = 0; i < u_NumPointLights && i < 8; ++i) {
+          // Use point shadow if this light index has shadow data
+          float shadowFactor = (i < u_NumPointShadows) ? pointShadows[i] : 0.0;
+          Lo += calculatePointLight(u_PointLights[i], albedo, normal, fs_in.FragPos,
+                                   V, metallic, roughness, F0, shadowFactor);
+      }
+
+      // Directional lights (with existing directional shadows)
+      for (int i = 0; i < u_NumDirectionalLights && i < 4; ++i) {
+          Lo += calculateDirectionalLight(u_DirectionalLights[i], albedo, normal, V,
+                                         metallic, roughness, F0, dirShadow);
+      }
+
+      // Spot lights (no shadows)
+      for (int i = 0; i < u_NumSpotLights && i < 4; ++i) {
+          Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos,
+                                  V, metallic, roughness, F0);
+      }
+
+      // Ambient lighting (not affected by shadows)
+      vec3 ambient = vec3(0.03) * albedo * ao;
+      vec3 color = ambient + Lo;
+
+      // Add emissive
+      color += emissive;
+
+      // Tone mapping only - hardware sRGB framebuffer handles gamma correction
+      color = color / (color + vec3(1.0)); // Reinhard tone mapping
+
+      FragColor = vec4(color, 1.0);
+  }
