@@ -49,6 +49,12 @@ void RenderPipeline::Execute(RenderContext& context) const
 				context.frameData.shadowMaps.clear();
 				context.frameData.shadowMatrices.clear();
 			}
+			else if (pass->GetName() == "PointShadowPass")
+			{
+				// Clear point shadow data when point shadow pass is disabled
+				context.frameData.pointShadowCubemaps.clear();
+				context.frameData.pointShadowFarPlanes.clear();
+			}
 		}
 	}
 }
