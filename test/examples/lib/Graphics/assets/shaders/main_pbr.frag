@@ -32,11 +32,6 @@ uniform sampler2D u_SpecularMap;   // Slot 6
 uniform sampler2D u_HeightMap;     // Slot 7
 uniform sampler2D u_ShadowMap;     // Slot 8
 
-// Point shadow cubemaps (slots 9-12 for up to 4 point lights)
-uniform samplerCube u_PointShadowMaps[4];
-uniform float u_PointShadowFarPlanes[4];
-uniform int u_NumPointShadowMaps = 0;
-
 // Texture availability flags (set by texture slot system)
 uniform bool u_HasDiffuseMap = false;
 uniform bool u_HasNormalMap = false;
@@ -134,51 +129,6 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     return shadow;
 }
 
-// Point shadow calculation using cubemap
-// Samples from array of up to 4 samplerCubes
-float PointShadowCalculation(vec3 fragPos, vec3 lightPos, int lightIndex, float farPlane)
-{
-    // Check if we have a shadow map for this light
-    if (lightIndex >= u_NumPointShadowMaps) {
-        return 0.0; // No shadow
-    }
-
-    // Get vector from light to fragment
-    vec3 fragToLight = fragPos - lightPos;
-
-    // Sample cubemap depth (stored as distance/farPlane)
-    float closestDepth = texture(u_PointShadowMaps[lightIndex], fragToLight).r;
-
-    // Convert back to original distance
-    closestDepth *= farPlane;
-
-    // Get current distance
-    float currentDepth = length(fragToLight);
-
-    // Calculate bias based on surface angle
-    float bias = 0.05;
-
-    // PCF filtering for softer shadows
-    float shadow = 0.0;
-    float samples = 4.0;
-    float offset = 0.1;
-    for(float x = -offset; x < offset; x += offset / (samples * 0.5))
-    {
-        for(float y = -offset; y < offset; y += offset / (samples * 0.5))
-        {
-            for(float z = -offset; z < offset; z += offset / (samples * 0.5))
-            {
-                float pcfDepth = texture(u_PointShadowMaps[lightIndex], fragToLight + vec3(x, y, z)).r;
-                pcfDepth *= farPlane;
-                shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
-            }
-        }
-    }
-    shadow /= (samples * samples * samples);
-
-    return shadow;
-}
-
 // Enhanced normal mapping helper for traditional textures
 vec3 getNormalFromMap() {
     if (!u_HasNormalMap) {
@@ -233,7 +183,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 }
 
 // Calculate contribution from a single point light
-vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
+vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0)
 {
     vec3 N = normalize(normal);
     vec3 L = normalize(light.position - fragPos);
@@ -259,15 +209,7 @@ vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPo
     float denominator = 4.0 * max(dot(N, viewDir), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
 
-    // Calculate point shadow
-    float shadowFactor = 0.0;
-    if (lightIndex < u_NumPointShadowMaps) {
-        shadowFactor = PointShadowCalculation(fragPos, light.position, lightIndex, u_PointShadowFarPlanes[lightIndex]);
-    }
-
-    // Apply shadow to lighting contribution
-    vec3 lightContribution = (kD * albedo / PI + specular) * radiance * NdotL;
-    return lightContribution * (1.0 - shadowFactor * 0.8); // Apply 80% shadow intensity
+    return (kD * albedo / PI + specular) * radiance * NdotL;
 }
 
 // Calculate contribution from a directional light
@@ -348,9 +290,9 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     // Accumulate lighting contribution
     vec3 Lo = vec3(0.0);
 
-    // Point lights (with shadows via cubemaps)
+    // Point lights (no shadows for now)
     for (int i = 0; i < u_NumPointLights && i < 8; ++i) {
-        Lo += calculatePointLight(u_PointLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
+        Lo += calculatePointLight(u_PointLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0);
     }
 
     // Directional lights (with shadows)

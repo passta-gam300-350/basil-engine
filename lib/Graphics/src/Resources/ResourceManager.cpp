@@ -56,28 +56,6 @@ std::shared_ptr<Shader> ResourceManager::LoadShader(const std::string& name, con
     }
 }
 
-std::shared_ptr<Shader> ResourceManager::LoadShaderWithGeometry(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath)
-{
-    if (HasShader(name))
-    {
-        spdlog::debug("Shader with geometry already loaded: {}", name);
-        return GetShader(name);
-    }
-
-    try
-    {
-        auto shader = std::make_shared<Shader>(vertexPath.c_str(), fragmentPath.c_str(), geometryPath.c_str());
-        m_Shaders[name] = shader;
-        spdlog::info("Shader with geometry '{}' loaded successfully", name);
-        return shader;
-    }
-    catch (const std::exception& e)
-    {
-        spdlog::error("Failed to load shader with geometry '{}': {}", name, e.what());
-        return nullptr;
-    }
-}
-
 std::shared_ptr<Shader> ResourceManager::GetShader(const std::string& name)
 {
     auto it = m_Shaders.find(name);

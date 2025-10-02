@@ -6,7 +6,6 @@
 #include "Utility/AABB.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
-#include <glad/glad.h>
 #include <spdlog/spdlog.h>
 #include <cassert>
 
@@ -241,7 +240,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         spdlog::warn("PBRLightingRenderer not available for lighting setup");
     }
 
-    // 5. Set directional shadow mapping uniforms if available
+    // 5. Set shadow mapping uniforms if available
     if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
         uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
 
@@ -266,32 +265,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
             false  // Disable shadows
         };
         renderPass.Submit(disableShadowCmd);
-    }
-
-    // 5b. Set point shadow cubemaps if available
-    if (!frameData.pointShadowCubemaps.empty() && !frameData.pointShadowFarPlanes.empty()) {
-        // Bind point shadow cubemaps (texture units 9-12)
-        shader->use();  // Ensure shader is active
-        shader->setInt("u_NumPointShadowMaps", static_cast<int>(frameData.pointShadowCubemaps.size()));
-
-        for (size_t i = 0; i < frameData.pointShadowCubemaps.size(); ++i) {
-            // Bind cubemap to texture unit 9+i
-            uint32_t textureUnit = 9 + static_cast<uint32_t>(i);
-            glActiveTexture(GL_TEXTURE0 + textureUnit);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, frameData.pointShadowCubemaps[i]);
-
-            // Set sampler uniform
-            std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
-            shader->setInt(samplerName, static_cast<int>(textureUnit));
-
-            // Set far plane uniform
-            std::string farPlaneName = "u_PointShadowFarPlanes[" + std::to_string(i) + "]";
-            shader->setFloat(farPlaneName, frameData.pointShadowFarPlanes[i]);
-        }
-    } else {
-        // No point shadows available
-        shader->use();
-        shader->setInt("u_NumPointShadowMaps", 0);
     }
 
 

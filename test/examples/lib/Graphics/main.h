@@ -81,7 +81,6 @@ private:
     void PrintSystemInfo() const;
     void PrintSceneInfo() const;
     void PrintRenderPassStatus() const;
-    void PrintPointShadowInfo() const;
 
     // Render pass controls
     void ToggleRenderPass(const std::string& passName);

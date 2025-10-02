@@ -151,7 +151,7 @@ void MainRenderingPass::RenderSkybox(RenderContext& context)
         return; // Skip if not properly configured
     }
 
-    //spdlog::info("Rendering skybox with cubemap ID: {}", m_SkyboxCubemapID);
+    spdlog::info("Rendering skybox with cubemap ID: {}", m_SkyboxCubemapID);
 
     // Disable face culling - we're inside the cube looking out
     RenderCommands::SetFaceCullingData cullingCmd{
