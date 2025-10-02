@@ -508,7 +508,7 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 		std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(Resource::ResourceType::MESH);
 		assetnames.emplace_back(meshname);
 		std::swap(assetnames.front(), assetnames.back());
-		static int current_item = 0;
+		int current_item = 0;
 
 		ImGui::Text("  Mesh GUID: ");
 		ImGui::SameLine();
