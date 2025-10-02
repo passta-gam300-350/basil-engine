@@ -67,11 +67,12 @@ bool GraphicsTestDriver::Initialize()
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
-    // Setup camera
+    // Setup camera - positioned to see point light and shadows
+    // Grid is at X:(-11 to -5), Y:0, Z:(-3 to 3), light at (-8, 4, 3)
     m_Camera = std::make_unique<Camera>(CameraType::Perspective);
     m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-    m_Camera->SetPosition(glm::vec3(0.0f, 2.0f, 8.0f));
-    m_Camera->SetRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
+    m_Camera->SetPosition(glm::vec3(-2.0f, 8.0f, 12.0f));  // View from southeast, elevated
+    m_Camera->SetRotation(glm::vec3(-35.0f, -155.0f, 0.0f)); // Look toward grid center
     
     // We'll manually update the scene renderer's frame data with camera matrices
 
@@ -105,8 +106,9 @@ bool GraphicsTestDriver::Initialize()
 void GraphicsTestDriver::Run()
 {
     spdlog::info("Starting render loop...");
-    spdlog::info("Advanced Graphics Demo - Instanced + Traditional Textures + PBR + AABB Debug");
-    spdlog::info("Note: First tinbox model (all meshes) will rotate to demonstrate AABB transformation");
+    spdlog::info("=== POINT SHADOW TEST DEMO ===");
+    spdlog::info("Scene: 1 Directional Light + 1 Point Light");
+    spdlog::info("Point light at (-8, 4, 3) positioned near grid center to cast clear shadows");
     spdlog::info("Controls:");
     spdlog::info("  - WASD: Move camera");
     spdlog::info("  - Mouse: Look around");
@@ -119,6 +121,8 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - 3: Toggle post-process pass");
     spdlog::info("  - 4: Toggle AABB wireframes");
     spdlog::info("  - 5: Toggle object rotation");
+    spdlog::info("  - 7: Toggle point shadow pass");
+    spdlog::info("  - 8: Print point shadow info");
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -226,17 +230,31 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load traditional texture shaders, will use basic shaders for fallback");
         }
 
-        // Load shadow mapping depth-only shader
+        // Load directional shadow mapping depth-only shader
         auto shadowShader = m_ResourceManager->LoadShader("shadow_depth",
             "assets/shaders/shadow_depth.vert",
             "assets/shaders/shadow_depth.frag");
 
         if (shadowShader) {
-            spdlog::info("Shadow mapping shader loaded successfully!");
+            spdlog::info("Directional shadow mapping shader loaded successfully!");
             // Configure the shadow mapping pass with the loaded shader
             m_SceneRenderer->SetShadowDepthShader(shadowShader);
         } else {
-            spdlog::warn("Could not load shadow mapping shader");
+            spdlog::warn("Could not load directional shadow mapping shader");
+        }
+
+        // Load point shadow mapping shader (geometry shader method)
+        auto pointShadowShader = m_ResourceManager->LoadShaderWithGeometry("point_shadow",
+            "assets/shaders/point_shadow.vert",
+            "assets/shaders/point_shadow.frag",
+            "assets/shaders/point_shadow.geom");
+
+        if (pointShadowShader) {
+            spdlog::info("Point shadow mapping shader loaded successfully!");
+            // Configure the point shadow mapping pass with the loaded shader
+            m_SceneRenderer->SetPointShadowShader(pointShadowShader);
+        } else {
+            spdlog::warn("Could not load point shadow mapping shader");
         }
 
         // Load skybox shader
@@ -411,64 +429,29 @@ void GraphicsTestDriver::SetupAdvancedScene()
         }
     }
 
-    // Complex PBR lighting setup
-    m_SceneLights.push_back(CreateDirectionalLight(
-        glm::vec3(0.2f, -0.8f, 0.3f),
-        glm::vec3(1.0f, 0.95f, 0.85f),
-        1.0f
-    ));
-    
-    // Point lights at the four corners of the 10x10 grid
-    // Grid spans from -13.5 to +13.5 (with 3.0f spacing)
-    float cornerOffset = 13.5f; // Half of (gridSize-1) * spacing
-    float lightHeight = 8.0f;
-    
-    // Top-left corner (red light)
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(-cornerOffset, lightHeight, -cornerOffset),
-        glm::vec3(1.0f, 0.2f, 0.2f),
-        4.0f,
-        25.0f
-    ));
-    
-    // Top-right corner (green light)
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(cornerOffset, lightHeight, -cornerOffset),
-        glm::vec3(0.2f, 1.0f, 0.2f),
-        4.0f,
-        25.0f
-    ));
-    
-    // Bottom-left corner (blue light)
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(-cornerOffset, lightHeight, cornerOffset),
-        glm::vec3(0.2f, 0.2f, 1.0f),
-        4.0f,
-        25.0f
-    ));
-    
-    // Bottom-right corner (yellow light)
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(cornerOffset, lightHeight, cornerOffset),
-        glm::vec3(1.0f, 1.0f, 0.2f),
-        4.0f,
-        25.0f
-    ));
-    
-    // Single spotlight in center above the grid
-    m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(0.0f, 10.0f, 0.0f),        // Position: centered above grid
-        glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
-        glm::vec3(0.8f, 0.0f, 0.8f),         // Color: purple light
-        6.0f,                                // Intensity
-        40.0f,                               // Range
-        15.0f,                               // Inner cone angle
-        30.0f                                // Outer cone angle
-    ));
-    
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.08f, 0.12f));
+    // ===== SIMPLIFIED LIGHTING FOR POINT SHADOW TESTING =====
 
-    spdlog::info("Advanced scene created: {} instances, {} dynamic lights", m_SceneObjects.size(), m_SceneLights.size());
+    // Single directional light (sun-like, from top-right)
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(0.3f, -0.7f, 0.5f),        // Direction: slightly angled
+        glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm white
+        0.8f                                  // Intensity: reduced to see point light better
+    ));
+
+    // Single point light positioned to cast clear shadows
+    // Grid center is at (-8, 0, 0), so position light near center but offset
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(-8.0f, 4.0f, 3.0f),        // Position: near grid center, elevated, offset in Z
+        glm::vec3(1.0f, 0.9f, 0.7f),         // Color: warm white/yellow
+        10.0f,                                // Intensity: very bright to see shadows clearly
+        20.0f                                 // Range: reduced since light is closer
+    ));
+
+    // Low ambient light to make shadows more visible
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.02f, 0.02f, 0.03f));
+
+    spdlog::info("Point shadow test scene created: {} objects, {} lights (1 directional, 1 point)",
+                 m_SceneObjects.size(), m_SceneLights.size());
 
     // Debug: verify all objects were created
     spdlog::debug("Created {} scene objects", m_SceneObjects.size());
@@ -800,6 +783,14 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                     }
                 }
                 break;
+
+            case GLFW_KEY_7:
+                s_Instance->ToggleRenderPass("PointShadowPass");
+                break;
+
+            case GLFW_KEY_8:
+                s_Instance->PrintPointShadowInfo();
+                break;
         }
     }
 }
@@ -937,6 +928,48 @@ void GraphicsTestDriver::ToggleSkybox()
         m_SceneRenderer->EnableSkybox(newState);
         spdlog::info("Skybox {}", newState ? "ENABLED" : "DISABLED");
     }
+}
+
+void GraphicsTestDriver::PrintPointShadowInfo() const
+{
+    spdlog::info("=== Point Shadow Information ===");
+
+    if (m_SceneRenderer) {
+        auto* pipeline = m_SceneRenderer->GetPipeline();
+        if (pipeline) {
+            bool passEnabled = pipeline->IsPassEnabled("PointShadowPass");
+            spdlog::info("  Point Shadow Pass: {}", passEnabled ? "ENABLED" : "DISABLED");
+
+            // Count point lights
+            int pointLightCount = 0;
+            for (const auto& light : m_SceneLights) {
+                if (light.enabled && light.type == Light::Type::Point) {
+                    pointLightCount++;
+                    spdlog::info("  Point Light #{}: Position({:.1f}, {:.1f}, {:.1f}), Intensity={:.1f}, Range={:.1f}",
+                                pointLightCount,
+                                light.position.x, light.position.y, light.position.z,
+                                light.intensity, light.range);
+                }
+            }
+
+            spdlog::info("  Total Point Lights: {}", pointLightCount);
+
+            auto& frameData = m_SceneRenderer->GetFrameData();
+            spdlog::info("  Point Shadow Cubemaps Generated: {}", frameData.pointShadowCubemaps.size());
+
+            for (size_t i = 0; i < frameData.pointShadowCubemaps.size(); ++i) {
+                spdlog::info("    Cubemap {}: TextureID={}, FarPlane={:.1f}",
+                            i, frameData.pointShadowCubemaps[i],
+                            i < frameData.pointShadowFarPlanes.size() ? frameData.pointShadowFarPlanes[i] : 0.0f);
+            }
+        } else {
+            spdlog::warn("Pipeline not found!");
+        }
+    } else {
+        spdlog::warn("Scene renderer not available!");
+    }
+
+    spdlog::info("================================");
 }
 
 void GraphicsTestDriver::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

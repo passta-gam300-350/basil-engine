@@ -52,6 +52,7 @@ public:
 
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
+    void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
     void SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const;
     void SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const;
