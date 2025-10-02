@@ -67,6 +67,8 @@ public:
     void EnableSkybox(bool enable);
     bool IsSkyboxEnabled() const;
 
+    void SetPointShadowDepthShader(const std::shared_ptr<Shader> &shader) const;
+
 private:
     //void InitializePipeline();
     void InitializeRenderingCoordinators();
