@@ -45,9 +45,11 @@ void PointShadowMappingPass::Execute(RenderContext &context)
 
     if (shadowCastingLights.empty())
     {
+        spdlog::info("PointShadowMappingPass: No shadow-casting lights found");
         return;  // No point lights casting shadows
     }
 
+    spdlog::info("PointShadowMappingPass: Rendering shadows for {} light(s)", shadowCastingLights.size());
     Begin();
     SetupCommandBuffer(context);
 
@@ -58,6 +60,7 @@ void PointShadowMappingPass::Execute(RenderContext &context)
 
         // Get or create cubemap FBO for this light
         auto cubemapFBO = GetOrCreateCubemapFBO(lightIdx);
+        spdlog::info("Point shadow light {}: FBO depth cubemap ID = {}", lightIdx, cubemapFBO->GetDepthCubemapID());
 
         // Calculate view matrices for 6 cubemap faces
         auto viewMatrices = CalculateCubemapViewMatrices(light->position);
@@ -137,13 +140,37 @@ void PointShadowMappingPass::RenderToCubemap(
     fbo->Bind();
 
     // Attach all 6 faces using glFramebufferTexture (not glFramebufferTexture2D)
+    // Note: This is redundant with FrameBuffer::Invalidate() but ensures correct attachment
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
         fbo->GetDepthCubemapID(), 0);
+
+    // Verify framebuffer is complete
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        spdlog::error("Point shadow FBO incomplete! Status: 0x{:x}", status);
+        return;
+    }
 
     // Set viewport for cubemap
     glViewport(0, 0, m_ShadowCubemapSize, m_ShadowCubemapSize);
 
-    // Clear depth buffer (affects all faces)
+    // Enable depth testing for shadow map rendering
+    RenderCommands::SetDepthTestData depthTestCmd{
+        true,           // Enable depth test
+        GL_LESS,        // Depth function
+        true            // Enable depth write
+    };
+    Submit(depthTestCmd);
+
+    // Enable back-face culling to optimize shadow rendering
+    RenderCommands::SetFaceCullingData cullCmd{
+        true,           // Enable culling
+        GL_BACK         // Cull back faces
+    };
+    Submit(cullCmd);
+
+    // Clear depth buffer to 1.0 (far plane)
+    glClearDepth(1.0f);
     RenderCommands::ClearData clearCmd{
         0.0f, 0.0f, 0.0f, 1.0f,
         false,  // Don't clear color
@@ -167,9 +194,19 @@ void PointShadowMappingPass::RenderToCubemap(
     m_PointShadowDepthShader->setFloat("u_FarPlane", m_ShadowFarPlane);
 
     // Render all visible objects ONCE (geometry shader emits to all 6 faces)
+    int objectCount = 0;
+    spdlog::info("Point shadow pass: Total renderables in context = {}", context.renderables.size());
+
     for (const auto &renderable : context.renderables)
     {
-        if (!renderable.visible || !renderable.mesh) continue;
+        if (!renderable.visible) {
+            spdlog::debug("Skipping invisible renderable");
+            continue;
+        }
+        if (!renderable.mesh) {
+            spdlog::debug("Skipping renderable with no mesh");
+            continue;
+        }
 
         // Set model matrix uniform
         m_PointShadowDepthShader->setMat4("u_Model", renderable.transform);
@@ -180,7 +217,10 @@ void PointShadowMappingPass::RenderToCubemap(
             renderable.mesh->GetIndexCount(),
             GL_TRIANGLES
             });
+        objectCount++;
     }
+    spdlog::info("Point shadow light {}: Rendered {} out of {} objects",
+                 lightIndex, objectCount, context.renderables.size());
 
     ExecuteCommands();
     fbo->Unbind();

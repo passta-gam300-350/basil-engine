@@ -61,6 +61,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // NEW: 2. Add point shadow mapping pass
     auto pointShadowPass = std::make_shared<PointShadowMappingPass>();
     mainPipeline->AddPass(pointShadowPass);
+    mainPipeline->EnablePass("PointShadowPass", true);  // ENABLED - point shadows active
 
     // 3. Add main rendering pass (now includes skybox rendering)
     auto mainPass = std::make_shared<MainRenderingPass>();
