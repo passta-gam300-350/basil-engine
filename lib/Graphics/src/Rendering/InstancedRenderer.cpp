@@ -271,6 +271,10 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     // 5b. Set point shadow cubemaps if available
     shader->use();  // Ensure shader is active
 
+    // Set shadow intensity parameters (can be made configurable later)
+    shader->setFloat("u_DirectionalShadowIntensity", 0.8f);  // 80% shadow intensity
+    shader->setFloat("u_PointShadowIntensity", 0.8f);        // 80% shadow intensity
+
     // Always initialize ALL 4 samplerCube uniforms to prevent undefined behavior
     // Even unused samplers must be bound to valid texture units
     const int MAX_POINT_SHADOW_MAPS = 4;
