@@ -27,8 +27,6 @@ struct SubmittedLightData {
     float innerCone = 30.0f;
     float outerCone = 45.0f;
     bool enabled = true;
-    // NEW: Shadow casting flag
-    bool castShadows = false;  // Default: don't cast shadows
 };
 
 // Picking data structures
