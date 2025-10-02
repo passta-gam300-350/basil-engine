@@ -241,8 +241,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     }
 
     // 5. Set shadow mapping uniforms if available
-    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) 
-    {
+    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
         uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
 
         RenderCommands::SetShadowUniformsData shadowCmd{
@@ -253,10 +252,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
             true  // Enable shadows
         };
         renderPass.Submit(shadowCmd);
-    } 
-
-    else 
-    {
+    } else {
         // No shadow data available - disable shadow mapping
         // Bind a default/dummy shadow matrix and unbind shadow texture
         glm::mat4 identityMatrix = glm::mat4(1.0f);
@@ -271,48 +267,6 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         renderPass.Submit(disableShadowCmd);
     }
 
-    // NEW: Set point shadow uniforms if available
-    if (!frameData.pointShadows.empty() && frameData.pointShadows.size() <= 4)
-    {
-        // Enable point shadows
-        shader->use();
-        shader->setBool("u_EnablePointShadows", true);
-        shader->setInt("u_NumPointShadows", static_cast<int>(frameData.pointShadows.size()));
-
-        // Bind each point shadow cubemap
-        for (size_t i = 0; i < frameData.pointShadows.size(); ++i)
-        {
-            const auto &pointShadow = frameData.pointShadows[i];
-
-            // Bind cubemap depth texture (slots 9, 10, 11, 12 for up to 4 point shadows)
-            uint32_t cubemapTexUnit = 9 + static_cast<uint32_t>(i);
-            uint32_t cubemapID = pointShadow.cubemapFBO->GetDepthCubemapID();
-
-            RenderCommands::BindCubemapData cubemapCmd{
-                cubemapID,
-                cubemapTexUnit,
-                shader,
-                "u_PointShadowMaps[" + std::to_string(i) + "]"
-            };
-            renderPass.Submit(cubemapCmd);
-
-            // Set light position and far plane
-            RenderCommands::SetPointShadowUniformsData pointShadowCmd{
-                shader,
-                pointShadow.lightPosition,
-                pointShadow.farPlane,
-                "u_PointShadowLightPositions[" + std::to_string(i) + "]",
-                "u_PointShadowFarPlanes[" + std::to_string(i) + "]"
-            };
-            renderPass.Submit(pointShadowCmd);
-        }
-    }
-    else
-    {
-        // Disable point shadows
-        shader->use();
-        shader->setBool("u_EnablePointShadows", false);
-    }
 
     // 6. Bind textures (if any)
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};

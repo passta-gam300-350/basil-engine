@@ -8,7 +8,6 @@
 #include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/PresentPass.h"
 #include "Pipeline/ShadowMappingPass.h"
-#include "Pipeline/PointShadowMappingPass.h"
 #include "Resources/Shader.h"
 #include "Resources/Mesh.h"
 #include <cassert>
@@ -58,25 +57,21 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto shadowPass = std::make_shared<ShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
 
-    // NEW: 2. Add point shadow mapping pass
-    auto pointShadowPass = std::make_shared<PointShadowMappingPass>();
-    mainPipeline->AddPass(pointShadowPass);
-
-    // 3. Add main rendering pass (now includes skybox rendering)
+    // 2. Add main rendering pass (now includes skybox rendering)
     auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
 
-    // 4. Add debug rendering pass
+    // 3. Add debug rendering pass
     auto debugPass = std::make_shared<DebugRenderPass>();
     mainPipeline->AddPass(debugPass);
     mainPipeline->EnablePass("DebugPass", false);
 
-    // 5. Add picking pass (executes when needed, disabled by default)
+    // 4. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 6. Add present pass (executes last)
+    // 5. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -302,21 +297,4 @@ bool SceneRenderer::IsSkyboxEnabled() const
         }
     }
     return false;
-}
-
-void SceneRenderer::SetPointShadowDepthShader(const std::shared_ptr<Shader> &shader) const
-{
-    assert(shader && "Point shadow depth shader cannot be null");
-    assert(shader->ID != 0 && "Point shadow depth shader must be compiled and linked");
-    assert(m_Pipeline && "Pipeline must be initialized before setting point shadow shader");
-
-    if (m_Pipeline)
-    {
-        auto pointShadowPass = std::dynamic_pointer_cast<PointShadowMappingPass>(
-            m_Pipeline->GetPass("PointShadowPass"));
-        if (pointShadowPass)
-        {
-            pointShadowPass->SetPointShadowDepthShader(shader);
-        }
-    }
 }

@@ -119,8 +119,6 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - 3: Toggle post-process pass");
     spdlog::info("  - 4: Toggle AABB wireframes");
     spdlog::info("  - 5: Toggle object rotation");
-    spdlog::info("  - 6: Toggle skybox");
-    spdlog::info("  - 7: Toggle point shadows");  // NEW
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -239,22 +237,6 @@ bool GraphicsTestDriver::LoadTestResources()
             m_SceneRenderer->SetShadowDepthShader(shadowShader);
         } else {
             spdlog::warn("Could not load shadow mapping shader");
-        }
-
-        // NEW: Load point shadow shader WITH geometry shader
-        auto pointShadowShader = m_ResourceManager->LoadShader("point_shadow_depth",
-            "assets/shaders/point_shadow_depth.vert",
-            "assets/shaders/point_shadow_depth.geom",  // Geometry shader
-            "assets/shaders/point_shadow_depth.frag");
-
-        if (pointShadowShader)
-        {
-            spdlog::info("Point shadow shader (with geometry shader) loaded successfully!");
-            m_SceneRenderer->SetPointShadowDepthShader(pointShadowShader);
-        }
-        else
-        {
-            spdlog::warn("Could not load point shadow shader");
         }
 
         // Load skybox shader
@@ -441,35 +423,31 @@ void GraphicsTestDriver::SetupAdvancedScene()
     float cornerOffset = 13.5f; // Half of (gridSize-1) * spacing
     float lightHeight = 8.0f;
     
-    // Top-left corner (red light) - WITH SHADOWS
-    auto redLight = CreatePointLight(
+    // Top-left corner (red light)
+    m_SceneLights.push_back(CreatePointLight(
         glm::vec3(-cornerOffset, lightHeight, -cornerOffset),
         glm::vec3(1.0f, 0.2f, 0.2f),
         4.0f,
         25.0f
-    );
-    redLight.castShadows = true;  // Enable shadows for this light
-    m_SceneLights.push_back(redLight);
-
-    // Top-right corner (green light) - WITH SHADOWS
-    auto greenLight = CreatePointLight(
+    ));
+    
+    // Top-right corner (green light)
+    m_SceneLights.push_back(CreatePointLight(
         glm::vec3(cornerOffset, lightHeight, -cornerOffset),
         glm::vec3(0.2f, 1.0f, 0.2f),
         4.0f,
         25.0f
-    );
-    greenLight.castShadows = true;  // Enable shadows for this light
-    m_SceneLights.push_back(greenLight);
-
-    // Bottom-left corner (blue light) - NO SHADOWS
+    ));
+    
+    // Bottom-left corner (blue light)
     m_SceneLights.push_back(CreatePointLight(
         glm::vec3(-cornerOffset, lightHeight, cornerOffset),
         glm::vec3(0.2f, 0.2f, 1.0f),
         4.0f,
         25.0f
     ));
-
-    // Bottom-right corner (yellow light) - NO SHADOWS
+    
+    // Bottom-right corner (yellow light)
     m_SceneLights.push_back(CreatePointLight(
         glm::vec3(cornerOffset, lightHeight, cornerOffset),
         glm::vec3(1.0f, 1.0f, 0.2f),
@@ -807,11 +785,6 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_6:
                 s_Instance->ToggleSkybox();
-                break;
-
-                // NEW: Key 7 to toggle point shadow pass
-            case GLFW_KEY_7:
-                s_Instance->ToggleRenderPass("PointShadowPass");
                 break;
 
             case GLFW_KEY_P:
