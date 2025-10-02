@@ -269,29 +269,36 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     }
 
     // 5b. Set point shadow cubemaps if available
-    if (!frameData.pointShadowCubemaps.empty() && !frameData.pointShadowFarPlanes.empty()) {
-        // Bind point shadow cubemaps (texture units 9-12)
-        shader->use();  // Ensure shader is active
-        shader->setInt("u_NumPointShadowMaps", static_cast<int>(frameData.pointShadowCubemaps.size()));
+    shader->use();  // Ensure shader is active
 
-        for (size_t i = 0; i < frameData.pointShadowCubemaps.size(); ++i) {
-            // Bind cubemap to texture unit 9+i
-            uint32_t textureUnit = 9 + static_cast<uint32_t>(i);
-            glActiveTexture(GL_TEXTURE0 + textureUnit);
+    // Always initialize ALL 4 samplerCube uniforms to prevent undefined behavior
+    // Even unused samplers must be bound to valid texture units
+    const int MAX_POINT_SHADOW_MAPS = 4;
+    int activeShadowMaps = (!frameData.pointShadowCubemaps.empty() && !frameData.pointShadowFarPlanes.empty())
+                           ? static_cast<int>(frameData.pointShadowCubemaps.size())
+                           : 0;
+
+    shader->setInt("u_NumPointShadowMaps", activeShadowMaps);
+
+    for (int i = 0; i < MAX_POINT_SHADOW_MAPS; ++i) {
+        uint32_t textureUnit = 9 + static_cast<uint32_t>(i);
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+
+        if (i < activeShadowMaps) {
+            // Bind actual shadow cubemap
             glBindTexture(GL_TEXTURE_CUBE_MAP, frameData.pointShadowCubemaps[i]);
-
-            // Set sampler uniform
-            std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
-            shader->setInt(samplerName, static_cast<int>(textureUnit));
 
             // Set far plane uniform
             std::string farPlaneName = "u_PointShadowFarPlanes[" + std::to_string(i) + "]";
             shader->setFloat(farPlaneName, frameData.pointShadowFarPlanes[i]);
+        } else {
+            // Bind dummy cubemap (texture ID 0) for unused slots
+            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
         }
-    } else {
-        // No point shadows available
-        shader->use();
-        shader->setInt("u_NumPointShadowMaps", 0);
+
+        // Always set sampler uniform to proper texture unit
+        std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
+        shader->setInt(samplerName, static_cast<int>(textureUnit));
     }
 
 
