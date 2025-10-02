@@ -11,6 +11,7 @@ class SplashScreen : public Screen
 public:
 	SplashScreen(GLFWwindow* window);
 	void init() override;
+	void update() override;
 	void render() override;
 	void cleanup() override;
 

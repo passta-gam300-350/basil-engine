@@ -43,6 +43,7 @@ public:
 
 
 	void Init(GLFWwindow* _win);
+	void Update();
 	void Render();
 	void Cleanup();
 

@@ -66,15 +66,63 @@ void EditorMain::init()
 	//std::jthread jth(&Engine::Update);
 }
 
-void EditorMain::render()
+
+void EditorMain::update()
 {
-	Engine::BeginFrame();
-	// Menu Bar
 	if (!active) return;
+
+	Engine::BeginFrame();
+
 
 	// Update input manager ONCE per frame - at the very beginning
 	auto* input = InputManager::Get_Instance();
 	input->Update();
+
+	glClearColor(1, 1, 1, 1);
+
+	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
+	if (!m_IsPlayMode && m_EditorCamera) {
+		ecs::world world = Engine::GetWorld();
+		auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
+
+		if (cameraEntities) {
+			auto entity = *cameraEntities.begin();
+			auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
+			auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
+
+			// Update ECS camera with EditorCamera data
+			positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
+
+			// DEBUG: Check what vectors EditorCamera produces and only update position
+			glm::vec3 editorForward = m_EditorCamera->GetForward();
+			glm::vec3 editorUp = m_EditorCamera->GetUp();
+			glm::vec3 editorRight = m_EditorCamera->GetRight();
+
+
+			// Update ECS camera vectors with EditorCamera data
+			cameraComponent.m_Front = editorForward;
+			cameraComponent.m_Up = editorUp;
+			cameraComponent.m_Right = editorRight;
+			cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
+		}
+	}
+
+	// Update engine systems
+	ecs::world world = Engine::GetWorld();
+	RenderSystem::System().Update(world);
+	Engine::EndFrame();
+	Engine::UpdateDebug();
+}
+
+
+void EditorMain::render()
+{
+	if (!active) return;
+	Engine::BeginFrame();
+
+	//// Update input manager ONCE per frame - at the very beginning
+	//auto* input = InputManager::Get_Instance();
+	//input->Update();
 
 
 
@@ -123,40 +171,40 @@ void EditorMain::render()
 
 
 
-	glClearColor(1, 1, 1, 1);
+	//glClearColor(1, 1, 1, 1);
 
-	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
-	if (!m_IsPlayMode && m_EditorCamera) {
-		ecs::world world = Engine::GetWorld();
-		auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
+	//// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
+	//if (!m_IsPlayMode && m_EditorCamera) {
+	//	ecs::world world = Engine::GetWorld();
+	//	auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
 
-		if (cameraEntities) {
-			auto entity = *cameraEntities.begin();
-			auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
-			auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
+	//	if (cameraEntities) {
+	//		auto entity = *cameraEntities.begin();
+	//		auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
+	//		auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
 
-			// Update ECS camera with EditorCamera data
-			positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
+	//		// Update ECS camera with EditorCamera data
+	//		positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
 
-			// DEBUG: Check what vectors EditorCamera produces and only update position
-			glm::vec3 editorForward = m_EditorCamera->GetForward();
-			glm::vec3 editorUp = m_EditorCamera->GetUp();
-			glm::vec3 editorRight = m_EditorCamera->GetRight();
+	//		// DEBUG: Check what vectors EditorCamera produces and only update position
+	//		glm::vec3 editorForward = m_EditorCamera->GetForward();
+	//		glm::vec3 editorUp = m_EditorCamera->GetUp();
+	//		glm::vec3 editorRight = m_EditorCamera->GetRight();
 
 
-			// Update ECS camera vectors with EditorCamera data
-			cameraComponent.m_Front = editorForward;
-			cameraComponent.m_Up = editorUp;
-			cameraComponent.m_Right = editorRight;
-			cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-		}
-	}
+	//		// Update ECS camera vectors with EditorCamera data
+	//		cameraComponent.m_Front = editorForward;
+	//		cameraComponent.m_Up = editorUp;
+	//		cameraComponent.m_Right = editorRight;
+	//		cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
+	//	}
+	//}
 
-	// Update engine systems
-	ecs::world world = Engine::GetWorld();
-	RenderSystem::System().Update(world);
-	Engine::EndFrame();
-	Engine::UpdateDebug();
+	//// Update engine systems
+	//ecs::world world = Engine::GetWorld();
+	//RenderSystem::System().Update(world);
+	//Engine::EndFrame();
+	//Engine::UpdateDebug();
 
 	Render_MenuBar();
 

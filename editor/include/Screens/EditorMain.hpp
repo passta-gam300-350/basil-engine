@@ -23,6 +23,7 @@ public:
 
 	EditorMain(GLFWwindow* window);
 	void init() override;
+	void update() override;
 	void render() override;
 	void cleanup() override;
 	void Show() override;
