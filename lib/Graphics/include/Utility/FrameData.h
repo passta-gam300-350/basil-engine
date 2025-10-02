@@ -18,15 +18,6 @@ struct FrameData
     std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
     std::vector<glm::mat4> shadowMatrices;
 
-    struct PointShadowData
-    {
-        std::shared_ptr<FrameBuffer> cubemapFBO;  // Depth cubemap framebuffer
-        std::array<glm::mat4, 6> viewMatrices;    // 6 face view matrices
-        glm::mat4 projectionMatrix;               // Shared perspective projection
-        glm::vec3 lightPosition;                  // Light world position
-        float farPlane;                           // Shadow range
-    };
-
     // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 

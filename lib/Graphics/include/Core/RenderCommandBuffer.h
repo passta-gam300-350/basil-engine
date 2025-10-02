@@ -119,17 +119,6 @@ namespace RenderCommands {
         std::shared_ptr<Shader> shader;
         std::string uniformName;
     };
-
-    // NEW: Set point shadow uniforms (light position, far plane)
-    struct SetPointShadowUniformsData
-    {
-        std::shared_ptr<Shader> shader;
-        glm::vec3 lightPosition;
-        float farPlane;
-        std::string lightPosUniform;  // e.g., "u_PointShadowLightPositions[0]"
-        std::string farPlaneUniform;  // e.g., "u_PointShadowFarPlanes[0]"
-    };
-
 }
 
 // Command variant - no virtual function calls, cache-friendly
@@ -150,8 +139,7 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetFaceCullingData,
     RenderCommands::SetObjectIDData,
     RenderCommands::ReadPixelData,
-    RenderCommands::BindCubemapData,
-    RenderCommands::SetPointShadowUniformsData
+    RenderCommands::BindCubemapData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -197,7 +185,6 @@ private:
     void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
     void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);
     void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
-    void ExecuteCommand(const RenderCommands::SetPointShadowUniformsData &cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

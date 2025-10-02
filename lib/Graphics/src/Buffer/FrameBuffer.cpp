@@ -33,9 +33,7 @@ FrameBuffer::FrameBuffer(FBOSpecs const &spec)
 	// Seperate the color attachment specs
 	for (auto format : spec.Attachments.Attachments)
 	{
-		// NEW: Also treat DEPTH_CUBEMAP as depth attachment
-		if (format.TextureFormat != FBOTextureFormat::DEPTH24STENCIL8 &&
-			format.TextureFormat != FBOTextureFormat::DEPTH_CUBEMAP)
+		if (format.TextureFormat != FBOTextureFormat::DEPTH24STENCIL8)
 			m_ColorAttachmentSpecs.emplace_back(format);
 		else
 			m_DepthAttachmentSpec = format;
@@ -101,53 +99,25 @@ void FrameBuffer::Invalidate()
 	if (m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None)
 	{
 		glGenTextures(1, &m_DepthAttachment);
+		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 
-		// NEW: Check if this is a cubemap depth texture
-		if (m_DepthAttachmentSpec.TextureFormat == FBOTextureFormat::DEPTH_CUBEMAP)
-		{
-			// Create depth cubemap texture
-			glBindTexture(GL_TEXTURE_CUBE_MAP, m_DepthAttachment);
+		// Use standard depth-stencil format
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
+			GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
+		
+		// Set texture parameters for depth texture
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-			// Allocate storage for all 6 cubemap faces
-			for (unsigned int i = 0; i < 6; ++i)
-			{
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-					m_Specifications.Width, m_Specifications.Height, 0,
-					GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-			}
+		// Use border clamping for shadow maps to prevent sampling outside bounds
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-			// Set texture parameters for cubemap
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		// Set border color to white (1.0) so areas outside shadow map are not in shadow
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-			// Note: We don't attach the cubemap to the FBO here
-			// Individual faces will be attached in RenderToCubemapFace() using AttachCubemapFace()
-		}
-		else
-		{
-			glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-
-			// Use standard depth-stencil format
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
-				GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
-
-			// Set texture parameters for depth texture
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-			// Use border clamping for shadow maps to prevent sampling outside bounds
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-			// Set border color to white (1.0) so areas outside shadow map are not in shadow
-			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
-		}
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 	}
 
 	// Specify draw buffers
@@ -159,11 +129,9 @@ void FrameBuffer::Invalidate()
 
 		glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), buffers);
 	}
-	else if (m_ColorAttachments.empty() && 
-		(m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None ||
-		m_DepthAttachmentSpec.TextureFormat == FBOTextureFormat::DEPTH_CUBEMAP))
+	else if (m_ColorAttachments.empty() && m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None)
 	{
-		// Only depth-pass (2D or Cubemap)
+		// Only depth-pass
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
 	}
@@ -295,21 +263,4 @@ uint32_t FrameBuffer::GetColorAttachmentRendererID(uint32_t index) const
 	}
 
 	return m_ColorAttachments[index];
-}
-
-void FrameBuffer::AttachCubemapFace(uint32_t face, uint32_t mipLevel)
-{
-	assert(face >= GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-		face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z &&
-		"Invalid cubemap face");
-
-	Bind();
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-		face, m_DepthAttachment, mipLevel);
-	Unbind();
-}
-
-uint32_t FrameBuffer::GetDepthCubemapID() const
-{
-	return m_DepthAttachment;  // Returns cubemap texture ID
 }
