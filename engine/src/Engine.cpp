@@ -196,6 +196,8 @@ void Engine::Exit() {
 	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
 	RenderSystem::System().Exit();
+	ResourceSystem::Release();
+	Scheduler::Release();
 }
 
 world Engine::GetWorld() {

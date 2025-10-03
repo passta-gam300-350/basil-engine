@@ -12,3 +12,5 @@ file(GLOB_RECURSE JOB_SYSTEM_FILES
 add_library("${PROJECT_NAME}" INTERFACE)
 
 target_include_directories("${PROJECT_NAME}" INTERFACE "${JOB_SYSTEM_DIR}/include")
+
+target_link_libraries(${PROJECT_NAME} INTERFACE data_structure_lib)
