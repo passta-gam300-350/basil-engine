@@ -596,8 +596,27 @@ void EditorMain::Render_MenuBar()
 	if (ImGui::BeginMenu("Scene"))
 	{
 		ImGui::MenuItem("New Scene", "Ctrl+N");
-		ImGui::MenuItem("Open Scene", "Ctrl+O");
-		ImGui::MenuItem("Save Scene", "Ctrl+S");
+		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
+		{
+			std::string path{};
+			if (fileService.OpenFileDialog(path))
+			{
+				LoadScene(path.c_str());
+			}
+		}
+		if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+		{
+			static int count{};
+			std::string currentPath = Editor::GetInstance().GetConfig().project_workingDir;
+			if (currentPath.empty()) {
+				spdlog::error("No project loaded, cannot save scene!");
+				return;
+			}
+			std::string scenePath = currentPath + "/assets/" + std::to_string(count++) + ".scene";
+			SaveScene(scenePath.c_str());
+
+				
+		}
 		ImGui::MenuItem("Save Scene As", "Ctrl+Shift+S");
 
 
@@ -1553,4 +1572,34 @@ void EditorMain::HandleViewportPicking()
 {
 	// This function can be called to handle other picking-related logic
 	// For now, picking is handled directly in Render_Scene()
+}
+
+void EditorMain::SaveScene(const char* path)
+{
+		if (path == nullptr) {
+		spdlog::error("Editor: Cannot save scene - path is null");
+		return;
+	}
+	ecs::world world = Engine::GetWorld();
+
+	world.SaveYAML(path);
+	spdlog::info("Editor: Scene saved to {}", path);
+
+}
+
+
+void EditorMain::LoadScene(const char* path)
+{
+	if (path == nullptr) {
+		spdlog::error("Editor: Cannot load scene - path is null");
+		return;
+	}
+	ClearEntitySelection();
+	ecs::world world = Engine::GetWorld();
+	world.UnloadAll();
+	world.LoadYAML(path);
+	spdlog::info("Editor: Scene loaded from {}", path);
+	// Clear selection after loading new scene
+	
+
 }

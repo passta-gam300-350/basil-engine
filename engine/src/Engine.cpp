@@ -44,6 +44,7 @@ void Engine::Init(std::string const& cfg ) {
 	Instance().m_Info.m_FrameLogRate = 165;
 
 	ReflectionRegistry::SetupNativeTypes();
+	ReflectionRegistry::SetupEngineTypes();
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
 		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
@@ -156,6 +157,7 @@ void Engine::ReportLastError() {
 
 void Engine::InitWithoutWindow(std::string const& cfg) {
 	ReflectionRegistry::SetupNativeTypes();
+	ReflectionRegistry::SetupEngineTypes();
 	Instance().m_Info.m_FrameLogRate = 165;
 	
 	Instance().m_World = WorldRegistry::NewWorld();

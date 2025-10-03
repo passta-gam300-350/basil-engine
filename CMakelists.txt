@@ -22,7 +22,7 @@ include(custom_tools)
 import_dependencies()
 
 #global compile options
-add_compile_options(/W4)
+add_compile_options(/W4 /MP)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # static analysis (comment out to disable and adjust path to clang-tidy.exe accordingly)

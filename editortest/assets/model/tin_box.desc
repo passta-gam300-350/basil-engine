@@ -1,0 +1,14 @@
+file info:
+  date indexed: 906693041
+  file hash: 518778867
+  file path: \model\tin_box.fbx
+resources:
+  mesh:
+    - guid: 360b0a0d7f2f87620c3a1246dbc1
+      name: btm highpoly
+      references: ~
+      options: ""
+    - guid: 360b0a0d7129985da4140e99c574
+      name: highpoly top
+      references: ~
+      options: ""

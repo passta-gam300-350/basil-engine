@@ -3,6 +3,9 @@
 
 #include <glm/glm.hpp>
 
+
+
+
 struct TransformComponent {
 	glm::mat4 m_trans;
 };
@@ -18,5 +21,14 @@ struct ScaleComponent {
 struct RotationComponent {
 	glm::vec3 m_Rotation; // Euler angles in degrees
 };
+
+/*
+ *RegisterReflectionComponent<Simple>(
+            "Simple",
+            MemberRegistrationV<&Simple::a, "a">,
+            MemberRegistrationV<&Simple::b, "b">
+        );
+ */
+
 
 #endif

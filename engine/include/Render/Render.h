@@ -12,6 +12,7 @@
 #include "Ecs/ecs.h"
 
 struct MeshRendererComponent {
+    bool isPrimitive;
     Resource::Guid m_MeshGuid;
     Resource::Guid m_MaterialGuid;
 };

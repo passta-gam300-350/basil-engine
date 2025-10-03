@@ -196,7 +196,8 @@ namespace ecs {
 			root["entities"].push_back(SerializeEntity<YAML::Node>(reg, entity));
 		}
 		std::ofstream outp{ path };
-		outp << root;
+		if (outp)
+			outp << root;
 	}
 
 	void world::UnloadNonGlobals() {

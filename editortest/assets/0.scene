@@ -1,0 +1,433 @@
+entities:
+  - entity name:
+      name: unnamed
+    PositionComponent:
+      m_WorldPos:
+        x: 0
+        y: 5
+        z: 0
+    LightComponent:
+      m_Type: 0
+      m_Direction:
+        x: 0.200000003
+        y: -0.800000012
+        z: 0.300000012
+      m_Color:
+        x: 1
+        y: 0.949999988
+        z: 0.850000024
+      m_Intensity: 1
+      m_Range: -107374176
+      m_InnerCone: -107374176
+      m_OuterCone: -107374176
+      m_IsEnabled: true
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: 3
+        y: 0
+        z: 3
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: 3
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: 3
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe27dcab391d381c46210c9
+      m_MaterialGuid: e75fbe27c0a941f275542d9d677
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: 3
+        y: 0
+        z: 0
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: 3
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: 0
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe27df9971cab133c6edcd6
+      m_MaterialGuid: e75fbe27476a0e72ef36887dad9
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: 3
+        y: 0
+        z: -3
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: 3
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: -3
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe27c8d81e22f6f739a091b
+      m_MaterialGuid: e75fbe273fc8b03b0dcc9606849
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: 0
+        y: 0
+        z: 3
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: 0
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: 3
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe2772a8940586df250656c
+      m_MaterialGuid: e75fbe278cb9e204327c4adc382
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: 0
+        y: 0
+        z: 0
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: 0
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: 0
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe27e7586f67e06379e9f83
+      m_MaterialGuid: e75fbe274448946ac0260646033
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: 0
+        y: 0
+        z: -3
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: 0
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: -3
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe270d29caf06b9bf00cb7d
+      m_MaterialGuid: e75fbe27c70a6584877178be09c
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: -3
+        y: 0
+        z: 3
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: -3
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: 3
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe27daab2899bdb1e99e5b7
+      m_MaterialGuid: e75fbe279319ab15ac70dfae46a
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: -3
+        y: 0
+        z: 0
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: -3
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: 0
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe272559f38d170d24980e6
+      m_MaterialGuid: e75fbe2713798c17d3b77f9587c
+  - entity name:
+      name: unnamed
+    ScaleComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+    VisibilityComponent:
+      m_IsVisible: true
+    PositionComponent:
+      m_WorldPos:
+        x: -3
+        y: 0
+        z: -3
+    RotationComponent:
+      m_Rotation:
+        x: 0
+        y: 0
+        z: 0
+    TransformComponent:
+      m_trans:
+        m00: 1
+        m01: 0
+        m02: 0
+        m03: -3
+        m10: 0
+        m11: 1
+        m12: 0
+        m13: 0
+        m20: 0
+        m21: 0
+        m22: 1
+        m23: -3
+        m30: 0
+        m31: 0
+        m32: 0
+        m33: 1
+    MeshRendererComponent:
+      m_MeshGuid: e75fbe272998746187a3c99f9e5
+      m_MaterialGuid: e75fbe27a909a2b519247925725
+  - entity name:
+      name: unnamed
+    PositionComponent:
+      m_WorldPos:
+        x: 0
+        y: 5
+        z: 10
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.42966747
+      m_Near: 0.100000001
+      m_Far: 100
+      m_Up:
+        x: -1.84732301e-08
+        y: 0.906307757
+        z: -0.42261827
+      m_Right:
+        x: 1
+        y: 0
+        z: -4.37113847e-08
+      m_Front:
+        x: -3.96159727e-08
+        y: -0.42261833
+        z: -0.906307876
+      m_Yaw: -90
+      m_Pitch: 0
+  - entity name:
+      name: unnamed
+    PositionComponent:
+      m_WorldPos:
+        x: 0
+        y: 5
+        z: 0
+    LightComponent:
+      m_Type: 0
+      m_Direction:
+        x: 0
+        y: -1
+        z: 0
+      m_Color:
+        x: 1
+        y: 1
+        z: 1
+      m_Intensity: 1
+      m_Range: 10
+      m_InnerCone: 30
+      m_OuterCone: 45
+      m_IsEnabled: true
