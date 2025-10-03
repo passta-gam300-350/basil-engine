@@ -134,14 +134,14 @@ void SerializeType(const entt::meta_any &obj, Node&out) {
         } 
         else {
             // primitives
-            if (int* v = value.try_cast<int>())
-                out[field_name] = *v;
-            else if (float* v = value.try_cast<float>())
-                out[field_name] = *v;
-            else if (double* v = value.try_cast<double>())
-                out[field_name] = *v;
-            else if (std::string* v = value.try_cast<std::string>())
-                out[field_name] = *v;
+            if (int* vi = value.try_cast<int>())
+                out[field_name] = *vi;
+            else if (float* vf = value.try_cast<float>())
+                out[field_name] = *vf;
+            else if (double* vd = value.try_cast<double>())
+                out[field_name] = *vd;
+            else if (std::string* vs = value.try_cast<std::string>())
+                out[field_name] = *vs;
         }
     }
 }
@@ -274,7 +274,7 @@ void RegisterDataMember(auto& factory) {
 template<typename T, typename... Refs>
 void RegisterReflectionComponent(std::string_view type_name, Refs...) {
     auto hashtypename = ToTypeName(type_name);
-    auto factory = entt::meta<T>().type(hashtypename);
+    auto factory = entt::meta_factory<T>().type(hashtypename);
     
     auto& field_table{ ReflectionRegistry::RegisterType(hashtypename, type_name) };
     // populate field tables

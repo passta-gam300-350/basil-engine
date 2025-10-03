@@ -17,7 +17,7 @@
 namespace ecs {
     struct SystemDependencyGraph {
         struct Node {
-            size_t index;                       // index in systems vector
+            size_t index{};                       // index in systems vector
             std::vector<size_t> successors;     // edges to other nodes
             size_t indegree = 0;                // for topological sort
         };

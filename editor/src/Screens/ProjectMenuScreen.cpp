@@ -168,7 +168,7 @@ void ProjectMenuScreen::render()
 	ImGui::EndChild();
 
 	ImGui::PushID("PROJECT_EXIT_BTN");
-	bool exit = ImGui::Button("Exit") | ImGui::IsKeyPressed(ImGuiKey_Escape);
+	bool exit = ImGui::Button("Exit") || ImGui::IsKeyPressed(ImGuiKey_Escape);
 
 	if (exit)
 	{

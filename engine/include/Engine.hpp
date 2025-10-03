@@ -20,9 +20,9 @@ class Engine
 
 	struct Info {
 
-		double m_FPS;
-		std::uint64_t m_TotalFrameCt;
-		std::uint64_t m_FrameLogCounter;	//basically total (mod) rate
+		double m_FPS{};
+		std::uint64_t m_TotalFrameCt{};
+		std::uint64_t m_FrameLogCounter{};	//basically total (mod) rate
 		std::uint64_t m_FrameLogRate;
 		spdlog::stopwatch m_StartTime;
 
@@ -32,7 +32,7 @@ class Engine
 			Wait,
 			Pause,
 			Exit
-		} m_State;
+		} m_State{ State::Running };
 	} m_Info;
 
 public:

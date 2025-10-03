@@ -38,6 +38,7 @@ ResourceTypeId_t ResourceType_Id() noexcept {
     return reinterpret_cast<ResourceTypeId_t>(&ResourceTypeInitiation<T>::m_TypeInstance);
 }
 
+#pragma warning(disable:4324) //disables alignas padding warning
 template <typename T>
 struct ResourceSlot {
     Resource::Guid m_Guid{ Resource::null_guid };
@@ -404,10 +405,11 @@ struct ResourceSystem {
 
     std::unordered_map<Resource::Guid, FileEntry> m_FileEntries;
     std::unordered_map<std::string, MemoryMappedFile> m_MappedIO;
-    std::string m_ResourceRootDirectory;
-    bool m_GlobFiles;
-    JobSystem m_JobSystem{4};
+
 private:
+    std::string m_ResourceRootDirectory;
+    bool m_GlobFiles{};
+    JobSystem m_JobSystem{4};
 };
 
 #define REGISTER_RESOURCE_TYPE_SHARED_PTR(T, loader_fn, unloader_fn)            \
