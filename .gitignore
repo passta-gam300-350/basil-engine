@@ -55,8 +55,11 @@ CMakeCache.txt
 *.in
 
 # build folders
+# Ignore everything under bin
 bin/*
-# negate
+# Reopen the path so Git can descend into assets
+!bin/assets/
+!bin/assets/shaders/
 !bin/assets/shaders/**
 out/
 .vs/
