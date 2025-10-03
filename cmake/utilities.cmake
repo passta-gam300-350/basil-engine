@@ -18,3 +18,19 @@ macro(GROUP_FILES_BY_FOLDER all_files)
         source_group("${GROUP}" FILES "${FILE}")
     endforeach()
 endmacro()
+
+function(link_lib_resource exe lib resource_dir dest_relative)
+    target_link_libraries(${exe} PRIVATE ${lib})
+    add_custom_command(TARGET ${exe} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${resource_dir}
+                $<TARGET_FILE_DIR:${exe}>/${dest_relative}
+    )
+endfunction()
+
+function(link_engine exe)
+    set(lib engine)
+    set(res_path "${CMAKE_SOURCE_DIR}/bin/assets/shaders")
+    link_lib_resource(${exe} ${lib} ${res_path} "assets/shaders")
+endfunction()
+
