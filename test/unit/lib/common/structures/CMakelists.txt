@@ -6,6 +6,7 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set(ALL_LIBS
+  PUBLIC data_structure_lib
   PRIVATE GTest::gtest
 )
 

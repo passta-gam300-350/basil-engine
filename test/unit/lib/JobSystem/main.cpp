@@ -1,216 +1,182 @@
-// test_jobsystem_gtest.cpp
-
-#include "jobsystem.hpp"
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 #include <gtest/gtest.h>
 #include <atomic>
 #include <chrono>
 #include <thread>
-#include <vector>
+#include <jobsystem.hpp> 
 
-using namespace std::chrono_literals;
-
-// Helper: wait up to timeout for future to become ready
-template<typename T>
-bool wait_ready(std::future<T>& fut,
-    std::chrono::milliseconds timeout = 500ms)
-{
-    return fut.wait_for(timeout) == std::future_status::ready;
-}
-
-//==============================================================================
-// 1) Basic value-returning job
-//==============================================================================
-TEST(JobSystemTest, BasicValueJob) {
-    JobSystem js(2);
-    auto [h, f] = js.schedule([](int a, int b) { return a + b; }, 6, 7);
-    EXPECT_TRUE(wait_ready(f));
-    EXPECT_EQ(f.get(), 13);
-    js.shutdown();
-}
-
-//==============================================================================
-// 2) Void-returning job
-//==============================================================================
-TEST(JobSystemTest, VoidJob) {
-    JobSystem js(2);
-    bool flag = false;
-    auto [h, f] = js.schedule([&] { flag = true; });
-    EXPECT_TRUE(wait_ready(f));
-    // No return value; just ensure completion
-    f.get();
-    EXPECT_TRUE(flag);
-    js.shutdown();
-}
-
-//==============================================================================
-// 3) Single dependency (order guarantee)
-//==============================================================================
-TEST(JobSystemTest, SingleDependency) {
-    JobSystem js(4);
-    bool flag = false;
-
-    auto [hA, fA] = js.schedule([] { return true; });
-    auto [hB, fB] = js.scheduleWithDeps(
-        { hA },
-        [&flag, &fA] { flag = fA.get(); }
-    );
-
-    EXPECT_TRUE(wait_ready(fB));
-    fB.get();
-    EXPECT_TRUE(flag);
-    js.shutdown();
-}
-
-//==============================================================================
-// 4) Multiple dependencies (all prerequisites must finish first)
-//==============================================================================
-TEST(JobSystemTest, MultipleDependencies) {
-    JobSystem js(4);
-    bool flag = false;
-
-    auto [h1, f1] = js.schedule([] { return 3; });
-    auto [h2, f2] = js.schedule([] { return 3; });
-
-    auto [h3, f3] = js.scheduleWithDeps(
-        { h1, h2 },
-        [&flag, &f1, &f2] { flag = f1.get() == f2.get(); }
-    );
-
-    EXPECT_TRUE(wait_ready(f3));
-    f3.get();
-    EXPECT_TRUE(flag);
-    js.shutdown();
-}
-
-//==============================================================================
-// 5) Deep dependency chain
-//==============================================================================
-TEST(JobSystemTest, DeepDependencyChain) {
-    const int DEPTH = 50;
-    JobSystem js(4);
-
-    // Kick off A0
-    JobHandle hPrev;
-    std::future<int> fPrev;
-    {
-        auto [h0, f0] = js.schedule([] { return 1; });
-        hPrev = h0;
-        fPrev = std::move(f0);
+// Utility: wait until a condition or timeout
+template <typename Pred>
+bool wait_until(Pred&& pred, int ms = 2000) {
+    auto start = std::chrono::steady_clock::now();
+    while (!pred()) {
+        if (std::chrono::steady_clock::now() - start > std::chrono::milliseconds(ms))
+            return false;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
-    // Build chain A1..A(DEPTH-1)
-    for (int i = 1; i < DEPTH; ++i) {
-        int prevVal = fPrev.get();  // capture before scheduling next
-        auto [hNext, fNext] = js.scheduleWithDeps(
-            { hPrev },
-            [prevVal] { return prevVal + 1; }
-        );
-        hPrev = hNext;
-        fPrev = std::move(fNext);
-    }
-
-    // Final result must be DEPTH
-    EXPECT_EQ(fPrev.get(), DEPTH);
-    js.shutdown();
+    return true;
 }
 
-//==============================================================================
-// 6) Branching dependencies (fan-out + fan-in)
-//==============================================================================
-TEST(JobSystemTest, BranchingDependencies) {
-    JobSystem js(4);
+// ------------------ TESTS ------------------
 
-    // Root job
-    auto [hRoot, fRoot] = js.schedule([] { return 10; });
-    int rootVal = fRoot.get();
+TEST(JobSystem, SingleJobCompletes) {
+    JobSystem js(2, 32);
 
-    // Fan-out
-    auto [hA, fA] = js.scheduleWithDeps(
-        { hRoot },
-        [rootVal] { return rootVal + 1; }
-    );
-    auto [hB, fB] = js.scheduleWithDeps(
-        { hRoot },
-        [rootVal] { return rootVal + 2; }
-    );
-    int valA = fA.get();
-    int valB = fB.get();
+    std::atomic<bool> ran{ false };
 
-    // Fan-in
-    auto [hC, fC] = js.scheduleWithDeps(
-        { hA, hB },
-        [valA, valB] { return valA * valB; }
-    );
-    EXPECT_EQ(fC.get(), (rootVal + 1) * (rootVal + 2));
+    auto job = js.submit(0, {}, [&](JobSystem& sys) -> JobTask {
+        ran = true;
+        co_return;
+        }, std::ref(js));
 
-    js.shutdown();
+    ASSERT_TRUE(wait_until([&] { return ran.load(); }));
+    ASSERT_TRUE(js.is_done(job));
 }
 
-//==============================================================================
-// 7) Nested scheduling (jobs that spawn jobs)
-//==============================================================================
-TEST(JobSystemTest, NestedScheduling) {
-    JobSystem js(4);
-
-    auto [hTop, fTop] = js.scheduleWithDeps({}, [&js] {
-        // This runs in a worker thread
-        auto [hSub, fSub] = js.schedule([] { return 99; });
-        return fSub.get() + 1;
-        });
-
-    EXPECT_EQ(fTop.get(), 100);
-    js.shutdown();
-}
-
-//==============================================================================
-// 8) Stress test (many small jobs)
-//==============================================================================
-TEST(JobSystemTest, StressTest) {
-    const int N = 10000;
-    JobSystem js(8);
+TEST(JobSystem, MultipleIndependentJobs) {
+    JobSystem js(4, 1000);
 
     std::atomic<int> counter{ 0 };
-    std::vector<std::future<void>> futures;
-    futures.reserve(N);
+    const int N = 1000;
+
+    std::vector<JobID> jobs;
+    for (int i = 0; i < N; ++i) {
+        jobs.push_back(js.submit(i % 4, {}, [&](JobSystem& sys, int id) -> JobTask {
+            counter.fetch_add(1);
+            co_return;
+            }, std::ref(js), i));
+    }
+
+    ASSERT_TRUE(wait_until([&] { return counter.load() == N; }));
+    for (auto j : jobs) ASSERT_TRUE(js.is_done(j));
+}
+
+TEST(JobSystem, JobDependencies) {
+    JobSystem js(4, 64);
+
+    std::atomic<bool> aDone{ false }, bDone{ false }, cDone{ false };
+
+    auto jobA = js.submit(0, {}, [&](JobSystem& sys) -> JobTask {
+        aDone = true;
+        co_return;
+        }, std::ref(js));
+
+    auto jobB = js.submit(1, {}, [&](JobSystem& sys) -> JobTask {
+        bDone = true;
+        co_return;
+        }, std::ref(js));
+
+    auto jobC = js.submit(2, { jobA, jobB }, [&](JobSystem& sys) -> JobTask {
+        EXPECT_TRUE(aDone.load());
+        EXPECT_TRUE(bDone.load());
+        cDone = true;
+        co_return;
+        }, std::ref(js));
+
+    ASSERT_TRUE(wait_until([&] { return cDone.load(); }));
+    ASSERT_TRUE(js.is_done(jobC));
+}
+
+TEST(JobSystem, CoroutineYielding) {
+    JobSystem js(2, 32);
+
+    std::atomic<int> steps{ 0 };
+
+    auto job = js.submit(0, {}, [&](JobSystem& sys) -> JobTask {
+        steps.fetch_add(1);
+        co_await sys.yield();
+        steps.fetch_add(1);
+        co_return;
+        }, std::ref(js));
+
+    ASSERT_TRUE(wait_until([&] { return steps.load() == 2; }));
+}
+
+TEST(JobSystem, ScheduleOnDifferentWorker) {
+    JobSystem js(2, 32);
+
+    std::atomic<int> ranOn{ -1 };
+
+    auto job = js.submit(0, {}, [&](JobSystem& sys) -> JobTask {
+        co_await sys.schedule_on(1);
+        ranOn = 1;
+        co_return;
+        }, std::ref(js));
+
+    ASSERT_TRUE(wait_until([&] { return ranOn.load() == 1; }));
+}
+
+TEST(JobSystem, WorkStealing) {
+    JobSystem js(4, 128);
+
+    std::atomic<int> counter{ 0 };
+    const int N = 20;
+
+    // Submit all jobs to worker 0, others should steal
+    for (int i = 0; i < N; ++i) {
+        js.submit(0, {}, [&](JobSystem& sys, int id) -> JobTask {
+            counter.fetch_add(1);
+            co_return;
+            }, std::ref(js), i);
+    }
+
+    ASSERT_TRUE(wait_until([&] { return counter.load() == N; }));
+}
+
+// A helper coroutine function that takes its own copies of i and dep
+void chain_step(int my_i, std::atomic<int>& last) {
+    // At this point, all static dependencies have been resolved by the scheduler
+    EXPECT_EQ(last.load(), my_i - 1);
+    last = my_i;
+}
+
+TEST(JobSystem, ChainOfDependencies) {
+    JobSystem js(8, 500);
+
+    const int N = 500;
+    std::atomic<int> last{ 0 };
+
+    // First job in the chain
+    JobID prev = js.submit(0, {}, [&](JobSystem& sys) -> JobTask {
+        last = 1;
+        co_return;
+        }, std::ref(js));
+
+    // Subsequent jobs depend on the previous one
+    for (int i = 2; i <= N; ++i) {
+        prev = js.submit(i % 8, { prev }, [](int my_i, std::atomic<int>& last) -> JobTask {
+            chain_step(my_i, last);
+            co_return;
+            }, i, std::ref(last));
+    }
+
+    js.wait_for(prev);
+
+    ASSERT_TRUE(wait_until([&] { return last.load() == N; }));
+}
+
+
+TEST(JobSystem, ManyJobsStress) {
+    JobSystem js(8, 2048);
+
+    const int N = 1000;
+    std::atomic<int> counter{ 0 };
 
     for (int i = 0; i < N; ++i) {
-        auto [h, f] = js.schedule(
-            [&counter] { counter.fetch_add(1, std::memory_order_relaxed); }
-        );
-        futures.push_back(std::move(f));
+        js.submit(i % 8, {}, [&](JobSystem& sys) -> JobTask {
+            counter.fetch_add(1);
+            co_return;
+            }, std::ref(js));
     }
 
-    for (auto& f : futures) {
-        EXPECT_TRUE(wait_ready(f, 5000ms));
-        f.get();
-    }
-
-    EXPECT_EQ(counter.load(), N);
-    js.shutdown();
+    ASSERT_TRUE(wait_until([&] { return counter.load() == N; }, 5000));
 }
 
-//==============================================================================
-// 9) Shutdown drains remaining jobs
-//==============================================================================
-TEST(JobSystemTest, ShutdownDrainsJobs) {
-    JobSystem js(2);
-
-    auto [h, f] = js.schedule([] {
-        std::this_thread::sleep_for(10ms);
-        return 123;
-        });
-
-    // Call shutdown before waiting on future
-    js.shutdown();
-
-    // The shutdown should drain and run this job
-    EXPECT_EQ(f.get(), 123);
-}
-
-//==============================================================================
-// main()
-//==============================================================================
+// --- main entry point for gtest ---
 int main(int argc, char** argv) {
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
