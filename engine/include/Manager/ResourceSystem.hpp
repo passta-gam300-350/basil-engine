@@ -369,14 +369,24 @@ struct ResourceSystem {
         std::uint64_t m_Size;
     };
 
-    static ResourceSystem& Instance() {
-        static ResourceSystem inst;
+    static std::unique_ptr<ResourceSystem>& InstancePtr() {
+        static std::unique_ptr<ResourceSystem> inst{std::make_unique<ResourceSystem>()};
         return inst;
     }
 
-    static ResourceSystem& SetResourceThreads(std::uint64_t thread_count) {
+    static void Release() {
+        InstancePtr().reset();
+    }
+
+    static ResourceSystem& Instance() {
+        return *InstancePtr();
+    }
+
+    static ResourceSystem& SetResourceThreads(std::int32_t thread_count) {
         ResourceSystem& inst{ Instance() };
-        inst.m_JobSystem.shutdown();
+        if (inst.m_JobSystem.get_thread_ct() == thread_count) {
+            return inst;
+        }
         inst.m_JobSystem.~JobSystem();
         new (&inst.m_JobSystem) JobSystem{ thread_count };
         return inst;
@@ -385,7 +395,7 @@ struct ResourceSystem {
     const char* GetMappedFilePtr(Resource::Guid);
     template <typename Fn, typename ...Args>
     auto Dispatch(Fn&& fn, Args&&... args) {
-        return m_JobSystem.schedule(std::forward<Fn>(fn), std::forward<Args>(args)...);
+        return m_JobSystem.submit({}, {}, JobSys::make_packaged_job(std::forward<Fn>(fn), std::forward<Args>(args)...));
     }
 
     static void LoadFileLists(std::string_view filelist);
@@ -396,7 +406,7 @@ struct ResourceSystem {
     std::unordered_map<std::string, MemoryMappedFile> m_MappedIO;
     std::string m_ResourceRootDirectory;
     bool m_GlobFiles;
-    JobSystem m_JobSystem;
+    JobSystem m_JobSystem{4};
 private:
 };
 
