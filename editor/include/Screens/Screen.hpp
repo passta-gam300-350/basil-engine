@@ -20,6 +20,7 @@ public:
 	Screen(GLFWwindow* window) { this->window = window; }
 	virtual ~Screen() = default;
 	virtual void init() = 0;
+	virtual void update() = 0;
 	virtual void render() = 0;
 	virtual void cleanup() = 0;
 	virtual void Show();

@@ -53,6 +53,13 @@ void Editor::Init(GLFWwindow* _win)
 
 }
 
+
+void Editor::Update()
+{
+	screens[currentState]->update();
+}
+
+
 void Editor::Render()
 {
 	screens[currentState]->render();

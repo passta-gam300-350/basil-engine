@@ -30,6 +30,23 @@ void SplashScreen::init()
 }
 
 
+void SplashScreen::update()
+{
+	static ImGuiIO& io = ImGui::GetIO(); (void)io;
+	if (!active) return;
+
+	if (timer > 0.0f)
+	{
+		timer -= io.DeltaTime;
+	}
+	else
+	{
+		Editor::GetInstance().ChangeState(EditorState::EDITOR_PROJECT);
+	}
+}
+
+
+
 void SplashScreen::render()
 {
 	static ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -46,16 +63,6 @@ void SplashScreen::render()
 	ImGui::SetCursorPos(ImVec2((windowSize.x - textSize.x) * 0.5f, (windowSize.y - textSize.y) * 0.5f));
 	ImGui::Text("Basil Editor");
 	ImGui::End();
-
-
-	if (timer > 0.0f)
-	{
-		timer -= io.DeltaTime;
-	}
-	else
-	{
-		Editor::GetInstance().ChangeState(EditorState::EDITOR_PROJECT);
-	}
 
 }
 

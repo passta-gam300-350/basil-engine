@@ -63,6 +63,12 @@ void ProjectMenuScreen::init()
 
 }
 
+void ProjectMenuScreen::update()
+{
+	// Update logic here
+}
+
+
 void ProjectMenuScreen::cleanup()
 {
 	

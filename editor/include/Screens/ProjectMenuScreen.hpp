@@ -25,6 +25,7 @@ public:
 	char projectSearchBuf[256] = "";
 
 	void init() override;
+	void update() override;
 	void render() override;
 	void cleanup() override;
 	void Show() override;
