@@ -153,7 +153,7 @@ struct JobPool {
         std::atomic<uint32_t> m_generation{ 0 };
 
         JobNode* m_node;
-        alignas(alignof(std::max_align_t)) unsigned char m_storage[sizeof(JobNode)];
+        alignas(alignof(std::max_align_t)) unsigned char m_storage[sizeof(JobNode)]{};
         Slot() : m_node(reinterpret_cast<JobNode*>(m_storage)) {}
     };
 

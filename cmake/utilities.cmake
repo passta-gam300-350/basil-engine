@@ -20,12 +20,18 @@ macro(GROUP_FILES_BY_FOLDER all_files)
 endmacro()
 
 function(link_lib_resource exe lib resource_dir dest_relative)
+
+if(EXISTS "${resource_dir}")
     target_link_libraries(${exe} PRIVATE ${lib})
     add_custom_command(TARGET ${exe} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 ${resource_dir}
                 $<TARGET_FILE_DIR:${exe}>/${dest_relative}
     )
+else()
+    message(WARNING "lib resource directory not found: ${resource_dir}")
+endif()
+    
 endfunction()
 
 function(link_engine exe)
