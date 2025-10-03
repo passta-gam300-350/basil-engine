@@ -55,10 +55,8 @@ CMakeCache.txt
 *.in
 
 # build folders
-bin/
+bin/*
 # negate
-!bin/assets/
-!bin/assets/shaders/
 !bin/assets/shaders/**
 out/
 .vs/
