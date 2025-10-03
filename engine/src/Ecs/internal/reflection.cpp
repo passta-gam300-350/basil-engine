@@ -137,6 +137,8 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
+		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
+		MemberRegistrationV<&MeshRendererComponent::isPrimitive, "isPrimitive">,
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
 		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);

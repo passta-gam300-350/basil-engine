@@ -41,12 +41,12 @@ namespace ecs {
 		return get_system_scheduler(handle);
 	}
 
-	STRONG_INLINE entt::entity world::detail::entt_entity_cast(ecs::entity enty)
+	entt::entity world::detail::entt_entity_cast(ecs::entity enty)
 	{
 		return static_cast<entt::entity>(enty.get_uid());
 	}
 
-	STRONG_INLINE std::uint32_t world::detail::entity_id_cast(entt::entity entt_entity)
+	std::uint32_t world::detail::entity_id_cast(entt::entity entt_entity)
 	{
 		return static_cast<std::uint32_t>(entt_entity);
 	}

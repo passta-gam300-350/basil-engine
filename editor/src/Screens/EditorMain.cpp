@@ -568,6 +568,7 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 			}, static_cast<void*>(&assetnames), assetnames.size());
 		if (current_item != 0) {
 			meshRendererComponent->m_MeshGuid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+			meshRendererComponent->isPrimitive = false;
 		}
 		ImGui::Text("  Material GUID: %s", meshRendererComponent->m_MaterialGuid.to_hex().c_str());
 	}
@@ -1287,15 +1288,17 @@ void EditorMain::CreatePlaneEntity()
 	assert(material && "Material creation failed");
 
 	// Generate GUIDs for the resources
-	auto meshGuid = Resource::Guid::generate();
+	Resource::Guid meshGuid = { 0,0 };
 	auto materialGuid = Resource::Guid::generate();
 
 	// Register resources with the RenderSystem's editor cache
-	RenderSystem::RegisterEditorMesh(meshGuid, planeMesh);
+	
 	RenderSystem::RegisterEditorMaterial(materialGuid, material);
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer;
+	meshRenderer.isPrimitive = true;
+	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
 	meshRenderer.m_MeshGuid = meshGuid;
 	meshRenderer.m_MaterialGuid = materialGuid;
 
@@ -1419,14 +1422,18 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	assert(material && "Material creation failed");
 
 	// Register in editor cache (use shared mesh for all cubes!)
-	auto meshGuid = Resource::Guid::generate();
+	Resource::Guid meshGuid{}; // Use 0 for primitive shared meshes
 	auto materialGuid = Resource::Guid::generate();
 
-	RenderSystem::RegisterEditorMesh(meshGuid, cubeMesh);
+
+
+	//RenderSystem::RegisterEditorMesh(meshGuid, cubeMesh);
 	RenderSystem::RegisterEditorMaterial(materialGuid, material);
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer;
+	meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
+	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer.m_MeshGuid = meshGuid;
 	meshRenderer.m_MaterialGuid = materialGuid;
 

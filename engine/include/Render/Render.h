@@ -13,6 +13,11 @@
 
 struct MeshRendererComponent {
     bool isPrimitive;
+    enum struct PrimitiveType : std::uint8_t {
+        NONE,
+        CUBE,
+        PLANE
+	} m_PrimitiveType;
     Resource::Guid m_MeshGuid;
     Resource::Guid m_MaterialGuid;
 };
