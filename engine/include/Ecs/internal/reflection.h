@@ -30,7 +30,7 @@ struct TypeData {
     bool IsPrimitive();
     auto begin() { //lowercase for compatibility with std::ranges
         entt::meta_any any = m_TypeInfo.from_void(m_Raw);
-        any.type().data().begin();
+        return any.type().data().begin();
     }
     auto end(); //lowercase for compatibility with std::ranges
 };
@@ -210,7 +210,6 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 }
 
 
-
 //templated deserialiser, Node must overload[](std::string const&)
 template<typename Node>
 void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
@@ -253,9 +252,6 @@ struct InterfaceRegistration : public InterfaceRegistrationBasic {
     static constexpr auto getptr = GetPtr;
     static constexpr std::string_view name = Name.data;
     static constexpr auto hash = ToTypeName(name);
-    
-    //static_assert(FunctionTraits<decltype(SetPtr)>::);
-    //static_assert();
 };
 
 template<auto Ptr, static_string Name>
@@ -284,7 +280,6 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
     // populate field tables
     (field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
    
-    // For each Refs (each is a MemberRegistration<…, …>):
     (RegisterDataMember<Refs>(factory), ...);
 
     factory.func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
@@ -353,28 +348,5 @@ struct COMPONENT_TYPE##_Registration{                                           
     }                                                                                                                \
     static COMPONENT_TYPE##_Registration COMPONENT_TYPE##RegisterV{}                                                     \
 };                                                                                                                                                                                              
-
-/*
-//macro free alternative. to use in code blocks no global space
-template<typename T, typename... MemberPairs>
-void RegisterReflectionComponent(std::string_view name, MemberPairs&&... members) {
-    auto meta_type = entt::meta<T>().type(entt::hashed_string{ name.data() });
-    (meta_type.data<typename AssociatedMemberTraits<std::decay_t<MemberPairs>>::MemberPointer>(members.second), ...);
-    meta_type.func<&entt::registry::emplace<T>, entt::as_void_t>("emplace"_tn);
-    ReflectionRegistry::types()[entt::type_hash<T>::value()] = meta_type;
-    ReflectionRegistry::BinSerializerRegistryInstance().push_back({
-        [](entt::snapshot& snap, std::ostream& os) { 
-            auto out_archive{ [&os](auto value) {
-                os.write(reinterpret_cast<const char*>(&value), sizeof(value));
-                } }; 
-            snap.template get<T>(out_archive); },
-        [](entt::snapshot_loader& loader, std::istream& is) { 
-            auto in_archive{ [&is](auto value) {
-            is.read(reinterpret_cast<char*>(&value), sizeof(value));
-            } };
-            loader.template get<T>(in_archive);
-        }});
-}*/
-
 
 #endif

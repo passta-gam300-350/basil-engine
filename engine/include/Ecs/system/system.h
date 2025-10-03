@@ -10,22 +10,21 @@
 namespace ecs {
 	struct SystemBase {
 		virtual void Init() {};
-        virtual void LoadConfig(YAML::Node& nd) {};
+        virtual void LoadConfig(YAML::Node&) {};
         virtual YAML::Node GetDefaultConfig() { return YAML::Node(); };
-		virtual void Update(world&, float dt) {};
+		virtual void Update(world&, float) {};
 		virtual void FixedUpdate(world&) {};
         virtual void Exit() {};
 		virtual ~SystemBase() = 0 {};
 	};
 
-	// Describes one system’s metadata and callable
 	struct SystemDescriptor {
 		std::string m_Name;
         std::uint64_t m_Id;
 		std::unordered_set<entt::id_type> m_Reads;
 		std::unordered_set<entt::id_type> m_Writes;
 		float m_UpdateRate;							
-		bool m_Enabled;									// set by YAML
+        bool m_Enabled;
 
         SystemDescriptor() = default;
         SystemDescriptor(std::string const& mname, std::uint64_t mid, std::unordered_set<entt::id_type> const& mr, std::unordered_set<entt::id_type> const& mw, float ur, bool e, std::function<SystemBase* ()> fn)
