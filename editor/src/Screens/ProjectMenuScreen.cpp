@@ -89,7 +89,7 @@ void ProjectMenuScreen::render()
 
 	ImGui::Begin("Project Menu", nullptr, bgFlags);
 
-	bool openPress, newPress;
+	bool openPress{}, newPress{};
 	if (ImGui::BeginTable("##table", 3,
 		ImGuiTableFlags_NoBordersInBody))
 	{

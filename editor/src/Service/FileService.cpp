@@ -101,9 +101,10 @@ bool FileService::OpenFileDialog(std::string& input_path)
 
 	CoUninitialize();
 	return false;
-#endif
+#else
 	input_path = "NOT IMPLEMENTED FOR THIS OS";
 	return false;
+#endif
 }
 
 
@@ -147,7 +148,8 @@ bool FileService::OpenFolderDialog(std::string& output_path)
 	}
 
 	return false;
-#endif
+#else
 	output_path = "NOT IMPLEMENTED FOR THIS OS";
 	return false;
+#endif
 }

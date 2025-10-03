@@ -20,6 +20,8 @@
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
 
+#define UNREF_PARAM(x) x;
+
 EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 {
 
@@ -31,6 +33,8 @@ void EditorMain::init()
 	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+	UNREF_PARAM(primaryMonitor);
+	UNREF_PARAM(mode);
 	// Set maximized
 	glfwMaximizeWindow(window);
 	
@@ -352,13 +356,9 @@ void EditorMain::Render_Inspector()
 
 void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 {
-
-	glm::vec3 pos{};
 	ecs::entity selected{};
 
 	TransformComponent* transformComponent = nullptr;
-	ScaleComponent* scaleComponent = nullptr;
-	PositionComponent* positionComponent = nullptr;
 
 	auto world = Engine::GetWorld();
 
@@ -372,26 +372,6 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 
 
 	}
-
-
-
-
-
-
-
-	/*for (auto& ent : scaleFilter)
-	{
-		if (static_cast<uint32_t>(ent.get_uid()) == m_SelectedEntityID)
-		{
-			if (world.has_all_components_in_entity<ScaleComponent>(ent))
-			{
-				scaleComponent = &world.get_component_from_entity<ScaleComponent>(ent);
-
-			}
-
-		}
-	}*/
-
 
 	if (transformComponent)
 	{
@@ -566,7 +546,7 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 			if (idx < 0 || idx >= vec.size()) return false;
 			*out_text = vec[idx].c_str();
 			return true;
-			}, static_cast<void*>(&assetnames), assetnames.size());
+			}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
 		if (current_item != 0) {
 			meshRendererComponent->m_MeshGuid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 		}
@@ -744,6 +724,8 @@ void EditorMain::Render_SceneExplorer()
 		bool hasLight = world.has_all_components_in_entity<LightComponent>(entity);
 		bool hasVisibility = world.has_all_components_in_entity<VisibilityComponent>(entity);
 
+		UNREF_PARAM(hasTransform);
+		
 		if (hasLight) entityName += " (Light)";
 		else if (hasMesh) entityName += " (Mesh)";
 		else entityName += " (Empty)";
@@ -837,7 +819,7 @@ void EditorMain::Render_CameraControls()
 	if (m_EditorCamera) {
 		// Camera mode selection
 		ImGui::Text("Camera Mode:");
-		const char* modes[] = { "Fly" }; //, "Orbit", "Pan" };
+		const char* modes[] = { "Fly" }; 
 		static int currentMode = 0;
 
 		if (ImGui::Combo("Mode", &currentMode, modes, IM_ARRAYSIZE(modes))) {
@@ -1010,7 +992,6 @@ void EditorMain::Render_AssetBrowser()
 
 		if (ImGui::BeginDragDropSource()) // If we start dragging
 		{
-			size_t pos = 0;
 			std::string itemPath = filepath.string();
 			char AssetPayload[] = "AssetDrop"; // Names any payload that starts from the asset browser to "AssetDrop"
 			ImGui::SetDragDropPayload(AssetPayload, itemPath.c_str(), strlen(itemPath.c_str()) + 1); // Actually load the payload with the data(the string name of the path)

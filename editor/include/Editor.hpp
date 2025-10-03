@@ -11,7 +11,7 @@ class Screen;
 
 enum struct EditorState
 {
-#include "defines/EditorStates.def",
+#include "defines/EditorStates.def"
 	EDITOR_NONE
 };
 
