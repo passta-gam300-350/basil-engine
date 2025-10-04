@@ -80,10 +80,11 @@ PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 target_compile_options(${PROJECT_NAME} PUBLIC
   $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
 )
+
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 postimport_dll(${PROJECT_NAME})
