@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   VertexBuffer.cpp
+\author Team PASSTA
+        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
+        Tham Kang Ting (kangting.t@digipen.edu)
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of OpenGL vertex buffer object for storing vertex data
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include <Buffer/VertexBuffer.h>
 #include <glad/glad.h>
 
