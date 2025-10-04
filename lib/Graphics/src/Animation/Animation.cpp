@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   Animation.cpp
+\author Team PASSTA
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of skeletal animation system with bone hierarchy and blending
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Animation/Animation.h"
 #include <glm/gtx/compatibility.hpp>
 #include <algorithm>
