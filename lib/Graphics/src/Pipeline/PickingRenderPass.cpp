@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   PickingRenderPass.cpp
+\author Team PASSTA
+        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
+        Tham Kang Ting (kangting.t@digipen.edu)
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of object picking render pass using color-coded IDs
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "../../include/Pipeline/PickingRenderPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
@@ -244,9 +261,9 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     if (result.hasHit) {
         // Calculate world position from screen coordinates and depth
         // Convert screen coords to NDC
-        const auto& spec = m_Framebuffer->GetSpecification();
-        float ndcX = (2.0f * static_cast<float>(fbX)) / static_cast<float>(spec.Width) - 1.0f;
-        float ndcY = 1.0f - (2.0f * static_cast<float>(fbY)) / static_cast<float>(spec.Height);
+        const auto& fbspec = m_Framebuffer->GetSpecification();
+        float ndcX = (2.0f * static_cast<float>(fbX)) / static_cast<float>(fbspec.Width) - 1.0f;
+        float ndcY = 1.0f - (2.0f * static_cast<float>(fbY)) / static_cast<float>(fbspec.Height);
         float ndcZ = 2.0f * depth - 1.0f;
 
         // Convert to clip space

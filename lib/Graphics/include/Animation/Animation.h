@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   Animation.h
+\author Team PASSTA
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Declares skeletal animation structures and animator for keyframe-based bone animation
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -56,7 +71,7 @@ struct oneSkeletonBone
     int id; // index for GPU
     int parentIndex; // who is the bone parent, if it is root then -1
     glm::mat4 inverseBind; // used for skinning, moves vertex from model space into bones space (is like create a local coordinate system for each bone)
-    // for eg We first move the vertex into elbow’s bind space (inverse bind) ? it becomes “1 unit away”.
+    // for eg We first move the vertex into elbow's bind space (inverse bind) ? it becomes "1 unit away".
 };
 
 // whole skeleton (static)

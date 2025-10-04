@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   Mesh.cpp
+\author Team PASSTA
+        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
+        Tham Kang Ting (kangting.t@digipen.edu)
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of mesh data structure with vertex/index buffers and AABB calculation
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include <Resources/Mesh.h>
 
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures)
@@ -21,9 +38,9 @@ void Mesh::setupMesh()
     // create buffers/arrays using existing buffer classes
     m_VertexArray = std::make_shared<VertexArray>();
 
-    uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-    m_VertexBuffer = std::make_shared<VertexBuffer>(vertices.data(), vertexBufferSize);
-    m_IndexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
+    uint64_t vertexBufferSize = vertices.size() * sizeof(Vertex);
+    m_VertexBuffer = std::make_shared<VertexBuffer>(vertices.data(), uint32_t(vertexBufferSize));
+    m_IndexBuffer = std::make_shared<IndexBuffer>(indices.data(), uint32_t(indices.size()));
 
     // Set up vertex buffer layout
     VertexBufferLayout layout;

@@ -4,21 +4,7 @@
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
 
-#include <string>
-#include <locale>
-#include <codecvt>
-
-namespace {
-    std::wstring string_to_wstring(const std::string& str) {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-        return conv.from_bytes(str);
-    }
-
-    std::string wstring_to_string(const std::wstring& wstr) {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-        return conv.to_bytes(wstr);
-    }
-}
+#include "Utility/StringConversion.hpp"
 
 namespace {
     constexpr std::uint64_t DEFAULT_RESOURCE_THREADS{ 4 };
@@ -43,7 +29,7 @@ namespace YAML {
                 return false;
             rhs.m_Guid = Resource::Guid::to_guid(node["guid"].as<std::string>());
             rhs.m_Path = node["path"].as<std::string>();
-            rhs.m_Path = node["byte"].as<std::uint64_t>();
+            rhs.m_Offset = node["byte"].as<std::uint64_t>();
             rhs.m_Size = node["size"].as<std::uint64_t>();
             return true;
         }
@@ -76,7 +62,7 @@ void ResourceSystem::LoadFileLists(std::string_view filelist)
 
 void ResourceSystem::LoadConfig(YAML::Node& cfg) {
     if (auto res_thread_ct = cfg["resource threads"]; res_thread_ct) {
-        SetResourceThreads(res_thread_ct.as<std::uint64_t>());
+        SetResourceThreads(res_thread_ct.as<std::int32_t>());
     }
     if (auto resource_list = cfg["resource list"]; resource_list) {
         LoadFileLists(resource_list.as<std::string>());

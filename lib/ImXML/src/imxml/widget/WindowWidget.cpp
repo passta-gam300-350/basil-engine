@@ -3,11 +3,11 @@
 #include "imgui.h"
 #include "imxml/ImXMLNode.hpp"
 
-void WindowWidget::render(ImXML::ImXMLNode* node)
+void WindowWidget::render(ImXML::ImXMLNode*)
 {
-	ImXML::ImXMLNode* n = node;
+	//ImXML::ImXMLNode* n = node;
 	ImGui::SetNextWindowPos(ImVec2(posx, posy));
-	ImGui::SetNextWindowSize(ImVec2(width, height));
+	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(width), static_cast<float>(height)));
 	ImGui::Begin(title.c_str(), &active);
 	ImGui::LabelText("%s", title.c_str());
 

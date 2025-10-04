@@ -1,5 +1,37 @@
 include(FetchContent)
 
+function(suppress_dep_warnings)
+    foreach(tgt IN LISTS ARGN)
+        if(NOT TARGET ${tgt})
+            message(WARNING "suppress_warnings: '${tgt}' is not a known target")
+            continue()
+        endif()
+
+        # Detect the target type
+        get_target_property(_type ${tgt} TYPE)
+
+        if(_type STREQUAL "INTERFACE_LIBRARY")
+            # INTERFACE targets don't compile, so only INTERFACE options are allowed
+            target_compile_options(${tgt} INTERFACE
+                $<$<CXX_COMPILER_ID:MSVC>:/W0>
+                $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+            )
+            set_target_properties(${tgt} PROPERTIES CXX_CLANG_TIDY "")
+        elseif(_type STREQUAL "UTILITY" OR _type STREQUAL "UNKNOWN_LIBRARY")
+            # UTILITY targets (custom commands) don't compile at all
+            message(STATUS "suppress_warnings: '${tgt}' is not a compilable target (type=${_type}), skipping")
+        else()
+            # Normal compilable targets (STATIC/SHARED/OBJECT/EXECUTABLE)
+            target_compile_options(${tgt} PRIVATE
+                $<$<CXX_COMPILER_ID:MSVC>:/W0>
+                $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+            )
+            set_target_properties(${tgt} PROPERTIES CXX_CLANG_TIDY "")
+        endif()
+    endforeach()
+endfunction()
+
+
 macro(import_catch)
     FetchContent_Declare(
         catch
@@ -31,30 +63,13 @@ macro(import_spdlog)
 endmacro()
 
 macro(import_glad)
-    # FetchContent_Declare(
-    # glad
-    # GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-    # GIT_TAG v2.0.8
-    # SOURCE_SUBDIR cmake
-    # )
-
-    # need python interpretor (need install) to generate glad on the fly
-    # FetchContent_MakeAvailable(glad)
-    # glad_add_library(glad STATIC API gl:core=4.6 LOCATION ${PROJECT_SOURCE_DIR}/vendor/glad-build/${TARGET})
-
-    # using generated glad src based on gl:core=4.6 no ext (update versioning here)
     set(GLAD_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/glad)
-    file(GLOB_RECURSE GLAD_SRC_FILES
-        ${GLAD_DIR}/src/*.c
-    )
-
-    # set(GLAD_SRC_FILES
-    # ${GLAD_DIR}/src/gl.c
-    # )
+    set(GLAD_SRC_FILES ${GLAD_DIR}/src/glad.c)
     add_library(glad STATIC
         ${GLAD_SRC_FILES}
     )
     target_include_directories(glad PUBLIC ${GLAD_DIR}/include)
+    set_target_properties(glad PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
 
 macro(import_glfw)
@@ -63,6 +78,11 @@ macro(import_glfw)
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG 3.4
     )
+
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
 
     FetchContent_MakeAvailable(glfw)
 endmacro()
@@ -131,6 +151,7 @@ macro(import_tinyddsloader)
     add_library(tinyddsloader INTERFACE)
     target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
     target_include_directories(tinyddsloader INTERFACE $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
+    set_target_properties(tinyddsloader PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
 
 macro(import_yaml_cpp)
@@ -141,6 +162,19 @@ macro(import_yaml_cpp)
     )
 
     FetchContent_MakeAvailable(yaml_cpp)
+endmacro()
+
+macro(import_jolt)
+    FetchContent_Declare(
+        jolt
+        GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+        GIT_TAG v5.4.0
+        SOURCE_SUBDIR Build
+    )
+
+    FetchContent_MakeAvailable(jolt)
+
+    set_target_properties(Jolt PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
 endmacro()
 
 macro(import_imgui)
@@ -296,6 +330,67 @@ macro(import_xml)
     FetchContent_MakeAvailable(pugixml)
 endmacro()
 
+function(hide_dependencies)
+# hide external targets to folders
+    set_target_properties(
+        glad 
+        glfw
+        uninstall
+        update_mappings
+        glm 
+        assimp 
+        EnTT 
+        imgui 
+        UpdateAssimpLibsDebugSymbolsAndDLLs 
+        zlibstatic 
+        Catch2
+        Catch2WithMain
+        ddsloader
+        ddsview
+        DirectXTex
+        meshoptimizer
+        pugixml-static
+        spdlog
+        stb
+        texassemble
+        texconv
+        texdiag
+        yaml-cpp
+        yaml-cpp-parse
+        yaml-cpp-read
+        yaml-cpp-sandbox
+        imgui_backends
+        PROPERTIES FOLDER dep)
+    suppress_dep_warnings(
+        glad 
+        glfw
+        uninstall
+        update_mappings
+        glm 
+        assimp 
+        EnTT 
+        imgui 
+        UpdateAssimpLibsDebugSymbolsAndDLLs 
+        zlibstatic 
+        Catch2
+        Catch2WithMain
+        ddsloader
+        ddsview
+        DirectXTex
+        meshoptimizer
+        pugixml-static
+        spdlog
+        stb
+        texassemble
+        texconv
+        texdiag
+        yaml-cpp
+        yaml-cpp-parse
+        yaml-cpp-read
+        yaml-cpp-sandbox
+        imgui_backends)
+endfunction()
+
 # Macro to import all dependencies
 macro(import_dependencies)
     if (NOT EXISTS "${CMAKE_SOURCE_DIR}/out/_dep")
@@ -320,9 +415,9 @@ macro(import_dependencies)
 
     import_mono()
     import_xml()
+    import_jolt()
 
-    # Set properties only for existing targets
-    set_target_properties(glad glfw glm assimp EnTT imgui UpdateAssimpLibsDebugSymbolsAndDLLs zlibstatic PROPERTIES FOLDER dep)
+    hide_dependencies()
 
     # Only set properties for mono_interface if it was created
     if(TARGET mono_interface)

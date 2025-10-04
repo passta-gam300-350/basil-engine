@@ -1,6 +1,0 @@
-#ifndef LIB_MEMORY_ALLOC_TLS
-#define LIB_MEMORY_ALLOC_TLS
-
-
-
-#endif

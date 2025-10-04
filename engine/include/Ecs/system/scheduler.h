@@ -17,7 +17,7 @@
 namespace ecs {
     struct SystemDependencyGraph {
         struct Node {
-            size_t index;                       // index in systems vector
+            size_t index{};                       // index in systems vector
             std::vector<size_t> successors;     // edges to other nodes
             size_t indegree = 0;                // for topological sort
         };
@@ -26,9 +26,15 @@ namespace ecs {
     };
 
     struct Scheduler {
-        static Scheduler& Instance() {
-            static Scheduler inst{};
+        static std::unique_ptr<Scheduler>& InstancePtr() {
+            static std::unique_ptr<Scheduler> inst{std::make_unique<Scheduler>()};
             return inst;
+        }
+        static void Release() {
+            InstancePtr().reset();
+        }
+        static Scheduler& Instance() {
+            return *InstancePtr();
         }
 
         //note: this is not expected to be called every frame
@@ -110,11 +116,11 @@ namespace ecs {
             scheduler.m_JobDependencies = jobdependencies;
         }
 
-        static std::future<void> Run(world w) {
+        static JobID Run(world w) {
             Scheduler& scheduler{ Instance() };
             SystemDependencyGraph& jobgraph{ scheduler.m_JobGraph };
-            std::vector<JobHandle> jobhandles{ jobgraph.nodes.size()};
-            std::vector<JobHandle> jobdep{};
+            std::vector<JobID> jobhandles{ jobgraph.nodes.size()};
+            std::vector<JobID> jobdep{};
             for (auto const& phase : scheduler.m_JobSchedulePhases) {
                 for (std::size_t node_idx : phase) {
                     //ensure that systemregistry do not destroy sysbase while scheduler is running
@@ -122,29 +128,30 @@ namespace ecs {
                     for (auto dep_idx : scheduler.m_JobDependencies[node_idx]) {
                         jobdep.emplace_back(jobhandles[dep_idx]);
                     }
-                    auto [hdl, fut] = scheduler.m_JobSystem.scheduleWithDeps(jobdep, [sys_fn] (world wrld) {sys_fn->FixedUpdate(wrld); }, w);
-                    jobhandles[node_idx] = hdl;
+                    JobID jid = scheduler.m_JobSystem.submit({}, jobdep, JobSys::make_packaged_job([sys_fn](world wrld) {sys_fn->FixedUpdate(wrld); }, w));
+                    jobhandles[node_idx] = jid;
                     jobdep.clear();
                 }
             }
-            auto [hdl_end, fut_end] = scheduler.m_JobSystem.scheduleWithDeps(jobhandles, [] {});
-            return std::move(fut_end);
+            JobID finished = scheduler.m_JobSystem.submit({}, jobhandles, JobSys::make_packaged_job([] {}));
+            return finished;
         }
         static void RunUntilCompletion(world w) {
-            Run(w).wait();
-            std::cout<<"schedule completed!\n";
+            Instance().m_JobSystem.wait_for(Run(w));
         }
 
-        static Scheduler& SetSystemThreads(std::uint64_t thread_count) {
+        static Scheduler& SetSystemThreads(std::int32_t thread_count) {
             Scheduler& inst{ Instance() };
-            inst.m_JobSystem.shutdown();
+            if (inst.m_JobSystem.get_thread_ct() == thread_count) {
+                return inst;
+            }
             inst.m_JobSystem.~JobSystem();
             new (&inst.m_JobSystem) JobSystem{ thread_count };
             return inst;
         }
 
+        JobSystem m_JobSystem{4};
     private:
-        JobSystem m_JobSystem;
         std::vector<std::vector<std::size_t>> m_JobSchedulePhases;
         std::vector<std::vector<std::size_t>> m_JobDependencies;
         SystemDependencyGraph m_JobGraph;

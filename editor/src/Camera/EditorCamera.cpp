@@ -107,7 +107,7 @@ void EditorCamera::UpdateFlyMode(float deltaTime)
     }
 }
 
-void EditorCamera::UpdateOrbitMode(float deltaTime)
+void EditorCamera::UpdateOrbitMode(float)
 {
     auto* input = InputManager::Get_Instance();
 
@@ -163,7 +163,7 @@ void EditorCamera::UpdateOrbitMode(float deltaTime)
     }
 }
 
-void EditorCamera::UpdatePanMode(float deltaTime)
+void EditorCamera::UpdatePanMode(float)
 {
     auto* input = InputManager::Get_Instance();
 
@@ -223,7 +223,7 @@ void EditorCamera::OnMouseScroll(float delta)
     }
 }
 
-void EditorCamera::OnMouseMove(float deltaX, float deltaY)
+void EditorCamera::OnMouseMove(float, float)
 {
     // This can be used for additional mouse movement handling if needed
 }

@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   Animation.cpp
+\author Team PASSTA
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of skeletal animation system with bone hierarchy and blending
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Animation/Animation.h"
 #include <glm/gtx/compatibility.hpp>
 #include <algorithm>
@@ -17,7 +32,7 @@ namespace helperTools
                 return i; // index found, currently between i and i+1
             }
         }
-        return allKeyFrames.size() - 2; // between the second last and last already, return the second last
+        return static_cast<int>(allKeyFrames.size()) - 2; // between the second last and last already, return the second last
     }
 
     template <typename keyFrame>
@@ -73,9 +88,9 @@ namespace skeletonHelper
         {
             if (theSkeleton.bones[i].parentIndex == -1) 
             {
-                oldToNew[i] = orderedBones.size();  // remember: old index i to new index (current size)
+                oldToNew[i] = static_cast<int>(orderedBones.size());  // remember: old index i to new index (current size)
                 oneSkeletonBone bone = theSkeleton.bones[i];
-                bone.id = orderedBones.size();  // update bone ID to match new position
+                bone.id = static_cast<int>(orderedBones.size());  // update bone ID to match new position
                 // parentIndex stays -1 (it's root)
                 orderedBones.push_back(bone);
             }
@@ -96,9 +111,9 @@ namespace skeletonHelper
                 int oldBonesParentIndex = theSkeleton.bones[i].parentIndex;
                 if (oldBonesParentIndex == -1 || oldToNew[oldBonesParentIndex] != -1) // is this bone parent already in ordered list
                 {
-                    oldToNew[i] = orderedBones.size();
+                    oldToNew[i] = static_cast<int>(orderedBones.size());
                     oneSkeletonBone bone = theSkeleton.bones[i];
-                    bone.id = orderedBones.size();  // update bone ID to match new position
+                    bone.id = static_cast<int>(orderedBones.size());  // update bone ID to match new position
                     if (oldBonesParentIndex != -1)
                     {
                         bone.parentIndex = oldToNew[oldBonesParentIndex];  // Parent's NEW position
@@ -128,7 +143,7 @@ namespace skeletonHelper
         for (size_t i = 0; i < theSkeleton.bones.size(); i++)
         {
             std::set<int> visited;  // track where we've been
-            int current = i;        // start from this bone
+            int current = static_cast<int>(i);        // start from this bone
 
             // follow the parent chain
             while (current != -1)  // -1 means we reached the root

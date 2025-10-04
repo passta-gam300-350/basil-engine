@@ -21,8 +21,8 @@ extern "C" {
 #include "Manager/ObjectManager.hpp"
 
 namespace {
-	constexpr std::uint64_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
-	constexpr std::uint64_t DEFAULT_RESOLUTION_HEIGHT{ 900ul };
+	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
+	constexpr std::uint32_t DEFAULT_RESOLUTION_HEIGHT{ 900ul };
 	constexpr bool DEFAULT_WINDOW_MODE{ false }; // false for windowed, true for fullscreen (borderless window is not support) //nvm both not supported// TODO: expand Core/Window.h Window interface
 	constexpr bool DEFAULT_VSYNC_OPTION{ false }; //true is toggle
 	constexpr std::uint32_t DEFAULT_LOG_SEVERITY{spdlog::level::info};
@@ -47,25 +47,23 @@ void Engine::Init(std::string const& cfg ) {
 	ReflectionRegistry::SetupEngineTypes();
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
-		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
+		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
 		//InputManager::Get_Instance()->Setup_Callbacks();
 		//ObjectManager::GetInstance().CreateGameObject();
 		return;
 	}
 	YAML::Node root{YAML::LoadFile(cfg)};
-	std::uint64_t win_width{ DEFAULT_RESOLUTION_WIDTH };
-	std::uint64_t win_height;
 	if (YAML::Node window{ root["window"] }; window) {
-		std::uint64_t win_width{ window["width"] ? window["width"].as<std::uint64_t>() : DEFAULT_RESOLUTION_WIDTH };
-		std::uint64_t win_height{ window["height"] ? window["height"].as<std::uint64_t>() : DEFAULT_RESOLUTION_HEIGHT };
-		bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
-		std::string win_name{ window["title"] ? window["title"].as<std::string>() : DEFAULT_NAME };
+		std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
+		std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
+		//bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
+		std::string win_name{ window["title"] ? window["title"].as<std::string>() : std::string(DEFAULT_NAME.begin(), DEFAULT_NAME.end()) };
 		bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
-		Instance().m_Window.reset(new Window(win_name, win_width, win_height));
-		//Instance().m_Window->SetVSync(win_vsync);
+		Instance().m_Window = std::make_unique<Window>(win_name, win_width, win_height);
+		Instance().m_Window->SetVSync(win_vsync);
 	}
 	else {
-		Instance().m_Window.reset(new Window(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT));
+		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
 	}
 	if (YAML::Node system{ root["system"] }; system) {
 		SystemRegistry::LoadConfig(system);
@@ -98,9 +96,7 @@ void Engine::Init(std::string const& cfg ) {
 void Engine::Update() {
 	try {
 		Engine& instance{ Instance() };
-		std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt };
-		std::uint64_t& frame_counter{ instance.m_Info.m_FrameLogCounter };
-		std::uint64_t& frame_log_rate{ instance.m_Info.m_FrameLogRate };
+		std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
 				if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
@@ -198,6 +194,8 @@ void Engine::Exit() {
 	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
 	RenderSystem::System().Exit();
+	ResourceSystem::Release();
+	Scheduler::Release();
 }
 
 world Engine::GetWorld() {

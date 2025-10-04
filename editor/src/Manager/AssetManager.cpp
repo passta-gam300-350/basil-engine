@@ -1,13 +1,13 @@
 #include "Manager/AssetManager.hpp"
+#include <Manager/ResourceSystem.hpp>
 #include <windows.h>
 #include <filesystem>
 #include <iostream>
-#include <string>
-#include <locale>
-#include <codecvt>
+#include <Utility/StringConversion.hpp>
+
 #include <importer/importer_registry.hpp>
-#include <Manager/ResourceSystem.hpp>
 #include <descriptors/descriptor_registry.hpp>
+
 
 namespace YAML {
 	template<>
@@ -56,16 +56,6 @@ bool hideFolder(const std::wstring& path) {
 
 	// Add the hidden attribute
 	return SetFileAttributesW(path.c_str(), attrs | FILE_ATTRIBUTE_HIDDEN);
-}
-
-std::wstring string_to_wstring(const std::string& str) {
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-	return conv.from_bytes(str);
-}
-
-std::string wstring_to_string(const std::wstring& wstr) {
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-	return conv.to_bytes(wstr);
 }
 
 std::string AssetManager::getParentPath(std::string const& path) {
@@ -211,7 +201,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 	ImportAssetList();
 
 	try {
-		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_RootPath)) {
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_RootPath, std::filesystem::directory_options::follow_directory_symlink)) {
 			if (entry.is_directory()) {
 				continue;
 			}
@@ -220,7 +210,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				std::string dir_path = getParentPath(desc_name);
 				std::string ext_name = getFileExtension(desc_name);
 				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
-				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc") {
+				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl") {
 					continue;
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };

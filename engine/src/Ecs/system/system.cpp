@@ -8,7 +8,7 @@ namespace {
 namespace ecs {
 	void SystemRegistry::LoadConfig(YAML::Node& cfg) {
 		if (cfg["system threads"]){
-			Scheduler::SetSystemThreads(cfg["system threads"].as<std::uint64_t>());
+			Scheduler::SetSystemThreads(cfg["system threads"].as<std::int32_t>());
 		}
 		if (cfg["enabled system"]) {
 			for (auto& s : Instance().m_AllSystems) {

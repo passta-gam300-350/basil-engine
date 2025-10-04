@@ -89,7 +89,7 @@ void ProjectMenuScreen::render()
 
 	ImGui::Begin("Project Menu", nullptr, bgFlags);
 
-	bool openPress, newPress;
+	bool openPress{}, newPress{};
 	if (ImGui::BeginTable("##table", 3,
 		ImGuiTableFlags_NoBordersInBody))
 	{
@@ -168,7 +168,7 @@ void ProjectMenuScreen::render()
 	ImGui::EndChild();
 
 	ImGui::PushID("PROJECT_EXIT_BTN");
-	bool exit = ImGui::Button("Exit") | ImGui::IsKeyPressed(ImGuiKey_Escape);
+	bool exit = ImGui::Button("Exit") || ImGui::IsKeyPressed(ImGuiKey_Escape);
 
 	if (exit)
 	{

@@ -1,22 +1,24 @@
+/******************************************************************************/
+/*!
+\file   FrameBuffer.cpp
+\author Team PASSTA
+        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
+        Tham Kang Ting (kangting.t@digipen.edu)
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of OpenGL framebuffer object for offscreen rendering
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include <Buffer/FrameBuffer.h>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <spdlog/spdlog.h>
-
-namespace Utils
-{
-	static GLenum TextureFormatToGL(FBOTextureFormat format)
-	{
-		switch (format)
-		{
-		case FBOTextureFormat::RGBA8: return GL_RGBA8;
-		case FBOTextureFormat::RGBA16F: return GL_RGBA16F;
-		case FBOTextureFormat::RED_INTEGER: return GL_R32I;
-		case FBOTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
-		default: return 0;
-		}
-	}
-}
 
 FrameBuffer::FrameBuffer(FBOSpecs const &spec)
 	: m_Specifications(spec)

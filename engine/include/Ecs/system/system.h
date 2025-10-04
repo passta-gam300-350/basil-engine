@@ -10,22 +10,21 @@
 namespace ecs {
 	struct SystemBase {
 		virtual void Init() {};
-        virtual void LoadConfig(YAML::Node& nd) {};
+        virtual void LoadConfig(YAML::Node&) {};
         virtual YAML::Node GetDefaultConfig() { return YAML::Node(); };
-		virtual void Update(world&, float dt) {};
+		virtual void Update(world&, float) {};
 		virtual void FixedUpdate(world&) {};
         virtual void Exit() {};
 		virtual ~SystemBase() = 0 {};
 	};
 
-	// Describes one system’s metadata and callable
 	struct SystemDescriptor {
 		std::string m_Name;
         std::uint64_t m_Id;
 		std::unordered_set<entt::id_type> m_Reads;
 		std::unordered_set<entt::id_type> m_Writes;
 		float m_UpdateRate;							
-		bool m_Enabled;									// set by YAML
+        bool m_Enabled;
 
         SystemDescriptor() = default;
         SystemDescriptor(std::string const& mname, std::uint64_t mid, std::unordered_set<entt::id_type> const& mr, std::unordered_set<entt::id_type> const& mw, float ur, bool e, std::function<SystemBase* ()> fn)
@@ -145,13 +144,13 @@ inline constexpr bool is_specialization_of_v = is_specialization_of<T, Template>
         static_assert(!std::is_abstract_v<TYPE> && #TYPE && "Type should not be abstract");                    \
         static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS READS, ecs::QuerySetBasic> && #READS && "Type should a query set");                    \
         static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS WRITES, ecs::QuerySetBasic> && #WRITES && "Type should a query set");                    \
-        static auto NAME##_SYSTEM_FACTORY = []()->ecs::SystemBase*{                                                 \
+        inline static auto NAME##_SYSTEM_FACTORY = []()->ecs::SystemBase*{                                                 \
             return new TYPE{__VA_ARGS__};                                                               \
         };                                                                                              \
-        static auto NAME##_SYSTEM_CONFIG_GENERATOR = []()->YAML::Node{                                                 \
+        inline static auto NAME##_SYSTEM_CONFIG_GENERATOR = []()->YAML::Node{                                                 \
             return YAML::Node{};                                                               \
         };                                                                                              \
-        auto NAME##_SYSTEM_REG = [&] {                                                                   \
+        inline auto NAME##_SYSTEM_REG = [&] {                                                                   \
             ecs::SystemRegistry::Instance().RegisterSystem({                                                 \
                #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), ESCAPE_PARENTHESIS READS ::GetSet(), ESCAPE_PARENTHESIS WRITES ::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                       \
                 });                                                                                     \
@@ -163,10 +162,10 @@ inline constexpr bool is_specialization_of_v = is_specialization_of<T, Template>
     namespace {                                                                                         \
         static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS READS, ecs::QuerySetBasic> && #READS && "Type should a query set");                    \
         static_assert(is_specialization_of_v<ESCAPE_PARENTHESIS WRITES, ecs::QuerySetBasic> && #WRITES && "Type should a query set");                    \
-        static auto NAME##_SYSTEM_FACTORY = []()->ecs::SystemBase*{                                                 \
+        inline static auto NAME##_SYSTEM_FACTORY = []()->ecs::SystemBase*{                                                 \
             return new ecs::GenericSystem{ INIT_FN, LOAD_FN, UPDATE_FN, FIXED_UPDATE, EXIT_FN };                      \
         };                                                                                              \
-        auto NAME##_SYSTEM_REG = [&]{                                                                    \
+        inline auto NAME##_SYSTEM_REG = [&]{                                                                    \
             ecs::SystemRegistry::Instance().RegisterSystem({                                                 \
                 #NAME, std::uint64_t(&NAME##_SYSTEM_FACTORY), ESCAPE_PARENTHESIS READS::GetSet(), ESCAPE_PARENTHESIS WRITES::GetSet(), UPDATE_PER_SEC, false, NAME##_SYSTEM_FACTORY                     \
             });                                                                                         \

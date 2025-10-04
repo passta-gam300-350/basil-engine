@@ -6,9 +6,12 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set(ALL_LIBS
+  PUBLIC data_structure_lib
   PRIVATE GTest::gtest
 )
 
 add_executable(${PROJECT_NAME} ${ALL_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+GROUP_UNIT_TEST_TARGETS(${PROJECT_NAME})

@@ -64,8 +64,8 @@ namespace Resource {
 			std::string m_ImporterOptions;
 		};
 		struct ResourceMetadataInfo {
-			std::uint64_t m_DateIndexed_ms; //date since unix epoch in ms
-			std::uint64_t m_FileChecksumHash; //checksum hash for version control and to flag for dirty descriptors 
+			std::uint64_t m_DateIndexed_ms{}; //date since unix epoch in ms
+			std::uint64_t m_FileChecksumHash{}; //checksum hash for version control and to flag for dirty descriptors 
 			std::string m_RawSourcePath;
 		};
 

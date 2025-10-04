@@ -6,14 +6,7 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set(ALL_LIBS
-  #PUBLIC glad
- # PUBLIC glfw
- # PUBLIC glm
-  #PUBLIC assimp::assimp
-  #PUBLIC stb
- # PUBLIC EnTT
-  PUBLIC mono_interface
-#  PUBLIC platform_lib
+    PUBLIC mono_interface
  )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
@@ -26,4 +19,13 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 
+target_compile_options(${PROJECT_NAME} PUBLIC
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
+
+
 postimport_dll(${PROJECT_NAME})
+
+
+GROUP_ENGINE_LIB_TARGETS(${PROJECT_NAME})

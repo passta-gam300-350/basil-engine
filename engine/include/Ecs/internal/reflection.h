@@ -24,15 +24,15 @@ struct TypeData {
 	void* m_Raw;
 	entt::meta_type m_TypeInfo;
 
-	TypeData& SetRaw(void*);
-	std::string TypeName();
-	entt::id_type TypeId();
-	bool IsPrimitive();
-	auto begin() { //lowercase for compatibility with std::ranges
-		entt::meta_any any = m_TypeInfo.from_void(m_Raw);
-		any.type().data().begin();
-	}
-	auto end(); //lowercase for compatibility with std::ranges
+    TypeData& SetRaw(void*);
+    std::string TypeName();
+    entt::id_type TypeId();
+    bool IsPrimitive();
+    auto begin() { //lowercase for compatibility with std::ranges
+        entt::meta_any any = m_TypeInfo.from_void(m_Raw);
+        return any.type().data().begin();
+    }
+    auto end(); //lowercase for compatibility with std::ranges
 };
 
 TypeInfo ResolveType(TypeName t_name);
@@ -348,7 +348,6 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 }
 
 
-
 //templated deserialiser, Node must overload[](std::string const&)
 template<typename Node>
 void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
@@ -387,13 +386,10 @@ struct MemberRegistration {
 
 template<auto SetPtr, auto GetPtr, static_string Name>
 struct InterfaceRegistration : public InterfaceRegistrationBasic {
-	static constexpr auto setptr = SetPtr;
-	static constexpr auto getptr = GetPtr;
-	static constexpr std::string_view name = Name.data;
-	static constexpr auto hash = ToTypeName(name);
-
-	//static_assert(FunctionTraits<decltype(SetPtr)>::);
-	//static_assert();
+    static constexpr auto setptr = SetPtr;
+    static constexpr auto getptr = GetPtr;
+    static constexpr std::string_view name = Name.data;
+    static constexpr auto hash = ToTypeName(name);
 };
 
 template<auto Ptr, static_string Name>
@@ -415,15 +411,14 @@ void RegisterDataMember(auto& factory) {
 
 template<typename T, typename... Refs>
 void RegisterReflectionComponent(std::string_view type_name, Refs...) {
-	auto hashtypename = ToTypeName(type_name);
-	auto factory = entt::meta<T>().type(hashtypename);
-
-	auto& field_table{ ReflectionRegistry::RegisterType(hashtypename, type_name) };
-	// populate field tables
-	(field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
-
-	// For each Refs (each is a MemberRegistration<…, …>):
-	(RegisterDataMember<Refs>(factory), ...);
+    auto hashtypename = ToTypeName(type_name);
+    auto factory = entt::meta_factory<T>().type(hashtypename);
+    
+    auto& field_table{ ReflectionRegistry::RegisterType(hashtypename, type_name) };
+    // populate field tables
+    (field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
+   
+    (RegisterDataMember<Refs>(factory), ...);
 
 	factory.func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
 	factory.func < [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
@@ -492,45 +487,26 @@ struct COMPONENT_TYPE##_Registration{                                           
     static COMPONENT_TYPE##_Registration COMPONENT_TYPE##RegisterV{}                                                     \
 };                                                                                                                                                                                              
 
-
-#define ReflectEnum(ENUM_TYPE, ...)                                                                \
-namespace {                                                                                        \
-    struct EnumRegistration {                                                                      \
-        EnumRegistration() {                                                                       \
-            entt::meta<ENUM_TYPE>()                                                                \
-                .type(#ENUM_TYPE##_tn)                                                             \
-                .enum_<ENUM_TYPE>()                                                                \
-                __VA_ARGS__                                                                        \
-                .conv<std::underlying_type_t<ENUM_TYPE>>();                                        \
-            ReflectionRegistry::types()[entt::type_hash<ENUM_TYPE>::value()] =                     \
-                entt::resolve(#ENUM_TYPE##_tn);                                                    \
-            ReflectionRegistry::TypeNames()[entt::type_hash<ENUM_TYPE>::value()] = #ENUM_TYPE;     \
-        }                                                                                          \
-    };                                                                                             \
-    static EnumRegistration EnumRegistrationInstance{};                                            \
-}
-
-
 /*
 //macro free alternative. to use in code blocks no global space
 template<typename T, typename... MemberPairs>
 void RegisterReflectionComponent(std::string_view name, MemberPairs&&... members) {
-	auto meta_type = entt::meta<T>().type(entt::hashed_string{ name.data() });
-	(meta_type.data<typename AssociatedMemberTraits<std::decay_t<MemberPairs>>::MemberPointer>(members.second), ...);
-	meta_type.func<&entt::registry::emplace<T>, entt::as_void_t>("emplace"_tn);
-	ReflectionRegistry::types()[entt::type_hash<T>::value()] = meta_type;
-	ReflectionRegistry::BinSerializerRegistryInstance().push_back({
-		[](entt::snapshot& snap, std::ostream& os) {
-			auto out_archive{ [&os](auto value) {
-				os.write(reinterpret_cast<const char*>(&value), sizeof(value));
-				} };
-			snap.template get<T>(out_archive); },
-		[](entt::snapshot_loader& loader, std::istream& is) {
-			auto in_archive{ [&is](auto value) {
-			is.read(reinterpret_cast<char*>(&value), sizeof(value));
-			} };
-			loader.template get<T>(in_archive);
-		}});
+    auto meta_type = entt::meta<T>().type(entt::hashed_string{ name.data() });
+    (meta_type.data<typename AssociatedMemberTraits<std::decay_t<MemberPairs>>::MemberPointer>(members.second), ...);
+    meta_type.func<&entt::registry::emplace<T>, entt::as_void_t>("emplace"_tn);
+    ReflectionRegistry::types()[entt::type_hash<T>::value()] = meta_type;
+    ReflectionRegistry::BinSerializerRegistryInstance().push_back({
+        [](entt::snapshot& snap, std::ostream& os) { 
+            auto out_archive{ [&os](auto value) {
+                os.write(reinterpret_cast<const char*>(&value), sizeof(value));
+                } }; 
+            snap.template get<T>(out_archive); },
+        [](entt::snapshot_loader& loader, std::istream& is) { 
+            auto in_archive{ [&is](auto value) {
+            is.read(reinterpret_cast<char*>(&value), sizeof(value));
+            } };
+            loader.template get<T>(in_archive);
+        }});
 }*/
 
 
