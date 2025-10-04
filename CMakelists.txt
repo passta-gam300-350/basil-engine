@@ -12,6 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+
+
+
 #modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(import-dependencies)
@@ -24,6 +27,7 @@ import_dependencies()
 #global compile options
 add_compile_options(/W4 /MP)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
 
 # static analysis (comment out to disable and adjust path to clang-tidy.exe accordingly)
 # set(CMAKE_CXX_CLANG_TIDY "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-tidy.exe;-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor|app|tools|test)/.*")

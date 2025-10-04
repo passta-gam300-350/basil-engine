@@ -101,7 +101,8 @@ namespace Resource {
 			ResourceDescriptor rdesc{};
 			for (auto it = resource.begin(); it != resource.end(); ++it) {
 				std::string key = it->first.as<std::string>();
-				for (auto const& val : it->second) {
+				auto tmp = it->second;
+				for (auto const& val : tmp) {
 					ResourceDescriptorEntry entry{};
 					entry.m_Guid = Resource::Guid::to_guid(val["guid"].as<std::string>());
 					entry.m_ImporterOptions = val["options"].as<std::string>();
