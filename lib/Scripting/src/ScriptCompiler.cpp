@@ -141,7 +141,7 @@ void ScriptCompiler::CompileAsync()
 	MonoString* output_dir = mono_string_new(compiler_d, "bin");
 	mono_bool val = false;
 	mono_bool isdll = false;
-	mono_bool debug = false;
+	//mono_bool debug = false;
 	args[0] = output;
 	args[1] = output_dir;
 	args[2] = mono_paths;
@@ -257,8 +257,8 @@ void ScriptCompiler::GetManagedLogs()
 		return;
 	}
 	log.clear();
-	int length = mono_array_length(arr);
-	for (int i = 0; i < length; ++i)
+	uint64_t length = mono_array_length(arr);
+	for (uint64_t i = 0; i < length; ++i)
 	{
 		MonoString* monoStr = mono_array_get(arr, MonoString*, i);
 		char* cStr = mono_string_to_utf8(monoStr);

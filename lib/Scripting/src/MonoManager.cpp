@@ -43,7 +43,7 @@ void MonoManager::Initialize()
 
 	m_Compiler->SetDebugCompile(true);
 	m_Compiler->SetMaxThread(4);
-	m_Compiler->SetMaxScriptThread(-1);
+	m_Compiler->SetMaxScriptThread(uint64_t(-1));
 
 	
 }

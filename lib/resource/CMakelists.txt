@@ -55,3 +55,20 @@ target_include_directories("${PROJECT_NAME}_ext"
 target_link_libraries("${PROJECT_NAME}_core" ${RESOURCE_CORE_DEP_LIBS})
 
 target_link_libraries("${PROJECT_NAME}_ext" ${RESOURCE_EXT_DEP_LIBS})
+
+target_compile_options("${PROJECT_NAME}_core" PUBLIC
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
+
+
+target_compile_options("${PROJECT_NAME}_ext" PUBLIC
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
+
+
+
+GROUP_ENGINE_LIB_TARGETS("${PROJECT_NAME}_core")
+
+GROUP_EDITOR_LIB_TARGETS("${PROJECT_NAME}_ext")

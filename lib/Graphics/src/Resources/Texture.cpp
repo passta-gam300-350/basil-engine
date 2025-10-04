@@ -103,8 +103,6 @@ unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma
 }
 
 unsigned int TextureLoader::CreateGPUTextureCompressed(tinyddsloader::DDSFile& ddsimg) {
-    const auto& img = ddsimg.GetImageData(0, 0);
-
     GLenum glCompressedFormat = 0;
     
     // map block compression format, bc7 not support. too bad. its too expensive anyways

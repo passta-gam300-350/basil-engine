@@ -13,3 +13,6 @@ set(ALL_LIBS
 add_executable(${PROJECT_NAME} ${ALL_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+
+GROUP_UNIT_TEST_TARGETS(${PROJECT_NAME})

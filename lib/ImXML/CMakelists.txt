@@ -22,3 +22,11 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC glfw pugixml
     PRIVATE imgui
 )
+
+target_compile_options(${PROJECT_NAME} PUBLIC
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
+
+
+GROUP_EDITOR_LIB_TARGETS(${PROJECT_NAME})

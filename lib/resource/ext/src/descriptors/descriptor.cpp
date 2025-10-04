@@ -34,7 +34,7 @@ namespace Resource {
 		meta.m_RawSourcePath = p.lexically_normal().make_preferred().string();
 		std::size_t pos = meta.m_RawSourcePath.find(DescriptorRegistry::GetDescriptorRootDirectory());
 		pos == std::string::npos ? meta.m_RawSourcePath : meta.m_RawSourcePath = meta.m_RawSourcePath.substr(DescriptorRegistry::GetDescriptorRootDirectory().size());
-		meta.m_FileChecksumHash = (static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(std::filesystem::last_write_time(s).time_since_epoch()).count()) << 32) | (std::filesystem::file_size(s) & BITMASK32);
+		meta.m_FileChecksumHash = (static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(std::filesystem::last_write_time(s).time_since_epoch()).count()) << 32) | (std::filesystem::file_size(s) & BITMASK32);
 		return meta;
 	}
 

@@ -98,20 +98,20 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 
     // Upload full InstanceData (not just matrices)
     const auto& instances = meshInstances.instances;
-    uint32_t instanceDataSize = instances.size() * sizeof(InstanceData);
+    uint64_t instanceDataSize = instances.size() * sizeof(InstanceData);
     assert(instanceDataSize > 0 && "Instance data size must be positive");
 
     // Create or get existing SSBO for full instance data
     auto& ssbo = m_InstanceSSBOs[meshId];
 
     if (!ssbo) {
-        ssbo = std::make_unique<ShaderStorageBuffer>(instances.data(), instanceDataSize, GL_DYNAMIC_DRAW);
+        ssbo = std::make_unique<ShaderStorageBuffer>(instances.data(), (unsigned int)(instanceDataSize), GL_DYNAMIC_DRAW);
         assert(ssbo && "Failed to create ShaderStorageBuffer");
         assert(ssbo->GetSSBOHandle() != 0 && "SSBO handle must be valid after creation");
     } else {
         // Update existing SSBO with full instance data
         assert(ssbo->GetSSBOHandle() != 0 && "Existing SSBO handle must be valid");
-        ssbo->SetData(instances.data(), instanceDataSize, 0);
+        ssbo->SetData(instances.data(), uint32_t(instanceDataSize), 0);
     }
 
     meshInstances.dirty = false;

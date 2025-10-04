@@ -244,9 +244,9 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     if (result.hasHit) {
         // Calculate world position from screen coordinates and depth
         // Convert screen coords to NDC
-        const auto& spec = m_Framebuffer->GetSpecification();
-        float ndcX = (2.0f * static_cast<float>(fbX)) / static_cast<float>(spec.Width) - 1.0f;
-        float ndcY = 1.0f - (2.0f * static_cast<float>(fbY)) / static_cast<float>(spec.Height);
+        const auto& fbspec = m_Framebuffer->GetSpecification();
+        float ndcX = (2.0f * static_cast<float>(fbX)) / static_cast<float>(fbspec.Width) - 1.0f;
+        float ndcY = 1.0f - (2.0f * static_cast<float>(fbY)) / static_cast<float>(fbspec.Height);
         float ndcZ = 2.0f * depth - 1.0f;
 
         // Convert to clip space

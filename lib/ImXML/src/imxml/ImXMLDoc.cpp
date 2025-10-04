@@ -74,7 +74,7 @@ void ImXML::ImXMLDoc::ParseChild(size_t root_index, std::vector<ImXMLNode>& stor
 		ImXMLNode sb = CreateNode(siblings);
 		storage.emplace_back(sb);
 
-		ImXMLNode& sb_ref = storage[count];
+		//ImXMLNode& sb_ref = storage[count];
 
 
 		size_t topIndex = count;

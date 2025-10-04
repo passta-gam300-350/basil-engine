@@ -101,7 +101,7 @@ ImXML::ImXMLNode* ImXML::ImXMLNode::next_sibling(ImXMLDoc* document)
 	{
 		return nullptr;
 	}
-	document->GetNode(next_siblings_index);
+	return &document->GetNode(next_siblings_index);
 }
 ImXML::ImXMLNode* ImXML::ImXMLNode::first_child(ImXMLDoc* document)
 {
@@ -109,7 +109,7 @@ ImXML::ImXMLNode* ImXML::ImXMLNode::first_child(ImXMLDoc* document)
 	{
 		return nullptr;
 	}
-	document->GetNode(children_index);
+	return &document->GetNode(children_index);
 }
 
 

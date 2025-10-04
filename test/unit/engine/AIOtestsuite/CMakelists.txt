@@ -18,3 +18,5 @@ add_executable(${PROJECT_NAME} ${ALL_FILES})
 add_test(NAME engine_aio_test_plan COMMAND ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+GROUP_UNIT_TEST_TARGETS(${PROJECT_NAME})

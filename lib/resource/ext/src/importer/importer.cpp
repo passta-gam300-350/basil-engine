@@ -8,20 +8,22 @@
 #include <descriptors/descriptor_registry.hpp>
 
 #include <string>
-#include <locale>
-#include <codecvt>
-
 #include <filesystem>
+#include <Windows.h>
 
 namespace {
 	std::wstring string_to_wstring(const std::string& str) {
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-		return conv.from_bytes(str);
+		int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+		std::wstring wstr(size_needed, 0);
+		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &wstr[0], size_needed);
+		return wstr;
 	}
 
 	std::string wstring_to_string(const std::wstring& wstr) {
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-		return conv.to_bytes(wstr);
+		int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
+		std::string utf8(size_needed, 0);
+		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &utf8[0], size_needed, nullptr, nullptr);
+		return utf8;
 	}
 }
 
@@ -53,7 +55,7 @@ namespace Resource {
 				aiString str;
 				mat->GetTexture(type, i, &str);
 				std::string stdstr{ str.C_Str() };
-				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return std::tolower(c); });
+				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); });
 				if (stdstr.find("metallic") == std::string::npos || stdstr.find("roughness") == std::string::npos) {
 					continue;
 				}
@@ -71,7 +73,7 @@ namespace Resource {
 				aiString str;
 				mat->GetTexture(type, i, &str);
 				std::string stdstr{ str.C_Str() };
-				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return std::tolower(c); });
+				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return uint8_t(std::tolower(c)); });
 				if (stdstr.find("metallic") != std::string::npos) {
 					if (std::string fstr{ str.C_Str() }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc" }; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
 						handles.emplace_back(ResourceDescriptor::LoadDescriptor(fstr).m_DescriptorEntries.begin()->second.m_Guid);
@@ -87,7 +89,7 @@ namespace Resource {
 				aiString str;
 				mat->GetTexture(type, i, &str);
 				std::string stdstr{ str.C_Str() };
-				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return std::tolower(c); });
+				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return uint8_t(std::tolower(c)); });
 				if (stdstr.find("roughness") != std::string::npos) {
 					if (std::string fstr{ str.C_Str() }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc" }; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
 						handles.emplace_back(ResourceDescriptor::LoadDescriptor(fstr).m_DescriptorEntries.begin()->second.m_Guid);
@@ -114,7 +116,7 @@ namespace Resource {
 				aiString str;
 				mat->GetTexture(type, i, &str);
 				std::string stdstr{ str.C_Str() };
-				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return std::tolower(c); });
+				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return uint8_t(std::tolower(c)); });
 				if (stdstr.find("normal") == std::string::npos) {
 					if (std::string fstr{ str.C_Str() }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc" }; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
 						handles.emplace_back(ResourceDescriptor::LoadDescriptor(fstr).m_DescriptorEntries.begin()->second.m_Guid);
@@ -128,7 +130,7 @@ namespace Resource {
 				aiString str;
 				mat->GetTexture(type, i, &str);
 				std::string stdstr{ str.C_Str() };
-				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return std::tolower(c); });
+				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return uint8_t(std::tolower(c)); });
 				if (std::string fstr{ str.C_Str() }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc" }; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
 					handles.emplace_back(ResourceDescriptor::LoadDescriptor(fstr).m_DescriptorEntries.begin()->second.m_Guid);
 					count++;
@@ -152,7 +154,7 @@ namespace Resource {
 				aiString str;
 				mat->GetTexture(type, i, &str);
 				std::string stdstr{ str.C_Str() };
-				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return std::tolower(c); });
+				std::transform(stdstr.begin(), stdstr.end(), stdstr.begin(), [](unsigned char c) { return uint8_t(std::tolower(c)); });
 				if (stdstr.find("normal") != std::string::npos) {
 					if (std::string fstr{ str.C_Str() }, dstr{ fstr.substr(0, fstr.find_last_of(".")) + ".desc"}; std::filesystem::exists(fstr) && std::filesystem::exists(dstr)) {
 						handles.emplace_back(ResourceDescriptor::LoadDescriptor(fstr).m_DescriptorEntries.begin()->second.m_Guid);
@@ -207,7 +209,7 @@ namespace Resource {
 				std::string texPath = pdir + "/" + path.C_Str();
 
 				// Normalize path
-				std::transform(texPath.begin(), texPath.end(), texPath.begin(), ::tolower);
+				std::transform(texPath.begin(), texPath.end(), texPath.begin(), [](unsigned char c) { return uint8_t(std::tolower(c)); });
 
 				// Optional: filter based on keywords
 				if (textureType == TextureType::METALLIC_BITMAP && texPath.find("metal") == std::string::npos)

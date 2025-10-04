@@ -5,11 +5,17 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/*.h
 )
 
-set(ALL_LIBS
- )
-
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+
+target_compile_options(${PROJECT_NAME} PUBLIC
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
+
+
+GROUP_ENGINE_LIB_TARGETS(${PROJECT_NAME})

@@ -1,9 +1,7 @@
 #define TINYDDSLOADER_IMPLEMENTATION
 
-#include "native/loader.h"
-#include <locale>
-#include <codecvt>
 #include <tinyddsloader.h>
+#include "native/loader.h"
 
 namespace {
 	//provides a std::istream like extraction, advances data param after extraction

@@ -21,9 +21,9 @@ void Mesh::setupMesh()
     // create buffers/arrays using existing buffer classes
     m_VertexArray = std::make_shared<VertexArray>();
 
-    uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-    m_VertexBuffer = std::make_shared<VertexBuffer>(vertices.data(), vertexBufferSize);
-    m_IndexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
+    uint64_t vertexBufferSize = vertices.size() * sizeof(Vertex);
+    m_VertexBuffer = std::make_shared<VertexBuffer>(vertices.data(), uint32_t(vertexBufferSize));
+    m_IndexBuffer = std::make_shared<IndexBuffer>(indices.data(), uint32_t(indices.size()));
 
     // Set up vertex buffer layout
     VertexBufferLayout layout;
