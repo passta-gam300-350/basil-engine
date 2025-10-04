@@ -13,6 +13,7 @@
 
 struct MeshRendererComponent {
     bool isPrimitive;
+    bool hasAttachedMaterial;
     enum struct PrimitiveType : std::uint8_t {
         NONE,
         CUBE,
@@ -20,6 +21,16 @@ struct MeshRendererComponent {
 	} m_PrimitiveType;
     Resource::Guid m_MeshGuid;
     Resource::Guid m_MaterialGuid;
+
+    struct Material
+    {
+        Resource::Guid m_MaterialGuid;
+        float metallic;
+		float roughness;
+		glm::vec3 m_AlbedoColor;
+
+
+    } material;
 };
 
 struct VisibilityComponent{

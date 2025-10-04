@@ -17,6 +17,7 @@
 #include "Editor.hpp"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "Core/Window.h"
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
 
@@ -33,7 +34,7 @@ void EditorMain::init()
 	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
 	// Set maximized
 	glfwMaximizeWindow(window);
-	
+
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
@@ -448,7 +449,7 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 			if (edited)
 			{
 
-				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0)) ;
+				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
 				glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
 				glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
 				glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
@@ -565,12 +566,23 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 			if (idx < 0 || idx >= vec.size()) return false;
 			*out_text = vec[idx].c_str();
 			return true;
-			}, static_cast<void*>(&assetnames), assetnames.size());
+		}, static_cast<void*>(&assetnames), assetnames.size());
 		if (current_item != 0) {
 			meshRendererComponent->m_MeshGuid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 			meshRendererComponent->isPrimitive = false;
 		}
-		ImGui::Text("  Material GUID: %s", meshRendererComponent->m_MaterialGuid.to_hex().c_str());
+		ImGui::Text("  Material GUID: %s", meshRendererComponent->material.m_MaterialGuid.to_hex().c_str());
+		// Section for editing material properties could go here
+
+		ImGui::SeparatorText("Material Properties");
+		glm::vec3 color = meshRendererComponent->material.m_AlbedoColor;
+		ImGui::Text("Color: ");
+		ImGui::SameLine();
+		if (ImGui::ColorEdit3("##ColorPickModel", &color.r)) {
+			meshRendererComponent->material.m_AlbedoColor = color;
+		}
+
+
 	}
 
 }
@@ -600,23 +612,31 @@ void EditorMain::Render_MenuBar()
 		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
 		{
 			std::string path{};
-			if (fileService.OpenFileDialog(path))
+			if (fileService.OpenFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), path, FileService::FILE_TYPE_LIST{ {L"Scene Files", L"*.scene"} }))
 			{
 				LoadScene(path.c_str());
+				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{path}.filename().string()).c_str());
+
+				
 			}
 		}
 		if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 		{
-			static int count{};
+			
 			std::string currentPath = Editor::GetInstance().GetConfig().project_workingDir;
 			if (currentPath.empty()) {
 				spdlog::error("No project loaded, cannot save scene!");
 				return;
 			}
-			std::string scenePath = currentPath + "/assets/" + std::to_string(count++) + ".scene";
-			SaveScene(scenePath.c_str());
-
+			std::string scenePath{};
+			fileService.SaveFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), scenePath, FileService::FILE_TYPE_LIST{{L"Scene Files", L"*.scene"} });
+			if (!scenePath.empty()) {
 				
+				SaveScene(scenePath.c_str());
+			} else
+				spdlog::warn("No scene path specified, not saving.");
+
+
 		}
 		ImGui::MenuItem("Save Scene As", "Ctrl+Shift+S");
 
@@ -755,7 +775,7 @@ void EditorMain::Render_SceneExplorer()
 		bool isSelected = (m_SelectedEntityID == entityUID);
 
 		// Display entity info with selection highlighting
-		std::string entityName = "Entity " + std::to_string(entity.get_uid());
+		std::string entityName = entity.name();
 
 		// Check what components this entity has
 		bool hasTransform = world.has_all_components_in_entity<TransformComponent>(entity);
@@ -989,7 +1009,7 @@ void EditorMain::Render_AssetBrowser()
 		if (filename.empty()) continue;
 
 		ImGui::PushID(filename.c_str());
-		ImGui::Button(filename.c_str(), {thumbnailSize, thumbnailSize}); // Creates a button for the folders
+		ImGui::Button(filename.c_str(), { thumbnailSize, thumbnailSize }); // Creates a button for the folders
 		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
 		{
 			/*
@@ -1045,11 +1065,11 @@ void EditorMain::Render_AssetBrowser()
 	ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32.0f, 256.0f); // Slider for thumbnail size
 	ImGui::SliderFloat("Padding Size", &padding, 0.0f, 24.0f); // Slider for how much padding between columns
 	ImGui::End();
-	
+
 	ImGui::Begin("Assets");
 	ImGui::Columns(columns, 0, false);
 	//this map is single threaded
-	for (auto[assetname, guid] : m_AssetManager->m_AssetNameGuid) {
+	for (auto [assetname, guid] : m_AssetManager->m_AssetNameGuid) {
 		ImGui::PushID(assetname.c_str());
 		ImGui::Button(assetname.c_str(), { thumbnailSize, thumbnailSize });
 		ImGui::TextWrapped(assetname.c_str()); // Name of the asset
@@ -1267,40 +1287,20 @@ void EditorMain::CreatePlaneEntity()
 	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Get shared plane mesh from RenderSystem
-	auto planeMesh = RenderSystem::GetSharedPlaneMesh();
-	assert(planeMesh && "Shared plane mesh must be available");
-
-	// Get PBR shader from RenderSystem
-	auto shader = RenderSystem::s_CubeShader;
-	if (!shader) {
-		RenderSystem::LoadBasicShaders();
-		shader = RenderSystem::s_CubeShader;
-	}
-	assert(shader && "PBR shader must be available");
-
-	// Create material with PBR shader
-	auto material = std::make_shared<Material>(shader, "PlaneMaterial_" + std::to_string(entity.get_uid()));
-	material->SetAlbedoColor(glm::vec3(0.8f, 0.3f, 0.3f)); // Red color
-	material->SetMetallicValue(0.1f);
-	material->SetRoughnessValue(0.8f);
-
-	assert(material && "Material creation failed");
-
-	// Generate GUIDs for the resources
-	Resource::Guid meshGuid = { 0,0 };
-	auto materialGuid = Resource::Guid::generate();
-
-	// Register resources with the RenderSystem's editor cache
-	
-	RenderSystem::RegisterEditorMaterial(materialGuid, material);
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer;
 	meshRenderer.isPrimitive = true;
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
-	meshRenderer.m_MeshGuid = meshGuid;
-	meshRenderer.m_MaterialGuid = materialGuid;
+	meshRenderer.hasAttachedMaterial = false;
+	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
+	meshRenderer.material.metallic = 0.1f;
+	meshRenderer.material.roughness = 0.8f;
+	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+
+
+
+
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 }
@@ -1401,41 +1401,21 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Get shared cube mesh from RenderSystem (enables proper instancing)
-	auto cubeMesh = RenderSystem::GetSharedCubeMesh();
-	assert(cubeMesh && "Shared cube mesh must be available");
-
-	// Get PBR shader from RenderSystem
-	auto shader = RenderSystem::s_CubeShader;
-	if (!shader) {
-		RenderSystem::LoadBasicShaders();
-		shader = RenderSystem::s_CubeShader;
-	}
-	assert(shader && "PBR shader must be available");
-
-	// Create PBR material with enhanced properties for better visibility
-	auto material = std::make_shared<Material>(shader, "EditorCube_" + std::to_string(entity.get_uid()));
-	material->SetAlbedoColor(color * 1.2f); // Brighten the color slightly
-	material->SetMetallicValue(0.0f);       // Non-metallic for better color visibility
-	material->SetRoughnessValue(0.6f);      // Medium roughness
-
-	assert(material && "Material creation failed");
-
-	// Register in editor cache (use shared mesh for all cubes!)
+	// Use shared primitive mesh and default material
 	Resource::Guid meshGuid{}; // Use 0 for primitive shared meshes
-	auto materialGuid = Resource::Guid::generate();
-
-
-
-	//RenderSystem::RegisterEditorMesh(meshGuid, cubeMesh);
-	RenderSystem::RegisterEditorMaterial(materialGuid, material);
+	Resource::Guid materialGuid{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer;
 	meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer.m_MeshGuid = meshGuid;
-	meshRenderer.m_MaterialGuid = materialGuid;
+	meshRenderer.hasAttachedMaterial = false;
+	meshRenderer.material.m_MaterialGuid = materialGuid;
+	meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
+	meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
+	meshRenderer.material.roughness = 0.6f; // Medium roughness
+
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 }
@@ -1583,7 +1563,7 @@ void EditorMain::HandleViewportPicking()
 
 void EditorMain::SaveScene(const char* path)
 {
-		if (path == nullptr) {
+	if (path == nullptr) {
 		spdlog::error("Editor: Cannot save scene - path is null");
 		return;
 	}
@@ -1607,6 +1587,6 @@ void EditorMain::LoadScene(const char* path)
 	world.LoadYAML(path);
 	spdlog::info("Editor: Scene loaded from {}", path);
 	// Clear selection after loading new scene
-	
+
 
 }

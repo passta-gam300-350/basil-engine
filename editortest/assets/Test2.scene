@@ -59,8 +59,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe27dcab391d381c46210c9
-      m_MaterialGuid: e75fbe27c0a941f275542d9d677
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d47781693906036782e3ebc
+      m_MaterialGuid: 13431d477f70b0b9f4e97bd0211e
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 1
+          y: 0
+          z: 0.837209702
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -99,8 +108,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe27df9971cab133c6edcd6
-      m_MaterialGuid: e75fbe27476a0e72ef36887dad9
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d47732f8f5e929dca31343c
+      m_MaterialGuid: 13431d477b568da3675ab377f619
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 1.20000005
+          y: 0.960000038
+          z: 0.24000001
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -139,8 +157,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe27c8d81e22f6f739a091b
-      m_MaterialGuid: e75fbe273fc8b03b0dcc9606849
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d487339afc9f8d66bc07686
+      m_MaterialGuid: 13431d487732b6b498917cd47258
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.24000001
+          z: 0.960000038
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -179,8 +206,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe2772a8940586df250656c
-      m_MaterialGuid: e75fbe278cb9e204327c4adc382
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d48779382f23245aadd5ce3
+      m_MaterialGuid: 13431d4873cabc60beaed618d40d
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 1.20000005
+          y: 0.960000038
+          z: 0.24000001
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -219,8 +255,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe27e7586f67e06379e9f83
-      m_MaterialGuid: e75fbe274448946ac0260646033
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d487f60b2d3a3b2eebbd2d1
+      m_MaterialGuid: 13431d48720da09948c303855cb6
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.24000001
+          z: 0.960000038
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -259,8 +304,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe270d29caf06b9bf00cb7d
-      m_MaterialGuid: e75fbe27c70a6584877178be09c
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d497da7a828f36e0f70a283
+      m_MaterialGuid: 13431d4979e5aa5d76f5b47b3ba1
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.960000038
+          z: 0.24000001
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -299,8 +353,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe27daab2899bdb1e99e5b7
-      m_MaterialGuid: e75fbe279319ab15ac70dfae46a
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d497f59a13d22d45250dc51
+      m_MaterialGuid: 13431d497052970313ee989891e5
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.24000001
+          z: 0.960000038
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -339,8 +402,17 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe272559f38d170d24980e6
-      m_MaterialGuid: e75fbe2713798c17d3b77f9587c
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d497ac5a417236f3467d430
+      m_MaterialGuid: 13431d497508a3e501e7e27d9409
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.960000038
+          z: 0.24000001
   - entity name:
       name: unnamed
     ScaleComponent:
@@ -379,15 +451,24 @@ entities:
         m32: 0
         m33: 1
     MeshRendererComponent:
-      m_MeshGuid: e75fbe272998746187a3c99f9e5
-      m_MaterialGuid: e75fbe27a909a2b519247925725
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 13431d4970cf9bbf3e012cb049c4
+      m_MaterialGuid: 13431d4979f195ff308402753b72
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.960000038
+          y: 0.24000001
+          z: 0.24000001
   - entity name:
       name: unnamed
     PositionComponent:
       m_WorldPos:
-        x: 0
-        y: 5
-        z: 10
+        x: 0.368491024
+        y: 3.43344307
+        z: 8.30432415
     CameraComponent:
       m_Type: "\x01"
       m_IsActive: true
@@ -396,17 +477,17 @@ entities:
       m_Near: 0.100000001
       m_Far: 100
       m_Up:
-        x: -1.84732301e-08
-        y: 0.906307757
-        z: -0.42261827
+        x: -0.00700891204
+        y: 0.894934356
+        z: -0.446142733
       m_Right:
-        x: 1
+        x: 0.999876618
         y: 0
-        z: -4.37113847e-08
+        z: -0.0157080833
       m_Front:
-        x: -3.96159727e-08
-        y: -0.42261833
-        z: -0.906307876
+        x: -0.0140577052
+        y: -0.446197838
+        z: -0.894824028
       m_Yaw: -90
       m_Pitch: 0
   - entity name:

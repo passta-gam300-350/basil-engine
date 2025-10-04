@@ -130,11 +130,13 @@ void RenderSystem::Update(ecs::world& world) {
 			switch (mesh.m_PrimitiveType) {
 			case MeshRendererComponent::PrimitiveType::CUBE:
 				meshResource = GetSharedCubeMesh();
+				assert(meshResource && "Shared cube mesh must be available");
 				mesh.m_MeshGuid = Resource::Guid::generate();
 				RegisterEditorMesh(mesh.m_MeshGuid, meshResource);
 				break;
 			case MeshRendererComponent::PrimitiveType::PLANE:
 				meshResource = GetSharedPlaneMesh();
+				assert(meshResource && "Shared plane mesh must be available");
 				mesh.m_MeshGuid = Resource::Guid::generate();
 				RegisterEditorMesh(mesh.m_MeshGuid, meshResource);
 				break;
@@ -156,28 +158,33 @@ void RenderSystem::Update(ecs::world& world) {
 		if (g_EditorMaterialCache.contains(mesh.m_MaterialGuid)) {
 			materialResource = g_EditorMaterialCache[mesh.m_MaterialGuid];
 		}
+		else if (!mesh.hasAttachedMaterial)
+		{
+			assert(s_CubeShader && "PBR shader must be available");
 
+			auto MeshMaterial = std::make_shared<Material>(s_CubeShader, "SCubeShaderDefault_" + std::to_string(obj.get_uid()));
+			assert(MeshMaterial && "Material creation failed");
+			MeshMaterial->SetAlbedoColor(mesh.material.m_AlbedoColor);
+			MeshMaterial->SetMetallicValue(mesh.material.metallic);
+			MeshMaterial->SetRoughnessValue(mesh.material.roughness);
 
+			mesh.m_MaterialGuid = Resource::Guid::generate();
+			RegisterEditorMaterial(mesh.m_MaterialGuid, MeshMaterial);
+			materialResource = MeshMaterial;
+		}
 		else {
 			// Fall back to file-based registry
-			//auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
-			std::shared_ptr<Material>* materialPtr = nullptr;
+			auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
 			if (materialPtr) {
 				materialResource = *materialPtr;
 			}
-			else if (mesh.isPrimitive)
-			{
-				// If primitive but material not found, assign default material
-				if (s_CubeShader) {
-					materialResource = std::make_shared<Material>(s_CubeShader, "DefaultMaterial_" + std::to_string(obj.get_uid()));
 
-					mesh.m_MaterialGuid = Resource::Guid::generate();
-					RegisterEditorMaterial(mesh.m_MaterialGuid, materialResource);
-				}
-				else {
-					spdlog::warn("RenderSystem: Default shader not loaded, cannot create default material");
-				}
-			}
+		}
+
+		// Before render update material properties if needed
+		if (materialResource)
+		{
+			materialResource->SetAlbedoColor(mesh.material.m_AlbedoColor);
 		}
 
 		// Only render if we have both mesh and material

@@ -109,6 +109,12 @@ void ReflectionRegistry::SetupNativeTypes() {
 void ReflectionRegistry::SetupEngineTypes()
 {
 
+	RegisterReflectionComponent<MeshRendererComponent::Material>(
+		"Material",
+		MemberRegistrationV<&MeshRendererComponent::Material::m_MaterialGuid, "m_MaterialGuid">,
+		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">
+	);
+
 	RegisterReflectionComponent<VisibilityComponent>(
 		"VisibilityComponent",
 		MemberRegistrationV<&VisibilityComponent::m_IsVisible, "m_IsVisible">
@@ -138,9 +144,12 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
 		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
+		MemberRegistrationV<&MeshRendererComponent::hasAttachedMaterial, "hasAttachedMaterial">,
 		MemberRegistrationV<&MeshRendererComponent::isPrimitive, "isPrimitive">,
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
-		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
+		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">,
+		MemberRegistrationV<&MeshRendererComponent::material, "material">
+
 	);
 
 
