@@ -16,6 +16,7 @@ function(suppress_dep_warnings)
                 $<$<CXX_COMPILER_ID:MSVC>:/W0>
                 $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
             )
+            set_target_properties(${tgt} PROPERTIES CXX_CLANG_TIDY "")
         elseif(_type STREQUAL "UTILITY" OR _type STREQUAL "UNKNOWN_LIBRARY")
             # UTILITY targets (custom commands) don't compile at all
             message(STATUS "suppress_warnings: '${tgt}' is not a compilable target (type=${_type}), skipping")
@@ -25,6 +26,7 @@ function(suppress_dep_warnings)
                 $<$<CXX_COMPILER_ID:MSVC>:/W0>
                 $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
             )
+            set_target_properties(${tgt} PROPERTIES CXX_CLANG_TIDY "")
         endif()
     endforeach()
 endfunction()
@@ -67,6 +69,7 @@ macro(import_glad)
         ${GLAD_SRC_FILES}
     )
     target_include_directories(glad PUBLIC ${GLAD_DIR}/include)
+    set_target_properties(glad PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
 
 macro(import_glfw)
@@ -148,6 +151,7 @@ macro(import_tinyddsloader)
     add_library(tinyddsloader INTERFACE)
     target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
     target_include_directories(tinyddsloader INTERFACE $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
+    set_target_properties(tinyddsloader PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
 
 macro(import_yaml_cpp)
@@ -158,6 +162,17 @@ macro(import_yaml_cpp)
     )
 
     FetchContent_MakeAvailable(yaml_cpp)
+endmacro()
+
+macro(import_jolt)
+    FetchContent_Declare(
+        jolt
+        GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+        GIT_TAG v5.4.0
+        SOURCE_SUBDIR Build
+    )
+
+    FetchContent_MakeAvailable(jolt)
 endmacro()
 
 macro(import_imgui)
@@ -398,6 +413,7 @@ macro(import_dependencies)
 
     import_mono()
     import_xml()
+    import_jolt()
 
     hide_dependencies()
 
