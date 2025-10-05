@@ -1,0 +1,177 @@
+#pragma once
+
+// Jolt includes
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyInterface.h>
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
+
+// STL includes
+#include <iostream>
+#include <cstdarg>
+#include <thread>
+
+#include <memory>
+#include <unordered_map>
+#include <yaml-cpp/yaml.h>
+
+#include "System/System.hpp"
+#include "Ecs/ecs.h"
+#include "Physics/Physics_Components.h"
+#include "components/transform.h"
+#include <glm/gtc/quaternion.hpp>  
+
+JPH_SUPPRESS_WARNINGS
+
+// Notes for jolt, scaling is relative to the middle, so a scale of 1.0 results and a cube of side 2.0.
+
+
+// Collision layers (customize for your game)
+namespace Layers {
+    static constexpr JPH::ObjectLayer NON_MOVING = 0;
+    static constexpr JPH::ObjectLayer MOVING = 1;
+    static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
+}
+
+namespace BroadPhaseLayers {
+    static constexpr JPH::BroadPhaseLayer NON_MOVING(0);
+    static constexpr JPH::BroadPhaseLayer MOVING(1);
+    static constexpr JPH::uint NUM_LAYERS(2);
+}
+
+// Forward declarations
+namespace JPH {
+    class TempAllocatorImpl;
+    class JobSystemThreadPool;
+}
+
+
+struct PhysicsSystem : public ecs::SystemBase {
+public:
+    //~PhysicsSystem() override = default;
+
+    // SystemBase interface implementation
+    void Init();
+    void FixedUpdate(ecs::world& world);
+    void Exit();
+
+
+    // Body creation/destruction
+    JPH::BodyID CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider = nullptr);
+
+    void DestroyRigidBody(JPH::BodyID bodyID);
+
+
+    // Accessors
+    JPH::PhysicsSystem* GetJoltPhysicsSystem() { return m_physicsSystem.get(); }
+    JPH::BodyInterface& GetBodyInterface() { return *m_bodyInterface; }
+
+    //void SetGravity(const JPH::Vec3& gravity);
+
+private:
+    void SyncTransformsToPhysics(ecs::world& world);
+    void SyncTransformsFromPhysics(ecs::world& world);
+    void ProcessCollisionEvents(ecs::world& world);
+
+
+    // Jolt core objects
+    std::unique_ptr<JPH::TempAllocatorImpl> m_tempAllocator;
+    std::unique_ptr<JPH::JobSystemThreadPool> m_jobSystem;
+
+    std::unique_ptr<JPH::PhysicsSystem> m_physicsSystem;
+    JPH::BodyInterface* m_bodyInterface; // Non-owning pointer
+
+    // Contact listener
+    std::unique_ptr<JPH::ContactListener> m_contactListener;
+
+    // Mapping between entities and bodies
+    std::vector<JPH::BodyID> m_JoltBodyIDs;
+    //std::unordered_map<ecs::entity, JPH::BodyID> m_entityToBody;
+    //std::unordered_map<JPH::BodyID, ecs::entity> m_bodyToEntity;
+
+    // Timing
+    float m_accumulator = 0.0f;
+
+    // Initialization state
+    bool m_initialized = false;
+};
+
+// In a utility header (e.g., PhysicsUtils.h)
+
+namespace PhysicsUtils {
+    // GLM to Jolt
+    inline JPH::Vec3 ToJolt(const glm::vec3& v) {
+        return JPH::Vec3(v.x, v.y, v.z);
+    }
+
+    // Jolt to GLM
+    inline glm::vec3 ToGLM(const JPH::Vec3& v) {
+        return glm::vec3(v.GetX(), v.GetY(), v.GetZ());
+    }
+
+    // GLM quat to Jolt quat
+    inline JPH::Quat ToQuatJolt(const glm::quat& q) {
+        return JPH::Quat(q.x, q.y, q.z, q.w);
+    }
+
+    // Jolt quat to GLM quat
+    inline glm::quat ToQuatGLM(const JPH::Quat& q) {
+        return glm::quat(q.GetW(), q.GetX(), q.GetY(), q.GetZ());
+    }
+
+    // GLM mat4 to Jolt Mat44
+    inline JPH::Mat44 ToMatJolt(const glm::mat4& m) {
+        return JPH::Mat44(
+            JPH::Vec4(m[0][0], m[0][1], m[0][2], m[0][3]),
+            JPH::Vec4(m[1][0], m[1][1], m[1][2], m[1][3]),
+            JPH::Vec4(m[2][0], m[2][1], m[2][2], m[2][3]),
+            JPH::Vec4(m[3][0], m[3][1], m[3][2], m[3][3])
+        );
+    }
+
+    // Jolt Mat44 to GLM mat4
+    inline glm::mat4 ToMatGLM(const JPH::Mat44& m) {
+        return glm::mat4(
+            m(0, 0), m(0, 1), m(0, 2), m(0, 3),
+            m(1, 0), m(1, 1), m(1, 2), m(1, 3),
+            m(2, 0), m(2, 1), m(2, 2), m(2, 3),
+            m(3, 0), m(3, 1), m(3, 2), m(3, 3)
+        );
+    }
+
+    // Convert Euler angles (in radians) to Jolt quaternion
+    inline JPH::Quat EulerToJoltQuat(const glm::vec3& eulerRadians) {
+        // Create GLM quaternion from Euler angles
+        glm::quat glmQuat = glm::quat(eulerRadians);
+
+        // Convert to Jolt
+        return JPH::Quat(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
+    }
+
+    // If your angles are in degrees:
+    inline JPH::Quat EulerDegreesToJoltQuat(const glm::vec3& eulerDegrees) {
+        glm::vec3 eulerRadians = glm::radians(eulerDegrees);
+        glm::quat glmQuat = glm::quat(eulerRadians);
+        return JPH::Quat(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
+    }
+
+    // Convert Jolt quaternion to Euler angles (radians)
+    inline glm::vec3 JoltQuatToEuler(const JPH::Quat& q) {
+        glm::quat glmQuat = ToQuatGLM(q);
+        return glm::eulerAngles(glmQuat);  // Returns radians
+    }
+
+    // Convert Jolt quaternion to Euler angles (degrees)
+    inline glm::vec3 JoltQuatToEulerDegrees(const JPH::Quat& q) {
+        glm::vec3 eulerRadians = JoltQuatToEuler(q);
+        return glm::degrees(eulerRadians);
+    }
+}

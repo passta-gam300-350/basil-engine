@@ -49,7 +49,7 @@ int main(int, char**)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	_CrtSetBreakAlloc(457658);
+	//_CrtSetBreakAlloc(457658);
 
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit())
