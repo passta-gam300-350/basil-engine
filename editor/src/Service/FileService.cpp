@@ -117,7 +117,7 @@ bool FileService::OpenFileDialog(std::string& input_path)
 #endif
 }
 
-bool FileService::OpenFileDialog(const char* defaultPath, std::string& input_path, FILE_TYPE_LIST const& fileTypes)
+bool FileService::OpenFileDialog(const char*, std::string& input_path, FILE_TYPE_LIST const& fileTypes)
 {
 	input_path.clear();
 #ifdef _WIN32
@@ -170,9 +170,10 @@ bool FileService::OpenFileDialog(const char* defaultPath, std::string& input_pat
 
 	CoUninitialize();
 	return false;
-#endif
+#else
 	input_path = "NOT IMPLEMENTED FOR THIS OS";
 	return false;
+#endif
 }
 
 bool FileService::SaveFileDialog(const char* defaultPath, std::string& output_path, FILE_TYPE_LIST const& fileTypes)
@@ -247,9 +248,10 @@ bool FileService::SaveFileDialog(const char* defaultPath, std::string& output_pa
 
 	CoUninitialize();
 	return false;
-#endif
+#else
 	output_path = "NOT IMPLEMENTED FOR THIS OS";
 	return false;
+#endif
 }
 
 

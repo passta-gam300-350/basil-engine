@@ -12,21 +12,20 @@ function(suppress_dep_warnings)
 
         if(_type STREQUAL "INTERFACE_LIBRARY")
             # INTERFACE targets don't compile, so only INTERFACE options are allowed
-            target_compile_options(${tgt} INTERFACE
-                $<$<CXX_COMPILER_ID:MSVC>:/W0>
-                $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
-            )
-            set_target_properties(${tgt} PROPERTIES CXX_CLANG_TIDY "")
+            # target_compile_options(${tgt} INTERFACE
+            #    $<$<CXX_COMPILER_ID:MSVC>:/W0>
+            #    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+            # )
         elseif(_type STREQUAL "UTILITY" OR _type STREQUAL "UNKNOWN_LIBRARY")
             # UTILITY targets (custom commands) don't compile at all
             message(STATUS "suppress_warnings: '${tgt}' is not a compilable target (type=${_type}), skipping")
         else()
             # Normal compilable targets (STATIC/SHARED/OBJECT/EXECUTABLE)
-            target_compile_options(${tgt} PRIVATE
-                $<$<CXX_COMPILER_ID:MSVC>:/W0>
-                $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
-            )
-            set_target_properties(${tgt} PROPERTIES CXX_CLANG_TIDY "")
+            # commented out. this causes the d9025 warnings when overriding the dependencies's cmake
+            # target_compile_options(${tgt} PRIVATE
+            #    $<$<CXX_COMPILER_ID:MSVC>:/W0>
+            #    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+            # )
         endif()
     endforeach()
 endfunction()
@@ -306,6 +305,7 @@ macro(import_mono)
             IMPORTED_IMPLIB_DEBUG "${MONO_LIBRARY}"
             IMPORTED_IMPLIB_MINSIZEREL "${MONO_LIBRARY}"
             IMPORTED_IMPLIB_RELWITHDEBINFO "${MONO_LIBRARY}"
+            IMPORTED_IMPLIB_DEBUG_STATIC_ANALYSIS "${MONO_LIBRARY}"
             IMPORTED_IMPLIB_INSTALLER "${MONO_LIBRARY}"
             INTERFACE_INCLUDE_DIRECTORIES ${MONO_IMPORT_INCLUDE_DIR}
         )
