@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Debug_Static_Analysis" CACHE STRING "" FORCE)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-set(CMAKE_CXX_FLAGS_DEBUG_STATIC_ANALYSIS "${CMAKE_CXX_FLAGS_DEBUG}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_DEBUG_STATIC_ANALYSIS "${CMAKE_CXX_FLAGS_DEBUG} /EHsc" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_DEBUG_STATIC_ANALYSIS   "${CMAKE_C_FLAGS_DEBUG}" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG_STATIC_ANALYSIS "${CMAKE_EXE_LINKER_FLAGS_DEBUG}" CACHE STRING "" FORCE)
 
@@ -29,6 +29,9 @@ import_dependencies()
 #global compile options
 #add_compile_options(/W4 /MP)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+# Enable exceptions for static analysis
+add_compile_options($<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:/EHsc>)
 
 
 # static analysis (comment out to disable and adjust path to clang-tidy.exe accordingly)
