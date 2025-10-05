@@ -23,7 +23,7 @@ extern "C" {
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
 	constexpr std::uint32_t DEFAULT_RESOLUTION_HEIGHT{ 900ul };
-	constexpr bool DEFAULT_WINDOW_MODE{ false }; // false for windowed, true for fullscreen (borderless window is not support) //nvm both not supported// TODO: expand Core/Window.h Window interface
+	constexpr bool DEFAULT_WINDOW_MODE{ false }; 
 	constexpr bool DEFAULT_VSYNC_OPTION{ false }; //true is toggle
 	constexpr std::uint32_t DEFAULT_LOG_SEVERITY{spdlog::level::info};
 	constexpr std::string_view DEFAULT_NAME{"Engine"};
