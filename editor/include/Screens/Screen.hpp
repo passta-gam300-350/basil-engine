@@ -1,8 +1,23 @@
+/******************************************************************************/
+/*!
+\file   Screen.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration of the Screen class, which is
+an abstract base class for different screens of the editor application.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 #include <cstdint>
 
-// A window or screen in the editor
 struct GLFWwindow;
 class Screen {
 protected:

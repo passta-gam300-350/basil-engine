@@ -810,16 +810,14 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
-	// Example profiling data
-	ImGui::Text("Frame Time: %.2fms", 16.67f);
+	
+	
 	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
 	double frameMs = last.frameMs;
 
-	ImGui::Text("Frame Time: %.2f ms", frameMs);
-	ImGui::Text("FPS: %.2f", (frameMs > 0.0) ? 1000.0 / frameMs : 0.0);
 
 	double totalMs = 0.0;
 	for (auto& kv : last.systemMs) {
