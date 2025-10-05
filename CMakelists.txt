@@ -34,6 +34,27 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 # static analysis (comment out to disable and adjust path to clang-tidy.exe accordingly)
 # set(CMAKE_CXX_CLANG_TIDY "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-tidy.exe;-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor|app|tools|test)/.*")
 
+# Try to find clang-tidy in PATH
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+
+# If not found, try Visual Studio's bundled LLVM tools (Windows only)
+if (NOT CLANG_TIDY_EXE AND MSVC)
+    set(CLANG_TIDY_EXE
+        "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-tidy.exe"
+    )
+    if (NOT EXISTS ${CLANG_TIDY_EXE})
+        message(SEND_ERROR "clang-tidy.exe not found")
+    endif()
+endif()
+
+# Conditionally enable clang-tidy only in Debug builds
+if (CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY
+        $<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:${CLANG_TIDY_EXE}>
+        $<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor)/.*>
+    )
+endif()
+
 #srcs
 add_subdirectory(lib)
 add_subdirectory(engine)

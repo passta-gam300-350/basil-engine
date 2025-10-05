@@ -24,7 +24,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 target_compile_options(${PROJECT_NAME} PUBLIC
-  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<CXX_COMPILER_ID:MSVC>:/W4 /MP>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
 )
 
