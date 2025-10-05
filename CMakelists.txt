@@ -50,7 +50,7 @@ endif()
 # Conditionally enable clang-tidy only in Debug builds
 if (CLANG_TIDY_EXE)
     set(CMAKE_CXX_CLANG_TIDY
-        "$<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:${CLANG_TIDY_EXE};-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor|tools|app)/.*>"
+        "$<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:${CLANG_TIDY_EXE};-header-filter=${CMAKE_SOURCE_DIR}/(lib|engine|editor|tools|app)/.*;--extra-arg=/EHsc>"
     )
 endif()
 
