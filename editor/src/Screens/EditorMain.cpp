@@ -21,7 +21,12 @@
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
 
+#include "Physics/Physics_System.h"
 #define UNREF_PARAM(x) x;
+
+PhysicsSystem PhysSys;
+JPH::Body* floorplan; // Delete this after m1
+JPH::BodyID sphere_id;
 
 EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 {
@@ -46,6 +51,11 @@ void EditorMain::init()
 	// init engine
 	Engine::GenerateDefaultConfig();
 	Engine::InitWithoutWindow("Default.yaml");
+
+	
+	// Temporary Physics Init
+	PhysSys.Init();
+
 
 	// Note: ImGui callbacks are already set up in main.cpp
 	// We need to chain our input handling with ImGui's callbacks
@@ -114,6 +124,46 @@ void EditorMain::update()
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
+	PhysSys.FixedUpdate(world);
+	auto cubes = world.filter_entities<RigidBodyComponent>();
+	for (auto cube : cubes)
+	{
+		auto rot = &world.get_component_from_entity<RotationComponent>(cube);
+		auto Trans = &world.get_component_from_entity<TransformComponent>(cube);
+		auto pos = &world.get_component_from_entity<PositionComponent>(cube);
+		auto scale = &world.get_component_from_entity<ScaleComponent>(cube);
+
+		glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.x), glm::vec3(1, 0, 0));
+		glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.y), glm::vec3(0, 1, 0));
+		glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.z), glm::vec3(0, 0, 1));
+		glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
+		Trans->m_trans = glm::translate(glm::mat4(1.0f), pos->m_WorldPos) * R * glm::scale(glm::mat4(1.0f), scale->m_Scale);
+	}
+
+	//Temporary Physic Update
+	/*
+	To add physic engine update
+	PF_SYSTEM("PhysicsSystem");
+	// returns list of entity ids
+	auto physics component = world.filter_entities<physics_comp>();
+
+
+	for(auto component : phsyicscomp) // goes through the id's
+	{
+		auto& [comp1, comp2, comp3] {component.get<comp1,comp2,comp3>()};
+	}
+
+
+	Component Details
+
+	struct PhysicsComponent {
+		Resource::Guid m_MeshGuid;
+		Resource::Guid m_MaterialGuid;
+	};
+
+	*/
+
+
 	Engine::EndFrame();
 	Engine::UpdateDebug();
 }
@@ -173,7 +223,7 @@ void EditorMain::render()
 		Setup_Dockspace(dockspace_id);
 	}
 
-
+	
 
 	//glClearColor(1, 1, 1, 1);
 
@@ -231,6 +281,16 @@ void EditorMain::render()
 
 void EditorMain::cleanup()
 {
+	//PhysSys.GetBodyInterface().RemoveBody(sphere_id);
+
+	//// Destroy the sphere. After this the sphere ID is no longer valid.
+	//PhysSys.GetBodyInterface().DestroyBody(sphere_id);
+
+	// Remove and destroy the floor
+	//PhysSys.GetBodyInterface().RemoveBody(floorplan->GetID());
+	//PhysSys.GetBodyInterface().DestroyBody(floorplan->GetID());
+
+	PhysSys.Exit();
 	m_AssetManager.reset(nullptr);
 	Engine::Exit();
 }
@@ -428,6 +488,15 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 
 			if (edited)
 			{
+				
+				//RigidBodyComponent* rb = nullptr;
+				//rb = &world.get_component_from_entity<RigidBodyComponent>(entity_handle);
+				//if (rb)
+				//{
+				//	PhysSys.GetBodyInterface().SetPositionAndRotation(rb->bodyID, PhysicsUtils::ToJolt(pos), PhysicsUtils::EulerToJoltQuat(rot), JPH::EActivation::Activate);
+
+				//}
+				
 
 				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
 				glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
@@ -717,26 +786,34 @@ void EditorMain::Render_SceneExplorer()
 {
 	ImGui::Begin("Hierarchy");
 
-	// Entity creation buttons
-	if (ImGui::Button("Create Empty")) {
-		CreateDefaultEntity();
+	if (ImGui::CollapsingHeader("Create Entities")) {
+		// Entity creation buttons
+		if (ImGui::Button("Create Empty")) {
+			CreateDefaultEntity();
+		}
+		//ImGui::SameLine();
+		if (ImGui::Button("Create Plane")) {
+			CreatePlaneEntity();
+		}
+		//ImGui::SameLine();
+		if (ImGui::Button("Create Cube")) {
+			CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+		}
+		//ImGui::SameLine();
+		if (ImGui::Button("Create Light")) {
+			CreateLightEntity();
+		}
+		//ImGui::SameLine();
+		if (ImGui::Button("Create Camera")) {
+			CreateCameraEntity();
+		}
+
+		if (ImGui::Button("Create Physics Cube"))
+		{
+			CreatePhysicsCube();
+		}
 	}
-	ImGui::SameLine();
-	if (ImGui::Button("Create Plane")) {
-		CreatePlaneEntity();
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Create Cube")) {
-		CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Create Light")) {
-		CreateLightEntity();
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Create Camera")) {
-		CreateCameraEntity();
-	}
+
 
 	ImGui::Separator();
 
@@ -1279,10 +1356,6 @@ void EditorMain::CreatePlaneEntity()
 	meshRenderer.material.roughness = 0.8f;
 	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
 
-
-
-
-
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 }
 
@@ -1337,6 +1410,102 @@ void EditorMain::CreateCameraEntity()
 	world.add_component_to_entity<CameraComponent>(entity, camera);
 }
 
+void EditorMain::CreatePhysicsDemoScene()
+{
+	ecs::world world = Engine::GetWorld();
+
+	// Create new entity
+	auto entity = world.add_entity();
+
+	// Add transform components
+	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, -2.0f, 0.0f));
+	world.add_component_to_entity<ScaleComponent>(entity, glm::vec3{ 1,1,1 });
+	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
+	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
+	world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+	// Add mesh renderer component
+	MeshRendererComponent meshRenderer;
+	meshRenderer.isPrimitive = true;
+	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
+	meshRenderer.hasAttachedMaterial = false;
+	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
+	meshRenderer.material.metallic = 0.1f;
+	meshRenderer.material.roughness = 0.8f;
+	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+
+	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	world.get_component_from_entity<ScaleComponent>(entity).m_Scale = glm::vec3{ 50,1,50 };
+	auto rot = &world.get_component_from_entity<RotationComponent>(entity);
+	auto Trans = &world.get_component_from_entity<TransformComponent>(entity);
+	auto pos = &world.get_component_from_entity<PositionComponent>(entity);
+	auto scale = &world.get_component_from_entity<ScaleComponent>(entity);
+
+	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.x), glm::vec3(1, 0, 0));
+	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.y), glm::vec3(0, 1, 0));
+	glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.z), glm::vec3(0, 0, 1));
+	glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
+	Trans->m_trans = glm::translate(glm::mat4(1.0f), pos->m_WorldPos) * R * glm::scale(glm::mat4(1.0f), scale->m_Scale);
+
+
+
+
+	// Creating Floor Physics
+	JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(50.f, 0.1f, 50.f));
+	floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+	JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
+	JPH::ShapeRefC floor_shape = floor_shape_result.Get();
+	JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
+	floorplan = PhysSys.GetBodyInterface().CreateBody(floor_settings);
+	PhysSys.GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
+
+
+
+	// Cube creation
+	auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
+	auto Cscale = glm::vec3(1.0f);
+	auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
+	auto entity2 = world.add_entity();
+
+	// Add transform components
+	world.add_component_to_entity<PositionComponent>(entity2, CPos);
+	world.add_component_to_entity<ScaleComponent>(entity2, Cscale);
+	world.add_component_to_entity<TransformComponent>(entity2, glm::scale(glm::translate(glm::mat4(1.0f), CPos), Cscale));
+	world.add_component_to_entity<RotationComponent>(entity2, glm::vec3{});
+	world.add_component_to_entity<VisibilityComponent>(entity2, true);
+	world.add_component_to_entity<RigidBodyComponent>(entity2);
+
+	// Use shared primitive mesh and default material
+	Resource::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+	Resource::Guid materialGuid2{}; // Use 0 for default material
+
+	// Add mesh renderer component
+	MeshRendererComponent meshRenderer2;
+	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
+	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
+	meshRenderer2.m_MeshGuid = meshGuid2;
+	meshRenderer2.hasAttachedMaterial = false;
+	meshRenderer2.material.m_MaterialGuid = materialGuid2;
+	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
+	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
+	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+
+	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
+	// Creating Cube
+	
+	JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f,0.5f,0.5f));
+	box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
+	JPH::ShapeRefC Box_shape = Box_shape_result.Get();
+	JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+	sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+	RigidBody->motionType = JPH::EMotionType::Dynamic;
+	RigidBody->bodyID = sphere_id;
+
+}
+
 void EditorMain::CreateDemoScene()
 {
 	spdlog::info("Creating demo scene with cubes and lighting");
@@ -1363,7 +1532,58 @@ void EditorMain::CreateDemoScene()
 	RenderSystem::Instance().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
+
+	CreatePhysicsDemoScene();
+
 }
+
+void EditorMain::CreatePhysicsCube()
+{
+	ecs::world world = Engine::GetWorld();
+
+	// Cube creation
+	auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
+	auto Cscale = glm::vec3(1.0f);
+	auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
+	auto entity2 = world.add_entity();
+
+	// Add transform components
+	world.add_component_to_entity<PositionComponent>(entity2, CPos);
+	world.add_component_to_entity<ScaleComponent>(entity2, Cscale);
+	world.add_component_to_entity<TransformComponent>(entity2, glm::scale(glm::translate(glm::mat4(1.0f), CPos), Cscale));
+	world.add_component_to_entity<RotationComponent>(entity2, glm::vec3{});
+	world.add_component_to_entity<VisibilityComponent>(entity2, true);
+	world.add_component_to_entity<RigidBodyComponent>(entity2);
+
+	// Use shared primitive mesh and default material
+	Resource::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+	Resource::Guid materialGuid2{}; // Use 0 for default material
+
+	// Add mesh renderer component
+	MeshRendererComponent meshRenderer2;
+	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
+	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
+	meshRenderer2.m_MeshGuid = meshGuid2;
+	meshRenderer2.hasAttachedMaterial = false;
+	meshRenderer2.material.m_MaterialGuid = materialGuid2;
+	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
+	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
+	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+
+	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
+	// Creating Cube
+
+	JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
+	box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
+	JPH::ShapeRefC Box_shape = Box_shape_result.Get();
+	JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+	sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+	RigidBody->motionType = JPH::EMotionType::Dynamic;
+	RigidBody->bodyID = sphere_id;
+}
+
 
 void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, const glm::vec3& color)
 {
