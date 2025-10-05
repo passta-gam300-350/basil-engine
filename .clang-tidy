@@ -478,7 +478,7 @@ Checks: >
   -readability-use-anyofallof,
   -zircon-temporary-objects
 
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '.*[/\\](lib|engine|editor|tools|app)[/\\].*\.(h|hpp)$'
 
 CheckOptions:
   - key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions

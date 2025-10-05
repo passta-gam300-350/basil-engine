@@ -39,6 +39,16 @@ macro(import_catch)
     )
 
     FetchContent_MakeAvailable(catch)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    foreach(target Catch2 Catch2WithMain)
+        if(TARGET ${target})
+            get_target_property(inc_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
+            if(inc_dirs)
+                set_target_properties(${target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+            endif()
+        endif()
+    endforeach()
 endmacro()
 
 macro(import_gtest)
@@ -49,6 +59,16 @@ macro(import_gtest)
     )
 
     FetchContent_MakeAvailable(gtest)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    foreach(target gtest gtest_main gmock gmock_main)
+        if(TARGET ${target})
+            get_target_property(inc_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
+            if(inc_dirs)
+                set_target_properties(${target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+            endif()
+        endif()
+    endforeach()
 endmacro()
 
 macro(import_spdlog)
@@ -71,7 +91,7 @@ macro(import_glad)
     add_library(glad STATIC
         ${GLAD_SRC_FILES}
     )
-    target_include_directories(glad PUBLIC ${GLAD_DIR}/include)
+    target_include_directories(glad SYSTEM PUBLIC ${GLAD_DIR}/include)
     set_target_properties(glad PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
 
@@ -88,6 +108,12 @@ macro(import_glfw)
     set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
 
     FetchContent_MakeAvailable(glfw)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs glfw INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(glfw PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_mesh_optimiser)
@@ -98,6 +124,12 @@ macro(import_mesh_optimiser)
     )
 
     FetchContent_MakeAvailable(mesh_optimiser)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs meshoptimizer INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(meshoptimizer PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_glm)
@@ -108,6 +140,12 @@ macro(import_glm)
     )
 
     FetchContent_MakeAvailable(glm)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs glm INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(glm PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_assimp)
@@ -118,6 +156,12 @@ macro(import_assimp)
     )
 
     FetchContent_MakeAvailable(assimp)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs assimp INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(assimp PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_entt)
@@ -128,6 +172,12 @@ macro(import_entt)
     )
 
     FetchContent_MakeAvailable(entt)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs EnTT INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(EnTT PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_zlib)
@@ -165,6 +215,12 @@ macro(import_yaml_cpp)
     )
 
     FetchContent_MakeAvailable(yaml_cpp)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs yaml-cpp INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(yaml-cpp PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_jolt)
@@ -177,7 +233,15 @@ macro(import_jolt)
 
     FetchContent_MakeAvailable(jolt)
 
-    set_target_properties(Jolt PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+    set_target_properties(Jolt PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+    )
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs Jolt INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(Jolt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 macro(import_imgui)
@@ -234,10 +298,10 @@ macro(import_imgui)
     )
 
 
-    target_include_directories(imgui_backends PUBLIC ${imgui_SOURCE_DIR}/backends)
-    target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+    target_include_directories(imgui_backends SYSTEM PUBLIC ${imgui_SOURCE_DIR}/backends)
+    target_include_directories(imgui SYSTEM PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_link_libraries(imgui_backends PRIVATE glfw glad imgui)
-    endmacro()
+endmacro()
 
 macro(import_stb)
     set(STB_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/stb)
@@ -247,7 +311,7 @@ macro(import_stb)
     add_library(stb STATIC
         ${STB_SRC_FILES}
     )
-    target_include_directories(stb PUBLIC ${STB_DIR})
+    target_include_directories(stb SYSTEM PUBLIC ${STB_DIR})
 endmacro()
 
 macro(import_directxtex)
@@ -258,6 +322,10 @@ macro(import_directxtex)
     )
 
     FetchContent_MakeAvailable(directxtex)
+
+    # Mark DirectXTex includes as SYSTEM to exclude from static analysis
+    get_target_property(directxtex_include_dirs DirectXTex INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(DirectXTex PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${directxtex_include_dirs}")
 endmacro()
 
 # Import Mono
@@ -332,6 +400,12 @@ macro(import_xml)
         GIT_TAG v1.15
     )
     FetchContent_MakeAvailable(pugixml)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    get_target_property(inc_dirs pugixml-static INTERFACE_INCLUDE_DIRECTORIES)
+    if(inc_dirs)
+        set_target_properties(pugixml-static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+    endif()
 endmacro()
 
 function(hide_dependencies)
