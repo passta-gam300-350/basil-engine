@@ -1,4 +1,16 @@
 #pragma once
+/*!************************************************************************
+\file:      Physics_System.h
+\author:    Sam Tsang
+\email:     sam.tsang@digipen.edu
+\course:    CSD 3401 - Software Engineering Project 5
+\brief:     This file has the declaration of the physics engine that wraps around the jolt library
+as well as a couple of helper functions for converting vec3's from glm to jolt
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+***************************************************************************/
 
 // Jolt includes
 #include <Jolt/Jolt.h>
@@ -75,9 +87,9 @@ public:
     JPH::BodyInterface& GetBodyInterface() { return *m_bodyInterface; }
 
     //void SetGravity(const JPH::Vec3& gravity);
-
-private:
     void SyncTransformsToPhysics(ecs::world& world);
+private:
+    
     void SyncTransformsFromPhysics(ecs::world& world);
     void ProcessCollisionEvents(ecs::world& world);
 

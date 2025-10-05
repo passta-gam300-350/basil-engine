@@ -1,8 +1,17 @@
+/*!************************************************************************
+\file:      Physics_System.cpp
+\author:    Sam Tsang
+\email:     sam.tsang@digipen.edu
+\course:    CSD 3401 - Software Engineering Project 5
+\brief:     This file has the implementation of the physics engine that wraps around the jolt library
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+***************************************************************************/
+
 #include "Physics/Physics_System.h"
 #include "Profiler/profiler.hpp"
-
-
-
 
 
 // Callback for traces, connect this to your own trace function if you have one
