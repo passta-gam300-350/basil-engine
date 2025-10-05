@@ -59,6 +59,10 @@ macro(import_spdlog)
     )
 
     FetchContent_MakeAvailable(spdlog)
+
+    # Mark spdlog includes as SYSTEM to exclude from static analysis
+    get_target_property(spdlog_include_dirs spdlog INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${spdlog_include_dirs}")
 endmacro()
 
 macro(import_glad)
@@ -336,16 +340,16 @@ endmacro()
 function(hide_dependencies)
 # hide external targets to folders
     set_target_properties(
-        glad 
+        glad
         glfw
         uninstall
         update_mappings
-        glm 
-        assimp 
-        EnTT 
-        imgui 
-        UpdateAssimpLibsDebugSymbolsAndDLLs 
-        zlibstatic 
+        glm
+        assimp
+        EnTT
+        imgui
+        UpdateAssimpLibsDebugSymbolsAndDLLs
+        zlibstatic
         Catch2
         Catch2WithMain
         ddsloader
