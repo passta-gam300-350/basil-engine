@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 
+#include "Engine.hpp"
 #include "Screens/EditorMain.hpp"
 #include "Screens/Screen.hpp"
 #include "Screens/SplashScreen.hpp"

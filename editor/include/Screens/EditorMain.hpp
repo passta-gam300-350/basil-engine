@@ -8,8 +8,11 @@
 #include "Manager/AssetManager.hpp"
 #include <memory>
 
+#include "Service/FileService.hpp"
+
 class EditorMain : public Screen
 {
+	FileService fileService;
 public:
 	bool showAboutModal = false;
 	bool showInspector = true;
@@ -110,5 +113,9 @@ private:
 
 	// Debug visualization control
 	void SetDebugVisualization(bool showAABBs);
+
+
+	void SaveScene(const char* path);
+	void LoadScene(const char* name);
 };
 #endif // EDITORMAIN_HPP

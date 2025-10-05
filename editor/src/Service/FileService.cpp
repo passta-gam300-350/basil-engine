@@ -23,6 +23,16 @@ namespace
 
 		return n;
 	}
+
+	std::wstring ConvertStrToWStr(std::string const& s)
+	{
+		int size_needed = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+		if (size_needed <= 0) return {};
+		std::wstring n(size_needed, '\0'); // allocate buffer
+		MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &n[0], size_needed);
+		n.resize(size_needed - 1); // remove the null terminator added by MultiByteToWideChar
+		return n;
+	}
 #endif
 }
 
@@ -107,6 +117,140 @@ bool FileService::OpenFileDialog(std::string& input_path)
 #endif
 }
 
+bool FileService::OpenFileDialog(const char* defaultPath, std::string& input_path, FILE_TYPE_LIST const& fileTypes)
+{
+	input_path.clear();
+#ifdef _WIN32
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if (FAILED(hr))
+		return false;
+
+	IFileDialog* pFileDialog = nullptr;
+	hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&pFileDialog));
+	if (SUCCEEDED(hr))
+	{
+		DWORD options = 0;
+		if (SUCCEEDED(pFileDialog->GetOptions(&options)))
+		{
+			pFileDialog->SetOptions(options | FOS_FORCEFILESYSTEM | FOS_FILEMUSTEXIST);
+		}
+
+		std::vector<COMDLG_FILTERSPEC> ctypes{};
+		if (fileTypes.empty())
+		{
+			ctypes.push_back({ L"All Files", L"*.*" });
+		}
+		for (const auto& ft : fileTypes)
+		{
+			ctypes.push_back({ ft.first, ft.second });
+		}
+
+		pFileDialog->SetFileTypes(static_cast<UINT>(ctypes.size()), ctypes.data());
+		hr = pFileDialog->Show(nullptr);
+		if (SUCCEEDED(hr))
+		{
+			IShellItem* pItem = nullptr;
+			if (SUCCEEDED(pFileDialog->GetResult(&pItem)))
+			{
+				PWSTR path = nullptr;
+				if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &path)))
+				{
+					std::wstring wpath(path);
+					input_path = ConvertWStrToStr(wpath);
+					CoTaskMemFree(path);
+				}
+				pItem->Release();
+				pFileDialog->Release();
+				CoUninitialize();
+				return true;
+			}
+		}
+		pFileDialog->Release();
+	}
+
+	CoUninitialize();
+	return false;
+#endif
+	input_path = "NOT IMPLEMENTED FOR THIS OS";
+	return false;
+}
+
+bool FileService::SaveFileDialog(const char* defaultPath, std::string& output_path, FILE_TYPE_LIST const& fileTypes)
+{
+	output_path.clear();
+#ifdef _WIN32
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if (FAILED(hr))
+		return false;
+
+	IFileSaveDialog* pFileDialog = nullptr;
+	hr = CoCreateInstance(CLSID_FileSaveDialog, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&pFileDialog));
+	if (SUCCEEDED(hr))
+	{
+		DWORD options = 0;
+		if (SUCCEEDED(pFileDialog->GetOptions(&options)))
+		{
+			pFileDialog->SetOptions(options | FOS_FORCEFILESYSTEM | FOS_OVERWRITEPROMPT);
+		}
+
+		std::vector<COMDLG_FILTERSPEC> ctypes{};
+		if (fileTypes.empty())
+		{
+			ctypes.push_back({ L"All Files", L"*.*" });
+		}
+		else
+		{
+			for (const auto& ft : fileTypes)
+				ctypes.push_back({ ft.first, ft.second });
+		}
+		pFileDialog->SetFileTypes(static_cast<UINT>(ctypes.size()), ctypes.data());
+		pFileDialog->SetDefaultExtension(L"scene");
+		if (defaultPath && *defaultPath)
+		{
+			std::wstring wDefault = ConvertStrToWStr(defaultPath);
+			if (wDefault.find(L".") != std::wstring::npos)
+			{
+				pFileDialog->SetFileName(wDefault.c_str());
+			}
+			else
+			{
+				IShellItem* pFolder = nullptr;
+				if (SUCCEEDED(SHCreateItemFromParsingName(wDefault.c_str(), nullptr, IID_PPV_ARGS(&pFolder))))
+				{
+					pFileDialog->SetDefaultFolder(pFolder);
+					pFolder->Release();
+				}
+			}
+		}
+
+		hr = pFileDialog->Show(nullptr);
+		if (SUCCEEDED(hr))
+		{
+			IShellItem* pItem = nullptr;
+			if (SUCCEEDED(pFileDialog->GetResult(&pItem)))
+			{
+				PWSTR path = nullptr;
+				if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &path)))
+				{
+					std::wstring wpath(path);
+					output_path = ConvertWStrToStr(wpath);
+					CoTaskMemFree(path);
+				}
+				pItem->Release();
+				pFileDialog->Release();
+				CoUninitialize();
+				return true;
+			}
+		}
+		pFileDialog->Release();
+	}
+
+	CoUninitialize();
+	return false;
+#endif
+	output_path = "NOT IMPLEMENTED FOR THIS OS";
+	return false;
+}
 
 
 bool FileService::OpenFolderDialog(std::string& output_path)

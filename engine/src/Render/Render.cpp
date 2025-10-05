@@ -48,6 +48,9 @@ void RenderSystem::Init() {
 	SetupDebugVisualization();
 
 	spdlog::info("RenderSystem initialized");
+
+
+
 }
 
 void RenderSystem::Update(ecs::world& world) {
@@ -84,7 +87,8 @@ void RenderSystem::Update(ecs::world& world) {
 		}
 
 		frameData.cameraPosition = camera_pos.m_WorldPos;
-	} else {
+	}
+	else {
 		// Fallback if no camera entity exists
 		frameData.viewMatrix = inst.m_Camera->GetViewMatrix();
 		frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
@@ -114,10 +118,36 @@ void RenderSystem::Update(ecs::world& world) {
 		std::shared_ptr<Mesh> meshResource;
 		std::shared_ptr<Material> materialResource;
 
+
+
 		// Try editor cache first (for runtime-created assets)
 		if (g_EditorMeshCache.contains(mesh.m_MeshGuid)) {
 			meshResource = g_EditorMeshCache[mesh.m_MeshGuid];
-		} else {
+		}
+		else if (mesh.isPrimitive) {
+
+
+			switch (mesh.m_PrimitiveType) {
+			case MeshRendererComponent::PrimitiveType::CUBE:
+				meshResource = GetSharedCubeMesh();
+				assert(meshResource && "Shared cube mesh must be available");
+				mesh.m_MeshGuid = Resource::Guid::generate();
+				RegisterEditorMesh(mesh.m_MeshGuid, meshResource);
+				break;
+			case MeshRendererComponent::PrimitiveType::PLANE:
+				meshResource = GetSharedPlaneMesh();
+				assert(meshResource && "Shared plane mesh must be available");
+				mesh.m_MeshGuid = Resource::Guid::generate();
+				RegisterEditorMesh(mesh.m_MeshGuid, meshResource);
+				break;
+			default:
+				assert(false && "Invalid GUID");
+
+
+			}
+
+		}
+		else {
 			// Fall back to file-based registry
 			auto* meshPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid);
 			if (meshPtr) {
@@ -127,12 +157,34 @@ void RenderSystem::Update(ecs::world& world) {
 
 		if (g_EditorMaterialCache.contains(mesh.m_MaterialGuid)) {
 			materialResource = g_EditorMaterialCache[mesh.m_MaterialGuid];
-		} else {
+		}
+		else if (!mesh.hasAttachedMaterial)
+		{
+			assert(s_CubeShader && "PBR shader must be available");
+
+			auto MeshMaterial = std::make_shared<Material>(s_CubeShader, "SCubeShaderDefault_" + std::to_string(obj.get_uid()));
+			assert(MeshMaterial && "Material creation failed");
+			MeshMaterial->SetAlbedoColor(mesh.material.m_AlbedoColor);
+			MeshMaterial->SetMetallicValue(mesh.material.metallic);
+			MeshMaterial->SetRoughnessValue(mesh.material.roughness);
+
+			mesh.m_MaterialGuid = Resource::Guid::generate();
+			RegisterEditorMaterial(mesh.m_MaterialGuid, MeshMaterial);
+			materialResource = MeshMaterial;
+		}
+		else {
 			// Fall back to file-based registry
 			auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
 			if (materialPtr) {
 				materialResource = *materialPtr;
 			}
+
+		}
+
+		// Before render update material properties if needed
+		if (materialResource)
+		{
+			materialResource->SetAlbedoColor(mesh.material.m_AlbedoColor);
 		}
 
 		// Only render if we have both mesh and material
@@ -151,7 +203,7 @@ void RenderSystem::Update(ecs::world& world) {
 			static int debugCount = 0;
 			if (debugCount < 5) {
 				spdlog::info("RenderSystem: Entity UID assignment - Entity: {}, UID: {}, static_cast result: {}",
-				            debugCount, obj.get_uid(), entityUID);
+					debugCount, obj.get_uid(), entityUID);
 				debugCount++;
 			}
 
@@ -270,7 +322,8 @@ void RenderSystem::LoadBasicShaders() {
 
 	if (!primitiveShader) {
 		spdlog::warn("Failed to load primitive shader for debug visualization");
-	} else {
+	}
+	else {
 		// Configure debug render pass with primitive shader
 		instance.m_SceneRenderer->SetDebugPrimitiveShader(primitiveShader);
 		spdlog::info("Debug primitive shader loaded successfully");
@@ -283,7 +336,8 @@ void RenderSystem::LoadBasicShaders() {
 
 	if (!shadowShader) {
 		spdlog::warn("Failed to load shadow depth shader - shadows will be disabled");
-	} else {
+	}
+	else {
 		instance.m_SceneRenderer->SetShadowDepthShader(shadowShader);
 		spdlog::info("Shadow depth shader loaded successfully");
 	}
@@ -295,7 +349,8 @@ void RenderSystem::LoadBasicShaders() {
 
 	if (!pickingShader) {
 		spdlog::warn("Failed to load picking shader - object picking will be disabled");
-	} else {
+	}
+	else {
 		instance.m_SceneRenderer->SetPickingShader(pickingShader);
 		spdlog::info("Picking shader loaded successfully");
 	}
@@ -340,22 +395,22 @@ auto load_mesh_lambda = [](const char* data)->std::shared_ptr<Mesh> {
 	vert.resize(dat.vertices.size());
 	memcpy(vert.data(), dat.vertices.data(), dat.vertices.size() * sizeof(Vertex));
 	return std::make_shared<Mesh>(vert, dat.indices, textures);
-	};
+};
 
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,
 	load_mesh_lambda, [](std::shared_ptr<Mesh>&) {});
 
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 	[](const char* data)->std::shared_ptr<Material> {
-		Resource::MaterialAssetData dat = Resource::load_native_material_from_memory(data);
-		Resource::ShaderAssetData shdr_dat = *ResourceRegistry::Instance().Get<Resource::ShaderAssetData>(dat.shader_guid);
-		std::shared_ptr<Shader> shdr = RenderSystem::Instance().m_SceneRenderer->GetResourceManager()->LoadShader(shdr_dat.m_Name, shdr_dat.m_VertPath, shdr_dat.m_FragPath);
-		std::shared_ptr<Material> mat = std::make_shared<Material>(shdr, dat.m_Name);
-		mat->SetAlbedoColor(dat.m_AlbedoColor);
-		mat->SetRoughnessValue(dat.m_RoughnessValue);
-		mat->SetMetallicValue(dat.m_MetallicValue);
-		return mat;
-	}, [](std::shared_ptr<Material>&) {});
+	Resource::MaterialAssetData dat = Resource::load_native_material_from_memory(data);
+	Resource::ShaderAssetData shdr_dat = *ResourceRegistry::Instance().Get<Resource::ShaderAssetData>(dat.shader_guid);
+	std::shared_ptr<Shader> shdr = RenderSystem::Instance().m_SceneRenderer->GetResourceManager()->LoadShader(shdr_dat.m_Name, shdr_dat.m_VertPath, shdr_dat.m_FragPath);
+	std::shared_ptr<Material> mat = std::make_shared<Material>(shdr, dat.m_Name);
+	mat->SetAlbedoColor(dat.m_AlbedoColor);
+	mat->SetRoughnessValue(dat.m_RoughnessValue);
+	mat->SetMetallicValue(dat.m_MetallicValue);
+	return mat;
+}, [](std::shared_ptr<Material>&) {});
 
 //REGISTER_RESOURCE_TYPE(Texture, [](const char* data)->Texture {return Texture(); }, [](Texture&) {});
 

@@ -98,6 +98,7 @@ protected:
             MemberRegistrationV<&Nested::s, "s">,
             MemberRegistrationV<&Nested::name, "name">
         );
+
     }
 };
 

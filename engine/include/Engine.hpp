@@ -55,6 +55,9 @@ public:
 	static bool WindowShouldClose();
 
 	static void GenerateDefaultConfig();
+	//static void CreateDefaultResources();
+
+
 	static void ReportLastError();
 	static ecs::world GetWorld();
 
@@ -64,8 +67,6 @@ public:
 	//engine state management
 	void Coma();	//do not use recklessly, this will put the program into deadlock 
 	void Terminate();
-	
-
 };
 
 

@@ -2,3 +2,9 @@ asset list:
   C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\editortest\assets\image\blue_sky.png:
     guid: 3089af99758380b923ce3d6826c4
     type: texture
+  btm highpoly:
+    guid: 360b0a0d7f2f87620c3a1246dbc1
+    type: mesh
+  highpoly top:
+    guid: 360b0a0d7129985da4140e99c574
+    type: mesh
