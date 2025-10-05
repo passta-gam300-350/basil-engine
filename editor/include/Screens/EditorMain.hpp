@@ -106,6 +106,9 @@ private:
 	               const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f));
 	void CreateCubeGrid(int gridSize = 3, float spacing = 3.0f);
 
+	void CreatePhysicsDemoScene();
+	void CreatePhysicsCube();
+
 	// Editor Camera
 	std::unique_ptr<EditorCamera> m_EditorCamera;
 

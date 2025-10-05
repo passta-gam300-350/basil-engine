@@ -200,16 +200,16 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 			
 
 			// primitives
-			else if (int* v = value.try_cast<int>())
-				out[field_name] = *v;
-			else if (float* v = value.try_cast<float>())
-				out[field_name] = *v;
-			else if (double* v = value.try_cast<double>())
-				out[field_name] = *v;
-			else if (std::string* v = value.try_cast<std::string>())
-				out[field_name] = *v;
-			else if (bool* v = value.try_cast<bool>())
-				out[field_name] = *v;
+			else if (int* vi = value.try_cast<int>())
+				out[field_name] = *vi;
+			else if (float* vf = value.try_cast<float>())
+				out[field_name] = *vf;
+			else if (double* vd = value.try_cast<double>())
+				out[field_name] = *vd;
+			else if (std::string* vs = value.try_cast<std::string>())
+				out[field_name] = *vs;
+			else if (bool* vb = value.try_cast<bool>())
+				out[field_name] = *vb;
 		
 
 		}

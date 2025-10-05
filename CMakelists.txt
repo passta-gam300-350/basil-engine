@@ -5,15 +5,17 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 #proj
 project(gam300)
 
-
 #cfg c++
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CONFIGURATION_TYPES Debug Release)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Debug_Static_Analysis" CACHE STRING "" FORCE)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+set(CMAKE_CXX_FLAGS_DEBUG_STATIC_ANALYSIS "${CMAKE_CXX_FLAGS_DEBUG}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_DEBUG_STATIC_ANALYSIS   "${CMAKE_C_FLAGS_DEBUG}" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG_STATIC_ANALYSIS "${CMAKE_EXE_LINKER_FLAGS_DEBUG}" CACHE STRING "" FORCE)
 
-
+option(ENABLE_STATIC_ANALYSIS "Enable static analysis" OFF)
 
 #modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -25,7 +27,7 @@ include(custom_tools)
 import_dependencies()
 
 #global compile options
-add_compile_options(/W4 /MP)
+#add_compile_options(/W4 /MP)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 
