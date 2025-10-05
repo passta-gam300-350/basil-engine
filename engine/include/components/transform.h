@@ -22,13 +22,5 @@ struct RotationComponent {
 	glm::vec3 m_Rotation; // Euler angles in degrees
 };
 
-/*
- *RegisterReflectionComponent<Simple>(
-            "Simple",
-            MemberRegistrationV<&Simple::a, "a">,
-            MemberRegistrationV<&Simple::b, "b">
-        );
- */
-
 
 #endif
