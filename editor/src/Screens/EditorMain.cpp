@@ -883,7 +883,7 @@ void EditorMain::Render_Profiler()
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
-	double frameMs = last.frameMs;
+	
 
 
 	double totalMs = 0.0;

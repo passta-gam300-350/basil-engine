@@ -59,15 +59,15 @@ void ReflectionRegistry::SetupNativeTypes() {
 
 	RegisterReflectionComponent<glm::mat2>(
 		"mat2",
-		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2& { return mtx[0]; }, "m0" > ,
-		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2& { return mtx[1]; }, "m1" >
+		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2 { return mtx[0]; }, "m0" > ,
+		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2 { return mtx[1]; }, "m1" >
 	);
 
 	RegisterReflectionComponent<glm::mat3>(
 		"mat3",
-		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3& { return mtx[0]; }, "m0" > ,
-		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3& { return mtx[1]; }, "m1" > ,
-		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3& { return mtx[2]; }, "m2" >
+		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[0]; }, "m0" > ,
+		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[1]; }, "m1" > ,
+		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[2]; }, "m2" >
 	);
 	/*
 	RegisterReflectionComponent<glm::mat4>(
