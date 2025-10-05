@@ -4,6 +4,7 @@
 
 #include "components/transform.h"
 #include "Render/Render.h"
+#include <Physics/Physics_Components.h>
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -152,7 +153,15 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	);
 
-
+	//RegisterReflectionComponent<RigidBodyComponent>(
+	//			"RigidBodyComponent",
+	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
+	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
+	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+	//);
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",

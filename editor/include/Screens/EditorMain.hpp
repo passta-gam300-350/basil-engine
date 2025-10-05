@@ -92,6 +92,8 @@ public:
 	void Render_Camera_Group_Component(ecs::entity entity_handle);
 	void Render_Mesh_Component(ecs::entity entity_handle);
 
+	void Render_Rigidbody_Component(ecs::entity entity_handle);
+
 private:
 	// Entity management
 	void CreateDefaultEntity();
