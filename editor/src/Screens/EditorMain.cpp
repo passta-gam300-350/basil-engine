@@ -77,7 +77,6 @@ void EditorMain::update()
 
 	Engine::BeginFrame();
 
-
 	// Update input manager ONCE per frame - at the very beginning
 	auto* input = InputManager::Get_Instance();
 	input->Update();
