@@ -1,4 +1,16 @@
 #pragma once
+/*!************************************************************************
+\file:      Physics_Components.h
+\author:    Sam Tsang
+\email:     sam.tsang@digipen.edu
+\course:    CSD 3401 - Software Engineering Project 5
+\brief:     This file has the definations of the components that will be used
+by ecs for physics. They wrap a couple of jolt specific data types
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+***************************************************************************/
 
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/BodyID.h>

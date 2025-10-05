@@ -488,6 +488,15 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 
 			if (edited)
 			{
+				
+				//RigidBodyComponent* rb = nullptr;
+				//rb = &world.get_component_from_entity<RigidBodyComponent>(entity_handle);
+				//if (rb)
+				//{
+				//	PhysSys.GetBodyInterface().SetPositionAndRotation(rb->bodyID, PhysicsUtils::ToJolt(pos), PhysicsUtils::EulerToJoltQuat(rot), JPH::EActivation::Activate);
+
+				//}
+				
 
 				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
 				glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
