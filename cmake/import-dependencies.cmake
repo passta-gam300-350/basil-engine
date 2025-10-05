@@ -173,7 +173,10 @@ macro(import_jolt)
 
     FetchContent_MakeAvailable(jolt)
 
-    set_target_properties(Jolt PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+    set_target_properties(Jolt PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+    )
+
 endmacro()
 
 macro(import_imgui)
