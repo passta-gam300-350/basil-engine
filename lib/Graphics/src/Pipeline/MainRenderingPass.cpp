@@ -15,7 +15,7 @@ MainRenderingPass::MainRenderingPass()
 	{
         1280, 720,
 {
-            { FBOTextureFormat::RGBA8 },
+            { FBOTextureFormat::SRGB8_ALPHA8 },
             { FBOTextureFormat::DEPTH24STENCIL8 }
 		}
     })

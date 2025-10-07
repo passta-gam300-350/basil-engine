@@ -7,6 +7,7 @@ enum class FBOTextureFormat
 {
 	None = 0,
 	RGBA8,
+	SRGB8_ALPHA8,   // sRGB format for automatic gamma correction
 	RGBA16F,        // 16-bit floating point for G-buffer precision
 	RED_INTEGER,
 	DEPTH24STENCIL8,

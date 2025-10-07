@@ -10,6 +10,7 @@ namespace Utils
 		switch (format)
 		{
 		case FBOTextureFormat::RGBA8: return GL_RGBA8;
+		case FBOTextureFormat::SRGB8_ALPHA8: return GL_SRGB8_ALPHA8;
 		case FBOTextureFormat::RGBA16F: return GL_RGBA16F;
 		case FBOTextureFormat::RED_INTEGER: return GL_R32I;
 		case FBOTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
@@ -81,16 +82,45 @@ void FrameBuffer::Invalidate()
 		for (uint32_t i = 0; i < m_ColorAttachments.size(); ++i)
 		{
 			glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[i]);
-			
-			// Use standard RGBA8 format for color attachments
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specifications.Width, m_Specifications.Height, 0,
-				GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+			// Use the actual format from specs instead of hardcoded GL_RGBA8
+			GLenum internalFormat = Utils::TextureFormatToGL(m_ColorAttachmentSpecs[i].TextureFormat);
+
+			// Determine format and type based on internal format
+			GLenum format;
+			GLenum type;
+
+			switch (m_ColorAttachmentSpecs[i].TextureFormat)
+			{
+				case FBOTextureFormat::RGBA16F:
+					format = GL_RGBA;
+					type = GL_FLOAT;
+					break;
+
+				case FBOTextureFormat::RED_INTEGER:
+					format = GL_RED_INTEGER;
+					type = GL_INT;
+					break;
+
+				case FBOTextureFormat::SRGB8_ALPHA8:
+				case FBOTextureFormat::RGBA8:
+				default:
+					format = GL_RGBA;
+					type = GL_UNSIGNED_BYTE;
+					break;
+			}
+
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat,
+						 m_Specifications.Width, m_Specifications.Height, 0,
+						 format, type, nullptr);
+
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_ColorAttachments[i], 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
+								  GL_TEXTURE_2D, m_ColorAttachments[i], 0);
 		}
 
 	}
