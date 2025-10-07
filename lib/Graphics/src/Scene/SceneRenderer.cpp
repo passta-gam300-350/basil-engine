@@ -1,6 +1,7 @@
 #include "Scene/SceneRenderer.h"
 #include "Pipeline/MainRenderingPass.h"
 #include "Pipeline/DebugRenderPass.h"
+#include "Pipeline/EditorResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/FrustumCuller.h"
@@ -72,12 +73,16 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(debugPass);
     mainPipeline->EnablePass("DebugPass", false);
 
-    // 5. Add picking pass (executes when needed, disabled by default)
+    // 5. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    auto editorResolvePass = std::make_shared<EditorResolvePass>();
+    mainPipeline->AddPass(editorResolvePass);
+
+    // 6. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 6. Add present pass (executes last)
+    // 7. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 

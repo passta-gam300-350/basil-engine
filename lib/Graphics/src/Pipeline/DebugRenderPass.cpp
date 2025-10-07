@@ -85,9 +85,6 @@ void DebugRenderPass::Execute(RenderContext& context)
     // Unbind the main framebuffer
     context.frameData.mainColorBuffer->Unbind();
 
-    // Update editor FBO with debug overlays (similar to MainRenderingPass)
-    UpdateEditorFBOWithDebug(context);
-
     // End the pass (no framebuffer unbinding since we don't have one)
     End();
 }
@@ -399,43 +396,4 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
     // Restore normal line width
     RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };
     Submit(restoreLineWidthCmd);
-}
-
-void DebugRenderPass::UpdateEditorFBOWithDebug(RenderContext &context)
-{
-    // Only update editor FBO if it exists and debug rendering was enabled
-    if (!context.frameData.editorColorBuffer || !context.frameData.mainColorBuffer)
-    {
-        return;
-    }
-
-    auto mainFBO = context.frameData.mainColorBuffer;
-    auto editorFBO = context.frameData.editorColorBuffer;
-    const auto &mainSpec = mainFBO->GetSpecification();
-
-    // Ensure editor FBO is same size as main FBO
-    if (editorFBO->GetSpecification().Width != mainSpec.Width ||
-        editorFBO->GetSpecification().Height != mainSpec.Height)
-    {
-
-        // Create identical FBO specs for editor copy
-        FBOSpecs editorSpec = mainSpec;
-        context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
-        editorFBO = context.frameData.editorColorBuffer;
-    }
-
-    // Blit main FBO (with debug overlays) to editor FBO
-    // Use OpenGL blit directly since this is editor integration (similar to MainRenderingPass)
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
-
-    glBlitFramebuffer(
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST
-    );
-
-    // Restore framebuffer binding
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }

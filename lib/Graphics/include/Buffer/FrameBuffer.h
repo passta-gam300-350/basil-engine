@@ -41,7 +41,7 @@ struct FBOSpecs
 	uint32_t Width = 0, Height = 0;
 	FBOAttachmentSpecs Attachments;
 	uint32_t Samples = 1;
-	bool SwapChainTarget = false;
+	// bool SwapChainTarget = false;
 };
 
 class FrameBuffer
@@ -63,6 +63,10 @@ public:
 	{
 		return m_Specifications;
 	}
+
+	// MSAA support
+	bool IsMultisampled() const { return m_Specifications.Samples > 1; }
+	void ResolveToFramebuffer(FrameBuffer* destination) const;
 
 
 private:

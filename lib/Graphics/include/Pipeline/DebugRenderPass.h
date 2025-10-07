@@ -60,8 +60,6 @@ public:
     bool GetClearColorBuffer() const { return m_ClearColorBuffer; }
 
 private:
-    // Update editor FBO with debug overlays (similar to MainRenderingPass)
-    void UpdateEditorFBOWithDebug(RenderContext& context);
     // Light visualization
     void RenderLightCubes(RenderContext& context);
     void RenderLightRays(RenderContext& context);

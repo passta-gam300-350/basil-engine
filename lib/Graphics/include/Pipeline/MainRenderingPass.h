@@ -40,9 +40,6 @@ private:
     // Update framebuffer to match current window size
     void UpdateFramebufferSize();
 
-    // Create separate FBO copy for editor display
-    void CreateEditorFBOCopy(RenderContext &context);
-
     // Render skybox if enabled
     void RenderSkybox(RenderContext& context);
 

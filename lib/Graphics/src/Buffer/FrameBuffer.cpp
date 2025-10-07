@@ -79,48 +79,61 @@ void FrameBuffer::Invalidate()
 		m_ColorAttachments.resize(m_ColorAttachmentSpecs.size());
 		glGenTextures(static_cast<GLsizei>(m_ColorAttachments.size()), m_ColorAttachments.data());
 
+		bool multisampled = IsMultisampled();
+		GLenum textureTarget = multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+
 		for (uint32_t i = 0; i < m_ColorAttachments.size(); ++i)
 		{
-			glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[i]);
+			glBindTexture(textureTarget, m_ColorAttachments[i]);
 
 			// Use the actual format from specs instead of hardcoded GL_RGBA8
 			GLenum internalFormat = Utils::TextureFormatToGL(m_ColorAttachmentSpecs[i].TextureFormat);
 
-			// Determine format and type based on internal format
-			GLenum format;
-			GLenum type;
-
-			switch (m_ColorAttachmentSpecs[i].TextureFormat)
+			if (multisampled)
 			{
-				case FBOTextureFormat::RGBA16F:
-					format = GL_RGBA;
-					type = GL_FLOAT;
-					break;
+				// Create multisampled texture
+				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specifications.Samples,
+					internalFormat, m_Specifications.Width, m_Specifications.Height, GL_TRUE);
+			}
+			else
+			{
+				// Determine format and type based on internal format
+				GLenum format;
+				GLenum type;
 
-				case FBOTextureFormat::RED_INTEGER:
-					format = GL_RED_INTEGER;
-					type = GL_INT;
-					break;
+				switch (m_ColorAttachmentSpecs[i].TextureFormat)
+				{
+					case FBOTextureFormat::RGBA16F:
+						format = GL_RGBA;
+						type = GL_FLOAT;
+						break;
 
-				case FBOTextureFormat::SRGB8_ALPHA8:
-				case FBOTextureFormat::RGBA8:
-				default:
-					format = GL_RGBA;
-					type = GL_UNSIGNED_BYTE;
-					break;
+					case FBOTextureFormat::RED_INTEGER:
+						format = GL_RED_INTEGER;
+						type = GL_INT;
+						break;
+
+					case FBOTextureFormat::SRGB8_ALPHA8:
+					case FBOTextureFormat::RGBA8:
+					default:
+						format = GL_RGBA;
+						type = GL_UNSIGNED_BYTE;
+						break;
+				}
+
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat,
+							 m_Specifications.Width, m_Specifications.Height, 0,
+							 format, type, nullptr);
+
+				// Texture parameters (not supported for multisampled textures)
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
 
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat,
-						 m_Specifications.Width, m_Specifications.Height, 0,
-						 format, type, nullptr);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-								  GL_TEXTURE_2D, m_ColorAttachments[i], 0);
+								  textureTarget, m_ColorAttachments[i], 0);
 		}
 
 	}
@@ -129,25 +142,38 @@ void FrameBuffer::Invalidate()
 	if (m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None)
 	{
 		glGenTextures(1, &m_DepthAttachment);
-		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 
-		// Use standard depth-stencil format
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
-			GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
-		
-		// Set texture parameters for depth texture
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		bool multisampled = IsMultisampled();
+		GLenum textureTarget = multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 
-		// Use border clamping for shadow maps to prevent sampling outside bounds
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glBindTexture(textureTarget, m_DepthAttachment);
 
-		// Set border color to white (1.0) so areas outside shadow map are not in shadow
-		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		if (multisampled)
+		{
+			// Create multisampled depth texture
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specifications.Samples,
+				GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, GL_TRUE);
+		}
+		else
+		{
+			// Use standard depth-stencil format
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
+				GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
+			// Set texture parameters for depth texture (not supported for multisampled)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			// Use border clamping for shadow maps to prevent sampling outside bounds
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+			// Set border color to white (1.0) so areas outside shadow map are not in shadow
+			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		}
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, textureTarget, m_DepthAttachment, 0);
 	}
 
 	// Specify draw buffers
@@ -210,10 +236,11 @@ void FrameBuffer::Invalidate()
 	}
 	else
 	{
-		spdlog::debug("Framebuffer created successfully: {}x{}, ColorAttachments: {}, DepthAttachment: {}",
+		spdlog::debug("Framebuffer created successfully: {}x{}, ColorAttachments: {}, DepthAttachment: {}, MSAA: {}x",
 			m_Specifications.Width, m_Specifications.Height,
 			m_ColorAttachments.size(),
-			(m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None) ? "Yes" : "No");
+			(m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None) ? "Yes" : "No",
+			m_Specifications.Samples);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -293,4 +320,55 @@ uint32_t FrameBuffer::GetColorAttachmentRendererID(uint32_t index) const
 	}
 
 	return m_ColorAttachments[index];
+}
+
+void FrameBuffer::ResolveToFramebuffer(FrameBuffer* destination) const
+{
+	if (!IsMultisampled())
+	{
+		spdlog::warn("Attempting to resolve non-multisampled framebuffer - use blit instead");
+		return;
+	}
+
+	if (!destination)
+	{
+		spdlog::error("Cannot resolve to null framebuffer!");
+		return;
+	}
+
+	if (destination->IsMultisampled())
+	{
+		spdlog::error("Cannot resolve to multisampled framebuffer - destination must be non-MSAA");
+		return;
+	}
+
+	// Ensure destination size matches source
+	const auto& srcSpec = GetSpecification();
+	const auto& dstSpec = destination->GetSpecification();
+
+	if (srcSpec.Width != dstSpec.Width || srcSpec.Height != dstSpec.Height)
+	{
+		spdlog::warn("Resolve: Source and destination sizes differ ({}x{} -> {}x{}) - will stretch",
+			srcSpec.Width, srcSpec.Height, dstSpec.Width, dstSpec.Height);
+	}
+
+	// Bind framebuffers for resolve
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBOHandle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, destination->GetFBOHandle());
+
+	// Resolve color attachments (MSAA -> non-MSAA)
+	// Use GL_NEAREST for multisampled resolve (GL_LINEAR not allowed for integer formats)
+	glBlitFramebuffer(
+		0, 0, srcSpec.Width, srcSpec.Height,
+		0, 0, dstSpec.Width, dstSpec.Height,
+		GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+		GL_NEAREST
+	);
+
+	// Restore framebuffer binding
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	spdlog::debug("Resolved MSAA framebuffer ({}x samples) to non-MSAA framebuffer",
+		m_Specifications.Samples);
 }

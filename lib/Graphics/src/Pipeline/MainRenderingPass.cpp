@@ -17,7 +17,8 @@ MainRenderingPass::MainRenderingPass()
 {
             { FBOTextureFormat::SRGB8_ALPHA8 },
             { FBOTextureFormat::DEPTH24STENCIL8 }
-		}
+		},
+        4  // 4x MSAA
     })
 {
     // Create default skybox cube mesh
@@ -81,9 +82,6 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
 
-    // Create separate editor FBO copy to avoid conflicts with PresentPass
-    CreateEditorFBOCopy(context);
-
     End();
 }
 
@@ -107,39 +105,6 @@ void MainRenderingPass::UpdateFramebufferSize()
         // Update the viewport to match the new framebuffer size
         SetViewport(Viewport(0, 0, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight)));
     }
-}
-
-void MainRenderingPass::CreateEditorFBOCopy(RenderContext &context)
-{
-    // Create editor FBO if it doesn't exist or size changed
-    auto mainFBO = GetFramebuffer();
-    const auto &mainSpec = mainFBO->GetSpecification();
-
-    if (!context.frameData.editorColorBuffer ||
-        context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||
-        context.frameData.editorColorBuffer->GetSpecification().Height != mainSpec.Height)
-    {
-        // Create identical FBO specs for editor copy
-        FBOSpecs editorSpec = mainSpec;
-        context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
-    }
-
-    // Blit main FBO to editor FBO
-    auto editorFBO = context.frameData.editorColorBuffer;
-
-    // Use OpenGL blit directly since we're not going through command buffer
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
-
-    glBlitFramebuffer(
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST
-    );
-
-    // Restore framebuffer binding
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void MainRenderingPass::RenderSkybox(RenderContext& context)

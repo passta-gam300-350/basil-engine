@@ -25,8 +25,8 @@ struct FrameData
     // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 
-    // Editor display copy (separate from main buffer used by PresentPass)
-    std::shared_ptr<FrameBuffer> editorColorBuffer;
+    // Editor display buffer (resolved from mainColorBuffer for ImGui sampling)
+    std::shared_ptr<FrameBuffer> editorResolvedBuffer;     // Non-MSAA resolved for ImGui
 
     // Post-processing chain
     std::shared_ptr<FrameBuffer> postProcessBuffer;
