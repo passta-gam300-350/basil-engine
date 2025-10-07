@@ -297,6 +297,36 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DispatchComputeData &cmd)
+{
+    assert(cmd.computeShader && "Compute shader cannot be null");
+    assert(cmd.computeShader->ID != 0 && "Compute shader must be compiled");
+    assert(cmd.groupsX > 0 && cmd.groupsY > 0 && cmd.groupsZ > 0 &&
+        "Compute dispatch groups must be positive");
+
+    // Bind and dispatch compute shader
+    cmd.computeShader->use();
+    glDispatchCompute(cmd.groupsX, cmd.groupsY, cmd.groupsZ);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindImageTextureData &cmd)
+{
+    assert(cmd.textureID != 0 && "Texture ID must be valid");
+    assert(cmd.unit < 8 && "Image unit must be within typical limits (0-7)");
+    assert(cmd.access == GL_READ_ONLY || cmd.access == GL_WRITE_ONLY ||
+        cmd.access == GL_READ_WRITE && "Invalid image access mode");
+
+    glBindImageTexture(cmd.unit, cmd.textureID, cmd.level,
+        cmd.layered ? GL_TRUE : GL_FALSE,
+        cmd.layer, cmd.access, cmd.format);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::MemoryBarrierData &cmd)
+{
+    assert(cmd.barriers != 0 && "Barrier flags must be specified");
+    glMemoryBarrier(cmd.barriers);
+}
+
 void RenderCommandBuffer::CleanupGPUState()
 {
     // Note: We don't reset shadow map texture (slot 8) here since it should persist
