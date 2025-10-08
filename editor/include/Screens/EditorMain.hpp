@@ -1,3 +1,24 @@
+/******************************************************************************/
+/*!
+\file   EditorMain.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+		Eirwen (c.lau\@digipen.edu)
+		Hai Jie (haijie.w\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contain the declaration for the EditorMain class, which is the
+main editor screen handling the viewport, entity management, and various editor panels.
+It integrates with the rendering system and ECS to provide a functional editor environment.
+It includes features like scene exploration, entity inspection, and camera controls. It allows
+for creating, selecting, and manipulating entities within the scene.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef EDITORMAIN_HPP
 #define EDITORMAIN_HPP
 
@@ -70,6 +91,8 @@ public:
 
 	void Render_Camera_Group_Component(ecs::entity entity_handle);
 	void Render_Mesh_Component(ecs::entity entity_handle);
+
+	void Render_Rigidbody_Component(ecs::entity entity_handle);
 
 private:
 	// Entity management

@@ -4,6 +4,7 @@
 
 #include "components/transform.h"
 #include "Render/Render.h"
+#include <Physics/Physics_Components.h>
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -55,26 +56,15 @@ void ReflectionRegistry::SetupNativeTypes() {
 
 	RegisterReflectionComponent<glm::mat2>(
 		"mat2",
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 0, 0>, &GetMatCellValue<glm::mat2, 0, 0>, "m00" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 0, 1>, &GetMatCellValue<glm::mat2, 0, 1>, "m01" >,
-
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 1, 0>, &GetMatCellValue<glm::mat2, 1, 0>, "m10" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 1, 1>, &GetMatCellValue<glm::mat2, 1, 1>, "m11" >
+		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2 { return mtx[0]; }, "m0" > ,
+		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2 { return mtx[1]; }, "m1" >
 	);
 
 	RegisterReflectionComponent<glm::mat3>(
 		"mat3",
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,0, 0>, &GetMatCellValue<glm::mat3,0, 0>, "m00" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,0, 1>, &GetMatCellValue<glm::mat3,0, 1>, "m01" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,0, 2>, &GetMatCellValue<glm::mat3,0, 2>, "m02" >,
-
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,1, 0>, &GetMatCellValue<glm::mat3,1, 0>, "m10" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,1, 1>, &GetMatCellValue<glm::mat3,1, 1>, "m11" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,1, 2>, &GetMatCellValue<glm::mat3,1, 2>, "m12" >,
-
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,2, 0>, &GetMatCellValue<glm::mat3,2, 0>, "m20" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,2, 1>, &GetMatCellValue<glm::mat3,2, 1>, "m21" >,
-		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,2, 2>, &GetMatCellValue<glm::mat3,2, 2>, "m22" >
+		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[0]; }, "m0" > ,
+		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[1]; }, "m1" > ,
+		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[2]; }, "m2" >
 	);
 
 
@@ -152,7 +142,15 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	);
 
-
+	//RegisterReflectionComponent<RigidBodyComponent>(
+	//			"RigidBodyComponent",
+	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
+	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
+	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+	//);
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",

@@ -1,4 +1,24 @@
-// THIS IS THE ACTUAL LEVEL EDITOR!!!,
+/******************************************************************************/
+/*!
+\file   EditorMain.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+		Eirwen (c.lau\@digipen.edu)
+		Hai Jie (haijie.w\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contain the implmentation for the EditorMain class, which is the
+main editor screen handling the viewport, entity management, and various editor panels.
+It integrates with the rendering system and ECS to provide a functional editor environment.
+It includes features like scene exploration, entity inspection, and camera controls. It allows
+for creating, selecting, and manipulating entities within the scene.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 
 #include <Render/Render.h>
 #include <Engine.hpp>
@@ -373,6 +393,8 @@ void EditorMain::Render_Inspector()
 				//	ImGui::Text("  Enabled: %s", light.m_IsEnabled ? "Yes" : "No");
 				//}
 
+				Render_Rigidbody_Component(entity);
+
 				Render_Lighting_Group_Component(entity);
 
 				// Camera Component
@@ -636,7 +658,37 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 
 }
 
+void EditorMain::Render_Rigidbody_Component(ecs::entity entity_handle)
+{
+	auto world = Engine::GetWorld();
 
+	RigidBodyComponent* rigidBodyComponent = nullptr;
+
+	if (world.has_all_components_in_entity<RigidBodyComponent>(entity_handle))
+	{
+		rigidBodyComponent = &world.get_component_from_entity<RigidBodyComponent>(entity_handle);
+	}
+
+	if (rigidBodyComponent)
+	{
+		if (ImGui::CollapsingHeader("Rigidbody"))
+		{
+			ImGui::Text("Rigidbody ID: %u", rigidBodyComponent->bodyID);
+			const char* motionTypes[] = { "Static", "Dynamic", "Kinematic" };
+			int currentMotionType = static_cast<int>(rigidBodyComponent->motionType);
+			ImGui::Text("Current Motion: %s", motionTypes[currentMotionType]);
+
+
+			glm::vec3 velocity = { rigidBodyComponent->velocity.GetX(), rigidBodyComponent->velocity.GetY(), rigidBodyComponent->velocity.GetZ() };
+			ImGui::Text("Velocity: %.2f, %.2f, %.2f", velocity.x, velocity.y, velocity.z);
+			glm::vec3 angularVelocity = { rigidBodyComponent->angularVelocity.GetX(), rigidBodyComponent->angularVelocity.GetY(), rigidBodyComponent->angularVelocity.GetZ() };
+			ImGui::Text("Angular Velocity: %.2f, %.2f, %.2f", angularVelocity.x, angularVelocity.y, angularVelocity.z);
+			
+			ImGui::NewLine();
+			ImGui::Checkbox("Enabled", &rigidBodyComponent->isActive);
+		}
+	}
+}
 
 void EditorMain::Render_MenuBar()
 {
@@ -886,16 +938,14 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
-	// Example profiling data
-	ImGui::Text("Frame Time: %.2fms", 16.67f);
+	
+	
 	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
-	double frameMs = last.frameMs;
+	
 
-	ImGui::Text("Frame Time: %.2f ms", frameMs);
-	ImGui::Text("FPS: %.2f", (frameMs > 0.0) ? 1000.0 / frameMs : 0.0);
 
 	double totalMs = 0.0;
 	for (auto& kv : last.systemMs) {
