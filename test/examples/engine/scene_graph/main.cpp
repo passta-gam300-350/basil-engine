@@ -147,6 +147,67 @@ int main() {
     PrintTransform("Wheel 1 (moves with car)", wheel1);
     PrintTransform("Wheel 2 (moves with car)", wheel2);
 
+    // Test deep hierarchy: Body -> Arm -> Forearm -> Hand -> Finger
+    std::cout << "\n--- Testing Deep Hierarchy (5 levels) ---\n";
+    ecs::entity body = world.add_entity();
+    body.add<TransformComponent>();
+    body.add<RelationshipComponent>();
+
+    ecs::entity arm = world.add_entity();
+    arm.add<TransformComponent>();
+    arm.add<RelationshipComponent>();
+
+    ecs::entity forearm = world.add_entity();
+    forearm.add<TransformComponent>();
+    forearm.add<RelationshipComponent>();
+
+    ecs::entity hand = world.add_entity();
+    hand.add<TransformComponent>();
+    hand.add<RelationshipComponent>();
+
+    ecs::entity finger = world.add_entity();
+    finger.add<TransformComponent>();
+    finger.add<RelationshipComponent>();
+
+    // Build hierarchy
+    SceneGraph::SetParent(arm, body);
+    SceneGraph::SetParent(forearm, arm);
+    SceneGraph::SetParent(hand, forearm);
+    SceneGraph::SetParent(finger, hand);
+
+    // Set transforms
+    auto& bodyTransform = body.get<TransformComponent>();
+    bodyTransform.localPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    auto& armTransform = arm.get<TransformComponent>();
+    armTransform.localPosition = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    auto& forearmTransform = forearm.get<TransformComponent>();
+    forearmTransform.localPosition = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    auto& handTransform = hand.get<TransformComponent>();
+    handTransform.localPosition = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    auto& fingerTransform = finger.get<TransformComponent>();
+    fingerTransform.localPosition = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    transformSystem.Update(world, 0.016f);
+
+    std::cout << "5-level hierarchy positions:\n";
+    PrintTransform("Body (root)", body);
+    PrintTransform("Arm (level 2)", arm);
+    PrintTransform("Forearm (level 3)", forearm);
+    PrintTransform("Hand (level 4)", hand);
+    PrintTransform("Finger (level 5)", finger);
+
+    std::cout << "\nMoving body to (10, 5, 0) - all children should follow:\n";
+    bodyTransform.localPosition = glm::vec3(10.0f, 5.0f, 0.0f);
+    SceneGraph::MarkTransformDirty(body);
+    transformSystem.Update(world, 0.016f);
+
+    PrintTransform("Body", body);
+    PrintTransform("Finger (deepest child)", finger);
+
     std::cout << "\n=== Scene Graph Example Complete ===\n";
 
     // Cleanup
