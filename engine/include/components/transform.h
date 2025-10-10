@@ -27,6 +27,8 @@ Technology is prohibited.
 
 
 struct TransformComponent {
+	glm::mat4 m_trans = glm::mat4(1.0f); // Kept for backward compatibility
+
 	// Local space (relative to parent)
 	glm::vec3 localPosition = glm::vec3(0.0f);
 	glm::quat localRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // Identity quaternion
@@ -56,9 +58,6 @@ struct TransformComponent {
 	glm::vec3 getEulerRotation() const {
 		return glm::eulerAngles(localRotation);
 	}
-
-	// Legacy compatibility
-	glm::mat4 m_trans = glm::mat4(1.0f); // Kept for backward compatibility
 };
 
 // Legacy components - kept for backward compatibility
