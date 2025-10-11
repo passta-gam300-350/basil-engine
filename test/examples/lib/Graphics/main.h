@@ -49,6 +49,9 @@ private:
     // Animation controls
     bool m_RotationEnabled;
 
+    // HDR state tracking
+    bool m_HDREnabled;
+
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -82,9 +85,11 @@ private:
     void PrintSceneInfo() const;
     void PrintRenderPassStatus() const;
     void PrintPointShadowInfo() const;
+    void PrintHDRInfo() const;
 
     // Render pass controls
     void ToggleRenderPass(const std::string& passName);
+    void ToggleHDRPipeline();
     void ToggleAABBVisualization();
     void ToggleSkybox();
     //void RenderUI(); // For ImGui if available

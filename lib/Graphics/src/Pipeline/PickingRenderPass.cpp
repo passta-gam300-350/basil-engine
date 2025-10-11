@@ -78,7 +78,7 @@ void PickingRenderPass::RenderPickingData(RenderContext& context)
         return;
     }
 
-    spdlog::info("RenderPickingData - Processing {} renderables", context.renderables.size());
+    //spdlog::info("RenderPickingData - Processing {} renderables", context.renderables.size());
 
     // Bind the picking shader
     RenderCommands::BindShaderData bindShaderCmd{ m_PickingShader };
@@ -93,7 +93,7 @@ void PickingRenderPass::RenderPickingData(RenderContext& context)
             continue; // Skip invisible objects or objects without picking IDs
         }
 
-        spdlog::info("Rendering object with ID: {}", renderable.objectID);
+        //spdlog::info("Rendering object with ID: {}", renderable.objectID);
         renderedCount++;
 
         // Set camera uniforms
@@ -125,7 +125,7 @@ void PickingRenderPass::RenderPickingData(RenderContext& context)
         }
     }
 
-    spdlog::info("RenderPickingData - Rendered {} objects with valid IDs out of {} total renderables", renderedCount, context.renderables.size());
+    //spdlog::info("RenderPickingData - Rendered {} objects with valid IDs out of {} total renderables", renderedCount, context.renderables.size());
 }
 
 PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, const RenderContext& context)
@@ -142,9 +142,9 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
                        query.viewportWidth, query.viewportHeight,
                        fbX, fbY);
 
-    spdlog::info("QueryPicking - Screen({}, {}) -> Framebuffer({}, {}) [Viewport: {}x{}]",
+    /*spdlog::info("QueryPicking - Screen({}, {}) -> Framebuffer({}, {}) [Viewport: {}x{}]",
                 query.screenX, query.screenY, fbX, fbY,
-                query.viewportWidth, query.viewportHeight);
+                query.viewportWidth, query.viewportHeight);*/
 
     // Bind the picking framebuffer for reading
     m_Framebuffer->Bind();
@@ -158,20 +158,20 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     uint8_t pixel[4];
     glReadPixels(fbX, fbY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
 
-    spdlog::info("QueryPicking - Read pixel RGBA: ({}, {}, {}, {})", pixel[0], pixel[1], pixel[2], pixel[3]);
+    //spdlog::info("QueryPicking - Read pixel RGBA: ({}, {}, {}, {})", pixel[0], pixel[1], pixel[2], pixel[3]);
 
     // Convert color back to object ID (match shader bit layout)
     objectID = (static_cast<uint32_t>(pixel[0]) << 16) |  // RED → high bits (16-23)
                (static_cast<uint32_t>(pixel[1]) << 8) |   // GREEN → mid bits (8-15)
                static_cast<uint32_t>(pixel[2]);
 
-    spdlog::info("QueryPicking - Converted to object ID: {}", objectID);
+    //spdlog::info("QueryPicking - Converted to object ID: {}", objectID);
 
     // Read depth value for world position calculation
     float depth;
     glReadPixels(fbX, fbY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
 
-    spdlog::info("QueryPicking - Depth value: {}", depth);
+    //spdlog::info("QueryPicking - Depth value: {}", depth);
 
     m_Framebuffer->Unbind();
 

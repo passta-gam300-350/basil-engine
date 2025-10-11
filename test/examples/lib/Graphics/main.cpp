@@ -40,6 +40,7 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_LastX(640.0f)
     , m_LastY(360.0f)
     , m_RotationEnabled(false)
+    , m_HDREnabled(false)  // HDR starts disabled
 {
     s_Instance = this;
 }
@@ -67,11 +68,16 @@ bool GraphicsTestDriver::Initialize()
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
-    // Setup camera - positioned to view Sponza scene
+    // Setup camera - positioned to view Sponza scene (matching ogldev tutorial 63)
     m_Camera = std::make_unique<Camera>(CameraType::Perspective);
     m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-    m_Camera->SetPosition(glm::vec3(0.0f, 2.0f, 5.0f));  // View from front, slightly elevated
-    m_Camera->SetRotation(glm::vec3(-10.0f, 180.0f, 0.0f)); // Look toward Sponza center
+    m_Camera->SetPosition(glm::vec3(59.0f, 9.0f, -1.6f));  // ogldev's camera position
+
+    // Convert ogldev's direction vector (-1.0, 0.05, 0.07) to pitch/yaw angles
+    glm::vec3 direction = glm::normalize(glm::vec3(-1.0f, 0.05f, 0.07f));
+    float pitch = glm::degrees(asin(direction.y));  // ~2.86 degrees
+    float yaw = glm::degrees(atan2(direction.z, direction.x));  // ~176 degrees
+    m_Camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
     
     // We'll manually update the scene renderer's frame data with camera matrices
 
@@ -105,8 +111,9 @@ bool GraphicsTestDriver::Initialize()
 void GraphicsTestDriver::Run()
 {
     spdlog::info("Starting render loop...");
-    spdlog::info("=== CRYTEK SPONZA DEMO ===");
-    spdlog::info("Scene: Crytek Sponza Atrium (no active lights, ambient only)");
+    spdlog::info("=== HDR TONE MAPPING DEMO (ogldev Tutorial 63) ===");
+    spdlog::info("Scene: Crytek Sponza with animated point light (intensity 5.0)");
+    spdlog::info("HDR: Enabled | Auto-Exposure: Active | Gamma: Enabled");
     spdlog::info("Controls:");
     spdlog::info("  - WASD: Move camera");
     spdlog::info("  - Mouse: Look around");
@@ -115,12 +122,17 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - F2: Print scene info");
     spdlog::info("  - F3: Print render pass status");
     spdlog::info("  - 1: Toggle shadow pass");
-    spdlog::info("  - 2: Toggle main pass");
-    spdlog::info("  - 3: Toggle post-process pass");
+    spdlog::info("  - 3: Toggle debug pass (light visualization)");
     spdlog::info("  - 4: Toggle AABB wireframes");
     spdlog::info("  - 5: Toggle object rotation");
+    spdlog::info("  - 6: Toggle skybox");
     spdlog::info("  - 7: Toggle point shadow pass");
     spdlog::info("  - 8: Print point shadow info");
+    spdlog::info("  - 9: Print HDR statistics (exposure, luminance)");
+    spdlog::info("  - O: Toggle HDR pipeline (all HDR passes on/off)");
+    spdlog::info("  - H: Toggle HDR auto-exposure only");
+    spdlog::info("  - T: Toggle tone mapping only");
+    spdlog::info("  - R: Toggle HDR resolve only");
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -135,7 +147,14 @@ void GraphicsTestDriver::Run()
         // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
 
-        // Submit static data once during initialization
+        // Animate point light position (ogldev tutorial 63 style)
+        if (!m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
+            // Animate X position: oscillates between -60 and +70 (sponza corridor)
+            float animatedX = (cosf(m_Time * 0.05f) + 1.0f) * 65.0f - 60.0f;
+            m_SceneLights[0].position.x = animatedX;
+        }
+
+        // Submit lights and objects each frame
         for (const auto& light : m_SceneLights) {
             m_SceneRenderer->SubmitLight(light);
         }
@@ -468,31 +487,23 @@ void GraphicsTestDriver::SetupAdvancedScene()
     //    }
     //}
 
-    // ===== CRYTEK SPONZA SCENE =====
-    // Create Sponza instance at origin with default scale
-    CreateModelInstance("sponza", "WhiteMaterial", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.01f));
-    spdlog::info("Sponza model instantiated at origin");
+    // ===== CRYTEK SPONZA SCENE (ogldev tutorial 63 setup) =====
+    // Create Sponza instance at origin with ogldev's scale
+    CreateModelInstance("sponza", "WhiteMaterial", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.05f));
+    spdlog::info("Sponza model instantiated at origin (scale 0.05, matching ogldev)");
 
-    // ===== SIMPLIFIED LIGHTING FOR POINT SHADOW TESTING =====
+    // ===== ANIMATED POINT LIGHT (ogldev tutorial 63 setup) =====
+    // Initial point light - position will be animated in Run() loop
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(0.0f, 0.5f, -1.6f),        // Initial position (ogldev)
+        glm::vec3(1.0f, 1.0f, 1.0f),         // Color: white
+        5.0f,                                 // DiffuseIntensity: 5.0 (ogldev)
+        100.0f                                // Range: large for Sponza
+    ));
+    spdlog::info("Animated point light created (intensity 5.0, matching ogldev)");
 
-    // Single directional light (sun-like, from top-right)
-    //m_SceneLights.push_back(CreateDirectionalLight(
-    //    glm::vec3(0.3f, -0.7f, 0.5f),        // Direction: slightly angled
-    //    glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm white
-    //    1.5f                                  // Intensity: increased to balance with point light
-    //));
-
-    //// Single point light positioned to cast clear shadows
-    //// Grid center is at (-8, 0, 0), so position light near center but offset
-    //m_SceneLights.push_back(CreatePointLight(
-    //    glm::vec3(-8.0f, 4.0f, 3.0f),        // Position: near grid center, elevated, offset in Z
-    //    glm::vec3(1.0f, 0.9f, 0.7f),         // Color: warm white/yellow
-    //    3.0f,                                 // Intensity: reduced to balance with directional light
-    //    20.0f                                 // Range: reduced since light is closer
-    //));
-
-    // Set ambient light for scene visibility (since no lights are active)
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.35f));
+    // Set ambient light (ogldev uses 0.2 on the light, we'll use global ambient)
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f));
 
     spdlog::info("Sponza scene created: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
@@ -575,7 +586,7 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         // Assign unique object ID (start from 100 for scene objects)
         static uint32_t nextObjectID = 100;
         renderable.objectID = nextObjectID++;
-        spdlog::info("Created object with ID: {}", renderable.objectID);
+        //spdlog::info("Created object with ID: {}", renderable.objectID);
 
         m_SceneObjects.push_back(renderable);
     }
@@ -835,6 +846,26 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
             case GLFW_KEY_8:
                 s_Instance->PrintPointShadowInfo();
                 break;
+
+            case GLFW_KEY_9:
+                s_Instance->PrintHDRInfo();
+                break;
+
+            case GLFW_KEY_O:
+                s_Instance->ToggleHDRPipeline();
+                break;
+
+            case GLFW_KEY_H:
+                s_Instance->ToggleRenderPass("HDRLuminancePass");
+                break;
+
+            case GLFW_KEY_T:
+                s_Instance->ToggleRenderPass("ToneMapPass");
+                break;
+
+            case GLFW_KEY_R:
+                s_Instance->ToggleRenderPass("HDRResolvePass");
+                break;
         }
     }
 }
@@ -903,8 +934,19 @@ void GraphicsTestDriver::PrintRenderPassStatus() const
     if (m_SceneRenderer) {
         auto* pipeline = m_SceneRenderer->GetPipeline();
         if (pipeline) {
-            // Check status of common render passes
-            std::vector<std::string> passes = {"ShadowPass", "MainPass"};
+            // Check status of all render passes
+            std::vector<std::string> passes = {
+                "ShadowPass",
+                "PointShadowPass",
+                "MainPass",
+                "HDRResolvePass",
+                "HDRLuminancePass",
+                "ToneMapPass",
+                "DebugPass",
+                "EditorResolvePass",
+                "PickingPass",
+                "PresentPass"
+            };
 
             for (const auto& passName : passes) {
                 bool enabled = pipeline->IsPassEnabled(passName);
@@ -936,6 +978,29 @@ void GraphicsTestDriver::ToggleRenderPass(const std::string& passName)
         }
     } else {
         spdlog::warn("Scene renderer not available - cannot toggle pass '{}'", passName);
+    }
+}
+
+void GraphicsTestDriver::ToggleHDRPipeline()
+{
+    if (m_SceneRenderer) {
+        auto* pipeline = m_SceneRenderer->GetPipeline();
+        if (pipeline) {
+            // Toggle the state
+            m_HDREnabled = !m_HDREnabled;
+
+            // Apply to all HDR-related passes
+            pipeline->EnablePass("HDRResolvePass", m_HDREnabled);
+            pipeline->EnablePass("HDRLuminancePass", m_HDREnabled);
+            pipeline->EnablePass("ToneMapPass", m_HDREnabled);
+
+            spdlog::info("HDR Pipeline {} (Resolve + Luminance + ToneMap)",
+                        m_HDREnabled ? "ENABLED" : "DISABLED");
+        } else {
+            spdlog::warn("Pipeline not found - cannot toggle HDR pipeline");
+        }
+    } else {
+        spdlog::warn("Scene renderer not available - cannot toggle HDR pipeline");
     }
 }
 
@@ -1016,6 +1081,40 @@ void GraphicsTestDriver::PrintPointShadowInfo() const
     spdlog::info("================================");
 }
 
+void GraphicsTestDriver::PrintHDRInfo() const
+{
+    spdlog::info("=== HDR Information ===");
+
+    if (m_SceneRenderer) {
+        auto* pipeline = m_SceneRenderer->GetPipeline();
+        if (pipeline) {
+            // Check HDR pass status
+            bool hdrLumEnabled = pipeline->IsPassEnabled("HDRLuminancePass");
+            bool toneMapEnabled = pipeline->IsPassEnabled("ToneMapPass");
+            bool hdrResolveEnabled = pipeline->IsPassEnabled("HDRResolvePass");
+
+            spdlog::info("  HDR Resolve Pass: {}", hdrResolveEnabled ? "ENABLED" : "DISABLED");
+            spdlog::info("  HDR Luminance Pass (Auto-Exposure): {}", hdrLumEnabled ? "ENABLED" : "DISABLED");
+            spdlog::info("  Tone Mapping Pass: {}", toneMapEnabled ? "ENABLED" : "DISABLED");
+
+            // Note: HDR values (exposure, avgLuminance) are calculated during render
+            // and are part of the temporary RenderContext. To display them here,
+            // we'd need to store them in FrameData.
+            spdlog::info("");
+            spdlog::info("  Note: HDR exposure and luminance values are calculated");
+            spdlog::info("  dynamically during rendering. Check console output during");
+            spdlog::info("  frame rendering for real-time values.");
+
+        } else {
+            spdlog::warn("Pipeline not found!");
+        }
+    } else {
+        spdlog::warn("Scene renderer not available!");
+    }
+
+    spdlog::info("=======================");
+}
+
 void GraphicsTestDriver::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if (!s_Instance) return;
@@ -1038,15 +1137,15 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
     int windowWidth, windowHeight;
     glfwGetWindowSize(m_Window->GetNativeWindow(), &windowWidth, &windowHeight);
 
-    spdlog::info("Attempting to pick at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
+    //spdlog::info("Attempting to pick at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
 
     // Enable picking temporarily
     m_SceneRenderer->EnablePicking(true);
-    spdlog::info("Picking enabled, rendering picking frame...");
+    //spdlog::info("Picking enabled, rendering picking frame...");
 
     // Render a picking frame (this will execute the picking pass)
     m_SceneRenderer->Render();
-    spdlog::info("Picking frame rendered, querying result...");
+    //spdlog::info("Picking frame rendered, querying result...");
 
     // Create picking query
     MousePickingQuery query;
@@ -1057,17 +1156,17 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
 
     // Query the picking result
     PickingResult result = m_SceneRenderer->QueryObjectPicking(query);
-    spdlog::info("Query completed, object ID: {}, hasHit: {}", result.objectID, result.hasHit);
+    //spdlog::info("Query completed, object ID: {}, hasHit: {}", result.objectID, result.hasHit);
 
     // Disable picking after use
     m_SceneRenderer->EnablePicking(false);
 
     // Handle the result
     if (result.hasHit) {
-        spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
+        /*spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
                     result.objectID,
                     result.worldPosition.x, result.worldPosition.y, result.worldPosition.z,
-                    result.depth);
+                    result.depth);*/
 
         // You could add additional logic here, such as:
         // - Highlighting the selected object
@@ -1075,7 +1174,7 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
         // - Triggering editor actions
 
     } else {
-        spdlog::info("No object picked at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
+        //spdlog::info("No object picked at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
     }
 }
 

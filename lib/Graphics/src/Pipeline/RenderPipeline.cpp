@@ -59,6 +59,12 @@ void RenderPipeline::Execute(RenderContext& context) const
 				context.frameData.pointShadowCubemaps.clear();
 				context.frameData.pointShadowFarPlanes.clear();
 			}
+			else if (pass->GetName() == "ToneMapPass")
+			{
+				// Clear post-process buffer when tone mapping is disabled
+				// This ensures PresentPass uses mainColorBuffer instead
+				context.frameData.postProcessBuffer = nullptr;
+			}
 		}
 	}
 }
