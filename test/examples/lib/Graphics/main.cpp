@@ -39,7 +39,7 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_FirstMouse(true)
     , m_LastX(640.0f)
     , m_LastY(360.0f)
-    , m_RotationEnabled(true)
+    , m_RotationEnabled(false)
 {
     s_Instance = this;
 }
@@ -67,12 +67,11 @@ bool GraphicsTestDriver::Initialize()
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
-    // Setup camera - positioned to see point light and shadows
-    // Grid is at X:(-11 to -5), Y:0, Z:(-3 to 3), light at (-8, 4, 3)
+    // Setup camera - positioned to view Sponza scene
     m_Camera = std::make_unique<Camera>(CameraType::Perspective);
     m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-    m_Camera->SetPosition(glm::vec3(-2.0f, 8.0f, 12.0f));  // View from southeast, elevated
-    m_Camera->SetRotation(glm::vec3(-35.0f, -155.0f, 0.0f)); // Look toward grid center
+    m_Camera->SetPosition(glm::vec3(0.0f, 2.0f, 5.0f));  // View from front, slightly elevated
+    m_Camera->SetRotation(glm::vec3(-10.0f, 180.0f, 0.0f)); // Look toward Sponza center
     
     // We'll manually update the scene renderer's frame data with camera matrices
 
@@ -106,9 +105,8 @@ bool GraphicsTestDriver::Initialize()
 void GraphicsTestDriver::Run()
 {
     spdlog::info("Starting render loop...");
-    spdlog::info("=== POINT SHADOW TEST DEMO ===");
-    spdlog::info("Scene: 1 Directional Light + 1 Point Light");
-    spdlog::info("Point light at (-8, 4, 3) positioned near grid center to cast clear shadows");
+    spdlog::info("=== CRYTEK SPONZA DEMO ===");
+    spdlog::info("Scene: Crytek Sponza Atrium (no active lights, ambient only)");
     spdlog::info("Controls:");
     spdlog::info("  - WASD: Move camera");
     spdlog::info("  - Mouse: Look around");
@@ -318,6 +316,17 @@ bool GraphicsTestDriver::LoadTestResources()
             return false;
         }
 
+        // Load Crytek Sponza model
+        auto sponzaModel = m_ResourceManager->LoadModel("sponza",
+            "assets/models/crytek_sponza/sponza.obj");
+
+        if (!sponzaModel) {
+            spdlog::error("Failed to load Sponza model!");
+            return false;
+        } else {
+            spdlog::info("Sponza model loaded successfully with {} meshes", sponzaModel->meshes.size());
+        }
+
         // Create test materials
         CreateTestMaterials();
 
@@ -388,46 +397,52 @@ void GraphicsTestDriver::SetupAdvancedScene()
 {
     spdlog::info("Setting up Advanced Graphics Demo...");
 
-    // Create ground plane
-    auto planeMesh = std::make_shared<Mesh>(
-        PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
-    );
+    // ===== DISABLED: PLANE AND TINBOX SCENE =====
+    //// Create ground plane
+    //auto planeMesh = std::make_shared<Mesh>(
+    //    PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
+    //);
+    //
+    //// Add ground plane to scene using GreenMaterial
+    //RenderableData ground;
+    //ground.mesh = planeMesh;
+    //ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+    //ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    //ground.visible = true;
+    //ground.objectID = 1;  // Ground plane has object ID 1
+    //m_SceneObjects.push_back(ground);
+    //
+    //// Create grids of objects for instanced rendering
+    //std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
+    //
+    //const int gridSize = 3;
+    //const float spacing = 3.0f;
+    //const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
+    //
+    //// Create tinbox grid (left side)
+    //for (int x = 0; x < gridSize; ++x) {
+    //    for (int z = 0; z < gridSize; ++z) {
+    //        glm::vec3 position(
+    //            startOffset + x * spacing - 8.0f, // Offset to the left
+    //            0.0f,
+    //            startOffset + z * spacing
+    //        );
+    //
+    //        // Use uniform scale
+    //        glm::vec3 scaleVec(1.0f);
+    //
+    //        // Cycle through materials based on position
+    //        int materialIndex = (x + z) % materials.size();
+    //        std::string material = materials[materialIndex];
+    //
+    //        CreateModelInstance("tinbox", material, position, scaleVec);
+    //    }
+    //}
 
-    // Add ground plane to scene using GreenMaterial
-    RenderableData ground;
-    ground.mesh = planeMesh;
-    ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
-    ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-    ground.visible = true;
-    ground.objectID = 1;  // Ground plane has object ID 1
-    m_SceneObjects.push_back(ground);
-
-    // Create grids of objects for instanced rendering
-    std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
-
-    const int gridSize = 3;
-    const float spacing = 3.0f;
-    const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
-
-    // Create tinbox grid (left side)
-    for (int x = 0; x < gridSize; ++x) {
-        for (int z = 0; z < gridSize; ++z) {
-            glm::vec3 position(
-                startOffset + x * spacing - 8.0f, // Offset to the left
-                0.0f,
-                startOffset + z * spacing
-            );
-
-            // Use uniform scale
-            glm::vec3 scaleVec(1.0f);
-
-            // Cycle through materials based on position
-            int materialIndex = (x + z) % materials.size();
-            std::string material = materials[materialIndex];
-
-            CreateModelInstance("tinbox", material, position, scaleVec);
-        }
-    }
+    // ===== CRYTEK SPONZA SCENE =====
+    // Create Sponza instance at origin with default scale
+    CreateModelInstance("sponza", "WhiteMaterial", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.01f));
+    spdlog::info("Sponza model instantiated at origin");
 
     // ===== SIMPLIFIED LIGHTING FOR POINT SHADOW TESTING =====
 
@@ -450,7 +465,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     // Set ambient light for scene visibility (since no lights are active)
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.35f));
 
-    spdlog::info("Point shadow test scene created: {} objects, {} lights (1 directional, 1 point)",
+    spdlog::info("Sponza scene created: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
 
     // Debug: verify all objects were created
