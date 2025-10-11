@@ -514,8 +514,9 @@ void GraphicsTestDriver::SetupAdvancedScene()
     ));
     spdlog::info("Animated point light created (diffuse: 5.0, ambient: 0.2, matching ogldev)");
 
-    // Set global ambient to 0 (we're using per-light ambient now, ogldev-style)
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.0f));
+    // Set global ambient to provide base illumination for surfaces far from lights
+    // This prevents areas far from the point light from being too dark
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.05f, 0.05f));  // Increased from 0.0
 
     spdlog::info("Sponza scene created: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
