@@ -220,6 +220,32 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformFloatDa
     cmd.shader->setFloat(cmd.uniformName, cmd.value);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformIntData& cmd)
+{
+    assert(cmd.shader && "SetUniformIntData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Int uniform
+    cmd.shader->setInt(cmd.uniformName, cmd.value);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformBoolData& cmd)
+{
+    assert(cmd.shader && "SetUniformBoolData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Bool uniform
+    cmd.shader->setBool(cmd.uniformName, cmd.value);
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd)
 {
     assert(cmd.shader && "SetUniformMat4ArrayData command must have a valid shader");
@@ -326,6 +352,42 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTextureIDData &cmd)
+{
+    assert(cmd.shader && "BindTextureIDData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    // Note: textureID can be 0 for unbinding
+    assert(cmd.textureUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS && "Texture unit must be within OpenGL limits");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Bind 2D texture to specified texture unit (or unbind if ID is 0)
+    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
+    glBindTexture(GL_TEXTURE_2D, cmd.textureID);
+
+    // Set uniform sampler to point to the texture unit
+    cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawArraysData &cmd)
+{
+    assert(cmd.vao != 0 && "DrawArraysData command must have a valid VAO handle");
+    assert(cmd.vertexCount > 0 && "DrawArraysData command must have a positive vertex count");
+    assert(cmd.mode == GL_TRIANGLES || cmd.mode == GL_LINES || cmd.mode == GL_POINTS ||
+           cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawArraysData mode must be a valid OpenGL primitive type");
+
+    // Bind VAO
+    glBindVertexArray(cmd.vao);
+
+    // Draw arrays (non-indexed rendering)
+    glDrawArrays(cmd.mode, cmd.first, cmd.vertexCount);
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
 
 // ===== LIGHTING COMMAND EXECUTION (Option A) =====

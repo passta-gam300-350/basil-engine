@@ -85,6 +85,18 @@ namespace RenderCommands {
         float value;
     };
 
+    struct SetUniformIntData {
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
+        int value;
+    };
+
+    struct SetUniformBoolData {
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
+        bool value;
+    };
+
     struct SetUniformMat4ArrayData {
         std::shared_ptr<Shader> shader;
         std::string uniformBaseName;  // e.g., "u_ShadowMatrices" (without array index)
@@ -130,6 +142,21 @@ namespace RenderCommands {
         uint32_t textureUnit;
         std::shared_ptr<Shader> shader;
         std::string uniformName;
+    };
+
+    struct BindTextureIDData
+    {
+        uint32_t textureID;
+        uint32_t textureUnit;
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
+    };
+
+    struct DrawArraysData {
+        uint32_t vao;
+        uint32_t vertexCount;
+        uint32_t mode = GL_TRIANGLES;  // GL_TRIANGLES, GL_LINES, GL_POINTS, etc.
+        uint32_t first = 0;            // Starting index
     };
 
     // ===== LIGHTING COMMANDS (Option A) =====
@@ -214,6 +241,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BlitFramebufferData,
     RenderCommands::SetUniformVec3Data,
     RenderCommands::SetUniformFloatData,
+    RenderCommands::SetUniformIntData,
+    RenderCommands::SetUniformBoolData,
     RenderCommands::SetUniformMat4ArrayData,
     RenderCommands::SetBlendingData,
     RenderCommands::SetLineWidthData,
@@ -222,6 +251,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetObjectIDData,
     RenderCommands::ReadPixelData,
     RenderCommands::BindCubemapData,
+    RenderCommands::BindTextureIDData,
+    RenderCommands::DrawArraysData,
     // Lighting commands (Option A)
     RenderCommands::SetPointLightsData,
     RenderCommands::SetDirectionalLightsData,
@@ -268,6 +299,8 @@ private:
     void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd);
+    void ExecuteCommand(const RenderCommands::SetUniformIntData& cmd);
+    void ExecuteCommand(const RenderCommands::SetUniformBoolData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
@@ -276,6 +309,8 @@ private:
     void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
     void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);
     void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
+    void ExecuteCommand(const RenderCommands::BindTextureIDData &cmd);
+    void ExecuteCommand(const RenderCommands::DrawArraysData &cmd);
     // Lighting command execution (Option A)
     void ExecuteCommand(const RenderCommands::SetPointLightsData& cmd);
     void ExecuteCommand(const RenderCommands::SetDirectionalLightsData& cmd);

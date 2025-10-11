@@ -25,6 +25,9 @@ void ToneMapRenderPass::Execute(RenderContext& context)
     // Begin pass (binds framebuffer and sets viewport)
     Begin();
 
+    // Setup command buffer with systems from context
+    SetupCommandBuffer(context);
+
     // Clear the framebuffer
     RenderCommands::ClearData clearCmd{
         0.0f, 0.0f, 0.0f, 1.0f,  // Black background
@@ -33,24 +36,59 @@ void ToneMapRenderPass::Execute(RenderContext& context)
     };
     Submit(clearCmd);
 
-    // Bind HDR texture from context (set by HDRResolvePass)
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, context.hdrTextureID);
+    // Bind shader
+    RenderCommands::BindShaderData bindShaderCmd{ m_ToneMappingShader };
+    Submit(bindShaderCmd);
 
-    // Activate tone mapping shader
-    m_ToneMappingShader->use();
+    // Bind HDR texture from context (set by HDRResolvePass)
+    RenderCommands::BindTextureIDData bindTextureCmd{
+        context.hdrTextureID,
+        0,  // Texture unit 0
+        m_ToneMappingShader,
+        "u_HDRTexture"
+    };
+    Submit(bindTextureCmd);
 
     // Set uniforms - READ FROM CONTEXT (framework pattern!)
-    m_ToneMappingShader->setInt("u_HDRTexture", 0);
-    m_ToneMappingShader->setFloat("u_Exposure", context.exposure);
-    m_ToneMappingShader->setFloat("u_AvgLuminance", context.avgLuminance);
-    m_ToneMappingShader->setInt("u_Method", static_cast<int>(m_Method));
-    m_ToneMappingShader->setBool("u_EnableGamma", m_GammaCorrection);
+    RenderCommands::SetUniformFloatData exposureCmd{
+        m_ToneMappingShader,
+        "u_Exposure",
+        context.exposure
+    };
+    Submit(exposureCmd);
+
+    RenderCommands::SetUniformFloatData avgLumCmd{
+        m_ToneMappingShader,
+        "u_AvgLuminance",
+        context.avgLuminance
+    };
+    Submit(avgLumCmd);
+
+    RenderCommands::SetUniformIntData methodCmd{
+        m_ToneMappingShader,
+        "u_Method",
+        static_cast<int>(m_Method)
+    };
+    Submit(methodCmd);
+
+    RenderCommands::SetUniformBoolData gammaCmd{
+        m_ToneMappingShader,
+        "u_EnableGamma",
+        m_GammaCorrection
+    };
+    Submit(gammaCmd);
 
     // Render full-screen quad
-    glBindVertexArray(m_QuadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    RenderCommands::DrawArraysData drawCmd{
+        m_QuadVAO,
+        6,             // 6 vertices (2 triangles)
+        GL_TRIANGLES,
+        0              // Start at vertex 0
+    };
+    Submit(drawCmd);
+
+    // Execute all commands submitted to this pass's command buffer
+    ExecuteCommands();
 
     // Store tone-mapped LDR result in frame data for subsequent passes
     context.frameData.postProcessBuffer = GetFramebuffer();
