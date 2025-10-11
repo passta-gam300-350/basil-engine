@@ -74,25 +74,25 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
 
-    // 4. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
+    // 4. Add debug rendering pass (shows light cubes) - BEFORE HDR resolve!
+    auto debugPass = std::make_shared<DebugRenderPass>();
+    mainPipeline->AddPass(debugPass);
+    mainPipeline->EnablePass("DebugPass", true);  // Enabled to visualize lights
+
+    // 5. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
     auto hdrResolvePass = std::make_shared<HDRResolvePass>();
     mainPipeline->AddPass(hdrResolvePass);
     mainPipeline->EnablePass("HDRResolvePass", false);  // Disabled by default
 
-    // 5. Add HDR luminance pass (auto-exposure calculation via compute shader)
+    // 6. Add HDR luminance pass (auto-exposure calculation via compute shader)
     auto hdrLuminancePass = std::make_shared<HDRLuminancePass>();
     mainPipeline->AddPass(hdrLuminancePass);
     mainPipeline->EnablePass("HDRLuminancePass", false);  // Disabled by default
 
-    // 6. Add tone mapping pass (HDR → LDR conversion)
+    // 7. Add tone mapping pass (HDR → LDR conversion)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
     mainPipeline->AddPass(toneMapPass);
     mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
-
-    // 7. Add debug rendering pass (shows light cubes)
-    auto debugPass = std::make_shared<DebugRenderPass>();
-    mainPipeline->AddPass(debugPass);
-    mainPipeline->EnablePass("DebugPass", true);  // Enabled to visualize lights
 
     // 8. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();

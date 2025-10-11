@@ -134,10 +134,12 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
             Submit(uniformsCmd);
 
             // Set the light color using the command buffer
+            // Boost color for HDR visibility (light cubes should be bright emissive objects)
+            glm::vec3 cubeColor = light.color * 10.0f;  // Make very bright for HDR
             RenderCommands::SetUniformVec3Data colorCmd{
                 m_PrimitiveShader,
                 "u_Color",
-                light.color
+                cubeColor
             };
             Submit(colorCmd);
 

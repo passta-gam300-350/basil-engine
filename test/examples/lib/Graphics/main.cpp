@@ -150,7 +150,7 @@ void GraphicsTestDriver::Run()
         // Animate point light position (ogldev tutorial 63 style)
         if (!m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
             // Animate X position: oscillates between -60 and +70 (sponza corridor)
-            float animatedX = (cosf(m_Time * 0.05f) + 1.0f) * 65.0f - 60.0f;
+            float animatedX = (cosf(m_Time * 0.1f) + 1.0f) * 65.0f - 60.0f;
             m_SceneLights[0].position.x = animatedX;
         }
 

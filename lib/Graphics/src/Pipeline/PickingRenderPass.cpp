@@ -23,11 +23,11 @@ PickingRenderPass::PickingRenderPass()
 void PickingRenderPass::Execute(RenderContext& context)
 {
     if (!m_Enabled || !m_PickingShader) {
-        spdlog::info("PickingRenderPass::Execute - Skipped (enabled: {}, shader: {})", m_Enabled, m_PickingShader != nullptr);
+        //spdlog::info("PickingRenderPass::Execute - Skipped (enabled: {}, shader: {})", m_Enabled, m_PickingShader != nullptr);
         return; // Skip if disabled or no picking shader
     }
 
-    spdlog::info("PickingRenderPass::Execute - Starting picking render...");
+    //spdlog::info("PickingRenderPass::Execute - Starting picking render...");
 
     // Update framebuffer size to match main framebuffer
     if (context.frameData.mainColorBuffer) {
