@@ -68,6 +68,10 @@ public:
     void EnableSkybox(bool enable);
     bool IsSkyboxEnabled() const;
 
+    // HDR configuration API
+    void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
+    void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
+
 private:
     //void InitializePipeline();
     void InitializeRenderingCoordinators();

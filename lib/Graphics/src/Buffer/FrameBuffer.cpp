@@ -10,8 +10,10 @@ namespace Utils
 		switch (format)
 		{
 		case FBOTextureFormat::RGBA8: return GL_RGBA8;
+		case FBOTextureFormat::RGB8: return GL_RGB8;
 		case FBOTextureFormat::SRGB8_ALPHA8: return GL_SRGB8_ALPHA8;
 		case FBOTextureFormat::RGBA16F: return GL_RGBA16F;
+		case FBOTextureFormat::RGB16F: return GL_RGB16F;
 		case FBOTextureFormat::RED_INTEGER: return GL_R32I;
 		case FBOTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
 		default: return 0;
@@ -106,6 +108,16 @@ void FrameBuffer::Invalidate()
 					case FBOTextureFormat::RGBA16F:
 						format = GL_RGBA;
 						type = GL_FLOAT;
+						break;
+
+					case FBOTextureFormat::RGB16F:
+						format = GL_RGB;
+						type = GL_FLOAT;
+						break;
+
+					case FBOTextureFormat::RGB8:
+						format = GL_RGB;
+						type = GL_UNSIGNED_BYTE;
 						break;
 
 					case FBOTextureFormat::RED_INTEGER:

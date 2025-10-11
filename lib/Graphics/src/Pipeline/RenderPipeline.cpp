@@ -1,6 +1,10 @@
 #include "../../include/Pipeline/RenderPipeline.h"
 #include "../../include/Pipeline/RenderContext.h"
+#include "../../include/Pipeline/MainRenderingPass.h"
+#include "../../include/Pipeline/HDRLuminancePass.h"
+#include "../../include/Pipeline/ToneMapRenderPass.h"
 #include <algorithm>
+#include <glad/glad.h>
 
 RenderPipeline::RenderPipeline()
 {

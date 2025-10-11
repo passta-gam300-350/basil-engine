@@ -307,6 +307,35 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load picking shader");
         }
 
+        // ===== Load HDR Compute Shader =====
+        spdlog::info("Loading HDR compute shader...");
+        auto hdrComputeShader = m_ResourceManager->LoadComputeShader(
+            "hdr_luminance",
+            "assets/shaders/hdr_luminance.comp"
+        );
+
+        if (hdrComputeShader) {
+            spdlog::info("HDR compute shader loaded successfully!");
+            m_SceneRenderer->SetHDRComputeShader(hdrComputeShader);
+        } else {
+            spdlog::warn("Could not load HDR compute shader");
+        }
+
+        // ===== Load Tone Mapping Shader =====
+        spdlog::info("Loading tone mapping shader...");
+        auto toneMappingShader = m_ResourceManager->LoadShader(
+            "tonemap",
+            "assets/shaders/tonemap.vert",
+            "assets/shaders/tonemap.frag"
+        );
+
+        if (toneMappingShader) {
+            spdlog::info("Tone mapping shader loaded successfully!");
+            m_SceneRenderer->SetToneMappingShader(toneMappingShader);
+        } else {
+            spdlog::warn("Could not load tone mapping shader");
+        }
+
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
             "assets/models/tinbox/tin_box.obj");

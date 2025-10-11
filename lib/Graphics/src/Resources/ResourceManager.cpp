@@ -78,6 +78,28 @@ std::shared_ptr<Shader> ResourceManager::LoadShaderWithGeometry(const std::strin
     }
 }
 
+std::shared_ptr<Shader> ResourceManager::LoadComputeShader(const std::string& name, const std::string& computePath)
+{
+    if (HasShader(name))
+    {
+        spdlog::debug("Compute shader already loaded: {}", name);
+        return GetShader(name);
+    }
+
+    try
+    {
+        auto shader = std::make_shared<Shader>(computePath.c_str());
+        m_Shaders[name] = shader;
+        spdlog::info("Compute shader '{}' loaded successfully", name);
+        return shader;
+    }
+    catch (const std::exception& e)
+    {
+        spdlog::error("Failed to load compute shader '{}': {}", name, e.what());
+        return nullptr;
+    }
+}
+
 std::shared_ptr<Shader> ResourceManager::GetShader(const std::string& name)
 {
     auto it = m_Shaders.find(name);

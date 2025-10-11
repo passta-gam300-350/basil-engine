@@ -16,13 +16,21 @@ void PresentPass::Execute(RenderContext& context)
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
 
-    // Check if we have a main color buffer to present
-    if (!context.frameData.mainColorBuffer) {
+    // Determine which buffer to present (post-process takes priority)
+    std::shared_ptr<FrameBuffer> sourceBuffer;
+    if (context.frameData.postProcessBuffer) {
+        // Present tone-mapped LDR result (HDR pipeline active)
+        sourceBuffer = context.frameData.postProcessBuffer;
+    } else if (context.frameData.mainColorBuffer) {
+        // Present main color buffer directly (no HDR/post-processing)
+        sourceBuffer = context.frameData.mainColorBuffer;
+    } else {
+        // No buffer to present
         End();
         return;
     }
 
-    auto mainFBO = context.frameData.mainColorBuffer;
+    auto mainFBO = sourceBuffer;
 
     // Get current window size dynamically
     GLFWwindow* currentWindow = glfwGetCurrentContext();

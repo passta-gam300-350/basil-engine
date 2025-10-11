@@ -15,10 +15,10 @@ MainRenderingPass::MainRenderingPass()
 	{
         1280, 720,
 {
-            { FBOTextureFormat::SRGB8_ALPHA8 },
+            { FBOTextureFormat::RGB16F },  // HDR format (16-bit float) - ogldev style
             { FBOTextureFormat::DEPTH24STENCIL8 }
 		},
-        4  // 4x MSAA
+        4  // 4x MSAA (resolved by HDRResolvePass before tone mapping)
     })
 {
     // Create default skybox cube mesh
@@ -81,6 +81,8 @@ void MainRenderingPass::Execute(RenderContext& context)
 
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
+
+    // HDR texture ID will be set by HDRResolvePass after MSAA resolve
 
     End();
 }

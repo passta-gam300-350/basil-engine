@@ -36,6 +36,11 @@ public:
     void EnableSkybox(bool enabled) { m_SkyboxEnabled = enabled; }
     bool IsSkyboxEnabled() const { return m_SkyboxEnabled; }
 
+    // HDR texture access (for tone mapping pipeline)
+    uint32_t GetHDRTexture() const {
+        return GetFramebuffer() ? GetFramebuffer()->GetColorAttachmentRendererID(0) : 0;
+    }
+
 private:
     // Update framebuffer to match current window size
     void UpdateFramebufferSize();

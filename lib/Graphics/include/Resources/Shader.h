@@ -11,10 +11,13 @@ class Shader
 {
 public:
     unsigned int ID;
-    
+
     // Constructor generates the shader on the fly
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
-    
+
+    // Compute shader constructor
+    Shader(const char* computePath);
+
     // Activate the shader
     void use();
     

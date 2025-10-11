@@ -21,6 +21,7 @@ public:
     // Shader management - simplified
     std::shared_ptr<Shader> LoadShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath);
     std::shared_ptr<Shader> LoadShaderWithGeometry(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath);
+    std::shared_ptr<Shader> LoadComputeShader(const std::string& name, const std::string& computePath);
     std::shared_ptr<Shader> GetShader(const std::string& name);
     bool HasShader(const std::string& name) const;
 

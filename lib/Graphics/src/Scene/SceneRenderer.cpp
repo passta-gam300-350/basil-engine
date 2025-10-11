@@ -10,8 +10,12 @@
 #include "Pipeline/PresentPass.h"
 #include "Pipeline/ShadowMappingPass.h"
 #include "Pipeline/PointShadowMappingPass.h"
+#include "Pipeline/HDRLuminancePass.h"
+#include "Pipeline/HDRResolvePass.h"
+#include "Pipeline/ToneMapRenderPass.h"
 #include "Resources/Shader.h"
 #include "Resources/Mesh.h"
+#include <glfw/glfw3.h>
 #include <cassert>
 
 SceneRenderer::SceneRenderer()
@@ -66,25 +70,37 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(pointShadowPass);
     mainPipeline->EnablePass("PointShadowPass", false);
 
-    // 3. Add main rendering pass (now includes skybox rendering)
+    // 3. Add main rendering pass (HDR output - RGB16F with 4x MSAA)
     auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
 
-    // 4. Add debug rendering pass
+    // 4. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
+    auto hdrResolvePass = std::make_shared<HDRResolvePass>();
+    mainPipeline->AddPass(hdrResolvePass);
+
+    // 5. Add HDR luminance pass (auto-exposure calculation via compute shader)
+    auto hdrLuminancePass = std::make_shared<HDRLuminancePass>();
+    mainPipeline->AddPass(hdrLuminancePass);
+
+    // 6. Add tone mapping pass (HDR → LDR conversion)
+    auto toneMapPass = std::make_shared<ToneMapRenderPass>();
+    mainPipeline->AddPass(toneMapPass);
+
+    // 7. Add debug rendering pass
     auto debugPass = std::make_shared<DebugRenderPass>();
     mainPipeline->AddPass(debugPass);
     mainPipeline->EnablePass("DebugPass", false);
 
-    // 5. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 8. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 6. Add picking pass (executes when needed, disabled by default)
+    // 9. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 7. Add present pass (executes last)
+    // 10. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -111,6 +127,15 @@ void SceneRenderer::Render()
     assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized before rendering");
     assert(m_ResourceManager && "ResourceManager must be initialized before rendering");
     assert(m_TextureSlotManager && "TextureSlotManager must be initialized before rendering");
+
+    // Update viewport dimensions in frame data
+    GLFWwindow* currentWindow = glfwGetCurrentContext();
+    if (currentWindow) {
+        int width, height;
+        glfwGetFramebufferSize(currentWindow, &width, &height);
+        m_FrameData.viewportWidth = static_cast<uint32_t>(width);
+        m_FrameData.viewportHeight = static_cast<uint32_t>(height);
+    }
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
@@ -324,4 +349,36 @@ bool SceneRenderer::IsSkyboxEnabled() const
         }
     }
     return false;
+}
+
+void SceneRenderer::SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "HDR compute shader cannot be null");
+    assert(shader->ID != 0 && "HDR compute shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting HDR compute shader");
+
+    if (m_Pipeline)
+    {
+        auto hdrLumPass = std::dynamic_pointer_cast<HDRLuminancePass>(m_Pipeline->GetPass("HDRLuminancePass"));
+        if (hdrLumPass)
+        {
+            hdrLumPass->SetComputeShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::SetToneMappingShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Tone mapping shader cannot be null");
+    assert(shader->ID != 0 && "Tone mapping shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting tone mapping shader");
+
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            toneMapPass->SetToneMappingShader(shader);
+        }
+    }
 }

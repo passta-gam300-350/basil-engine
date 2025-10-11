@@ -7,8 +7,10 @@ enum class FBOTextureFormat
 {
 	None = 0,
 	RGBA8,
+	RGB8,           // 8-bit RGB (LDR, no alpha)
 	SRGB8_ALPHA8,   // sRGB format for automatic gamma correction
 	RGBA16F,        // 16-bit floating point for G-buffer precision
+	RGB16F,         // 16-bit float per channel, no alpha (HDR) ← ogldev uses this
 	RED_INTEGER,
 	DEPTH24STENCIL8,
 	Depth = DEPTH24STENCIL8

@@ -96,9 +96,57 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
         glDeleteShader(geometry);
 }
 
-void Shader::use() 
-{ 
-    glUseProgram(ID); 
+// Compute shader constructor
+Shader::Shader(const char* computePath)
+{
+    // 1. Retrieve the compute shader source code from file
+    std::string computeCode;
+    std::ifstream cShaderFile;
+
+    // Ensure ifstream can throw exceptions
+    cShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try
+    {
+        // Open file
+        cShaderFile.open(computePath);
+        std::stringstream cShaderStream;
+
+        // Read file's buffer contents into stream
+        cShaderStream << cShaderFile.rdbuf();
+
+        // Close file handler
+        cShaderFile.close();
+
+        // Convert stream into string
+        computeCode = cShaderStream.str();
+    }
+    catch (std::ifstream::failure& e)
+    {
+        spdlog::error("COMPUTE_SHADER::FILE_NOT_SUCCESSFULLY_READ: {}", e.what());
+    }
+
+    const char* cShaderCode = computeCode.c_str();
+
+    // 2. Compile compute shader
+    unsigned int compute = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(compute, 1, &cShaderCode, NULL);
+    glCompileShader(compute);
+    checkCompileErrors(compute, "COMPUTE");
+
+    // 3. Create shader program
+    ID = glCreateProgram();
+    glAttachShader(ID, compute);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+
+    // 4. Delete the shader as it's linked into our program now
+    glDeleteShader(compute);
+}
+
+void Shader::use()
+{
+    glUseProgram(ID);
 }
 
 void Shader::setBool(const std::string &name, bool value) const
