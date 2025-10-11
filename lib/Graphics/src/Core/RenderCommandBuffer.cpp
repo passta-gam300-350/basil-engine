@@ -220,6 +220,24 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformFloatDa
     cmd.shader->setFloat(cmd.uniformName, cmd.value);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd)
+{
+    assert(cmd.shader && "SetUniformMat4ArrayData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformBaseName.empty() && "Uniform base name cannot be empty");
+    assert(!cmd.matrices.empty() && "Matrix array cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set each matrix in the array using indexed uniform names
+    // e.g., "u_ShadowMatrices[0]", "u_ShadowMatrices[1]", etc.
+    for (size_t i = 0; i < cmd.matrices.size(); ++i) {
+        std::string uniformName = cmd.uniformBaseName + "[" + std::to_string(i) + "]";
+        cmd.shader->setMat4(uniformName, cmd.matrices[i]);
+    }
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetBlendingData& cmd)
 {
     if (cmd.enable) {

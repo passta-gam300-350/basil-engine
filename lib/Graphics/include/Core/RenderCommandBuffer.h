@@ -85,6 +85,12 @@ namespace RenderCommands {
         float value;
     };
 
+    struct SetUniformMat4ArrayData {
+        std::shared_ptr<Shader> shader;
+        std::string uniformBaseName;  // e.g., "u_ShadowMatrices" (without array index)
+        std::vector<glm::mat4> matrices;
+    };
+
     struct SetBlendingData {
         bool enable;
         uint32_t srcFactor = GL_SRC_ALPHA;      // Default: GL_SRC_ALPHA
@@ -208,6 +214,7 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BlitFramebufferData,
     RenderCommands::SetUniformVec3Data,
     RenderCommands::SetUniformFloatData,
+    RenderCommands::SetUniformMat4ArrayData,
     RenderCommands::SetBlendingData,
     RenderCommands::SetLineWidthData,
     RenderCommands::SetDepthTestData,
@@ -261,6 +268,7 @@ private:
     void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd);
+    void ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
     void ExecuteCommand(const RenderCommands::SetDepthTestData &cmd);

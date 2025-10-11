@@ -146,15 +146,29 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
 
     // Render scene geometry using commands
     if (!context.renderables.empty()) {
-        // Set per-light uniforms directly (these are constant for all objects)
-        // This is acceptable since they don't change per-object
-        m_PointShadowShader->use();
-        for (size_t i = 0; i < 6; ++i) {
-            std::string uniformName = "u_ShadowMatrices[" + std::to_string(i) + "]";
-            m_PointShadowShader->setMat4(uniformName, shadowMatrices[i]);
-        }
-        m_PointShadowShader->setVec3("u_LightPos", light.position);
-        m_PointShadowShader->setFloat("u_FarPlane", m_ShadowFarPlane);
+        // Submit shadow matrices array command (6 matrices for cubemap faces)
+        RenderCommands::SetUniformMat4ArrayData shadowMatricesCmd{
+            m_PointShadowShader,
+            "u_ShadowMatrices",
+            shadowMatrices
+        };
+        Submit(shadowMatricesCmd);
+
+        // Submit light position command
+        RenderCommands::SetUniformVec3Data lightPosCmd{
+            m_PointShadowShader,
+            "u_LightPos",
+            light.position
+        };
+        Submit(lightPosCmd);
+
+        // Submit far plane command
+        RenderCommands::SetUniformFloatData farPlaneCmd{
+            m_PointShadowShader,
+            "u_FarPlane",
+            m_ShadowFarPlane
+        };
+        Submit(farPlaneCmd);
 
         // Submit draw commands for each object with proper uniform submission
         for (const auto& renderable : context.renderables) {
