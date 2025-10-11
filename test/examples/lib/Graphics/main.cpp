@@ -432,23 +432,23 @@ void GraphicsTestDriver::SetupAdvancedScene()
     // ===== SIMPLIFIED LIGHTING FOR POINT SHADOW TESTING =====
 
     // Single directional light (sun-like, from top-right)
-    m_SceneLights.push_back(CreateDirectionalLight(
-        glm::vec3(0.3f, -0.7f, 0.5f),        // Direction: slightly angled
-        glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm white
-        1.5f                                  // Intensity: increased to balance with point light
-    ));
+    //m_SceneLights.push_back(CreateDirectionalLight(
+    //    glm::vec3(0.3f, -0.7f, 0.5f),        // Direction: slightly angled
+    //    glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm white
+    //    1.5f                                  // Intensity: increased to balance with point light
+    //));
 
-    // Single point light positioned to cast clear shadows
-    // Grid center is at (-8, 0, 0), so position light near center but offset
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(-8.0f, 4.0f, 3.0f),        // Position: near grid center, elevated, offset in Z
-        glm::vec3(1.0f, 0.9f, 0.7f),         // Color: warm white/yellow
-        3.0f,                                 // Intensity: reduced to balance with directional light
-        20.0f                                 // Range: reduced since light is closer
-    ));
+    //// Single point light positioned to cast clear shadows
+    //// Grid center is at (-8, 0, 0), so position light near center but offset
+    //m_SceneLights.push_back(CreatePointLight(
+    //    glm::vec3(-8.0f, 4.0f, 3.0f),        // Position: near grid center, elevated, offset in Z
+    //    glm::vec3(1.0f, 0.9f, 0.7f),         // Color: warm white/yellow
+    //    3.0f,                                 // Intensity: reduced to balance with directional light
+    //    20.0f                                 // Range: reduced since light is closer
+    //));
 
-    // Low ambient light to make shadows more visible
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.05f, 0.06f));
+    // Set ambient light for scene visibility (since no lights are active)
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.35f));
 
     spdlog::info("Point shadow test scene created: {} objects, {} lights (1 directional, 1 point)",
                  m_SceneObjects.size(), m_SceneLights.size());

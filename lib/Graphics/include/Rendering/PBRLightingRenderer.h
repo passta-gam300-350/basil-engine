@@ -105,6 +105,9 @@ private:
     std::vector<DirectionalLight> m_DirectionalLights;
     std::vector<SpotLight> m_SpotLights;
 
+    // Ambient lighting
+    glm::vec3 m_AmbientLight = glm::vec3(0.03f);
+
     // Shadow intensity parameters
     float m_DirectionalShadowIntensity = 0.8f;
     float m_PointShadowIntensity = 0.8f;

@@ -58,11 +58,13 @@ void SceneRenderer::InitializeDefaultPipeline()
     // Shadow pass will need shader to be set after creation by the application
     auto shadowPass = std::make_shared<ShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
+    mainPipeline->EnablePass("ShadowPass", false);
 
     // 2. Add point shadow mapping pass (geometry shader method)
     // Point shadow pass will need shader to be set after creation by the application
     auto pointShadowPass = std::make_shared<PointShadowMappingPass>();
     mainPipeline->AddPass(pointShadowPass);
+    mainPipeline->EnablePass("PointShadowPass", false);
 
     // 3. Add main rendering pass (now includes skybox rendering)
     auto mainPass = std::make_shared<MainRenderingPass>();

@@ -72,12 +72,15 @@ void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
     SetupPBRLighting(shader, frameData, material);
 }
 
-void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
+void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
                                          const glm::vec3& ambientLight, const FrameData& frameData)
 {
     // Clear existing lights
     ClearLights();
-    
+
+    // Store ambient light
+    m_AmbientLight = ambientLight;
+
     // Convert submitted light data to internal format
     for (const auto& submittedLight : submittedLights)
     {
@@ -140,6 +143,9 @@ void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, 
 
     // Ensure shader is active for uniform setting
     shader->use();
+
+    // Set ambient light
+    shader->setVec3("u_AmbientLight", m_AmbientLight);
 
     // Set light data
     SetupPointLights(shader);

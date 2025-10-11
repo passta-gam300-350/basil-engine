@@ -100,6 +100,9 @@ uniform vec3 u_AlbedoColor = vec3(0.8, 0.8, 0.8);
 uniform float u_MetallicValue = 0.0;
 uniform float u_RoughnessValue = 0.5;
 
+// Ambient lighting
+uniform vec3 u_AmbientLight = vec3(0.03);
+
 // PBR constants
 const float PI = 3.14159265359;
 
@@ -391,7 +394,7 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     }
 
     // Ambient lighting (not affected by shadows)
-    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 ambient = u_AmbientLight * albedo * ao;
 
     return ambient + Lo;
 }
