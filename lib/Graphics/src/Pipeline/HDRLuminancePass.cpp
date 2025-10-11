@@ -17,9 +17,14 @@ void HDRLuminancePass::Execute(RenderContext& context)
         return;
     }
 
-    // Initialize buffer if not done yet
-    if (!m_LuminanceBuffer || m_NumGroupsX == 0 || m_NumGroupsY == 0) {
-        InitializeBuffer(context.frameData.viewportWidth, context.frameData.viewportHeight);
+    // Initialize or resize buffer if viewport size changed
+    uint32_t currentWidth = context.frameData.viewportWidth;
+    uint32_t currentHeight = context.frameData.viewportHeight;
+
+    if (!m_LuminanceBuffer || m_LastWidth != currentWidth || m_LastHeight != currentHeight) {
+        InitializeBuffer(currentWidth, currentHeight);
+        m_LastWidth = currentWidth;
+        m_LastHeight = currentHeight;
     }
 
     // Begin the pass (no framebuffer needed for compute)
