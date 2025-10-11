@@ -68,6 +68,16 @@ bool GraphicsTestDriver::Initialize()
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
+    // Enable HDR tone mapping pipeline (matches ogldev tutorial 63)
+    auto* pipeline = m_SceneRenderer->GetPipeline();
+    if (pipeline) {
+        pipeline->EnablePass("HDRResolvePass", true);
+        pipeline->EnablePass("HDRLuminancePass", true);
+        pipeline->EnablePass("ToneMapPass", true);
+        m_HDREnabled = true;  // Update state variable
+        spdlog::info("HDR tone mapping pipeline enabled (matching ogldev tutorial 63)");
+    }
+
     // Setup camera - positioned to view Sponza scene (matching ogldev tutorial 63)
     m_Camera = std::make_unique<Camera>(CameraType::Perspective);
     m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);

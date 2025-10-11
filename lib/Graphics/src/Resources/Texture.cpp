@@ -95,7 +95,12 @@ unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, data.width, data.height, 0, dataFormat, GL_UNSIGNED_BYTE, data.pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
-    
+
+    // Enable anisotropic filtering for maximum texture clarity (matches ogldev)
+    GLfloat maxAnisotropy = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -212,6 +217,11 @@ unsigned int TextureLoader::CreateGPUCubemap(const CubemapTextureData &data, boo
     {
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+        // Enable anisotropic filtering for cubemaps with mipmaps
+        GLfloat maxAnisotropy = 0.0f;
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+        glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
     }
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
