@@ -207,6 +207,19 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec3Dat
     cmd.shader->setVec3(cmd.uniformName, cmd.value);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd)
+{
+    assert(cmd.shader && "SetUniformFloatData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Float uniform
+    cmd.shader->setFloat(cmd.uniformName, cmd.value);
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetBlendingData& cmd)
 {
     if (cmd.enable) {
@@ -282,19 +295,178 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
 {
     assert(cmd.shader && "BindCubemapData command must have a valid shader");
     assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
-    assert(cmd.cubemapID != 0 && "Cubemap ID must be valid");
+    // Note: cubemapID can be 0 for unbinding
     assert(cmd.textureUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS && "Texture unit must be within OpenGL limits");
     assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
 
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind cubemap to specified texture unit
+    // Bind cubemap to specified texture unit (or unbind if ID is 0)
     glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
+}
+
+// ===== LIGHTING COMMAND EXECUTION (Option A) =====
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointLightsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for point lights");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of point lights
+    cmd.shader->setInt("u_NumPointLights", static_cast<int>(cmd.lights.size()));
+
+    // Set up each point light's properties
+    for (size_t i = 0; i < cmd.lights.size(); ++i) {
+        const auto& light = cmd.lights[i];
+        std::string prefix = "u_PointLights[" + std::to_string(i) + "].";
+
+        cmd.shader->setVec3(prefix + "position", light.position);
+        cmd.shader->setVec3(prefix + "color", light.color);
+        cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "constant", light.constant);
+        cmd.shader->setFloat(prefix + "linear", light.linear);
+        cmd.shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDirectionalLightsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for directional lights");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of directional lights
+    cmd.shader->setInt("u_NumDirectionalLights", static_cast<int>(cmd.lights.size()));
+
+    // Set up each directional light's properties
+    for (size_t i = 0; i < cmd.lights.size(); ++i) {
+        const auto& light = cmd.lights[i];
+        std::string prefix = "u_DirectionalLights[" + std::to_string(i) + "].";
+
+        cmd.shader->setVec3(prefix + "direction", light.direction);
+        cmd.shader->setVec3(prefix + "color", light.color);
+        cmd.shader->setFloat(prefix + "intensity", light.intensity);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetSpotLightsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for spot lights");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of spot lights
+    cmd.shader->setInt("u_NumSpotLights", static_cast<int>(cmd.lights.size()));
+
+    // Set up each spot light's properties
+    for (size_t i = 0; i < cmd.lights.size(); ++i) {
+        const auto& light = cmd.lights[i];
+        std::string prefix = "u_SpotLights[" + std::to_string(i) + "].";
+
+        cmd.shader->setVec3(prefix + "position", light.position);
+        cmd.shader->setVec3(prefix + "direction", light.direction);
+        cmd.shader->setVec3(prefix + "color", light.color);
+        cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "cutOff", light.cutOff);
+        cmd.shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
+        cmd.shader->setFloat(prefix + "constant", light.constant);
+        cmd.shader->setFloat(prefix + "linear", light.linear);
+        cmd.shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetMaterialPBRData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for material properties");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set PBR material properties
+    cmd.shader->setVec3("u_AlbedoColor", cmd.albedoColor);
+    cmd.shader->setFloat("u_MetallicValue", cmd.metallicValue);
+    cmd.shader->setFloat("u_RoughnessValue", cmd.roughnessValue);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDirectionalShadowData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for directional shadow");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(cmd.shadowMapUnit >= 0 && cmd.shadowMapUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS &&
+           "Shadow map texture unit must be within OpenGL limits");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set light space matrix
+    cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
+
+    // Set shadow enable flag
+    cmd.shader->setBool("u_EnableShadows", cmd.enableShadows);
+
+    if (cmd.enableShadows) {
+        // Bind shadow map texture to specified unit
+        if (m_TextureBindingSystem) {
+            m_TextureBindingSystem->BindTextureID(cmd.shadowMapTexture, cmd.shadowMapUnit);
+        } else {
+            // Fallback to manual binding
+            glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
+            glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
+        }
+
+        // Set shadow map sampler uniform
+        cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointShadowsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for point shadows");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    const int MAX_POINT_SHADOW_MAPS = 4;
+    int activeShadowMaps = static_cast<int>(cmd.cubemapTextures.size());
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of active shadow maps
+    cmd.shader->setInt("u_NumPointShadowMaps", activeShadowMaps);
+
+    // Bind each cubemap or dummy texture
+    for (int i = 0; i < MAX_POINT_SHADOW_MAPS; ++i) {
+        uint32_t textureUnit = cmd.startTextureUnit + static_cast<uint32_t>(i);
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+
+        if (i < activeShadowMaps) {
+            // Bind actual shadow cubemap
+            glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapTextures[i]);
+
+            // Set far plane uniform
+            std::string farPlaneName = "u_PointShadowFarPlanes[" + std::to_string(i) + "]";
+            cmd.shader->setFloat(farPlaneName, cmd.farPlanes[i]);
+        } else {
+            // Bind dummy cubemap for unused slots
+            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        }
+
+        // Set sampler uniform to proper texture unit
+        std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
+        cmd.shader->setInt(samplerName, static_cast<int>(textureUnit));
+    }
 }
 
 void RenderCommandBuffer::CleanupGPUState()

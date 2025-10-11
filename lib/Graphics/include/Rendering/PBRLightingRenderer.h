@@ -8,6 +8,7 @@
 struct SubmittedLightData;
 struct FrameData;
 class Material;
+class RenderPass;
 
 /**
  * PBR Lighting Renderer - Independent Lighting System
@@ -72,8 +73,15 @@ public:
     void SubmitLightingCommands(std::shared_ptr<Shader> shader,
                                 const FrameData& frameData,
                                 const Material* material);
-    
-    
+
+    // NEW: Command-based lighting setup using RenderPass (Option A)
+    void SubmitLightingCommands(RenderPass& renderPass,
+                                 std::shared_ptr<Shader> shader,
+                                 const Material* material = nullptr);
+    void SubmitShadowCommands(RenderPass& renderPass,
+                              std::shared_ptr<Shader> shader,
+                              const FrameData& frameData);
+
     // Getters for light data (used by other renderers)
     const std::vector<PointLight>& GetPointLights() const { return m_PointLights; }
     const std::vector<DirectionalLight>& GetDirectionalLights() const { return m_DirectionalLights; }

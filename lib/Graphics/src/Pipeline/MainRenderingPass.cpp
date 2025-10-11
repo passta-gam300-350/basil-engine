@@ -169,4 +169,14 @@ void MainRenderingPass::RenderSkybox(RenderContext& context)
         GL_TRIANGLES
     };
     Submit(drawCmd);
+
+    // CRITICAL: Unbind cubemap from texture unit 0 to prevent conflicts
+    // Scene objects will try to bind 2D textures to unit 0, which conflicts with cubemap
+    RenderCommands::BindCubemapData unbindCmd{
+        0,              // Unbind by binding texture ID 0
+        0,              // Texture unit 0
+        m_SkyboxShader,
+        "u_Skybox"
+    };
+    Submit(unbindCmd);
 }

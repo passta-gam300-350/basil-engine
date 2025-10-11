@@ -233,13 +233,13 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     };
     renderPass.Submit(uniformsCmd);
 
-    // 4. Apply lighting setup (material properties are now per-instance in SSBO)
+    // 4. Apply lighting setup via command submission (Option A - REFACTORED)
     if (m_PBRLighting) {
-        // Apply lighting uniforms only (no per-instance material data)
-        m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
+        // ✅ NEW: Submit lighting commands instead of direct OpenGL calls
+        m_PBRLighting->SubmitLightingCommands(renderPass, shader, nullptr);
 
-        // 5. Setup all shadow maps (directional + point) via PBRLightingRenderer
-        m_PBRLighting->SetupShadowMaps(shader, frameData);
+        // ✅ NEW: Submit shadow commands instead of direct OpenGL calls
+        m_PBRLighting->SubmitShadowCommands(renderPass, shader, frameData);
     } else {
         spdlog::warn("PBRLightingRenderer not available for lighting setup");
     }

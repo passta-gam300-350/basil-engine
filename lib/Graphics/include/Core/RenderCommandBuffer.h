@@ -79,6 +79,12 @@ namespace RenderCommands {
         glm::vec3 value;
     };
 
+    struct SetUniformFloatData {
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
+        float value;
+    };
+
     struct SetBlendingData {
         bool enable;
         uint32_t srcFactor = GL_SRC_ALPHA;      // Default: GL_SRC_ALPHA
@@ -120,7 +126,73 @@ namespace RenderCommands {
         std::string uniformName;
     };
 
- 
+    // ===== LIGHTING COMMANDS (Option A) =====
+    // Forward declarations for light types
+    struct PointLightData {
+        glm::vec3 position;
+        glm::vec3 color;
+        float intensity;
+        float constant;
+        float linear;
+        float quadratic;
+    };
+
+    struct DirectionalLightData {
+        glm::vec3 direction;
+        glm::vec3 color;
+        float intensity;
+    };
+
+    struct SpotLightData {
+        glm::vec3 position;
+        glm::vec3 direction;
+        glm::vec3 color;
+        float intensity;
+        float cutOff;
+        float outerCutOff;
+        float constant;
+        float linear;
+        float quadratic;
+    };
+
+    struct SetPointLightsData {
+        std::shared_ptr<Shader> shader;
+        std::vector<PointLightData> lights;
+    };
+
+    struct SetDirectionalLightsData {
+        std::shared_ptr<Shader> shader;
+        std::vector<DirectionalLightData> lights;
+    };
+
+    struct SetSpotLightsData {
+        std::shared_ptr<Shader> shader;
+        std::vector<SpotLightData> lights;
+    };
+
+    struct SetMaterialPBRData {
+        std::shared_ptr<Shader> shader;
+        glm::vec3 albedoColor;
+        float metallicValue;
+        float roughnessValue;
+    };
+
+    struct SetDirectionalShadowData {
+        std::shared_ptr<Shader> shader;
+        glm::mat4 lightSpaceMatrix;
+        uint32_t shadowMapTexture;
+        int shadowMapUnit;
+        bool enableShadows;
+    };
+
+    struct SetPointShadowsData {
+        std::shared_ptr<Shader> shader;
+        std::vector<uint32_t> cubemapTextures;
+        std::vector<float> farPlanes;
+        int startTextureUnit;  // Starting slot (e.g., 9)
+    };
+
+
 }
 
 // Command variant - no virtual function calls, cache-friendly
@@ -135,13 +207,21 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetShadowUniformsData,
     RenderCommands::BlitFramebufferData,
     RenderCommands::SetUniformVec3Data,
+    RenderCommands::SetUniformFloatData,
     RenderCommands::SetBlendingData,
     RenderCommands::SetLineWidthData,
     RenderCommands::SetDepthTestData,
     RenderCommands::SetFaceCullingData,
     RenderCommands::SetObjectIDData,
     RenderCommands::ReadPixelData,
-    RenderCommands::BindCubemapData
+    RenderCommands::BindCubemapData,
+    // Lighting commands (Option A)
+    RenderCommands::SetPointLightsData,
+    RenderCommands::SetDirectionalLightsData,
+    RenderCommands::SetSpotLightsData,
+    RenderCommands::SetMaterialPBRData,
+    RenderCommands::SetDirectionalShadowData,
+    RenderCommands::SetPointShadowsData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -180,6 +260,7 @@ private:
     void ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd);
     void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
+    void ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
     void ExecuteCommand(const RenderCommands::SetDepthTestData &cmd);
@@ -187,6 +268,13 @@ private:
     void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
     void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);
     void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
+    // Lighting command execution (Option A)
+    void ExecuteCommand(const RenderCommands::SetPointLightsData& cmd);
+    void ExecuteCommand(const RenderCommands::SetDirectionalLightsData& cmd);
+    void ExecuteCommand(const RenderCommands::SetSpotLightsData& cmd);
+    void ExecuteCommand(const RenderCommands::SetMaterialPBRData& cmd);
+    void ExecuteCommand(const RenderCommands::SetDirectionalShadowData& cmd);
+    void ExecuteCommand(const RenderCommands::SetPointShadowsData& cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

@@ -334,3 +334,141 @@ void PBRLightingRenderer::SetShadowIntensity(float directionalIntensity, float p
     m_DirectionalShadowIntensity = glm::clamp(directionalIntensity, 0.0f, 1.0f);
     m_PointShadowIntensity = glm::clamp(pointIntensity, 0.0f, 1.0f);
 }
+
+// ===== OPTION A: COMMAND-BASED LIGHTING SETUP =====
+#include "Pipeline/RenderPass.h"
+#include "Core/RenderCommandBuffer.h"
+
+void PBRLightingRenderer::SubmitLightingCommands(RenderPass& renderPass,
+                                                   std::shared_ptr<Shader> shader,
+                                                   const Material* material)
+{
+    assert(shader && "Shader cannot be null for lighting submission");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // 1. Submit ambient light
+    RenderCommands::SetUniformVec3Data ambientCmd{
+        shader,
+        "u_AmbientLight",
+        m_AmbientLight
+    };
+    renderPass.Submit(ambientCmd);
+
+    // 2. Convert and submit point lights
+    std::vector<RenderCommands::PointLightData> pointLightData;
+    pointLightData.reserve(m_PointLights.size());
+    for (const auto& light : m_PointLights) {
+        pointLightData.push_back({
+            light.position,
+            light.color,
+            light.intensity,
+            light.constant,
+            light.linear,
+            light.quadratic
+        });
+    }
+    RenderCommands::SetPointLightsData pointLightsCmd{shader, pointLightData};
+    renderPass.Submit(pointLightsCmd);
+
+    // 3. Convert and submit directional lights
+    std::vector<RenderCommands::DirectionalLightData> dirLightData;
+    dirLightData.reserve(m_DirectionalLights.size());
+    for (const auto& light : m_DirectionalLights) {
+        dirLightData.push_back({
+            light.direction,
+            light.color,
+            light.intensity
+        });
+    }
+    RenderCommands::SetDirectionalLightsData dirLightsCmd{shader, dirLightData};
+    renderPass.Submit(dirLightsCmd);
+
+    // 4. Convert and submit spot lights
+    std::vector<RenderCommands::SpotLightData> spotLightData;
+    spotLightData.reserve(m_SpotLights.size());
+    for (const auto& light : m_SpotLights) {
+        spotLightData.push_back({
+            light.position,
+            light.direction,
+            light.color,
+            light.intensity,
+            light.cutOff,
+            light.outerCutOff,
+            light.constant,
+            light.linear,
+            light.quadratic
+        });
+    }
+    RenderCommands::SetSpotLightsData spotLightsCmd{shader, spotLightData};
+    renderPass.Submit(spotLightsCmd);
+
+    // 5. Submit material properties (if material provided)
+    // Note: For instanced rendering, materials are per-instance in SSBO, so we skip this
+    if (material) {
+        RenderCommands::SetMaterialPBRData materialCmd{
+            shader,
+            material->GetAlbedoColor(),
+            material->GetMetallicValue(),
+            material->GetRoughnessValue()
+        };
+        renderPass.Submit(materialCmd);
+    }
+}
+
+void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
+                                                std::shared_ptr<Shader> shader,
+                                                const FrameData& frameData)
+{
+    assert(shader && "Shader cannot be null for shadow submission");
+    assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // 1. Submit shadow intensity uniforms (FIXED: Use float, not vec3)
+    RenderCommands::SetUniformFloatData dirShadowIntensityCmd{
+        shader,
+        "u_DirectionalShadowIntensity",
+        m_DirectionalShadowIntensity
+    };
+    renderPass.Submit(dirShadowIntensityCmd);
+
+    RenderCommands::SetUniformFloatData pointShadowIntensityCmd{
+        shader,
+        "u_PointShadowIntensity",
+        m_PointShadowIntensity
+    };
+    renderPass.Submit(pointShadowIntensityCmd);
+
+    // 2. Submit directional shadow
+    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
+        uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
+
+        RenderCommands::SetDirectionalShadowData shadowCmd{
+            shader,
+            frameData.shadowMatrices[0],
+            shadowTexID,
+            8,  // Shadow map slot
+            true  // Enable shadows
+        };
+        renderPass.Submit(shadowCmd);
+    } else {
+        // Disable shadows
+        RenderCommands::SetDirectionalShadowData shadowCmd{
+            shader,
+            glm::mat4(1.0f),
+            0,
+            8,
+            false  // Disable shadows
+        };
+        renderPass.Submit(shadowCmd);
+    }
+
+    // 3. Submit point shadows
+    if (!frameData.pointShadowCubemaps.empty() && !frameData.pointShadowFarPlanes.empty()) {
+        RenderCommands::SetPointShadowsData pointShadowCmd{
+            shader,
+            frameData.pointShadowCubemaps,
+            frameData.pointShadowFarPlanes,
+            9  // Point shadow start slot
+        };
+        renderPass.Submit(pointShadowCmd);
+    }
+}
