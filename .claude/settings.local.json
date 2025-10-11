@@ -3,7 +3,11 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(cmake:*)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "Read(//mnt/c/Users/thamk/ogldev/Common/**)",
+      "Read(//mnt/c/Users/thamk/ogldev/**)",
+      "Bash(xargs basename:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

@@ -106,10 +106,10 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 pointLight.color = submittedLight.color;
                 pointLight.intensity = submittedLight.diffuseIntensity;  // Use diffuse intensity
                 pointLight.ambientIntensity = submittedLight.ambientIntensity;  // Per-light ambient
-                // Default attenuation values - could be configurable
-                pointLight.constant = 1.0f;
-                pointLight.linear = 0.09f;
-                pointLight.quadratic = 0.032f;
+                // Ogldev tutorial 63 attenuation values for bright, far-reaching lighting
+                pointLight.constant = 0.1f;
+                pointLight.linear = 0.01f;
+                pointLight.quadratic = 0.001f;
                 AddPointLight(pointLight);
                 break;
             }
@@ -123,10 +123,10 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 spotLight.ambientIntensity = submittedLight.ambientIntensity;  // Per-light ambient
                 spotLight.cutOff = glm::cos(glm::radians(submittedLight.innerCone));
                 spotLight.outerCutOff = glm::cos(glm::radians(submittedLight.outerCone));
-                // Default attenuation values
-                spotLight.constant = 1.0f;
-                spotLight.linear = 0.09f;
-                spotLight.quadratic = 0.032f;
+                // Ogldev tutorial 63 attenuation values for bright, far-reaching lighting
+                spotLight.constant = 0.1f;
+                spotLight.linear = 0.01f;
+                spotLight.quadratic = 0.001f;
                 AddSpotLight(spotLight);
                 break;
             }

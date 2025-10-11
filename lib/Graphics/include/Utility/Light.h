@@ -51,7 +51,7 @@ private:
 	glm::vec3 m_Position = { 0.f,0.f,0.f };
 
 	float m_Range = 10.f;
-	glm::vec3 m_Attenuation = { 1.0f, 0.09f, 0.032f }; // constant, linear, quadratic
+	glm::vec3 m_Attenuation = { 0.1f, 0.01f, 0.001f }; // constant, linear, quadratic (ogldev tutorial 63)
 
 	float m_InnerCutoff = 0.91f; // cos(glm::radians(25.0f))
 	float m_OuterCutoff = 0.82f; // cos(glm::radians(35.0f))

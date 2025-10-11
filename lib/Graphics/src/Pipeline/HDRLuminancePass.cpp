@@ -108,13 +108,17 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     uint32_t totalPixels = m_NumGroupsX * m_NumGroupsY * m_LocalSizeX * m_LocalSizeY;
     float avgLuminance = std::exp(sum / static_cast<float>(totalPixels));
 
-    // Calculate exposure using photographic middle gray (0.18)
-    // Formula from ogldev: Exposure = targetGray / AvgLuminance
-    const float targetGray = 0.18f;
-    float exposure = targetGray / avgLuminance;
+    // OGLDEV MATCHING: Use fixed exposure like ogldev tutorial 63
+    // Ogldev uses 0.4457 as a fixed value and does NOT calculate from avgLuminance
+    // (Their shader line 92 that calculates exposure is commented out)
+    const float exposure = 0.4457f;  // Fixed value matching ogldev
 
-    // Clamp exposure to reasonable range (prevent extreme values)
-    exposure = glm::clamp(exposure, 0.1f, 10.0f);
+    // Alternative (dynamic exposure - commented out):
+     //const float targetGray = 0.18f;
+     //float exposure = targetGray / avgLuminance;
+    // No clamping (ogldev doesn't clamp either)
+     // Clamp exposure to reasonable range (prevent extreme values)
+     //exposure = glm::clamp(exposure, 0.1f, 10.0f);
 
     // WRITE TO CONTEXT (framework pattern!)
     context.avgLuminance = avgLuminance;

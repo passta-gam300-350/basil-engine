@@ -91,6 +91,7 @@ void SceneRenderer::InitializeDefaultPipeline()
 
     // 7. Add tone mapping pass (HDR → LDR conversion)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
+    toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - we use GL_FRAMEBUFFER_SRGB for automatic conversion
     mainPipeline->AddPass(toneMapPass);
     mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
