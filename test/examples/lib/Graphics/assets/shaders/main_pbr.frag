@@ -59,7 +59,8 @@ uniform float u_PointShadowIntensity = 0.8;
 struct PointLight {
     vec3 position;
     vec3 color;
-    float intensity;
+    float intensity;           // Diffuse intensity (ogldev-style)
+    float ambientIntensity;    // Per-light ambient contribution (ogldev-style)
     float constant;
     float linear;
     float quadratic;
@@ -68,14 +69,16 @@ struct PointLight {
 struct DirectionalLight {
     vec3 direction;
     vec3 color;
-    float intensity;
+    float intensity;           // Diffuse intensity (ogldev-style)
+    float ambientIntensity;    // Per-light ambient contribution (ogldev-style)
 };
 
 struct SpotLight {
     vec3 position;
     vec3 direction;
     vec3 color;
-    float intensity;
+    float intensity;           // Diffuse intensity (ogldev-style)
+    float ambientIntensity;    // Per-light ambient contribution (ogldev-style)
     float cutOff;
     float outerCutOff;
     float constant;
@@ -361,7 +364,7 @@ vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos,
     return (kD * albedo / PI + specular) * radiance * NdotL;
 }
 
-// Multi-light PBR lighting calculation
+// Multi-light PBR lighting calculation (ogldev-style with per-light ambient)
 vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao)
 {
     vec3 N = normalize(normal);
@@ -371,32 +374,49 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
-    // Accumulate lighting contribution
+    // Accumulate lighting contribution (direct + specular)
     vec3 Lo = vec3(0.0);
 
-    // Track maximum shadow factor to preserve shadow detail when multiple shadows overlap
-    // This ensures directional shadows remain visible within point shadow areas
-    float maxShadow = 0.0;
+    // Accumulate per-light ambient contribution (ogldev-style)
+    vec3 totalAmbient = vec3(0.0);
 
     // Point lights (with individual shadows via cubemaps)
     for (int i = 0; i < u_NumPointLights && i < 8; ++i) {
+        // Direct lighting
         Lo += calculatePointLight(u_PointLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
+
+        // Per-light ambient (ogldev-style: attenuated by distance)
+        float distance = length(u_PointLights[i].position - fs_in.FragPos);
+        float attenuation = 1.0 / (u_PointLights[i].constant + u_PointLights[i].linear * distance +
+                                   u_PointLights[i].quadratic * (distance * distance));
+        totalAmbient += u_PointLights[i].color * u_PointLights[i].ambientIntensity * attenuation * albedo * ao;
     }
 
     // Directional lights (with individual shadows)
     for (int i = 0; i < u_NumDirectionalLights && i < 4; ++i) {
+        // Direct lighting
         Lo += calculateDirectionalLight(u_DirectionalLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
+
+        // Per-light ambient (ogldev-style: no attenuation for directional)
+        totalAmbient += u_DirectionalLights[i].color * u_DirectionalLights[i].ambientIntensity * albedo * ao;
     }
 
     // Spot lights (no shadows for now)
     for (int i = 0; i < u_NumSpotLights && i < 4; ++i) {
+        // Direct lighting
         Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0);
+
+        // Per-light ambient (ogldev-style: attenuated by distance)
+        float distance = length(u_SpotLights[i].position - fs_in.FragPos);
+        float attenuation = 1.0 / (u_SpotLights[i].constant + u_SpotLights[i].linear * distance +
+                                   u_SpotLights[i].quadratic * (distance * distance));
+        totalAmbient += u_SpotLights[i].color * u_SpotLights[i].ambientIntensity * attenuation * albedo * ao;
     }
 
-    // Ambient lighting (not affected by shadows)
-    vec3 ambient = u_AmbientLight * albedo * ao;
+    // Add global ambient as fallback (can be set to 0 if using only per-light ambient)
+    totalAmbient += u_AmbientLight * albedo * ao;
 
-    return ambient + Lo;
+    return totalAmbient + Lo;
 }
 
 void main() {
@@ -436,8 +456,7 @@ void main() {
     // Add emissive
     color += emissive;
 
-    // Tone mapping only - hardware sRGB framebuffer handles gamma correction
-    color = color / (color + vec3(1.0)); // Reinhard tone mapping
-
+    // Output raw HDR color to HDR framebuffer (RGB16F)
+    // Tone mapping will be applied later in ToneMapRenderPass
     FragColor = vec4(color, 1.0);
 }

@@ -70,11 +70,14 @@ private:
     // Utility functions
     void CreateModelInstance(const std::string& modelName, const std::string& materialName,
                            const glm::vec3& position, const glm::vec3& scale = glm::vec3(1.0f));
-    SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity = 1.0f);
-    SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity = 1.0f, float range = 10.0f);
+    SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color,
+                                              float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f);
+    SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color,
+                                        float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f, float range = 10.0f);
     SubmittedLightData CreateSpotLight(const glm::vec3& position, const glm::vec3& direction,
-                                     const glm::vec3& color, float intensity = 1.0f, float range = 10.0f,
-                                     float innerCone = 30.0f, float outerCone = 45.0f);
+                                       const glm::vec3& color, float diffuseIntensity = 1.0f,
+                                       float ambientIntensity = 0.0f, float range = 10.0f,
+                                       float innerCone = 30.0f, float outerCone = 45.0f);
 
     // AABB calculation and debug rendering
     void CalculateAndSubmitAABBs();

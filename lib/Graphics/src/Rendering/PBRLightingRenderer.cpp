@@ -94,7 +94,8 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 DirectionalLight dirLight;
                 dirLight.direction = submittedLight.direction;
                 dirLight.color = submittedLight.color;
-                dirLight.intensity = submittedLight.intensity;
+                dirLight.intensity = submittedLight.diffuseIntensity;  // Use diffuse intensity
+                dirLight.ambientIntensity = submittedLight.ambientIntensity;  // Per-light ambient
                 AddDirectionalLight(dirLight);
                 break;
             }
@@ -103,7 +104,8 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 PointLight pointLight;
                 pointLight.position = submittedLight.position;
                 pointLight.color = submittedLight.color;
-                pointLight.intensity = submittedLight.intensity;
+                pointLight.intensity = submittedLight.diffuseIntensity;  // Use diffuse intensity
+                pointLight.ambientIntensity = submittedLight.ambientIntensity;  // Per-light ambient
                 // Default attenuation values - could be configurable
                 pointLight.constant = 1.0f;
                 pointLight.linear = 0.09f;
@@ -117,7 +119,8 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 spotLight.position = submittedLight.position;
                 spotLight.direction = submittedLight.direction;
                 spotLight.color = submittedLight.color;
-                spotLight.intensity = submittedLight.intensity;
+                spotLight.intensity = submittedLight.diffuseIntensity;  // Use diffuse intensity
+                spotLight.ambientIntensity = submittedLight.ambientIntensity;  // Per-light ambient
                 spotLight.cutOff = glm::cos(glm::radians(submittedLight.innerCone));
                 spotLight.outerCutOff = glm::cos(glm::radians(submittedLight.outerCone));
                 // Default attenuation values
@@ -180,6 +183,7 @@ void PBRLightingRenderer::SetupPointLights(std::shared_ptr<Shader> shader)
         shader->setVec3(prefix + "position", light.position);
         shader->setVec3(prefix + "color", light.color);
         shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);  // Ogldev-style per-light ambient
         shader->setFloat(prefix + "constant", light.constant);
         shader->setFloat(prefix + "linear", light.linear);
         shader->setFloat(prefix + "quadratic", light.quadratic);
@@ -204,6 +208,7 @@ void PBRLightingRenderer::SetupDirectionalLights(std::shared_ptr<Shader> shader)
         shader->setVec3(prefix + "direction", light.direction);
         shader->setVec3(prefix + "color", light.color);
         shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);  // Ogldev-style per-light ambient
     }
 }
 
@@ -220,6 +225,7 @@ void PBRLightingRenderer::SetupSpotLights(std::shared_ptr<Shader> shader)
         shader->setVec3(prefix + "direction", light.direction);
         shader->setVec3(prefix + "color", light.color);
         shader->setFloat(prefix + "intensity", light.intensity);
+        shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);  // Ogldev-style per-light ambient
         shader->setFloat(prefix + "cutOff", light.cutOff);
         shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
         shader->setFloat(prefix + "constant", light.constant);

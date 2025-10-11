@@ -498,12 +498,13 @@ void GraphicsTestDriver::SetupAdvancedScene()
         glm::vec3(0.0f, 0.5f, -1.6f),        // Initial position (ogldev)
         glm::vec3(1.0f, 1.0f, 1.0f),         // Color: white
         5.0f,                                 // DiffuseIntensity: 5.0 (ogldev)
+        0.2f,                                 // AmbientIntensity: 0.2 (ogldev per-light ambient)
         100.0f                                // Range: large for Sponza
     ));
-    spdlog::info("Animated point light created (intensity 5.0, matching ogldev)");
+    spdlog::info("Animated point light created (diffuse: 5.0, ambient: 0.2, matching ogldev)");
 
-    // Set ambient light (ogldev uses 0.2 on the light, we'll use global ambient)
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f));
+    // Set global ambient to 0 (we're using per-light ambient now, ogldev-style)
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.0f));
 
     spdlog::info("Sponza scene created: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
@@ -594,39 +595,45 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
 
 
-SubmittedLightData GraphicsTestDriver::CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity)
+SubmittedLightData GraphicsTestDriver::CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color,
+                                                              float diffuseIntensity, float ambientIntensity)
 {
     SubmittedLightData light;
     light.type = Light::Type::Directional;
     light.direction = glm::normalize(direction);
     light.color = color;
-    light.intensity = intensity;
+    light.diffuseIntensity = diffuseIntensity;    // Ogldev-style diffuse intensity
+    light.ambientIntensity = ambientIntensity;     // Ogldev-style per-light ambient
     light.enabled = true;
     return light;
 }
 
-SubmittedLightData GraphicsTestDriver::CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity, float range)
+SubmittedLightData GraphicsTestDriver::CreatePointLight(const glm::vec3& position, const glm::vec3& color,
+                                                         float diffuseIntensity, float ambientIntensity, float range)
 {
     SubmittedLightData light;
     light.type = Light::Type::Point;
     light.position = position;
     light.color = color;
-    light.intensity = intensity;
+    light.diffuseIntensity = diffuseIntensity;     // Ogldev-style diffuse intensity
+    light.ambientIntensity = ambientIntensity;     // Ogldev-style per-light ambient
     light.range = range;
     light.enabled = true;
     return light;
 }
 
 SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position, const glm::vec3& direction,
-                                                     const glm::vec3& color, float intensity, float range,
-                                                     float innerCone, float outerCone)
+                                                       const glm::vec3& color, float diffuseIntensity,
+                                                       float ambientIntensity, float range,
+                                                       float innerCone, float outerCone)
 {
     SubmittedLightData light;
     light.type = Light::Type::Spot;
     light.position = position;
     light.direction = glm::normalize(direction);
     light.color = color;
-    light.intensity = intensity;
+    light.diffuseIntensity = diffuseIntensity;     // Ogldev-style diffuse intensity
+    light.ambientIntensity = ambientIntensity;     // Ogldev-style per-light ambient
     light.range = range;
     light.innerCone = innerCone;
     light.outerCone = outerCone;

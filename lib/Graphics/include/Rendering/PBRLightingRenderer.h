@@ -29,23 +29,26 @@ public:
     struct PointLight {
         glm::vec3 position;
         glm::vec3 color;
-        float intensity;
+        float intensity;            // Diffuse intensity (ogldev-style)
+        float ambientIntensity;     // Per-light ambient contribution (ogldev-style)
         float constant;
         float linear;
         float quadratic;
     };
-    
+
     struct DirectionalLight {
         glm::vec3 direction;
         glm::vec3 color;
-        float intensity;
+        float intensity;            // Diffuse intensity (ogldev-style)
+        float ambientIntensity;     // Per-light ambient contribution (ogldev-style)
     };
-    
+
     struct SpotLight {
         glm::vec3 position;
         glm::vec3 direction;
         glm::vec3 color;
-        float intensity;
+        float intensity;            // Diffuse intensity (ogldev-style)
+        float ambientIntensity;     // Per-light ambient contribution (ogldev-style)
         float cutOff;
         float outerCutOff;
         float constant;
