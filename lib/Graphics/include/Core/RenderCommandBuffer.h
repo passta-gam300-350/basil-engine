@@ -120,32 +120,7 @@ namespace RenderCommands {
         std::string uniformName;
     };
 
-    // Compute shader dispatch
-    struct DispatchComputeData
-    {
-        std::shared_ptr<Shader> computeShader;
-        uint32_t groupsX;
-        uint32_t groupsY;
-        uint32_t groupsZ;
-    };
-
-    // Bind texture as image for compute shader read/write
-    struct BindImageTextureData
-    {
-        uint32_t unit;           // Image unit to bind to (0-7 typically)
-        uint32_t textureID;      // OpenGL texture handle
-        uint32_t level;          // Mipmap level
-        bool layered;            // Layered texture (for cubemaps/arrays)
-        uint32_t layer;          // Layer to bind (if not layered)
-        uint32_t access;         // GL_READ_ONLY, GL_WRITE_ONLY, GL_READ_WRITE
-        uint32_t format;         // Internal format (GL_RGBA16F, etc.)
-    };
-
-    // Memory barrier for synchronization
-    struct MemoryBarrierData
-    {
-        uint32_t barriers;  // GL_SHADER_STORAGE_BARRIER_BIT, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT, etc.
-    };
+ 
 }
 
 // Command variant - no virtual function calls, cache-friendly
@@ -166,10 +141,7 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetFaceCullingData,
     RenderCommands::SetObjectIDData,
     RenderCommands::ReadPixelData,
-    RenderCommands::BindCubemapData,
-    RenderCommands::DispatchComputeData,
-    RenderCommands::BindImageTextureData,
-    RenderCommands::MemoryBarrierData
+    RenderCommands::BindCubemapData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -215,9 +187,6 @@ private:
     void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
     void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);
     void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
-    void ExecuteCommand(const RenderCommands::DispatchComputeData &cmd);
-    void ExecuteCommand(const RenderCommands::BindImageTextureData &cmd);
-    void ExecuteCommand(const RenderCommands::MemoryBarrierData &cmd);
 
     // GPU state cleanup
     void CleanupGPUState();
