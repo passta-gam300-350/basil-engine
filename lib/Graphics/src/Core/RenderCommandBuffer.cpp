@@ -390,6 +390,29 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawArraysData &c
     glBindVertexArray(0);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DispatchComputeData &cmd)
+{
+    assert(cmd.computeShader && "DispatchComputeData command must have a valid compute shader");
+    assert(cmd.computeShader->ID != 0 && "Compute shader program must be compiled and linked");
+    assert(cmd.numGroupsX > 0 && "Number of X work groups must be positive");
+    assert(cmd.numGroupsY > 0 && "Number of Y work groups must be positive");
+    assert(cmd.numGroupsZ > 0 && "Number of Z work groups must be positive");
+
+    // Activate compute shader
+    cmd.computeShader->use();
+
+    // Dispatch compute shader work groups
+    glDispatchCompute(cmd.numGroupsX, cmd.numGroupsY, cmd.numGroupsZ);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::MemoryBarrierData &cmd)
+{
+    assert(cmd.barriers != 0 && "MemoryBarrierData command must have valid barrier flags");
+
+    // Insert memory barrier to ensure compute shader writes complete
+    glMemoryBarrier(cmd.barriers);
+}
+
 // ===== LIGHTING COMMAND EXECUTION (Option A) =====
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointLightsData& cmd)

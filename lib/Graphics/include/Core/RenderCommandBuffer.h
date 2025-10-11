@@ -159,6 +159,17 @@ namespace RenderCommands {
         uint32_t first = 0;            // Starting index
     };
 
+    struct DispatchComputeData {
+        std::shared_ptr<Shader> computeShader;
+        uint32_t numGroupsX;
+        uint32_t numGroupsY;
+        uint32_t numGroupsZ;
+    };
+
+    struct MemoryBarrierData {
+        uint32_t barriers;  // GL_SHADER_STORAGE_BARRIER_BIT, GL_TEXTURE_FETCH_BARRIER_BIT, etc.
+    };
+
     // ===== LIGHTING COMMANDS (Option A) =====
     // Forward declarations for light types
     struct PointLightData {
@@ -253,6 +264,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BindCubemapData,
     RenderCommands::BindTextureIDData,
     RenderCommands::DrawArraysData,
+    RenderCommands::DispatchComputeData,
+    RenderCommands::MemoryBarrierData,
     // Lighting commands (Option A)
     RenderCommands::SetPointLightsData,
     RenderCommands::SetDirectionalLightsData,
@@ -311,6 +324,8 @@ private:
     void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
     void ExecuteCommand(const RenderCommands::BindTextureIDData &cmd);
     void ExecuteCommand(const RenderCommands::DrawArraysData &cmd);
+    void ExecuteCommand(const RenderCommands::DispatchComputeData &cmd);
+    void ExecuteCommand(const RenderCommands::MemoryBarrierData &cmd);
     // Lighting command execution (Option A)
     void ExecuteCommand(const RenderCommands::SetPointLightsData& cmd);
     void ExecuteCommand(const RenderCommands::SetDirectionalLightsData& cmd);

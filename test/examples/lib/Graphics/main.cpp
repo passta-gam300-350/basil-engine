@@ -503,7 +503,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
     spdlog::info("Animated point light created (intensity 5.0, matching ogldev)");
 
     // Set ambient light (ogldev uses 0.2 on the light, we'll use global ambient)
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f));
 
     spdlog::info("Sponza scene created: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());

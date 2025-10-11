@@ -22,29 +22,55 @@ void HDRLuminancePass::Execute(RenderContext& context)
         InitializeBuffer(context.frameData.viewportWidth, context.frameData.viewportHeight);
     }
 
-    // Bind HDR texture from context (set by HDRResolvePass)
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, context.hdrTextureID);
+    // Begin the pass (no framebuffer needed for compute)
+    Begin();
 
-    // Activate compute shader
-    m_ComputeShader->use();
-    m_ComputeShader->setInt("u_HdrTexture", 0);
+    // Setup command buffer with systems from context
+    SetupCommandBuffer(context);
+
+    // Bind HDR texture from context (set by HDRResolvePass)
+    RenderCommands::BindTextureIDData bindTextureCmd{
+        context.hdrTextureID,
+        0,  // Texture unit 0
+        m_ComputeShader,
+        "u_HdrTexture"
+    };
+    Submit(bindTextureCmd);
 
     // Bind SSBO to binding point 1
-    m_LuminanceBuffer->BindBase(1);
+    RenderCommands::BindSSBOData bindSSBOCmd{
+        m_LuminanceBuffer->GetSSBOHandle(),
+        1  // Binding point 1
+    };
+    Submit(bindSSBOCmd);
 
-    // Dispatch compute shader
-    // Each work group = 10x10 threads
-    glDispatchCompute(m_NumGroupsX, m_NumGroupsY, 1);
+    // Dispatch compute shader (each work group = 10x10 threads)
+    RenderCommands::DispatchComputeData dispatchCmd{
+        m_ComputeShader,
+        m_NumGroupsX,
+        m_NumGroupsY,
+        1  // Z dimension
+    };
+    Submit(dispatchCmd);
 
     // Memory barrier: ensure compute shader writes complete before CPU reads
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    RenderCommands::MemoryBarrierData barrierCmd{
+        GL_SHADER_STORAGE_BARRIER_BIT
+    };
+    Submit(barrierCmd);
+
+    // Execute all commands submitted to this pass's command buffer
+    ExecuteCommands();
 
     // Calculate exposure and WRITE TO CONTEXT (framework pattern!)
+    // This happens after ExecuteCommands() to ensure compute shader completed
     CalculateExposure(context);
 
     // Unbind SSBO
     m_LuminanceBuffer->Unbind();
+
+    // End the pass
+    End();
 }
 
 void HDRLuminancePass::SetComputeShader(std::shared_ptr<Shader> shader)
