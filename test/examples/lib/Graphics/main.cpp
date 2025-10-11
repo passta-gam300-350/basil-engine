@@ -516,7 +516,7 @@ void GraphicsTestDriver::SetupAdvancedScene()
 
     // Set global ambient to provide base illumination for surfaces far from lights
     // This prevents areas far from the point light from being too dark
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f, 0.05f, 0.05f));  // Increased from 0.0
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.07f, 0.07f, 0.07f));  // Increased from 0.0
 
     spdlog::info("Sponza scene created: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
