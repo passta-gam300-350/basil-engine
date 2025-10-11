@@ -4,6 +4,7 @@
 #include <Scene/SceneRenderer.h>
 #include <Resources/ResourceManager.h>
 #include <Utility/Camera.h>
+#include <Pipeline/ToneMapRenderPass.h>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>

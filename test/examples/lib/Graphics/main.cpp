@@ -143,6 +143,7 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - H: Toggle HDR auto-exposure only");
     spdlog::info("  - T: Toggle tone mapping only");
     spdlog::info("  - R: Toggle HDR resolve only");
+    spdlog::info("  - M: Cycle tone mapping method (None/Reinhard/ACES/Exposure)");
 
     while (!m_Window->ShouldClose()) {
         // Calculate delta time
@@ -882,6 +883,25 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_R:
                 s_Instance->ToggleRenderPass("HDRResolvePass");
+                break;
+
+            case GLFW_KEY_M:  // Cycle through tone mapping methods
+                if (s_Instance->m_SceneRenderer) {
+                    auto* pipeline = s_Instance->m_SceneRenderer->GetPipeline();
+                    if (pipeline) {
+                        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(
+                            pipeline->GetPass("ToneMapPass")
+                        );
+                        if (toneMapPass) {
+                            int current = static_cast<int>(toneMapPass->GetMethod());
+                            int next = (current + 1) % 4;  // Cycle 0-3
+                            toneMapPass->SetMethod(static_cast<ToneMapRenderPass::Method>(next));
+
+                            const char* names[] = {"None", "Reinhard", "ACES", "Exposure"};
+                            spdlog::info("Tone mapping method: {} ({})", names[next], next);
+                        }
+                    }
+                }
                 break;
         }
     }
