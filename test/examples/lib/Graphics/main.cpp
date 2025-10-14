@@ -504,7 +504,6 @@ void GraphicsTestDriver::SetupAdvancedScene()
     spdlog::info("Sponza model instantiated at origin (scale 0.05, matching ogldev)");
 
     // ===== ANIMATED POINT LIGHT (ogldev tutorial 63 setup) =====
-    // Initial point light - position will be animated in Run() loop
     m_SceneLights.push_back(CreatePointLight(
         glm::vec3(0.0f, 0.5f, -1.6f),        // Initial position (ogldev)
         glm::vec3(1.0f, 1.0f, 1.0f),         // Color: white
@@ -513,6 +512,17 @@ void GraphicsTestDriver::SetupAdvancedScene()
         100.0f                                // Range: large for Sponza
     ));
     spdlog::info("Animated point light created (diffuse: 5.0, ambient: 0.2, matching ogldev)");
+
+    // ===== HDR TEST LIGHT - OVERBRIGHT RED =====
+    // DISABLED - Uncomment to test HDR with extreme overbright red light
+    // m_SceneLights.push_back(CreatePointLight(
+    //     glm::vec3(0.0f, 3.0f, 0.0f),         // Center of scene, close to geometry
+    //     glm::vec3(1.0f, 0.0f, 0.0f),         // Pure RED
+    //     100.0f,                               // EXTREMELY BRIGHT (100x normal!)
+    //     0.0f,                                 // No ambient
+    //     150.0f                                // Very large range
+    // ));
+    // spdlog::info("HDR TEST LIGHT: EXTREME overbright red (intensity 100.0) at scene center - Press 'O' to toggle HDR!");
 
     // Set global ambient to provide base illumination for surfaces far from lights
     // This prevents areas far from the point light from being too dark
