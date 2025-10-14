@@ -8,7 +8,7 @@ ToneMapRenderPass::ToneMapRenderPass()
     : RenderPass("ToneMapPass", FBOSpecs{
         1280, 720,
         {
-            { FBOTextureFormat::RGB8 },  // LDR output (8-bit RGB)
+            { FBOTextureFormat::SRGB8 },  // sRGB output (automatic hardware gamma correction via GL_FRAMEBUFFER_SRGB)
         },
         1  // No MSAA for post-process
     })

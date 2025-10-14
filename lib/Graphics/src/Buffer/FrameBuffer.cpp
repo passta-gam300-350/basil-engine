@@ -11,6 +11,7 @@ namespace Utils
 		{
 		case FBOTextureFormat::RGBA8: return GL_RGBA8;
 		case FBOTextureFormat::RGB8: return GL_RGB8;
+		case FBOTextureFormat::SRGB8: return GL_SRGB8;
 		case FBOTextureFormat::SRGB8_ALPHA8: return GL_SRGB8_ALPHA8;
 		case FBOTextureFormat::RGBA16F: return GL_RGBA16F;
 		case FBOTextureFormat::RGB16F: return GL_RGB16F;
@@ -116,6 +117,7 @@ void FrameBuffer::Invalidate()
 						break;
 
 					case FBOTextureFormat::RGB8:
+					case FBOTextureFormat::SRGB8:
 						format = GL_RGB;
 						type = GL_UNSIGNED_BYTE;
 						break;

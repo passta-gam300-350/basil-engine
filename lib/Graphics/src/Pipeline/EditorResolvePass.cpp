@@ -13,31 +13,37 @@ EditorResolvePass::EditorResolvePass()
 
 void EditorResolvePass::Execute(RenderContext& context)
 {
-    // Check if we have a main buffer to resolve
-    if (!context.frameData.mainColorBuffer)
-    {
-        // No main buffer yet, skip
+    // Determine which buffer to use for editor display (same logic as PresentPass)
+    std::shared_ptr<FrameBuffer> sourceBuffer;
+
+    if (context.frameData.postProcessBuffer) {
+        // Use tone-mapped LDR result (HDR pipeline active)
+        sourceBuffer = context.frameData.postProcessBuffer;
+    } else if (context.frameData.mainColorBuffer) {
+        // Use main color buffer directly (no HDR/post-processing)
+        sourceBuffer = context.frameData.mainColorBuffer;
+    } else {
+        // No buffer available
         return;
     }
 
-    auto mainFBO = context.frameData.mainColorBuffer;
-    const auto& mainSpec = mainFBO->GetSpecification();
+    const auto& sourceSpec = sourceBuffer->GetSpecification();
 
-    // Only resolve if the main buffer is actually multisampled
-    if (!mainFBO->IsMultisampled())
+    // Only resolve if the source buffer is actually multisampled
+    if (!sourceBuffer->IsMultisampled())
     {
         // Not multisampled, just use it directly for editor
-        context.frameData.editorResolvedBuffer = mainFBO;
+        context.frameData.editorResolvedBuffer = sourceBuffer;
         return;
     }
 
     // Create or resize resolved buffer if needed
     if (!context.frameData.editorResolvedBuffer ||
-        context.frameData.editorResolvedBuffer->GetSpecification().Width != mainSpec.Width ||
-        context.frameData.editorResolvedBuffer->GetSpecification().Height != mainSpec.Height)
+        context.frameData.editorResolvedBuffer->GetSpecification().Width != sourceSpec.Width ||
+        context.frameData.editorResolvedBuffer->GetSpecification().Height != sourceSpec.Height)
     {
-        // Create non-MSAA version with same format as main
-        FBOSpecs resolvedSpec = mainSpec;
+        // Create non-MSAA version with same format as source
+        FBOSpecs resolvedSpec = sourceSpec;
         resolvedSpec.Samples = 1;  // Force non-MSAA
         context.frameData.editorResolvedBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
 
@@ -45,6 +51,6 @@ void EditorResolvePass::Execute(RenderContext& context)
             resolvedSpec.Width, resolvedSpec.Height);
     }
 
-    // Resolve MSAA main buffer to non-MSAA resolved buffer
-    mainFBO->ResolveToFramebuffer(context.frameData.editorResolvedBuffer.get());
+    // Resolve MSAA source buffer to non-MSAA resolved buffer
+    sourceBuffer->ResolveToFramebuffer(context.frameData.editorResolvedBuffer.get());
 }
