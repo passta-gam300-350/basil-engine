@@ -97,10 +97,47 @@ The graphics library includes:
 - `lib/Graphics/STANDALONE_USAGE_EXAMPLE.md`: Integration examples
 - `lib/Graphics/EDITOR_INTEGRATION_ROADMAP.md`: Future development plans
 - `test/examples/lib/Graphics/main.cpp`: Working graphics example
+- `engine/RENDER_SYSTEM_ARCHITECTURE.md`: **NEW** - Detailed RenderSystem architecture documentation
+- `engine/RENDER_SYSTEM_REFACTOR_EXECUTION_PLAN.md`: Refactoring plan (Phases 0-6)
+
+## RenderSystem Architecture (2025 Refactoring)
+
+The RenderSystem has been refactored from a monolithic singleton into a clean, modular architecture:
+
+### Before Refactoring
+- Single monolithic class (~420 lines)
+- Static singleton pattern with hidden dependencies
+- 6 file-scope global variables (mutable state)
+- Mixed responsibilities (rendering + shader loading + primitive generation + initialization)
+
+### After Refactoring (Phases 1-6 Complete)
+- **RenderSystem**: Main coordinator (owned by Engine, NOT a singleton)
+- **ShaderLibrary**: Shader loading and caching
+- **PrimitiveManager**: Primitive mesh generation (cube, plane, etc.)
+- **RenderResourceCache**: Entity-specific resource caching
+- **ComponentInitializer**: ECS component initialization logic
+
+**Key Changes:**
+- ✅ No singleton pattern - access via `Engine::GetRenderSystem()`
+- ✅ No file-scope variables - explicit ownership
+- ✅ Clear separation of concerns
+- ✅ Fully documented with Doxygen comments
+- ✅ Each class < 300 lines
+
+**Usage:**
+```cpp
+// OLD (before refactoring)
+RenderSystem::Instance().m_SceneRenderer->Render();
+
+// NEW (after refactoring)
+Engine::GetRenderSystem().m_SceneRenderer->Render();
+```
+
+See `engine/RENDER_SYSTEM_ARCHITECTURE.md` for complete architecture details, data flow diagrams, and usage examples.
 
 ## Development Notes
 
-- The engine is currently on the `graphics-experimental` branch with significant graphics refactoring
+- The engine is currently on the `render-system-refactor` branch with completed RenderSystem refactoring (Phases 1-6)
 - Graphics library is designed to be completely standalone and framework-agnostic
 - Future roadmap includes material serialization, hot-reload, and enhanced ECS integration
 - Runtime output directory is configured to `bin/` at project root level

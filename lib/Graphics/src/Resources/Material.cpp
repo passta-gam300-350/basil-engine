@@ -32,7 +32,7 @@ void Material::SetFloat(const std::string& name, float value)
 {
     if (m_Shader)
     {
-        m_Shader->use();
+        // Note: Shader is already bound by the command buffer system
         m_Shader->setFloat(name, value);
     }
 }
@@ -41,7 +41,7 @@ void Material::SetVec3(const std::string& name, const glm::vec3& value)
 {
     if (m_Shader)
     {
-        m_Shader->use();
+        // Note: Shader is already bound by the command buffer system
         m_Shader->setVec3(name, value);
     }
 }
@@ -50,7 +50,7 @@ void Material::SetVec4(const std::string& name, const glm::vec4& value)
 {
     if (m_Shader)
     {
-        m_Shader->use();
+        // Note: Shader is already bound by the command buffer system
         m_Shader->setVec4(name, value);
     }
 }
@@ -59,7 +59,7 @@ void Material::SetMat4(const std::string& name, const glm::mat4& value)
 {
     if (m_Shader)
     {
-        m_Shader->use();
+        // Note: Shader is already bound by the command buffer system
         m_Shader->setMat4(name, value);
     }
 }

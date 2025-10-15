@@ -48,6 +48,14 @@ void Engine::Init(std::string const& cfg ) {
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
+
+		// Create and initialize RenderSystem
+		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+		Instance().m_RenderSystem->Init();
+		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+		Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
+
+		Scheduler::CompileJobSchedule();
 		//InputManager::Get_Instance()->Setup_Callbacks();
 		//ObjectManager::GetInstance().CreateGameObject();
 		return;
@@ -86,11 +94,18 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	RenderSystem::System().Init();
+	// Create and initialize RenderSystem
+	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+	Instance().m_RenderSystem->Init();
+
+	// Set up RenderSystem observers and initialize existing entities from loaded world
+	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
+
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 
-	
+
 }
 
 void Engine::Update() {
@@ -108,7 +123,9 @@ void Engine::Update() {
 
 				PF_BEGIN_FRAME(frame_number);
 				//instance.m_World.update();
-				RenderSystem::System().Update(instance.m_World);
+				if (instance.m_RenderSystem) {
+					instance.m_RenderSystem->Update(instance.m_World);
+				}
 				PF_END_FRAME();
 				Engine::GetWindowInstance().SwapBuffers();
 
@@ -185,7 +202,14 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	RenderSystem::System().Init();
+	// Create and initialize RenderSystem
+	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+	Instance().m_RenderSystem->Init();
+
+	// Set up RenderSystem observers and initialize existing entities from loaded world
+	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
+
 	Scheduler::CompileJobSchedule();
 }
 
@@ -193,7 +217,10 @@ void Engine::Exit() {
 	SystemRegistry::Exit();
 	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
-	RenderSystem::System().Exit();
+	if (Instance().m_RenderSystem) {
+		Instance().m_RenderSystem->Exit();
+		Instance().m_RenderSystem.reset();
+	}
 	ResourceSystem::Release();
 	Scheduler::Release();
 }
@@ -227,6 +254,13 @@ Window& Engine::GetWindowInstance() {
 		throw std::runtime_error("Engine window not created - use Engine::Init() instead of InitWithoutWindow() for standalone applications");
 	}
 	return *Instance().m_Window;
+}
+
+RenderSystem& Engine::GetRenderSystem() {
+	if (!Instance().m_RenderSystem) {
+		throw std::runtime_error("RenderSystem not created - call Engine::Init() first");
+	}
+	return *Instance().m_RenderSystem;
 }
 
 bool Engine::WindowShouldClose() {

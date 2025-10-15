@@ -7,6 +7,7 @@
 #include "Ecs/ecs.h"
 
 class Window;
+struct RenderSystem;
 namespace Logger {
 	class Sink;
 }
@@ -14,6 +15,7 @@ namespace Logger {
 class Engine
 {
 	std::unique_ptr<Window> m_Window;
+	std::unique_ptr<RenderSystem> m_RenderSystem;
 	ecs::world m_World;
 	std::unique_ptr<Logger::Sink> m_Sink;
 	std::string m_WorkingDirectory;
@@ -50,6 +52,7 @@ public:
 	static void EndFrame();
 
 	static Window& GetWindowInstance();
+	static RenderSystem& GetRenderSystem();
 	static spdlog::stopwatch GetAppElapsedTime();
 	static Logger::Sink* GetSink();
 	static bool WindowShouldClose();

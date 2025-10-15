@@ -114,7 +114,7 @@ void EditorMain::update()
 
 	glClearColor(1, 1, 1, 1);
 
-	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
+	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem Update
 	if (!m_IsPlayMode && m_EditorCamera) {
 		ecs::world world = Engine::GetWorld();
 		auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
@@ -143,7 +143,7 @@ void EditorMain::update()
 
 	// Update engine systems
 	ecs::world world = Engine::GetWorld();
-	RenderSystem::System().Update(world);
+	Engine::GetRenderSystem().Update(world);
 	PhysSys.FixedUpdate(world);
 	auto cubes = world.filter_entities<RigidBodyComponent>();
 	for (auto cube : cubes)
@@ -1227,7 +1227,7 @@ void EditorMain::Render_Scene()
 	}
 
 	// Check if editor framebuffer is available before trying to access it
-	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
+	auto& frameData = Engine::GetRenderSystem().m_SceneRenderer->GetFrameData();
 	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
@@ -1579,7 +1579,7 @@ void EditorMain::CreateDemoScene()
 	world.add_component_to_entity<LightComponent>(lightEntity, light);
 
 	// Set stronger ambient light for better visibility
-	RenderSystem::Instance().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
+	Engine::GetRenderSystem().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
@@ -1706,7 +1706,7 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 
 void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight)
 {
-	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 	assert(sceneRenderer && "SceneRenderer must be available for entity picking");
 
 	// Assert input parameters are valid
@@ -1790,7 +1790,7 @@ void EditorMain::ClearEntitySelection()
 
 void EditorMain::SetDebugVisualization(bool showAABBs)
 {
-	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 	if (sceneRenderer == nullptr) {
 		return;
 	}
