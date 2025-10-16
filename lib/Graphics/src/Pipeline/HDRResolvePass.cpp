@@ -50,4 +50,9 @@ void HDRResolvePass::Execute(RenderContext& context)
 
     // Store resolved HDR texture ID for HDR luminance and tone mapping passes
     context.hdrTextureID = context.frameData.hdrResolvedBuffer->GetColorAttachmentRendererID(0);
+
+    // Validate texture ID
+    if (context.hdrTextureID == 0) {
+        spdlog::error("HDRResolvePass: Failed to get valid texture ID from resolved buffer!");
+    }
 }

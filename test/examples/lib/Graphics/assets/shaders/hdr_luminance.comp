@@ -27,13 +27,15 @@ void main()
     vec3 hdrColor = texelFetch(u_HdrTexture, texCoord, 0).rgb;
 
     // Calculate luminance (perceived brightness)
-    // ITU-R BT.709 standard weights for RGB ’ luminance
+    // ITU-R BT.709 standard weights for RGB to luminance
     float luminance = dot(hdrColor, vec3(0.2126, 0.7152, 0.0722));
 
     // Store LOG of luminance for geometric mean calculation
     // Geometric mean is perceptually more accurate than arithmetic mean
-    // Add small epsilon to avoid log(0) = -inf
-    localLum[gl_LocalInvocationIndex] = log(luminance + 0.0001);
+    // Use max() to ensure we NEVER take log of negative or zero (which causes NaN)
+    // Clamp to minimum of 0.0001 before taking log
+    float safeLuminance = max(luminance, 0.0001);
+    localLum[gl_LocalInvocationIndex] = log(safeLuminance);
 
     // Synchronize all threads in this work group
     barrier();

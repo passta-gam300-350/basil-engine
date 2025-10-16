@@ -13,7 +13,15 @@ HDRLuminancePass::HDRLuminancePass()
 void HDRLuminancePass::Execute(RenderContext& context)
 {
     if (!m_ComputeShader) {
-        spdlog::warn("HDRLuminancePass: No compute shader set!");
+        // No compute shader - use fixed safe values instead of NaN!
+        context.avgLuminance = 0.5f;   // Middle gray
+        context.exposure = 1.0f;        // Neutral exposure
+
+        static bool warned = false;
+        if (!warned) {
+            spdlog::warn("HDRLuminancePass: No compute shader set! Using fixed exposure=1.0");
+            warned = true;
+        }
         return;
     }
 
@@ -96,9 +104,22 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     // Sum all tile luminances
     float sum = 0.0f;
     uint32_t numTiles = m_NumGroupsX * m_NumGroupsY;
+    uint32_t invalidCount = 0;
 
     for (uint32_t i = 0; i < numTiles; ++i) {
-        sum += pLuminance[i];
+        float val = pLuminance[i];
+        // Skip NaN or infinite values from compute shader
+        if (std::isfinite(val)) {
+            sum += val;
+        } else {
+            invalidCount++;
+        }
+    }
+
+    // Log if compute shader produced invalid values
+    if (invalidCount > 0) {
+        spdlog::warn("HDRLuminancePass: Compute shader produced {} invalid/NaN values out of {} tiles!",
+                     invalidCount, numTiles);
     }
 
     // Unmap SSBO
@@ -106,7 +127,15 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
 
     // Calculate geometric mean: exp(average of log luminances)
     uint32_t totalPixels = m_NumGroupsX * m_NumGroupsY * m_LocalSizeX * m_LocalSizeY;
-    float avgLuminance = std::exp(sum / static_cast<float>(totalPixels));
+    float avgLogLum = sum / static_cast<float>(totalPixels);
+    float avgLuminance = std::exp(avgLogLum);
+
+    // Validate avgLuminance - if NaN or invalid, use safe default
+    if (!std::isfinite(avgLuminance) || avgLuminance <= 0.0f) {
+        spdlog::warn("HDRLuminancePass: Invalid avgLuminance ({:.3f}) from sum={:.3f}, avgLogLum={:.3f}, totalPixels={}. Using default 0.5",
+                     avgLuminance, sum, avgLogLum, totalPixels);
+        avgLuminance = 0.5f;
+    }
 
     // DYNAMIC EXPOSURE: Calculate exposure based on scene brightness
     // This auto-adapts to different lighting conditions
@@ -115,6 +144,12 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
 
     // Clamp exposure to reasonable range (prevent extreme values)
     exposure = glm::clamp(exposure, 0.1f, 3.0f);
+
+    // Validate exposure - if still NaN, use safe default
+    if (!std::isfinite(exposure)) {
+        spdlog::warn("HDRLuminancePass: Invalid exposure ({:.3f}), using default 1.0", exposure);
+        exposure = 1.0f;
+    }
 
     // Alternative (fixed exposure - use this to match ogldev exactly):
     // const float exposure = 0.4457f;  // Fixed value matching ogldev

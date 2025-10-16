@@ -36,12 +36,15 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
 
+    // Ensure stencil testing is disabled before clearing (clean state)
+    Submit(RenderCommands::EnableStencilTestData{ false });
+
     // Ensure stencil write mask is enabled before clearing
     Submit(RenderCommands::SetStencilMaskData{ 0xFF });
 
     // Clear color, depth, and stencil buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a
+        0.7f, 0.7f, 0.7f, 1.0f,  // Gray background
         true,                      // clearColor
         true,                      // clearDepth
         true                       // clearStencil (needed for outline rendering)
@@ -100,6 +103,11 @@ void MainRenderingPass::UpdateFramebufferSize()
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
 
+    // Skip if window is minimized (framebuffer size = 0)
+    if (windowWidth == 0 || windowHeight == 0) {
+        return;
+    }
+
     // Check if we need to resize the framebuffer
     auto currentSpecs = m_Framebuffer->GetSpecification();
     if (currentSpecs.Width != static_cast<uint32_t>(windowWidth) ||
@@ -117,8 +125,8 @@ void MainRenderingPass::RenderSkybox(RenderContext& context)
 {
     if (!m_SkyboxEnabled || !m_SkyboxShader || !m_SkyboxMesh || m_SkyboxCubemapID == 0)
     {
-        spdlog::warn("Skybox not rendering - Enabled: {}, Shader: {}, Mesh: {}, CubemapID: {}",
-                     m_SkyboxEnabled, m_SkyboxShader != nullptr, m_SkyboxMesh != nullptr, m_SkyboxCubemapID);
+       /* spdlog::warn("Skybox not rendering - Enabled: {}, Shader: {}, Mesh: {}, CubemapID: {}",
+                     m_SkyboxEnabled, m_SkyboxShader != nullptr, m_SkyboxMesh != nullptr, m_SkyboxCubemapID);*/
         return; // Skip if not properly configured
     }
 

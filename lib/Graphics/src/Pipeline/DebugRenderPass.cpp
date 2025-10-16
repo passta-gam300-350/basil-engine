@@ -53,12 +53,12 @@ void DebugRenderPass::Execute(RenderContext& context)
     Submit(enableBlendCmd);
 
     // Disable depth writing but keep depth testing for proper overlay rendering
-    //RenderCommands::SetDepthTestData depthTestCmd{
-    //    true,           // enable depth testing (to respect scene depth)
-    //    GL_LEQUAL,      // depth function (allow equal depth for overlays)
-    //    false           // disable depth writing (preserve main pass depth)
-    //};
-    //Submit(depthTestCmd);
+    RenderCommands::SetDepthTestData depthTestCmd{
+        true,           // enable depth testing (to respect scene depth)
+        GL_LEQUAL,      // depth function (allow equal depth for overlays)
+        false           // disable depth writing (preserve main pass depth)
+    };
+    Submit(depthTestCmd);
 
     // Render light cubes for visualization
     if (m_ShowLightCubes && !context.lights.empty()) {
@@ -78,6 +78,14 @@ void DebugRenderPass::Execute(RenderContext& context)
     // Disable blending after debug rendering
     RenderCommands::SetBlendingData disableBlendCmd{ false };
     Submit(disableBlendCmd);
+
+    // Restore depth testing and writing to default state
+    RenderCommands::SetDepthTestData restoreDepthCmd{
+        true,           // enable depth testing
+        GL_LESS,        // default depth function
+        true            // enable depth writing
+    };
+    Submit(restoreDepthCmd);
 
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();

@@ -143,6 +143,12 @@ void SceneRenderer::Render()
     if (currentWindow) {
         int width, height;
         glfwGetFramebufferSize(currentWindow, &width, &height);
+
+        // Skip rendering if window is minimized (framebuffer size = 0)
+        if (width == 0 || height == 0) {
+            return;
+        }
+
         m_FrameData.viewportWidth = static_cast<uint32_t>(width);
         m_FrameData.viewportHeight = static_cast<uint32_t>(height);
     }

@@ -40,6 +40,13 @@ void ToneMapRenderPass::Execute(RenderContext& context)
     };
     Submit(clearCmd);
 
+    // Validate HDR texture is available
+    if (context.hdrTextureID == 0) {
+        spdlog::error("ToneMapRenderPass: Invalid HDR texture ID (0)!");
+        End();
+        return;
+    }
+
     // Bind shader
     RenderCommands::BindShaderData bindShaderCmd{ m_ToneMappingShader };
     Submit(bindShaderCmd);
@@ -150,6 +157,11 @@ void ToneMapRenderPass::UpdateFramebufferSize()
 
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
+
+    // Skip if window is minimized (framebuffer size = 0)
+    if (windowWidth == 0 || windowHeight == 0) {
+        return;
+    }
 
     // Check if we need to resize the framebuffer
     auto currentSpecs = m_Framebuffer->GetSpecification();

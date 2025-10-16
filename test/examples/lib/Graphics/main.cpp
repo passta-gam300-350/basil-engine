@@ -99,6 +99,10 @@ bool GraphicsTestDriver::Initialize()
         return false;
     }
 
+    // Enable VSync to prevent screen tearing and black flashes
+    m_Window->SetVSync(true);
+    spdlog::info("VSync enabled");
+
     // Create scene renderer (owns all graphics systems now)
     m_SceneRenderer = std::make_unique<SceneRenderer>();
 
