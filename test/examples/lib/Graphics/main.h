@@ -61,8 +61,9 @@ private:
     
     void ProcessInput();
 
-    // Advanced demo scene
-    void SetupAdvancedScene();
+    // Demo scene setups (each includes: objects, lights, camera, outline mode)
+    void SetupSponzaDemo();      // Sponza cathedral - lighting test with HDR
+    void SetupTinboxDemo();      // Tinbox grid - outline and PBR testing
 
     // Resource loading
     bool LoadTestResources();
@@ -100,6 +101,15 @@ private:
 
     // Object picking
     void HandleObjectPicking(double mouseX, double mouseY);
+
+    // Outline modes
+    void SetupStaticOutlines();           // Outline first 5 objects (static demo)
+    void UpdateCameraBasedOutline();      // Outline object camera is looking at (dynamic)
+
+    // Ray-AABB intersection helper
+    bool RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
+                           const glm::vec3& aabbMin, const glm::vec3& aabbMax,
+                           float& tMin, float& tMax) const;
 
     // Static pointer for callbacks
     static GraphicsTestDriver* s_Instance;

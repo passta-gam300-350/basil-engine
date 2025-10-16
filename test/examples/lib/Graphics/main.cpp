@@ -1,3 +1,38 @@
+/*
+ * ===============================================
+ * GRAPHICS TEST DRIVER - CONFIGURATION GUIDE
+ * ===============================================
+ *
+ * DEMO SELECTION:
+ * ---------------
+ * In Initialize(), choose which demo to run by uncommenting ONE:
+ *
+ *   SetupSponzaDemo();   // Sponza cathedral - LIGHTING & HDR TEST
+ *                        // - Animated point light (intensity 5.0)
+ *                        // - HDR tone mapping
+ *                        // - Camera positioned inside cathedral
+ *                        // - NO OUTLINES (lighting test only)
+ *
+ *   SetupTinboxDemo();   // Tinbox grid - OUTLINE & PBR TEST
+ *                        // - Directional + point lights
+ *                        // - CLICK-BASED OUTLINES (left-click to select)
+ *                        // - Camera positioned to view grid
+ *
+ * Each demo function sets up:
+ *   - Scene objects
+ *   - Lighting
+ *   - Camera position/orientation
+ *   - Outline mode (if applicable)
+ *
+ * OUTLINE SELECTION:
+ * ------------------
+ * - Click-based: Left-click on any object to outline the entire model
+ * - Click on empty space to clear outlines
+ * - All meshes of the same model instance will be outlined together
+ *
+ * ===============================================
+ */
+
 #include "main.h"
 
 #include <Resources/Material.h>
@@ -12,6 +47,8 @@
 #include <random>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <map>
+#include <algorithm>
+#include <cfloat>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -78,19 +115,6 @@ bool GraphicsTestDriver::Initialize()
         spdlog::info("HDR tone mapping pipeline enabled (matching ogldev tutorial 63)");
     }
 
-    // Setup camera - positioned to view Sponza scene (matching ogldev tutorial 63)
-    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
-    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-    m_Camera->SetPosition(glm::vec3(59.0f, 9.0f, -1.6f));  // ogldev's camera position
-
-    // Convert ogldev's direction vector (-1.0, 0.05, 0.07) to pitch/yaw angles
-    glm::vec3 direction = glm::normalize(glm::vec3(-1.0f, 0.05f, 0.07f));
-    float pitch = glm::degrees(asin(direction.y));  // ~2.86 degrees
-    float yaw = glm::degrees(atan2(direction.z, direction.x));  // ~176 degrees
-    m_Camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
-    
-    // We'll manually update the scene renderer's frame data with camera matrices
-
     // Setup input callbacks
     glfwSetKeyCallback(m_Window->GetNativeWindow(), KeyCallback);
     glfwSetCursorPosCallback(m_Window->GetNativeWindow(), MouseCallback);
@@ -104,8 +128,11 @@ bool GraphicsTestDriver::Initialize()
         return false;
     }
 
-    // Setup the advanced demo scene
-    SetupAdvancedScene();
+    // ===== DEMO SELECTION =====
+    // Uncomment ONE demo to run:
+
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupTinboxDemo();       // Tinbox grid - outline/PBR test
     
     
 
@@ -121,9 +148,7 @@ bool GraphicsTestDriver::Initialize()
 void GraphicsTestDriver::Run()
 {
     spdlog::info("Starting render loop...");
-    spdlog::info("=== HDR TONE MAPPING DEMO (ogldev Tutorial 63) ===");
-    spdlog::info("Scene: Crytek Sponza with animated point light (intensity 5.0)");
-    spdlog::info("HDR: Enabled | Auto-Exposure: Active | Gamma: Enabled");
+    spdlog::info("=== GRAPHICS DEMO ===");
     spdlog::info("Controls:");
     spdlog::info("  - WASD: Move camera");
     spdlog::info("  - Mouse: Look around");
@@ -132,6 +157,7 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - F2: Print scene info");
     spdlog::info("  - F3: Print render pass status");
     spdlog::info("  - 1: Toggle shadow pass");
+    spdlog::info("  - 2: Toggle outline pass");
     spdlog::info("  - 3: Toggle debug pass (light visualization)");
     spdlog::info("  - 4: Toggle AABB wireframes");
     spdlog::info("  - 5: Toggle object rotation");
@@ -186,6 +212,12 @@ void GraphicsTestDriver::Run()
 
         // Calculate and submit debug AABBs for visualization
         CalculateAndSubmitAABBs();
+
+        // ===== OUTLINE UPDATE =====
+        // Outline selection is now CLICK-BASED via HandleObjectPicking()
+        // Left-click on an object to outline the entire model instance
+        // Click on empty space to clear outlines
+        // No need for per-frame camera-based updates anymore!
 
         // Render scene (handles begin/end frame internally)
         m_SceneRenderer->Render();
@@ -337,6 +369,19 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load picking shader");
         }
 
+        // Load outline shader for stencil-based outlines
+        auto outlineShader = m_ResourceManager->LoadShader("outline",
+            "assets/shaders/outline.vert",
+            "assets/shaders/outline.frag");
+
+        if (outlineShader) {
+            spdlog::info("Outline shader loaded successfully!");
+            // Configure the outline pass with the loaded shader
+            m_SceneRenderer->SetOutlineShader(outlineShader);
+        } else {
+            spdlog::warn("Could not load outline shader");
+        }
+
         // ===== Load HDR Compute Shader =====
         spdlog::info("Loading HDR compute shader...");
         auto hdrComputeShader = m_ResourceManager->LoadComputeShader(
@@ -452,87 +497,125 @@ void GraphicsTestDriver::CreateTestMaterials()
     spdlog::info("Test materials created and registered.");
 }
 
-void GraphicsTestDriver::SetupAdvancedScene()
+// =============================================================================================
+// DEMO SETUP FUNCTIONS
+// =============================================================================================
+// Each demo function is a complete, self-contained setup that configures:
+//   1. Scene objects
+//   2. Lighting
+//   3. Camera position and orientation
+//   4. Outline mode (if applicable)
+//
+// DEMO 1 - Sponza:  Lighting/HDR test - NO outlines
+// DEMO 2 - Tinbox:  Outline/PBR test - Camera-based outlines
+//
+// To switch demos, just uncomment one function call in Initialize()
+// =============================================================================================
+
+// ===== DEMO 1: SPONZA CATHEDRAL - LIGHTING & HDR TEST =====
+void GraphicsTestDriver::SetupSponzaDemo()
 {
-    spdlog::info("Setting up Advanced Graphics Demo...");
+    spdlog::info("=== SETTING UP SPONZA DEMO (Lighting & HDR Test) ===");
 
-    // ===== DISABLED: PLANE AND TINBOX SCENE =====
-    //// Create ground plane
-    //auto planeMesh = std::make_shared<Mesh>(
-    //    PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
-    //);
-    //
-    //// Add ground plane to scene using GreenMaterial
-    //RenderableData ground;
-    //ground.mesh = planeMesh;
-    //ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
-    //ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-    //ground.visible = true;
-    //ground.objectID = 1;  // Ground plane has object ID 1
-    //m_SceneObjects.push_back(ground);
-    //
-    //// Create grids of objects for instanced rendering
-    //std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial", "GoldMaterial", "WhiteMaterial"};
-    //
-    //const int gridSize = 3;
-    //const float spacing = 3.0f;
-    //const float startOffset = -(gridSize - 1) * spacing * 0.5f; // Center the grid
-    //
-    //// Create tinbox grid (left side)
-    //for (int x = 0; x < gridSize; ++x) {
-    //    for (int z = 0; z < gridSize; ++z) {
-    //        glm::vec3 position(
-    //            startOffset + x * spacing - 8.0f, // Offset to the left
-    //            0.0f,
-    //            startOffset + z * spacing
-    //        );
-    //
-    //        // Use uniform scale
-    //        glm::vec3 scaleVec(1.0f);
-    //
-    //        // Cycle through materials based on position
-    //        int materialIndex = (x + z) % materials.size();
-    //        std::string material = materials[materialIndex];
-    //
-    //        CreateModelInstance("tinbox", material, position, scaleVec);
-    //    }
-    //}
+    // 1. CREATE CAMERA
+    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
+    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    m_Camera->SetPosition(glm::vec3(59.0f, 9.0f, -1.6f));  // Inside cathedral
+    glm::vec3 direction = glm::normalize(glm::vec3(-1.0f, 0.05f, 0.07f));
+    float pitch = glm::degrees(asin(direction.y));
+    float yaw = glm::degrees(atan2(direction.z, direction.x));
+    m_Camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+    spdlog::info("Camera positioned inside Sponza cathedral");
 
-    // ===== CRYTEK SPONZA SCENE (ogldev tutorial 63 setup) =====
-    // Create Sponza instance at origin with ogldev's scale
+    // 2. CREATE SCENE OBJECTS
     CreateModelInstance("sponza", "WhiteMaterial", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.05f));
-    spdlog::info("Sponza model instantiated at origin (scale 0.05, matching ogldev)");
+    spdlog::info("Sponza model loaded: {} meshes", m_SceneObjects.size());
 
-    // ===== ANIMATED POINT LIGHT (ogldev tutorial 63 setup) =====
+    // 3. CREATE LIGHTS
+    // Animated point light (ogldev tutorial 63 setup)
     m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(0.0f, 0.5f, -1.6f),        // Initial position (ogldev)
+        glm::vec3(0.0f, 0.5f, -1.6f),        // Initial position (will be animated)
         glm::vec3(1.0f, 1.0f, 1.0f),         // Color: white
-        5.0f,                                 // DiffuseIntensity: 5.0 (ogldev)
-        0.2f,                                 // AmbientIntensity: 0.2 (ogldev per-light ambient)
+        5.0f,                                 // DiffuseIntensity: 5.0 (high for HDR)
+        0.2f,                                 // AmbientIntensity: 0.2
         100.0f                                // Range: large for Sponza
     ));
-    spdlog::info("Animated point light created (diffuse: 5.0, ambient: 0.2, matching ogldev)");
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.07f, 0.07f, 0.07f));
+    spdlog::info("Animated point light created (intensity 5.0 for HDR demo)");
 
-    // ===== HDR TEST LIGHT - OVERBRIGHT RED =====
-    // DISABLED - Uncomment to test HDR with extreme overbright red light
-    // m_SceneLights.push_back(CreatePointLight(
-    //     glm::vec3(0.0f, 3.0f, 0.0f),         // Center of scene, close to geometry
-    //     glm::vec3(1.0f, 0.0f, 0.0f),         // Pure RED
-    //     100.0f,                               // EXTREMELY BRIGHT (100x normal!)
-    //     0.0f,                                 // No ambient
-    //     150.0f                                // Very large range
-    // ));
-    // spdlog::info("HDR TEST LIGHT: EXTREME overbright red (intensity 100.0) at scene center - Press 'O' to toggle HDR!");
-
-    // Set global ambient to provide base illumination for surfaces far from lights
-    // This prevents areas far from the point light from being too dark
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.07f, 0.07f, 0.07f));  // Increased from 0.0
-
-    spdlog::info("Sponza scene created: {} objects, {} lights",
+    spdlog::info("Sponza demo setup complete: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
+    spdlog::info("NOTE: This demo focuses on LIGHTING/HDR - NO OUTLINES");
+    spdlog::info("      In Run() loop, COMMENT OUT UpdateCameraBasedOutline()");
+}
 
-    // Debug: verify all objects were created
-    spdlog::debug("Created {} scene objects", m_SceneObjects.size());
+// ===== DEMO 2: TINBOX GRID - OUTLINE & PBR TEST =====
+void GraphicsTestDriver::SetupTinboxDemo()
+{
+    spdlog::info("=== SETTING UP TINBOX DEMO ===");
+
+    // 1. CREATE CAMERA
+    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
+    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    m_Camera->SetPosition(glm::vec3(-15.0f, 3.0f, 5.0f));  // View grid from angle
+    glm::vec3 direction = glm::normalize(glm::vec3(1.0f, -0.2f, -0.3f));
+    float pitch = glm::degrees(asin(direction.y));
+    float yaw = glm::degrees(atan2(direction.z, direction.x));
+    m_Camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+    spdlog::info("Camera positioned to view tinbox grid");
+
+    // 2. CREATE SCENE OBJECTS
+    // Ground plane
+    auto planeMesh = std::make_shared<Mesh>(
+        PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
+    );
+    RenderableData ground;
+    ground.mesh = planeMesh;
+    ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+    ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    ground.visible = true;
+    ground.objectID = 1;
+    m_SceneObjects.push_back(ground);
+
+    // Tinbox grid
+    std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
+                                          "GoldMaterial", "WhiteMaterial"};
+    const int gridSize = 3;
+    const float spacing = 3.0f;
+    const float startOffset = -(gridSize - 1) * spacing * 0.5f;
+
+    for (int x = 0; x < gridSize; ++x) {
+        for (int z = 0; z < gridSize; ++z) {
+            glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
+            int materialIndex = (x + z) % materials.size();
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
+        }
+    }
+    spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
+
+    // 3. CREATE LIGHTS
+    // Directional light
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(0.2f, -1.0f, 0.3f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        0.8f, 0.2f
+    ));
+    // Point light
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(0.0f, 3.0f, 0.0f),
+        glm::vec3(1.0f, 0.9f, 0.7f),
+        2.0f, 0.1f, 50.0f
+    ));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.1f, 0.1f, 0.1f));
+    spdlog::info("Lights created: 1 directional, 1 point");
+
+    // 4. SETUP OUTLINE MODE - Click-based selection
+    m_SceneRenderer->ClearOutlinedObjects();
+    spdlog::info("Click-based outline mode enabled (left-click to select objects)");
+
+    spdlog::info("Tinbox demo setup complete: {} objects, {} lights",
+                 m_SceneObjects.size(), m_SceneLights.size());
+    spdlog::info("NOTE: Left-click on any tinbox to outline the entire model (all meshes)");
 }
 
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
@@ -542,7 +625,11 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
     if (!model || model->meshes.empty()) {
         return;
     }
-    
+
+    // Assign a unique model instance ID for this model instance (shared by all meshes)
+    static uint32_t nextModelInstanceID = 1000;
+    uint32_t thisModelInstanceID = nextModelInstanceID++;
+
     // Create a renderable for each mesh in the model
     for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
         // Share the same mesh objects instead of creating new ones
@@ -561,13 +648,13 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
             s_MeshCache[meshKey] = mesh;
         }
 
-        
+
         // Create renderable for this mesh
         RenderableData renderable;
         renderable.mesh = mesh;
         renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
         renderable.visible = true;
-        
+
         // Check if this mesh has textures (indicating we should preserve them)
         if (mesh->textures.size() > 0) {
 
@@ -609,7 +696,11 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         // Assign unique object ID (start from 100 for scene objects)
         static uint32_t nextObjectID = 100;
         renderable.objectID = nextObjectID++;
-        //spdlog::info("Created object with ID: {}", renderable.objectID);
+
+        // Assign the model instance ID (shared by all meshes of this model)
+        renderable.modelInstanceID = thisModelInstanceID;
+
+        //spdlog::info("Created object with ID: {}, ModelInstanceID: {}", renderable.objectID, renderable.modelInstanceID);
 
         m_SceneObjects.push_back(renderable);
     }
@@ -835,6 +926,10 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_1:
                 s_Instance->ToggleRenderPass("ShadowPass");
+                break;
+
+            case GLFW_KEY_2:
+                s_Instance->ToggleRenderPass("OutlinePass");
                 break;
 
             case GLFW_KEY_3:
@@ -1211,18 +1306,158 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
 
     // Handle the result
     if (result.hasHit) {
-        /*spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
+        spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
                     result.objectID,
                     result.worldPosition.x, result.worldPosition.y, result.worldPosition.z,
-                    result.depth);*/
+                    result.depth);
 
-        // You could add additional logic here, such as:
-        // - Highlighting the selected object
-        // - Storing the selected object ID
-        // - Triggering editor actions
+        // Find the modelInstanceID of the clicked object
+        uint32_t clickedModelInstanceID = 0;
+        for (const auto& renderable : m_SceneObjects) {
+            if (renderable.objectID == result.objectID) {
+                clickedModelInstanceID = renderable.modelInstanceID;
+                break;
+            }
+        }
+
+        if (clickedModelInstanceID != 0) {
+            // Clear previous outlines
+            m_SceneRenderer->ClearOutlinedObjects();
+
+            // Find and outline all meshes with the same modelInstanceID
+            for (const auto& renderable : m_SceneObjects) {
+                if (renderable.modelInstanceID == clickedModelInstanceID) {
+                    m_SceneRenderer->AddOutlinedObject(renderable.objectID);
+                    spdlog::info("  -> Outlining mesh with objectID: {} (modelInstanceID: {})",
+                               renderable.objectID, renderable.modelInstanceID);
+                }
+            }
+        }
 
     } else {
-        //spdlog::info("No object picked at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
+        spdlog::info("No object picked at screen position ({:.0f}, {:.0f})", mouseX, mouseY);
+        // Clear outlines when clicking empty space
+        m_SceneRenderer->ClearOutlinedObjects();
+    }
+}
+
+bool GraphicsTestDriver::RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
+                                           const glm::vec3& aabbMin, const glm::vec3& aabbMax,
+                                           float& tMin, float& tMax) const
+{
+    // Ray-AABB intersection using the slab method
+    tMin = 0.0f;
+    tMax = FLT_MAX;
+
+    for (int i = 0; i < 3; i++) {
+        if (abs(rayDir[i]) < 0.0001f) {
+            // Ray is parallel to slab, check if origin is within bounds
+            if (rayOrigin[i] < aabbMin[i] || rayOrigin[i] > aabbMax[i]) {
+                return false;
+            }
+        } else {
+            // Compute intersection distances to near and far plane
+            float t1 = (aabbMin[i] - rayOrigin[i]) / rayDir[i];
+            float t2 = (aabbMax[i] - rayOrigin[i]) / rayDir[i];
+
+            if (t1 > t2) std::swap(t1, t2);
+
+            tMin = std::max(tMin, t1);
+            tMax = std::min(tMax, t2);
+
+            if (tMin > tMax) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// =============================================================================================
+// OUTLINE MODE FUNCTIONS
+// =============================================================================================
+// Two outline modes are available:
+//
+// 1. STATIC OUTLINE (SetupStaticOutlines):
+//    - Call once in demo setup
+//    - Outlines first N objects permanently
+//    - Usage: Manual utility function (not used in current demos)
+//
+// 2. CAMERA-BASED OUTLINE (UpdateCameraBasedOutline):
+//    - Call every frame in render loop
+//    - Outlines object camera is pointing at (raycast from camera)
+//    - Used in: SetupTinboxDemo()
+//
+// NOTE: SetupSponzaDemo() does NOT use outlines (lighting test only)
+// =============================================================================================
+
+// ===== OUTLINE UTILITY: STATIC (First N objects) =====
+void GraphicsTestDriver::SetupStaticOutlines()
+{
+    if (!m_SceneRenderer) return;
+
+    // Clear any existing outlines
+    m_SceneRenderer->ClearOutlinedObjects();
+
+    // Add first 5 objects to outline list
+    for (size_t i = 0; i < std::min(size_t(5), m_SceneObjects.size()); ++i) {
+        m_SceneRenderer->AddOutlinedObject(m_SceneObjects[i].objectID);
+    }
+
+    spdlog::info("Static outline mode: {} objects outlined",
+                 std::min(size_t(5), m_SceneObjects.size()));
+}
+
+// ===== OUTLINE MODE: CAMERA-BASED (Dynamic raycast) =====
+void GraphicsTestDriver::UpdateCameraBasedOutline()
+{
+    if (!m_Camera || !m_SceneRenderer) return;
+
+    // Get camera ray
+    glm::vec3 rayOrigin = m_Camera->GetPosition();
+    glm::vec3 rayDir = m_Camera->GetFront();  // Camera uses GetFront() not GetForward()
+
+    // Track closest hit
+    float closestDistance = FLT_MAX;
+    uint32_t hitObjectID = 0;
+    bool foundHit = false;
+
+    // Test ray against all objects
+    for (const auto& renderable : m_SceneObjects) {
+        if (!renderable.visible || !renderable.mesh) {
+            continue;
+        }
+
+        // Calculate mesh AABB in local space
+        AABB localAABB = AABB::CreateFromMesh(renderable.mesh);
+
+        // Transform AABB to world space
+        glm::vec3 aabbMin = glm::vec3(renderable.transform * glm::vec4(localAABB.min, 1.0f));
+        glm::vec3 aabbMax = glm::vec3(renderable.transform * glm::vec4(localAABB.max, 1.0f));
+
+        // Ensure min/max are correct after transformation
+        glm::vec3 worldMin = glm::min(aabbMin, aabbMax);
+        glm::vec3 worldMax = glm::max(aabbMin, aabbMax);
+
+        // Test ray-AABB intersection
+        float tMin, tMax;
+        if (RayIntersectsAABB(rayOrigin, rayDir, worldMin, worldMax, tMin, tMax)) {
+            // Check if this is the closest hit
+            if (tMin >= 0.0f && tMin < closestDistance) {
+                closestDistance = tMin;
+                hitObjectID = renderable.objectID;
+                foundHit = true;
+            }
+        }
+    }
+
+    // Update outline system - clear all first
+    m_SceneRenderer->ClearOutlinedObjects();
+
+    // Add only the hit object
+    if (foundHit) {
+        m_SceneRenderer->AddOutlinedObject(hitObjectID);
     }
 }
 

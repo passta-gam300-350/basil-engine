@@ -45,11 +45,16 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ClearData& cmd)
     if (cmd.clearColor) {
         glClearColor(cmd.r, cmd.g, cmd.b, cmd.a);
     }
-    
+
+    if (cmd.clearStencil) {
+        glClearStencil(0);  // Clear stencil buffer to 0
+    }
+
     GLbitfield mask = 0;
     if (cmd.clearColor) mask |= GL_COLOR_BUFFER_BIT;
     if (cmd.clearDepth) mask |= GL_DEPTH_BUFFER_BIT;
-    
+    if (cmd.clearStencil) mask |= GL_STENCIL_BUFFER_BIT;
+
     if (mask != 0) {
         glClear(mask);
     }
@@ -570,6 +575,31 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointShadowsDa
         std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
         cmd.shader->setInt(samplerName, static_cast<int>(textureUnit));
     }
+}
+
+// ===== STENCIL COMMAND EXECUTION =====
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::EnableStencilTestData& cmd)
+{
+    if (cmd.enable) {
+        glEnable(GL_STENCIL_TEST);
+    } else {
+        glDisable(GL_STENCIL_TEST);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilFuncData& cmd)
+{
+    glStencilFunc(cmd.func, cmd.ref, cmd.mask);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilOpData& cmd)
+{
+    glStencilOp(cmd.sfail, cmd.dpfail, cmd.dppass);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilMaskData& cmd)
+{
+    glStencilMask(cmd.mask);
 }
 
 void RenderCommandBuffer::CleanupGPUState()

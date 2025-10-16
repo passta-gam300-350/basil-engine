@@ -36,11 +36,15 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
 
-    // Clear color and depth buffers using command buffer
+    // Ensure stencil write mask is enabled before clearing
+    Submit(RenderCommands::SetStencilMaskData{ 0xFF });
+
+    // Clear color, depth, and stencil buffers using command buffer
     RenderCommands::ClearData clearCmd{
         0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a
         true,                      // clearColor
-        true                       // clearDepth
+        true,                      // clearDepth
+        true                       // clearStencil (needed for outline rendering)
     };
 
     Submit(clearCmd);

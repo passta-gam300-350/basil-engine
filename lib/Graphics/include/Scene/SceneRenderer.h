@@ -14,6 +14,7 @@ class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
 class PickingRenderPass;
+class OutlineRenderPass;
 
 class SceneRenderer {
 public:
@@ -58,10 +59,19 @@ public:
     void SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
+    void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
     void EnablePicking(bool enable) const;
+
+    // Outline functionality
+    void AddOutlinedObject(uint32_t objectID) const;
+    void RemoveOutlinedObject(uint32_t objectID) const;
+    void ClearOutlinedObjects() const;
+    void SetOutlineColor(const glm::vec3& color) const;
+    void SetOutlineScale(float scale) const;
+    void EnableOutlineRendering(bool enable) const;
 
     void SetSkyboxCubemap(unsigned int cubemapID);
     void SetSkyboxShader(const std::shared_ptr<Shader> &shader);

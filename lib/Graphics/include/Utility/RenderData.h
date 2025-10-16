@@ -15,6 +15,7 @@ struct RenderableData {
     bool visible = true;
     uint32_t renderLayer = 0;
     uint32_t objectID = 0;  // Unique ID for object picking (0 = no picking)
+    uint32_t modelInstanceID = 0;  // ID shared by all meshes of the same model instance
 };
 
 struct SubmittedLightData {

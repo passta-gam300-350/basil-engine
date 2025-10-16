@@ -18,6 +18,7 @@ namespace RenderCommands {
         float r, g, b, a;
         bool clearColor;
         bool clearDepth;
+        bool clearStencil = false;  // Optional stencil buffer clear
     };
 
     struct BindShaderData {
@@ -236,6 +237,28 @@ namespace RenderCommands {
         int startTextureUnit;  // Starting slot (e.g., 9)
     };
 
+    // ===== STENCIL TESTING COMMANDS =====
+    struct EnableStencilTestData {
+        bool enable;
+    };
+
+    struct SetStencilFuncData {
+        uint32_t func;       // GL_NEVER, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_EQUAL, GL_NOTEQUAL, GL_ALWAYS
+        int ref;             // Reference value (0-255)
+        uint32_t mask;       // Mask value (typically 0xFF)
+    };
+
+    struct SetStencilOpData {
+        uint32_t sfail;      // Action if stencil test fails
+        uint32_t dpfail;     // Action if stencil passes but depth fails
+        uint32_t dppass;     // Action if both tests pass
+                             // Common values: GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, GL_INVERT
+    };
+
+    struct SetStencilMaskData {
+        uint32_t mask;       // Stencil write mask (0x00 = no write, 0xFF = write all bits)
+    };
+
 
 }
 
@@ -272,7 +295,12 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetSpotLightsData,
     RenderCommands::SetMaterialPBRData,
     RenderCommands::SetDirectionalShadowData,
-    RenderCommands::SetPointShadowsData
+    RenderCommands::SetPointShadowsData,
+    // Stencil commands
+    RenderCommands::EnableStencilTestData,
+    RenderCommands::SetStencilFuncData,
+    RenderCommands::SetStencilOpData,
+    RenderCommands::SetStencilMaskData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -333,6 +361,11 @@ private:
     void ExecuteCommand(const RenderCommands::SetMaterialPBRData& cmd);
     void ExecuteCommand(const RenderCommands::SetDirectionalShadowData& cmd);
     void ExecuteCommand(const RenderCommands::SetPointShadowsData& cmd);
+    // Stencil command execution
+    void ExecuteCommand(const RenderCommands::EnableStencilTestData& cmd);
+    void ExecuteCommand(const RenderCommands::SetStencilFuncData& cmd);
+    void ExecuteCommand(const RenderCommands::SetStencilOpData& cmd);
+    void ExecuteCommand(const RenderCommands::SetStencilMaskData& cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

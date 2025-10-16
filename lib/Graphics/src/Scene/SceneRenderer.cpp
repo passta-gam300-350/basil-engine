@@ -1,6 +1,7 @@
 #include "Scene/SceneRenderer.h"
 #include "Pipeline/MainRenderingPass.h"
 #include "Pipeline/DebugRenderPass.h"
+#include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/RenderContext.h"
@@ -79,32 +80,37 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(debugPass);
     mainPipeline->EnablePass("DebugPass", true);  // Enabled to visualize lights
 
-    // 5. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
+    // 5. Add outline rendering pass (stencil-based outlines) - BEFORE HDR resolve!
+    auto outlinePass = std::make_shared<OutlineRenderPass>();
+    mainPipeline->AddPass(outlinePass);
+    mainPipeline->EnablePass("OutlinePass", true);  // Enabled by default
+
+    // 6. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
     auto hdrResolvePass = std::make_shared<HDRResolvePass>();
     mainPipeline->AddPass(hdrResolvePass);
     mainPipeline->EnablePass("HDRResolvePass", false);  // Disabled by default
 
-    // 6. Add HDR luminance pass (auto-exposure calculation via compute shader)
+    // 7. Add HDR luminance pass (auto-exposure calculation via compute shader)
     auto hdrLuminancePass = std::make_shared<HDRLuminancePass>();
     mainPipeline->AddPass(hdrLuminancePass);
     mainPipeline->EnablePass("HDRLuminancePass", false);  // Disabled by default
 
-    // 7. Add tone mapping pass (HDR → LDR conversion)
+    // 8. Add tone mapping pass (HDR → LDR conversion)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
     toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - ToneMapPass uses SRGB8 format for hardware gamma via GL_FRAMEBUFFER_SRGB
     mainPipeline->AddPass(toneMapPass);
     mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
-    // 8. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 9. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 9. Add picking pass (executes when needed, disabled by default)
+    // 10. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 10. Add present pass (executes last)
+    // 11. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -383,6 +389,109 @@ void SceneRenderer::SetToneMappingShader(const std::shared_ptr<Shader>& shader) 
         if (toneMapPass)
         {
             toneMapPass->SetToneMappingShader(shader);
+        }
+    }
+}
+
+// ===== OUTLINE RENDERING METHODS =====
+void SceneRenderer::SetOutlineShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Outline shader cannot be null");
+    assert(shader->ID != 0 && "Outline shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting outline shader");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->SetOutlineShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::AddOutlinedObject(uint32_t objectID) const
+{
+    assert(m_Pipeline && "Pipeline must be initialized before adding outlined object");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->AddOutlinedObject(objectID);
+        }
+    }
+}
+
+void SceneRenderer::RemoveOutlinedObject(uint32_t objectID) const
+{
+    assert(m_Pipeline && "Pipeline must be initialized before removing outlined object");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->RemoveOutlinedObject(objectID);
+        }
+    }
+}
+
+void SceneRenderer::ClearOutlinedObjects() const
+{
+    assert(m_Pipeline && "Pipeline must be initialized before clearing outlined objects");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->ClearOutlinedObjects();
+        }
+    }
+}
+
+void SceneRenderer::SetOutlineColor(const glm::vec3& color) const
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting outline color");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->SetOutlineColor(color);
+        }
+    }
+}
+
+void SceneRenderer::SetOutlineScale(float scale) const
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting outline scale");
+    assert(scale > 1.0f && "Outline scale must be greater than 1.0");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->SetOutlineScale(scale);
+        }
+    }
+}
+
+void SceneRenderer::EnableOutlineRendering(bool enable) const
+{
+    assert(m_Pipeline && "Pipeline must be initialized before enabling outline rendering");
+
+    if (m_Pipeline)
+    {
+        auto outlinePass = std::dynamic_pointer_cast<OutlineRenderPass>(m_Pipeline->GetPass("OutlinePass"));
+        if (outlinePass)
+        {
+            outlinePass->SetEnabled(enable);
+            m_Pipeline->EnablePass("OutlinePass", enable);
         }
     }
 }
