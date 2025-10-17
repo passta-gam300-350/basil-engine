@@ -31,7 +31,10 @@ public:
 	ScriptID AddAssembly(const char* assemblyPath, bool isSystem);
 
 	ScriptID AddKlass(std::shared_ptr<CSKlass> klass);
+	ScriptID AddKlass(const char* klassName, const char* klassNamespace = "");
 	ScriptID AddInstance(std::unique_ptr<CSKlassInstance> instance);
+	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "");
+	
 
 	ManagedAssembly* GetAssembly(ScriptID id);
 	CSKlass* GetKlass(ScriptID id);	
