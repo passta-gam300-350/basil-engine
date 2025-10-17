@@ -36,7 +36,7 @@ public:
 	MonoLoader() = default;
 
 	void Initialize(std::string const& assembly_dir, std::string const& config_dir);
-	std::unique_ptr<ManagedAssembly> LoadAssembly(std::string const& assemblyPath);
+	std::unique_ptr<ManagedAssembly> LoadAssembly(std::string const& assemblyPath, MonoDomain* domain);
 	MonoImage* LoadImage(ManagedAssembly const& assembly);
 
 	MonoDomain* GetBackendDomain();

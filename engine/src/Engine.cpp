@@ -19,6 +19,7 @@ extern "C" {
 }
 #endif
 #include "Manager/ObjectManager.hpp"
+#include "Manager/MonoEntityManager.hpp"
 
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -87,6 +88,7 @@ void Engine::Init(std::string const& cfg ) {
 	}
 
 	RenderSystem::System().Init();
+	MonoEntityManager::GetInstance().initialize();
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 

@@ -32,7 +32,7 @@ void ScriptCompiler::Init(MonoLoader* ptrLoader, std::string const& compiler_dir
 	compiler_path = compiler_dir;
 
 	loader->Enable_Compiler();
-	compilerAssembly = loader->LoadAssembly(compiler_path);
+	compilerAssembly = loader->LoadAssembly(compiler_path, loader->GetCompilerDomain());
 	compilerImage = loader->LoadImage(*compilerAssembly);
 
 	compilerKlass = mono_class_from_name(compilerImage, "", "CSCompiler");
@@ -118,7 +118,7 @@ void ScriptCompiler::RemoveScript(std::string const& path)
 {
 	auto it = std::remove_if(scripts.begin(), scripts.end(), [&](ScriptInfo const& info) {
 		return info.path == path;
-		});
+	});
 	scripts.erase(it, scripts.end());
 }
 
@@ -230,8 +230,8 @@ void ScriptCompiler::EndProcesses()
 
 void ScriptCompiler::printLog() const
 {
-	
-	for (const auto& entry : log)
+
+	for (const auto& entry : diagnostics)
 	{
 		std::cout << entry << std::endl;
 	}
@@ -280,10 +280,45 @@ void ScriptCompiler::GetManagedLogs()
 	uint64_t length = mono_array_length(arr);
 	for (uint64_t i = 0; i < length; ++i)
 	{
-		MonoString* monoStr = mono_array_get(arr, MonoString*, i);
-		char* cStr = mono_string_to_utf8(monoStr);
+		MonoArray* inner = mono_array_get(arr, MonoArray*, i);
+		if (!inner)
+			continue;
+		DiagnosticLog logEntry;
+		MonoString* path = mono_array_get(inner, MonoString*, 0);
+		MonoString* position = mono_array_get(inner, MonoString*, 1);
+		MonoString* severity = mono_array_get(inner, MonoString*, 2);
+		MonoString* diagID = mono_array_get(inner, MonoString*, 3);
+		MonoString* message = mono_array_get(inner, MonoString*, 4);
+		char const * fn = mono_string_to_utf8(path);
+		char const* pos = mono_string_to_utf8(position);
+		char const* sev = mono_string_to_utf8(severity);
+		char const* did = mono_string_to_utf8(diagID);
+		char const* msg = mono_string_to_utf8(message);
+
+		logEntry.filename = fn;
+		logEntry.position = pos;
+		logEntry.severity = sev;
+		logEntry.diagnosticID = did;
+		logEntry.message = msg;
+		diagnostics.push_back(logEntry);
+		std::string fullLog = logEntry.filename + "(" + logEntry.position + "): " + logEntry.severity + " " + logEntry.diagnosticID + ": " + logEntry.message;
+		log.emplace_back(fullLog);
+		
+		mono_free((void*)fn);
+		mono_free((void*)pos);
+		mono_free((void*)sev);
+		mono_free((void*)did);
+		mono_free((void*)msg);
+
+
+
+
+
+
+
+		/*char* cStr = mono_string_to_utf8(monoStr);
 		log.emplace_back(cStr);
-		mono_free(cStr);
+		mono_free(cStr);*/
 	}
 
 	mono_domain_set(current, false);
@@ -349,4 +384,10 @@ ScriptCompiler::~ScriptCompiler()
 {
 	EndProcesses();
 	compilerAssembly.reset();
+}
+
+std::ostream& operator<<(std::ostream& os, const ScriptCompiler::DiagnosticLog& log)
+{
+	os << log.filename << "(" << log.position << "): " << log.severity << " " << log.diagnosticID << ": " << log.message;
+	return os;
 }

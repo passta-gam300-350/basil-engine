@@ -61,7 +61,7 @@ class ScriptCompiler {
 		std::string output_name = "GameAssembly";
 		std::string output_directory = "bin";
 		bool isDLL = true;
-		bool debug = false;
+		bool debug = true;
 		bool optimize = false;
 		bool verbose = false;
 	} compile_settings;
@@ -77,6 +77,22 @@ class ScriptCompiler {
 	std::string compiler_path;
 
 public:
+
+	struct DiagnosticLog {
+		std::string filename;
+		std::string position;
+		std::string severity;
+		std::string diagnosticID;
+		std::string message;
+
+		friend std::ostream& operator<<(std::ostream& os, const ScriptCompiler::DiagnosticLog& log);
+
+		
+	};
+	
+	
+	std::vector<DiagnosticLog> diagnostics;
+
 	void Init(MonoLoader* loader, std::string const& compiler_dir);
 	void CompileAsync();
 	void CompileAllScripts();
@@ -145,4 +161,7 @@ public:
 
 
 };
+
+
+
 #endif // SCRIPTCOMPILER_HPP

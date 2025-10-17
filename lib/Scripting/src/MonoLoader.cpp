@@ -72,9 +72,11 @@ void MonoLoader::Exit()
 	}
 }
 
-std::unique_ptr<ManagedAssembly> MonoLoader::LoadAssembly(std::string const& assemblyPath)
+std::unique_ptr<ManagedAssembly> MonoLoader::LoadAssembly(std::string const& assemblyPath, MonoDomain* domain)
 {
-	return std::make_unique<ManagedAssembly>(std::make_unique<CSAssembly>(assemblyPath));
+	auto assembly = std::make_unique<ManagedAssembly>(std::make_unique<CSAssembly>(assemblyPath));
+	assembly->Load(domain);
+	return assembly;
 }
 MonoImage* MonoLoader::LoadImage(const ManagedAssembly& assembly)
 {

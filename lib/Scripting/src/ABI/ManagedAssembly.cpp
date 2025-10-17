@@ -27,4 +27,47 @@ bool ManagedAssembly::Load(MonoDomain* domain)
 	return true;
 }
 
+MonoImage* ManagedAssembly::Image() const noexcept
+{
+	if (!isLoaded || !assemblyHandle) {
+		return nullptr;
+	}
+	return mono_assembly_get_image(assemblyHandle);
+}
+bool ManagedAssembly::IsLoaded() const noexcept
+{
+	return isLoaded;
+}
+std::string_view ManagedAssembly::Name() const noexcept
+{
+	if (assembly) {
+		return assembly->Name();
+	}
+	return {};
+}
+std::string_view ManagedAssembly::Path() const noexcept
+{
+	if (assembly) {
+		return assembly->Path().string();
+	}
+	return {};
+}
+std::size_t ManagedAssembly::Size() const noexcept
+{
+	if (assembly) {
+		return assembly->Size();
+	}
+	return 0;
+}
+void ManagedAssembly::Unload() noexcept
+{
+	if (!isLoaded) {
+		return;
+	}
+	assemblyHandle = nullptr;
+	isLoaded = false;
+}
+
+
+
 ManagedAssembly::~ManagedAssembly() = default;
