@@ -26,12 +26,11 @@ Technology is prohibited.
 
 #include "MonoLoader.hpp"
 
-
 class ScriptCompiler {
 
 	MonoLoader* loader;
 
-	MonoAssembly* compilerAssembly;
+	std::unique_ptr<ManagedAssembly> compilerAssembly;
 	MonoImage* compilerImage;
 
 	MonoClass* compilerKlass;
@@ -57,6 +56,15 @@ class ScriptCompiler {
 		bool debug;
 
 	};
+
+	struct CompileSettings {
+		std::string output_name = "GameAssembly";
+		std::string output_directory = "bin";
+		bool isDLL = true;
+		bool debug = false;
+		bool optimize = false;
+		bool verbose = false;
+	} compile_settings;
 
 
 	CommandInfo command_info{ "csc", false };
@@ -113,6 +121,23 @@ public:
 	void AddReferences(std::string const& name, std::string const& path);
 	void RemoveReferences(std::string const& name);
 	void ClearReferences();
+
+
+
+	void SetCompileOutputName(std::string const& name);
+	std::string const& GetCompileOutputName() const;
+	void SetCompileOutputDirectory(std::string const& dir);
+	std::string const& GetCompileOutputDirectory() const;
+	void SetCompileAsDLL(bool isDLL);
+	bool IsCompileAsDLL() const;
+	void SetOptimizeCompile(bool optimize);
+	bool IsOptimizeCompile() const;
+	bool IsVerboseCompile() const;
+	void SetVerboseCompile(bool verbose);
+
+
+	~ScriptCompiler();
+
 
 
 

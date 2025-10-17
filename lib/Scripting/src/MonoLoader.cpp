@@ -19,7 +19,9 @@ Technology is prohibited.
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include "ABI/ABI.h"
 
+#include <cassert>
 
 
 void MonoLoader::Initialize(std::string const& assembly_dir, std::string const& config_dir)
@@ -70,17 +72,14 @@ void MonoLoader::Exit()
 	}
 }
 
-MonoAssembly* MonoLoader::LoadAssembly(std::string const& assemblyPath)
+std::unique_ptr<ManagedAssembly> MonoLoader::LoadAssembly(std::string const& assemblyPath)
 {
-	MonoAssembly* assembly = mono_domain_assembly_open(mono_domain_get(), assemblyPath.c_str());
-	return assembly;
+	return std::make_unique<ManagedAssembly>(std::make_unique<CSAssembly>(assemblyPath));
 }
-MonoImage* MonoLoader::LoadImage(MonoAssembly* assembly)
+MonoImage* MonoLoader::LoadImage(const ManagedAssembly& assembly)
 {
-	if (!assembly)
-		return nullptr;
-	MonoImage* image = mono_assembly_get_image(assembly);
-	return image;
+	assert(assembly.IsLoaded() && "Assembly is not loaded!");
+	return assembly.IsLoaded() ? assembly.Image() : nullptr;
 }
 MonoDomain* MonoLoader::GetBackendDomain()
 {
@@ -101,3 +100,13 @@ MonoDomain* MonoLoader::GetActiveDomain()
 	return mono_domain_get();
 }
 
+MonoLoader::~MonoLoader()
+{
+	Exit();
+	if (compilerDomain)
+	{
+		mono_domain_unload(compilerDomain);
+		compilerDomain = nullptr;
+	}
+	mono_jit_cleanup(backendDomain);
+}

@@ -1,0 +1,67 @@
+#ifndef CSKlass_HPP
+#define CSKlass_HPP
+
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
+#include <mono/utils/mono-forward.h>
+#include <mono/metadata/image.h>
+#include <mono/metadata/class.h>
+#include <mono/metadata/object.h>
+
+struct CSKlassInstance;
+
+struct CSKlass
+{
+	CSKlass() = default;
+	CSKlass(MonoImage* image, std::string_view namespaceName, std::string_view className);
+
+	bool Bind(MonoImage* image, std::string_view namespaceName, std::string_view className);
+	void Reset() noexcept;
+
+	[[nodiscard]] bool IsValid() const noexcept;
+	[[nodiscard]] MonoClass* Klass() const noexcept;
+	[[nodiscard]] MonoImage* Image() const noexcept;
+	[[nodiscard]] std::string_view Namespace() const noexcept;
+	[[nodiscard]] std::string_view Name() const noexcept;
+
+	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
+
+	CSKlassInstance CreateInstance(MonoDomain* domain = nullptr) const;
+
+	MonoMethod* GetMethod(const char* methodName, int paramCount = -1) const;
+
+private:
+	MonoMethod* ResolveMethod(const char* methodName, int paramCount) const;
+	std::string BuildCacheKey(const char* methodName, int paramCount) const;
+
+	MonoImage* m_image{ nullptr };
+	MonoClass* m_class{ nullptr };
+	std::string m_namespace;
+	std::string m_name;
+	mutable std::unordered_map<std::string, MonoMethod*> m_methodCache;
+};
+
+struct CSKlassInstance
+{
+	CSKlassInstance() = default;
+	explicit CSKlassInstance(const CSKlass* klass);
+	CSKlassInstance(const CSKlass* klass, MonoObject* instance);
+
+	void Attach(const CSKlass* klass, MonoObject* instance);
+	void Reset() noexcept;
+
+	[[nodiscard]] bool IsValid() const noexcept;
+	[[nodiscard]] const CSKlass* Klass() const noexcept;
+	[[nodiscard]] MonoObject* Object() const noexcept;
+
+	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
+
+private:
+	const CSKlass* m_klass{ nullptr };
+	MonoObject* m_instance{ nullptr };
+};
+
+
+#endif

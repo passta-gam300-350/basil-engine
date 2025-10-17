@@ -21,11 +21,16 @@ Technology is prohibited.
 #define MONOMANAGER_HPP
 #include <string>
 #include <vector>
+#include <memory>
 #include <mono/utils/mono-forward.h>
+
 
 
 class ScriptCompiler;
 class MonoLoader;
+struct CSKlass;
+struct CSKlassInstance;
+struct ManagedAssembly;
 
 class MonoManager {
 	static ScriptCompiler* m_Compiler;
@@ -52,5 +57,12 @@ public:
 
 	static ScriptCompiler* GetCompiler();
 	static MonoLoader* GetLoader();
+
+
+	// Classes
+
+	static std::shared_ptr<CSKlass> GetKlass(ManagedAssembly* assembly, const char* klassName, const char* klassNamespace = "");
+	static std::unique_ptr<CSKlassInstance> CreateInstance(MonoDomain* domain, CSKlass const& klass);
+	~MonoManager();
 };
 #endif //MONOMANAGER_HPP

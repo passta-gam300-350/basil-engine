@@ -29,6 +29,7 @@ Technology is prohibited.
 #include <mono/metadata/mono-debug.h>
 
 #include "ScriptCompiler.hpp"
+#include "ABI/ABI.h"
 
 namespace
 {
@@ -41,7 +42,7 @@ namespace
 
 ScriptCompiler* MonoManager::m_Compiler = nullptr;
 MonoLoader* MonoManager::m_Loader = nullptr;
-std::vector<std::string> MonoManager::m_ScriptBins  {};
+std::vector<std::string> MonoManager::m_ScriptBins{};
 bool MonoManager::m_Verbose = false;
 
 
@@ -65,19 +66,19 @@ void MonoManager::Initialize()
 	m_Compiler->SetMaxThread(4);
 	m_Compiler->SetMaxScriptThread(uint64_t(-1));
 
-	
+
 }
 
 void MonoManager::AddSearchDirectories(std::string const& path)
 {
 	std::filesystem::path file_path = path;
-	std::cout <<std::filesystem::absolute(file_path).string() << std::endl;
+	std::cout << std::filesystem::absolute(file_path).string() << std::endl;
 	if (std::filesystem::is_directory(file_path)) {
 		if (m_Verbose) {
 			std::cout << "Adding script bin directory: " << std::filesystem::absolute(file_path).string() << std::endl;
 
 		}
-		m_Compiler->AddSearchDirectories("DEFAULT",std::filesystem::absolute(file_path).string());
+		m_Compiler->AddSearchDirectories("DEFAULT", std::filesystem::absolute(file_path).string());
 	}
 
 }
@@ -125,4 +126,15 @@ MonoLoader* MonoManager::GetLoader()
 }
 
 
+std::shared_ptr<CSKlass> MonoManager::GetKlass(ManagedAssembly* assembly, const char* klassName, const char* klassNamespace)
+{
+	return std::make_shared<CSKlass>(assembly->Image(), klassNamespace, klassName);
+}
+
+std::unique_ptr<CSKlassInstance> MonoManager::CreateInstance(MonoDomain* domain, CSKlass const& klass)
+{
+	return std::make_unique<CSKlassInstance>(klass.CreateInstance(domain));
+}
+
+MonoManager::~MonoManager() = default;
 

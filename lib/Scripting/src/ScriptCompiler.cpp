@@ -15,6 +15,7 @@ without the prior written consent of DigiPen Institute of
 Technology is prohibited.
 */
 /******************************************************************************/
+#include "ABI/ABI.h"
 #include "ScriptCompiler.hpp"
 #include <filesystem>
 #include <iostream>
@@ -32,7 +33,7 @@ void ScriptCompiler::Init(MonoLoader* ptrLoader, std::string const& compiler_dir
 
 	loader->Enable_Compiler();
 	compilerAssembly = loader->LoadAssembly(compiler_path);
-	compilerImage = loader->LoadImage(compilerAssembly);
+	compilerImage = loader->LoadImage(*compilerAssembly);
 
 	compilerKlass = mono_class_from_name(compilerImage, "", "CSCompiler");
 	/*
@@ -154,19 +155,21 @@ void ScriptCompiler::CompileAsync()
 	 *public static void Setup(string output, string outputDirectory, string[] sources, string[] references, bool isDLL = false, bool debug = false,
 	 *bool optimize = false, bool verbose = false)
 	*/
-	MonoString* output = mono_string_new(compiler_d, "UserApplication");
-	MonoString* output_dir = mono_string_new(compiler_d, "bin");
-	mono_bool val = false;
-	mono_bool isdll = false;
-	//mono_bool debug = false;
+	MonoString* output = mono_string_new(compiler_d, compile_settings.output_name.c_str());
+	MonoString* output_dir = mono_string_new(compiler_d, compile_settings.output_directory.c_str());
+	mono_bool val = compile_settings.optimize ? 1 : 0;
+	mono_bool isdll = compile_settings.isDLL ? 1 : 0;
+	mono_bool debug = compile_settings.debug ? 1 : 0;
+	mono_bool optimize = compile_settings.optimize ? 1 : 0;
+	mono_bool verbose = compile_settings.verbose ? 1 : 0;
 	args[0] = output;
 	args[1] = output_dir;
 	args[2] = mono_paths;
 	args[3] = mono_refs;
 	args[4] = &isdll; // isDLL
-	args[5] = &val; // debug
-	args[6] = &val; // optimize
-	args[7] = &val; // verbose
+	args[5] = &debug; // debug
+	args[6] = &optimize; // optimize
+	args[7] = &verbose; // verbose
 
 
 	std::string n = mono_method_full_name(current_method, true);
@@ -299,4 +302,51 @@ void ScriptCompiler::RemoveReferences(std::string const& name)
 void ScriptCompiler::ClearReferences()
 {
 	assemblies_references.clear();
+}
+
+void ScriptCompiler::SetCompileOutputName(std::string const& name)
+{
+	compile_settings.output_name = name;
+}
+std::string const& ScriptCompiler::GetCompileOutputName() const
+{
+	return compile_settings.output_name;
+}
+void ScriptCompiler::SetCompileOutputDirectory(std::string const& dir)
+{
+	compile_settings.output_directory = dir;
+}
+std::string const& ScriptCompiler::GetCompileOutputDirectory() const
+{
+	return compile_settings.output_directory;
+}
+void ScriptCompiler::SetCompileAsDLL(bool isDLL)
+{
+	compile_settings.isDLL = isDLL;
+}
+bool ScriptCompiler::IsCompileAsDLL() const
+{
+	return compile_settings.isDLL;
+}
+void ScriptCompiler::SetOptimizeCompile(bool optimize)
+{
+	compile_settings.optimize = optimize;
+}
+bool ScriptCompiler::IsOptimizeCompile() const
+{
+	return compile_settings.optimize;
+}
+bool ScriptCompiler::IsVerboseCompile() const
+{
+	return compile_settings.verbose;
+}
+void ScriptCompiler::SetVerboseCompile(bool verbose)
+{
+	compile_settings.verbose = verbose;
+}
+
+ScriptCompiler::~ScriptCompiler()
+{
+	EndProcesses();
+	compilerAssembly.reset();
 }
