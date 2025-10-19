@@ -28,9 +28,11 @@ ecs::entity ObjectManager::CreateGameObject(glm::vec3 pos, glm::vec3 scale, glm:
 	gameObject.add<ScaleComponent>(scale);
 	gameObject.add<RotationComponent>(rot);
 
+	uint64_t handle = gameObject.get_uuid();
+	void* args[] = { &handle };
 	// add CS Managed component
-	Resource::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", true);
-	
+	Resource::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", args,true);
+
 	spdlog::info("Created Mono Instance with GUID: {}", id.to_hex());
 
 

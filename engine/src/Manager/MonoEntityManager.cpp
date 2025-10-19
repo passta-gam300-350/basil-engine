@@ -43,21 +43,23 @@ Resource::Guid MonoEntityManager::AddKlass(std::shared_ptr<CSKlass> klass) {
 
 Resource::Guid MonoEntityManager::AddKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
 	auto klass = MonoManager::GetKlass(MonoEntityManager::GetInstance().GetAssembly((isBackend) ? BACKEND_ASSEMBLY_ID : PRIMARY_ASSEMBLY_ID), klassName, klassNamespace);
+
 	return AddKlass(std::move(klass));
 }
 
-Resource::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, bool isBackend) {
+Resource::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend) {
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
 	if (klass) {
-		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass);
+		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
 		return AddInstance(std::move(instance));
 
 	}
 	// Create klass if not exists
-	auto klassID = AddKlass(klassName, klassNamespace, isBackend);
-	auto klassPtr = GetKlass(klassID);
-	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr);
+	
+	AddNamedKlass(klassName, klassNamespace, isBackend);
+	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
+	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
 	return AddInstance(std::move(instance));
 }
 

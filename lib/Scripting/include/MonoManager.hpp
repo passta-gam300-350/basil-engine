@@ -62,7 +62,7 @@ public:
 	// Classes
 
 	static std::shared_ptr<CSKlass> GetKlass(ManagedAssembly* assembly, const char* klassName, const char* klassNamespace = "");
-	static std::unique_ptr<CSKlassInstance> CreateInstance(MonoDomain* domain, CSKlass const& klass);
+	static std::unique_ptr<CSKlassInstance> CreateInstance(MonoDomain* domain, CSKlass const& klass, void* args[]=nullptr);
 	~MonoManager();
 };
 #endif //MONOMANAGER_HPP

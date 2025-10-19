@@ -133,9 +133,9 @@ std::shared_ptr<CSKlass> MonoManager::GetKlass(ManagedAssembly* assembly, const 
 	return std::make_shared<CSKlass>(assembly->Image(), klassNamespace, klassName);
 }
 
-std::unique_ptr<CSKlassInstance> MonoManager::CreateInstance(MonoDomain* domain, CSKlass const& klass)
+std::unique_ptr<CSKlassInstance> MonoManager::CreateInstance(MonoDomain* domain, CSKlass const& klass, void* args[])
 {
-	return std::make_unique<CSKlassInstance>(klass.CreateInstance(domain));
+	return std::make_unique<CSKlassInstance>(klass.CreateInstance(domain, args));
 }
 
 MonoManager::~MonoManager() = default;

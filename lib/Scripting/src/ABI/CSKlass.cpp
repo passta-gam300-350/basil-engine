@@ -5,6 +5,7 @@
 #include <mono/metadata/mono-config.h>
 
 #include <utility>
+#include <iostream>
 
 CSKlass::CSKlass(MonoImage* image, std::string_view namespaceName, std::string_view className)
 {
@@ -79,7 +80,7 @@ MonoObject* CSKlass::Invoke(const char* methodName, void** args, MonoObject** ex
 	return mono_runtime_invoke(method, nullptr, args, exception);
 }
 
-CSKlassInstance CSKlass::CreateInstance(MonoDomain* domain) const
+CSKlassInstance CSKlass::CreateInstance(MonoDomain* domain, void* args[]) const
 {
 	if (!IsValid())
 	{
@@ -102,7 +103,20 @@ CSKlassInstance CSKlass::CreateInstance(MonoDomain* domain) const
 		return {};
 	}
 
-	mono_runtime_object_init(object);
+	if (!args)
+		mono_runtime_object_init(object);
+	else {
+		MonoMethod* constructor = mono_class_get_method_from_name(m_class, ".ctor", args ? -1 : 0);
+		if (constructor)
+		{
+			MonoObject* exception = nullptr;
+			mono_runtime_invoke(constructor, object, args, &exception);
+			if (exception)
+			{
+				throw "Exception occurred during object construction.";
+			}
+		}
+	}
 	return CSKlassInstance(this, object);
 }
 

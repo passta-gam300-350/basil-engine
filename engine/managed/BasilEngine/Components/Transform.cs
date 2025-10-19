@@ -38,7 +38,7 @@ namespace BasilEngine.Components
             set;
         } = new Vector3(1, 1, 1);
 
-        public Transform(UInt32 handle)
+        public Transform(UInt64 handle)
         {
             NativeID = handle; // GameObject Handle
         }

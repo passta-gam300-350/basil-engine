@@ -46,7 +46,7 @@ public:
 
 	ScriptID InstanceFrom(CSKlass const& klass);
 	ScriptID AddInstance(std::unique_ptr<CSKlassInstance> instance);
-	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "", bool isBackend=false);
+	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "", void* args[]=nullptr, bool isBackend = false);
 	
 
 	ManagedAssembly* GetAssembly(ScriptID id);

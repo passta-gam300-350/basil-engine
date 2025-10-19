@@ -28,7 +28,7 @@ struct CSKlass
 
 	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
 
-	CSKlassInstance CreateInstance(MonoDomain* domain = nullptr) const;
+	CSKlassInstance CreateInstance(MonoDomain* domain = nullptr, void* args[] = nullptr) const;
 	CSKlassInstance CreateNativeInstance(MonoDomain* domain = nullptr) const;
 
 	MonoMethod* GetMethod(const char* methodName, int paramCount = -1) const;

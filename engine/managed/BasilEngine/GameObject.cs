@@ -15,9 +15,9 @@ namespace BasilEngine
     {
         // TODO: Add Glue Gen Attribute
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern string internal_GetName(UInt32 handle);
+        private extern string internal_GetName(UInt64 handle);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void internal_SetName(UInt32 handle, string name);
+        public static extern void internal_SetName(UInt64 handle, string name);
 
 
         private Transform transformComponent = null;
@@ -65,6 +65,13 @@ namespace BasilEngine
         {
             get => internal_GetName(this.NativeID);
             set => internal_SetName(this.NativeID, value);
+        }
+
+        public GameObject(UInt64 handle)
+        {
+            this.NativeID = handle;
+            Console.WriteLine("GameObject created with handle: " + handle); 
+            transformComponent = new Transform(handle);
         }
 
 
