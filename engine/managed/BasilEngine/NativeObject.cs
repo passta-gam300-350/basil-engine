@@ -1,13 +1,15 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EngineAPI
+namespace BasilEngine
 {
     public class NativeObject
     {
-        public IntPtr m_Handler { get; private set; } = IntPtr.Zero;
+        public UInt64 NativeID { get; protected set; } = 0;
     }
+
 }

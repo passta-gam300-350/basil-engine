@@ -188,6 +188,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	}
 
 	RenderSystem::System().Init();
+	MonoEntityManager::GetInstance().initialize();
 	Scheduler::CompileJobSchedule();
 }
 

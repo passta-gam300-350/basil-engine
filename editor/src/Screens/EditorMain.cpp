@@ -42,6 +42,7 @@ Technology is prohibited.
 #include "Profiler/profiler.hpp"
 
 #include "Physics/Physics_System.h"
+#include "Manager/ObjectManager.hpp"
 #define UNREF_PARAM(x) x;
 
 PhysicsSystem PhysSys;
@@ -1379,6 +1380,8 @@ void EditorMain::CreateDefaultEntity()
 	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
 	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+	
 }
 
 void EditorMain::CreatePlaneEntity()
@@ -1386,12 +1389,10 @@ void EditorMain::CreatePlaneEntity()
 	ecs::world world = Engine::GetWorld();
 
 	// Create new entity
-	auto entity = world.add_entity();
+	auto entity = ObjectManager::GetInstance().CreateGameObject({}, { 1,1,1 }, {});
+
 
 	// Add transform components
-	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
-	world.add_component_to_entity<ScaleComponent>(entity, glm::vec3{ 1,1,1 });
-	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
 	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 

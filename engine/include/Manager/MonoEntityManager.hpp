@@ -1,6 +1,7 @@
 #ifndef MonoEntityManager_HPP
 #define MonoEntityManager_HPP
 #include "serialisation/guid.h"
+#include "Manager/MonoTypeRegistry.hpp"
 #include <unordered_map>
 #include <memory>
 
@@ -11,6 +12,7 @@ struct ManagedAssembly;
 class MonoEntityManager {
 	using ScriptID = Resource::Guid;
 	ScriptID PRIMARY_ASSEMBLY_ID{ 0x0, 0x0 };
+	ScriptID BACKEND_ASSEMBLY_ID{ 0x0,0x0 };
 	std::vector<std::unique_ptr<ManagedAssembly>> m_Assemblies;
 	std::vector<std::shared_ptr<CSKlass>> m_Klasses;
 	std::vector<std::unique_ptr<CSKlassInstance>> m_Instances;
@@ -20,7 +22,13 @@ class MonoEntityManager {
 	std::unordered_map<ScriptID, size_t> m_EntityInstanceMap;
 	std::unordered_map<ScriptID, size_t> m_EntityMap;
 
+	std::unordered_map<std::string, ScriptID> m_NamedKlassMap;
+
+	MonoTypeRegistry m_TypeRegistry;
+
 public:
+	
+
 	MonoEntityManager();
 	static MonoEntityManager& GetInstance();
 
@@ -31,9 +39,14 @@ public:
 	ScriptID AddAssembly(const char* assemblyPath, bool isSystem);
 
 	ScriptID AddKlass(std::shared_ptr<CSKlass> klass);
-	ScriptID AddKlass(const char* klassName, const char* klassNamespace = "");
+	ScriptID AddKlass(const char* klassName, const char* klassNamespace = "", bool isBackend=false);
+
+	void AddNamedKlass(const char* klassName, const char* klassNamespace = "", bool isBackend = false);
+
+
+	ScriptID InstanceFrom(CSKlass const& klass);
 	ScriptID AddInstance(std::unique_ptr<CSKlassInstance> instance);
-	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "");
+	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "", bool isBackend=false);
 	
 
 	ManagedAssembly* GetAssembly(ScriptID id);
@@ -41,6 +54,14 @@ public:
 	CSKlassInstance* GetInstance(ScriptID id);
 
 
+	CSKlass* GetNamedKlass(const char* klassName, const char* klassNamespace);
+
+	MonoTypeRegistry& GetTypeRegistry() {
+		return m_TypeRegistry;
+	}
+
+
+	void ClearAll();
 	~MonoEntityManager();
 
 

@@ -4,6 +4,8 @@
 #include "Component/Identification.hpp"
 #include "Component/RelationshipComponent.hpp"
 #include "components/transform.h"
+#include <Manager/MonoEntityManager.hpp>
+#include <spdlog/spdlog.h>
 
 ObjectManager& ObjectManager::GetInstance()
 {
@@ -11,7 +13,7 @@ ObjectManager& ObjectManager::GetInstance()
 	return instance;
 }
 
-ecs::entity ObjectManager::CreateGameObject()
+ecs::entity ObjectManager::CreateGameObject(glm::vec3 pos, glm::vec3 scale, glm::vec3 rot)
 {
 	// Game object factory method
 	ecs::world currentWorld = Engine::GetWorld();
@@ -22,9 +24,15 @@ ecs::entity ObjectManager::CreateGameObject()
 	
 
 	// Transformation group
-	gameObject.add<TransformComponent>();
-	gameObject.add<PositionComponent>();
-	/*gameObject.add<RelationshipComponent>(0);*/
+	gameObject.add<PositionComponent>(pos);
+	gameObject.add<ScaleComponent>(scale);
+	gameObject.add<RotationComponent>(rot);
+
+	// add CS Managed component
+	Resource::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", true);
+	
+	spdlog::info("Created Mono Instance with GUID: {}", id.to_hex());
+
 
 
 

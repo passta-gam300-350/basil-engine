@@ -1,4 +1,4 @@
-set(ASM_NAME EngineAPI)
+set(ASM_NAME BasilEngine)
 
 set(CSPROJPath ${ASM_NAME}/${ASM_NAME}.csproj)
 

@@ -28,7 +28,7 @@ StringManager& StringManager::GetInstance()
 }
 
 
-StringManager::StringID StringManager::Intern_String(std::string const&& str)
+StringManager::StringID StringManager::Intern_String(std::string&& str)
 {
 	auto it = StringTable.find(HashString(str));
 	if (it != StringTable.end())

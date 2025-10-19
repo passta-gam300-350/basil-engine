@@ -61,10 +61,12 @@ void MonoManager::Initialize()
 
 	m_Compiler = new ScriptCompiler();
 	m_Compiler->Init(m_Loader, csc_path);
+	m_Compiler->AddReferences("engine", R"(C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\BasilEngine.dll)");
 
 	m_Compiler->SetDebugCompile(true);
 	m_Compiler->SetMaxThread(4);
 	m_Compiler->SetMaxScriptThread(uint64_t(-1));
+	m_Compiler->SetVerboseCompile(true);
 
 
 }

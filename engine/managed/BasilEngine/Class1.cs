@@ -1,4 +1,4 @@
-﻿namespace EngineAPI;
+﻿namespace BasilEngine;
 using Engine.Bindings;
 using System.Runtime.CompilerServices;
 

@@ -29,6 +29,7 @@ struct CSKlass
 	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
 
 	CSKlassInstance CreateInstance(MonoDomain* domain = nullptr) const;
+	CSKlassInstance CreateNativeInstance(MonoDomain* domain = nullptr) const;
 
 	MonoMethod* GetMethod(const char* methodName, int paramCount = -1) const;
 
@@ -46,20 +47,24 @@ private:
 struct CSKlassInstance
 {
 	CSKlassInstance() = default;
-	explicit CSKlassInstance(const CSKlass* klass);
-	CSKlassInstance(const CSKlass* klass, MonoObject* instance);
+	explicit CSKlassInstance(const CSKlass* klass, bool isNative=false);
+	CSKlassInstance(const CSKlass* klass, MonoObject* instance, bool isNative=false);
 
-	void Attach(const CSKlass* klass, MonoObject* instance);
+	void Attach(const CSKlass* klass, MonoObject* instance, bool isNative=false);
 	void Reset() noexcept;
 
 	[[nodiscard]] bool IsValid() const noexcept;
 	[[nodiscard]] const CSKlass* Klass() const noexcept;
 	[[nodiscard]] MonoObject* Object() const noexcept;
+	[[nodiscard]] void UpdateManaged() noexcept;
 
 	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
 
+	
 private:
+
 	const CSKlass* m_klass{ nullptr };
+	uint32_t m_instanceHandle{ 0 };
 	MonoObject* m_instance{ nullptr };
 };
 

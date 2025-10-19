@@ -19,7 +19,7 @@ private:
 	ecs::world world;
 public:
 	Scene();
-	Scene(std::string const& name);
+	Scene(std::string name);
 	SceneMetadata const& GetMetadata() const;
 
 

@@ -106,6 +106,33 @@ CSKlassInstance CSKlass::CreateInstance(MonoDomain* domain) const
 	return CSKlassInstance(this, object);
 }
 
+CSKlassInstance CSKlass::CreateNativeInstance(MonoDomain* domain) const
+{
+	if (!IsValid())
+	{
+		return {};
+	}
+
+	if (!domain)
+	{
+		domain = mono_domain_get();
+	}
+
+	if (!domain)
+	{
+		return {};
+	}
+
+	MonoObject* object = mono_object_new(domain, m_class);
+	if (!object)
+	{
+		return {};
+	}
+
+	mono_runtime_object_init(object);
+	return CSKlassInstance(this, object, true);
+}
+
 MonoMethod* CSKlass::GetMethod(const char* methodName, int paramCount) const
 {
 	return ResolveMethod(methodName, paramCount);
@@ -144,23 +171,26 @@ std::string CSKlass::BuildCacheKey(const char* methodName, int paramCount) const
 	return key;
 }
 
-CSKlassInstance::CSKlassInstance(const CSKlass* klass)
+CSKlassInstance::CSKlassInstance(const CSKlass* klass, bool isNative)
 {
 	if (klass)
 	{
-		Attach(klass, nullptr);
+		Attach(klass, nullptr, isNative);
 	}
 }
 
-CSKlassInstance::CSKlassInstance(const CSKlass* klass, MonoObject* instance)
+CSKlassInstance::CSKlassInstance(const CSKlass* klass, MonoObject* instance, bool isNative)
 {
-	Attach(klass, instance);
+	Attach(klass, instance, isNative);
 }
 
-void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance)
+void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance, bool isNative)
 {
 	m_klass = klass;
 	m_instance = instance;
+	if (instance)
+		m_instanceHandle = (isNative) ? mono_gchandle_new(instance, false) : mono_gchandle_new_weakref(instance, false);
+	else m_instanceHandle = 0;
 }
 
 void CSKlassInstance::Reset() noexcept
@@ -181,7 +211,15 @@ const CSKlass* CSKlassInstance::Klass() const noexcept
 
 MonoObject* CSKlassInstance::Object() const noexcept
 {
-	return m_instance;
+	return (m_instanceHandle) ? mono_gchandle_get_target(m_instanceHandle) : nullptr;
+}
+
+void CSKlassInstance::UpdateManaged() noexcept
+{
+	if (IsValid())
+	{
+		m_instance = Object();
+	}
 }
 
 MonoObject* CSKlassInstance::Invoke(const char* methodName, void** args, MonoObject** exception, int paramCount) const
