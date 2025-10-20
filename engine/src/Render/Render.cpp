@@ -8,6 +8,9 @@
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 
+#include <Resources/MaterialInstanceManager.h>
+#include <Resources/MaterialInstance.h>
+
 #include "native/loader.h"
 #include "native/texture.h"
 
@@ -59,6 +62,9 @@ RenderSystem::RenderSystem() {
 	// Initialize resource cache
 	m_ResourceCache = std::make_unique<RenderResourceCache>();
 
+	// Initialize material instance manager
+	m_MaterialInstanceManager = std::make_unique<MaterialInstanceManager>();
+
 	// Initialize component initializer (depends on all above subsystems)
 	m_ComponentInitializer = std::make_unique<ComponentInitializer>(
 		*m_ResourceCache,
@@ -70,6 +76,7 @@ RenderSystem::RenderSystem() {
 RenderSystem::~RenderSystem() {
 	// Release ComponentInitializer first (it depends on other subsystems)
 	m_ComponentInitializer.reset();
+	m_MaterialInstanceManager.reset();
 	m_ResourceCache.reset();
 	m_PrimitiveManager.reset();
 	m_ShaderLibrary.reset();
@@ -273,6 +280,12 @@ void RenderSystem::FixedUpdate(ecs::world& w) {
 void RenderSystem::Exit() {
 	// Clear all entity-specific caches before shutdown
 	ClearAllEntityCaches();
+
+	// Clear all material instances
+	if (m_MaterialInstanceManager) {
+		m_MaterialInstanceManager->ClearAllInstances();
+	}
+
 	// Destructor will handle cleanup automatically
 }
 
@@ -311,6 +324,45 @@ void RenderSystem::ClearAllEntityCaches() {
 	} else {
 		spdlog::error("RenderSystem: Cannot clear entity caches - ResourceCache not initialized");
 	}
+}
+
+// ========== Material Instance API Implementation ==========
+
+std::shared_ptr<MaterialInstance> RenderSystem::GetMaterialInstance(
+	uint64_t entityUID,
+	std::shared_ptr<Material> baseMaterial)
+{
+	if (!m_MaterialInstanceManager) {
+		spdlog::error("RenderSystem: MaterialInstanceManager not initialized");
+		return nullptr;
+	}
+
+	return m_MaterialInstanceManager->GetMaterialInstance(entityUID, baseMaterial);
+}
+
+bool RenderSystem::HasMaterialInstance(uint64_t entityUID) const {
+	if (!m_MaterialInstanceManager) {
+		return false;
+	}
+
+	return m_MaterialInstanceManager->HasInstance(entityUID);
+}
+
+std::shared_ptr<MaterialInstance> RenderSystem::GetExistingMaterialInstance(uint64_t entityUID) const {
+	if (!m_MaterialInstanceManager) {
+		return nullptr;
+	}
+
+	return m_MaterialInstanceManager->GetExistingInstance(entityUID);
+}
+
+void RenderSystem::DestroyMaterialInstance(uint64_t entityUID) {
+	if (!m_MaterialInstanceManager) {
+		spdlog::warn("RenderSystem: MaterialInstanceManager not initialized");
+		return;
+	}
+
+	m_MaterialInstanceManager->DestroyInstance(entityUID);
 }
 
 void RenderSystem::SetupDebugVisualization() {

@@ -31,6 +31,8 @@ class ShaderLibrary;
 class PrimitiveManager;
 class RenderResourceCache;
 class ComponentInitializer;
+class MaterialInstanceManager;
+class MaterialInstance;
 
 /**
  * @brief Component for rendering meshes on entities
@@ -290,6 +292,42 @@ public:
      */
     static void ClearAllEntityCaches();
 
+    // ========== Material Instance API ==========
+
+    /**
+     * @brief Get or create a material instance for an entity
+     *
+     * First call creates an instance, subsequent calls return the existing instance.
+     * This implements Unity's Renderer.material behavior (copy-on-write).
+     *
+     * @param entityUID Unique identifier for the entity
+     * @param baseMaterial The base material to instance from
+     * @return Material instance (never null if baseMaterial is valid)
+     */
+    std::shared_ptr<MaterialInstance> GetMaterialInstance(uint64_t entityUID,
+                                                           std::shared_ptr<Material> baseMaterial);
+
+    /**
+     * @brief Check if an entity has a material instance
+     * @param entityUID Unique identifier for the entity
+     */
+    bool HasMaterialInstance(uint64_t entityUID) const;
+
+    /**
+     * @brief Get existing material instance (returns nullptr if no instance exists)
+     * @param entityUID Unique identifier for the entity
+     */
+    std::shared_ptr<MaterialInstance> GetExistingMaterialInstance(uint64_t entityUID) const;
+
+    /**
+     * @brief Destroy the material instance for an entity
+     *
+     * After this call, the entity will use the shared material again.
+     *
+     * @param entityUID Unique identifier for the entity
+     */
+    void DestroyMaterialInstance(uint64_t entityUID);
+
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
@@ -314,6 +352,7 @@ private:
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
     std::unique_ptr<RenderResourceCache> m_ResourceCache;       ///< Entity resource caching
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
+    std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
 };
 
 #endif
