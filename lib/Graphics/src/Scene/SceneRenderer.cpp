@@ -11,6 +11,7 @@
 #include "Pipeline/PresentPass.h"
 #include "Pipeline/ShadowMappingPass.h"
 #include "Pipeline/PointShadowMappingPass.h"
+#include "Pipeline/SpotShadowMappingPass.h"
 #include "Pipeline/HDRLuminancePass.h"
 #include "Pipeline/HDRResolvePass.h"
 #include "Pipeline/ToneMapRenderPass.h"
@@ -18,6 +19,7 @@
 #include "Resources/Mesh.h"
 #include <glfw/glfw3.h>
 #include <cassert>
+#include <spdlog/spdlog.h>
 
 SceneRenderer::SceneRenderer()
 {
@@ -71,7 +73,13 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(pointShadowPass);
     mainPipeline->EnablePass("PointShadowPass", false);
 
-    // 3. Add main rendering pass (HDR output - RGB16F with 4x MSAA)
+    // 3. Add spot shadow mapping pass (perspective projection, reuses directional shader)
+    // Spot shadow pass will need shader to be set after creation by the application
+    auto spotShadowPass = std::make_shared<SpotShadowMappingPass>();
+    mainPipeline->AddPass(spotShadowPass);
+    mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
+
+    // 4. Add main rendering pass (HDR output - RGB16F with 4x MSAA)
     auto mainPass = std::make_shared<MainRenderingPass>();
     mainPipeline->AddPass(mainPass);
 
@@ -201,6 +209,25 @@ void SceneRenderer::SetPointShadowShader(const std::shared_ptr<Shader>& shader) 
         auto pointShadowPass = std::dynamic_pointer_cast<PointShadowMappingPass>(m_Pipeline->GetPass("PointShadowPass"));
         if (pointShadowPass) {
             pointShadowPass->SetPointShadowShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::SetSpotShadowShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Spot shadow shader cannot be null");
+    assert(shader->ID != 0 && "Spot shadow shader must be compiled and linked before setting");
+    assert(m_Pipeline && "Pipeline must be initialized before setting shaders");
+
+    if (m_Pipeline) {
+        auto spotShadowPass = std::dynamic_pointer_cast<SpotShadowMappingPass>(
+            m_Pipeline->GetPass("SpotShadowPass")
+        );
+        if (spotShadowPass) {
+            spotShadowPass->SetShadowDepthShader(shader);
+            spdlog::info("SceneRenderer: Spot shadow depth shader configured");
+        } else {
+            spdlog::warn("SceneRenderer: SpotShadowPass not found in pipeline");
         }
     }
 }

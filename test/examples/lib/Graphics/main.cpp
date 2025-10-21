@@ -160,7 +160,7 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - F1: Toggle camera controls");
     spdlog::info("  - F2: Print scene info");
     spdlog::info("  - F3: Print render pass status");
-    spdlog::info("  - 1: Toggle shadow pass");
+    spdlog::info("  - 1: Toggle shadow pass (directional)");
     spdlog::info("  - 2: Toggle outline pass");
     spdlog::info("  - 3: Toggle debug pass (light visualization)");
     spdlog::info("  - 4: Toggle AABB wireframes");
@@ -169,6 +169,7 @@ void GraphicsTestDriver::Run()
     spdlog::info("  - 7: Toggle point shadow pass");
     spdlog::info("  - 8: Print point shadow info");
     spdlog::info("  - 9: Print HDR statistics (exposure, luminance)");
+    spdlog::info("  - B: Toggle spot shadow pass");
     spdlog::info("  - O: Toggle HDR pipeline (all HDR passes on/off)");
     spdlog::info("  - H: Toggle HDR auto-exposure only");
     spdlog::info("  - T: Toggle tone mapping only");
@@ -303,6 +304,9 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::info("Directional shadow mapping shader loaded successfully!");
             // Configure the shadow mapping pass with the loaded shader
             m_SceneRenderer->SetShadowDepthShader(shadowShader);
+            // Configure spot shadow mapping pass (reuses directional shadow shader)
+            m_SceneRenderer->SetSpotShadowShader(shadowShader);
+            spdlog::info("Spot shadow mapping configured (reuses directional shadow shader)");
         } else {
             spdlog::warn("Could not load directional shadow mapping shader");
         }
@@ -610,8 +614,19 @@ void GraphicsTestDriver::SetupTinboxDemo()
         glm::vec3(1.0f, 0.9f, 0.7f),
         2.0f, 0.1f, 50.0f
     ));
+    // Spot light - positioned directly above tinbox grid center
+    m_SceneLights.push_back(CreateSpotLight(
+        glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
+        glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
+        glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
+        2.5f,                                  // DiffuseIntensity: bright for visible shadows
+        0.1f,                                  // AmbientIntensity: low ambient
+        30.0f,                                 // Range: covers tinbox grid
+        15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
+        25.0f                                  // OuterCone: 25 degrees (cone angle)
+    ));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.1f, 0.1f, 0.1f));
-    spdlog::info("Lights created: 1 directional, 1 point");
+    spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 
     // 4. SETUP OUTLINE MODE - Click-based selection
     m_SceneRenderer->ClearOutlinedObjects();
@@ -620,6 +635,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     spdlog::info("Tinbox demo setup complete: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
     spdlog::info("NOTE: Left-click on any tinbox to outline the entire model (all meshes)");
+    spdlog::info("NOTE: Press 'B' to toggle spot light shadows (spotlight centered above grid at [-8, 8, 0])");
 }
 
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
@@ -1013,6 +1029,10 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                     }
                 }
                 break;
+
+            case GLFW_KEY_B:
+                s_Instance->ToggleRenderPass("SpotShadowPass");
+                break;
         }
     }
 }
@@ -1085,6 +1105,7 @@ void GraphicsTestDriver::PrintRenderPassStatus() const
             std::vector<std::string> passes = {
                 "ShadowPass",
                 "PointShadowPass",
+                "SpotShadowPass",
                 "MainPass",
                 "HDRResolvePass",
                 "HDRLuminancePass",

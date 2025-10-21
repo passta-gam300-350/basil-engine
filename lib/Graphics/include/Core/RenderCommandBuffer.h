@@ -98,6 +98,12 @@ namespace RenderCommands {
         bool value;
     };
 
+    struct SetUniformMat4Data {
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
+        glm::mat4 value;
+    };
+
     struct SetUniformMat4ArrayData {
         std::shared_ptr<Shader> shader;
         std::string uniformBaseName;  // e.g., "u_ShadowMatrices" (without array index)
@@ -277,6 +283,7 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetUniformFloatData,
     RenderCommands::SetUniformIntData,
     RenderCommands::SetUniformBoolData,
+    RenderCommands::SetUniformMat4Data,
     RenderCommands::SetUniformMat4ArrayData,
     RenderCommands::SetBlendingData,
     RenderCommands::SetLineWidthData,
@@ -342,6 +349,7 @@ private:
     void ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformIntData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformBoolData& cmd);
+    void ExecuteCommand(const RenderCommands::SetUniformMat4Data& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);

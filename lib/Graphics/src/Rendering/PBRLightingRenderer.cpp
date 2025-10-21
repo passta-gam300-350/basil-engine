@@ -478,3 +478,42 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
         renderPass.Submit(pointShadowCmd);
     }
 }
+
+void PBRLightingRenderer::SubmitSpotShadowCommands(
+    RenderPass& renderPass,
+    std::shared_ptr<Shader> shader,
+    const FrameData& frameData)
+{
+    // Check if spot shadows are available
+    if (frameData.spotShadowMaps.empty() || !frameData.spotShadowMaps[0]) {
+        // No spot shadows available - disable spot shadows
+        renderPass.Submit(RenderCommands::SetUniformBoolData{
+            shader, "u_EnableSpotShadows", false
+        });
+        return;
+    }
+
+    // Enable spot shadows
+    renderPass.Submit(RenderCommands::SetUniformBoolData{
+        shader, "u_EnableSpotShadows", true
+    });
+
+    // Set spot shadow light-space matrix
+    renderPass.Submit(RenderCommands::SetUniformMat4Data{
+        shader, "u_SpotLightSpaceMatrix", frameData.spotShadowMatrices[0]
+    });
+
+    // Bind spot shadow map texture to unit 13 (after point shadows 9-12)
+    uint32_t spotShadowTexture = frameData.spotShadowMaps[0]->GetDepthAttachmentRendererID();
+    renderPass.Submit(RenderCommands::BindTextureIDData{
+        spotShadowTexture,
+        13,  // Texture unit 13
+        shader,
+        "u_SpotShadowMap"
+    });
+
+    // Set spot shadow intensity
+    renderPass.Submit(RenderCommands::SetUniformFloatData{
+        shader, "u_SpotShadowIntensity", m_SpotShadowIntensity
+    });
+}

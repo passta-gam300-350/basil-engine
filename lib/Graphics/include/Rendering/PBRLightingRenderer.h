@@ -84,6 +84,9 @@ public:
     void SubmitShadowCommands(RenderPass& renderPass,
                               std::shared_ptr<Shader> shader,
                               const FrameData& frameData);
+    void SubmitSpotShadowCommands(RenderPass& renderPass,
+                                   std::shared_ptr<Shader> shader,
+                                   const FrameData& frameData);
 
     // Getters for light data (used by other renderers)
     const std::vector<PointLight>& GetPointLights() const { return m_PointLights; }
@@ -109,6 +112,8 @@ public:
     void SetShadowIntensity(float directionalIntensity, float pointIntensity);
     float GetDirectionalShadowIntensity() const { return m_DirectionalShadowIntensity; }
     float GetPointShadowIntensity() const { return m_PointShadowIntensity; }
+    void SetSpotShadowIntensity(float intensity) { m_SpotShadowIntensity = intensity; }
+    float GetSpotShadowIntensity() const { return m_SpotShadowIntensity; }
 
 private:
     // Light storage (moved from InstancedRenderer)
@@ -122,6 +127,7 @@ private:
     // Shadow intensity parameters
     float m_DirectionalShadowIntensity = 0.8f;
     float m_PointShadowIntensity = 0.8f;
+    float m_SpotShadowIntensity = 0.8f;
 
     // Helper methods for setting up specific light types
     void SetupPointLights(std::shared_ptr<Shader> shader);

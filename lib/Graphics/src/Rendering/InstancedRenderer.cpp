@@ -240,6 +240,9 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
         // ✅ NEW: Submit shadow commands instead of direct OpenGL calls
         m_PBRLighting->SubmitShadowCommands(renderPass, shader, frameData);
+
+        // ✅ NEW: Submit spot shadow commands
+        m_PBRLighting->SubmitSpotShadowCommands(renderPass, shader, frameData);
     } else {
         spdlog::warn("PBRLightingRenderer not available for lighting setup");
     }

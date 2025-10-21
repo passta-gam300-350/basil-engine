@@ -22,6 +22,10 @@ struct FrameData
     std::vector<uint32_t> pointShadowCubemaps;  // Cubemap texture IDs
     std::vector<float> pointShadowFarPlanes;    // Far plane for each point light
 
+    // Spot light shadow mapping data (2D depth maps with perspective projection)
+    std::vector<std::shared_ptr<FrameBuffer>> spotShadowMaps;
+    std::vector<glm::mat4> spotShadowMatrices;
+
     // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;
 

@@ -59,6 +59,12 @@ void RenderPipeline::Execute(RenderContext& context) const
 				context.frameData.pointShadowCubemaps.clear();
 				context.frameData.pointShadowFarPlanes.clear();
 			}
+			else if (pass->GetName() == "SpotShadowPass")
+			{
+				// Clear spot shadow data when spot shadow pass is disabled
+				context.frameData.spotShadowMaps.clear();
+				context.frameData.spotShadowMatrices.clear();
+			}
 			else if (pass->GetName() == "ToneMapPass")
 			{
 				// Clear post-process buffer when tone mapping is disabled

@@ -30,6 +30,7 @@ uniform vec3 u_ViewPos;
 
 // Shadow mapping uniforms
 uniform mat4 u_LightSpaceMatrix;
+uniform mat4 u_SpotLightSpaceMatrix;
 
 // Output to fragment shader
 out VS_OUT {
@@ -42,6 +43,7 @@ out VS_OUT {
 
     // Shadow mapping
     vec4 FragPosLightSpace;
+    vec4 FragPosSpotLightSpace;
 
     // Per-instance material data passed to fragment shader
     vec4 InstanceColor;
@@ -65,6 +67,7 @@ void main()
 
     // Calculate position in light space for shadow mapping
     vs_out.FragPosLightSpace = u_LightSpaceMatrix * worldPos;
+    vs_out.FragPosSpotLightSpace = u_SpotLightSpaceMatrix * worldPos;
 
     // Calculate normal matrix for this instance
     mat3 normalMatrix = mat3(transpose(inverse(model)));

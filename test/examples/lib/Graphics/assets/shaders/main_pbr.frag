@@ -11,6 +11,7 @@ in VS_OUT {
 
     // Shadow mapping
     vec4 FragPosLightSpace;
+    vec4 FragPosSpotLightSpace;
 
     // Per-instance material data from vertex shader
     vec4 InstanceColor;
@@ -54,6 +55,12 @@ uniform bool u_EnableShadows = false;
 // Shadow intensity controls (0.0 = no shadow, 1.0 = full shadow)
 uniform float u_DirectionalShadowIntensity = 0.8;
 uniform float u_PointShadowIntensity = 0.8;
+
+// Spot shadow uniforms
+uniform sampler2D u_SpotShadowMap;  // Slot 13
+uniform bool u_EnableSpotShadows = false;
+uniform float u_SpotShadowIntensity = 0.8;
+uniform mat4 u_SpotLightSpaceMatrix;
 
 // Multi-light system for instanced rendering
 struct PointLight {
@@ -149,6 +156,54 @@ float DirectionalShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
         for(int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(u_ShadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
+}
+
+// Spot shadow calculation (very similar to directional)
+float SpotShadowCalculation(vec3 normal, vec3 lightDir)
+{
+    // Check if spot shadows are enabled
+    if (!u_EnableSpotShadows) {
+        return 0.0;
+    }
+
+    // Transform fragment position to spot light space
+    vec4 fragPosLightSpace = fs_in.FragPosSpotLightSpace;
+
+    // Perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    // Transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Check if we're outside the spot shadow map
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // Get closest depth value from spot light's perspective
+    float closestDepth = texture(u_SpotShadowMap, projCoords.xy).r;
+
+    // Get depth of current fragment from spot light's perspective
+    float currentDepth = projCoords.z;
+
+    // Calculate bias based on surface angle to light (reduces shadow acne)
+    vec3 N = normalize(normal);
+    vec3 L = normalize(-lightDir);
+    float bias = max(0.005 * (1.0 - dot(N, L)), 0.001);
+
+    // PCF (Percentage Closer Filtering) for softer shadows
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(u_SpotShadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(u_SpotShadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
         }
     }
@@ -361,7 +416,13 @@ vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos,
     float denominator = 4.0 * max(dot(N, viewDir), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
 
-    return (kD * albedo / PI + specular) * radiance * NdotL;
+    // Calculate spot shadow
+    vec3 lightDir = normalize(fragPos - light.position);
+    float shadow = SpotShadowCalculation(normal, lightDir);
+    float shadowFactor = 1.0 - (shadow * u_SpotShadowIntensity);
+
+    // Apply shadow to diffuse and specular (not to ambient which is handled separately)
+    return (kD * albedo / PI + specular) * radiance * NdotL * shadowFactor;
 }
 
 // Multi-light PBR lighting calculation (ogldev-style with per-light ambient)

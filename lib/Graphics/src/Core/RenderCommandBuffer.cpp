@@ -251,6 +251,19 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformBoolDat
     cmd.shader->setBool(cmd.uniformName, cmd.value);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformMat4Data& cmd)
+{
+    assert(cmd.shader && "SetUniformMat4Data command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the mat4 uniform
+    cmd.shader->setMat4(cmd.uniformName, cmd.value);
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd)
 {
     assert(cmd.shader && "SetUniformMat4ArrayData command must have a valid shader");
