@@ -489,13 +489,21 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 			if (edited)
 			{
 				
-				//RigidBodyComponent* rb = nullptr;
-				//rb = &world.get_component_from_entity<RigidBodyComponent>(entity_handle);
-				//if (rb)
-				//{
-				//	PhysSys.GetBodyInterface().SetPositionAndRotation(rb->bodyID, PhysicsUtils::ToJolt(pos), PhysicsUtils::EulerToJoltQuat(rot), JPH::EActivation::Activate);
 
-				//}
+				if (entity_handle.all<RigidBodyComponent>())
+				{
+					auto& rb = world.get_component_from_entity<RigidBodyComponent>(entity_handle);
+					if (rb.motionType == JPH::EMotionType::Kinematic)
+					{
+						PhysSys.GetBodyInterface().SetPositionAndRotation(rb.bodyID, PhysicsUtils::ToJolt(pos), PhysicsUtils::EulerToJoltQuat(rot), JPH::EActivation::DontActivate);
+					}
+					else
+					{
+						PhysSys.GetBodyInterface().SetPositionAndRotation(rb.bodyID, PhysicsUtils::ToJolt(pos), PhysicsUtils::EulerToJoltQuat(rot), JPH::EActivation::Activate);
+					}
+					
+				}
+
 				
 
 				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
@@ -1450,13 +1458,12 @@ void EditorMain::CreatePhysicsDemoScene()
 
 
 
-
 	// Creating Floor Physics
 	JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(50.f, 0.1f, 50.f));
 	floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
 	JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
 	JPH::ShapeRefC floor_shape = floor_shape_result.Get();
-	JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
+	JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, Layers::NON_MOVING);
 	floorplan = PhysSys.GetBodyInterface().CreateBody(floor_settings);
 	PhysSys.GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
 
