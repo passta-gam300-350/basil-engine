@@ -43,6 +43,8 @@ Technology is prohibited.
 
 #include "Physics/Physics_System.h"
 #include "Manager/ObjectManager.hpp"
+#include <components/behaviour.hpp>
+#include <System/BehaviourSystem.hpp>
 #define UNREF_PARAM(x) x;
 
 PhysicsSystem PhysSys;
@@ -1408,6 +1410,12 @@ void EditorMain::CreatePlaneEntity()
 	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	world.add_component_to_entity<behaviour>(entity, behaviour{ {"UserTest"},{}});
+	BehaviourSystem::Instance().RegisterComponent(entity);
+
+
+
 }
 
 void EditorMain::CreateLightEntity()

@@ -26,7 +26,34 @@ bool CSKlass::Bind(MonoImage* image, std::string_view namespaceName, std::string
 		return false;
 	}
 
-	m_class = mono_class_from_name(m_image, m_namespace.empty() ? nullptr : m_namespace.c_str(), m_name.c_str());
+	// Print all classes in the image for debugging
+	MonoClass* assemblyClass = mono_class_from_name(mono_get_corlib(), "System.Reflection", "Assembly");
+	MonoMethod* getTypesMethod = mono_class_get_method_from_name(assemblyClass, "GetTypes", 0);
+
+	MonoAssembly* assembly = mono_image_get_assembly(m_image);
+	char const* nameAsm = mono_assembly_name_get_name(mono_assembly_get_name(assembly));
+	std::cout << "Listing classes in assembly: " << nameAsm << std::endl;
+	MonoReflectionAssembly* asmObj = mono_assembly_get_object(mono_domain_get(), assembly);
+	MonoArray* typesArray = (MonoArray*)mono_runtime_invoke(getTypesMethod, asmObj, nullptr, nullptr);
+
+	int len = mono_array_length(typesArray);
+	for (int i = 0; i < len; ++i)
+	{
+		MonoReflectionType* reflType = (MonoReflectionType*)mono_array_get(typesArray, MonoObject*, i);
+		MonoType* type = mono_reflection_type_get_type(reflType);
+		MonoClass* klass = mono_class_from_mono_type(type);
+
+		const char* ns = mono_class_get_namespace(klass);
+		const char* name = mono_class_get_name(klass);
+		std::cout << "Found class: " << ((!std::string(ns).empty()) ? ns : "(global)") << "." << name << std::endl;
+	}
+
+	m_class = mono_class_from_name(m_image, m_namespace.empty() ? "" : m_namespace.c_str(), m_name.c_str());
+	if (!m_class)
+	{
+		std::cerr << "Failed to bind class: " << m_namespace << "." << m_name << std::endl;
+		return false;
+	}
 	return m_class != nullptr;
 }
 
@@ -174,6 +201,40 @@ MonoMethod* CSKlass::ResolveMethod(const char* methodName, int paramCount) const
 	}
 	return method;
 }
+
+bool CSKlass::IsDerivedFrom(const char* baseClassFullName) const
+{
+	
+	if (!IsValid() || !baseClassFullName)
+		return false;
+
+	// Split input into namespace and class name
+	std::string baseFull(baseClassFullName);
+	std::string baseNamespace;
+	std::string baseName;
+
+	MonoClass* parent = mono_class_get_parent(m_class);
+	if (!parent) return false;
+	
+
+	// Get parent class full name
+	while (parent)
+	{
+		MonoImage* img = mono_class_get_image(parent);
+		const char* parentNamespace = mono_class_get_namespace(parent);
+		const char* parentName = mono_class_get_name(parent);
+		std::string parentFull = std::string((parentNamespace && *parentNamespace) ? parentNamespace : "") + "." + std::string(parentName);
+		if (parentFull == baseFull)
+		{
+			return true;
+		}
+		parent = mono_class_get_parent(parent);
+
+	}
+
+	
+}
+
 
 std::string CSKlass::BuildCacheKey(const char* methodName, int paramCount) const
 {

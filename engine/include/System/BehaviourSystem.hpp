@@ -8,9 +8,11 @@
 class BehaviourSystem : public ecs::SystemBase
 {
 
-	std::unordered_map<ecs::entity, bool> enabledStates;
-	std::unordered_map<Resource::Guid, MonoObject*> scriptClasses;
+	std::unordered_map<uint64_t, bool> enabledStates;
+
 public:
+
+	static BehaviourSystem& Instance();
 	void Init() override;
 	void Update(ecs::world&, float dt) override;
 	void FixedUpdate(ecs::world&) override;
@@ -20,5 +22,12 @@ public:
 
 	void AddClass(const char* name, const char* klassNamespace = "");
 
+	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, Resource::Guid scriptID);
+
+
+	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns="");
+
+
+	void RegisterComponent(ecs::entity& entity);
 
 };

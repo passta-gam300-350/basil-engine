@@ -26,9 +26,20 @@ namespace BasilEngine.Components
         [StaticAccessor("ComponentManager", StaticAccessorType.DoubleColon)]
         private extern Transform Get_Transform_Internal();
 
+
+        private GameObject _gameObject = null;
+
         public GameObject gameObject
         {
-            get => Get_GO_Internal();
+            get
+            {
+                if (_gameObject == null)
+                {
+                    _gameObject = new GameObject(NativeID);
+                }
+                return _gameObject;
+
+            }
         }
         public Transform transform
         {
@@ -39,6 +50,10 @@ namespace BasilEngine.Components
         public string tag { get; set; } = "Untagged"; 
 
 
+        public bool Enabled
+        {
+            get; set;
+        } = true;
 
     }
 }

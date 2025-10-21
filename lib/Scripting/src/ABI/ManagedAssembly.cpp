@@ -15,7 +15,7 @@ bool ManagedAssembly::Load(MonoDomain* domain)
 
 	assert(!assemblyHandle && "Assembly handle should be null if not loaded.");
 	assert(assembly && "Assembly pointer should not be null.");
-
+		
 
 	assemblyHandle = mono_domain_assembly_open(domain, assembly->Path().string().c_str());
 

@@ -5,6 +5,7 @@
 #include "Input/InputManager.h"
 #include "Ecs/ecs.h"
 #include "Render/render.h"
+#include "System/BehaviourSystem.hpp"
 #include <stdexcept>
 
 #ifdef _WIN32
@@ -88,7 +89,7 @@ void Engine::Init(std::string const& cfg ) {
 	}
 
 	RenderSystem::System().Init();
-	MonoEntityManager::GetInstance().initialize();
+	BehaviourSystem::Instance().Init();
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 
@@ -111,6 +112,7 @@ void Engine::Update() {
 				PF_BEGIN_FRAME(frame_number);
 				//instance.m_World.update();
 				RenderSystem::System().Update(instance.m_World);
+				BehaviourSystem::Instance().Update(instance.m_World, 0.f);
 				PF_END_FRAME();
 				Engine::GetWindowInstance().SwapBuffers();
 
@@ -147,6 +149,9 @@ void Engine::UpdateDebug() {
 
 	frame_number++;
 	frame_counter--;
+
+	//TODO: DEBUG REMOVE LATER
+	BehaviourSystem::Instance().Update(instance.m_World, 0.f);
 }
 
 void Engine::ReportLastError() {
@@ -188,7 +193,8 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	}
 
 	RenderSystem::System().Init();
-	MonoEntityManager::GetInstance().initialize();
+	BehaviourSystem::Instance().Init();
+
 	Scheduler::CompileJobSchedule();
 }
 

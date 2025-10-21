@@ -29,6 +29,9 @@ Resource::Guid MonoEntityManager::AddAssembly(std::unique_ptr<ManagedAssembly> a
 }
 
 Resource::Guid MonoEntityManager::AddAssembly(const char* assemblyPath, bool isSystem = false) {
+	if (isSystem)
+		MonoManager::GetLoader()->Enable_BackEnd();
+	else MonoManager::GetLoader()->Enable_Game();
 	auto assembly = MonoManager::GetLoader()->LoadAssembly(assemblyPath, ((isSystem) ? MonoManager::GetLoader()->GetBackendDomain() : MonoManager::GetLoader()->GetGameDomain()));
 	return AddAssembly(std::move(assembly));
 }
@@ -42,6 +45,11 @@ Resource::Guid MonoEntityManager::AddKlass(std::shared_ptr<CSKlass> klass) {
 }
 
 Resource::Guid MonoEntityManager::AddKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
+	
+	if (false)
+		MonoManager::GetLoader()->Enable_BackEnd();
+	else MonoManager::GetLoader()->Enable_Game();
+	
 	auto klass = MonoManager::GetKlass(MonoEntityManager::GetInstance().GetAssembly((isBackend) ? BACKEND_ASSEMBLY_ID : PRIMARY_ASSEMBLY_ID), klassName, klassNamespace);
 
 	return AddKlass(std::move(klass));
@@ -73,7 +81,13 @@ Resource::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> i
 
 void MonoEntityManager::AddNamedKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
 	auto klassID = AddKlass(klassName, klassNamespace, isBackend);
-	std::string fullName = std::string(klassNamespace) + "." + std::string(klassName);
+	std::string fullName;
+	if (std::string(klassNamespace).empty()) {
+		fullName = std::string(klassName);
+	}
+	else {
+		fullName = std::string(klassNamespace) + "." + std::string(klassName);
+	}
 
 	m_TypeRegistry.Register(fullName, klassID);
 
@@ -107,7 +121,14 @@ CSKlassInstance* MonoEntityManager::GetInstance(const ScriptID id) {
 
 
 CSKlass* MonoEntityManager::GetNamedKlass(const char* klassName, const char* klassNamespace) {
-	std::string fullName = std::string(klassNamespace) + "." + std::string(klassName);
+	std::string fullName;
+	if (std::string(klassNamespace).empty()) {
+		fullName = std::string(klassName);
+	}
+	else {
+		fullName = std::string(klassNamespace) + "." + std::string(klassName);
+	}
+
 	auto const id = m_TypeRegistry.GetMonoEntityID(fullName);
 	return GetKlass(id);
 }
@@ -158,11 +179,11 @@ void MonoEntityManager::initialize() {
 
 	if (logs.empty()) {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str(), true);
+		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str());
 	}
 	else {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str(), true);
+		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str());
 		std::cout << "Info generated, see logs above." << std::endl;
 	}
 

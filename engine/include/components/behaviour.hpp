@@ -19,12 +19,13 @@ Technology is prohibited.
 
 #ifndef behaviour_hpp
 #define behaviour_hpp
-#include "uuid/uuid.hpp"
-
-
+#include "serialisation/guid.h"
+#include <string>
 struct behaviour
 {
-	UUID<128> scriptID;
+	std::vector<std::string> classesName;
+	std::vector<Resource::Guid> scriptIDs;
+
 };
 
 #endif
