@@ -20,7 +20,7 @@ struct MeshRendererComponent {
         PLANE
 	} m_PrimitiveType;
     Resource::Guid m_MeshGuid;
-    Resource::Guid m_MaterialGuid;
+    Resource::Guid m_MaterialGuid; //material intance
 
     struct Material
     {
@@ -46,23 +46,6 @@ struct LightComponent {
     float m_InnerCone;
     float m_OuterCone;
     bool m_IsEnabled;
-};
-
-struct CameraComponent {
-    enum class CameraType : std::uint8_t {
-        ORTHO,
-        PERSPECTIVE
-    } m_Type;
-    bool m_IsActive;
-    float m_Fov;
-    float m_AspectRatio;
-    float m_Near;
-    float m_Far;
-    glm::vec3 m_Up;
-    glm::vec3 m_Right;
-    glm::vec3 m_Front;
-    float m_Yaw;
-    float m_Pitch;
 };
 
 struct RenderSystem : public ecs::SystemBase {

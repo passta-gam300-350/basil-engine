@@ -4,8 +4,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <Render/Camera.h>
 
-class EditorCamera
+class EditorCamera : public CameraSystem::Camera
 {
 public:
     enum class Mode
@@ -22,22 +23,22 @@ public:
     void Update(float deltaTime);
 
     // Camera manipulation
-    void SetPosition(const glm::vec3& position) { m_Position = position; }
+    void SetPosition(const glm::vec3& position) { m_Pos = position; }
     void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; }
     void SetTarget(const glm::vec3& target) { m_Target = target; }
     void SetMode(Mode mode) { m_Mode = mode; }
 
     // Camera properties
-    void SetFOV(float fov) { m_FOV = fov; UpdateProjection(); }
+    void SetFOV(float fov) { m_Fov = fov; UpdateProjection(); }
     void SetAspectRatio(float aspect) { m_AspectRatio = aspect; UpdateProjection(); }
-    void SetNearPlane(float nearPlane) { m_NearPlane = nearPlane; UpdateProjection(); }
-    void SetFarPlane(float farPlane) { m_FarPlane = farPlane; UpdateProjection(); }
+    void SetNearPlane(float nearPlane) { m_Near = nearPlane; UpdateProjection(); }
+    void SetFarPlane(float farPlane) { m_Far = farPlane; UpdateProjection(); }
 
     // Getters
-    glm::vec3 GetPosition() const { return m_Position; }
+    glm::vec3 GetPosition() const { return m_Pos; }
     glm::vec3 GetRotation() const { return m_Rotation; }
     glm::vec3 GetTarget() const { return m_Target; }
-    glm::vec3 GetForward() const { return m_Forward; }
+    glm::vec3 GetForward() const { return m_Front; }
     glm::vec3 GetRight() const { return m_Right; }
     glm::vec3 GetUp() const { return m_Up; }
 
@@ -89,17 +90,6 @@ private:
     glm::vec3 m_Position{0.0f, 5.0f, 10.0f};
     glm::vec3 m_Rotation{0.0f, 0.0f, 0.0f}; // Pitch, Yaw, Roll
     glm::vec3 m_Target{0.0f, 0.0f, 0.0f};
-
-    // Camera vectors
-    glm::vec3 m_Forward{0.0f, 0.0f, -1.0f};
-    glm::vec3 m_Right{1.0f, 0.0f, 0.0f};
-    glm::vec3 m_Up{0.0f, 1.0f, 0.0f};
-
-    // Projection parameters
-    float m_FOV = 45.0f;
-    float m_AspectRatio = 16.0f / 9.0f;
-    float m_NearPlane = 0.1f;
-    float m_FarPlane = 1000.0f;
 
     // Matrices
     glm::mat4 m_ViewMatrix{1.0f};
