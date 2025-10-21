@@ -313,18 +313,18 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load instanced shadow mapping shader");
         }
 
-        // Load point shadow mapping shader (geometry shader method)
-        auto pointShadowShader = m_ResourceManager->LoadShaderWithGeometry("point_shadow",
-            "assets/shaders/point_shadow.vert",
-            "assets/shaders/point_shadow.frag",
-            "assets/shaders/point_shadow.geom");
+        // Load INSTANCED point shadow mapping shader (geometry shader + SSBO)
+        auto pointShadowShader = m_ResourceManager->LoadShaderWithGeometry("point_shadow_instanced",
+            "assets/shaders/point_shadow_instanced.vert",
+            "assets/shaders/point_shadow_instanced.frag",
+            "assets/shaders/point_shadow_instanced.geom");
 
         if (pointShadowShader) {
-            spdlog::info("Point shadow mapping shader loaded successfully!");
+            spdlog::info("Instanced point shadow mapping shader loaded successfully!");
             // Configure the point shadow mapping pass with the loaded shader
             m_SceneRenderer->SetPointShadowShader(pointShadowShader);
         } else {
-            spdlog::warn("Could not load point shadow mapping shader");
+            spdlog::warn("Could not load instanced point shadow mapping shader");
         }
 
         // Load skybox shader

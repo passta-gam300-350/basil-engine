@@ -3,6 +3,7 @@
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Utility/Light.h"
 #include "../../include/Resources/Shader.h"
+#include "../../include/Rendering/InstancedRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
@@ -170,33 +171,12 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
         };
         Submit(farPlaneCmd);
 
-        // Submit draw commands for each object with proper uniform submission
-        for (const auto& renderable : context.renderables) {
-            if (!renderable.visible || !renderable.mesh) continue;
-
-            // Bind shader command
-            RenderCommands::BindShaderData bindShaderCmd{m_PointShadowShader};
-            Submit(bindShaderCmd);
-
-            // Set per-object model matrix through command buffer
-            // This ensures each object renders with its own transform
-            RenderCommands::SetUniformsData uniformsCmd{
-                m_PointShadowShader,
-                renderable.transform,       // Model matrix (unique per object)
-                glm::mat4(1.0f),           // View matrix (not used - set in shadow matrices)
-                glm::mat4(1.0f),           // Projection matrix (not used - set in shadow matrices)
-                glm::vec3(0.0f)            // Camera position (not needed for shadows)
-            };
-            Submit(uniformsCmd);
-
-            // Submit draw command (MUST go through command buffer!)
-            RenderCommands::DrawElementsData drawCmd{
-                renderable.mesh->GetVertexArray()->GetVAOHandle(),
-                renderable.mesh->GetIndexCount(),
-                GL_TRIANGLES
-            };
-            Submit(drawCmd);
-        }
+        // Use InstancedRenderer to render all objects with instancing
+        context.instancedRenderer.RenderShadowToPass(
+            *this,                      // This render pass
+            context.renderables,        // All visible renderables
+            m_PointShadowShader         // Instanced point shadow shader
+        );
     }
 
     // Execute all submitted commands
