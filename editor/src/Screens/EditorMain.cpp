@@ -56,6 +56,8 @@ void EditorMain::init()
 	// Temporary Physics Init
 	PhysSys.Init();
 
+	// [TEMP] Audio Init
+	//Audio::Init();
 
 	// Note: ImGui callbacks are already set up in main.cpp
 	// We need to chain our input handling with ImGui's callbacks
@@ -125,6 +127,8 @@ void EditorMain::update()
 	ecs::world world = Engine::GetWorld();
 	RenderSystem::System().Update(world);
 	PhysSys.FixedUpdate(world);
+	// [TEMP] Audio Update
+	// Audio::Update();
 	auto cubes = world.filter_entities<RigidBodyComponent>();
 	for (auto cube : cubes)
 	{
@@ -293,6 +297,8 @@ void EditorMain::cleanup()
 	PhysSys.Exit();
 	m_AssetManager.reset(nullptr);
 	Engine::Exit();
+	// [TEMP] Audio Cleanup
+	//Audio::Exit();
 }
 
 void EditorMain::Show()
