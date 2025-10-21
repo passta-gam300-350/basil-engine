@@ -11,6 +11,7 @@ namespace ecs {
 		
 		struct entity_name_t {
 			std::string m_name;
+
 			entity_name_t() = default;
 			entity_name_t(entity_name_t const&) = default;
 			entity_name_t(entity_name_t&&) noexcept = default;
@@ -91,6 +92,8 @@ namespace ecs {
 		std::uint64_t get_uuid() const {
 			return handle;
 		}
+
+		std::vector<std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>> get_reflectible_components() const;
 	};
 }
 
