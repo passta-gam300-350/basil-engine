@@ -17,29 +17,37 @@ public:
     ShaderStorageBuffer(ShaderStorageBuffer&& other) noexcept;
     ShaderStorageBuffer& operator=(ShaderStorageBuffer&& other) noexcept;
 
+    // Create persistent mapped buffer (GL 4.4+)
+    // Flags: GL_MAP_READ_BIT, GL_MAP_WRITE_BIT, GL_MAP_PERSISTENT_BIT, GL_MAP_COHERENT_BIT
+    void CreatePersistentBuffer(uint32_t size, GLbitfield flags);
+
     // Bind to specific binding point (for shader access)
     void BindBase(uint32_t bindingPoint) const;
-    
+
     // Bind for CPU operations (reading/writing)
     void Bind() const;
     void Unbind() const;
 
     // Update buffer data
     void SetData(const void* data, uint32_t size, uint32_t offset = 0);
-    
-    // Resize buffer (reallocates)
+
+    // Resize buffer (reallocates - NOT supported for persistent buffers)
     void Resize(uint32_t newSize);
-    
-    // Map buffer for direct CPU access
+
+    // Map buffer for direct CPU access (traditional mapping)
     void* Map(GLenum access = GL_READ_WRITE);
     void Unmap();
-    
+
+    // Access persistent pointer (only valid if created with CreatePersistentBuffer)
+    void* GetPersistentPtr() const { return m_PersistentPtr; }
+    bool IsPersistent() const { return m_IsPersistent; }
+
     // Read data back from GPU
     void GetData(void* data, uint32_t size, uint32_t offset = 0) const;
-    
+
     // Memory barrier for synchronization
     void MemoryBarrier(GLbitfield barriers = GL_SHADER_STORAGE_BARRIER_BIT);
-    
+
     // Getters
     uint32_t GetSSBOHandle() const { return m_SSBOHandle; }
     uint32_t GetSize() const { return m_Size; }
@@ -50,6 +58,11 @@ private:
     uint32_t m_Size;
     GLenum m_Usage;
     mutable bool m_IsMapped;
+
+    // Persistent mapping support (GL 4.4+)
+    bool m_IsPersistent;
+    void* m_PersistentPtr;
+    GLbitfield m_PersistentFlags;
 };
 
 // Templated helper for structured data

@@ -79,8 +79,7 @@ void HDRLuminancePass::Execute(RenderContext& context)
     // This happens after ExecuteCommands() to ensure compute shader completed
     CalculateExposure(context);
 
-    // Unbind SSBO
-    m_LuminanceBuffer->Unbind();
+    // Note: SSBO remains bound and persistently mapped - no need to unbind
 
     // End the pass
     End();
@@ -93,11 +92,11 @@ void HDRLuminancePass::SetComputeShader(std::shared_ptr<Shader> shader)
 
 void HDRLuminancePass::CalculateExposure(RenderContext& context)
 {
-    // Map SSBO for CPU reading (GPU to CPU transfer, may stall pipeline)
-    float* pLuminance = static_cast<float*>(m_LuminanceBuffer->Map(GL_READ_ONLY));
+    // Access persistent pointer (no stall - buffer is always mapped)
+    float* pLuminance = static_cast<float*>(m_LuminanceBuffer->GetPersistentPtr());
 
     if (!pLuminance) {
-        spdlog::error("HDRLuminancePass: Failed to map SSBO!");
+        spdlog::error("HDRLuminancePass: Failed to access persistent buffer!");
         return;
     }
 
@@ -122,8 +121,7 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
                      invalidCount, numTiles);
     }
 
-    // Unmap SSBO
-    m_LuminanceBuffer->Unmap();
+    // No need to unmap - buffer is persistently mapped!
 
     // Calculate geometric mean: exp(average of log luminances)
     uint32_t totalPixels = m_NumGroupsX * m_NumGroupsY * m_LocalSizeX * m_LocalSizeY;
@@ -171,15 +169,23 @@ uint32_t HDRLuminancePass::AlignUpToMultiple(uint32_t value, uint32_t multiple)
 void HDRLuminancePass::InitializeBuffer(uint32_t width, uint32_t height)
 {
     // Calculate number of work groups needed to cover screen
-    // Each work group processes 10�10 pixels
+    // Each work group processes 10x10 pixels
     m_NumGroupsX = AlignUpToMultiple(width, m_LocalSizeX) / m_LocalSizeX;
     m_NumGroupsY = AlignUpToMultiple(height, m_LocalSizeY) / m_LocalSizeY;
 
     uint32_t numTiles = m_NumGroupsX * m_NumGroupsY;
+    uint32_t bufferSize = numTiles * sizeof(float);
 
-    // Create SSBO to store per-tile results (one float per tile)
-    m_LuminanceBuffer = std::make_unique<ShaderStorageBuffer>(nullptr, numTiles * sizeof(float), GL_DYNAMIC_DRAW);
+    // Create SSBO with persistent mapping (GL 4.4+)
+    // Flags: GL_MAP_READ_BIT - allow CPU reads
+    //        GL_MAP_PERSISTENT_BIT - keep mapped across draw calls
+    //        GL_MAP_COHERENT_BIT - automatic synchronization (no manual flush needed)
+    m_LuminanceBuffer = std::make_unique<ShaderStorageBuffer>();
+    m_LuminanceBuffer->CreatePersistentBuffer(
+        bufferSize,
+        GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+    );
 
-    spdlog::info("HDRLuminancePass: Initialized ({}x{}, {} tiles, {}x{} groups)",
+    spdlog::info("HDRLuminancePass: Initialized with persistent buffer ({}x{}, {} tiles, {}x{} groups)",
                  width, height, numTiles, m_NumGroupsX, m_NumGroupsY);
 }
