@@ -40,7 +40,7 @@ public:
 
 	void ChangeState(EditorState newState);
 	EditorState GetState() const { return currentState; }
-
+	GLFWwindow* GetWindowPtr() { return window; }
 
 	void Init(GLFWwindow* _win);
 	void Update();
@@ -51,14 +51,11 @@ public:
 
 	EDITOR_CONFIG& GetConfig() { return configuration; }
 
+
 	void Set_Working_Path(const char* path);
 	void Set_Workspace_Name(const char* name);
 	void Unload();
 	void Load();
-
-
-
-
 };
 
 

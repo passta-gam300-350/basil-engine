@@ -1,8 +1,9 @@
 // THIS IS THE ACTUAL LEVEL EDITOR!!!,
 
 #include <Render/Render.h>
+#include <Render/Camera.h>
 #include <Engine.hpp>
-#include <components/transform.h>
+#include <Component/Transform.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
@@ -22,6 +23,7 @@
 #include "Profiler/profiler.hpp"
 
 #include "Physics/Physics_System.h"
+#include <Messaging/Messaging_System.h>
 #define UNREF_PARAM(x) x;
 
 PhysicsSystem PhysSys;
@@ -48,124 +50,36 @@ void EditorMain::init()
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
-	// init engine
-	Engine::GenerateDefaultConfig();
-	Engine::InitWithoutWindow("Default.yaml");
-
-	
-	// Temporary Physics Init
-	PhysSys.Init();
-
-
-	// Note: ImGui callbacks are already set up in main.cpp
-	// We need to chain our input handling with ImGui's callbacks
-	// InputManager will be updated manually in render() to avoid conflicts
-
 	// Initialize Editor Camera
-	m_EditorCamera = std::make_unique<EditorCamera>();
+	m_EditorCamera = std::make_shared<EditorCamera>();
 	m_EditorCamera->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 	// Set rotation to look towards origin from (0,5,10): pitch down, yaw to face -Z direction
 	m_EditorCamera->SetRotation(glm::vec3(-25.0f, -90.0f, 0.0f));
 	// Set orbit target to origin so orbit mode works
 	m_EditorCamera->SetTarget(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	// Create a basic light so we can see something
-	CreateLightEntity();
-	// Create an ECS camera entity for the RenderSystem to use
-	// We'll update it with EditorCamera data each frame
-	CreateCameraEntity();
+	CameraSystem::SetAuxCamera(m_EditorCamera);
+	CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
 
-	// Create demo scene with cubes for testing
+	glfwMakeContextCurrent(nullptr);
+	// init engine
+	engineService.init();
+	while (Engine::GetState() == Engine::Info::State::Init);
+	engineService.block();
+	glfwMakeContextCurrent(Editor::GetInstance().GetWindowPtr());
+
 	CreateDemoScene();
 
-	//std::jthread jth(&Engine::Update);
+	// Note: ImGui callbacks are already set up in main.cpp
+	// We need to chain our input handling with ImGui's callbacks
+	// InputManager will be updated manually in render() to avoid conflicts
 }
 
 
 void EditorMain::update()
 {
 	if (!active) return;
-
-	Engine::BeginFrame();
-
-	// Update input manager ONCE per frame - at the very beginning
-	auto* input = InputManager::Get_Instance();
-	input->Update();
-
-	glClearColor(1, 1, 1, 1);
-
-	// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
-	if (!m_IsPlayMode && m_EditorCamera) {
-		ecs::world world = Engine::GetWorld();
-		auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
-
-		if (cameraEntities) {
-			auto entity = *cameraEntities.begin();
-			auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
-			auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
-
-			// Update ECS camera with EditorCamera data
-			positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
-
-			// DEBUG: Check what vectors EditorCamera produces and only update position
-			glm::vec3 editorForward = m_EditorCamera->GetForward();
-			glm::vec3 editorUp = m_EditorCamera->GetUp();
-			glm::vec3 editorRight = m_EditorCamera->GetRight();
-
-
-			// Update ECS camera vectors with EditorCamera data
-			cameraComponent.m_Front = editorForward;
-			cameraComponent.m_Up = editorUp;
-			cameraComponent.m_Right = editorRight;
-			cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-		}
-	}
-
-	// Update engine systems
-	ecs::world world = Engine::GetWorld();
-	RenderSystem::System().Update(world);
-	PhysSys.FixedUpdate(world);
-	auto cubes = world.filter_entities<RigidBodyComponent>();
-	for (auto cube : cubes)
-	{
-		auto rot = &world.get_component_from_entity<RotationComponent>(cube);
-		auto Trans = &world.get_component_from_entity<TransformComponent>(cube);
-		auto pos = &world.get_component_from_entity<PositionComponent>(cube);
-		auto scale = &world.get_component_from_entity<ScaleComponent>(cube);
-
-		glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.x), glm::vec3(1, 0, 0));
-		glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.y), glm::vec3(0, 1, 0));
-		glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.z), glm::vec3(0, 0, 1));
-		glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
-		Trans->m_trans = glm::translate(glm::mat4(1.0f), pos->m_WorldPos) * R * glm::scale(glm::mat4(1.0f), scale->m_Scale);
-	}
-
-	//Temporary Physic Update
-	/*
-	To add physic engine update
-	PF_SYSTEM("PhysicsSystem");
-	// returns list of entity ids
-	auto physics component = world.filter_entities<physics_comp>();
-
-
-	for(auto component : phsyicscomp) // goes through the id's
-	{
-		auto& [comp1, comp2, comp3] {component.get<comp1,comp2,comp3>()};
-	}
-
-
-	Component Details
-
-	struct PhysicsComponent {
-		Resource::Guid m_MeshGuid;
-		Resource::Guid m_MaterialGuid;
-	};
-
-	*/
-
-
-	Engine::EndFrame();
-	Engine::UpdateDebug();
+	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
 
 
@@ -173,15 +87,6 @@ void EditorMain::render()
 {
 	if (!active) return;
 	Engine::BeginFrame();
-
-	//// Update input manager ONCE per frame - at the very beginning
-	//auto* input = InputManager::Get_Instance();
-	//input->Update();
-
-
-
-
-
 
 	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -223,43 +128,6 @@ void EditorMain::render()
 		Setup_Dockspace(dockspace_id);
 	}
 
-	
-
-	//glClearColor(1, 1, 1, 1);
-
-	//// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
-	//if (!m_IsPlayMode && m_EditorCamera) {
-	//	ecs::world world = Engine::GetWorld();
-	//	auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
-
-	//	if (cameraEntities) {
-	//		auto entity = *cameraEntities.begin();
-	//		auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
-	//		auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
-
-	//		// Update ECS camera with EditorCamera data
-	//		positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
-
-	//		// DEBUG: Check what vectors EditorCamera produces and only update position
-	//		glm::vec3 editorForward = m_EditorCamera->GetForward();
-	//		glm::vec3 editorUp = m_EditorCamera->GetUp();
-	//		glm::vec3 editorRight = m_EditorCamera->GetRight();
-
-
-	//		// Update ECS camera vectors with EditorCamera data
-	//		cameraComponent.m_Front = editorForward;
-	//		cameraComponent.m_Up = editorUp;
-	//		cameraComponent.m_Right = editorRight;
-	//		cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-	//	}
-	//}
-
-	//// Update engine systems
-	//ecs::world world = Engine::GetWorld();
-	//RenderSystem::System().Update(world);
-	//Engine::EndFrame();
-	//Engine::UpdateDebug();
-
 	Render_MenuBar();
 
 	if (showSceneExplorer)
@@ -275,8 +143,8 @@ void EditorMain::render()
 	Render_CameraControls();
 	Render_AssetBrowser();
 
-
-
+	engineService.m_cont->m_container_is_presentable.release();
+	engineService.start();
 }
 
 void EditorMain::cleanup()
@@ -292,7 +160,9 @@ void EditorMain::cleanup()
 
 	PhysSys.Exit();
 	m_AssetManager.reset(nullptr);
-	Engine::Exit();
+	//Engine::Exit();
+	///Engine::
+	engineService.release();
 }
 
 void EditorMain::Show()
@@ -329,74 +199,30 @@ void EditorMain::Render_Inspector()
 		ImGui::Separator();
 		ImGui::Text("Object ID: %u", m_SelectedEntityID);
 
-		// Try to find the entity in the world
-		ecs::world world = Engine::GetWorld();
-		auto entities = world.filter_entities<PositionComponent>();
+		auto& entities = engineService.m_cont->m_entities_snapshot;
 
-		bool entityFound = false;
-		for (auto entity : entities) {
-			if (static_cast<uint32_t>(entity.get_uid()) == m_SelectedEntityID) {
-				entityFound = true;
+		if (auto it{ std::find_if(entities.begin(), entities.end(), [this](std::size_t ehdl) {return ecs::entity(ehdl).get_uid() == m_SelectedEntityID; }) }; it != entities.end()) {
+			// Show entity components
+			ImGui::Text("Entity UID: %llu", m_SelectedEntityID);
 
-				// Show entity components
-				ImGui::Text("Entity UID: %llu", entity.get_uid());
+			// renders all reflectible components
+			Render_Components();
 
-				//// Position Component
-				//if (world.has_all_components_in_entity<PositionComponent>(entity)) {
-				//	auto& pos = world.get_component_from_entity<PositionComponent>(entity);
-				//	ImGui::Text("Position Component:");
-				//	ImGui::Text("  World Pos: (%.2f, %.2f, %.2f)", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
-				//}
+			ImGui::Separator();
 
-				//// Transform Component
-				//if (world.has_all_components_in_entity<TransformComponent>(entity)) {
-				//	ImGui::Text("Transform Component: Present");
-				//}
-				Render_Transform_Group_Component(entity);
-
-				// Mesh Renderer Component
-				/*if (world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
-					auto& meshRenderer = world.get_component_from_entity<MeshRendererComponent>(entity);
-					ImGui::Text("Mesh Renderer Component:");
-					ImGui::Text("  Mesh GUID: %s", meshRenderer.m_MeshGuid.to_hex().c_str());
-					ImGui::Text("  Material GUID: %s", meshRenderer.m_MaterialGuid.to_hex().c_str());
-				}*/
-				Render_Mesh_Component(entity);
-
-				//// Light Component
-				//if (world.has_all_components_in_entity<LightComponent>(entity)) {
-				//	auto& light = world.get_component_from_entity<LightComponent>(entity);
-				//	ImGui::Text("Light Component:");
-				//	ImGui::Text("  Type: %d", static_cast<int>(light.m_Type));
-				//	ImGui::Text("  Color: (%.2f, %.2f, %.2f)", light.m_Color.r, light.m_Color.g, light.m_Color.b);
-				//	ImGui::Text("  Intensity: %.2f", light.m_Intensity);
-				//	ImGui::Text("  Enabled: %s", light.m_IsEnabled ? "Yes" : "No");
-				//}
-
-				Render_Lighting_Group_Component(entity);
-
-				// Camera Component
-				/*if (world.has_all_components_in_entity<CameraComponent>(entity)) {
-					auto& camera = world.get_component_from_entity<CameraComponent>(entity);
-					ImGui::Text("Camera Component:");
-					ImGui::Text("  Type: %s", camera.m_Type == CameraComponent::CameraType::PERSPECTIVE ? "Perspective" : "Orthographic");
-					ImGui::Text("  FOV: %.1f", camera.m_Fov);
-					ImGui::Text("  Active: %s", camera.m_IsActive ? "Yes" : "No");
-				}*/
-				Render_Camera_Group_Component(entity);
-
-				ImGui::Separator();
-
-				// Action buttons
-				if (ImGui::Button("Clear Selection")) {
-					ClearEntitySelection();
-				}
-
-				break;
+			// Action buttons
+			if (ImGui::Button("Clear Selection")) {
+				ClearEntitySelection();
+			}
+			if (ImGui::Button("Add Component")) {
+				ImGui::OpenPopup("Add Component Popup");
+			}
+			if (ImGui::BeginPopup("Add Component Popup")) {
+				Render_Add_Component_Menu();
+				ImGui::EndPopup();
 			}
 		}
-
-		if (!entityFound) {
+		else {
 			ImGui::Text("Selected entity not found in world!");
 			ImGui::Text("(Entity may have been deleted)");
 			if (ImGui::Button("Clear Selection")) {
@@ -413,230 +239,112 @@ void EditorMain::Render_Inspector()
 	ImGui::End();
 }
 
-
-void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
+void EditorMain::Render_Components()
 {
-	ecs::entity selected{};
+	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
+	auto& type_map{ ReflectionRegistry::types() };
+	auto& internal_type_map{ ReflectionRegistry::InternalID() };
 
-	TransformComponent* transformComponent = nullptr;
+	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 
-	auto world = Engine::GetWorld();
-
-	bool containTransform = world.has_all_components_in_entity<TransformComponent>(entity_handle);
-	if (containTransform)
-	{
-		selected = entity_handle;
-
-
-		transformComponent = &world.get_component_from_entity<TransformComponent>(selected);
-
-
-	}
-
-	if (transformComponent)
-	{
-		bool containPos = world.has_all_components_in_entity<PositionComponent>(entity_handle);
-		bool containScale = world.has_all_components_in_entity<ScaleComponent>(entity_handle);
-		bool containRot = world.has_all_components_in_entity<RotationComponent>(entity_handle);
-		if (ImGui::CollapsingHeader("Transform"))
-		{
-			PositionComponent* posComp = nullptr;
-			ScaleComponent* scaleComp = nullptr;
-			RotationComponent* rotComp = nullptr;
-			glm::vec3 pos, scale{ 1 }, rot{};
-			bool edited{};
-			if (containPos) posComp = &world.get_component_from_entity<PositionComponent>(entity_handle);
-			if (containScale) scaleComp = &world.get_component_from_entity<ScaleComponent>(entity_handle);
-			if (containRot) rotComp = &world.get_component_from_entity<RotationComponent>(entity_handle);
-			if (posComp) pos = posComp->m_WorldPos;
-			if (scaleComp) scale = scaleComp->m_Scale;
-			if (rotComp) rot = rotComp->m_Rotation;
-
-			if (posComp) {
-				ImGui::PushID("POSITION_INSPECTOR_INPUT_LABEL");
-				ImGui::Text("Position");
-				ImGui::PopID();
-				ImGui::SameLine();
-				if (ImGui::DragFloat3("##POSITION_INSPECTOR", &pos.x))
-				{
-					posComp->m_WorldPos = pos;
-					edited = true;
-				}
-			}
-			if (scaleComp) {
-				ImGui::PushID("SCALE_INSPECTOR_INPUT_LABEL");
-				ImGui::Text("Scale");
-				ImGui::PopID();
-				ImGui::SameLine();
-				if (ImGui::DragFloat3("##SCALE_INSPECTOR", &scale.x))
-				{
-					scaleComp->m_Scale = scale;
-					edited = true;
-				}
-			}
-			if (rotComp) {
-				ImGui::PushID("ROTATION_INSPECTOR_INPUT_LABEL");
-				ImGui::Text("Rotation");
-				ImGui::PopID();
-				ImGui::SameLine();
-				if (ImGui::DragFloat3("##ROTATION_INSPECTOR", &rot.x))
-				{
-					rotComp->m_Rotation = rot;
-					edited = true;
-				}
-			}
-
-			if (edited)
-			{
-				
-				//RigidBodyComponent* rb = nullptr;
-				//rb = &world.get_component_from_entity<RigidBodyComponent>(entity_handle);
-				//if (rb)
-				//{
-				//	PhysSys.GetBodyInterface().SetPositionAndRotation(rb->bodyID, PhysicsUtils::ToJolt(pos), PhysicsUtils::EulerToJoltQuat(rot), JPH::EActivation::Activate);
-
-				//}
-				
-
-				glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
-				glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
-				glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
-				glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
-				transformComponent->m_trans = glm::translate(glm::mat4(1.0f), pos) * R * glm::scale(glm::mat4(1.0f), scale);
-			}
-
-
-
+	for (auto const& [type_id, uptr] : component_list) {
+		if (type_id == skip_name_component) {
+			continue;
 		}
-	}
-
-}
-
-void EditorMain::Render_Lighting_Group_Component(ecs::entity handle)
-{
-
-
-	auto world = Engine::GetWorld();
-	ecs::entity selected{};
-
-	LightComponent* lightComponent = nullptr;
-
-	bool containLight = world.has_all_components_in_entity<LightComponent>(handle);
-	if (!containLight) return;
-	lightComponent = &world.get_component_from_entity<LightComponent>(handle);
-
-	if (lightComponent)
-	{
-		if (ImGui::CollapsingHeader("Lighting"))
-		{
-			const char* lightTypes[] = { "Directional", "Point", "Spotlight" };
-			int currentType = static_cast<int>(lightComponent->m_Type);
-			if (ImGui::Combo("Light Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes)))
-			{
-				lightComponent->m_Type = static_cast<Light::Type>(currentType);
+		entt::meta_type type = type_map[type_id];
+		entt::meta_any comp = type.from_void(uptr.get());
+		if (ImGui::TreeNode(ReflectionRegistry::GetTypeName(type.id()).c_str())) {
+			bool is_dirty = false;
+			Render_Component_Member(comp, is_dirty);
+			ImGui::TreePop();
+			if (is_dirty) {
+				engineService.m_cont->m_write_back_queue.push(type_id);
 			}
-			ImGui::ColorEdit3("Color", &lightComponent->m_Color.r);
-			ImGui::InputFloat("Intensity", &lightComponent->m_Intensity);
-
-
-			ImGui::Checkbox("Enabled", &lightComponent->m_IsEnabled);
-
 		}
 	}
 }
 
-
-void EditorMain::Render_Camera_Group_Component(ecs::entity entity_handle)
+void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 {
-	auto world = Engine::GetWorld();
+	auto type = comp.type();
+	auto field_table = ReflectionRegistry::GetFieldNames(type.id());
 
-	CameraComponent* cameraComponent = nullptr;
+	int i{};
 
-	if (world.has_all_components_in_entity<CameraComponent>(entity_handle))
-	{
-		cameraComponent = &world.get_component_from_entity<CameraComponent>(entity_handle);
-	}
+	for (auto [id, data] : type.data()) {
+		std::string field_name{ field_table[id] };
 
-	if (cameraComponent)
-	{
-		float fov = cameraComponent->m_Fov;
-		bool isActive = cameraComponent->m_IsActive;
-		CameraComponent::CameraType type = cameraComponent->m_Type;
+		ImGui::PushID(i++);
 
-		if (ImGui::CollapsingHeader("Camera"))
-		{
-			const char* cameraTypes[] = { "Orthographic", "Perspective" };
-			int currentType = static_cast<int>(type);
-			if (ImGui::Combo("Camera Type", &currentType, cameraTypes, IM_ARRAYSIZE(cameraTypes)))
-			{
-				cameraComponent->m_Type = static_cast<CameraComponent::CameraType>(currentType);
+		auto value = data.get(comp);
+		auto meta_type = value.type();
+		if (meta_type.data().begin() != meta_type.data().end()) {
+			if (ImGui::CollapsingHeader(field_name.c_str())) {
+				Render_Component_Member(value, is_dirty);
 			}
-			if (cameraComponent->m_Type == CameraComponent::CameraType::PERSPECTIVE)
+		}
+		else {
+			if (meta_type.is_enum())
 			{
-				if (ImGui::InputFloat("Field of View", &fov))
+				const void* val_ptr = value.base().data();
+				if (meta_type.size_of() <= sizeof(int))
 				{
-					cameraComponent->m_Fov = fov;
+					int enum_value = *static_cast<const int*>(val_ptr);
+					ImGui::InputInt(field_name.c_str(), &enum_value);
+				}
+				else
+				{
+					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 			}
-			else if (cameraComponent->m_Type == CameraComponent::CameraType::ORTHO)
-			{
-				// Orthographic-specific settings can go here
+
+			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
+				ImGui::Text((field_name + v->to_hex_no_delimiter()).c_str());
+
+
+			// primitives
+			else if (int* vi = value.try_cast<int>()) {
+				if (ImGui::InputInt(field_name.c_str(), vi)) {
+					is_dirty = true;
+				}
 			}
-			ImGui::Checkbox("Active", &isActive);
-			cameraComponent->m_IsActive = isActive;
+			else if (float* vf = value.try_cast<float>()) {
+				if (ImGui::InputFloat(field_name.c_str(), vf)) {
+					is_dirty = true;
+				}
+			}
+			else if (double* vd = value.try_cast<double>()) {
+				if (ImGui::InputDouble(field_name.c_str(), vd)) {
+					is_dirty = true;
+				}
+			}
+			/*else if (std::string* vs = value.try_cast<std::string>())
+				if (ImGui::InputText(field_name.c_str(), vs)) {
+					is_dirty = true;
+				}*/
+			else if (bool* vb = value.try_cast<bool>()) {
+				if (ImGui::Checkbox(field_name.c_str(), vb)) {
+					is_dirty = true;
+				}
+			}
 		}
+		ImGui::PopID();
 	}
 }
 
-void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
+void EditorMain::Render_Add_Component_Menu()
 {
-	auto world = Engine::GetWorld();
-	MeshRendererComponent* meshRendererComponent = nullptr;
-	if (world.has_all_components_in_entity<MeshRendererComponent>(entity_handle))
-	{
-		meshRendererComponent = &world.get_component_from_entity<MeshRendererComponent>(entity_handle);
-	}
-
-	if (!meshRendererComponent) return;
-	if (ImGui::CollapsingHeader("Mesh Renderer"))
-	{
-		std::string meshname = m_AssetManager->ResolveAssetName(meshRendererComponent->m_MeshGuid);
-		meshname.empty() ? meshname = meshRendererComponent->m_MeshGuid.to_hex() : meshname;
-
-		std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(Resource::ResourceType::MESH);
-		assetnames.emplace_back(meshname);
-		std::swap(assetnames.front(), assetnames.back());
-		int current_item = 0;
-
-		ImGui::Text("  Mesh GUID: ");
-		ImGui::SameLine();
-		ImGui::Combo("##mesh selector", &current_item, [](void* data, int idx, const char** out_text) {
-			auto& vec = *static_cast<std::vector<std::string>*>(data);
-			if (idx < 0 || idx >= vec.size()) return false;
-			*out_text = vec[idx].c_str();
-			return true;
-			}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
-		if (current_item != 0) {
-			meshRendererComponent->m_MeshGuid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-			meshRendererComponent->isPrimitive = false;
+	auto& reflectible_component_list = engineService.get_reflectible_component_id_name_list();
+	static const ReflectionRegistry::TypeID skip_name_component{ ReflectionRegistry::InternalID()[entt::type_index<ecs::entity::entity_name_t>::value()] };
+	for (auto const&[type_id, type_name] : reflectible_component_list) {
+		if (type_id == skip_name_component) {
+			continue;
 		}
-		ImGui::Text("  Material GUID: %s", meshRendererComponent->material.m_MaterialGuid.to_hex().c_str());
-		// Section for editing material properties could go here
-
-		ImGui::SeparatorText("Material Properties");
-		glm::vec3 color = meshRendererComponent->material.m_AlbedoColor;
-		ImGui::Text("Color: ");
-		ImGui::SameLine();
-		if (ImGui::ColorEdit3("##ColorPickModel", &color.r)) {
-			meshRendererComponent->material.m_AlbedoColor = color;
+		if (ImGui::MenuItem(type_name.c_str())) {
+			
 		}
-
-
 	}
-
 }
-
-
 
 void EditorMain::Render_MenuBar()
 {
@@ -821,10 +529,11 @@ void EditorMain::Render_SceneExplorer()
 	ecs::world world = Engine::GetWorld();
 
 	// Get all entities with position component (basic entities)
-	auto entities = world.filter_entities<PositionComponent>();
+	auto entities = engineService.m_cont->m_entities_snapshot;
 
 	ImGui::Text("Entities in scene:");
-	for (auto entity : entities) {
+	for (auto ehdl : entities) {
+		ecs::entity entity{ehdl};
 		ImGui::PushID(static_cast<int>(entity.get_uid()));
 
 		// Check if this entity is currently selected
@@ -1124,7 +833,7 @@ void EditorMain::Render_AssetBrowser()
 	ImGui::SliderFloat("Padding Size", &padding, 0.0f, 24.0f); // Slider for how much padding between columns
 	ImGui::End();
 
-	ImGui::Begin("Assets");
+	ImGui::Begin("Resources");
 	ImGui::Columns(columns, 0, false);
 	//this map is single threaded
 	for (auto [assetname, guid] : m_AssetManager->m_AssetNameGuid) {
@@ -1261,23 +970,10 @@ void EditorMain::Render_Scene()
 
 	// Debug info below the viewport
 	ecs::world world = Engine::GetWorld();
-	auto allEntities = world.filter_entities<PositionComponent>();
-	auto meshEntities = world.filter_entities<MeshRendererComponent>();
-	auto lightEntities = world.filter_entities<LightComponent>();
-	auto cameraEntities = world.filter_entities<CameraComponent>();
-
-	int entityCount = 0, meshCount = 0, lightCount = 0, cameraCount = 0;
-	for (auto entity : allEntities) {
-		entityCount++;
-		// Debug: Check what components each entity has
-		bool hasMeshRenderer = world.has_all_components_in_entity<MeshRendererComponent>(entity);
-		if (hasMeshRenderer) {
-			//spdlog::info("DEBUG: Entity {} has MeshRendererComponent", entity.get_uid());
-		}
-	}
-	for (auto entity : meshEntities) { meshCount++; }
-	for (auto entity : lightEntities) { lightCount++; }
-	for (auto entity : cameraEntities) { cameraCount++; }
+	auto entityCount = engineService.m_cont->m_entities_snapshot.size();
+	auto meshCount = world.filter_entities<MeshRendererComponent>().size_hint();
+	auto lightCount = world.filter_entities<LightComponent>().size_hint();
+	auto cameraCount = world.filter_entities<CameraComponent>().size_hint();
 
 	ImGui::Text("Total entities: %d", entityCount);
 	ImGui::Text("Mesh entities: %d", meshCount);
@@ -1326,8 +1022,7 @@ void EditorMain::CreateDefaultEntity()
 	auto entity = world.add_entity();
 
 	// Add basic components
-	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
-	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
+	world.add_component_to_entity<TransformComponent>(entity);
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 }
 
@@ -1339,10 +1034,7 @@ void EditorMain::CreatePlaneEntity()
 	auto entity = world.add_entity();
 
 	// Add transform components
-	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 0.0f, 0.0f));
-	world.add_component_to_entity<ScaleComponent>(entity, glm::vec3{ 1,1,1 });
-	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
-	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
+	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 
@@ -1367,7 +1059,7 @@ void EditorMain::CreateLightEntity()
 	auto entity = world.add_entity();
 
 	// Add position
-	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 5.0f, 0.0f));
+	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
 
 	// Add light component
 	LightComponent light;
@@ -1391,7 +1083,7 @@ void EditorMain::CreateCameraEntity()
 	auto entity = world.add_entity();
 
 	// Add position component
-	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, 2.0f, 5.0f));
+	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 2.0f, 5.0f) });
 
 	// Add camera component
 	CameraComponent camera;
@@ -1418,10 +1110,7 @@ void EditorMain::CreatePhysicsDemoScene()
 	auto entity = world.add_entity();
 
 	// Add transform components
-	world.add_component_to_entity<PositionComponent>(entity, glm::vec3(0.0f, -2.0f, 0.0f));
-	world.add_component_to_entity<ScaleComponent>(entity, glm::vec3{ 1,1,1 });
-	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
-	world.add_component_to_entity<TransformComponent>(entity, glm::mat4(1.0f));
+	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, -2.0f, 0.0f) });
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 	// Add mesh renderer component
@@ -1436,17 +1125,15 @@ void EditorMain::CreatePhysicsDemoScene()
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	world.get_component_from_entity<ScaleComponent>(entity).m_Scale = glm::vec3{ 50,1,50 };
-	auto rot = &world.get_component_from_entity<RotationComponent>(entity);
-	auto Trans = &world.get_component_from_entity<TransformComponent>(entity);
-	auto pos = &world.get_component_from_entity<PositionComponent>(entity);
-	auto scale = &world.get_component_from_entity<ScaleComponent>(entity);
+	world.get_component_from_entity<TransformComponent>(entity).m_Scale = glm::vec3{ 50,1,50 };
+	auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
+	auto& [scale, rot, pos] = world.get_component_from_entity<TransformComponent>(entity);
 
-	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.x), glm::vec3(1, 0, 0));
-	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.y), glm::vec3(0, 1, 0));
-	glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot->m_Rotation.z), glm::vec3(0, 0, 1));
+	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
+	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
+	glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
 	glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
-	Trans->m_trans = glm::translate(glm::mat4(1.0f), pos->m_WorldPos) * R * glm::scale(glm::mat4(1.0f), scale->m_Scale);
+	Trans->m_Mtx = glm::translate(glm::mat4(1.0f), pos) * R * glm::scale(glm::mat4(1.0f), scale);
 
 
 
@@ -1469,10 +1156,7 @@ void EditorMain::CreatePhysicsDemoScene()
 	auto entity2 = world.add_entity();
 
 	// Add transform components
-	world.add_component_to_entity<PositionComponent>(entity2, CPos);
-	world.add_component_to_entity<ScaleComponent>(entity2, Cscale);
-	world.add_component_to_entity<TransformComponent>(entity2, glm::scale(glm::translate(glm::mat4(1.0f), CPos), Cscale));
-	world.add_component_to_entity<RotationComponent>(entity2, glm::vec3{});
+	world.add_component_to_entity<TransformComponent>(entity2, TransformComponent{ Cscale, glm::vec3{}, CPos });
 	world.add_component_to_entity<VisibilityComponent>(entity2, true);
 	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
@@ -1517,7 +1201,7 @@ void EditorMain::CreateDemoScene()
 	ecs::world world = Engine::GetWorld();
 
 	auto lightEntity = world.add_entity();
-	world.add_component_to_entity<PositionComponent>(lightEntity, glm::vec3(0.0f, 5.0f, 0.0f));
+	world.add_component_to_entity<TransformComponent>(lightEntity, TransformComponent{ glm::vec3{1.f}, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
 
 	LightComponent light;
 	light.m_Type = Light::Type::Directional;
@@ -1533,7 +1217,7 @@ void EditorMain::CreateDemoScene()
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
-	CreatePhysicsDemoScene();
+	//CreatePhysicsDemoScene();
 
 }
 
@@ -1548,10 +1232,7 @@ void EditorMain::CreatePhysicsCube()
 	auto entity2 = world.add_entity();
 
 	// Add transform components
-	world.add_component_to_entity<PositionComponent>(entity2, CPos);
-	world.add_component_to_entity<ScaleComponent>(entity2, Cscale);
-	world.add_component_to_entity<TransformComponent>(entity2, glm::scale(glm::translate(glm::mat4(1.0f), CPos), Cscale));
-	world.add_component_to_entity<RotationComponent>(entity2, glm::vec3{});
+	world.add_component_to_entity<TransformComponent>(entity2, TransformComponent{ Cscale, glm::vec3{}, CPos });
 	world.add_component_to_entity<VisibilityComponent>(entity2, true);
 	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
@@ -1593,12 +1274,7 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	auto entity = world.add_entity();
 
 	// Add transform components
-	world.add_component_to_entity<PositionComponent>(entity, position);
-	world.add_component_to_entity<ScaleComponent>(entity, scale);
-	world.add_component_to_entity<TransformComponent>(entity,
-		glm::scale(glm::translate(glm::mat4(1.0f), position), scale));
-
-	world.add_component_to_entity<RotationComponent>(entity, glm::vec3{});
+	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ scale, glm::vec3{}, position });
 
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
@@ -1669,13 +1345,9 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 
 	// Debug: Check how many entities exist and have renderable components
 	ecs::world world = Engine::GetWorld();
-	auto allEntities = world.filter_entities<PositionComponent>();
-	auto renderableEntities = world.filter_entities<MeshRendererComponent, VisibilityComponent>();
+	auto renderableCount = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>().size();
 
-	int totalEntities = 0;
-	int renderableCount = 0;
-	for (auto entity : allEntities) { totalEntities++; }
-	for (auto entity : renderableEntities) { renderableCount++; }
+	auto totalEntities = engineService.m_cont->m_entities_snapshot.size();
 
 	spdlog::info("Editor: World has {} total entities, {} with renderable components", totalEntities, renderableCount);
 
@@ -1725,7 +1397,7 @@ void EditorMain::SelectEntity(uint32_t objectID)
 {
 	m_SelectedEntityID = objectID;
 	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
-
+	engineService.inspect_entity(ecs::entity(uint32_t(Engine::GetWorld()), objectID).get_uuid());
 	// TODO: Add visual feedback for selected entity (highlight, outline, etc.)
 	// This could involve setting a uniform or render state for the selected object
 }
