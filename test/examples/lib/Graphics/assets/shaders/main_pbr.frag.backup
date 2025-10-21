@@ -31,6 +31,7 @@ uniform sampler2D u_AOMap;         // Slot 4
 uniform sampler2D u_EmissiveMap;   // Slot 5
 uniform sampler2D u_SpecularMap;   // Slot 6
 uniform sampler2D u_HeightMap;     // Slot 7
+uniform sampler2D u_ShadowMap;     // Slot 8
 
 // Unified shadow texture arrays
 uniform sampler2D u_Shadow2DTextures[16];        // 2D depth maps (directional/spot) - slots 8-23
@@ -129,7 +130,148 @@ uniform int u_NumShadows = 0;
 // We keep individual slots for now to avoid dynamic indexing issues
 // Slots 8-39 reserved for shadows (32 total shadow maps)
 
-// ===== UNIFIED SSBO-BASED SHADOW CALCULATION FUNCTIONS =====
+// Directional shadow calculation - now takes fragment position and calculates light space internally
+float DirectionalShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
+{
+    // Only calculate shadow if enabled
+    if (!u_EnableShadows) {
+        return 0.0;
+    }
+
+    // Transform fragment position to light space
+    vec4 fragPosLightSpace = u_LightSpaceMatrix * vec4(fragPos, 1.0);
+
+    // Perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    // Transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Check if we're outside the shadow map
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // Get closest depth value from light's perspective
+    float closestDepth = texture(u_ShadowMap, projCoords.xy).r;
+
+    // Get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // Calculate bias based on surface angle to light (reduces shadow acne)
+    vec3 N = normalize(normal);
+    vec3 L = normalize(-lightDir);
+    float bias = max(0.005 * (1.0 - dot(N, L)), 0.001);
+
+    // PCF (Percentage Closer Filtering) for softer shadows
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(u_ShadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(u_ShadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
+}
+
+// Spot shadow calculation (supports multiple spot lights)
+float SpotShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir, int lightIndex)
+{
+    // Check if this spot light has shadows enabled
+    if (lightIndex >= u_NumSpotShadowMaps) {
+        return 0.0;
+    }
+
+    // Transform fragment position to spot light space
+    vec4 fragPosLightSpace = u_SpotLightSpaceMatrices[lightIndex] * vec4(fragPos, 1.0);
+
+    // Perform perspective divide (important for perspective projection!)
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    // Transform to [0,1] range for texture sampling
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Check if we're outside the spot shadow map
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // Get closest depth value from spot light's perspective
+    float closestDepth = texture(u_SpotShadowMaps[lightIndex], projCoords.xy).r;
+
+    // Get depth of current fragment from spot light's perspective
+    float currentDepth = projCoords.z;
+
+    // Calculate bias based on surface angle to light (reduces shadow acne)
+    vec3 N = normalize(normal);
+    vec3 L = normalize(-lightDir);
+    float bias = max(0.005 * (1.0 - dot(N, L)), 0.001);
+
+    // PCF (Percentage Closer Filtering) for softer shadows
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(u_SpotShadowMaps[lightIndex], 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(u_SpotShadowMaps[lightIndex], projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
+}
+
+// Point shadow calculation using cubemap
+// Samples from array of up to 4 samplerCubes
+float PointShadowCalculation(vec3 fragPos, vec3 lightPos, int lightIndex, float farPlane)
+{
+    // Check if we have a shadow map for this light
+    if (lightIndex >= u_NumPointShadowMaps) {
+        return 0.0; // No shadow
+    }
+
+    // Get vector from light to fragment
+    vec3 fragToLight = fragPos - lightPos;
+
+    // Sample cubemap depth (stored as distance/farPlane)
+    float closestDepth = texture(u_PointShadowMaps[lightIndex], fragToLight).r;
+
+    // Convert back to original distance
+    closestDepth *= farPlane;
+
+    // Get current distance
+    float currentDepth = length(fragToLight);
+
+    // Calculate bias based on surface angle
+    float bias = 0.05;
+
+    // PCF filtering for softer shadows
+    float shadow = 0.0;
+    float samples = 4.0;
+    float offset = 0.1;
+    for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+    {
+        for(float y = -offset; y < offset; y += offset / (samples * 0.5))
+        {
+            for(float z = -offset; z < offset; z += offset / (samples * 0.5))
+            {
+                float pcfDepth = texture(u_PointShadowMaps[lightIndex], fragToLight + vec3(x, y, z)).r;
+                pcfDepth *= farPlane;
+                shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+            }
+        }
+    }
+    shadow /= (samples * samples * samples);
+
+    return shadow;
+}
+
+// ===== SSBO-BASED SHADOW CALCULATION FUNCTIONS =====
 // These functions read shadow data from the SSBO and calculate shadows dynamically
 
 // Calculate 2D shadow (directional/spot) using unified texture array
@@ -186,22 +328,6 @@ float CalculateCubemapShadow(vec3 fragPos, vec3 lightPos, int textureIndex, floa
     }
     shadow /= (samples * samples * samples);
     return shadow;
-}
-
-// Find shadow index for a given light type and light index
-// Returns -1 if no shadow found
-int FindShadowIndex(int lightType, int lightIndex)
-{
-    int typeCount = 0;
-    for (int i = 0; i < u_NumShadows; ++i) {
-        if (shadows[i].shadowType == lightType) {
-            if (typeCount == lightIndex) {
-                return i;  // Found the shadow for this light
-            }
-            typeCount++;
-        }
-    }
-    return -1;  // No shadow found
 }
 
 // Calculate shadow for a given light index using SSBO data
@@ -311,13 +437,15 @@ vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPo
     float denominator = 4.0 * max(dot(N, viewDir), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
 
-    // Calculate point shadow using SSBO
-    int shadowIndex = FindShadowIndex(SHADOW_TYPE_POINT, lightIndex);
-    float shadowFactor = CalculateShadowFromSSBO(shadowIndex, fragPos, normal, light.position, vec3(0.0));
+    // Calculate point shadow
+    float shadowFactor = 0.0;
+    if (lightIndex < u_NumPointShadowMaps) {
+        shadowFactor = PointShadowCalculation(fragPos, light.position, lightIndex, u_PointShadowFarPlanes[lightIndex]);
+    }
 
-    // Apply shadow to lighting contribution
+    // Apply shadow to lighting contribution with configurable intensity
     vec3 lightContribution = (kD * albedo / PI + specular) * radiance * NdotL;
-    return lightContribution * (1.0 - shadowFactor);
+    return lightContribution * (1.0 - shadowFactor * u_PointShadowIntensity);
 }
 
 // Calculate contribution from a directional light
@@ -344,13 +472,15 @@ vec3 calculateDirectionalLight(DirectionalLight light, vec3 albedo, vec3 normal,
     float denominator = 4.0 * max(dot(N, viewDir), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
 
-    // Calculate directional shadow using SSBO
-    int shadowIndex = FindShadowIndex(SHADOW_TYPE_DIRECTIONAL, lightIndex);
-    float shadowFactor = CalculateShadowFromSSBO(shadowIndex, fragPos, normal, vec3(0.0), light.direction);
+    // Calculate directional shadow (currently only supports first directional light)
+    float shadowFactor = 0.0;
+    if (lightIndex == 0) {  // Only first directional light has shadow map
+        shadowFactor = DirectionalShadowCalculation(fragPos, normal, light.direction);
+    }
 
-    // Apply shadow to directional light contribution
+    // Apply shadow to directional light contribution with configurable intensity
     vec3 lightContribution = (kD * albedo / PI + specular) * radiance * NdotL;
-    return lightContribution * (1.0 - shadowFactor);
+    return lightContribution * (1.0 - shadowFactor * u_DirectionalShadowIntensity);
 }
 
 // Calculate contribution from a spot light (supports shadows)
@@ -386,14 +516,16 @@ vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos,
     float denominator = 4.0 * max(dot(N, viewDir), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
 
-    // Calculate spot shadow using SSBO
-    vec3 lightDir = normalize(fragPos - light.position);
-    int shadowIndex = FindShadowIndex(SHADOW_TYPE_SPOT, lightIndex);
-    float shadowFactor = CalculateShadowFromSSBO(shadowIndex, fragPos, normal, light.position, lightDir);
+    // Calculate spot shadow
+    float shadowFactor = 0.0;
+    if (lightIndex < u_NumSpotShadowMaps) {
+        vec3 lightDir = normalize(fragPos - light.position);
+        shadowFactor = SpotShadowCalculation(fragPos, normal, lightDir, lightIndex);
+    }
 
-    // Apply shadow to diffuse and specular
+    // Apply shadow to diffuse and specular with configurable intensity
     vec3 lightContribution = (kD * albedo / PI + specular) * radiance * NdotL;
-    return lightContribution * (1.0 - shadowFactor);
+    return lightContribution * (1.0 - shadowFactor * u_SpotShadowIntensity);
 }
 
 // Multi-light PBR lighting calculation (ogldev-style with per-light ambient)

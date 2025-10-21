@@ -1,5 +1,7 @@
 #pragma once
 #include "../Resources/Shader.h"
+#include "../Buffer/ShaderStorageBuffer.h"
+#include "../Utility/ShadowData.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -84,9 +86,6 @@ public:
     void SubmitShadowCommands(RenderPass& renderPass,
                               std::shared_ptr<Shader> shader,
                               const FrameData& frameData);
-    void SubmitSpotShadowCommands(RenderPass& renderPass,
-                                   std::shared_ptr<Shader> shader,
-                                   const FrameData& frameData);
 
     // Getters for light data (used by other renderers)
     const std::vector<PointLight>& GetPointLights() const { return m_PointLights; }
@@ -129,13 +128,14 @@ private:
     float m_PointShadowIntensity = 0.8f;
     float m_SpotShadowIntensity = 0.8f;
 
+    // Unified shadow data (SSBO-based, supports 50+ lights)
+    std::unique_ptr<TypedShaderStorageBuffer<ShadowData>> m_ShadowSSBO;
+
     // Helper methods for setting up specific light types
     void SetupPointLights(std::shared_ptr<Shader> shader);
     void SetupDirectionalLights(std::shared_ptr<Shader> shader);
     void SetupSpotLights(std::shared_ptr<Shader> shader);
     void SetupMaterialProperties(std::shared_ptr<Shader> shader, const Material* material);
 
-    // Shadow setup helpers
-    void SetupDirectionalShadows(std::shared_ptr<Shader> shader, const FrameData& frameData);
-    void SetupPointShadows(std::shared_ptr<Shader> shader, const FrameData& frameData);
+    // Shadow setup helpers - removed (now using unified SSBO system in SubmitShadowCommands)
 };

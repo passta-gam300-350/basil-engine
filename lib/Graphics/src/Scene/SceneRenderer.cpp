@@ -53,6 +53,11 @@ void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();
 	m_SubmittedLights.clear();
+
+	// Clear SSBO-based shadow data (will be repopulated by enabled shadow passes)
+	m_FrameData.shadowDataArray.clear();
+	m_FrameData.shadow2DTextures.clear();
+	m_FrameData.shadowCubemapTextures.clear();
 }
 
 

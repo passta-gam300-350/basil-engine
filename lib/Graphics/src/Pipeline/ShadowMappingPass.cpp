@@ -61,13 +61,17 @@ void ShadowMappingPass::Execute(RenderContext& context)
     glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
-    // Store shadow matrix in frame data for main pass
-    if (context.frameData.shadowMaps.empty()) {
-        context.frameData.shadowMaps.resize(1);
-        context.frameData.shadowMatrices.resize(1);
-    }
-    context.frameData.shadowMaps[0] = GetFramebuffer();
-    context.frameData.shadowMatrices[0] = lightSpaceMatrix;
+    // Add directional shadow to the unified shadow data array
+    ShadowData dirShadow;
+    dirShadow.shadowType = ShadowData::Directional;
+    dirShadow.lightSpaceMatrix = lightSpaceMatrix;
+    dirShadow.textureIndex = static_cast<int32_t>(context.frameData.shadow2DTextures.size());
+    dirShadow.farPlane = 0.0f;  // Not used for directional lights
+    dirShadow.intensity = 0.8f;  // Default shadow intensity
+
+    // Store shadow data and texture ID
+    context.frameData.shadowDataArray.push_back(dirShadow);
+    context.frameData.shadow2DTextures.push_back(GetFramebuffer()->GetDepthAttachmentRendererID());
 
     // Clear depth buffer
     RenderCommands::ClearData clearCmd{

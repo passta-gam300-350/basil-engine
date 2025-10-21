@@ -607,11 +607,11 @@ void GraphicsTestDriver::SetupTinboxDemo()
 
     // 3. CREATE LIGHTS
     // Directional light
-    /*m_SceneLights.push_back(CreateDirectionalLight(
+    m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.2f, -1.0f, 0.3f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         0.8f, 0.2f
-    ));*/
+    ));
     // Point light
     m_SceneLights.push_back(CreatePointLight(
         glm::vec3(0.0f, 3.0f, 0.0f),
@@ -619,16 +619,16 @@ void GraphicsTestDriver::SetupTinboxDemo()
         2.0f, 0.1f, 50.0f
     ));
     // Spot light - positioned directly above tinbox grid center
-    //m_SceneLights.push_back(CreateSpotLight(
-    //    glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
-    //    glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
-    //    glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
-    //    2.5f,                                  // DiffuseIntensity: bright for visible shadows
-    //    0.1f,                                  // AmbientIntensity: low ambient
-    //    30.0f,                                 // Range: covers tinbox grid
-    //    15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
-    //    25.0f                                  // OuterCone: 25 degrees (cone angle)
-    //));
+    m_SceneLights.push_back(CreateSpotLight(
+        glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
+        glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
+        glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
+        2.5f,                                  // DiffuseIntensity: bright for visible shadows
+        0.1f,                                  // AmbientIntensity: low ambient
+        30.0f,                                 // Range: covers tinbox grid
+        15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
+        25.0f                                  // OuterCone: 25 degrees (cone angle)
+    ));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.1f, 0.1f, 0.1f));
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 
@@ -1236,13 +1236,16 @@ void GraphicsTestDriver::PrintPointShadowInfo() const
             spdlog::info("  Total Point Lights: {}", pointLightCount);
 
             auto& frameData = m_SceneRenderer->GetFrameData();
-            spdlog::info("  Point Shadow Cubemaps Generated: {}", frameData.pointShadowCubemaps.size());
 
-            for (size_t i = 0; i < frameData.pointShadowCubemaps.size(); ++i) {
-                spdlog::info("    Cubemap {}: TextureID={}, FarPlane={:.1f}",
-                            i, frameData.pointShadowCubemaps[i],
-                            i < frameData.pointShadowFarPlanes.size() ? frameData.pointShadowFarPlanes[i] : 0.0f);
+            // Count point shadows in unified shadow array
+            int pointShadowCount = 0;
+            for (const auto& shadow : frameData.shadowDataArray) {
+                if (shadow.shadowType == ShadowData::Point) {
+                    pointShadowCount++;
+                }
             }
+            spdlog::info("  Point Shadows in SSBO: {}", pointShadowCount);
+            spdlog::info("  Total Shadows in SSBO: {}", frameData.shadowDataArray.size());
         } else {
             spdlog::warn("Pipeline not found!");
         }

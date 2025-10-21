@@ -36,21 +36,13 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
         }
     }
 
-    // If no spot lights, clear frame data and return
+    // If no spot lights, return (frame data is already cleared)
     if (spotLights.empty()) {
-        context.frameData.spotShadowMaps.clear();
-        context.frameData.spotShadowMatrices.clear();
         return;
     }
 
     // Ensure we have enough framebuffers
     EnsureFramebuffers(spotLights.size());
-
-    // Clear and resize frame data
-    context.frameData.spotShadowMaps.clear();
-    context.frameData.spotShadowMatrices.clear();
-    context.frameData.spotShadowMaps.resize(spotLights.size());
-    context.frameData.spotShadowMatrices.resize(spotLights.size());
 
     // Render shadow map for each spot light
     for (size_t i = 0; i < spotLights.size(); ++i) {
@@ -71,9 +63,17 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
 
         glm::mat4 spotLightSpaceMatrix = spotProjection * spotView;
 
-        // Store spot shadow map and matrix in frame data for main pass
-        context.frameData.spotShadowMaps[i] = shadowFBO;
-        context.frameData.spotShadowMatrices[i] = spotLightSpaceMatrix;
+        // Add spot shadow to the unified shadow data array
+        ShadowData spotShadow;
+        spotShadow.shadowType = ShadowData::Spot;
+        spotShadow.lightSpaceMatrix = spotLightSpaceMatrix;
+        spotShadow.textureIndex = static_cast<int32_t>(context.frameData.shadow2DTextures.size());
+        spotShadow.farPlane = 0.0f;  // Not used for spot lights
+        spotShadow.intensity = 0.8f;  // Default shadow intensity
+
+        // Store shadow data and texture ID
+        context.frameData.shadowDataArray.push_back(spotShadow);
+        context.frameData.shadow2DTextures.push_back(shadowFBO->GetDepthAttachmentRendererID());
 
         // Bind this spot light's framebuffer
         shadowFBO->Bind();

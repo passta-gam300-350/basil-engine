@@ -47,30 +47,13 @@ void RenderPipeline::Execute(RenderContext& context) const
 		else
 		{
 			// Handle disabled passes that need cleanup
-			if (pass->GetName() == "ShadowPass")
-			{
-				// Clear shadow data when shadow pass is disabled
-				context.frameData.shadowMaps.clear();
-				context.frameData.shadowMatrices.clear();
-			}
-			else if (pass->GetName() == "PointShadowPass")
-			{
-				// Clear point shadow data when point shadow pass is disabled
-				context.frameData.pointShadowCubemaps.clear();
-				context.frameData.pointShadowFarPlanes.clear();
-			}
-			else if (pass->GetName() == "SpotShadowPass")
-			{
-				// Clear spot shadow data when spot shadow pass is disabled
-				context.frameData.spotShadowMaps.clear();
-				context.frameData.spotShadowMatrices.clear();
-			}
-			else if (pass->GetName() == "ToneMapPass")
+			if (pass->GetName() == "ToneMapPass")
 			{
 				// Clear post-process buffer when tone mapping is disabled
 				// This ensures PresentPass uses mainColorBuffer instead
 				context.frameData.postProcessBuffer = nullptr;
 			}
+			// Note: Shadow data is automatically cleared at the start of each frame in ClearFrame()
 		}
 	}
 }

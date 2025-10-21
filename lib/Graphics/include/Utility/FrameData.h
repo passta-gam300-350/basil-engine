@@ -2,6 +2,7 @@
 
 #include "../Buffer/FrameBuffer.h"
 #include "AABB.h"
+#include "ShadowData.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -14,17 +15,14 @@
  */
 struct FrameData
 {
-    // Directional shadow mapping data
-    std::vector<std::shared_ptr<FrameBuffer>> shadowMaps;
-    std::vector<glm::mat4> shadowMatrices;
+    // UNIFIED SHADOW DATA (SSBO-based, supports 50+ lights)
+    // This vector stores shadow metadata for all active shadows (directional, point, spot)
+    std::vector<ShadowData> shadowDataArray;
 
-    // Point light shadow mapping data (cubemaps)
-    std::vector<uint32_t> pointShadowCubemaps;  // Cubemap texture IDs
-    std::vector<float> pointShadowFarPlanes;    // Far plane for each point light
-
-    // Spot light shadow mapping data (2D depth maps with perspective projection)
-    std::vector<std::shared_ptr<FrameBuffer>> spotShadowMaps;
-    std::vector<glm::mat4> spotShadowMatrices;
+    // Shadow texture IDs (for texture arrays)
+    // Index corresponds to shadowDataArray[i].textureIndex
+    std::vector<uint32_t> shadow2DTextures;       // 2D depth maps (directional/spot)
+    std::vector<uint32_t> shadowCubemapTextures;  // Cubemap depth maps (point)
 
     // Main rendering output (includes debug overlay when enabled)
     std::shared_ptr<FrameBuffer> mainColorBuffer;

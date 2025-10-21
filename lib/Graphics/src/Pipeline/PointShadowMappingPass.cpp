@@ -95,20 +95,12 @@ void PointShadowMappingPass::Execute(RenderContext& context)
     }
 
     if (pointLights.empty()) {
-        // No point lights - clear shadow data
-        context.frameData.pointShadowCubemaps.clear();
-        context.frameData.pointShadowFarPlanes.clear();
+        // No point lights - return (frame data is already cleared)
         return;
     }
 
     // Limit to max point lights (number of pre-allocated FBOs)
     size_t numLights = std::min(pointLights.size(), static_cast<size_t>(m_MaxPointLights));
-
-    // Clear previous frame's shadow data
-    context.frameData.pointShadowCubemaps.clear();
-    context.frameData.pointShadowFarPlanes.clear();
-    context.frameData.pointShadowCubemaps.reserve(numLights);
-    context.frameData.pointShadowFarPlanes.reserve(numLights);
 
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
@@ -187,9 +179,17 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
 
     // === END COMMAND-BASED RENDERING ===
 
-    // Store shadow cubemap data in frame data
-    context.frameData.pointShadowCubemaps.push_back(cubemapFBO->GetCubemapTextureID());
-    context.frameData.pointShadowFarPlanes.push_back(m_ShadowFarPlane);
+    // Add point shadow to the unified shadow data array
+    ShadowData pointShadow;
+    pointShadow.shadowType = ShadowData::Point;
+    pointShadow.lightSpaceMatrix = glm::mat4(1.0f);  // Not used for point lights
+    pointShadow.textureIndex = static_cast<int32_t>(context.frameData.shadowCubemapTextures.size());
+    pointShadow.farPlane = m_ShadowFarPlane;  // Used for depth normalization
+    pointShadow.intensity = 0.8f;  // Default shadow intensity
+
+    // Store shadow data and cubemap texture ID
+    context.frameData.shadowDataArray.push_back(pointShadow);
+    context.frameData.shadowCubemapTextures.push_back(cubemapFBO->GetCubemapTextureID());
 }
 
 std::vector<glm::mat4> PointShadowMappingPass::CalculateShadowMatrices(const glm::vec3& lightPos, float farPlane)
