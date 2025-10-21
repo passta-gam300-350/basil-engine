@@ -3,6 +3,7 @@
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Utility/Light.h"
 #include "../../include/Resources/Shader.h"
+#include "../../include/Rendering/InstancedRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
@@ -84,45 +85,30 @@ void ShadowMappingPass::Execute(RenderContext& context)
     };
     Submit(cullingCmd);
 
-    // Render shadow casters (all visible objects) with depth-only shader
-    if (!context.renderables.empty())
+    // Render shadow casters using INSTANCED rendering
+    if (!context.renderables.empty() && m_ShadowDepthShader)
     {
-        // Use injected shadow depth shader
-        if (!m_ShadowDepthShader)
-        {
-            spdlog::error("ShadowMappingPass: No shadow depth shader available. Skipping shadow rendering.");
-            End();
-            return;
-        }
+        // Set light-space uniforms (same for all instances)
+        RenderCommands::SetUniformMat4Data viewCmd{
+            m_ShadowDepthShader,
+            "u_View",
+            lightView
+        };
+        Submit(viewCmd);
 
-        // Render each object individually with light-space transformation
-        for (const auto& renderable : context.renderables)
-        {
-            if (!renderable.visible || !renderable.mesh) continue;
+        RenderCommands::SetUniformMat4Data projCmd{
+            m_ShadowDepthShader,
+            "u_Projection",
+            lightProjection
+        };
+        Submit(projCmd);
 
-            // Using depth-only shader for shadow casting
-            // Bind depth-only shader first
-            RenderCommands::BindShaderData bindShaderCmd{m_ShadowDepthShader};
-            Submit(bindShaderCmd);
-
-            // Set light-space uniforms for depth-only shader
-            RenderCommands::SetUniformsData uniformsCmd{
-                m_ShadowDepthShader,               // Use injected depth-only shader
-                renderable.transform,              // Model matrix
-                lightView,                         // Light view matrix
-                lightProjection,                   // Light projection matrix
-                glm::vec3(0.0f)                   // Camera position (not needed for shadows)
-            };
-            Submit(uniformsCmd);
-
-            // Submit draw command
-            RenderCommands::DrawElementsData drawCmd{
-                renderable.mesh->GetVertexArray()->GetVAOHandle(),
-                renderable.mesh->GetIndexCount(),
-                GL_TRIANGLES  // Shadow mapping uses standard triangle meshes
-            };
-            Submit(drawCmd);
-        }
+        // Use InstancedRenderer to render all objects with instancing
+        context.instancedRenderer.RenderShadowToPass(
+            *this,                    // This render pass
+            context.renderables,      // All visible renderables
+            m_ShadowDepthShader       // Instanced shadow depth shader
+        );
     }
 
     // Execute all commands submitted to this pass's command buffer

@@ -13,14 +13,14 @@ class Shader;
  * Spot Shadow Mapping Pass - Renders depth maps from spot light perspective
  *
  * Similar to directional shadow mapping but uses PERSPECTIVE projection.
- * Renders scene geometry to 2D depth framebuffer from spot light's position.
+ * Renders scene geometry to 2D depth framebuffers from each spot light's position.
  * Populates FrameData::spotShadowMaps and spotShadowMatrices for main pass.
  *
  * Key Features:
  * - Perspective projection (FOV = 2 × outer cutoff angle)
- * - Reuses shadow_depth shader (same as directional shadows)
- * - 1024×1024 depth-only framebuffer
- * - Supports first spot light only (extendable to multiple)
+ * - Supports multiple spot lights with separate shadow maps
+ * - Uses instanced rendering for efficiency
+ * - 1024×1024 depth-only framebuffers
  */
 class SpotShadowMappingPass : public RenderPass {
 public:
@@ -31,7 +31,7 @@ public:
     // Context-based execution
     void Execute(RenderContext& context) override;
 
-    // Set shadow depth shader (can reuse directional shadow shader!)
+    // Set shadow depth shader (instanced version!)
     void SetShadowDepthShader(std::shared_ptr<Shader> shader) { m_ShadowDepthShader = shader; }
 
 private:
@@ -39,9 +39,16 @@ private:
     glm::mat4 CalculateSpotLightViewMatrix(const glm::vec3& position, const glm::vec3& direction);
     glm::mat4 CalculateSpotLightProjectionMatrix(float outerCutoffDegrees, float range);
 
+    // Ensure we have enough framebuffers for spot lights
+    void EnsureFramebuffers(size_t count);
+
     // Shader storage
     std::shared_ptr<Shader> m_ShadowDepthShader;
 
+    // Multiple framebuffers for multiple spot lights
+    std::vector<std::shared_ptr<FrameBuffer>> m_SpotShadowFramebuffers;
+
     // Configuration
     static constexpr uint32_t SPOT_SHADOW_MAP_SIZE = 1024;  // 1K resolution (can increase to 2K)
+    static constexpr size_t MAX_SPOT_LIGHTS = 4;  // Maximum supported spot lights
 };

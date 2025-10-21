@@ -70,6 +70,7 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_SceneRenderer(nullptr)
     , m_ResourceManager(nullptr)
     , m_Camera(nullptr)
+    , m_ActiveDemo(DemoType::Tinbox)  // Default to Tinbox
     , m_Time(0.0f)
     , m_DeltaTime(0.0f)
     , m_CameraEnabled(false)
@@ -189,8 +190,9 @@ void GraphicsTestDriver::Run()
         // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
 
-        // Animate point light position (ogldev tutorial 63 style)
-        if (!m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
+        // Animate point light position (only in Sponza demo)
+        if (m_ActiveDemo == DemoType::Sponza &&
+            !m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
             // Animate X position: oscillates between -60 and +70 (sponza corridor)
             float animatedX = (cosf(m_Time * 0.3f) + 1.0f) * 65.0f - 60.0f;
             m_SceneLights[0].position.x = animatedX;
@@ -295,20 +297,20 @@ bool GraphicsTestDriver::LoadTestResources()
             spdlog::warn("Could not load traditional texture shaders, will use basic shaders for fallback");
         }
 
-        // Load directional shadow mapping depth-only shader
-        auto shadowShader = m_ResourceManager->LoadShader("shadow_depth",
-            "assets/shaders/shadow_depth.vert",
-            "assets/shaders/shadow_depth.frag");
+        // Load INSTANCED shadow mapping depth-only shader (SSBO-based)
+        auto shadowShader = m_ResourceManager->LoadShader("shadow_depth_instanced",
+            "assets/shaders/shadow_depth_instanced.vert",
+            "assets/shaders/shadow_depth_instanced.frag");
 
         if (shadowShader) {
-            spdlog::info("Directional shadow mapping shader loaded successfully!");
-            // Configure the shadow mapping pass with the loaded shader
+            spdlog::info("Instanced shadow mapping shader loaded successfully!");
+            // Configure the shadow mapping pass with the instanced shader
             m_SceneRenderer->SetShadowDepthShader(shadowShader);
-            // Configure spot shadow mapping pass (reuses directional shadow shader)
+            // Configure spot shadow mapping pass (reuses same instanced shader)
             m_SceneRenderer->SetSpotShadowShader(shadowShader);
-            spdlog::info("Spot shadow mapping configured (reuses directional shadow shader)");
+            spdlog::info("Shadow passes configured with GPU instancing (supports multiple spot lights)");
         } else {
-            spdlog::warn("Could not load directional shadow mapping shader");
+            spdlog::warn("Could not load instanced shadow mapping shader");
         }
 
         // Load point shadow mapping shader (geometry shader method)
@@ -523,6 +525,7 @@ void GraphicsTestDriver::CreateTestMaterials()
 // ===== DEMO 1: SPONZA CATHEDRAL - LIGHTING & HDR TEST =====
 void GraphicsTestDriver::SetupSponzaDemo()
 {
+    m_ActiveDemo = DemoType::Sponza;
     spdlog::info("=== SETTING UP SPONZA DEMO (Lighting & HDR Test) ===");
 
     // 1. CREATE CAMERA
@@ -560,6 +563,7 @@ void GraphicsTestDriver::SetupSponzaDemo()
 // ===== DEMO 2: TINBOX GRID - OUTLINE & PBR TEST =====
 void GraphicsTestDriver::SetupTinboxDemo()
 {
+    m_ActiveDemo = DemoType::Tinbox;
     spdlog::info("=== SETTING UP TINBOX DEMO ===");
 
     // 1. CREATE CAMERA
@@ -603,11 +607,11 @@ void GraphicsTestDriver::SetupTinboxDemo()
 
     // 3. CREATE LIGHTS
     // Directional light
-    m_SceneLights.push_back(CreateDirectionalLight(
+    /*m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.2f, -1.0f, 0.3f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         0.8f, 0.2f
-    ));
+    ));*/
     // Point light
     m_SceneLights.push_back(CreatePointLight(
         glm::vec3(0.0f, 3.0f, 0.0f),
@@ -615,16 +619,16 @@ void GraphicsTestDriver::SetupTinboxDemo()
         2.0f, 0.1f, 50.0f
     ));
     // Spot light - positioned directly above tinbox grid center
-    m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
-        glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
-        glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
-        2.5f,                                  // DiffuseIntensity: bright for visible shadows
-        0.1f,                                  // AmbientIntensity: low ambient
-        30.0f,                                 // Range: covers tinbox grid
-        15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
-        25.0f                                  // OuterCone: 25 degrees (cone angle)
-    ));
+    //m_SceneLights.push_back(CreateSpotLight(
+    //    glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
+    //    glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
+    //    glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
+    //    2.5f,                                  // DiffuseIntensity: bright for visible shadows
+    //    0.1f,                                  // AmbientIntensity: low ambient
+    //    30.0f,                                 // Range: covers tinbox grid
+    //    15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
+    //    25.0f                                  // OuterCone: 25 degrees (cone angle)
+    //));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.1f, 0.1f, 0.1f));
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 

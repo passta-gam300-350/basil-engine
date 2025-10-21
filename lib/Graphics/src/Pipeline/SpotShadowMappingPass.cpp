@@ -3,146 +3,156 @@
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Utility/Light.h"
 #include "../../include/Resources/Shader.h"
+#include "../../include/Rendering/InstancedRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
 SpotShadowMappingPass::SpotShadowMappingPass()
-    : RenderPass("SpotShadowPass", FBOSpecs{
-        SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE,
-        {
-            // Depth-only framebuffer (same as directional shadows)
-            { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
-    }),
-    m_ShadowDepthShader(nullptr)
+    : RenderPass("SpotShadowPass"),  // No default framebuffer - we'll create dynamically
+      m_ShadowDepthShader(nullptr)
 {
-    spdlog::info("SpotShadowMappingPass created ({}x{} depth-only FBO)",
-                 SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
+    spdlog::info("SpotShadowMappingPass created (dynamic framebuffers for multiple spot lights)");
 }
 
 SpotShadowMappingPass::SpotShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
-    : RenderPass("SpotShadowPass", FBOSpecs{
-        SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE,
-        {
-            { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
-    }),
-    m_ShadowDepthShader(shadowDepthShader)
+    : RenderPass("SpotShadowPass"),
+      m_ShadowDepthShader(shadowDepthShader)
 {
-    spdlog::info("SpotShadowMappingPass created with shader ({}x{} depth-only FBO)",
-                 SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
+    spdlog::info("SpotShadowMappingPass created with shader (supports up to {} spot lights)",
+                 MAX_SPOT_LIGHTS);
 }
 
 void SpotShadowMappingPass::Execute(RenderContext& context)
 {
-    // Find the first enabled spot light
-    const auto& lights = context.lights;
-    const SubmittedLightData* spotLight = nullptr;
-
-    for (const auto& light : lights) {
+    // Collect all enabled spot lights
+    std::vector<const SubmittedLightData*> spotLights;
+    for (const auto& light : context.lights) {
         if (light.enabled && light.type == Light::Type::Spot) {
-            spotLight = &light;
-            break;  // Support first spot light only (can extend to multiple)
+            spotLights.push_back(&light);
+            if (spotLights.size() >= MAX_SPOT_LIGHTS) {
+                spdlog::warn("SpotShadowMappingPass: Exceeded maximum spot lights ({}), ignoring extras", MAX_SPOT_LIGHTS);
+                break;
+            }
         }
     }
 
-    if (!spotLight) {
-        // No spot light found - skip shadow mapping and clear frame data
-        if (!context.frameData.spotShadowMaps.empty()) {
-            context.frameData.spotShadowMaps.clear();
-            context.frameData.spotShadowMatrices.clear();
-        }
+    // If no spot lights, clear frame data and return
+    if (spotLights.empty()) {
+        context.frameData.spotShadowMaps.clear();
+        context.frameData.spotShadowMatrices.clear();
         return;
     }
 
-    // Begin shadow pass - bind depth framebuffer
-    Begin();
+    // Ensure we have enough framebuffers
+    EnsureFramebuffers(spotLights.size());
 
-    // Setup command buffer with systems from context
-    SetupCommandBuffer(context);
+    // Clear and resize frame data
+    context.frameData.spotShadowMaps.clear();
+    context.frameData.spotShadowMatrices.clear();
+    context.frameData.spotShadowMaps.resize(spotLights.size());
+    context.frameData.spotShadowMatrices.resize(spotLights.size());
 
-    // Calculate spot light view matrix (look from position toward direction)
-    glm::mat4 spotView = CalculateSpotLightViewMatrix(
-        spotLight->position,
-        spotLight->direction
-    );
+    // Render shadow map for each spot light
+    for (size_t i = 0; i < spotLights.size(); ++i) {
+        const auto* spotLight = spotLights[i];
+        auto& shadowFBO = m_SpotShadowFramebuffers[i];
 
-    // Calculate perspective projection (FOV based on outer cone)
-    glm::mat4 spotProjection = CalculateSpotLightProjectionMatrix(
-        spotLight->outerCone,  // Outer cutoff in degrees
-        spotLight->range       // Light range for far plane
-    );
+        // Calculate spot light view matrix (look from position toward direction)
+        glm::mat4 spotView = CalculateSpotLightViewMatrix(
+            spotLight->position,
+            spotLight->direction
+        );
 
-    glm::mat4 spotLightSpaceMatrix = spotProjection * spotView;
+        // Calculate perspective projection (FOV based on outer cone)
+        glm::mat4 spotProjection = CalculateSpotLightProjectionMatrix(
+            spotLight->outerCone,  // Outer cutoff in degrees
+            spotLight->range       // Light range for far plane
+        );
 
-    // Store spot shadow matrix in frame data for main pass
-    if (context.frameData.spotShadowMaps.empty()) {
-        context.frameData.spotShadowMaps.resize(1);
-        context.frameData.spotShadowMatrices.resize(1);
-    }
-    context.frameData.spotShadowMaps[0] = GetFramebuffer();
-    context.frameData.spotShadowMatrices[0] = spotLightSpaceMatrix;
+        glm::mat4 spotLightSpaceMatrix = spotProjection * spotView;
 
-    // Clear depth buffer
-    RenderCommands::ClearData clearCmd{
-        0.0f, 0.0f, 0.0f, 1.0f,  // color (not used for depth-only)
-        false,                    // don't clear color
-        true                      // clear depth
-    };
-    Submit(clearCmd);
+        // Store spot shadow map and matrix in frame data for main pass
+        context.frameData.spotShadowMaps[i] = shadowFBO;
+        context.frameData.spotShadowMatrices[i] = spotLightSpaceMatrix;
 
-    // Enable face culling for shadows (cull front faces to reduce peter panning)
-    RenderCommands::SetFaceCullingData cullingCmd{
-        true,      // enable face culling
-        GL_FRONT   // cull front faces for shadows (helps with shadow acne)
-    };
-    Submit(cullingCmd);
+        // Bind this spot light's framebuffer
+        shadowFBO->Bind();
 
-    // Render shadow casters (all visible objects) with depth-only shader
-    if (!context.renderables.empty())
-    {
-        // Use injected shadow depth shader (same as directional!)
-        if (!m_ShadowDepthShader)
+        // Set viewport to match shadow map size
+        glViewport(0, 0, SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
+
+        // Setup command buffer with systems from context
+        SetupCommandBuffer(context);
+
+        // Clear depth buffer
+        RenderCommands::ClearData clearCmd{
+            0.0f, 0.0f, 0.0f, 1.0f,  // color (not used for depth-only)
+            false,                    // don't clear color
+            true,                     // clear depth
+            false                      // don't clear stencil
+        };
+        Submit(clearCmd);
+
+        // Enable face culling for shadows (cull front faces to reduce peter panning)
+        RenderCommands::SetFaceCullingData cullingCmd{
+            true,      // enable face culling
+            GL_FRONT   // cull front faces for shadows (helps with shadow acne)
+        };
+        Submit(cullingCmd);
+
+        // Render shadow casters using INSTANCED rendering
+        if (!context.renderables.empty() && m_ShadowDepthShader)
         {
-            spdlog::error("SpotShadowMappingPass: No shadow depth shader available. Skipping shadow rendering.");
-            End();
-            return;
+            // Set light-space uniforms (same for all instances)
+            RenderCommands::SetUniformMat4Data viewCmd{
+                m_ShadowDepthShader,
+                "u_View",
+                spotView
+            };
+            Submit(viewCmd);
+
+            RenderCommands::SetUniformMat4Data projCmd{
+                m_ShadowDepthShader,
+                "u_Projection",
+                spotProjection
+            };
+            Submit(projCmd);
+
+            // Use InstancedRenderer to render all objects with instancing
+            context.instancedRenderer.RenderShadowToPass(
+                *this,                    // This render pass
+                context.renderables,      // All visible renderables
+                m_ShadowDepthShader       // Instanced shadow depth shader
+            );
         }
 
-        // Render each object individually with spot-light-space transformation
-        for (const auto& renderable : context.renderables)
-        {
-            if (!renderable.visible || !renderable.mesh) continue;
+        // Execute all commands submitted to this pass's command buffer
+        ExecuteCommands();
 
-            // Bind depth-only shader
-            RenderCommands::BindShaderData bindShaderCmd{m_ShadowDepthShader};
-            Submit(bindShaderCmd);
-
-            // Set spot-light-space uniforms for depth-only shader
-            RenderCommands::SetUniformsData uniformsCmd{
-                m_ShadowDepthShader,               // Use injected depth-only shader
-                renderable.transform,              // Model matrix
-                spotView,                          // Spot light view matrix
-                spotProjection,                    // Spot light PERSPECTIVE projection
-                glm::vec3(0.0f)                   // Camera position (not needed for shadows)
-            };
-            Submit(uniformsCmd);
-
-            // Submit draw command
-            RenderCommands::DrawElementsData drawCmd{
-                renderable.mesh->GetVertexArray()->GetVAOHandle(),
-                renderable.mesh->GetIndexCount(),
-                GL_TRIANGLES  // Shadow mapping uses standard triangle meshes
-            };
-            Submit(drawCmd);
-        }
+        // Unbind framebuffer
+        shadowFBO->Unbind();
     }
+}
 
-    // Execute all commands submitted to this pass's command buffer
-    ExecuteCommands();
+void SpotShadowMappingPass::EnsureFramebuffers(size_t count)
+{
+    // Create additional framebuffers if needed
+    while (m_SpotShadowFramebuffers.size() < count) {
+        FBOSpecs specs{
+            SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE,
+            {
+                // Depth-only framebuffer (same as directional shadows)
+                { FBOTextureFormat::DEPTH24STENCIL8 }
+            }
+        };
 
-    // End shadow pass
-    End();
+        auto fbo = std::make_shared<FrameBuffer>(specs);
+        m_SpotShadowFramebuffers.push_back(fbo);
+
+        spdlog::info("SpotShadowMappingPass: Created framebuffer #{} ({}x{})",
+                     m_SpotShadowFramebuffers.size(),
+                     SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
+    }
 }
 
 glm::mat4 SpotShadowMappingPass::CalculateSpotLightViewMatrix(

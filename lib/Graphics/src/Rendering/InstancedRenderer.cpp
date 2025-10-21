@@ -136,6 +136,71 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
     }
 }
 
+void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader)
+{
+    if (renderables.empty() || !shadowShader) {
+        return;
+    }
+
+    // Build instance data from renderables (group by mesh)
+    BuildDynamicInstanceData(renderables);
+
+    // Render all instance batches with shadow shader (depth-only)
+    for (const auto& pair : m_MeshInstances) {
+        const auto& meshId = pair.first;
+        const auto& meshInstances = pair.second;
+
+        if (meshInstances.instances.empty()) {
+            continue;
+        }
+
+        // Get SSBO for this mesh
+        auto ssboIt = m_InstanceSSBOs.find(meshId);
+        if (ssboIt == m_InstanceSSBOs.end()) {
+            spdlog::error("No SSBO for mesh '{}' in shadow pass", meshId);
+            continue;
+        }
+
+        // Get mesh
+        if (!meshInstances.mesh) {
+            spdlog::error("Missing mesh for '{}' in shadow pass", meshId);
+            continue;
+        }
+
+        // 1. Bind shadow shader
+        RenderCommands::BindShaderData bindShaderCmd{shadowShader};
+        renderPass.Submit(bindShaderCmd);
+
+        // 2. Bind instance SSBO
+        RenderCommands::BindSSBOData bindSSBOCmd{
+            ssboIt->second->GetSSBOHandle(),
+            INSTANCE_SSBO_BINDING
+        };
+        renderPass.Submit(bindSSBOCmd);
+
+        // Note: View and projection matrices are set by the shadow pass itself
+        // We only need to bind SSBO and draw
+
+        // 3. Draw all instances
+        uint32_t indexCount = meshInstances.mesh->GetIndexCount();
+        uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
+        uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
+
+        assert(indexCount > 0 && "Index count must be positive for instanced shadow drawing");
+        assert(instanceCount > 0 && "Instance count must be positive for instanced shadow drawing");
+        assert(vaoHandle != 0 && "VAO handle must be valid for instanced shadow drawing");
+
+        RenderCommands::DrawElementsInstancedData drawCmd{
+            vaoHandle,
+            indexCount,
+            instanceCount,
+            0,  // Base instance
+            GL_TRIANGLES
+        };
+        renderPass.Submit(drawCmd);
+    }
+}
+
 void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableData>& renderables)
 {
     // Clear and rebuild instance data based on currently visible renderables

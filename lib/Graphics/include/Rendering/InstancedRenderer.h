@@ -44,6 +44,9 @@ public:
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData);
 
+    // Shadow-specific rendering (depth-only, no lighting)
+    void RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader);
+
     // Build dynamic instance data based on visible renderables
     void BuildDynamicInstanceData(const std::vector<RenderableData>& renderables);
     

@@ -476,6 +476,11 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
             9  // Point shadow start slot
         };
         renderPass.Submit(pointShadowCmd);
+    } else {
+        // No point shadows available - set count to 0
+        renderPass.Submit(RenderCommands::SetUniformIntData{
+            shader, "u_NumPointShadowMaps", 0
+        });
     }
 }
 
@@ -485,32 +490,43 @@ void PBRLightingRenderer::SubmitSpotShadowCommands(
     const FrameData& frameData)
 {
     // Check if spot shadows are available
-    if (frameData.spotShadowMaps.empty() || !frameData.spotShadowMaps[0]) {
-        // No spot shadows available - disable spot shadows
-        renderPass.Submit(RenderCommands::SetUniformBoolData{
-            shader, "u_EnableSpotShadows", false
+    if (frameData.spotShadowMaps.empty()) {
+        // No spot shadows available - set count to 0
+        renderPass.Submit(RenderCommands::SetUniformIntData{
+            shader, "u_NumSpotShadowMaps", 0
         });
         return;
     }
 
-    // Enable spot shadows
-    renderPass.Submit(RenderCommands::SetUniformBoolData{
-        shader, "u_EnableSpotShadows", true
+    // Set number of spot shadow maps
+    int numSpotShadows = static_cast<int>(frameData.spotShadowMaps.size());
+    renderPass.Submit(RenderCommands::SetUniformIntData{
+        shader, "u_NumSpotShadowMaps", numSpotShadows
     });
 
-    // Set spot shadow light-space matrix
-    renderPass.Submit(RenderCommands::SetUniformMat4Data{
-        shader, "u_SpotLightSpaceMatrix", frameData.spotShadowMatrices[0]
-    });
+    // Bind all spot shadow map textures to slots 13-16 (up to 4)
+    for (size_t i = 0; i < frameData.spotShadowMaps.size() && i < 4; ++i) {
+        if (frameData.spotShadowMaps[i]) {
+            uint32_t spotShadowTexture = frameData.spotShadowMaps[i]->GetDepthAttachmentRendererID();
 
-    // Bind spot shadow map texture to unit 13 (after point shadows 9-12)
-    uint32_t spotShadowTexture = frameData.spotShadowMaps[0]->GetDepthAttachmentRendererID();
-    renderPass.Submit(RenderCommands::BindTextureIDData{
-        spotShadowTexture,
-        13,  // Texture unit 13
-        shader,
-        "u_SpotShadowMap"
-    });
+            // Bind to u_SpotShadowMaps[i] at texture unit 13+i
+            std::string uniformName = "u_SpotShadowMaps[" + std::to_string(i) + "]";
+            renderPass.Submit(RenderCommands::BindTextureIDData{
+                spotShadowTexture,
+                static_cast<uint32_t>(13 + i),  // Texture units 13, 14, 15, 16
+                shader,
+                uniformName
+            });
+        }
+    }
+
+    // Set all spot light space matrices
+    for (size_t i = 0; i < frameData.spotShadowMatrices.size() && i < 4; ++i) {
+        std::string uniformName = "u_SpotLightSpaceMatrices[" + std::to_string(i) + "]";
+        renderPass.Submit(RenderCommands::SetUniformMat4Data{
+            shader, uniformName, frameData.spotShadowMatrices[i]
+        });
+    }
 
     // Set spot shadow intensity
     renderPass.Submit(RenderCommands::SetUniformFloatData{

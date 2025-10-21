@@ -14,7 +14,13 @@
 #include <string>
 #include <chrono>
 
-class GraphicsTestDriver 
+enum class DemoType
+{
+    Sponza,
+    Tinbox
+};
+
+class GraphicsTestDriver
 {
 public:
     GraphicsTestDriver();
@@ -36,6 +42,9 @@ private:
     // Scene objects
     std::vector<RenderableData> m_SceneObjects;
     std::vector<SubmittedLightData> m_SceneLights;
+
+    // Current demo type
+    DemoType m_ActiveDemo;
 
     // Animation/Movement
     float m_Time;

@@ -56,11 +56,11 @@ uniform bool u_EnableShadows = false;
 uniform float u_DirectionalShadowIntensity = 0.8;
 uniform float u_PointShadowIntensity = 0.8;
 
-// Spot shadow uniforms
-uniform sampler2D u_SpotShadowMap;  // Slot 13
-uniform bool u_EnableSpotShadows = false;
+// Spot shadow maps (slots 13-16 for up to 4 spot lights)
+uniform sampler2D u_SpotShadowMaps[4];
+uniform mat4 u_SpotLightSpaceMatrices[4];
+uniform int u_NumSpotShadowMaps = 0;
 uniform float u_SpotShadowIntensity = 0.8;
-uniform mat4 u_SpotLightSpaceMatrix;
 
 // Multi-light system for instanced rendering
 struct PointLight {
@@ -164,21 +164,21 @@ float DirectionalShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
     return shadow;
 }
 
-// Spot shadow calculation (very similar to directional)
-float SpotShadowCalculation(vec3 normal, vec3 lightDir)
+// Spot shadow calculation (supports multiple spot lights)
+float SpotShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir, int lightIndex)
 {
-    // Check if spot shadows are enabled
-    if (!u_EnableSpotShadows) {
+    // Check if this spot light has shadows enabled
+    if (lightIndex >= u_NumSpotShadowMaps) {
         return 0.0;
     }
 
     // Transform fragment position to spot light space
-    vec4 fragPosLightSpace = fs_in.FragPosSpotLightSpace;
+    vec4 fragPosLightSpace = u_SpotLightSpaceMatrices[lightIndex] * vec4(fragPos, 1.0);
 
-    // Perform perspective divide
+    // Perform perspective divide (important for perspective projection!)
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 
-    // Transform to [0,1] range
+    // Transform to [0,1] range for texture sampling
     projCoords = projCoords * 0.5 + 0.5;
 
     // Check if we're outside the spot shadow map
@@ -186,7 +186,7 @@ float SpotShadowCalculation(vec3 normal, vec3 lightDir)
         return 0.0;
 
     // Get closest depth value from spot light's perspective
-    float closestDepth = texture(u_SpotShadowMap, projCoords.xy).r;
+    float closestDepth = texture(u_SpotShadowMaps[lightIndex], projCoords.xy).r;
 
     // Get depth of current fragment from spot light's perspective
     float currentDepth = projCoords.z;
@@ -198,12 +198,12 @@ float SpotShadowCalculation(vec3 normal, vec3 lightDir)
 
     // PCF (Percentage Closer Filtering) for softer shadows
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(u_SpotShadowMap, 0);
+    vec2 texelSize = 1.0 / textureSize(u_SpotShadowMaps[lightIndex], 0);
     for(int x = -1; x <= 1; ++x)
     {
         for(int y = -1; y <= 1; ++y)
         {
-            float pcfDepth = texture(u_SpotShadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            float pcfDepth = texture(u_SpotShadowMaps[lightIndex], projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
         }
     }
@@ -383,8 +383,8 @@ vec3 calculateDirectionalLight(DirectionalLight light, vec3 albedo, vec3 normal,
     return lightContribution * (1.0 - shadowFactor * u_DirectionalShadowIntensity);
 }
 
-// Calculate contribution from a spot light
-vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0)
+// Calculate contribution from a spot light (supports shadows)
+vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
 {
     vec3 N = normalize(normal);
     vec3 L = normalize(light.position - fragPos);
@@ -417,12 +417,15 @@ vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos,
     vec3 specular     = numerator / denominator;
 
     // Calculate spot shadow
-    vec3 lightDir = normalize(fragPos - light.position);
-    float shadow = SpotShadowCalculation(normal, lightDir);
-    float shadowFactor = 1.0 - (shadow * u_SpotShadowIntensity);
+    float shadowFactor = 0.0;
+    if (lightIndex < u_NumSpotShadowMaps) {
+        vec3 lightDir = normalize(fragPos - light.position);
+        shadowFactor = SpotShadowCalculation(fragPos, normal, lightDir, lightIndex);
+    }
 
-    // Apply shadow to diffuse and specular (not to ambient which is handled separately)
-    return (kD * albedo / PI + specular) * radiance * NdotL * shadowFactor;
+    // Apply shadow to diffuse and specular with configurable intensity
+    vec3 lightContribution = (kD * albedo / PI + specular) * radiance * NdotL;
+    return lightContribution * (1.0 - shadowFactor * u_SpotShadowIntensity);
 }
 
 // Multi-light PBR lighting calculation (ogldev-style with per-light ambient)
@@ -462,10 +465,10 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
         totalAmbient += u_DirectionalLights[i].color * u_DirectionalLights[i].ambientIntensity * albedo * ao;
     }
 
-    // Spot lights (no shadows for now)
+    // Spot lights (with shadows)
     for (int i = 0; i < u_NumSpotLights && i < 4; ++i) {
-        // Direct lighting
-        Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0);
+        // Direct lighting (with shadow support)
+        Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
 
         // Per-light ambient (ogldev-style: attenuated by distance)
         float distance = length(u_SpotLights[i].position - fs_in.FragPos);
