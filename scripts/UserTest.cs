@@ -6,13 +6,20 @@ using System.Numerics;
 
 public class UserTest : Behavior
 {
+    int counter = 0;
     public void Init()
     {
 
     }
     public void Update()
     {
-        Console.WriteLine("Hello from C# :)"); 
+        counter++;
+        Console.WriteLine($"Hello from C# :) {counter}");
+    }
+    
+    public void FixedUpdate()
+    {
+        
     }
 
 

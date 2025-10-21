@@ -236,6 +236,24 @@ bool CSKlass::IsDerivedFrom(const char* baseClassFullName) const
 }
 
 
+bool CSKlass::IsDerivedFrom(const CSKlass& baseClass) const
+{
+	if (!IsValid() || !baseClass.IsValid())
+		return false;
+	MonoClass* parent = mono_class_get_parent(m_class);
+	if (!parent) return false;
+	MonoClass* baseKlass = baseClass.Klass();
+	
+	if (!baseKlass) return false;
+	if (parent == baseKlass)
+	{
+		return true;
+	}
+
+}
+
+
+
 std::string CSKlass::BuildCacheKey(const char* methodName, int paramCount) const
 {
 	std::string key;

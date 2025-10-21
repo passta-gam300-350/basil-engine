@@ -26,6 +26,7 @@ struct CSKlass
 	[[nodiscard]] std::string_view Namespace() const noexcept;
 	[[nodiscard]] std::string_view Name() const noexcept;
 	[[nodiscard]] bool IsDerivedFrom(const char* baseClassFullName) const;
+	[[nodiscard]] bool IsDerivedFrom(const CSKlass& baseClass) const;
 	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
 
 	CSKlassInstance CreateInstance(MonoDomain* domain = nullptr, void* args[] = nullptr) const;

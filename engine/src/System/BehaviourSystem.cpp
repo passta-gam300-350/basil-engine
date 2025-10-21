@@ -95,9 +95,18 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		return;
 	}
 	const CSKlass* klass = instance->Klass();
-	bool derived = klass->IsDerivedFrom("BasilEngine.Components.Behaviour");
+	auto derivedClass = MonoEntityManager::GetInstance().GetNamedKlass("Behavior", "BasilEngine.Components");
+	if (!derivedClass) {
+		MonoEntityManager::GetInstance().AddNamedKlass("Behavior", "BasilEngine.Components", true);
+		derivedClass = MonoEntityManager::GetInstance().GetNamedKlass("Behavior", "BasilEngine.Components");
+		if (!derivedClass) {
+			spdlog::warn("[BehaviourSystem] BasilEngine.Components.Behaviour class not found in assembly!");
+			return;
+		}
+	}
+	bool derived = klass->IsDerivedFrom(*derivedClass);
 	if (!derived) {
-		spdlog::warn("[BehaviourSystem] Script ID: {} is not derived from BasilEngine.Behaviour", scriptID.to_hex());
+		spdlog::warn("[BehaviorSystem] Script ID: {} is not derived from BasilEngine.Behavior", scriptID.to_hex());
 		return;
 	}
 
