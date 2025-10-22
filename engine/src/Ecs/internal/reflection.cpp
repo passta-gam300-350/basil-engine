@@ -2,8 +2,9 @@
 #include "Ecs/ecs.h"
 #include <glm/glm.hpp>
 
-#include "components/transform.h"
+#include "Component/Transform.hpp"
 #include "Render/Render.h"
+#include "Render/Camera.h"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -120,25 +121,11 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&VisibilityComponent::m_IsVisible, "m_IsVisible">
 	);
 
-	RegisterReflectionComponent<PositionComponent>(
-		"PositionComponent",
-		MemberRegistrationV<&PositionComponent::m_WorldPos, "m_WorldPos">
-	);
-
-	RegisterReflectionComponent<ScaleComponent>(
-		"ScaleComponent",
-		MemberRegistrationV<&ScaleComponent::m_Scale, "m_Scale">
-	);
-
-	RegisterReflectionComponent<RotationComponent>(
-		"RotationComponent",
-		MemberRegistrationV<&RotationComponent::m_Rotation, "m_Rotation">
-
-	);
-
 	RegisterReflectionComponent<TransformComponent>(
 		"TransformComponent",
-		MemberRegistrationV<&TransformComponent::m_trans, "m_trans">
+		MemberRegistrationV<&TransformComponent::m_Scale, "m_Scale">,
+		MemberRegistrationV<&TransformComponent::m_Rotation, "m_Rotate">,
+		MemberRegistrationV<&TransformComponent::m_Translation, "m_Trans">
 	);
 
 	RegisterReflectionComponent<MeshRendererComponent>(

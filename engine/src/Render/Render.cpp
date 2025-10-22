@@ -1,11 +1,27 @@
+/******************************************************************************/
+/*!
+\file   render.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    definition of the render system
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #include <Core/Window.h>
 #include "Render/Render.h"
 #include "Engine.hpp"
-#include "components/transform.h"
+//#include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 
 #include "native/loader.h"
 #include "native/texture.h"
+#include "Render/Camera.h"
 
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
@@ -61,42 +77,26 @@ void RenderSystem::Update(ecs::world& world) {
 	//begin frame
 	inst.m_SceneRenderer->ClearFrame();
 
-	auto world_cameras = world.filter_entities<CameraComponent, PositionComponent>();
+	auto world_camera = CameraSystem::GetActiveCamera();
 	auto& frameData = inst.m_SceneRenderer->GetFrameData();
 
-	// Camera management - upload ECS camera data to graphics lib camera
-	if (world_cameras) {
-		auto [camera, camera_pos] {(*world_cameras.begin()).get<CameraComponent, PositionComponent>()};
-
-		// Update graphics camera from ECS camera entity
-		inst.m_Camera->SetPosition(camera_pos.m_WorldPos);
-
-		// Set camera orientation using Front, Up, Right vectors
-		glm::mat4 view = glm::lookAt(
-			camera_pos.m_WorldPos,
-			camera_pos.m_WorldPos + camera.m_Front,  // Look at position + front vector
-			camera.m_Up
-		);
-
-		// Set the view matrix directly instead of using SetRotation
-		frameData.viewMatrix = view;
-
-		if (camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
-			inst.m_Camera->SetPerspective(camera.m_Fov, camera.m_AspectRatio, camera.m_Near, camera.m_Far);
-			frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
-		}
-
-		frameData.cameraPosition = camera_pos.m_WorldPos;
-	}
-	else {
-		// Fallback if no camera entity exists
-		frameData.viewMatrix = inst.m_Camera->GetViewMatrix();
+	//update camera
+	inst.m_Camera->SetPosition(world_camera.m_Pos);
+	glm::mat4 view = glm::lookAt(
+		world_camera.m_Pos,
+		world_camera.m_Pos + world_camera.m_Front,  // Look at position + front vector
+		world_camera.m_Up
+	);
+	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
+		inst.m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
 		frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
-		frameData.cameraPosition = inst.m_Camera->GetPosition();
 	}
 
-	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>();
-	auto sceneLights = world.filter_entities<LightComponent, PositionComponent>();
+	frameData.viewMatrix = view;
+	frameData.cameraPosition = world_camera.m_Pos;
+
+	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
+	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = 0;
@@ -113,7 +113,7 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	for (auto obj : sceneObjects) {
-		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformComponent, VisibilityComponent>()};
+		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>()};
 
 		std::shared_ptr<Mesh> meshResource;
 		std::shared_ptr<Material> materialResource;
@@ -192,7 +192,7 @@ void RenderSystem::Update(ecs::world& world) {
 			RenderableData renderData;
 			renderData.mesh = meshResource;
 			renderData.material = materialResource;
-			renderData.transform = transform.m_trans;
+			renderData.transform = transform.m_Mtx;
 			renderData.visible = visible.m_IsVisible;
 			renderData.renderLayer = 1;
 
@@ -220,14 +220,14 @@ void RenderSystem::Update(ecs::world& world) {
 
 			// Submit AABB for debug visualization (using pre-calculated mesh AABB)
 			if (visible.m_IsVisible && meshResource->GetAABB().IsValid()) {
-				DebugAABB debugAABB(meshResource->GetAABB(), transform.m_trans, glm::vec3(1.0f, 0.0f, 0.0f));
+				DebugAABB debugAABB(meshResource->GetAABB(), transform.m_Mtx, glm::vec3(1.0f, 0.0f, 0.0f));
 				frameData.debugAABBs.push_back(debugAABB);
 			}
 		}
 	}
 
 	for (auto light : sceneLights) {
-		auto [lightComponent, position] {light.get<LightComponent, PositionComponent>()};
+		auto [lightComponent, position] {light.get<LightComponent, TransformComponent>()};
 		SubmittedLightData lightData;
 		lightData.type = lightComponent.m_Type;
 		lightData.color = lightComponent.m_Color;
@@ -237,7 +237,7 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.outerCone = lightComponent.m_OuterCone;
 		lightData.intensity = lightComponent.m_Intensity;
 		lightData.range = lightComponent.m_Range;
-		lightData.position = position.m_WorldPos;
+		lightData.position = position.m_Translation;
 		inst.m_SceneRenderer->SubmitLight(lightData);
 	}
 
