@@ -45,6 +45,7 @@ Technology is prohibited.
 #include "Manager/ObjectManager.hpp"
 #include <components/behaviour.hpp>
 #include <System/BehaviourSystem.hpp>
+#include <Manager/MonoEntityManager.hpp>
 #define UNREF_PARAM(x) x;
 
 PhysicsSystem PhysSys;
@@ -73,6 +74,16 @@ void EditorMain::init()
 
 	// init engine
 	Engine::GenerateDefaultConfig();
+	MonoEntityManager::GetInstance().initialize(); // Early  initialization before Engine init
+	std::string scriptDir = std::filesystem::path{ Editor::GetInstance().GetConfig().project_workingDir + "\\assets\\scripts\\" }.string();
+	
+	if (std::filesystem::exists(scriptDir))
+		MonoEntityManager::GetInstance().AddSearchDirectory(scriptDir.c_str());
+	
+	std::string outputDir = std::filesystem::path{ Editor::GetInstance().GetConfig().project_workingDir + "\\managed\\" }.string();
+	if (std::filesystem::exists(outputDir))	
+		MonoEntityManager::GetInstance().SetOutputDirectory(outputDir.c_str());
+
 	Engine::InitWithoutWindow("Default.yaml");
 
 	

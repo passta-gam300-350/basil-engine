@@ -1,0 +1,19 @@
+
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net48</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Optimize>False</Optimize>
+        <DebugType>full</DebugType>
+        <AssemblyName>GameAssembly</AssemblyName>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="BasilEngine"><HintPath>C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\BasilEngine.dll</HintPath></Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\scripts\Hello.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\scripts\UserTest.cs" />
+    </ItemGroup>
+</Project>

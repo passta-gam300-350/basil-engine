@@ -13,6 +13,10 @@ class MonoEntityManager {
 	using ScriptID = Resource::Guid;
 	ScriptID PRIMARY_ASSEMBLY_ID{ 0x0, 0x0 };
 	ScriptID BACKEND_ASSEMBLY_ID{ 0x0,0x0 };
+
+	std::string searchScriptIn;
+
+
 	std::vector<std::unique_ptr<ManagedAssembly>> m_Assemblies;
 	std::vector<std::shared_ptr<CSKlass>> m_Klasses;
 	std::vector<std::unique_ptr<CSKlassInstance>> m_Instances;
@@ -26,6 +30,9 @@ class MonoEntityManager {
 
 	MonoTypeRegistry m_TypeRegistry;
 
+	bool preCompiled = false;
+	bool useDefault = true;
+
 public:
 	
 
@@ -33,7 +40,11 @@ public:
 	static MonoEntityManager& GetInstance();
 
 	void initialize();
+	void StartCompilation();
 
+
+	void AddSearchDirectory(const char* path);
+	void SetOutputDirectory(const char* path);
 
 	ScriptID AddAssembly(std::unique_ptr<ManagedAssembly> assembly);
 	ScriptID AddAssembly(const char* assemblyPath, bool isSystem);
@@ -42,7 +53,7 @@ public:
 	ScriptID AddKlass(const char* klassName, const char* klassNamespace = "", bool isBackend=false);
 
 	void AddNamedKlass(const char* klassName, const char* klassNamespace = "", bool isBackend = false);
-
+	void AddNamedKlass(std::shared_ptr<CSKlass> klass);
 
 	ScriptID InstanceFrom(CSKlass const& klass);
 	ScriptID AddInstance(std::unique_ptr<CSKlassInstance> instance);
@@ -55,6 +66,12 @@ public:
 
 
 	CSKlass* GetNamedKlass(const char* klassName, const char* klassNamespace);
+
+	void AddKlassFromAssembly(ScriptID assemblyID);
+
+	void SetPreCompiled(bool val) {
+		preCompiled = val;
+	}
 
 	MonoTypeRegistry& GetTypeRegistry() {
 		return m_TypeRegistry;

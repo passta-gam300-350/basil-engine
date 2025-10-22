@@ -35,7 +35,7 @@ BehaviourSystem& BehaviourSystem::Instance() {
 
 void BehaviourSystem::Init()
 {
-	MonoEntityManager::GetInstance().initialize();
+	
 
 	auto world = Engine::GetWorld();
 

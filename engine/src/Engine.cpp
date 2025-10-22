@@ -89,6 +89,9 @@ void Engine::Init(std::string const& cfg ) {
 	}
 
 	RenderSystem::System().Init();
+	MonoEntityManager::GetInstance().SetPreCompiled(true);
+	MonoEntityManager::GetInstance().initialize();
+	MonoEntityManager::GetInstance().StartCompilation();
 	BehaviourSystem::Instance().Init();
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
@@ -191,6 +194,9 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	} else {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
+
+	MonoEntityManager::GetInstance().SetPreCompiled(false);
+	MonoEntityManager::GetInstance().StartCompilation();
 
 	RenderSystem::System().Init();
 	BehaviourSystem::Instance().Init();

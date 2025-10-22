@@ -45,11 +45,11 @@ Resource::Guid MonoEntityManager::AddKlass(std::shared_ptr<CSKlass> klass) {
 }
 
 Resource::Guid MonoEntityManager::AddKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
-	
+
 	if (false)
 		MonoManager::GetLoader()->Enable_BackEnd();
 	else MonoManager::GetLoader()->Enable_Game();
-	
+
 	auto klass = MonoManager::GetKlass(MonoEntityManager::GetInstance().GetAssembly((isBackend) ? BACKEND_ASSEMBLY_ID : PRIMARY_ASSEMBLY_ID), klassName, klassNamespace);
 
 	return AddKlass(std::move(klass));
@@ -64,7 +64,7 @@ Resource::Guid MonoEntityManager::AddInstance(const char* klassName, const char*
 
 	}
 	// Create klass if not exists
-	
+
 	AddNamedKlass(klassName, klassNamespace, isBackend);
 	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
 	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
@@ -91,6 +91,19 @@ void MonoEntityManager::AddNamedKlass(const char* klassName, const char* klassNa
 
 	m_TypeRegistry.Register(fullName, klassID);
 
+}
+
+
+void MonoEntityManager::AddNamedKlass(std::shared_ptr<CSKlass> klass) {
+	auto klassID = AddKlass(klass);
+	std::string fullName;
+	if (std::string(klass->Namespace()).empty()) {
+		fullName = std::string(klass->Name());
+	}
+	else {
+		fullName = std::string(klass->Namespace()) + "." + std::string(klass->Name());
+	}
+	m_TypeRegistry.Register(fullName, klassID);
 }
 
 
@@ -133,6 +146,17 @@ CSKlass* MonoEntityManager::GetNamedKlass(const char* klassName, const char* kla
 	return GetKlass(id);
 }
 
+void MonoEntityManager::AddKlassFromAssembly(const ScriptID assemblyID) {
+	auto assembly = GetAssembly(assemblyID);
+	if (!assembly || !assembly->IsLoaded()) {
+		return;
+	}
+	auto klasses = MonoManager::LoadKlassesFromAssembly(assembly);
+	for (auto& klass : klasses) {
+		AddNamedKlass(klass); // Register a NAMED class instead of an anonymous class
+	}
+}
+
 
 // Invalidate all script id and clear all maps and vectors
 void MonoEntityManager::ClearAll() {
@@ -161,33 +185,67 @@ void MonoEntityManager::initialize() {
 	m_EntityMap.clear();
 
 	MonoManager::Initialize();
-	for (const char* bucket : scriptBuckets) {
-		MonoManager::AddSearchDirectories(bucket);
+
+
+
+}
+
+void MonoEntityManager::StartCompilation() {
+	if (useDefault) {
+		for (const char* bucket : scriptBuckets) {
+			MonoManager::AddSearchDirectories(bucket);
+		}
+		MonoManager::GetCompiler()->SetCompileOutputDirectory(asmOutputDir);
 	}
-	MonoManager::GetCompiler()->SetCompileOutputDirectory(asmOutputDir);
 
 
+	std::filesystem::path asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
 
-	std::filesystem::path asmPath = std::filesystem::absolute(asmOutputDir) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
 	//TODO: Move it to cmake build
 	std::filesystem::path backendPath = R"(C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\BasilEngine.dll)";
 
-	MonoManager::StartCompilation();
+	if (preCompiled) {
+		std::cout << "Using pre-compiled assemblies." << std::endl;
+	}
+	else {
+		MonoManager::StartCompilation();
 
 
+	}
 	auto& logs = MonoManager::GetCompiler()->GetLogs();
 
 	if (logs.empty()) {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
 		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str());
+
+		// Load all klasses from assemblies - Backend first
+		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
 	}
 	else {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
 		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str());
+
+		// Load all klasses from assemblies - Backend first
+		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
 		std::cout << "Info generated, see logs above." << std::endl;
 	}
-
 }
+
+void MonoEntityManager::AddSearchDirectory(const char* path) {
+	std::filesystem::path file_path = path;
+	std::cout << std::filesystem::absolute(file_path).string() << std::endl;
+	if (std::filesystem::is_directory(file_path)) {
+		MonoManager::GetCompiler()->AddSearchDirectories("DEFAULT", std::filesystem::absolute(file_path).string());
+	}
+	useDefault = false;
+}
+
+void MonoEntityManager::SetOutputDirectory(const char* path) {
+	std::filesystem::path file_path = path;
+	MonoManager::GetCompiler()->SetCompileOutputDirectory(std::filesystem::absolute(file_path).string());
+	useDefault = false;
+}
+
 
 
 

@@ -10,6 +10,9 @@ using System.Reflection.Emit;
 
 namespace BasilEngine
 {
+    /// <summary>
+    /// Represents a game object in the Basil Engine.
+    /// </summary>
 
     public class GameObject : NativeObject
     {

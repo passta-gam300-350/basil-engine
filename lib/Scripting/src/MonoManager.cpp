@@ -138,5 +138,45 @@ std::unique_ptr<CSKlassInstance> MonoManager::CreateInstance(MonoDomain* domain,
 	return std::make_unique<CSKlassInstance>(klass.CreateInstance(domain, args));
 }
 
+std::vector<std::shared_ptr<CSKlass>> MonoManager::LoadKlassesFromAssembly(ManagedAssembly* assembly)
+{
+	std::vector<std::shared_ptr<CSKlass>> klasses;
+
+	MonoImage* image = assembly->Image();
+	if (!image)
+	{
+		return klasses;
+	}
+	const MonoTableInfo* typeDefTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+	if (!typeDefTable)
+	{
+		return klasses;
+	}
+	int rows = mono_table_info_get_rows(typeDefTable);
+
+	for (int i = 0; i < rows; ++i)
+	{
+		uint32_t cols[MONO_TYPEDEF_SIZE];
+		mono_metadata_decode_row(typeDefTable, i, cols, MONO_TYPEDEF_SIZE);
+		uint32_t nameIdx = cols[MONO_TYPEDEF_NAME];
+		uint32_t namespaceIdx = cols[MONO_TYPEDEF_NAMESPACE];
+		const char* className = mono_metadata_string_heap(image, nameIdx);
+
+		if (std::string{ className } == "<Module>")
+			continue;
+
+		const char* namespaceName = mono_metadata_string_heap(image, namespaceIdx);
+		auto klass = std::make_shared<CSKlass>(image, namespaceName, className);
+		
+		klasses.push_back(klass);
+
+	}
+
+
+	return klasses;
+}
+
 MonoManager::~MonoManager() = default;
+
+
 
