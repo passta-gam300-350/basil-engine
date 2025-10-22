@@ -10,6 +10,7 @@
 
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
+#include <Resources/MaterialPropertyBlock.h>
 
 #include "native/loader.h"
 #include "native/texture.h"
@@ -229,6 +230,12 @@ void RenderSystem::Update(ecs::world& world) {
 			// Use existing entityUID (uint64_t) and cast to uint32_t for objectID
 			renderData.objectID = static_cast<uint32_t>(entityUID);
 
+			// Attach property block if it exists and has properties
+			auto propBlockIt = m_PropertyBlocks.find(entityUID);
+			if (propBlockIt != m_PropertyBlocks.end() && !propBlockIt->second->IsEmpty()) {
+				renderData.propertyBlock = propBlockIt->second;
+			}
+
 			// Debug: Log entity UID assignment for first few entities
 			static int debugCount = 0;
 			if (debugCount < 5) {
@@ -285,6 +292,9 @@ void RenderSystem::Exit() {
 	if (m_MaterialInstanceManager) {
 		m_MaterialInstanceManager->ClearAllInstances();
 	}
+
+	// Clear all property blocks
+	m_PropertyBlocks.clear();
 
 	// Destructor will handle cleanup automatically
 }
@@ -363,6 +373,42 @@ void RenderSystem::DestroyMaterialInstance(uint64_t entityUID) {
 	}
 
 	m_MaterialInstanceManager->DestroyInstance(entityUID);
+}
+
+// ========== Material Property Block Management ==========
+
+std::shared_ptr<MaterialPropertyBlock> RenderSystem::GetPropertyBlock(uint64_t entityUID) {
+	// Check if property block already exists
+	auto it = m_PropertyBlocks.find(entityUID);
+	if (it != m_PropertyBlocks.end()) {
+		return it->second;
+	}
+
+	// Create new property block
+	auto propBlock = std::make_shared<MaterialPropertyBlock>();
+	m_PropertyBlocks[entityUID] = propBlock;
+	return propBlock;
+}
+
+bool RenderSystem::HasPropertyBlock(uint64_t entityUID) const {
+	auto it = m_PropertyBlocks.find(entityUID);
+	if (it == m_PropertyBlocks.end()) {
+		return false;
+	}
+
+	// Check if property block has any properties set
+	return !it->second->IsEmpty();
+}
+
+void RenderSystem::ClearPropertyBlock(uint64_t entityUID) {
+	auto it = m_PropertyBlocks.find(entityUID);
+	if (it != m_PropertyBlocks.end()) {
+		it->second->Clear();
+	}
+}
+
+void RenderSystem::DestroyPropertyBlock(uint64_t entityUID) {
+	m_PropertyBlocks.erase(entityUID);
 }
 
 void RenderSystem::SetupDebugVisualization() {

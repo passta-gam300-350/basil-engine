@@ -33,6 +33,7 @@ class RenderResourceCache;
 class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
+class MaterialPropertyBlock;
 
 /**
  * @brief Component for rendering meshes on entities
@@ -328,6 +329,56 @@ public:
      */
     void DestroyMaterialInstance(uint64_t entityUID);
 
+    // ========== Material Property Block Management ==========
+
+    /**
+     * @brief Get or create a MaterialPropertyBlock for an entity
+     *
+     * MaterialPropertyBlocks provide lightweight per-object material customization
+     * without creating full material instances. They preserve GPU instancing compatibility
+     * and use minimal memory (only stores overridden properties).
+     *
+     * Use Case Comparison:
+     * - MaterialPropertyBlock: Small tweaks (color tint, roughness), preserves instancing
+     * - MaterialInstance: Full material customization, breaks instancing
+     *
+     * @param entityUID Unique identifier for the entity
+     * @return Property block for the entity (never null, creates if doesn't exist)
+     *
+     * @code
+     * // Example: Red tint on specific entity
+     * auto propBlock = renderSystem.GetPropertyBlock(entityUID);
+     * propBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.0f, 0.0f));
+     * propBlock->SetFloat("u_Roughness", 0.8f);
+     * @endcode
+     */
+    std::shared_ptr<MaterialPropertyBlock> GetPropertyBlock(uint64_t entityUID);
+
+    /**
+     * @brief Check if an entity has a property block with properties set
+     * @param entityUID Unique identifier for the entity
+     * @return true if property block exists and has properties
+     */
+    bool HasPropertyBlock(uint64_t entityUID) const;
+
+    /**
+     * @brief Clear all properties from an entity's property block
+     *
+     * The property block object remains but all properties are cleared.
+     *
+     * @param entityUID Unique identifier for the entity
+     */
+    void ClearPropertyBlock(uint64_t entityUID);
+
+    /**
+     * @brief Destroy the property block for an entity
+     *
+     * After this call, the entity will have no property overrides.
+     *
+     * @param entityUID Unique identifier for the entity
+     */
+    void DestroyPropertyBlock(uint64_t entityUID);
+
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
@@ -353,6 +404,12 @@ private:
     std::unique_ptr<RenderResourceCache> m_ResourceCache;       ///< Entity resource caching
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
+
+    // ========== Material Property Blocks ==========
+
+    /// Per-entity property blocks for lightweight material customization
+    /// Key: Entity UID, Value: Property block
+    std::unordered_map<uint64_t, std::shared_ptr<MaterialPropertyBlock>> m_PropertyBlocks;
 };
 
 #endif

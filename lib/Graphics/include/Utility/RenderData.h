@@ -19,6 +19,7 @@ Technology is prohibited.
 
 #include "../Resources/Mesh.h"
 #include "../Resources/Material.h"
+#include "../Resources/MaterialPropertyBlock.h"
 #include "Light.h"
 #include "AABB.h"
 #include <memory>
@@ -32,6 +33,11 @@ struct RenderableData {
     bool visible = true;
     uint32_t renderLayer = 0;
     uint32_t objectID = 0;  // Unique ID for object picking (0 = no picking)
+
+    // Optional property block for per-object material customization
+    // Applied AFTER material properties to override specific values
+    // Preserves GPU instancing unlike MaterialInstance
+    std::shared_ptr<MaterialPropertyBlock> propertyBlock = nullptr;
 };
 
 struct SubmittedLightData {
