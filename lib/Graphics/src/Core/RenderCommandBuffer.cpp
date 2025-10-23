@@ -425,6 +425,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointLightsDat
         cmd.shader->setVec3(prefix + "position", light.position);
         cmd.shader->setVec3(prefix + "color", light.color);
         cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);
         cmd.shader->setFloat(prefix + "constant", light.constant);
         cmd.shader->setFloat(prefix + "linear", light.linear);
         cmd.shader->setFloat(prefix + "quadratic", light.quadratic);
@@ -450,6 +451,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDirectionalLig
         cmd.shader->setVec3(prefix + "direction", light.direction);
         cmd.shader->setVec3(prefix + "color", light.color);
         cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);
     }
 }
 
@@ -473,6 +475,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetSpotLightsData
         cmd.shader->setVec3(prefix + "direction", light.direction);
         cmd.shader->setVec3(prefix + "color", light.color);
         cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);
         cmd.shader->setFloat(prefix + "cutOff", light.cutOff);
         cmd.shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
         cmd.shader->setFloat(prefix + "constant", light.constant);

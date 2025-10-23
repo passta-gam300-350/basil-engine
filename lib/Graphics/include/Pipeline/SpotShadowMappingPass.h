@@ -35,12 +35,12 @@ public:
     void SetShadowDepthShader(std::shared_ptr<Shader> shader) { m_ShadowDepthShader = shader; }
 
 private:
+    // Initialization
+    void InitializeFramebuffers();
+
     // Helper methods for matrix calculation
     glm::mat4 CalculateSpotLightViewMatrix(const glm::vec3& position, const glm::vec3& direction);
     glm::mat4 CalculateSpotLightProjectionMatrix(float outerCutoffDegrees, float range);
-
-    // Ensure we have enough framebuffers for spot lights
-    void EnsureFramebuffers(size_t count);
 
     // Shader storage
     std::shared_ptr<Shader> m_ShadowDepthShader;

@@ -1,4 +1,4 @@
-#include "../../include/Pipeline/ShadowMappingPass.h"
+#include "../../include/Pipeline/DirectionalShadowMappingPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Utility/Light.h"
@@ -7,8 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
-ShadowMappingPass::ShadowMappingPass()
-    : RenderPass("ShadowPass", FBOSpecs{
+DirectionalShadowMappingPass::DirectionalShadowMappingPass()
+    : RenderPass("DirectionalShadowPass", FBOSpecs{
         SHADOW_MAP_SIZE, SHADOW_MAP_SIZE,
         {
             // Depth-only framebuffer for shadow mapping
@@ -19,8 +19,8 @@ ShadowMappingPass::ShadowMappingPass()
 {
 }
 
-ShadowMappingPass::ShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
-    : RenderPass("ShadowPass", FBOSpecs{
+DirectionalShadowMappingPass::DirectionalShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
+    : RenderPass("DirectionalShadowPass", FBOSpecs{
         SHADOW_MAP_SIZE, SHADOW_MAP_SIZE,
         {
             // Depth-only framebuffer for shadow mapping
@@ -31,7 +31,7 @@ ShadowMappingPass::ShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
 {
 }
 
-void ShadowMappingPass::Execute(RenderContext& context)
+void DirectionalShadowMappingPass::Execute(RenderContext& context)
 {
     // Find the primary directional light (first one in the list)
     const auto& lights = context.lights;
@@ -122,7 +122,7 @@ void ShadowMappingPass::Execute(RenderContext& context)
     End();
 }
 
-glm::mat4 ShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter)
+glm::mat4 DirectionalShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter)
 {
     // Position light far away in the opposite direction
     glm::vec3 normalizedDir = glm::normalize(lightDirection);
@@ -141,7 +141,7 @@ glm::mat4 ShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDire
     return glm::lookAt(lightPosition, sceneCenter, up);
 }
 
-glm::mat4 ShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData)
+glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData)
 {
     // Create orthographic projection that covers the scene
     // For a 2x2 grid with spacing 3.0f, scene spans roughly -1.5 to +1.5 in X/Z

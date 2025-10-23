@@ -82,8 +82,27 @@ public:
     void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
 
+    // Facade methods for decoupling (avoid exposing internal coordinators/pipeline)
+    void ToggleRenderPass(const std::string& passName);
+    void SetShadowIntensity(float directional, float point, float spot);
+    void ClearInstanceCache();
+
+    // Camera control facade
+    void SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos);
+
+    // Debug rendering facade
+    void SetDebugAABBs(const std::vector<DebugAABB>& aabbs);
+    void ToggleAABBVisualization();
+
+    // Pass control facade
+    bool IsPassEnabled(const std::string& passName) const;
+    void EnablePass(const std::string& passName, bool enable);
+    void ToggleHDRPipeline(bool enable);
+
+    // Debug info (read-only access for debugging/logging)
+    const FrameData& GetFrameDataReadOnly() const { return m_FrameData; }
+
 private:
-    //void InitializePipeline();
     void InitializeRenderingCoordinators();
 
     void InitializeDefaultPipeline();

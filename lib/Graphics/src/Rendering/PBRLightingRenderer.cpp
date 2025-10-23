@@ -231,6 +231,7 @@ void PBRLightingRenderer::SubmitLightingCommands(RenderPass& renderPass,
             light.position,
             light.color,
             light.intensity,
+            light.ambientIntensity,
             light.constant,
             light.linear,
             light.quadratic
@@ -246,7 +247,8 @@ void PBRLightingRenderer::SubmitLightingCommands(RenderPass& renderPass,
         dirLightData.push_back({
             light.direction,
             light.color,
-            light.intensity
+            light.intensity,
+            light.ambientIntensity
         });
     }
     RenderCommands::SetDirectionalLightsData dirLightsCmd{shader, dirLightData};
@@ -261,6 +263,7 @@ void PBRLightingRenderer::SubmitLightingCommands(RenderPass& renderPass,
             light.direction,
             light.color,
             light.intensity,
+            light.ambientIntensity,
             light.cutOff,
             light.outerCutOff,
             light.constant,

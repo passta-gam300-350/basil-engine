@@ -9,7 +9,7 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/PresentPass.h"
-#include "Pipeline/ShadowMappingPass.h"
+#include "Pipeline/DirectionalShadowMappingPass.h"
 #include "Pipeline/PointShadowMappingPass.h"
 #include "Pipeline/SpotShadowMappingPass.h"
 #include "Pipeline/HDRLuminancePass.h"
@@ -68,9 +68,9 @@ void SceneRenderer::InitializeDefaultPipeline()
 
     // 1. Add directional shadow mapping pass
     // Shadow pass will need shader to be set after creation by the application
-    auto shadowPass = std::make_shared<ShadowMappingPass>();
+    auto shadowPass = std::make_shared<DirectionalShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
-    mainPipeline->EnablePass("ShadowPass", false);
+    mainPipeline->EnablePass("DirectionalShadowPass", false);
 
     // 2. Add point shadow mapping pass (geometry shader method)
     // Point shadow pass will need shader to be set after creation by the application
@@ -196,7 +196,7 @@ void SceneRenderer::SetShadowDepthShader(const std::shared_ptr<Shader>& shader) 
     assert(m_Pipeline && "Pipeline must be initialized before setting shadow shader");
 
     if (m_Pipeline) {
-        auto shadowPass = std::dynamic_pointer_cast<ShadowMappingPass>(m_Pipeline->GetPass("ShadowPass"));
+        auto shadowPass = std::dynamic_pointer_cast<DirectionalShadowMappingPass>(m_Pipeline->GetPass("DirectionalShadowPass"));
         if (shadowPass) {
             shadowPass->SetShadowDepthShader(shader);
         }
@@ -427,6 +427,115 @@ void SceneRenderer::SetToneMappingShader(const std::shared_ptr<Shader>& shader) 
         {
             toneMapPass->SetToneMappingShader(shader);
         }
+    }
+}
+
+// ===== FACADE METHODS FOR DECOUPLING =====
+void SceneRenderer::ToggleRenderPass(const std::string& passName)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before toggling render passes");
+
+    if (m_Pipeline)
+    {
+        bool currentlyEnabled = m_Pipeline->IsPassEnabled(passName);
+        bool newState = !currentlyEnabled;
+        m_Pipeline->EnablePass(passName, newState);
+        spdlog::info("SceneRenderer: Toggled render pass '{}' to {}",
+                     passName, newState ? "enabled" : "disabled");
+    }
+}
+
+void SceneRenderer::SetShadowIntensity(float directional, float point, float spot)
+{
+    assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized");
+
+    if (m_PBRLightingRenderer)
+    {
+        m_PBRLightingRenderer->SetShadowIntensity(directional, point);
+        m_PBRLightingRenderer->SetSpotShadowIntensity(spot);
+        spdlog::debug("SceneRenderer: Set shadow intensities (dir: {}, point: {}, spot: {})",
+                     directional, point, spot);
+    }
+}
+
+void SceneRenderer::ClearInstanceCache()
+{
+    assert(m_InstancedRenderer && "InstancedRenderer must be initialized");
+
+    if (m_InstancedRenderer)
+    {
+        m_InstancedRenderer->Clear();
+        spdlog::debug("SceneRenderer: Cleared instance cache for animation");
+    }
+}
+
+void SceneRenderer::SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos)
+{
+    m_FrameData.viewMatrix = view;
+    m_FrameData.projectionMatrix = proj;
+    m_FrameData.cameraPosition = pos;
+}
+
+void SceneRenderer::SetDebugAABBs(const std::vector<DebugAABB>& aabbs)
+{
+    m_FrameData.debugAABBs = aabbs;
+}
+
+void SceneRenderer::ToggleAABBVisualization()
+{
+    assert(m_Pipeline && "Pipeline must be initialized");
+
+    if (m_Pipeline)
+    {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass)
+        {
+            bool newState = !debugPass->GetShowAABBs();
+            debugPass->SetShowAABBs(newState);
+            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
+                         newState ? "ENABLED" : "DISABLED");
+        }
+        else
+        {
+            spdlog::warn("SceneRenderer: Debug pass not found - cannot toggle AABB visualization");
+        }
+    }
+}
+
+bool SceneRenderer::IsPassEnabled(const std::string& passName) const
+{
+    assert(m_Pipeline && "Pipeline must be initialized");
+
+    if (m_Pipeline)
+    {
+        return m_Pipeline->IsPassEnabled(passName);
+    }
+    return false;
+}
+
+void SceneRenderer::EnablePass(const std::string& passName, bool enable)
+{
+    assert(m_Pipeline && "Pipeline must be initialized");
+
+    if (m_Pipeline)
+    {
+        m_Pipeline->EnablePass(passName, enable);
+        spdlog::debug("SceneRenderer: Pass '{}' {}",
+                     passName, enable ? "enabled" : "disabled");
+    }
+}
+
+void SceneRenderer::ToggleHDRPipeline(bool enable)
+{
+    assert(m_Pipeline && "Pipeline must be initialized");
+
+    if (m_Pipeline)
+    {
+        m_Pipeline->EnablePass("HDRResolvePass", enable);
+        m_Pipeline->EnablePass("HDRLuminancePass", enable);
+        m_Pipeline->EnablePass("ToneMapPass", enable);
+        spdlog::info("SceneRenderer: HDR tone mapping pipeline {}",
+                     enable ? "enabled" : "disabled");
     }
 }
 

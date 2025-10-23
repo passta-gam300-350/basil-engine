@@ -106,9 +106,6 @@ private:
     void PrintHDRInfo() const;
 
     // Render pass controls
-    void ToggleRenderPass(const std::string& passName);
-    void ToggleHDRPipeline();
-    void ToggleAABBVisualization();
     void ToggleSkybox();
     //void RenderUI(); // For ImGui if available
 

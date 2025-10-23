@@ -10,7 +10,7 @@
 class Shader;
 
 /**
- * Shadow Mapping Pass - Renders depth maps from light perspective
+ * Directional Shadow Mapping Pass - Renders depth maps from directional light perspective
  *
  * Renders scene geometry to depth-only framebuffer from the perspective of
  * the primary directional light. Populates FrameData::shadowMaps[0] and
@@ -18,11 +18,11 @@ class Shader;
  *
  * Uses pass ID 0 to ensure execution before main rendering pass (pass ID 1).
  */
-class ShadowMappingPass : public RenderPass {
+class DirectionalShadowMappingPass : public RenderPass {
 public:
-    ShadowMappingPass();
-    ShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader);
-    ~ShadowMappingPass() = default;
+    DirectionalShadowMappingPass();
+    DirectionalShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader);
+    ~DirectionalShadowMappingPass() = default;
 
     // Context-based execution
     void Execute(RenderContext& context) override;

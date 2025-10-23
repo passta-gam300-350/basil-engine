@@ -113,14 +113,9 @@ bool GraphicsTestDriver::Initialize()
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
     // Enable HDR tone mapping pipeline (matches ogldev tutorial 63)
-    auto* pipeline = m_SceneRenderer->GetPipeline();
-    if (pipeline) {
-        pipeline->EnablePass("HDRResolvePass", true);
-        pipeline->EnablePass("HDRLuminancePass", true);
-        pipeline->EnablePass("ToneMapPass", true);
-        m_HDREnabled = true;  // Update state variable
-        spdlog::info("HDR tone mapping pipeline enabled (matching ogldev tutorial 63)");
-    }
+    m_SceneRenderer->ToggleHDRPipeline(true);
+    m_HDREnabled = true;  // Update state variable
+    spdlog::info("HDR tone mapping pipeline enabled (matching ogldev tutorial 63)");
 
     // Setup input callbacks
     glfwSetKeyCallback(m_Window->GetNativeWindow(), KeyCallback);
@@ -138,8 +133,8 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    //SetupTinboxDemo();       // Tinbox grid - outline/PBR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupTinboxDemo();       // Tinbox grid - outline/PBR test
     
     
 
@@ -210,10 +205,11 @@ void GraphicsTestDriver::Run()
 
         // Update camera data manually
         if (m_Camera) {
-            auto& frameData = m_SceneRenderer->GetFrameData();
-            frameData.viewMatrix = m_Camera->GetViewMatrix();
-            frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
-            frameData.cameraPosition = m_Camera->GetPosition();
+            m_SceneRenderer->SetCameraData(
+                m_Camera->GetViewMatrix(),
+                m_Camera->GetProjectionMatrix(),
+                m_Camera->GetPosition()
+            );
         }
 
         // Update transformations (rotate one instance for AABB testing)
@@ -221,7 +217,7 @@ void GraphicsTestDriver::Run()
 
         // Clear instance cache when transforms change (enables animation)
         if (m_RotationEnabled) {
-            m_SceneRenderer->GetInstancedRenderer()->Clear();
+            m_SceneRenderer->ClearInstanceCache();
             m_AABBsCached = false;  // Also invalidate AABB cache for rotating objects
         }
 
@@ -621,23 +617,23 @@ void GraphicsTestDriver::SetupTinboxDemo()
         0.8f, 0.2f
     ));
     // Point light
-    m_SceneLights.push_back(CreatePointLight(
+    /*m_SceneLights.push_back(CreatePointLight(
         glm::vec3(0.0f, 3.0f, 0.0f),
         glm::vec3(1.0f, 0.9f, 0.7f),
         2.0f, 0.1f, 50.0f
-    ));
+    ));*/
     // Spot light - positioned directly above tinbox grid center
-    m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
-        glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
-        glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
-        2.5f,                                  // DiffuseIntensity: bright for visible shadows
-        0.1f,                                  // AmbientIntensity: low ambient
-        30.0f,                                 // Range: covers tinbox grid
-        15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
-        25.0f                                  // OuterCone: 25 degrees (cone angle)
-    ));
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.1f, 0.1f, 0.1f));
+    //m_SceneLights.push_back(CreateSpotLight(
+    //    glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
+    //    glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
+    //    glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
+    //    2.5f,                                  // DiffuseIntensity: bright for visible shadows
+    //    0.1f,                                  // AmbientIntensity: low ambient
+    //    30.0f,                                 // Range: covers tinbox grid
+    //    15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
+    //    25.0f                                  // OuterCone: 25 degrees (cone angle)
+    //));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 
     // 4. SETUP OUTLINE MODE - Click-based selection
@@ -788,9 +784,6 @@ SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position
 
 void GraphicsTestDriver::CalculateAndSubmitAABBs()
 {
-    auto& frameData = m_SceneRenderer->GetFrameData();
-    frameData.debugAABBs.clear();
-
     // Cache AABBs on first frame (avoids iterating through 2.6M vertices every frame)
     if (!m_AABBsCached) {
         m_CachedAABBs.clear();
@@ -842,8 +835,8 @@ void GraphicsTestDriver::CalculateAndSubmitAABBs()
         m_AABBsCached = true;
     }
 
-    // Submit cached AABBs to frame data (fast - just copies data)
-    frameData.debugAABBs = m_CachedAABBs;
+    // Submit cached AABBs to scene renderer (fast - just copies data)
+    m_SceneRenderer->SetDebugAABBs(m_CachedAABBs);
 }
 
 void GraphicsTestDriver::UpdateInstanceTransforms()
@@ -966,19 +959,19 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                 break;
 
             case GLFW_KEY_1:
-                s_Instance->ToggleRenderPass("ShadowPass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("DirectionalShadowPass");
                 break;
 
             case GLFW_KEY_2:
-                s_Instance->ToggleRenderPass("OutlinePass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("OutlinePass");
                 break;
 
             case GLFW_KEY_3:
-                s_Instance->ToggleRenderPass("DebugPass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("DebugPass");
                 break;
 
             case GLFW_KEY_4:
-                s_Instance->ToggleAABBVisualization();
+                s_Instance->m_SceneRenderer->ToggleAABBVisualization();
                 break;
 
             case GLFW_KEY_5:
@@ -992,20 +985,17 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_P:
                 if (s_Instance->m_SceneRenderer) {
-                    auto* pipeline = s_Instance->m_SceneRenderer->GetPipeline();
-                    if (pipeline) {
-                        bool isEnabled = pipeline->IsPassEnabled("PickingPass");
-                        spdlog::info("Picking mode {} (Left-click objects to test)",
-                                   isEnabled ? "already ENABLED" : "ENABLED");
-                        if (!isEnabled) {
-                            s_Instance->m_SceneRenderer->EnablePicking(true);
-                        }
+                    bool isEnabled = s_Instance->m_SceneRenderer->IsPassEnabled("PickingPass");
+                    spdlog::info("Picking mode {} (Left-click objects to test)",
+                               isEnabled ? "already ENABLED" : "ENABLED");
+                    if (!isEnabled) {
+                        s_Instance->m_SceneRenderer->EnablePicking(true);
                     }
                 }
                 break;
 
             case GLFW_KEY_7:
-                s_Instance->ToggleRenderPass("PointShadowPass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("PointShadowPass");
                 break;
 
             case GLFW_KEY_8:
@@ -1017,19 +1007,20 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                 break;
 
             case GLFW_KEY_O:
-                s_Instance->ToggleHDRPipeline();
+                s_Instance->m_HDREnabled = !s_Instance->m_HDREnabled;
+                s_Instance->m_SceneRenderer->ToggleHDRPipeline(s_Instance->m_HDREnabled);
                 break;
 
             case GLFW_KEY_H:
-                s_Instance->ToggleRenderPass("HDRLuminancePass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("HDRLuminancePass");
                 break;
 
             case GLFW_KEY_T:
-                s_Instance->ToggleRenderPass("ToneMapPass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("ToneMapPass");
                 break;
 
             case GLFW_KEY_R:
-                s_Instance->ToggleRenderPass("HDRResolvePass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("HDRResolvePass");
                 break;
 
             case GLFW_KEY_M:  // Cycle through tone mapping methods
@@ -1052,7 +1043,7 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
                 break;
 
             case GLFW_KEY_B:
-                s_Instance->ToggleRenderPass("SpotShadowPass");
+                s_Instance->m_SceneRenderer->ToggleRenderPass("SpotShadowPass");
                 break;
         }
     }
@@ -1120,101 +1111,30 @@ void GraphicsTestDriver::PrintRenderPassStatus() const
     spdlog::info("=== Render Pass Status ===");
 
     if (m_SceneRenderer) {
-        auto* pipeline = m_SceneRenderer->GetPipeline();
-        if (pipeline) {
-            // Check status of all render passes
-            std::vector<std::string> passes = {
-                "ShadowPass",
-                "PointShadowPass",
-                "SpotShadowPass",
-                "MainPass",
-                "HDRResolvePass",
-                "HDRLuminancePass",
-                "ToneMapPass",
-                "DebugPass",
-                "EditorResolvePass",
-                "PickingPass",
-                "PresentPass"
-            };
+        // Check status of all render passes
+        std::vector<std::string> passes = {
+            "DirectionalShadowPass",
+            "PointShadowPass",
+            "SpotShadowPass",
+            "MainPass",
+            "HDRResolvePass",
+            "HDRLuminancePass",
+            "ToneMapPass",
+            "DebugPass",
+            "EditorResolvePass",
+            "PickingPass",
+            "PresentPass"
+        };
 
-            for (const auto& passName : passes) {
-                bool enabled = pipeline->IsPassEnabled(passName);
-                spdlog::info("  {}: {}", passName, enabled ? "ENABLED" : "DISABLED");
-            }
-        } else {
-            spdlog::warn("Pipeline not found!");
+        for (const auto& passName : passes) {
+            bool enabled = m_SceneRenderer->IsPassEnabled(passName);
+            spdlog::info("  {}: {}", passName, enabled ? "ENABLED" : "DISABLED");
         }
     } else {
         spdlog::warn("Scene renderer not available!");
     }
 
     spdlog::info("==========================");
-}
-
-void GraphicsTestDriver::ToggleRenderPass(const std::string& passName)
-{
-    if (m_SceneRenderer) {
-        auto* pipeline = m_SceneRenderer->GetPipeline();
-        if (pipeline) {
-            bool currentlyEnabled = pipeline->IsPassEnabled(passName);
-            bool newState = !currentlyEnabled;
-
-            pipeline->EnablePass(passName, newState);
-
-            spdlog::info("Render pass '{}' {}", passName, newState ? "ENABLED" : "DISABLED");
-        } else {
-            spdlog::warn("Pipeline not found - cannot toggle pass '{}'", passName);
-        }
-    } else {
-        spdlog::warn("Scene renderer not available - cannot toggle pass '{}'", passName);
-    }
-}
-
-void GraphicsTestDriver::ToggleHDRPipeline()
-{
-    if (m_SceneRenderer) {
-        auto* pipeline = m_SceneRenderer->GetPipeline();
-        if (pipeline) {
-            // Toggle the state
-            m_HDREnabled = !m_HDREnabled;
-
-            // Apply to all HDR-related passes
-            pipeline->EnablePass("HDRResolvePass", m_HDREnabled);
-            pipeline->EnablePass("HDRLuminancePass", m_HDREnabled);
-            pipeline->EnablePass("ToneMapPass", m_HDREnabled);
-
-            spdlog::info("HDR Pipeline {} (Resolve + Luminance + ToneMap)",
-                        m_HDREnabled ? "ENABLED" : "DISABLED");
-        } else {
-            spdlog::warn("Pipeline not found - cannot toggle HDR pipeline");
-        }
-    } else {
-        spdlog::warn("Scene renderer not available - cannot toggle HDR pipeline");
-    }
-}
-
-void GraphicsTestDriver::ToggleAABBVisualization()
-{
-    if (m_SceneRenderer) {
-        auto* pipeline = m_SceneRenderer->GetPipeline();
-        if (pipeline) {
-            auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
-            if (debugPass) {
-                bool currentlyEnabled = debugPass->GetShowAABBs();
-                bool newState = !currentlyEnabled;
-
-                debugPass->SetShowAABBs(newState);
-
-                spdlog::info("AABB wireframe visualization {}", newState ? "ENABLED" : "DISABLED");
-            } else {
-                spdlog::warn("Debug pass not found - cannot toggle AABB visualization");
-            }
-        } else {
-            spdlog::warn("Pipeline not found - cannot toggle AABB visualization");
-        }
-    } else {
-        spdlog::warn("Scene renderer not available - cannot toggle AABB visualization");
-    }
 }
 
 void GraphicsTestDriver::ToggleSkybox()
@@ -1233,10 +1153,8 @@ void GraphicsTestDriver::PrintPointShadowInfo() const
     spdlog::info("=== Point Shadow Information ===");
 
     if (m_SceneRenderer) {
-        auto* pipeline = m_SceneRenderer->GetPipeline();
-        if (pipeline) {
-            bool passEnabled = pipeline->IsPassEnabled("PointShadowPass");
-            spdlog::info("  Point Shadow Pass: {}", passEnabled ? "ENABLED" : "DISABLED");
+        bool passEnabled = m_SceneRenderer->IsPassEnabled("PointShadowPass");
+        spdlog::info("  Point Shadow Pass: {}", passEnabled ? "ENABLED" : "DISABLED");
 
             // Count point lights
             int pointLightCount = 0;
@@ -1252,7 +1170,7 @@ void GraphicsTestDriver::PrintPointShadowInfo() const
 
             spdlog::info("  Total Point Lights: {}", pointLightCount);
 
-            auto& frameData = m_SceneRenderer->GetFrameData();
+            const auto& frameData = m_SceneRenderer->GetFrameDataReadOnly();
 
             // Count point shadows in unified shadow array
             int pointShadowCount = 0;
@@ -1261,11 +1179,8 @@ void GraphicsTestDriver::PrintPointShadowInfo() const
                     pointShadowCount++;
                 }
             }
-            spdlog::info("  Point Shadows in SSBO: {}", pointShadowCount);
-            spdlog::info("  Total Shadows in SSBO: {}", frameData.shadowDataArray.size());
-        } else {
-            spdlog::warn("Pipeline not found!");
-        }
+        spdlog::info("  Point Shadows in SSBO: {}", pointShadowCount);
+        spdlog::info("  Total Shadows in SSBO: {}", frameData.shadowDataArray.size());
     } else {
         spdlog::warn("Scene renderer not available!");
     }
@@ -1278,28 +1193,22 @@ void GraphicsTestDriver::PrintHDRInfo() const
     spdlog::info("=== HDR Information ===");
 
     if (m_SceneRenderer) {
-        auto* pipeline = m_SceneRenderer->GetPipeline();
-        if (pipeline) {
-            // Check HDR pass status
-            bool hdrLumEnabled = pipeline->IsPassEnabled("HDRLuminancePass");
-            bool toneMapEnabled = pipeline->IsPassEnabled("ToneMapPass");
-            bool hdrResolveEnabled = pipeline->IsPassEnabled("HDRResolvePass");
+        // Check HDR pass status
+        bool hdrLumEnabled = m_SceneRenderer->IsPassEnabled("HDRLuminancePass");
+        bool toneMapEnabled = m_SceneRenderer->IsPassEnabled("ToneMapPass");
+        bool hdrResolveEnabled = m_SceneRenderer->IsPassEnabled("HDRResolvePass");
 
-            spdlog::info("  HDR Resolve Pass: {}", hdrResolveEnabled ? "ENABLED" : "DISABLED");
-            spdlog::info("  HDR Luminance Pass (Auto-Exposure): {}", hdrLumEnabled ? "ENABLED" : "DISABLED");
-            spdlog::info("  Tone Mapping Pass: {}", toneMapEnabled ? "ENABLED" : "DISABLED");
+        spdlog::info("  HDR Resolve Pass: {}", hdrResolveEnabled ? "ENABLED" : "DISABLED");
+        spdlog::info("  HDR Luminance Pass (Auto-Exposure): {}", hdrLumEnabled ? "ENABLED" : "DISABLED");
+        spdlog::info("  Tone Mapping Pass: {}", toneMapEnabled ? "ENABLED" : "DISABLED");
 
-            // Note: HDR values (exposure, avgLuminance) are calculated during render
-            // and are part of the temporary RenderContext. To display them here,
-            // we'd need to store them in FrameData.
-            spdlog::info("");
-            spdlog::info("  Note: HDR exposure and luminance values are calculated");
-            spdlog::info("  dynamically during rendering. Check console output during");
-            spdlog::info("  frame rendering for real-time values.");
-
-        } else {
-            spdlog::warn("Pipeline not found!");
-        }
+        // Note: HDR values (exposure, avgLuminance) are calculated during render
+        // and are part of the temporary RenderContext. To display them here,
+        // we'd need to store them in FrameData.
+        spdlog::info("");
+        spdlog::info("  Note: HDR exposure and luminance values are calculated");
+        spdlog::info("  dynamically during rendering. Check console output during");
+        spdlog::info("  frame rendering for real-time values.");
     } else {
         spdlog::warn("Scene renderer not available!");
     }

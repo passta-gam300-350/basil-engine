@@ -8,17 +8,20 @@
 #include <spdlog/spdlog.h>
 
 SpotShadowMappingPass::SpotShadowMappingPass()
-    : RenderPass("SpotShadowPass"),  // No default framebuffer - we'll create dynamically
+    : RenderPass("SpotShadowPass"),
       m_ShadowDepthShader(nullptr)
 {
-    spdlog::info("SpotShadowMappingPass created (dynamic framebuffers for multiple spot lights)");
+    InitializeFramebuffers();
+    spdlog::info("SpotShadowMappingPass: Initialized with {} framebuffers (size: {}x{})",
+                 MAX_SPOT_LIGHTS, SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
 }
 
 SpotShadowMappingPass::SpotShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
     : RenderPass("SpotShadowPass"),
       m_ShadowDepthShader(shadowDepthShader)
 {
-    spdlog::info("SpotShadowMappingPass created with shader (supports up to {} spot lights)",
+    InitializeFramebuffers();
+    spdlog::info("SpotShadowMappingPass: Initialized with shader and {} framebuffers",
                  MAX_SPOT_LIGHTS);
 }
 
@@ -43,9 +46,6 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
 
     // Clear command buffer to prevent accumulation across frames
     ClearCommands();
-
-    // Ensure we have enough framebuffers
-    EnsureFramebuffers(spotLights.size());
 
     // Render shadow map for each spot light
     for (size_t i = 0; i < spotLights.size(); ++i) {
@@ -137,10 +137,12 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
     }
 }
 
-void SpotShadowMappingPass::EnsureFramebuffers(size_t count)
+void SpotShadowMappingPass::InitializeFramebuffers()
 {
-    // Create additional framebuffers if needed
-    while (m_SpotShadowFramebuffers.size() < count) {
+    // Pre-allocate framebuffers for maximum number of spot lights (consistent with PointShadowMappingPass)
+    m_SpotShadowFramebuffers.reserve(MAX_SPOT_LIGHTS);
+
+    for (size_t i = 0; i < MAX_SPOT_LIGHTS; ++i) {
         FBOSpecs specs{
             SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE,
             {
@@ -151,10 +153,6 @@ void SpotShadowMappingPass::EnsureFramebuffers(size_t count)
 
         auto fbo = std::make_shared<FrameBuffer>(specs);
         m_SpotShadowFramebuffers.push_back(fbo);
-
-        spdlog::info("SpotShadowMappingPass: Created framebuffer #{} ({}x{})",
-                     m_SpotShadowFramebuffers.size(),
-                     SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
     }
 }
 

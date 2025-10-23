@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <cmath>
+#include <cstring>  // For std::memset
 
 HDRLuminancePass::HDRLuminancePass()
     : RenderPass("HDRLuminancePass")
@@ -185,6 +186,12 @@ void HDRLuminancePass::InitializeBuffer(uint32_t width, uint32_t height)
         bufferSize,
         GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
     );
+
+    // Zero-initialize the buffer to prevent garbage data on first frame
+    float* pLuminance = static_cast<float*>(m_LuminanceBuffer->GetPersistentPtr());
+    if (pLuminance) {
+        std::memset(pLuminance, 0, bufferSize);
+    }
 
     spdlog::info("HDRLuminancePass: Initialized with persistent buffer ({}x{}, {} tiles, {}x{} groups)",
                  width, height, numTiles, m_NumGroupsX, m_NumGroupsY);

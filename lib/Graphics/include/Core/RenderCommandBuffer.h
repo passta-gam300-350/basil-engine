@@ -175,6 +175,7 @@ namespace RenderCommands {
         glm::vec3 position;
         glm::vec3 color;
         float intensity;
+        float ambientIntensity;
         float constant;
         float linear;
         float quadratic;
@@ -184,6 +185,7 @@ namespace RenderCommands {
         glm::vec3 direction;
         glm::vec3 color;
         float intensity;
+        float ambientIntensity;
     };
 
     struct SpotLightData {
@@ -191,6 +193,7 @@ namespace RenderCommands {
         glm::vec3 direction;
         glm::vec3 color;
         float intensity;
+        float ambientIntensity;
         float cutOff;
         float outerCutOff;
         float constant;
