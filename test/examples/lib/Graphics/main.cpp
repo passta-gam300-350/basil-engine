@@ -35,6 +35,7 @@
 
 #include "main.h"
 
+#include <Rendering/InstancedRenderer.h>
 #include <Resources/Material.h>
 #include <Resources/Mesh.h>
 #include <Resources/Model.h>

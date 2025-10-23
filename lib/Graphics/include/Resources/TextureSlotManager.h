@@ -16,7 +16,6 @@
 #define TEXTURE_SLOT_EMISSIVE   5
 #define TEXTURE_SLOT_SPECULAR   6
 #define TEXTURE_SLOT_HEIGHT     7
-#define TEXTURE_SLOT_SHADOW     8
 
 // Maximum number of texture slots available
 #define MAX_TEXTURE_SLOTS       16

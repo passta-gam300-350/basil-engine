@@ -14,7 +14,7 @@ void TextureSlotManager::BindTextures(const std::vector<Texture>& textures, cons
         return;
     }
 
-    // Clear only material texture slots (0-7), preserve shadow map (slot 8) and other special textures
+    // Clear material texture slots (0-7)
     for (int i = 0; i < 8; ++i) {
         UnbindTexture(i);
     }
@@ -105,7 +105,6 @@ std::string TextureSlotManager::GetTextureUniformName(int slot) {
         case TEXTURE_SLOT_EMISSIVE:  return "u_EmissiveMap";
         case TEXTURE_SLOT_SPECULAR:  return "u_SpecularMap";
         case TEXTURE_SLOT_HEIGHT:    return "u_HeightMap";
-        case TEXTURE_SLOT_SHADOW:    return "u_ShadowMap";
         default:                     return "";
     }
 }
@@ -182,5 +181,4 @@ void TextureSlotManager::SetTextureUniformSamplers(const std::shared_ptr<Shader>
     shader->setInt("u_EmissiveMap", TEXTURE_SLOT_EMISSIVE);
     shader->setInt("u_SpecularMap", TEXTURE_SLOT_SPECULAR);
     shader->setInt("u_HeightMap", TEXTURE_SLOT_HEIGHT);
-    shader->setInt("u_ShadowMap", TEXTURE_SLOT_SHADOW);
 }

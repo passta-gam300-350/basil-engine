@@ -57,14 +57,6 @@ namespace RenderCommands {
         uint32_t mode = GL_TRIANGLES;  // GL_TRIANGLES, GL_LINES, GL_POINTS, etc.
     };
 
-    struct SetShadowUniformsData {
-        std::shared_ptr<Shader> shader;
-        glm::mat4 lightSpaceMatrix;
-        uint32_t shadowMapTexture;
-        int shadowMapUnit;
-        bool enableShadows;
-    };
-
     struct BlitFramebufferData {
         uint32_t srcFBO;
         uint32_t dstFBO;
@@ -228,21 +220,6 @@ namespace RenderCommands {
         float roughnessValue;
     };
 
-    struct SetDirectionalShadowData {
-        std::shared_ptr<Shader> shader;
-        glm::mat4 lightSpaceMatrix;
-        uint32_t shadowMapTexture;
-        int shadowMapUnit;
-        bool enableShadows;
-    };
-
-    struct SetPointShadowsData {
-        std::shared_ptr<Shader> shader;
-        std::vector<uint32_t> cubemapTextures;
-        std::vector<float> farPlanes;
-        int startTextureUnit;  // Starting slot (e.g., 9)
-    };
-
     // ===== STENCIL TESTING COMMANDS =====
     struct EnableStencilTestData {
         bool enable;
@@ -277,7 +254,6 @@ using VariantRenderCommand = std::variant<
     RenderCommands::DrawElementsData,
     RenderCommands::BindSSBOData,
     RenderCommands::DrawElementsInstancedData,
-    RenderCommands::SetShadowUniformsData,
     RenderCommands::BlitFramebufferData,
     RenderCommands::SetUniformVec3Data,
     RenderCommands::SetUniformFloatData,
@@ -301,8 +277,6 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetDirectionalLightsData,
     RenderCommands::SetSpotLightsData,
     RenderCommands::SetMaterialPBRData,
-    RenderCommands::SetDirectionalShadowData,
-    RenderCommands::SetPointShadowsData,
     // Stencil commands
     RenderCommands::EnableStencilTestData,
     RenderCommands::SetStencilFuncData,
@@ -343,7 +317,6 @@ private:
     void ExecuteCommand(const RenderCommands::DrawElementsData& cmd);
     void ExecuteCommand(const RenderCommands::BindSSBOData& cmd);
     void ExecuteCommand(const RenderCommands::DrawElementsInstancedData& cmd);
-    void ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd);
     void ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformVec3Data& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd);
@@ -367,8 +340,6 @@ private:
     void ExecuteCommand(const RenderCommands::SetDirectionalLightsData& cmd);
     void ExecuteCommand(const RenderCommands::SetSpotLightsData& cmd);
     void ExecuteCommand(const RenderCommands::SetMaterialPBRData& cmd);
-    void ExecuteCommand(const RenderCommands::SetDirectionalShadowData& cmd);
-    void ExecuteCommand(const RenderCommands::SetPointShadowsData& cmd);
     // Stencil command execution
     void ExecuteCommand(const RenderCommands::EnableStencilTestData& cmd);
     void ExecuteCommand(const RenderCommands::SetStencilFuncData& cmd);

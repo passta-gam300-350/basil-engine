@@ -9,10 +9,6 @@ in VS_OUT {
     vec3 Bitangent;
     mat3 TBN;
 
-    // Shadow mapping
-    vec4 FragPosLightSpace;
-    vec4 FragPosSpotLightSpace;
-
     // Per-instance material data from vertex shader
     vec4 InstanceColor;
     float InstanceMetallic;

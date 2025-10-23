@@ -36,43 +36,6 @@ void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
     m_SpotLights.push_back(light);
 }
 
-void PBRLightingRenderer::SetupPBRLighting(std::shared_ptr<Shader> shader,
-                                           const FrameData& frameData,
-                                           const Material* material)
-{
-    assert(shader && "Shader cannot be null for PBR lighting setup");
-    assert(shader->ID != 0 && "Shader program must be compiled and linked");
-
-    if (!shader) {
-        spdlog::error("PBRLightingRenderer::SetupPBRLighting: NULL shader provided");
-        return;
-    }
-
-    // Ensure shader is active for uniform setting
-    shader->use();
-
-    // Set light counts
-    SetupPointLights(shader);
-    SetupDirectionalLights(shader);
-    SetupSpotLights(shader);
-
-    // Set material properties - use Material's method if available, else use legacy method
-    if (material) {
-        const_cast<Material*>(material)->ApplyPBRProperties();
-    } else {
-        SetupMaterialProperties(shader, material);
-    }
-}
-
-void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
-                                                 const FrameData& frameData,
-                                                 const Material* material)
-{
-    // For now, we'll use immediate setup since we don't have specific lighting commands yet
-    // TODO: Add dedicated lighting commands to RenderCommandBuffer
-    SetupPBRLighting(shader, frameData, material);
-}
-
 void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
                                          const glm::vec3& ambientLight, const FrameData& frameData)
 {
@@ -136,35 +99,6 @@ void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& 
                 break;
             }
         }
-    }
-}
-
-void PBRLightingRenderer::ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material)
-{
-    assert(shader && "Shader cannot be null for lighting application");
-    assert(shader->ID != 0 && "Shader program must be compiled and linked");
-
-    if (!shader) {
-        spdlog::error("PBRLightingRenderer::ApplyLightingToShader: NULL shader provided");
-        return;
-    }
-
-    // Ensure shader is active for uniform setting
-    shader->use();
-
-    // Set ambient light
-    shader->setVec3("u_AmbientLight", m_AmbientLight);
-
-    // Set light data
-    SetupPointLights(shader);
-    SetupDirectionalLights(shader);
-    SetupSpotLights(shader);
-
-    // Set material properties - use Material's method if available, else use legacy method
-    if (material) {
-        const_cast<Material*>(material)->ApplyPBRProperties();
-    } else {
-        SetupMaterialProperties(shader, material);
     }
 }
 
@@ -257,26 +191,6 @@ void PBRLightingRenderer::SetupMaterialProperties(std::shared_ptr<Shader> shader
     // Note: Bindless texture system handles u_HasDiffuseMap, u_HasNormalMap, etc.
     // and texture handle uploads to SSBO at binding point 1
 }
-
-void PBRLightingRenderer::SetupShadowMaps(std::shared_ptr<Shader> shader, const FrameData& frameData)
-{
-    assert(shader && "Shader cannot be null for shadow setup");
-    assert(shader->ID != 0 && "Shader program must be compiled and linked");
-
-    if (!shader) {
-        spdlog::error("PBRLightingRenderer::SetupShadowMaps: NULL shader provided");
-        return;
-    }
-
-    // Ensure shader is active
-    shader->use();
-
-    // Note: Shadow setup now done through command-based SubmitShadowCommands()
-    // which uses the unified SSBO system
-}
-
-// These old non-command-based shadow functions have been removed
-// All shadow setup now goes through SubmitShadowCommands() which uses the unified SSBO system
 
 void PBRLightingRenderer::SetShadowIntensity(float directionalIntensity, float pointIntensity)
 {

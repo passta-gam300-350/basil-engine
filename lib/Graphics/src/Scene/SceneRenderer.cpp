@@ -136,7 +136,6 @@ void SceneRenderer::InitializeRenderingCoordinators()
     m_PBRLightingRenderer = std::make_unique<PBRLightingRenderer>();  // Initialize lighting first
     assert(m_PBRLightingRenderer && "Failed to create PBRLightingRenderer");
 
-    //m_MeshRenderer = std::make_unique<MeshRenderer>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
     assert(m_FrustumCuller && "Failed to create FrustumCuller");
 

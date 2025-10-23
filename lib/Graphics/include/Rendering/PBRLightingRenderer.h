@@ -68,18 +68,8 @@ public:
     void AddPointLight(const PointLight& light);
     void AddDirectionalLight(const DirectionalLight& light);
     void AddSpotLight(const SpotLight& light);
-    
-    // PBR lighting setup for any shader
-    void SetupPBRLighting(std::shared_ptr<Shader> shader,
-                          const FrameData& frameData,
-                          const Material* material = nullptr);
 
-    // Command-based lighting setup (integrates with render pipeline)
-    void SubmitLightingCommands(std::shared_ptr<Shader> shader,
-                                const FrameData& frameData,
-                                const Material* material);
-
-    // NEW: Command-based lighting setup using RenderPass (Option A)
+    // Command-based lighting setup using RenderPass
     void SubmitLightingCommands(RenderPass& renderPass,
                                  std::shared_ptr<Shader> shader,
                                  const Material* material = nullptr);
@@ -91,21 +81,15 @@ public:
     const std::vector<PointLight>& GetPointLights() const { return m_PointLights; }
     const std::vector<DirectionalLight>& GetDirectionalLights() const { return m_DirectionalLights; }
     const std::vector<SpotLight>& GetSpotLights() const { return m_SpotLights; }
-    
+
     // Light count getters
     size_t GetPointLightCount() const { return m_PointLights.size(); }
     size_t GetDirectionalLightCount() const { return m_DirectionalLights.size(); }
     size_t GetSpotLightCount() const { return m_SpotLights.size(); }
-    
-    // Lighting update with submitted data (called once per frame)
-    void UpdateLighting(const std::vector<SubmittedLightData>& submittedLights, 
-                       const glm::vec3& ambientLight, const FrameData& frameData);
-    
-    // Helper method for any renderer to apply lighting to their shader
-    void ApplyLightingToShader(std::shared_ptr<Shader> shader, const Material* material = nullptr);
 
-    // Shadow mapping setup (moved from InstancedRenderer)
-    void SetupShadowMaps(std::shared_ptr<Shader> shader, const FrameData& frameData);
+    // Lighting update with submitted data (called once per frame)
+    void UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
+                       const glm::vec3& ambientLight, const FrameData& frameData);
 
     // Shadow intensity configuration
     void SetShadowIntensity(float directionalIntensity, float pointIntensity);

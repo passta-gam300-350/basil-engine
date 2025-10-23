@@ -9,7 +9,6 @@
 #include <vector>
 
 // Forward declarations for rendering coordinators
-//class MeshRenderer;
 class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
@@ -105,7 +104,6 @@ private:
     std::unique_ptr<TextureSlotManager> m_TextureSlotManager;
 
     // Rendering coordinators - SceneRenderer owns these
-    //std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;

@@ -153,38 +153,6 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO*/
 }
 
-void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd)
-{
-    assert(cmd.shader && "SetShadowUniformsData command must have a valid shader");
-    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
-    assert(cmd.shadowMapUnit >= 0 && cmd.shadowMapUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS &&
-           "Shadow map texture unit must be within OpenGL limits");
-
-    // Ensure shader is active
-    cmd.shader->use();
-
-    // Set light space matrix uniform
-    cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
-
-    // Bind shadow map texture to specified unit using TextureSlotManager
-    if (m_TextureBindingSystem) {
-        m_TextureBindingSystem->BindTextureID(cmd.shadowMapTexture, cmd.shadowMapUnit);
-    } else {
-        // Fallback to manual binding
-        glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
-        glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
-    }
-
-    // Always set the uniform to point to the correct texture unit
-    cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
-
-    // Set the shadow enable flag
-    cmd.shader->setBool("u_EnableShadows", cmd.enableShadows);
-
-    // Note: Shadow map texture will remain bound until explicitly unbound
-    // This is intentional as it needs to stay bound for the entire rendering pass
-}
-
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd)
 {
 
@@ -525,74 +493,6 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetMaterialPBRDat
     cmd.shader->setVec3("u_AlbedoColor", cmd.albedoColor);
     cmd.shader->setFloat("u_MetallicValue", cmd.metallicValue);
     cmd.shader->setFloat("u_RoughnessValue", cmd.roughnessValue);
-}
-
-void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDirectionalShadowData& cmd)
-{
-    assert(cmd.shader && "Shader cannot be null for directional shadow");
-    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
-    assert(cmd.shadowMapUnit >= 0 && cmd.shadowMapUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS &&
-           "Shadow map texture unit must be within OpenGL limits");
-
-    // Activate shader
-    cmd.shader->use();
-
-    // Set light space matrix
-    cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
-
-    // Set shadow enable flag
-    cmd.shader->setBool("u_EnableShadows", cmd.enableShadows);
-
-    if (cmd.enableShadows) {
-        // Bind shadow map texture to specified unit
-        if (m_TextureBindingSystem) {
-            m_TextureBindingSystem->BindTextureID(cmd.shadowMapTexture, cmd.shadowMapUnit);
-        } else {
-            // Fallback to manual binding
-            glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
-            glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
-        }
-
-        // Set shadow map sampler uniform
-        cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
-    }
-}
-
-void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointShadowsData& cmd)
-{
-    assert(cmd.shader && "Shader cannot be null for point shadows");
-    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
-
-    const int MAX_POINT_SHADOW_MAPS = 4;
-    int activeShadowMaps = static_cast<int>(cmd.cubemapTextures.size());
-
-    // Activate shader
-    cmd.shader->use();
-
-    // Set number of active shadow maps
-    cmd.shader->setInt("u_NumPointShadowMaps", activeShadowMaps);
-
-    // Bind each cubemap or dummy texture
-    for (int i = 0; i < MAX_POINT_SHADOW_MAPS; ++i) {
-        uint32_t textureUnit = cmd.startTextureUnit + static_cast<uint32_t>(i);
-        glActiveTexture(GL_TEXTURE0 + textureUnit);
-
-        if (i < activeShadowMaps) {
-            // Bind actual shadow cubemap
-            glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapTextures[i]);
-
-            // Set far plane uniform
-            std::string farPlaneName = "u_PointShadowFarPlanes[" + std::to_string(i) + "]";
-            cmd.shader->setFloat(farPlaneName, cmd.farPlanes[i]);
-        } else {
-            // Bind dummy cubemap for unused slots
-            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        }
-
-        // Set sampler uniform to proper texture unit
-        std::string samplerName = "u_PointShadowMaps[" + std::to_string(i) + "]";
-        cmd.shader->setInt(samplerName, static_cast<int>(textureUnit));
-    }
 }
 
 // ===== STENCIL COMMAND EXECUTION =====
