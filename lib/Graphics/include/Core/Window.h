@@ -24,6 +24,7 @@ class Window
 {
 public:
 	Window(const std::string& title = "Engine", uint32_t width = 1280, uint32_t height = 720);
+	Window(GLFWwindow*);
 	Window(const Window&) = delete;
 	Window& operator=(const Window&) = delete;
 	Window(Window&&) = delete;
