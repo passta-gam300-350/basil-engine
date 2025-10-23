@@ -124,9 +124,11 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
         return;
     }
 
-    // Always rebuild instance data based on currently visible renderables
-    // This handles dynamic frustum culling as camera moves
-    BuildDynamicInstanceData(renderables);
+    // Only build instance data if it doesn't exist yet (caching for static scenes)
+    // TODO: Add dirty flag system to rebuild when objects actually change
+    if (m_MeshInstances.empty()) {
+        BuildDynamicInstanceData(renderables);
+    }
 
     // Render the instance batches to the specified pass
     for (const auto& pair : m_MeshInstances) {
@@ -142,8 +144,11 @@ void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::ve
         return;
     }
 
-    // Build instance data from renderables (group by mesh)
-    BuildDynamicInstanceData(renderables);
+    // Only build instance data if it doesn't exist yet (caching for static scenes)
+    // Shadow passes can reuse the same instance data built by the main render pass
+    if (m_MeshInstances.empty()) {
+        BuildDynamicInstanceData(renderables);
+    }
 
     // Render all instance batches with shadow shader (depth-only)
     for (const auto& pair : m_MeshInstances) {

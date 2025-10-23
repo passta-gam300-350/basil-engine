@@ -79,6 +79,7 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_LastY(360.0f)
     , m_RotationEnabled(false)
     , m_HDREnabled(false)  // HDR starts disabled
+    , m_AABBsCached(false)
 {
     s_Instance = this;
 }
@@ -217,7 +218,7 @@ void GraphicsTestDriver::Run()
         // Update transformations (rotate one instance for AABB testing)
         UpdateInstanceTransforms();
 
-        // Calculate and submit debug AABBs for visualization
+        // Calculate and submit debug AABBs for visualization (cached)
         CalculateAndSubmitAABBs();
 
         // ===== OUTLINE UPDATE =====
@@ -423,7 +424,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/tinbox/tin_box.obj");
+            "assets/models/dragon/dragon.obj");
 
         if (!tinBoxModel) {
             spdlog::error("Failed to load tin box model!");
@@ -592,7 +593,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     // Tinbox grid
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
-    const int gridSize = 3;
+    const int gridSize = 2;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f;
 
@@ -780,53 +781,62 @@ SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position
 
 void GraphicsTestDriver::CalculateAndSubmitAABBs()
 {
-    // Clear previous frame's debug AABBs
     auto& frameData = m_SceneRenderer->GetFrameData();
     frameData.debugAABBs.clear();
 
-    // Group meshes by model instance (based on position)
-    struct Vec3Compare {
-        bool operator()(const glm::vec3& a, const glm::vec3& b) const {
-            const float epsilon = 0.01f;
-            if (std::abs(a.x - b.x) > epsilon) return a.x < b.x;
-            if (std::abs(a.y - b.y) > epsilon) return a.y < b.y;
-            return a.z < b.z;
+    // Cache AABBs on first frame (avoids iterating through 2.6M vertices every frame)
+    if (!m_AABBsCached) {
+        m_CachedAABBs.clear();
+
+        // Group meshes by model instance (based on position)
+        struct Vec3Compare {
+            bool operator()(const glm::vec3& a, const glm::vec3& b) const {
+                const float epsilon = 0.01f;
+                if (std::abs(a.x - b.x) > epsilon) return a.x < b.x;
+                if (std::abs(a.y - b.y) > epsilon) return a.y < b.y;
+                return a.z < b.z;
+            }
+        };
+
+        std::map<glm::vec3, std::vector<const RenderableData*>, Vec3Compare> modelInstances;
+
+        // Group all meshes by their position (model instance)
+        for (const auto& renderable : m_SceneObjects) {
+            if (!renderable.visible || !renderable.mesh) {
+                continue;
+            }
+
+            // Extract position from transform matrix
+            glm::vec3 position = glm::vec3(renderable.transform[3]);
+            modelInstances[position].push_back(&renderable);
         }
-    };
 
-    std::map<glm::vec3, std::vector<const RenderableData*>, Vec3Compare> modelInstances;
+        // Calculate AABB per model instance (EXPENSIVE - only done once!)
+        for (auto it = modelInstances.begin(); it != modelInstances.end(); ++it) {
+            const glm::vec3& instancePosition = it->first;
+            const std::vector<const RenderableData*>& meshes = it->second;
 
-    // Group all meshes by their position (model instance)
-    for (const auto& renderable : m_SceneObjects) {
-        if (!renderable.visible || !renderable.mesh) {
-            continue;
+            AABB modelAABB; // Start with invalid AABB
+            glm::mat4 instanceTransform = meshes[0]->transform;
+
+            // Combine all mesh AABBs to create model AABB
+            for (const auto* renderable : meshes) {
+                AABB meshAABB = AABB::CreateFromMesh(renderable->mesh);
+                modelAABB.ExpandToInclude(meshAABB);
+            }
+
+            // Create debug color
+            glm::vec3 debugColor = glm::vec3(1.0f, 0.0f, 0.0f);
+
+            // Cache the AABB with local space bounds
+            m_CachedAABBs.emplace_back(modelAABB, instanceTransform, debugColor);
         }
 
-        // Extract position from transform matrix
-        glm::vec3 position = glm::vec3(renderable.transform[3]);
-        modelInstances[position].push_back(&renderable);
+        m_AABBsCached = true;
     }
 
-    // Calculate AABB per model instance
-    for (auto it = modelInstances.begin(); it != modelInstances.end(); ++it) {
-        const glm::vec3& instancePosition = it->first;
-        const std::vector<const RenderableData*>& meshes = it->second;
-
-        AABB modelAABB; // Start with invalid AABB
-        glm::mat4 instanceTransform = meshes[0]->transform; // All meshes should have same transform
-
-        // Combine all mesh AABBs to create model AABB
-        for (const auto* renderable : meshes) {
-            AABB meshAABB = AABB::CreateFromMesh(renderable->mesh);
-            modelAABB.ExpandToInclude(meshAABB);
-        }
-
-        // Create debug color based on instance position
-        glm::vec3 debugColor = glm::vec3(1.0f, 0.0f, 0.0f);
-
-        // Submit model instance AABB to frame data
-        frameData.debugAABBs.emplace_back(modelAABB, instanceTransform, debugColor);
-    }
+    // Submit cached AABBs to frame data (fast - just copies data)
+    frameData.debugAABBs = m_CachedAABBs;
 }
 
 void GraphicsTestDriver::UpdateInstanceTransforms()

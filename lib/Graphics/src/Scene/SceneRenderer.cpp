@@ -91,28 +91,28 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 4. Add debug rendering pass (shows light cubes) - BEFORE HDR resolve!
     auto debugPass = std::make_shared<DebugRenderPass>();
     mainPipeline->AddPass(debugPass);
-    mainPipeline->EnablePass("DebugPass", true);  // Enabled to visualize lights
+    mainPipeline->EnablePass("DebugPass", false);  // Enabled to visualize lights
 
     // 5. Add outline rendering pass (stencil-based outlines) - BEFORE HDR resolve!
     auto outlinePass = std::make_shared<OutlineRenderPass>();
     mainPipeline->AddPass(outlinePass);
-    mainPipeline->EnablePass("OutlinePass", true);  // Enabled by default
+    mainPipeline->EnablePass("OutlinePass", false);  // Enabled by default
 
     // 6. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
     auto hdrResolvePass = std::make_shared<HDRResolvePass>();
     mainPipeline->AddPass(hdrResolvePass);
-    mainPipeline->EnablePass("HDRResolvePass", false);  // Disabled by default
+    //mainPipeline->EnablePass("HDRResolvePass", true);  // Disabled by default
 
     // 7. Add HDR luminance pass (auto-exposure calculation via compute shader)
     auto hdrLuminancePass = std::make_shared<HDRLuminancePass>();
     mainPipeline->AddPass(hdrLuminancePass);
-    mainPipeline->EnablePass("HDRLuminancePass", false);  // Disabled by default
+    //mainPipeline->EnablePass("HDRLuminancePass", false);  // Disabled by default
 
     // 8. Add tone mapping pass (HDR → LDR conversion)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
     toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - ToneMapPass uses SRGB8 format for hardware gamma via GL_FRAMEBUFFER_SRGB
     mainPipeline->AddPass(toneMapPass);
-    mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
+    //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
     // 9. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();

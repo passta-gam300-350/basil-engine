@@ -103,14 +103,17 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
     glDrawElements(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
-    // Reset material texture state (but preserve shadow map binding)
-    if (m_TextureBindingSystem)
+    // PERFORMANCE: Disabled texture unbinding after each draw call
+    // Rebinding textures for the next draw is sufficient - no need to unbind
+    // This saves hundreds of glBindTexture(slot, 0) calls per frame
+    // Original code was unbinding 8 slots × 90 meshes = 720 calls per frame!
+    /*if (m_TextureBindingSystem)
     {
         // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
         for (int i = 0; i < 8; ++i) {
             m_TextureBindingSystem->UnbindTexture(i);
         }
-    }
+    }*/
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindSSBOData& cmd)
@@ -135,8 +138,10 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
                            cmd.instanceCount);
     glBindVertexArray(0);
 
-    // Reset material texture state (but preserve shadow map binding)
-    if (m_TextureBindingSystem)
+    // PERFORMANCE: Disabled texture unbinding after each draw call
+    // Rebinding textures and SSBOs for the next draw is sufficient
+    // Original code: 90 meshes × (8 texture unbinds + 1 SSBO unbind) = 810 calls per frame!
+    /*if (m_TextureBindingSystem)
     {
         // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
         for (int i = 0; i < 8; ++i) {
@@ -145,7 +150,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
     }
 
     // Unbind SSBO binding points to prevent state leakage
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO*/
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd)

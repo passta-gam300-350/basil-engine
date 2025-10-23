@@ -41,6 +41,9 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
         return;
     }
 
+    // Clear command buffer to prevent accumulation across frames
+    ClearCommands();
+
     // Ensure we have enough framebuffers
     EnsureFramebuffers(spotLights.size());
 

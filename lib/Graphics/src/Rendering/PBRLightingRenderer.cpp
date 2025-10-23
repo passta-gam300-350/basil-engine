@@ -76,6 +76,10 @@ void PBRLightingRenderer::SubmitLightingCommands(std::shared_ptr<Shader> shader,
 void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
                                          const glm::vec3& ambientLight, const FrameData& frameData)
 {
+    // PERFORMANCE: Reset lighting and shadow cache at start of each frame
+    m_LastLightingShader.reset();
+    m_LastShadowShader.reset();
+
     // Clear existing lights
     ClearLights();
 
@@ -291,6 +295,12 @@ void PBRLightingRenderer::SubmitLightingCommands(RenderPass& renderPass,
     assert(shader && "Shader cannot be null for lighting submission");
     assert(shader->ID != 0 && "Shader program must be compiled and linked");
 
+    // PERFORMANCE: Skip if lighting already set up for this shader this frame
+    if (m_LastLightingShader == shader) {
+        return;
+    }
+    m_LastLightingShader = shader;
+
     // 1. Submit ambient light
     RenderCommands::SetUniformVec3Data ambientCmd{
         shader,
@@ -366,6 +376,12 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
 {
     assert(shader && "Shader cannot be null for shadow submission");
     assert(shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // PERFORMANCE: Skip if shadows already set up for this shader this frame
+    if (m_LastShadowShader == shader) {
+        return;
+    }
+    m_LastShadowShader = shader;
 
     // UNIFIED SHADOW SYSTEM (SSBO + Texture Arrays)
     if (!frameData.shadowDataArray.empty()) {

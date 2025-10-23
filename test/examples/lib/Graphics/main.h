@@ -62,6 +62,10 @@ private:
     // HDR state tracking
     bool m_HDREnabled;
 
+    // AABB caching (avoid recalculating from 2.6M vertices every frame)
+    std::vector<DebugAABB> m_CachedAABBs;
+    bool m_AABBsCached;
+
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);

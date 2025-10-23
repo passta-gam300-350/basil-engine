@@ -131,6 +131,10 @@ private:
     // Unified shadow data (SSBO-based, supports 50+ lights)
     std::unique_ptr<TypedShaderStorageBuffer<ShadowData>> m_ShadowSSBO;
 
+    // PERFORMANCE: Track which shader has lighting set up to avoid redundant uniform uploads
+    std::shared_ptr<Shader> m_LastLightingShader;
+    std::shared_ptr<Shader> m_LastShadowShader;
+
     // Helper methods for setting up specific light types
     void SetupPointLights(std::shared_ptr<Shader> shader);
     void SetupDirectionalLights(std::shared_ptr<Shader> shader);
