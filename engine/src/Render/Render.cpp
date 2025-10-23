@@ -107,6 +107,17 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 	} else {
 		spdlog::error("RenderSystem: ComponentInitializer not initialized");
 	}
+
+	// Setup observer for component updates (triggered by registry.patch())
+	entt::registry& registry = world.impl.get_registry();
+
+	// Disconnect existing update observers first
+	registry.on_update<MeshRendererComponent>().disconnect();
+
+	// Connect update observer to sync material properties when component changes
+	registry.on_update<MeshRendererComponent>().connect<&RenderSystem::OnMeshRendererUpdated>(this);
+
+	spdlog::info("RenderSystem: MeshRendererComponent update observer registered");
 }
 
 void RenderSystem::InitializeExistingEntities(ecs::world& world) {
@@ -214,15 +225,38 @@ void RenderSystem::Update(ecs::world& world) {
 			}
 		}
 
-		// NOTE: Material properties are set during initialization (InitializeMeshRenderer)
-		// DO NOT update materials per-frame as this causes shared materials to overwrite each other
-		// If you need per-entity material variation, each entity must have its own Material instance
+		// NOTE: Material system follows Unity-style behavior:
+		// - Component properties: Used for editor/serialization (synced to base material)
+		// - Material instances: Runtime copy-on-write for per-entity customization
 
 		// Only render if we have both mesh and material
 		if (meshResource && materialResource) {
+			std::shared_ptr<Material> renderMaterial = materialResource;
+
+			// Check if entity has a material instance (Unity's Renderer.material behavior)
+			if (m_MaterialInstanceManager && m_MaterialInstanceManager->HasInstance(entityUID)) {
+				// Instance exists - use it instead of base material
+				auto instance = m_MaterialInstanceManager->GetExistingInstance(entityUID);
+				if (instance) {
+					// Apply instance properties (base + overrides) before rendering
+					// Note: ApplyProperties() sets shader uniforms directly
+					instance->ApplyProperties();
+
+					// Still use base material for RenderableData (shader is from base)
+					// The instance properties were already applied to the shader
+					renderMaterial = instance->GetBaseMaterial();
+				}
+			} else if (!mesh.hasAttachedMaterial) {
+				// No instance - sync component properties to base material (editor behavior)
+				// This allows direct component editing in editor
+				materialResource->SetAlbedoColor(mesh.material.m_AlbedoColor);
+				materialResource->SetMetallicValue(mesh.material.metallic);
+				materialResource->SetRoughnessValue(mesh.material.roughness);
+			}
+
 			RenderableData renderData;
 			renderData.mesh = meshResource;
-			renderData.material = materialResource;
+			renderData.material = renderMaterial;
 			renderData.transform = transform.m_trans;
 			renderData.visible = visible.m_IsVisible;
 			renderData.renderLayer = 1;
@@ -334,6 +368,42 @@ void RenderSystem::ClearAllEntityCaches() {
 	} else {
 		spdlog::error("RenderSystem: Cannot clear entity caches - ResourceCache not initialized");
 	}
+}
+
+void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& meshRenderer) {
+	auto& renderSystem = Engine::GetRenderSystem();
+
+	if (!renderSystem.m_ResourceCache) {
+		spdlog::error("RenderSystem: Cannot sync material - ResourceCache not initialized");
+		return;
+	}
+
+	// Get the cached material
+	auto material = renderSystem.m_ResourceCache->GetEntityMaterial(entityUID);
+
+	if (!material) {
+		spdlog::warn("RenderSystem: Cannot sync material for entity {} - no cached material found", entityUID);
+		return;
+	}
+
+	// Sync component material properties to cached material
+	material->SetAlbedoColor(meshRenderer.material.m_AlbedoColor);
+	material->SetMetallicValue(meshRenderer.material.metallic);
+	material->SetRoughnessValue(meshRenderer.material.roughness);
+
+	spdlog::debug("RenderSystem: Synced material properties for entity {}", entityUID);
+}
+
+void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity entity) {
+	// Get the updated component
+	auto* meshComp = registry.try_get<MeshRendererComponent>(entity);
+	if (!meshComp) return;
+
+	// Get entity UID
+	const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
+
+	// Sync to cached material
+	SyncMaterialFromComponent(entityUID, *meshComp);
 }
 
 // ========== Material Instance API Implementation ==========

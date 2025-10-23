@@ -293,6 +293,19 @@ public:
      */
     static void ClearAllEntityCaches();
 
+    /**
+     * @brief Update cached material properties from MeshRendererComponent
+     *
+     * Call this after modifying MeshRendererComponent.material properties to sync
+     * the changes to the cached material used for rendering.
+     *
+     * @param entityUID Unique identifier of the entity
+     * @param meshRenderer The updated MeshRendererComponent
+     *
+     * @note This is automatically called if you use registry.patch<MeshRendererComponent>()
+     */
+    static void SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& meshRenderer);
+
     // ========== Material Instance API ==========
 
     /**
@@ -396,6 +409,16 @@ private:
      * @param entity Entity handle with MeshRendererComponent
      */
     void InitializeMeshRenderer(entt::registry& registry, entt::entity entity);
+
+    /**
+     * @brief Handle MeshRendererComponent updates (sync material properties)
+     *
+     * Called automatically when registry.patch<MeshRendererComponent>() is used.
+     *
+     * @param registry EnTT registry containing the entity
+     * @param entity Entity handle with MeshRendererComponent
+     */
+    void OnMeshRendererUpdated(entt::registry& registry, entt::entity entity);
 
     // ========== Render Subsystems ==========
 

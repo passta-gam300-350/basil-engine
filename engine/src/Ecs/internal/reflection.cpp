@@ -102,7 +102,9 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<MeshRendererComponent::Material>(
 		"Material",
 		MemberRegistrationV<&MeshRendererComponent::Material::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">
+		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">,
+		MemberRegistrationV<&MeshRendererComponent::Material::roughness, "roughness">,
+		MemberRegistrationV<&MeshRendererComponent::Material::metallic, "metallic">
 	);
 
 	RegisterReflectionComponent<VisibilityComponent>(
