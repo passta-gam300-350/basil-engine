@@ -218,6 +218,12 @@ void GraphicsTestDriver::Run()
         // Update transformations (rotate one instance for AABB testing)
         UpdateInstanceTransforms();
 
+        // Clear instance cache when transforms change (enables animation)
+        if (m_RotationEnabled) {
+            m_SceneRenderer->GetInstancedRenderer()->Clear();
+            m_AABBsCached = false;  // Also invalidate AABB cache for rotating objects
+        }
+
         // Calculate and submit debug AABBs for visualization (cached)
         CalculateAndSubmitAABBs();
 
