@@ -40,6 +40,7 @@ public:
 
 	void SwapBuffers();
 	void SetVSync(bool enabled);
+	void SetTitle(const std::string& title);
 	void SetClearColor(float r, float g, float b, float a = 1.0f);
 	void Clear();
 

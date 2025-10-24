@@ -229,6 +229,10 @@ world Engine::GetWorld() {
 	return Instance().m_World;
 }
 
+double Engine::GetDeltaTime() {
+	return Instance().m_Info.m_DeltaTime;
+}
+
 void Engine::GenerateDefaultConfig() {
 	YAML::Node root{  };
 	YAML::Node window{  };
@@ -274,7 +278,22 @@ Logger::Sink* Engine::GetSink() {
 
 void Engine::BeginFrame()
 {
-	PF_BEGIN_FRAME(Instance().m_Info.m_TotalFrameCt);
+	Engine& instance = Instance();
+
+	// Calculate delta time
+	double currentTime = glfwGetTime();
+
+	// Initialize on first frame
+	if (instance.m_Info.m_LastFrameTime == 0.0) {
+		instance.m_Info.m_LastFrameTime = currentTime;
+		instance.m_Info.m_DeltaTime = 0.0;
+	} else {
+		instance.m_Info.m_DeltaTime = currentTime - instance.m_Info.m_LastFrameTime;
+	}
+
+	instance.m_Info.m_LastFrameTime = currentTime;
+
+	PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 }
 
 void Engine::EndFrame()

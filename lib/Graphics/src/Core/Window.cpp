@@ -102,6 +102,11 @@ void Window::SetVSync(bool enabled)
 	glfwSwapInterval(enabled ? 1 : 0);
 }
 
+void Window::SetTitle(const std::string& title)
+{
+	glfwSetWindowTitle(m_Window, title.c_str());
+}
+
 void Window::SetClearColor(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);

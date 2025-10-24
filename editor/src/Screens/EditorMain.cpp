@@ -938,9 +938,26 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
-	
-	
-	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
+
+	auto& info = Engine::Instance().GetInfo();
+
+	// Update FPS/Delta display at intervals for readability
+	static double lastUpdateTime = 0.0;
+	static double displayFPS = 0.0;
+	static double displayDeltaTime = 0.0;
+	static float updateInterval = 0.25f; // Update every 0.25 seconds
+
+	double currentTime = glfwGetTime();
+	if (currentTime - lastUpdateTime >= updateInterval) {
+		displayFPS = info.m_FPS;
+		displayDeltaTime = info.m_DeltaTime;
+		lastUpdateTime = currentTime;
+	}
+
+	ImGui::Text("FPS: %.2f", displayFPS);
+	ImGui::Text("Delta Time: %.3f ms", displayDeltaTime * 1000.0);
+	ImGui::SliderFloat("Update Interval", &updateInterval, 0.1f, 2.0f, "%.2f s");
+	ImGui::Separator();
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();

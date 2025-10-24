@@ -23,6 +23,8 @@ class Engine
 	struct Info {
 
 		double m_FPS{};
+		double m_DeltaTime{};          // Time elapsed since last frame (seconds)
+		double m_LastFrameTime{};      // Time of last frame (for delta calculation)
 		std::uint64_t m_TotalFrameCt{};
 		std::uint64_t m_FrameLogCounter{};	//basically total (mod) rate
 		std::uint64_t m_FrameLogRate;
@@ -63,6 +65,7 @@ public:
 
 	static void ReportLastError();
 	static ecs::world GetWorld();
+	static double GetDeltaTime();
 
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
