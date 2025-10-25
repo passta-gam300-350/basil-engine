@@ -462,7 +462,14 @@ void main() {
 
     float roughness = fs_in.InstanceRoughness;
     if (u_HasRoughnessMap) {
+        // Modern PBR: Use roughness texture directly
         roughness = texture(u_RoughnessMap, fs_in.TexCoords).r;
+    }
+    else if (u_HasSpecularMap) {
+        // Legacy Blinn-Phong: Convert specular to roughness (backwards compatibility)
+        // Specular maps are glossy (high = shiny), roughness is opposite (high = rough)
+        float specular = texture(u_SpecularMap, fs_in.TexCoords).r;
+        roughness = 1.0 - specular;  // Direct linear conversion (Option 1: more glossy)
     }
 
     float ao = 1.0;

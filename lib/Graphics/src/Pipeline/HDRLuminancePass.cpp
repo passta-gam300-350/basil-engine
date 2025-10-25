@@ -141,8 +141,8 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     const float targetGray = 0.18f;  // Standard photographic middle gray
     float exposure = targetGray / glm::max(avgLuminance, 0.001f);  // Avoid division by zero
 
-    // Clamp exposure to reasonable range (prevent extreme values)
-    exposure = glm::clamp(exposure, 0.1f, 3.0f);
+    // Clamp exposure to reasonable range (lowered max from 3.0 to 2.0 to reduce over-brightening)
+    exposure = glm::clamp(exposure, 0.1f, 1.0f);
 
     // Validate exposure - if still NaN, use safe default
     if (!std::isfinite(exposure)) {
@@ -157,9 +157,9 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     context.avgLuminance = avgLuminance;
     context.exposure = exposure;
 
-    // Debug logging (uncomment if needed)
-    // spdlog::debug("HDRLuminancePass: AvgLum={:.4f}, Exposure={:.4f}",
-    //               context.avgLuminance, context.exposure);
+    // Debug logging - enabled to diagnose brightness issue
+    spdlog::info("HDRLuminancePass: AvgLum={:.4f}, Exposure={:.4f}",
+                  context.avgLuminance, context.exposure);
 }
 
 uint32_t HDRLuminancePass::AlignUpToMultiple(uint32_t value, uint32_t multiple)

@@ -133,8 +133,8 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    SetupTinboxDemo();       // Tinbox grid - outline/PBR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupTinboxDemo();       // Tinbox grid - outline/PBR test
     
     
 
@@ -187,13 +187,13 @@ void GraphicsTestDriver::Run()
         // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
 
-        // Animate point light position (only in Sponza demo)
-        if (m_ActiveDemo == DemoType::Sponza &&
-            !m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
-            // Animate X position: oscillates between -60 and +70 (sponza corridor)
-            float animatedX = (cosf(m_Time * 0.3f) + 1.0f) * 65.0f - 60.0f;
-            m_SceneLights[0].position.x = animatedX;
-        }
+        // Animate point light position (only in Sponza demo) - DISABLED (using directional light now)
+        // if (m_ActiveDemo == DemoType::Sponza &&
+        //     !m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
+        //     // Animate X position: oscillates between -60 and +70 (sponza corridor)
+        //     float animatedX = (cosf(m_Time * 0.3f) + 1.0f) * 65.0f - 60.0f;
+        //     m_SceneLights[0].position.x = animatedX;
+        // }
 
         // Submit lights and objects each frame
         for (const auto& light : m_SceneLights) {
@@ -547,16 +547,15 @@ void GraphicsTestDriver::SetupSponzaDemo()
     spdlog::info("Sponza model loaded: {} meshes", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
-    // Animated point light (ogldev tutorial 63 setup)
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(0.0f, 0.5f, -1.6f),        // Initial position (will be animated)
-        glm::vec3(1.0f, 1.0f, 1.0f),         // Color: white
-        5.0f,                                 // DiffuseIntensity: 5.0 (high for HDR)
-        0.2f,                                 // AmbientIntensity: 0.2
-        100.0f                                // Range: large for Sponza
+    // Directional light (sunlight at grazing angle for softer lighting)
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(-0.5f, -0.4f, -0.3f),      // Direction: more horizontal/grazing angle (less steep)
+        glm::vec3(1.0f, 0.95f, 0.9f),        // Color: warm sunlight
+        2.0f,                                 // DiffuseIntensity: bright sunlight
+        0.0f                                  // AmbientIntensity: no ambient (pure directional)
     ));
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.07f, 0.07f, 0.07f));
-    spdlog::info("Animated point light created (intensity 5.0 for HDR demo)");
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f));  // Very low ambient for strong shadow contrast (like CryEngine)
+    spdlog::info("Directional sunlight created (intensity 2.0)");
 
     spdlog::info("Sponza demo setup complete: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
