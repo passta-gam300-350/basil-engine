@@ -144,11 +144,11 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightViewMatrix(const glm::vec3
 glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData)
 {
     // Create orthographic projection that covers the scene
-    // For a 2x2 grid with spacing 3.0f, scene spans roughly -1.5 to +1.5 in X/Z
-    // Add margin for ground plane and light angle
-    float orthoSize = 15.0f;  // Smaller, tighter bounds
+    // Sponza cathedral is ~200 units wide (scaled 0.05), so we need large coverage
+    // Tinbox demo uses smaller orthoSize (15.0f) for tighter shadows
+    float orthoSize = 100.0f;  // Large enough to cover entire Sponza cathedral
     float nearPlane = 1.0f;
-    float farPlane = 50.0f;
+    float farPlane = 150.0f;   // Increased to cover Sponza's height
 
     // Orthographic projection calculated
 

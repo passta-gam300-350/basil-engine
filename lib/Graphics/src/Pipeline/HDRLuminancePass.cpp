@@ -142,7 +142,7 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     float exposure = targetGray / glm::max(avgLuminance, 0.001f);  // Avoid division by zero
 
     // Clamp exposure to reasonable range (lowered max from 3.0 to 2.0 to reduce over-brightening)
-    exposure = glm::clamp(exposure, 0.1f, 1.0f);
+    exposure = glm::clamp(exposure, 0.1f, 3.0f);
 
     // Validate exposure - if still NaN, use safe default
     if (!std::isfinite(exposure)) {

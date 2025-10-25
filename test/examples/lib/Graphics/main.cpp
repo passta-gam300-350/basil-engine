@@ -187,13 +187,23 @@ void GraphicsTestDriver::Run()
         // Begin frame - no direct renderer access needed
         m_SceneRenderer->ClearFrame();
 
-        // Animate point light position (only in Sponza demo) - DISABLED (using directional light now)
-        // if (m_ActiveDemo == DemoType::Sponza &&
-        //     !m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Point) {
-        //     // Animate X position: oscillates between -60 and +70 (sponza corridor)
-        //     float animatedX = (cosf(m_Time * 0.3f) + 1.0f) * 65.0f - 60.0f;
-        //     m_SceneLights[0].position.x = animatedX;
-        // }
+        // Animate directional light (daylight cycle - sun rotating across the sky)
+        if (m_ActiveDemo == DemoType::Sponza &&
+            !m_SceneLights.empty() && m_SceneLights[0].type == Light::Type::Directional) {
+            // Rotate sun around the scene (full cycle in ~60 seconds)
+            float cycleSpeed = 0.1f;  // Radians per second (0.1 = slow, 1.0 = fast)
+            float angle = m_Time * cycleSpeed;
+
+            // Sun rotates in XY plane (from east to west across the sky)
+            // When angle = 0°: sun at horizon (east)
+            // When angle = 90°: sun at zenith (noon, directly above)
+            // When angle = 180°: sun at horizon (west)
+            float sunX = cosf(angle) * 0.5f;   // Horizontal movement (east-west)
+            float sunY = -sinf(angle);         // Vertical movement (below horizon to zenith)
+            float sunZ = -0.2f;                // Slight north-south bias
+
+            m_SceneLights[0].direction = glm::normalize(glm::vec3(sunX, sunY, sunZ));
+        }
 
         // Submit lights and objects each frame
         for (const auto& light : m_SceneLights) {
@@ -547,15 +557,15 @@ void GraphicsTestDriver::SetupSponzaDemo()
     spdlog::info("Sponza model loaded: {} meshes", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
-    // Directional light (sunlight at grazing angle for softer lighting)
+    // Directional light (sunlight from above at steep angle, matching CryEngine)
     m_SceneLights.push_back(CreateDirectionalLight(
-        glm::vec3(-0.5f, -0.4f, -0.3f),      // Direction: more horizontal/grazing angle (less steep)
+        glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
         glm::vec3(1.0f, 0.95f, 0.9f),        // Color: warm sunlight
-        2.0f,                                 // DiffuseIntensity: bright sunlight
+        2.5f,                                 // DiffuseIntensity: bright sunlight (increased for steeper angle)
         0.0f                                  // AmbientIntensity: no ambient (pure directional)
     ));
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.05f));  // Very low ambient for strong shadow contrast (like CryEngine)
-    spdlog::info("Directional sunlight created (intensity 2.0)");
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f));  // Very low ambient for strong shadow contrast (like CryEngine)
+    spdlog::info("Directional sunlight created (intensity 2.5) with DAYLIGHT CYCLE animation");
 
     spdlog::info("Sponza demo setup complete: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
