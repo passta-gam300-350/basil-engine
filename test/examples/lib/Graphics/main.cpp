@@ -133,8 +133,8 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    //SetupTinboxDemo();       // Tinbox grid - outline/PBR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupTinboxDemo();       // Tinbox grid - outline/PBR test
     
     
 
@@ -437,10 +437,10 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/dragon/dragon.obj");
+            "assets/models/chair/chair.obj");
 
         if (!tinBoxModel) {
-            spdlog::error("Failed to load tin box model!");
+            spdlog::error("Failed to load chair model!");
             return false;
         }
 
@@ -605,7 +605,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     // Tinbox grid
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
-    const int gridSize = 2;
+    const int gridSize = 1;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f;
 
@@ -613,36 +613,36 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
         }
     }
     spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
     // Directional light
-    m_SceneLights.push_back(CreateDirectionalLight(
+    /*m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.2f, -1.0f, 0.3f),
         glm::vec3(1.0f, 1.0f, 1.0f),
-        0.8f, 0.2f
-    ));
-    // Point light
+        0.3f, 0.2f
+    ));*/
+    // Point light - positioned close to chair for visible lighting
     m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(0.0f, 3.0f, 0.0f),
+        glm::vec3(-8.0f, 2.0f, 0.0f),         // Right above chair at (-8, 0, 0)
         glm::vec3(1.0f, 0.9f, 0.7f),
-        2.0f, 0.1f, 50.0f
+        5.0f, 0.1f, 50.0f                      // Increased intensity to 5.0
     ));
-    // Spot light - positioned directly above tinbox grid center
+    // Spot light - positioned close to chair for visible shadows
     m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
+        glm::vec3(-8.0f, 3.0f, 0.0f),         // Lowered from 8.0 to 3.0 for stronger effect
         glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
         glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
-        2.5f,                                  // DiffuseIntensity: bright for visible shadows
+        8.0f,                                  // Increased intensity to 8.0
         0.1f,                                  // AmbientIntensity: low ambient
-        30.0f,                                 // Range: covers tinbox grid
+        30.0f,                                 // Range: covers chair area
         15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
         25.0f                                  // OuterCone: 25 degrees (cone angle)
     ));
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f)); // Reduced to let other lights show
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 
     // 4. SETUP OUTLINE MODE - Click-based selection
