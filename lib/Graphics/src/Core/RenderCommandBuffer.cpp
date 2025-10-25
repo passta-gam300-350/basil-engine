@@ -260,8 +260,22 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetBlendingData& 
     if (cmd.enable) {
         glEnable(GL_BLEND);
         glBlendFunc(cmd.srcFactor, cmd.dstFactor);
+        glBlendEquation(cmd.blendEquation);
     } else {
         glDisable(GL_BLEND);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetViewportData& cmd)
+{
+    glViewport(cmd.x, cmd.y, cmd.width, cmd.height);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec2Data& cmd)
+{
+    if (cmd.shader) {
+        cmd.shader->use();
+        cmd.shader->setVec2(cmd.uniformName, cmd.value);
     }
 }
 

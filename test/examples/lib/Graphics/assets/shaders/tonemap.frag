@@ -5,10 +5,13 @@ out vec4 FragColor;
 
 // ===== Uniforms =====
 uniform sampler2D u_HDRTexture;
+uniform sampler2D u_BloomTexture;
 uniform float u_Exposure = 1.0;
 uniform float u_AvgLuminance = 0.5;
 uniform int u_Method = 3;  // 0=None, 1=Reinhard, 2=ACES, 3=Exposure
 uniform bool u_EnableGamma = true;
+uniform int u_BloomEnabled = 0;
+uniform float u_BloomStrength = 0.04;
 
 // ===== Tone Mapping Operators =====
 
@@ -44,7 +47,7 @@ vec3 ExposureToneMapping(vec3 hdrColor, float exposure) {
     return mapped;
 }
 
-// Gamma Correction (Linear ’ sRGB)
+// Gamma Correction (Linear ï¿½ sRGB)
 vec3 GammaCorrection(vec3 color) {
     return pow(color, vec3(1.0 / 2.2));
 }
@@ -54,6 +57,13 @@ void main()
 {
     // Sample HDR color
     vec3 hdrColor = texture(u_HDRTexture, TexCoords).rgb;
+
+    // Add bloom if enabled (BEFORE tone mapping!)
+    if (u_BloomEnabled == 1) {
+        vec3 bloomColor = texture(u_BloomTexture, TexCoords).rgb;
+        hdrColor += bloomColor * u_BloomStrength;
+    }
+
     vec3 mapped;
 
     // Apply tone mapping based on selected method

@@ -12,6 +12,7 @@ enum class FBOTextureFormat
 	SRGB8_ALPHA8,   // sRGB format with alpha for automatic gamma correction
 	RGBA16F,        // 16-bit floating point for G-buffer precision
 	RGB16F,         // 16-bit float per channel, no alpha (HDR) ← ogldev uses this
+	RGB11F_G11F_B10F, // Packed HDR format for bloom (32 bits total: 11+11+10)
 	RED_INTEGER,
 	DEPTH24STENCIL8,
 	Depth = DEPTH24STENCIL8

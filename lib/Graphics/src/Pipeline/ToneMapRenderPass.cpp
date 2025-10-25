@@ -60,6 +60,39 @@ void ToneMapRenderPass::Execute(RenderContext& context)
     };
     Submit(bindTextureCmd);
 
+    // Bind bloom texture if available (set by BloomRenderPass)
+    if (m_BloomEnabled && context.frameData.bloomTexture != 0) {
+        RenderCommands::BindTextureIDData bindBloomCmd{
+            context.frameData.bloomTexture,
+            1,  // Texture unit 1
+            m_ToneMappingShader,
+            "u_BloomTexture"
+        };
+        Submit(bindBloomCmd);
+
+        RenderCommands::SetUniformFloatData bloomStrengthCmd{
+            m_ToneMappingShader,
+            "u_BloomStrength",
+            m_BloomStrength
+        };
+        Submit(bloomStrengthCmd);
+
+        RenderCommands::SetUniformIntData bloomEnabledCmd{
+            m_ToneMappingShader,
+            "u_BloomEnabled",
+            1
+        };
+        Submit(bloomEnabledCmd);
+    } else {
+        // Disable bloom in shader
+        RenderCommands::SetUniformIntData bloomEnabledCmd{
+            m_ToneMappingShader,
+            "u_BloomEnabled",
+            0
+        };
+        Submit(bloomEnabledCmd);
+    }
+
     // Set uniforms - READ FROM CONTEXT (framework pattern!)
     RenderCommands::SetUniformFloatData exposureCmd{
         m_ToneMappingShader,

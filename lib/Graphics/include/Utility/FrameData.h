@@ -30,6 +30,9 @@ struct FrameData
     // HDR resolved buffer (resolved from MSAA mainColorBuffer for tone mapping)
     std::shared_ptr<FrameBuffer> hdrResolvedBuffer;        // Non-MSAA RGB16F for HDR pipeline
 
+    // Bloom texture (output of BloomRenderPass)
+    uint32_t bloomTexture = 0;
+
     // Editor display buffer (resolved from mainColorBuffer for ImGui sampling)
     std::shared_ptr<FrameBuffer> editorResolvedBuffer;     // Non-MSAA resolved for ImGui
 

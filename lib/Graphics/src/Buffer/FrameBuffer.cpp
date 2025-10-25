@@ -15,6 +15,7 @@ namespace Utils
 		case FBOTextureFormat::SRGB8_ALPHA8: return GL_SRGB8_ALPHA8;
 		case FBOTextureFormat::RGBA16F: return GL_RGBA16F;
 		case FBOTextureFormat::RGB16F: return GL_RGB16F;
+		case FBOTextureFormat::RGB11F_G11F_B10F: return GL_R11F_G11F_B10F;
 		case FBOTextureFormat::RED_INTEGER: return GL_R32I;
 		case FBOTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
 		default: return 0;
@@ -112,6 +113,11 @@ void FrameBuffer::Invalidate()
 						break;
 
 					case FBOTextureFormat::RGB16F:
+						format = GL_RGB;
+						type = GL_FLOAT;
+						break;
+
+					case FBOTextureFormat::RGB11F_G11F_B10F:
 						format = GL_RGB;
 						type = GL_FLOAT;
 						break;

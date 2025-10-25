@@ -617,22 +617,22 @@ void GraphicsTestDriver::SetupTinboxDemo()
         0.8f, 0.2f
     ));
     // Point light
-    /*m_SceneLights.push_back(CreatePointLight(
+    m_SceneLights.push_back(CreatePointLight(
         glm::vec3(0.0f, 3.0f, 0.0f),
         glm::vec3(1.0f, 0.9f, 0.7f),
         2.0f, 0.1f, 50.0f
-    ));*/
+    ));
     // Spot light - positioned directly above tinbox grid center
-    //m_SceneLights.push_back(CreateSpotLight(
-    //    glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
-    //    glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
-    //    glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
-    //    2.5f,                                  // DiffuseIntensity: bright for visible shadows
-    //    0.1f,                                  // AmbientIntensity: low ambient
-    //    30.0f,                                 // Range: covers tinbox grid
-    //    15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
-    //    25.0f                                  // OuterCone: 25 degrees (cone angle)
-    //));
+    m_SceneLights.push_back(CreateSpotLight(
+        glm::vec3(-8.0f, 8.0f, 0.0f),         // Position: centered above grid at (-8, 8, 0)
+        glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
+        glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
+        2.5f,                                  // DiffuseIntensity: bright for visible shadows
+        0.1f,                                  // AmbientIntensity: low ambient
+        30.0f,                                 // Range: covers tinbox grid
+        15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
+        25.0f                                  // OuterCone: 25 degrees (cone angle)
+    ));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 

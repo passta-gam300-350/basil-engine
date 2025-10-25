@@ -106,6 +106,17 @@ namespace RenderCommands {
         bool enable;
         uint32_t srcFactor = GL_SRC_ALPHA;      // Default: GL_SRC_ALPHA
         uint32_t dstFactor = GL_ONE_MINUS_SRC_ALPHA; // Default: GL_ONE_MINUS_SRC_ALPHA
+        uint32_t blendEquation = GL_FUNC_ADD;   // Default: GL_FUNC_ADD
+    };
+
+    struct SetViewportData {
+        uint32_t x, y, width, height;
+    };
+
+    struct SetUniformVec2Data {
+        std::shared_ptr<Shader> shader;
+        std::string uniformName;
+        glm::vec2 value;
     };
 
     struct SetLineWidthData {
@@ -265,6 +276,8 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetUniformMat4Data,
     RenderCommands::SetUniformMat4ArrayData,
     RenderCommands::SetBlendingData,
+    RenderCommands::SetViewportData,
+    RenderCommands::SetUniformVec2Data,
     RenderCommands::SetLineWidthData,
     RenderCommands::SetDepthTestData,
     RenderCommands::SetFaceCullingData,
@@ -327,7 +340,9 @@ private:
     void ExecuteCommand(const RenderCommands::SetUniformBoolData& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformMat4Data& cmd);
     void ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd);
+    void ExecuteCommand(const RenderCommands::SetUniformVec2Data& cmd);
     void ExecuteCommand(const RenderCommands::SetBlendingData& cmd);
+    void ExecuteCommand(const RenderCommands::SetViewportData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
     void ExecuteCommand(const RenderCommands::SetDepthTestData &cmd);
     void ExecuteCommand(const RenderCommands::SetFaceCullingData &cmd);

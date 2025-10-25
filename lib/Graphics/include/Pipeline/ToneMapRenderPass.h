@@ -33,10 +33,14 @@ public:
     void SetToneMappingShader(std::shared_ptr<Shader> shader);
     void SetMethod(Method method) { m_Method = method; }
     void EnableGammaCorrection(bool enable) { m_GammaCorrection = enable; }
+    void SetBloomStrength(float strength) { m_BloomStrength = strength; }
+    void EnableBloom(bool enable) { m_BloomEnabled = enable; }
 
     // Getters
     Method GetMethod() const { return m_Method; }
     bool IsGammaCorrectionEnabled() const { return m_GammaCorrection; }
+    float GetBloomStrength() const { return m_BloomStrength; }
+    bool IsBloomEnabled() const { return m_BloomEnabled; }
 
 private:
     std::shared_ptr<Shader> m_ToneMappingShader;
@@ -44,6 +48,10 @@ private:
     // Configuration (exposure/luminance come from context!)
     Method m_Method = Method::Exposure;
     bool m_GammaCorrection = true;
+
+    // Bloom configuration
+    float m_BloomStrength = 0.04f;
+    bool m_BloomEnabled = true;
 
     // Full-screen quad
     uint32_t m_QuadVAO = 0;

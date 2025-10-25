@@ -15,6 +15,7 @@
 #include "Pipeline/HDRLuminancePass.h"
 #include "Pipeline/HDRResolvePass.h"
 #include "Pipeline/ToneMapRenderPass.h"
+#include "Pipeline/BloomRenderPass.h"
 #include "Resources/Shader.h"
 #include "Resources/Mesh.h"
 #include <glfw/glfw3.h>
@@ -108,22 +109,27 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(hdrLuminancePass);
     //mainPipeline->EnablePass("HDRLuminancePass", false);  // Disabled by default
 
-    // 8. Add tone mapping pass (HDR → LDR conversion)
+    // 8. Add physically based bloom pass (multi-scale blur with Karis average)
+    auto bloomPass = std::make_shared<BloomRenderPass>();
+    mainPipeline->AddPass(bloomPass);
+    spdlog::info("SceneRenderer: Added BloomRenderPass to pipeline");
+
+    // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
     toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - ToneMapPass uses SRGB8 format for hardware gamma via GL_FRAMEBUFFER_SRGB
     mainPipeline->AddPass(toneMapPass);
     //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
-    // 9. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 10. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 10. Add picking pass (executes when needed, disabled by default)
+    // 11. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 11. Add present pass (executes last)
+    // 12. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
