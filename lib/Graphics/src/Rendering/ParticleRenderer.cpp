@@ -22,7 +22,7 @@ void ParticleRenderer::SubmitParticleSystem(ParticleRenderData const& dataNeeded
 	m_SubmittedSystems.push_back(dataNeeded);
 }
 
-void ParticleRenderer::RenderToPass(RenderPass& passData, FrameData const& frameData)
+void ParticleRenderer::RenderToPass(RenderPass& pass, FrameData const& frameData)
 {
 	if (m_SubmittedSystems.empty() || !m_ParticleShader)
 	{
@@ -33,7 +33,7 @@ void ParticleRenderer::RenderToPass(RenderPass& passData, FrameData const& frame
 	{
 		if (eachSystem.particles.empty() == false)
 		{
-			RenderSystem(eachSystem, frameData);
+			RenderSystem(eachSystem, frameData, pass);
 			m_TotalParticleCount += eachSystem.particles.size();
 		}
 	}
@@ -77,7 +77,7 @@ void ParticleRenderer::CreateBillboardQuad()
 	m_QuadVAO = quadMesh.GetVertexArray();
 }
 
-void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData const& frameData)
+void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData const& frameData, RenderPass& pass)
 {
 	UpdateSSBO(system.particles);
 	uint32_t activeCount = 0;
@@ -92,27 +92,24 @@ void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData 
 	{
 		return;
 	}
-	m_ParticleShader->use();
-	m_ParticleShader->setMat4("uProjection", frameData.projectionMatrix);
-	m_ParticleShader->setMat4("uView", frameData.viewMatrix);
+	// bind shader
+	pass.Submit(RenderCommands::BindShaderData{ m_ParticleShader });
+	// bind ssbo
+	pass.Submit(RenderCommands::BindSSBOData{m_InstanceSSBO->GetSSBOHandle(), PARTICLE_SSBO_BINDING});
+	// set uniforms 
+	pass.Submit(RenderCommands::SetUniformsData{ m_ParticleShader, glm::mat4(1.0f), frameData.viewMatrix, frameData.projectionMatrix, frameData.cameraPosition });
+	// bind texture 
 	if (system.texture)
 	{
-		glActiveTexture(GL_TEXTURE0);  
-		glBindTexture(GL_TEXTURE_2D, system.texture->id); 
-		m_ParticleShader->setInt("uTexture", 0);  
+		std::vector<Texture> textures = { *system.texture };
+		pass.Submit(RenderCommands::BindTexturesData{ textures, m_ParticleShader });
 	}
-	SetBlendMode(system.blendMode);
-	if (system.depthWrite == false) 
-	{
-		glDepthMask(GL_FALSE);
-	}
-	m_QuadVAO->Bind();
-	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, activeCount);
-	if (system.depthWrite == false)
-	{
-		glDepthMask(GL_TRUE);
-	}
-	glDisable(GL_BLEND);
+	// set blend mode
+	SetBlendMode(system.blendMode, pass);
+	// set depth test
+	pass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, system.depthWrite });
+	// draw instanced
+	pass.Submit(RenderCommands::DrawElementsInstancedData{ m_QuadVAO->GetVAOHandle(), 6, activeCount, 0, GL_TRIANGLES });
 }
 
 void ParticleRenderer::UpdateSSBO(std::vector<Particle> const& particles)
@@ -140,23 +137,23 @@ void ParticleRenderer::UpdateSSBO(std::vector<Particle> const& particles)
 	}
 }
 
-void ParticleRenderer::SetBlendMode(BlendMode mode)
+void ParticleRenderer::SetBlendMode(BlendMode mode, RenderPass& pass)
 {
-	glEnable(GL_BLEND);
+	// 5. Set blending
 	if (mode == BlendMode::Alpha)
 	{
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		pass.Submit(RenderCommands::SetBlendingData{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA });
 	}
 	else if (mode == BlendMode::Additive)
 	{
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		pass.Submit(RenderCommands::SetBlendingData{ true, GL_SRC_ALPHA, GL_ONE });
 	}
-	else if (mode == BlendMode::Multiply)
+	else if (mode == BlendMode::Multiply) 
 	{
-		glBlendFunc(GL_DST_COLOR, GL_ZERO);
+		pass.Submit(RenderCommands::SetBlendingData{ true, GL_DST_COLOR, GL_ZERO });
 	}
-	else if (mode == BlendMode::Opaque)
+	else 
 	{
-		glDisable(GL_BLEND);
+		pass.Submit(RenderCommands::SetBlendingData{ false });
 	}
 }

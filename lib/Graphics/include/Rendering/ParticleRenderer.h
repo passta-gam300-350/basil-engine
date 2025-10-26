@@ -25,9 +25,9 @@ public:
 private:
     void InitializeResources();
     void CreateBillboardQuad();
-    void RenderSystem(ParticleRenderData const& system, FrameData const& frameData);
+    void RenderSystem(ParticleRenderData const& system, FrameData const& frameData, RenderPass& pass);
     void UpdateSSBO(std::vector<Particle>const& particles);
-    void SetBlendMode(BlendMode mode);
+    void SetBlendMode(BlendMode mode, RenderPass& pass);
 
     std::shared_ptr<VertexArray> m_QuadVAO;
     std::shared_ptr<Shader> m_ParticleShader;
@@ -37,5 +37,5 @@ private:
     uint32_t m_MaxParticles = 10000;
     uint32_t m_TotalParticleCount = 0;
 
-    static constexpr uint32_t PARTICLE_SSBO_BINDING = 0;
+    static constexpr uint32_t PARTICLE_SSBO_BINDING = 0U;
 };

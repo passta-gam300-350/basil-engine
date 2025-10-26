@@ -27,8 +27,8 @@ void main()
     ParticleInstanceData eachParticle = allParticles[gl_InstanceID];
     vec3 cameraRight = vec3(uView[0][0], uView[1][0], uView[2][0]);
     vec3 cameraUp = vec3(uView[0][1], uView[1][1], uView[2][1]);
-    float c = cos(p.rotation);
-    float s = sin(p.rotation);
+    float c = cos(eachParticle.rotation);
+    float s = sin(eachParticle.rotation);
     // rotation around billboard facing axis
     vec2 rotatedPos = 
     vec2(
@@ -36,7 +36,7 @@ void main()
           aPosition.x * s + aPosition.y * c
         );
     vec3 vertexWorldPos = eachParticle.position + cameraRight * rotatedPos.x * eachParticle.size + cameraUp * rotatedPos.y * eachParticle.size;
-    gl_position = uProjection * uView * vec4(vertexWorldPos, 1.0);
+    gl_Position = uProjection * uView * vec4(vertexWorldPos, 1.0);
     vTexCoord = aPosition.xy + 0.5;
     vColor = eachParticle.color;
 }
