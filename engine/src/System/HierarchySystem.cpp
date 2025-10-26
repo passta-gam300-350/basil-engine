@@ -1,28 +1,28 @@
-#include "System/TransformHierarchySystem.hpp"
-#include "components/transform.h"
+#include "System/HierarchySystem.hpp"
+#include "Component/Transform.hpp"
 #include "Component/RelationshipComponent.hpp"
 #include <glm/glm.hpp>
 
-void TransformHierarchySystem::Init()
+void HierarchySystem::Init()
 {
 	// Nothing to initialize
 }
 
-void TransformHierarchySystem::Update(ecs::world& world, float dt)
+void HierarchySystem::Update(ecs::world& world, float dt)
 {
 	// Update all root entities first (entities without parents or with invalid parents)
 	UpdateRootEntities(world);
 }
 
-void TransformHierarchySystem::Exit()
+void HierarchySystem::Exit()
 {
 	// Nothing to clean up
 }
 
-void TransformHierarchySystem::UpdateRootEntities(ecs::world& world)
+void HierarchySystem::UpdateRootEntities(ecs::world& world)
 {
-	// Find all entities with TransformComponent
-	auto view = world.impl.get_registry().view<TransformComponent>();
+	// Find all entities with both TransformComponent and TransformMtxComponent
+	auto view = world.impl.get_registry().view<TransformComponent, TransformMtxComponent>();
 
 	for (auto enttEntity : view)
 	{
@@ -41,12 +41,12 @@ void TransformHierarchySystem::UpdateRootEntities(ecs::world& world)
 		if (isRoot)
 		{
 			auto& transform = ent.get<TransformComponent>();
+			auto& mtx = ent.get<TransformMtxComponent>();
 
-			// Root entities: world matrix = local matrix
+			// Root entities: world matrix = local matrix (from m_Translation, m_Rotation, m_Scale)
 			if (transform.isDirty)
 			{
-				transform.worldMatrix = transform.getLocalMatrix();
-				transform.m_trans = transform.worldMatrix; // Update legacy field
+				mtx.m_Mtx = transform.getLocalMatrix();
 				transform.isDirty = false;
 			}
 
@@ -56,14 +56,15 @@ void TransformHierarchySystem::UpdateRootEntities(ecs::world& world)
 				auto& relationship = ent.get<RelationshipComponent>();
 				if (relationship.getChildCount() > 0)
 				{
-					UpdateTransformHierarchy(world, ent, transform.worldMatrix);
+					// Pass world, entity, and parent's world matrix to children
+					UpdateTransformHierarchy(world, ent, mtx.m_Mtx);
 				}
 			}
 		}
 	}
 }
 
-void TransformHierarchySystem::UpdateTransformHierarchy(ecs::world& world, ecs::entity entity, const glm::mat4& parentWorldMatrix)
+void HierarchySystem::UpdateTransformHierarchy(ecs::world& world, ecs::entity entity, const glm::mat4& parentWorldMatrix)
 {
 	if (!entity.all<RelationshipComponent>())
 		return;
@@ -71,32 +72,33 @@ void TransformHierarchySystem::UpdateTransformHierarchy(ecs::world& world, ecs::
 	auto& relationship = entity.get<RelationshipComponent>();
 	const auto& children = relationship.getChildren();
 
-	for (const auto& childEntity : children)
+	for (auto childEntity : children)
 	{
-		// Validate child entity exists
+		// Validate child entity exists and has required components
 		if (!world.is_valid(childEntity))
 			continue;
 
-		if (!childEntity.all<TransformComponent>())
+		if (!childEntity.all<TransformComponent, TransformMtxComponent>())
 			continue;
 
 		auto& childTransform = childEntity.get<TransformComponent>();
+		auto& mtx = childEntity.get<TransformMtxComponent>();
 
 		// Update child's world matrix: parent's world matrix * child's local matrix
-		childTransform.worldMatrix = parentWorldMatrix * childTransform.getLocalMatrix();
-		childTransform.m_trans = childTransform.worldMatrix; // Update legacy field
+		// getLocalMatrix() uses m_Translation, m_Rotation (Euler), and m_Scale
+		mtx.m_Mtx = parentWorldMatrix * childTransform.getLocalMatrix();
 		childTransform.isDirty = false;
 
 		// Recursively update this child's children
-		UpdateTransformHierarchy(world, childEntity, childTransform.worldMatrix);
+		UpdateTransformHierarchy(world, childEntity, mtx.m_Mtx);
 	}
 }
 
 // Register the system
 RegisterSystemDerived(
-	TransformHierarchySystem,
-	TransformHierarchySystem,
+	HierarchySystem,
+	HierarchySystem,
 	(ecs::ReadSet<RelationshipComponent>),
-	(ecs::WriteSet<TransformComponent>),
+	(ecs::WriteSet<TransformComponent, TransformMtxComponent>),
 	60.0f // Update 60 times per second
 );

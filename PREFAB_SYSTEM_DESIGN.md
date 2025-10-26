@@ -244,7 +244,7 @@ uint32_t hash = Hash("TransformComponent.localPosition.x");
 The prefab system builds on top of the existing scene graph:
 
 - Prefab hierarchies use `RelationshipComponent` and `SceneGraph` API
-- Transform propagation handled by `TransformHierarchySystem`
+- Transform propagation handled by `HierarchySystem`
 - Prefab sync respects parent-child relationships
 
 Example: When syncing a prefab instance:
@@ -330,6 +330,6 @@ Create `test/examples/engine/prefab/main.cpp`:
 ## References
 
 - Scene Graph: `engine/include/Scene/SceneGraph.hpp`
-- Transform System: `engine/include/System/TransformHierarchySystem.hpp`
+- Hierarchy System: `engine/include/System/HierarchySystem.hpp`
 - ECS Integration: `test/examples/engine/scene_graph/main.cpp`
 - Asset Manager: `editor/include/Manager/AssetManager.hpp`

@@ -1160,9 +1160,13 @@ void EditorMain::CreatePhysicsDemoScene()
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	world.get_component_from_entity<TransformComponent>(entity).m_Scale = glm::vec3{ 50,1,50 };
+	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
+	transform.m_Scale = glm::vec3{ 50,1,50 };
 	auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
-	auto& [scale, rot, pos] = world.get_component_from_entity<TransformComponent>(entity);
+
+	const auto& scale = transform.m_Scale;
+	const auto& rot = transform.m_Rotation;
+	const auto& pos = transform.m_Translation;
 
 	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
 	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));

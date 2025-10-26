@@ -323,7 +323,7 @@ The implementation provides a **complete architectural foundation** but requires
 
 1. **SceneGraph**: Uses `SceneGraph::SetParent()`, `GetChildren()` for hierarchy
 2. **RelationshipComponent**: Prefab hierarchies use standard parent-child relationships
-3. **TransformHierarchySystem**: Transform propagation works automatically
+3. **HierarchySystem**: Transform propagation works automatically
 4. **ECS World**: All entities live in standard ECS world
 
 ### File Structure

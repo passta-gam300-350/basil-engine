@@ -1,6 +1,6 @@
 #include "Scene/SceneGraph.hpp"
 #include "Component/RelationshipComponent.hpp"
-#include "components/transform.h"
+#include "Component/Transform.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
 void SceneGraph::SetParent(ecs::entity child, ecs::entity parent, bool keepWorldTransform)
@@ -91,19 +91,20 @@ void SceneGraph::RemoveChild(ecs::entity parent, ecs::entity child, bool keepWor
 		childRelationship.setParent(ecs::entity{});
 	}
 
-	if (keepWorldTransform && child.all<TransformComponent>())
+	if (keepWorldTransform && child.all<TransformComponent>() && child.all<TransformMtxComponent>())
 	{
 		auto& transform = child.get<TransformComponent>();
+		auto& mtx = child.get<TransformMtxComponent>();
 
 		// Convert world transform to local
 		glm::vec3 scale, translation, skew;
 		glm::vec4 perspective;
 		glm::quat rotation;
-		glm::decompose(transform.worldMatrix, scale, rotation, translation, skew, perspective);
+		glm::decompose(mtx.m_Mtx, scale, rotation, translation, skew, perspective);
 
-		transform.localPosition = translation;
-		transform.localRotation = rotation;
-		transform.localScale = scale;
+		transform.m_Translation = translation;
+		transform.m_Rotation = glm::degrees(glm::eulerAngles(rotation));
+		transform.m_Scale = scale;
 	}
 
 	MarkTransformDirty(child);
@@ -150,11 +151,11 @@ glm::mat4 SceneGraph::GetWorldTransform(ecs::entity entity)
 	if (!static_cast<bool>(entity))
 		return glm::mat4(1.0f);
 
-	if (!entity.all<TransformComponent>())
+	if (!entity.all<TransformMtxComponent>())
 		return glm::mat4(1.0f);
 
-	auto& transform = entity.get<TransformComponent>();
-	return transform.worldMatrix;
+	auto& mtx = entity.get<TransformMtxComponent>();
+	return mtx.m_Mtx;
 }
 
 glm::mat4 SceneGraph::GetLocalTransform(ecs::entity entity)
@@ -212,19 +213,22 @@ void SceneGraph::ConvertWorldToLocal(ecs::entity entity, const glm::mat4& target
 		glm::quat rotation;
 		glm::decompose(targetWorldMatrix, scale, rotation, translation, skew, perspective);
 
-		transform.localPosition = translation;
-		transform.localRotation = rotation;
-		transform.localScale = scale;
+		transform.m_Translation = translation;
+		transform.m_Rotation = glm::degrees(glm::eulerAngles(rotation));
+		transform.m_Scale = scale;
 		transform.isDirty = true;
 		return;
 	}
 
 	// Extract parent's world transform components
-	auto& parentTransform = parent.get<TransformComponent>();
+	if (!parent.all<TransformMtxComponent>())
+		return; // Parent has no world matrix yet
+
+	auto& parentMtx = parent.get<TransformMtxComponent>();
 	glm::vec3 parentScale, parentTranslation, parentSkew;
 	glm::vec4 parentPerspective;
 	glm::quat parentRotation;
-	glm::decompose(parentTransform.worldMatrix, parentScale, parentRotation, parentTranslation, parentSkew, parentPerspective);
+	glm::decompose(parentMtx.m_Mtx, parentScale, parentRotation, parentTranslation, parentSkew, parentPerspective);
 
 	// Extract target world transform components
 	glm::vec3 targetScale, targetTranslation, targetSkew;
@@ -245,9 +249,9 @@ void SceneGraph::ConvertWorldToLocal(ecs::entity entity, const glm::mat4& target
 	// Scale: relative to parent
 	glm::vec3 relativeScale = targetScale / parentScale;
 
-	transform.localPosition = relativePos;
-	transform.localRotation = relativeRotation;
-	transform.localScale = relativeScale;
+	transform.m_Translation = relativePos;
+	transform.m_Rotation = glm::degrees(glm::eulerAngles(relativeRotation));
+	transform.m_Scale = relativeScale;
 	transform.isDirty = true;
 }
 
@@ -256,10 +260,12 @@ void SceneGraph::ConvertLocalToWorld(ecs::entity entity)
 	if (!static_cast<bool>(entity))
 		return;
 
-	if (!entity.all<TransformComponent>())
+	// Require both components - do not auto-add
+	if (!entity.all<TransformComponent, TransformMtxComponent>())
 		return;
 
 	auto& transform = entity.get<TransformComponent>();
+	auto& mtx = entity.get<TransformMtxComponent>();
 
 	// Get parent's world matrix
 	glm::mat4 parentWorldMatrix = glm::mat4(1.0f);
@@ -270,6 +276,5 @@ void SceneGraph::ConvertLocalToWorld(ecs::entity entity)
 	}
 
 	// Calculate world matrix: parent * local
-	transform.worldMatrix = parentWorldMatrix * transform.getLocalMatrix();
-	transform.m_trans = transform.worldMatrix;
+	mtx.m_Mtx = parentWorldMatrix * transform.getLocalMatrix();
 }

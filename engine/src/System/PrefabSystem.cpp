@@ -7,6 +7,7 @@
 #include <sstream>
 #include <chrono>
 #include <iomanip>
+#include <glm/ext.hpp>
 
 // Static member initialization
 std::unordered_map<std::string, PrefabData> PrefabSystem::s_PrefabCache;

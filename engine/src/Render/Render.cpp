@@ -151,18 +151,18 @@ void RenderSystem::Update(ecs::world& world) {
 	m_SceneRenderer->ClearFrame();
 
 	auto world_camera = CameraSystem::GetActiveCamera();
-	auto& frameData = inst.m_SceneRenderer->GetFrameData();
+	auto& frameData = m_SceneRenderer->GetFrameData();
 
 	//update camera
-	inst.m_Camera->SetPosition(world_camera.m_Pos);
+	m_Camera->SetPosition(world_camera.m_Pos);
 	glm::mat4 view = glm::lookAt(
 		world_camera.m_Pos,
 		world_camera.m_Pos + world_camera.m_Front,  // Look at position + front vector
 		world_camera.m_Up
 	);
 	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
-		inst.m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
-		frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
+		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
+		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
 	}
 
 	frameData.viewMatrix = view;

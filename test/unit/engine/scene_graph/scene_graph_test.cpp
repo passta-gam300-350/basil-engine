@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "Scene/SceneGraph.hpp"
 #include "Component/RelationshipComponent.hpp"
-#include "components/transform.h"
+#include "Component/Transform.hpp"
 #include "Ecs/ecs.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -25,6 +25,7 @@ protected:
     entity CreateTestEntity() {
         entity e = testWorld.add_entity();
         e.add<TransformComponent>();
+        e.add<TransformMtxComponent>();
         e.add<RelationshipComponent>();
         return e;
     }
@@ -107,8 +108,8 @@ TEST_F(SceneGraphTest, LocalTransform) {
     entity e = CreateTestEntity();
     auto& transform = e.get<TransformComponent>();
 
-    transform.localPosition = glm::vec3(1.0f, 2.0f, 3.0f);
-    transform.localScale = glm::vec3(2.0f, 2.0f, 2.0f);
+    transform.m_Translation = glm::vec3(1.0f, 2.0f, 3.0f);
+    transform.m_Scale = glm::vec3(2.0f, 2.0f, 2.0f);
 
     glm::mat4 localMat = transform.getLocalMatrix();
 
@@ -128,18 +129,21 @@ TEST_F(SceneGraphTest, TransformHierarchyBasic) {
 
     // Set parent at position (10, 0, 0)
     auto& parentTransform = parent.get<TransformComponent>();
-    parentTransform.localPosition = glm::vec3(10.0f, 0.0f, 0.0f);
+    parentTransform.m_Translation = glm::vec3(10.0f, 0.0f, 0.0f);
 
     // Set child at local position (5, 0, 0) - relative to parent
     auto& childTransform = child.get<TransformComponent>();
-    childTransform.localPosition = glm::vec3(5.0f, 0.0f, 0.0f);
+    childTransform.m_Translation = glm::vec3(5.0f, 0.0f, 0.0f);
 
-    // Manually compute world matrices (simulating what system does)
-    parentTransform.worldMatrix = parentTransform.getLocalMatrix();
-    childTransform.worldMatrix = parentTransform.worldMatrix * childTransform.getLocalMatrix();
+    // Manually compute world matrices (simulating what HierarchySystem does)
+    auto& parentMtx = parent.get<TransformMtxComponent>();
+    auto& childMtx = child.get<TransformMtxComponent>();
+
+    parentMtx.m_Mtx = parentTransform.getLocalMatrix();
+    childMtx.m_Mtx = parentMtx.m_Mtx * childTransform.getLocalMatrix();
 
     // Child's world position should be (15, 0, 0)
-    glm::vec3 childWorldPos = glm::vec3(childTransform.worldMatrix[3]);
+    glm::vec3 childWorldPos = glm::vec3(childMtx.m_Mtx[3]);
     EXPECT_NEAR(childWorldPos.x, 15.0f, 0.001f);
     EXPECT_NEAR(childWorldPos.y, 0.0f, 0.001f);
     EXPECT_NEAR(childWorldPos.z, 0.0f, 0.001f);
@@ -177,21 +181,24 @@ TEST_F(SceneGraphTest, ScaleInheritance) {
 
     // Parent scaled 2x
     auto& parentTransform = parent.get<TransformComponent>();
-    parentTransform.localScale = glm::vec3(2.0f);
+    parentTransform.m_Scale = glm::vec3(2.0f);
 
     // Child scaled 3x (relative to parent)
     auto& childTransform = child.get<TransformComponent>();
-    childTransform.localScale = glm::vec3(3.0f);
+    childTransform.m_Scale = glm::vec3(3.0f);
 
     // Compute world matrices
-    parentTransform.worldMatrix = parentTransform.getLocalMatrix();
-    childTransform.worldMatrix = parentTransform.worldMatrix * childTransform.getLocalMatrix();
+    auto& parentMtx = parent.get<TransformMtxComponent>();
+    auto& childMtx = child.get<TransformMtxComponent>();
+
+    parentMtx.m_Mtx = parentTransform.getLocalMatrix();
+    childMtx.m_Mtx = parentMtx.m_Mtx * childTransform.getLocalMatrix();
 
     // Extract scale from child's world matrix
     glm::vec3 scale, translation, skew;
     glm::vec4 perspective;
     glm::quat rotation;
-    glm::decompose(childTransform.worldMatrix, scale, rotation, translation, skew, perspective);
+    glm::decompose(childMtx.m_Mtx, scale, rotation, translation, skew, perspective);
 
     // Child's world scale should be 2 * 3 = 6
     EXPECT_NEAR(scale.x, 6.0f, 0.01f);
@@ -199,21 +206,28 @@ TEST_F(SceneGraphTest, ScaleInheritance) {
     EXPECT_NEAR(scale.z, 6.0f, 0.01f);
 }
 
-// Test euler angle conversion
-TEST_F(SceneGraphTest, EulerAngleConversion) {
+// Test euler angle rotation in getLocalMatrix
+TEST_F(SceneGraphTest, EulerAngleRotation) {
     entity e = CreateTestEntity();
     auto& transform = e.get<TransformComponent>();
 
-    glm::vec3 eulerAngles = glm::vec3(glm::radians(45.0f), glm::radians(90.0f), glm::radians(30.0f));
-    transform.setRotationFromEuler(eulerAngles);
+    // Set rotation in degrees (stored as Euler angles)
+    transform.m_Rotation = glm::vec3(45.0f, 90.0f, 30.0f);
 
-    glm::vec3 retrieved = transform.getEulerRotation();
+    // Get local matrix (should convert Euler to rotation matrix internally)
+    glm::mat4 localMat = transform.getLocalMatrix();
 
-    // Due to gimbal lock and quaternion conversion, we just check it doesn't crash
-    // and returns reasonable values
-    EXPECT_TRUE(std::isfinite(retrieved.x));
-    EXPECT_TRUE(std::isfinite(retrieved.y));
-    EXPECT_TRUE(std::isfinite(retrieved.z));
+    // Extract rotation from matrix to verify it's been applied
+    glm::vec3 scale, translation, skew;
+    glm::vec4 perspective;
+    glm::quat rotation;
+    glm::decompose(localMat, scale, rotation, translation, skew, perspective);
+
+    // Just verify the decomposition succeeds and returns finite values
+    EXPECT_TRUE(std::isfinite(rotation.x));
+    EXPECT_TRUE(std::isfinite(rotation.y));
+    EXPECT_TRUE(std::isfinite(rotation.z));
+    EXPECT_TRUE(std::isfinite(rotation.w));
 }
 
 // Test dirty flag
@@ -232,9 +246,10 @@ TEST_F(SceneGraphTest, DirtyFlagSetCorrectly) {
 TEST_F(SceneGraphTest, GetLocalAndWorldTransforms) {
     entity e = CreateTestEntity();
     auto& transform = e.get<TransformComponent>();
+    auto& mtx = e.get<TransformMtxComponent>();
 
-    transform.localPosition = glm::vec3(5.0f, 10.0f, 15.0f);
-    transform.worldMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 200.0f, 300.0f));
+    transform.m_Translation = glm::vec3(5.0f, 10.0f, 15.0f);
+    mtx.m_Mtx = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 200.0f, 300.0f));
 
     glm::mat4 local = SceneGraph::GetLocalTransform(e);
     glm::mat4 world = SceneGraph::GetWorldTransform(e);
@@ -265,14 +280,22 @@ TEST_F(SceneGraphTest, RemoveChildSpecific) {
     EXPECT_TRUE(SceneGraph::HasParent(child2));
 }
 
-// Test legacy compatibility
-TEST_F(SceneGraphTest, LegacyCompatibility) {
+// Test TransformComponent and TransformMtxComponent integration
+TEST_F(SceneGraphTest, ComponentIntegration) {
     entity e = CreateTestEntity();
     auto& transform = e.get<TransformComponent>();
+    auto& mtx = e.get<TransformMtxComponent>();
 
-    transform.worldMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 2.0f, 3.0f));
-    transform.m_trans = transform.worldMatrix;
+    // Set local transform
+    transform.m_Translation = glm::vec3(1.0f, 2.0f, 3.0f);
+    transform.m_Scale = glm::vec3(2.0f, 2.0f, 2.0f);
 
-    // m_trans should match worldMatrix
-    EXPECT_TRUE(MatricesEqual(transform.m_trans, transform.worldMatrix));
+    // Compute world matrix
+    mtx.m_Mtx = transform.getLocalMatrix();
+
+    // Verify world matrix contains the correct transformation
+    glm::vec3 worldPos = glm::vec3(mtx.m_Mtx[3]);
+    EXPECT_NEAR(worldPos.x, 1.0f, 0.001f);
+    EXPECT_NEAR(worldPos.y, 2.0f, 0.001f);
+    EXPECT_NEAR(worldPos.z, 3.0f, 0.001f);
 }
