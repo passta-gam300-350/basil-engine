@@ -20,7 +20,7 @@ SceneManager& SceneManager::GetInstance()
 
 void SceneManager::AddScene(Scene const& scene)
 {
-	scenes[scene.GetMetadata().name] = scene;
+	scenes[scene.m_scene_id] = scene;
 }
 
 void SceneManager::RemoveScene(std::string const& sceneName)
