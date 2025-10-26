@@ -51,7 +51,6 @@ struct MeshRendererComponent {
         CUBE,
         PLANE
 	} m_PrimitiveType;
-
     Resource::Guid m_MeshGuid;     ///< GUID of the mesh asset (or zero for primitives)
     Resource::Guid m_MaterialGuid; ///< GUID of the material asset
 
@@ -86,65 +85,6 @@ struct LightComponent {
     bool m_IsEnabled;             ///< Light enabled state
 };
 
-/**
- * @brief Component for camera entities in the scene
- *
- * The RenderSystem reads from the first CameraComponent entity found.
- * Supports both perspective and orthographic projection.
- */
-struct CameraComponent {
-    enum class CameraType : std::uint8_t {
-        ORTHO,
-        PERSPECTIVE
-    } m_Type;
-    bool m_IsActive;              ///< Camera active state
-    float m_Fov;                  ///< Field of view (degrees, perspective only)
-    float m_AspectRatio;          ///< Aspect ratio (width/height)
-    float m_Near;                 ///< Near clipping plane distance
-    float m_Far;                  ///< Far clipping plane distance
-    glm::vec3 m_Up;               ///< Camera up vector (world space)
-    glm::vec3 m_Right;            ///< Camera right vector (world space)
-    glm::vec3 m_Front;            ///< Camera forward vector (world space)
-    float m_Yaw;                  ///< Yaw rotation (degrees)
-    float m_Pitch;                ///< Pitch rotation (degrees)
-};
-
-/**
- * @brief Main rendering system for the engine
- *
- * RenderSystem is responsible for:
- * - Managing the graphics rendering pipeline via SceneRenderer
- * - Processing ECS entities with rendering components (MeshRendererComponent, LightComponent, CameraComponent)
- * - Managing render-specific resources (shaders, primitives, materials)
- * - Coordinating component initialization and resource caching
- *
- * @note RenderSystem is NOT a singleton - it's owned by the Engine class
- *       Access via Engine::GetRenderSystem() instead of static Instance() methods
- *
- * @section usage Usage
- * @code
- * // Initialization (done by Engine)
- * auto renderSystem = std::make_unique<RenderSystem>();
- * renderSystem->Init();
- * renderSystem->SetupComponentObservers(world);
- * renderSystem->InitializeExistingEntities(world);
- *
- * // Per-frame update
- * renderSystem->Update(world);
- *
- * // Cleanup (done by Engine)
- * renderSystem->Exit();
- * @endcode
- *
- * @section architecture Architecture
- * RenderSystem delegates responsibilities to specialized subsystems:
- * - ShaderLibrary: Loads and caches shaders
- * - PrimitiveManager: Creates shared primitive meshes (cube, plane, etc.)
- * - RenderResourceCache: Caches entity-specific render resources
- * - ComponentInitializer: Handles MeshRendererComponent initialization logic
- *
- * @see ShaderLibrary, PrimitiveManager, RenderResourceCache, ComponentInitializer
- */
 struct RenderSystem : public ecs::SystemBase {
 public:
     // ========== Constructor and Destructor ==========

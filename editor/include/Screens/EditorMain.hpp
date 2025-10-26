@@ -28,12 +28,15 @@ Technology is prohibited.
 #include "ecs/fwd.h"
 #include "Manager/AssetManager.hpp"
 #include <memory>
+#include <spdlog/spdlog.h>
 
 #include "Service/FileService.hpp"
+#include "Service/EngineService.hpp"
 
 class EditorMain : public Screen
 {
 	FileService fileService;
+	EngineContainerService engineService;
 public:
 	bool showAboutModal = false;
 	bool showInspector = true;
@@ -84,13 +87,10 @@ public:
 	void Render_Game();
 	void Render_CameraControls();
 
+	void Render_Components();
+	void Render_Component_Member(auto&, bool& is_dirty);
 
-	void Render_Transform_Group_Component(ecs::entity entity_handle);
-
-	void Render_Lighting_Group_Component(ecs::entity entity_handle);
-
-	void Render_Camera_Group_Component(ecs::entity entity_handle);
-	void Render_Mesh_Component(ecs::entity entity_handle);
+	void Render_Add_Component_Menu();
 
 	void Render_Rigidbody_Component(ecs::entity entity_handle);
 
@@ -112,7 +112,7 @@ private:
 	void CreatePhysicsCube();
 
 	// Editor Camera
-	std::unique_ptr<EditorCamera> m_EditorCamera;
+	std::shared_ptr<EditorCamera> m_EditorCamera;
 
 	// Asset Manager
 	std::unique_ptr<AssetManager> m_AssetManager;

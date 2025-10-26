@@ -76,6 +76,66 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glfwSetWindowUserPointer(m_Window, this);
 }
 
+Window::Window(GLFWwindow* ptr)
+	: m_Width{}, m_Height{}, m_Window{}
+{
+	if (glfwInit() == GLFW_FALSE)
+	{
+		spdlog::error("Failed to initialize GLFW");
+		return;
+	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+	// Create the GLFW window
+	glfwGetWindowSize(ptr, (int32_t*)(&m_Width), (int32_t*)(&m_Height));
+	glfwMakeContextCurrent(ptr);
+	m_Window = glfwCreateWindow(m_Width, m_Height, "hidden", nullptr, ptr);
+	if (m_Window == nullptr)
+	{
+		spdlog::error("Failed to create GLFW window");
+		glfwTerminate();
+		return;
+	}
+
+	// Make this window's context current (moved from Window class)
+	glfwMakeContextCurrent(m_Window);
+
+	if (gladLoadGL() == 0)
+	{
+		spdlog::error("Failed to initialize GLAD2");
+		return;
+	}
+
+	// Print OpenGL info
+	spdlog::info("OpenGL Vendor: {}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+	spdlog::info("OpenGL Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+	spdlog::info("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+	spdlog::info("GLSL Version: {}", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
+	// Set default OpenGL state
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glEnable(GL_BLEND);
+	glEnable(GL_MULTISAMPLE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Enable sRGB framebuffer for automatic linear-to-sRGB conversion
+	glEnable(GL_FRAMEBUFFER_SRGB);
+	spdlog::info("sRGB framebuffer enabled for linear color pipeline");
+
+	m_Initialized = true;
+
+	// Set up callbacks
+	glfwSetFramebufferSizeCallback(m_Window, FramebufferSizeCallback);
+	glfwSetWindowUserPointer(m_Window, this);
+}
+
 Window::~Window()
 {
 	glfwDestroyWindow(m_Window);

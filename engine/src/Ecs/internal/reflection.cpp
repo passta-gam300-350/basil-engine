@@ -2,9 +2,9 @@
 #include "Ecs/ecs.h"
 #include <glm/glm.hpp>
 
-#include "components/transform.h"
+#include "Component/Transform.hpp"
 #include "Render/Render.h"
-#include <Physics/Physics_Components.h>
+#include "Render/Camera.h"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -56,15 +56,26 @@ void ReflectionRegistry::SetupNativeTypes() {
 
 	RegisterReflectionComponent<glm::mat2>(
 		"mat2",
-		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2 { return mtx[0]; }, "m0" > ,
-		MemberRegistrationV < [](glm::mat2 mtx) -> glm::vec2 { return mtx[1]; }, "m1" >
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 0, 0>, &GetMatCellValue<glm::mat2, 0, 0>, "m00" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 0, 1>, &GetMatCellValue<glm::mat2, 0, 1>, "m01" >,
+
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 1, 0>, &GetMatCellValue<glm::mat2, 1, 0>, "m10" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat2, 1, 1>, &GetMatCellValue<glm::mat2, 1, 1>, "m11" >
 	);
 
 	RegisterReflectionComponent<glm::mat3>(
 		"mat3",
-		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[0]; }, "m0" > ,
-		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[1]; }, "m1" > ,
-		MemberRegistrationV < [](glm::mat3 mtx) -> glm::vec3 { return mtx[2]; }, "m2" >
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,0, 0>, &GetMatCellValue<glm::mat3,0, 0>, "m00" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,0, 1>, &GetMatCellValue<glm::mat3,0, 1>, "m01" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,0, 2>, &GetMatCellValue<glm::mat3,0, 2>, "m02" >,
+
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,1, 0>, &GetMatCellValue<glm::mat3,1, 0>, "m10" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,1, 1>, &GetMatCellValue<glm::mat3,1, 1>, "m11" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,1, 2>, &GetMatCellValue<glm::mat3,1, 2>, "m12" >,
+
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,2, 0>, &GetMatCellValue<glm::mat3,2, 0>, "m20" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,2, 1>, &GetMatCellValue<glm::mat3,2, 1>, "m21" >,
+		InterfaceRegistrationV < &SetMatCellValue<glm::mat3,2, 2>, &GetMatCellValue<glm::mat3,2, 2>, "m22" >
 	);
 
 
@@ -112,25 +123,11 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&VisibilityComponent::m_IsVisible, "m_IsVisible">
 	);
 
-	RegisterReflectionComponent<PositionComponent>(
-		"PositionComponent",
-		MemberRegistrationV<&PositionComponent::m_WorldPos, "m_WorldPos">
-	);
-
-	RegisterReflectionComponent<ScaleComponent>(
-		"ScaleComponent",
-		MemberRegistrationV<&ScaleComponent::m_Scale, "m_Scale">
-	);
-
-	RegisterReflectionComponent<RotationComponent>(
-		"RotationComponent",
-		MemberRegistrationV<&RotationComponent::m_Rotation, "m_Rotation">
-
-	);
-
 	RegisterReflectionComponent<TransformComponent>(
 		"TransformComponent",
-		MemberRegistrationV<&TransformComponent::m_trans, "m_trans">
+		MemberRegistrationV<&TransformComponent::m_Scale, "m_Scale">,
+		MemberRegistrationV<&TransformComponent::m_Rotation, "m_Rotate">,
+		MemberRegistrationV<&TransformComponent::m_Translation, "m_Trans">
 	);
 
 	RegisterReflectionComponent<MeshRendererComponent>(
