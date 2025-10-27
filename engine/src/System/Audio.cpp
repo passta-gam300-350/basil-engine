@@ -60,7 +60,7 @@ void AudioSystem::Stop_All_Audio()
 	}
 }
 
-void AudioSystem::Load_Audio(std::string _dir, bool _loop, bool _stream, bool _3d, bool _ambient)
+void AudioSystem::Load_Audio(std::string _dir, bool _loop, bool _stream, bool _3d, bool _ambient, bool _linear)
 {
 	std::cout << "Loading audio\n";
 	mode |= (_loop) ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
@@ -68,6 +68,7 @@ void AudioSystem::Load_Audio(std::string _dir, bool _loop, bool _stream, bool _3
 	mode |= (_3d) ? FMOD_3D : FMOD_2D;
 	if (_3d)
 		mode |= (_ambient) ? FMOD_3D_INVERSETAPEREDROLLOFF : FMOD_3D_INVERSEROLLOFF;
+	mode |= (_linear) ? FMOD_3D_LINEARROLLOFF : FMOD_3D_INVERSETAPEREDROLLOFF; // [TEMP] Just to test linear rolloff
 	FMOD::Sound* p_sound = nullptr;
 	result = p_system->createSound(_dir.c_str(), mode, nullptr, &p_sound);
 	FMOD_ErrorCheck(result);
@@ -117,7 +118,11 @@ FMOD_DSP_TYPE AudioSystem::Filter_Selector(Filter _filter)
 	}
 }
 
-void AudioSystem::Init(void* extradriverdata = nullptr) {
+AudioSystem AudioSystem::System() {
+	return AudioSystem();
+}
+
+void AudioSystem::Init(void* extradriverdata) {
 	std::cout << "Creating audio system\n";
 	result = FMOD::System_Create(&p_system);
 	FMOD_ErrorCheck(result);
@@ -154,7 +159,7 @@ void AudioSystem::Init(void* extradriverdata = nullptr) {
 	// createSound here when serialization is done
 
 	std::cout << "Creating drumloop.wave\n";
-	Load_Audio("", true, true, false); // [TEMP] (Add path to audio file)
+	Load_Audio("test/examples/lib/resource/assets/audio/drumloop.wav", true, true, false, false); // [TEMP] (Add path to audio file)
 
 	result = p_system->playSound(m_sound[0], nullptr, false, &v_channel[0]);
 	FMOD_ErrorCheck(result);
@@ -177,7 +182,7 @@ void AudioSystem::Init(void* extradriverdata = nullptr) {
 }
 
 
-void AudioSystem::Update()
+void AudioSystem::Update(ecs::world&)
 {
 	std::vector<FMOD::Channel*> stopped_channels;
 	for (auto it = v_channel.begin(); it != v_channel.end(); ++it)

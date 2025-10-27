@@ -66,7 +66,7 @@ public:
 	static void Play_Audio();
 	static void Stop_Audio();
 	static void Stop_All_Audio();
-	static void Load_Audio(std::string _dir = "", bool _loop, bool _stream, bool _3d, bool _linear = false);
+	static void Load_Audio(std::string, bool _loop, bool _stream, bool _3d, bool _ambient, bool _linear = false);
 	static void Unload_Audio();
 	static void Unload_All_Audio();
 
@@ -75,12 +75,11 @@ public:
 private:
 	//static std::unique_ptr<InstanceData& InstancePtr();
 public:
-	//static InstanceData& Instance();
-	//static AudioSystem System();
+	static AudioSystem System();
 	//~AudioSystem() = default;
 
 	void Init(void* extradriverdata = nullptr);
-	void Update();
+	void Update(ecs::world&);
 	void Exit();
 };
 #endif

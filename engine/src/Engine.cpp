@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
 #include "Render/Camera.h"
+#include "System/Audio.hpp"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -99,6 +100,7 @@ void Engine::Init(std::string const& cfg ) {
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
+	AudioSystem::System().Init(); // [TEMP]
 }
 
 void Engine::CoreUpdate() {
@@ -114,6 +116,7 @@ void Engine::CoreUpdate() {
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
+	AudioSystem::System().Update(instance.m_World); // [TEMP]
 	PF_END_FRAME();
 }
 
@@ -227,6 +230,7 @@ void Engine::Exit() {
 	RenderSystem::System().Exit();
 	ResourceSystem::Release();
 	Scheduler::Release();
+	AudioSystem::System().Exit(); // [TEMP]
 	InstancePtr().reset();
 }
 
