@@ -10,18 +10,15 @@ enum class EmissionType
 	Point,
 	Box,
 	Sphere,
-	Cone
 };
 
 struct ParticleEmitterConfiguration
 {
 	glm::vec3 position;
-	glm::vec3 direction;
 
 	EmissionType emissionType;
-	glm::vec3 emissionSize;
+	glm::vec3 emitterSize;
 	float sphereRadius;
-	float coneAngle;
 
 	float emissionRate = 10.0f;
 	int maxParticles = 10000;
@@ -34,6 +31,7 @@ struct ParticleEmitterConfiguration
 	glm::vec4 startColor = glm::vec4(1.0f);
 	glm::vec4 endColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
 	float startSize = 1.0f;
+	float endSize = 0.5f;
 	float startRotation = 0.0f;
 	float rotationSpeed = 0.0f;
 
