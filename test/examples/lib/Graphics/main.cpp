@@ -133,8 +133,8 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    SetupTinboxDemo();       // Tinbox grid - outline/PBR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupTinboxDemo();       // Tinbox grid - outline/PBR test
     
     
 

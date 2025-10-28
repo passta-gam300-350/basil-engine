@@ -158,8 +158,8 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     context.exposure = exposure;
 
     // Debug logging - enabled to diagnose brightness issue
-    spdlog::info("HDRLuminancePass: AvgLum={:.4f}, Exposure={:.4f}",
-                  context.avgLuminance, context.exposure);
+    /*spdlog::info("HDRLuminancePass: AvgLum={:.4f}, Exposure={:.4f}",
+                  context.avgLuminance, context.exposure);*/
 }
 
 uint32_t HDRLuminancePass::AlignUpToMultiple(uint32_t value, uint32_t multiple)
