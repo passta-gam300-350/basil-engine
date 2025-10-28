@@ -347,6 +347,9 @@ macro(import_fmod)
     set(FMOD_STUDIO_API_LIB_DIR "${FMOD_API_DIR}/api/studio/lib/x64")
     set(FMOD_STUDIO_API_INC_DIR "${FMOD_API_DIR}/api/studio/inc")
 
+    set(FMOD_API_DLL_PATH_DEBUG "${FMOD_CORE_API_LIB_DIR}/fmodL.dll")
+    set(FMOD_API_DLL_PATH_RELEASE "${FMOD_CORE_API_LIB_DIR}/fmod.dll")
+
     find_library(FMOD_CORE_LIBRARY_DEBUG fmodL_vc PATHS ${FMOD_CORE_API_LIB_DIR})
     find_library(FMOD_CORE_LIBRARY_RELEASE fmod_vc PATHS ${FMOD_CORE_API_LIB_DIR})
 
@@ -393,6 +396,7 @@ macro(import_fmod)
         IMPORTED_LOCATION_DEBUG_STATIC_ANALYSIS ${FMOD_STUDIO_API_LIB_DIR}/fmodstudioL.dll
         IMPORTED_IMPLIB_DEBUG_STATIC_ANALYSIS ${FMOD_STUDIO_LIBRARY_DEBUG}
     )
+
 endmacro()
 
 # Import Mono
@@ -595,6 +599,21 @@ macro(mono_postimport target)
     target_compile_definitions(${target} PUBLIC MONO_COMPILER="${TOOL_DLL_CSCOMPILER}")
 endmacro(mono_postimport target)
 
+macro(fmod_postimport targetName)
+   # Check build configuration and copy appropriate FMOD DLLs
+   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+       set(FMOD_DLL_PATH "${FMOD_API_DLL_PATH_DEBUG}")
+   else()
+       set(FMOD_DLL_PATH "${FMOD_API_DLL_PATH_RELEASE}")
+    endif()
+    add_custom_command(TARGET ${targetName} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FMOD_DLL_PATH}" "$<TARGET_FILE_DIR:${targetName}>"
+    )
+
+
+endmacro()
+
 macro(postimport_dll targetName)
     mono_postimport(${targetName})
+    fmod_postimport(${targetName})
 endmacro()
