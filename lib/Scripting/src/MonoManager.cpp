@@ -30,6 +30,7 @@ Technology is prohibited.
 
 #include "ScriptCompiler.hpp"
 #include "ABI/ABI.h"
+#include <mono/metadata/threads.h>
 
 namespace
 {
@@ -176,6 +177,20 @@ std::vector<std::shared_ptr<CSKlass>> MonoManager::LoadKlassesFromAssembly(Manag
 	return klasses;
 }
 
+
+void MonoManager::Attach() {
+
+	MonoDomain* rootDomain = mono_get_root_domain();
+	if (mono_domain_get() == rootDomain)
+		return;
+	mono_thread_attach(rootDomain);
+	mono_domain_set(rootDomain, false);
+}
+
+void MonoManager::Detach() {
+	MonoThread* thread = mono_thread_current();
+	mono_thread_detach(thread);
+}
 MonoManager::~MonoManager() = default;
 
 

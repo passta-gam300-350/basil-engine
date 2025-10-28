@@ -55,8 +55,12 @@ public:
 	static void StartCompilation();
 
 
-	static ScriptCompiler* GetCompiler();
+	static ScriptCompiler	* GetCompiler();
 	static MonoLoader* GetLoader();
+
+
+	static void Attach();
+	static void Detach();
 
 
 	// Classes

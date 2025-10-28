@@ -1,7 +1,28 @@
 #include "Service/EngineService.hpp"
 #include "Editor.hpp"
+#include "Manager/MonoEntityManager.hpp"
 
+#include <filesystem>
 void EngineContainerService::EngineContainer::engine_service() {
+	MonoEntityManager::GetInstance().initialize();
+
+	std::string working_dir = Editor::GetInstance().GetConfig().project_workingDir;
+	std::string asset_dir = working_dir + "assets";
+
+	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "scripts";
+	if (std::filesystem::exists(scripts_dir)) {
+		MonoEntityManager::GetInstance().AddSearchDirectory(scripts_dir.string().c_str());
+	}
+
+	std::filesystem::path managed_dir = std::filesystem::path{ working_dir } / "managed";
+	if (std::filesystem::exists(managed_dir)) {
+		MonoEntityManager::GetInstance().SetOutputDirectory(managed_dir.string().c_str());
+	}
+
+	//Mono Configuration here
+	
+
+
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
 	Engine::SetState(Engine::Info::State::Wait);

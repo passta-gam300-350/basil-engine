@@ -69,7 +69,7 @@ void EditorMain::init()
 	UNREF_PARAM(mode);
 	// Set maximized
 	glfwMaximizeWindow(window);
-
+	
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
@@ -97,6 +97,8 @@ void EditorMain::init()
 	// Note: ImGui callbacks are already set up in main.cpp
 	// We need to chain our input handling with ImGui's callbacks
 	// InputManager will be updated manually in render() to avoid conflicts
+
+	MonoEntityManager::GetInstance().Attach();
 }
 
 
@@ -360,12 +362,12 @@ void EditorMain::Render_Add_Component_Menu()
 {
 	auto& reflectible_component_list = engineService.get_reflectible_component_id_name_list();
 	static const ReflectionRegistry::TypeID skip_name_component{ ReflectionRegistry::InternalID()[entt::type_index<ecs::entity::entity_name_t>::value()] };
-	for (auto const&[type_id, type_name] : reflectible_component_list) {
+	for (auto const& [type_id, type_name] : reflectible_component_list) {
 		if (type_id == skip_name_component) {
 			continue;
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {
-			
+
 		}
 	}
 }
@@ -396,25 +398,26 @@ void EditorMain::Render_MenuBar()
 			if (fileService.OpenFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), path, FileService::FILE_TYPE_LIST{ {L"Scene Files", L"*.scene"} }))
 			{
 				LoadScene(path.c_str());
-				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{path}.filename().string()).c_str());
+				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{ path }.filename().string()).c_str());
 
-				
+
 			}
 		}
 		if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 		{
-			
+
 			std::string currentPath = Editor::GetInstance().GetConfig().project_workingDir;
 			if (currentPath.empty()) {
 				spdlog::error("No project loaded, cannot save scene!");
 				return;
 			}
 			std::string scenePath{};
-			fileService.SaveFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), scenePath, FileService::FILE_TYPE_LIST{{L"Scene Files", L"*.scene"} });
+			fileService.SaveFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), scenePath, FileService::FILE_TYPE_LIST{ {L"Scene Files", L"*.scene"} });
 			if (!scenePath.empty()) {
-				
+
 				SaveScene(scenePath.c_str());
-			} else
+			}
+			else
 				spdlog::warn("No scene path specified, not saving.");
 
 
@@ -557,7 +560,7 @@ void EditorMain::Render_SceneExplorer()
 
 	ImGui::Text("Entities in scene:");
 	for (auto ehdl : entities) {
-		ecs::entity entity{ehdl};
+		ecs::entity entity{ ehdl };
 		ImGui::PushID(static_cast<int>(entity.get_uid()));
 
 		// Check if this entity is currently selected
@@ -574,7 +577,7 @@ void EditorMain::Render_SceneExplorer()
 		bool hasVisibility = world.has_all_components_in_entity<VisibilityComponent>(entity);
 
 		UNREF_PARAM(hasTransform);
-		
+
 		if (hasLight) entityName += " (Light)";
 		else if (hasMesh) entityName += " (Mesh)";
 		else entityName += " (Empty)";
@@ -619,13 +622,13 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
-	
-	
+
+
 	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
-	
+
 
 
 	double totalMs = 0.0;
@@ -666,7 +669,7 @@ void EditorMain::Render_CameraControls()
 	if (m_EditorCamera) {
 		// Camera mode selection
 		ImGui::Text("Camera Mode:");
-		const char* modes[] = { "Fly" }; 
+		const char* modes[] = { "Fly" };
 		static int currentMode = 0;
 
 		if (ImGui::Combo("Mode", &currentMode, modes, IM_ARRAYSIZE(modes))) {
@@ -1047,7 +1050,7 @@ void EditorMain::CreateDefaultEntity()
 	world.add_component_to_entity<TransformComponent>(entity);
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	
+
 }
 
 void EditorMain::CreatePlaneEntity()
@@ -1075,7 +1078,7 @@ void EditorMain::CreatePlaneEntity()
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	world.add_component_to_entity<behaviour>(entity, behaviour{ {"UserTest"},{}});
+	world.add_component_to_entity<behaviour>(entity, behaviour{ {"UserTest"},{} });
 	BehaviourSystem::Instance().RegisterComponent(entity);
 
 
@@ -1209,8 +1212,8 @@ void EditorMain::CreatePhysicsDemoScene()
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
-	
-	JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f,0.5f,0.5f));
+
+	JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
 	box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
 	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 	JPH::ShapeRefC Box_shape = Box_shape_result.Get();

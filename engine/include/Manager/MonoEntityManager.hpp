@@ -81,6 +81,8 @@ public:
 	void ClearAll();
 	~MonoEntityManager();
 
+	void Attach();
+	void Detach();
 
 };
 

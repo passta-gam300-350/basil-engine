@@ -246,8 +246,10 @@ void MonoEntityManager::SetOutputDirectory(const char* path) {
 	useDefault = false;
 }
 
+void MonoEntityManager::Attach() {
+	MonoManager::Attach();
+}
 
-
-
-
-
+void MonoEntityManager::Detach() {
+	MonoManager::Detach();
+}
