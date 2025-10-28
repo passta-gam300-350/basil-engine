@@ -20,6 +20,7 @@ Technology is prohibited.
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
+#include "../../include/Rendering/ParticleRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
 #include <glfw/glfw3.h>
 
@@ -76,6 +77,9 @@ void MainRenderingPass::Execute(RenderContext& context)
 
         // 3. Forward instanced rendering with visible renderables using pass-local buffer
         context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData);
+
+        // 4. 
+        context.particleRenderer.RenderToPass(*this, context.frameData);
     }
 
     // Execute all commands submitted to this pass's command buffer

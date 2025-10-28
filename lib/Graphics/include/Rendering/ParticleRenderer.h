@@ -3,12 +3,10 @@
 #include "../Utility/Particle.h"
 #include "../Resources/Shader.h"
 #include "../Resources/Mesh.h"
+#include "Pipeline/RenderPass.h"
+#include "Utility/FrameData.h"
 #include <memory>
 #include <vector>
-
-// Forward declarations
-class RenderPass;
-struct FrameData;
 
 class ParticleRenderer
 {

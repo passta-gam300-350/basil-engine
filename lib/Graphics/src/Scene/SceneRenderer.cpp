@@ -25,6 +25,7 @@ Technology is prohibited.
 #include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/PresentPass.h"
 #include "Pipeline/ShadowMappingPass.h"
+#include "Rendering/ParticleRenderer.h"
 #include "Resources/Shader.h"
 #include "Resources/Mesh.h"
 #include <cassert>
@@ -55,6 +56,11 @@ void SceneRenderer::SubmitRenderable(const RenderableData& renderable) {
     m_SubmittedRenderables.push_back(renderable);
 }
 
+void SceneRenderer::SubmitParticles(const ParticleRenderData& particleData) {
+    if (m_ParticleRenderer) {
+        m_ParticleRenderer->SubmitParticleSystem(particleData);
+    }
+}
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
@@ -64,6 +70,9 @@ void SceneRenderer::ClearFrame()
     m_SubmittedRenderables.clear();
 	m_SubmittedLights.clear();
 	GetFrameData().debugAABBs.clear();
+    if (m_ParticleRenderer) {
+        m_ParticleRenderer->ClearFrame();
+    }
 }
 
 
@@ -109,6 +118,9 @@ void SceneRenderer::InitializeRenderingCoordinators()
 
     m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_PBRLightingRenderer.get());
     assert(m_InstancedRenderer && "Failed to create InstancedRenderer");
+
+    m_ParticleRenderer = std::make_unique<ParticleRenderer>();
+    assert(m_ParticleRenderer && "Failed to create ParticleRenderer");
 }
 
 void SceneRenderer::Render()
@@ -117,7 +129,7 @@ void SceneRenderer::Render()
     assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized before rendering");
     assert(m_ResourceManager && "ResourceManager must be initialized before rendering");
     assert(m_TextureSlotManager && "TextureSlotManager must be initialized before rendering");
-
+    assert(m_ParticleRenderer && "ParticleRenderer must be initialized before rendering");
     // Create context with references to our data - NO COPYING!
     RenderContext context(
         m_SubmittedRenderables,  // const ref to renderables
@@ -127,7 +139,8 @@ void SceneRenderer::Render()
         *m_InstancedRenderer,    // ref to instanced renderer
         *m_PBRLightingRenderer,  // ref to PBR lighting
         *m_ResourceManager,      // ref to resource manager
-        *m_TextureSlotManager    // ref to texture slot manager
+        *m_TextureSlotManager,   // ref to texture slot manager
+        *m_ParticleRenderer      // ref to particle renderer 
     );
 
     // Execute the single pipeline
@@ -238,7 +251,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer);
 
             spdlog::info("QueryObjectPicking: Executing picking pass with {} renderables", m_SubmittedRenderables.size());
 
