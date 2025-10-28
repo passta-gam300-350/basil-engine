@@ -106,7 +106,6 @@ void EditorMain::update()
 void EditorMain::render()
 {
 	if (!active) return;
-	Engine::BeginFrame();
 
 	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -884,19 +883,8 @@ void EditorMain::Render_AssetBrowser()
 
 void EditorMain::Render_Scene()
 {
-	// Update editor camera - will be done inside the Scene window with proper input handling
-	if (!m_IsPlayMode && m_EditorCamera) {
-		// Get delta time
-		static auto lastTime = std::chrono::steady_clock::now();
-		auto currentTime = std::chrono::steady_clock::now();
-		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-		lastTime = currentTime;
-
-		// Camera update will be moved inside the viewport handling to avoid input conflicts
-		// Store deltaTime for later use
-		static float s_deltaTime = deltaTime;
-		s_deltaTime = deltaTime;
-	}
+	// Get delta time for camera updates
+	float deltaTime = static_cast<float>(Engine::GetDeltaTime());
 
 	ImGui::Begin("Scene");
 
@@ -967,12 +955,6 @@ void EditorMain::Render_Scene()
 
 		// Handle camera input only when viewport is hovered and not clicking
 		if (!m_IsPlayMode && m_EditorCamera && viewportHovered && !viewportClicked) {
-			// Get stored delta time
-			static auto lastTime = std::chrono::steady_clock::now();
-			auto currentTime = std::chrono::steady_clock::now();
-			float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-			lastTime = currentTime;
-
 			// Temporarily disable ImGui input capture for camera control
 			ImGuiIO& io = ImGui::GetIO();
 			bool originalWantCaptureMouse = io.WantCaptureMouse;

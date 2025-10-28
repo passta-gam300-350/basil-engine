@@ -118,7 +118,7 @@ void Engine::Init(std::string const& cfg ) {
 
 void Engine::CoreUpdate() {
 	Engine& instance{ Instance() };
-	PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
+	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
 	TransformSystem().FixedUpdate(instance.m_World);
@@ -129,7 +129,7 @@ void Engine::CoreUpdate() {
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
-	PF_END_FRAME();
+	//PF_END_FRAME();
 }
 
 void Engine::Update() {
@@ -172,7 +172,7 @@ void Engine::UpdateDebug() {
 	if (frame_log_rate && frame_counter >= frame_log_rate) {
 		Profiler::instance().printLastFrameSummary();
 		Engine::Instance().GetInfo().m_FPS = Profiler::instance().getLastFps();
-
+		Engine::Instance().GetInfo().m_DeltaTime = 1 / Engine::Instance().GetInfo().m_FPS;
 	}
 
 	frame_number++;
@@ -309,19 +309,6 @@ Logger::Sink* Engine::GetSink() {
 void Engine::BeginFrame()
 {
 	Engine& instance = Instance();
-
-	// Calculate delta time
-	double currentTime = glfwGetTime();
-
-	// Initialize on first frame
-	if (instance.m_Info.m_LastFrameTime == 0.0) {
-		instance.m_Info.m_LastFrameTime = currentTime;
-		instance.m_Info.m_DeltaTime = 0.0;
-	} else {
-		instance.m_Info.m_DeltaTime = currentTime - instance.m_Info.m_LastFrameTime;
-	}
-
-	instance.m_Info.m_LastFrameTime = currentTime;
 
 	PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 }
