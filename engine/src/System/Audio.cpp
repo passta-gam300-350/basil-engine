@@ -18,8 +18,6 @@ FMOD_VECTOR sound_vel{ 0.0f, 0.0f, 0.0f };
 FMOD_VECTOR right{ 1.0f, 0.0f, 0.0f };
 FMOD_VECTOR up{ 0.0f, 1.0f, 0.0f };
 FMOD_VECTOR forward{ 0.0f, 0.0f, 1.0f };
-//FMOD::Sound* p_sound{ 0 };
-//FMOD::Channel* p_channel{ 0 };
 std::vector<FMOD::DSP*> dsp = { 0, 0, 0, 0 };
 std::vector<bool> dsp_bypass = { true, true, true, true };
 #pragma endregion
@@ -34,11 +32,24 @@ void AudioSystem::FMOD_ErrorCheck(FMOD_RESULT _result)
 	}
 }
 
-void AudioSystem::Play_Audio()
+void AudioSystem::Play_Temp_Audio()
 {
 	std::cout << "Playing audio\n";
 	FMOD::Channel* p_channel = nullptr;
-	result = p_system->playSound(m_sound[0], nullptr, false, &p_channel);
+	FMOD::Sound* p_sound = nullptr;
+	FMOD_MODE mode = FMOD_DEFAULT;
+	mode |= FMOD_LOOP_NORMAL;
+	mode |= FMOD_3D;
+	mode |= FMOD_CREATESTREAM;
+	result = p_system->createSound("test/examples/lib/resource/assets/audio/drumloop.wav", mode, nullptr, &p_sound);
+	FMOD_ErrorCheck(result);
+	result = p_system->playSound(p_sound, nullptr, false, &v_channel[0]);
+	FMOD_ErrorCheck(result);
+}
+
+void AudioSystem::Play_Audio()
+{
+	std::cout << "Playing audio\n";
 }
 
 void AudioSystem::Stop_Audio()
@@ -137,7 +148,7 @@ void AudioSystem::Init(void* extradriverdata) {
 
 	// Need to pull data of created channel groups
 	std::cout << "Creating Channel Groups\n";
-	v_group.resize(1);
+	v_group.resize(1); // [TEMP]
 	for (int i{ 0 }; i < v_group.size(); ++i)
 	{
 		result = p_system->createChannelGroup(nullptr, &v_group[i]);
@@ -148,6 +159,7 @@ void AudioSystem::Init(void* extradriverdata) {
 
 	// [TEMP]
 	// Set channel to channel group
+	v_channel.resize(1); // [TEMP]
 	result = v_channel[0]->setChannelGroup(v_group[0]);
 
 	std::cout << "Getting Master Channel Group\n";
@@ -159,9 +171,9 @@ void AudioSystem::Init(void* extradriverdata) {
 	// createSound here when serialization is done
 
 	std::cout << "Creating drumloop.wave\n";
-	Load_Audio("test/examples/lib/resource/assets/audio/drumloop.wav", true, true, false, false); // [TEMP] (Add path to audio file)
+	//Load_Audio("test/examples/lib/resource/assets/audio/drumloop.wav", true, true, false, false); // [TEMP] (Add path to audio file)
 
-	result = p_system->playSound(m_sound[0], nullptr, false, &v_channel[0]);
+	Play_Temp_Audio();
 	FMOD_ErrorCheck(result);
 
 	// createDSP every possible built in DSP (custom DSP plugins when serialization is done)

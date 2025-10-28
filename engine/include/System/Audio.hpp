@@ -63,6 +63,7 @@ struct AudioSystem : public ecs::SystemBase
 public:
 	static void FMOD_ErrorCheck(FMOD_RESULT _result);
 
+	static void Play_Temp_Audio();
 	static void Play_Audio();
 	static void Stop_Audio();
 	static void Stop_All_Audio();
