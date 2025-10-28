@@ -30,27 +30,17 @@ int main() {
     ecs::world world = ecs::world::new_world_instance();
 
     // Create entities
-    std::cout << "Creating entities...\n";
     ecs::entity sun = world.add_entity();
-    std::cout << "  Created sun, adding components...\n";
     sun.add<TransformComponent>();
     sun.add<RelationshipComponent>();
-    std::cout << "    Added RelationshipComponent\n";
 
     ecs::entity earth = world.add_entity();
-    std::cout << "  Created earth, adding components...\n";
     earth.add<TransformComponent>();
-    std::cout << "    Added TransformComponent\n";
     earth.add<RelationshipComponent>();
-    std::cout << "    Added RelationshipComponent\n";
 
     ecs::entity moon = world.add_entity();
-    std::cout << "  Created moon, adding components...\n";
     moon.add<TransformComponent>();
-    std::cout << "    Added TransformComponent\n";
     moon.add<RelationshipComponent>();
-    std::cout << "    Added RelationshipComponent\n";
-    std::cout << "All entities created successfully.\n";
 
     // Set up hierarchy: Sun -> Earth -> Moon
     std::cout << "\nSetting up hierarchy: Sun -> Earth -> Moon\n";

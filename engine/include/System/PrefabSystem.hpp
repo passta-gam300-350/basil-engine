@@ -135,7 +135,8 @@ public:
      * @param value The overridden value
      */
     static void MarkPropertyOverridden(ecs::world& world, ecs::entity instance,
-                                       Component::ComponentType componentType,
+                                       std::uint32_t componentTypeHash,
+                                       const std::string& componentTypeName,
                                        const std::string& propertyPath,
                                        PropertyValue value);
 
@@ -151,7 +152,7 @@ public:
      * @return True if the override was found and reverted
      */
     static bool RevertOverride(ecs::world& world, ecs::entity instance,
-                               Component::ComponentType componentType,
+                               std::uint32_t componentTypeHash,
                                const std::string& propertyPath);
 
     /**
@@ -276,7 +277,7 @@ private:
      * @brief Check if a property is overridden
      */
     static bool IsPropertyOverridden(const PrefabComponent* prefabComp,
-                                     Component::ComponentType componentType,
+                                     std::uint32_t componentTypeHash,
                                      const std::string& propertyPath);
 
     // Prefab cache (UUID -> PrefabData)

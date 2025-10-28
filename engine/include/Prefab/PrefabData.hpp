@@ -31,21 +31,27 @@ using SerializedPropertyValue = std::variant<
 /**
  * @brief Represents a single component's serialized data in a prefab
  *
- * Stores the component type and all its property values as key-value pairs.
+ * Uses reflection-based type identification (entt::id_type hash + human-readable name).
  * Properties are stored with their names as keys for easy lookup during
  * deserialization and property override application.
+ *
+ * NOTE: Replaced Component::ComponentType enum with reflection types since actual
+ * gameplay components (TransformComponent, MeshRendererComponent, etc.) are
+ * registered via reflection, not the legacy ComponentType enum.
  */
 struct SerializedComponent
 {
-    Component::ComponentType type;                          ///< Component type
+    std::uint32_t typeHash = 0;                             ///< Reflection type hash (entt::id_type)
+    std::string typeName;                                   ///< Human-readable type name (e.g., "TransformComponent")
     std::map<std::string, SerializedPropertyValue> properties; ///< Property name -> value
 
     SerializedComponent() = default;
-    SerializedComponent(Component::ComponentType t) : type(t) {}
+    SerializedComponent(std::uint32_t hash, std::string name)
+        : typeHash(hash), typeName(std::move(name)) {}
 
     /**
      * @brief Set a property value
-     * @param name Property name (e.g., "localPosition")
+     * @param name Property name (e.g., "m_Translation")
      * @param value Property value
      */
     void SetProperty(const std::string& name, SerializedPropertyValue value)
@@ -79,30 +85,60 @@ struct PrefabEntity
     std::vector<PrefabEntity> children;          ///< Child entities in the hierarchy
 
     /**
-     * @brief Find a component by type
-     * @param type Component type to find
+     * @brief Find a component by type hash
+     * @param typeHash Reflection type hash to find
      * @return Pointer to the component, or nullptr if not found
      */
-    SerializedComponent* GetComponent(Component::ComponentType type)
+    SerializedComponent* GetComponent(std::uint32_t typeHash)
     {
         for (auto& comp : components)
         {
-            if (comp.type == type)
+            if (comp.typeHash == typeHash)
                 return &comp;
         }
         return nullptr;
     }
 
     /**
-     * @brief Find a component by type (const version)
-     * @param type Component type to find
+     * @brief Find a component by type hash (const version)
+     * @param typeHash Reflection type hash to find
      * @return Pointer to the component, or nullptr if not found
      */
-    const SerializedComponent* GetComponent(Component::ComponentType type) const
+    const SerializedComponent* GetComponent(std::uint32_t typeHash) const
     {
         for (const auto& comp : components)
         {
-            if (comp.type == type)
+            if (comp.typeHash == typeHash)
+                return &comp;
+        }
+        return nullptr;
+    }
+
+    /**
+     * @brief Find a component by type name
+     * @param typeName Component type name (e.g., "TransformComponent")
+     * @return Pointer to the component, or nullptr if not found
+     */
+    SerializedComponent* GetComponentByName(const std::string& typeName)
+    {
+        for (auto& comp : components)
+        {
+            if (comp.typeName == typeName)
+                return &comp;
+        }
+        return nullptr;
+    }
+
+    /**
+     * @brief Find a component by type name (const version)
+     * @param typeName Component type name
+     * @return Pointer to the component, or nullptr if not found
+     */
+    const SerializedComponent* GetComponentByName(const std::string& typeName) const
+    {
+        for (const auto& comp : components)
+        {
+            if (comp.typeName == typeName)
                 return &comp;
         }
         return nullptr;
@@ -110,24 +146,34 @@ struct PrefabEntity
 
     /**
      * @brief Check if this entity has a specific component type
-     * @param type Component type to check
+     * @param typeHash Reflection type hash to check
      * @return True if the component exists
      */
-    bool HasComponent(Component::ComponentType type) const
+    bool HasComponent(std::uint32_t typeHash) const
     {
-        return GetComponent(type) != nullptr;
+        return GetComponent(typeHash) != nullptr;
+    }
+
+    /**
+     * @brief Check if this entity has a specific component type by name
+     * @param typeName Component type name to check
+     * @return True if the component exists
+     */
+    bool HasComponentByName(const std::string& typeName) const
+    {
+        return GetComponentByName(typeName) != nullptr;
     }
 
     /**
      * @brief Add a component to this entity
-     * @param component The component to add
+     * @param component The component to add (replaces existing if same type)
      */
     void AddComponent(const SerializedComponent& component)
     {
-        // Remove existing component of same type if any
+        // Remove existing component of same type hash if any
         for (auto it = components.begin(); it != components.end(); ++it)
         {
-            if (it->type == component.type)
+            if (it->typeHash == component.typeHash)
             {
                 components.erase(it);
                 break;

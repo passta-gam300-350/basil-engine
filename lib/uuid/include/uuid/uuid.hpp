@@ -69,6 +69,7 @@ public:
 	uint64_t getHigh() const;
 
     std::string ToString();
+    static UUID FromString(const std::string& str);
 
 };
 
@@ -237,7 +238,53 @@ std::string UUID<N>::ToString()
 	return result;
 }
 
+template <size_t N>
+	requires AllowedSize<N>
+UUID<N> UUID<N>::FromString(const std::string& str)
+{
+	UUID<N> uuid;
 
+	// Remove dashes and validate length
+	std::string cleanStr;
+	for (char c : str)
+	{
+		if (c != '-')
+			cleanStr += c;
+	}
+
+	// Expected length: 32 hex chars for 128-bit, 16 for 64-bit
+	size_t expectedLength = N / 4;
+	if (cleanStr.length() != expectedLength)
+	{
+		throw std::runtime_error("Invalid UUID string length");
+	}
+
+	// Parse hex string and set bits
+	for (size_t i = 0; i < cleanStr.length(); ++i)
+	{
+		char c = cleanStr[i];
+		uint8_t nibble = 0;
+
+		// Convert hex char to nibble (4 bits)
+		if (c >= '0' && c <= '9')
+			nibble = c - '0';
+		else if (c >= 'a' && c <= 'f')
+			nibble = c - 'a' + 10;
+		else if (c >= 'A' && c <= 'F')
+			nibble = c - 'A' + 10;
+		else
+			throw std::runtime_error("Invalid hex character in UUID string");
+
+		// Set the 4 bits for this nibble (high to low order)
+		for (int j = 0; j < 4; ++j)
+		{
+			bool bit = (nibble >> (3 - j)) & 1;
+			uuid.bits[N - 1 - (i * 4 + j)] = bit;
+		}
+	}
+
+	return uuid;
+}
 
 template <size_t N> requires AllowedSize<N>
 uint64_t UUID<N>::getLow() const

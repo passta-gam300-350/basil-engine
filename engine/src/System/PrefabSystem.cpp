@@ -1,13 +1,16 @@
 #include "System/PrefabSystem.hpp"
 #include "Component/PrefabComponent.hpp"
 #include "Component/RelationshipComponent.hpp"
+#include "Component/Transform.hpp"
 #include "Scene/SceneGraph.hpp"
+#include "Ecs/internal/reflection.h"
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <sstream>
 #include <chrono>
 #include <iomanip>
 #include <glm/ext.hpp>
+#include <entt/entt.hpp>
 
 // Static member initialization
 std::unordered_map<std::string, PrefabData> PrefabSystem::s_PrefabCache;
@@ -117,7 +120,8 @@ SerializedPropertyValue DeserializePropertyValue(const YAML::Node& node, const s
 YAML::Node SerializeComponent(const SerializedComponent& comp)
 {
     YAML::Node node;
-    node["type"] = static_cast<int>(comp.type);
+    node["typeHash"] = comp.typeHash;
+    node["typeName"] = comp.typeName;
 
     YAML::Node properties;
     for (const auto& [propName, propValue] : comp.properties)
@@ -133,7 +137,8 @@ YAML::Node SerializeComponent(const SerializedComponent& comp)
 SerializedComponent DeserializeComponent(const YAML::Node& node)
 {
     SerializedComponent comp;
-    comp.type = static_cast<Component::ComponentType>(node["type"].as<int>());
+    comp.typeHash = node["typeHash"].as<std::uint32_t>(0);
+    comp.typeName = node["typeName"].as<std::string>("");
 
     if (node["properties"])
     {
@@ -211,6 +216,163 @@ std::string GetCurrentTimestamp()
     return ss.str();
 }
 
+// ========================
+// Reflection Bridge Functions
+// ========================
+
+/**
+ * @brief Convert entt::meta_any to SerializedPropertyValue
+ * Supports: bool, int, float, double, string, vec2/3/4, quat
+ */
+SerializedPropertyValue MetaAnyToPropertyValue(const entt::meta_any& value)
+{
+    // Try each supported type
+    if (auto* v = value.try_cast<bool>())
+        return *v;
+    if (auto* v = value.try_cast<int>())
+        return *v;
+    if (auto* v = value.try_cast<float>())
+        return *v;
+    if (auto* v = value.try_cast<double>())
+        return *v;
+    if (auto* v = value.try_cast<std::string>())
+        return *v;
+    if (auto* v = value.try_cast<glm::vec2>())
+        return *v;
+    if (auto* v = value.try_cast<glm::vec3>())
+        return *v;
+    if (auto* v = value.try_cast<glm::vec4>())
+        return *v;
+    if (auto* v = value.try_cast<glm::quat>())
+        return *v;
+
+    // Unsupported type - return default int
+    return 0;
+}
+
+/**
+ * @brief Convert SerializedPropertyValue to entt::meta_any
+ */
+entt::meta_any PropertyValueToMetaAny(const SerializedPropertyValue& value)
+{
+    return std::visit([](auto&& arg) -> entt::meta_any {
+        return entt::forward_as_meta(arg);
+    }, value);
+}
+
+/**
+ * @brief Serialize a component using reflection
+ * @param componentPtr Pointer to component data
+ * @param metaType Reflection meta_type for the component
+ * @return SerializedComponent with all reflected properties
+ */
+SerializedComponent SerializeComponentViaReflection(const void* componentPtr, const entt::meta_type& metaType)
+{
+    // Create meta_any from raw pointer
+    entt::meta_any componentAny = metaType.from_void(componentPtr);
+
+    // Get type information from reflection
+    std::uint32_t typeHash = static_cast<std::uint32_t>(metaType.id());
+    std::string typeName = ReflectionRegistry::GetTypeName(metaType.id());
+
+    // Create serialized component with reflection type info
+    SerializedComponent serialized(typeHash, typeName);
+
+    // Get field name mapping
+    auto fieldNames = ReflectionRegistry::GetFieldNames(metaType.id());
+
+    // Iterate all reflected fields
+    for (const auto& [fieldId, fieldData] : metaType.data())
+    {
+        // Get field name
+        auto fieldNameIt = fieldNames.find(fieldId);
+        if (fieldNameIt == fieldNames.end())
+            continue;  // Skip if no name registered
+
+        std::string fieldName = fieldNameIt->second;
+
+        // Get field value
+        entt::meta_any fieldValue = fieldData.get(componentAny);
+
+        // Convert to PropertyValue
+        SerializedPropertyValue propValue = MetaAnyToPropertyValue(fieldValue);
+
+        // Store in serialized component
+        serialized.properties[fieldName] = propValue;
+    }
+
+    return serialized;
+}
+
+/**
+ * @brief Apply serialized component data to entity using reflection
+ * @param registry ECS registry
+ * @param enttEntity EnTT entity handle
+ * @param serialized Serialized component data
+ * @return true if component was successfully applied
+ */
+bool DeserializeComponentViaReflection(entt::registry& registry, entt::entity enttEntity,
+                                       const SerializedComponent& serialized)
+{
+    // Get type name from serialized component
+    if (serialized.typeName.empty())
+        return false;  // No type name stored
+
+    // Find meta_type by name
+    entt::meta_type metaType;
+    for (const auto& [typeHash, mt] : ReflectionRegistry::types())
+    {
+        if (ReflectionRegistry::GetTypeName(typeHash) == serialized.typeName)
+        {
+            metaType = mt;
+            break;
+        }
+    }
+
+    if (!metaType)
+        return false;  // Type not found in reflection registry
+
+    // Construct component instance
+    entt::meta_any componentAny = metaType.construct();
+    if (!componentAny)
+        return false;  // Failed to construct
+
+    // Get field name mapping
+    auto fieldNames = ReflectionRegistry::GetFieldNames(metaType.id());
+
+    // Set each property from serialized data
+    for (const auto& [fieldId, fieldData] : metaType.data())
+    {
+        // Get field name
+        auto fieldNameIt = fieldNames.find(fieldId);
+        if (fieldNameIt == fieldNames.end())
+            continue;
+
+        std::string fieldName = fieldNameIt->second;
+
+        // Check if property exists in serialized data
+        auto propIt = serialized.properties.find(fieldName);
+        if (propIt == serialized.properties.end())
+            continue;  // Property not in serialized data
+
+        // Convert PropertyValue to meta_any
+        entt::meta_any propValue = PropertyValueToMetaAny(propIt->second);
+
+        // Set field value
+        fieldData.set(componentAny, propValue);
+    }
+
+    // Add component to entity using reflection's emplace function
+    auto emplaceFunc = metaType.func("emplace_meta_any"_tn);
+    if (emplaceFunc)
+    {
+        emplaceFunc.invoke({}, entt::forward_as_meta(registry), enttEntity, entt::forward_as_meta(componentAny));
+        return true;
+    }
+
+    return false;
+}
+
 } // anonymous namespace
 
 // ========================
@@ -233,11 +395,9 @@ PrefabData PrefabSystem::LoadPrefabFromFile(const std::string& prefabPath)
             data.version = meta["version"].as<int>(1);
             data.createdDate = meta["created"].as<std::string>("");
 
-            // Parse UUID
+            // Parse UUID from string
             std::string uuidStr = meta["uuid"].as<std::string>();
-            // TODO: Implement UUID parsing from string
-            // For now, generate a new one
-            data.uuid = UUID<128>::Generate();
+            data.uuid = UUID<128>::FromString(uuidStr);
         }
 
         // Load entity hierarchy
@@ -297,17 +457,33 @@ bool PrefabSystem::SavePrefabToFile(const PrefabData& data, const std::string& p
 
 ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const UUID<128>& prefabId, const glm::vec3& position)
 {
-    // TODO: Load prefab data from cache or file system
-    // For now, return invalid entity as placeholder
+    // Load prefab data from cache
+    UUID<128> mutableId = prefabId;  // Make a mutable copy
+    std::string uuidStr = mutableId.ToString();
+    auto it = s_PrefabCache.find(uuidStr);
+    if (it == s_PrefabCache.end())
+    {
+        // Prefab not in cache
+        // TODO: Need file path to load from disk
+        // For now, return invalid entity
+        return ecs::entity();
+    }
 
-    // Create root entity
-    ecs::entity rootEntity; // = world.create();
+    const PrefabData& prefabData = it->second;
 
-    // Attach PrefabComponent
-    // rootEntity.add<PrefabComponent>(prefabId);
+    // Create root entity and hierarchy
+    ecs::entity invalidParent;  // Invalid parent for root
+    ecs::entity rootEntity = InstantiateEntity(world, prefabData.root, invalidParent, prefabId);
 
-    // Recursively create entity hierarchy
-    // InstantiateEntity(world, prefabData.root, rootEntity, prefabId);
+    // Attach PrefabComponent to root
+    rootEntity.add<PrefabComponent>(prefabId);
+
+    // Apply position to root entity's transform
+    if (rootEntity.all<TransformComponent>())
+    {
+        auto& transform = rootEntity.get<TransformComponent>();
+        transform.m_Translation = position;
+    }
 
     return rootEntity;
 }
@@ -337,16 +513,24 @@ int PrefabSystem::SyncPrefab(ecs::world& world, const UUID<128>& prefabId)
 
 bool PrefabSystem::SyncInstance(ecs::world& world, ecs::entity instance)
 {
-    // Get PrefabComponent
-    // auto* prefabComp = instance.try_get<PrefabComponent>();
-    // if (!prefabComp)
-    //     return false;
+    // Check if entity has PrefabComponent
+    if (!instance.all<PrefabComponent>())
+        return false;
 
-    // Load prefab data
-    // PrefabData prefabData = LoadPrefabData(prefabComp->m_PrefabGuid);
+    // Get PrefabComponent
+    auto& prefabComp = instance.get<PrefabComponent>();
+
+    // Load prefab data from cache
+    UUID<128> mutableGuid = prefabComp.m_PrefabGuid;
+    std::string uuidStr = mutableGuid.ToString();
+    auto it = s_PrefabCache.find(uuidStr);
+    if (it == s_PrefabCache.end())
+        return false;  // Prefab not in cache
+
+    const PrefabData& prefabData = it->second;
 
     // Apply prefab data while preserving overrides
-    // ApplyPrefabDataToEntity(world, instance, prefabData.root, prefabComp);
+    ApplyPrefabDataToEntity(world, instance, prefabData.root, &prefabComp);
 
     return true;
 }
@@ -356,70 +540,93 @@ bool PrefabSystem::SyncInstance(ecs::world& world, ecs::entity instance)
 // ========================
 
 void PrefabSystem::MarkPropertyOverridden(ecs::world& world, ecs::entity instance,
-                                          Component::ComponentType componentType,
+                                          std::uint32_t componentTypeHash,
+                                          const std::string& componentTypeName,
                                           const std::string& propertyPath,
                                           PropertyValue value)
 {
-    // Get PrefabComponent
-    // auto* prefabComp = instance.try_get<PrefabComponent>();
-    // if (prefabComp)
-    // {
-    //     prefabComp->SetPropertyOverride(componentType, propertyPath, value);
-    // }
+    // Check and get PrefabComponent
+    if (instance.all<PrefabComponent>())
+    {
+        auto& prefabComp = instance.get<PrefabComponent>();
+        prefabComp.SetPropertyOverride(componentTypeHash, componentTypeName, propertyPath, value);
+    }
 }
 
 bool PrefabSystem::RevertOverride(ecs::world& world, ecs::entity instance,
-                                  Component::ComponentType componentType,
+                                  std::uint32_t componentTypeHash,
                                   const std::string& propertyPath)
 {
+    // Check if entity has PrefabComponent
+    if (!instance.all<PrefabComponent>())
+        return false;
+
     // Get PrefabComponent
-    // auto* prefabComp = instance.try_get<PrefabComponent>();
-    // if (!prefabComp)
-    //     return false;
+    auto& prefabComp = instance.get<PrefabComponent>();
 
     // Remove override
-    // bool removed = prefabComp->RemovePropertyOverride(componentType, propertyPath);
+    bool removed = prefabComp.RemovePropertyOverride(componentTypeHash, propertyPath);
 
-    // if (removed)
-    // {
-    //     // Reload property from prefab
-    //     SyncInstance(world, instance);
-    // }
+    if (removed)
+    {
+        // Reload property from prefab
+        SyncInstance(world, instance);
+    }
 
-    return true;
+    return removed;
 }
 
 void PrefabSystem::RevertAllOverrides(ecs::world& world, ecs::entity instance)
 {
-    // Get PrefabComponent
-    // auto* prefabComp = instance.try_get<PrefabComponent>();
-    // if (prefabComp)
-    // {
-    //     prefabComp->ClearAllPropertyOverrides();
-    //     prefabComp->m_AddedComponents.clear();
-    //     prefabComp->m_DeletedComponents.clear();
-    //
-    //     // Reload entire instance from prefab
-    //     SyncInstance(world, instance);
-    // }
+    // Check and get PrefabComponent
+    if (instance.all<PrefabComponent>())
+    {
+        auto& prefabComp = instance.get<PrefabComponent>();
+        prefabComp.ClearAllPropertyOverrides();
+        prefabComp.m_AddedComponents.clear();
+        prefabComp.m_DeletedComponents.clear();
+
+        // Reload entire instance from prefab
+        SyncInstance(world, instance);
+    }
 }
 
 bool PrefabSystem::ApplyInstanceToPrefab(ecs::world& world, ecs::entity instance, const std::string& prefabPath)
 {
-    // Get PrefabComponent
-    // auto* prefabComp = instance.try_get<PrefabComponent>();
-    // if (!prefabComp)
-    //     return false;
+    // Check and get PrefabComponent
+    if (!instance.all<PrefabComponent>())
+        return false;
+
+    auto& prefabComp = instance.get<PrefabComponent>();
 
     // Serialize entity hierarchy
-    // PrefabData prefabData;
-    // prefabData.uuid = prefabComp->m_PrefabGuid;
-    // prefabData.root = SerializeEntityHierarchy(world, instance);
+    PrefabData prefabData;
+    prefabData.uuid = prefabComp.m_PrefabGuid;
+    prefabData.root = SerializeEntityHierarchy(world, instance);
+
+    // Get name from cache if available
+    std::string uuidStr = prefabData.GetUuidString();
+    auto it = s_PrefabCache.find(uuidStr);
+    if (it != s_PrefabCache.end())
+    {
+        prefabData.name = it->second.name;
+        prefabData.createdDate = it->second.createdDate;
+    }
+    else
+    {
+        prefabData.name = "UpdatedPrefab";
+        prefabData.createdDate = GetCurrentTimestamp();
+    }
 
     // Save to file
-    // return SavePrefabToFile(prefabData, prefabPath);
+    if (SavePrefabToFile(prefabData, prefabPath))
+    {
+        // Update cache
+        s_PrefabCache[uuidStr] = prefabData;
+        return true;
+    }
 
-    return true;
+    return false;
 }
 
 // ========================
@@ -431,27 +638,31 @@ std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const 
     std::vector<ecs::entity> instances;
 
     // Query all entities with PrefabComponent
-    // world.query<PrefabComponent>([&](ecs::entity entity, PrefabComponent& prefabComp) {
-    //     if (prefabComp.m_PrefabGuid == prefabId)
-    //     {
-    //         instances.push_back(entity);
-    //     }
-    // });
+    auto entities = world.filter_entities<PrefabComponent>();
+    for (auto entity : entities)
+    {
+        auto& prefabComp = entity.get<PrefabComponent>();
+        if (prefabComp.m_PrefabGuid == prefabId)
+        {
+            instances.push_back(entity);
+        }
+    }
 
     return instances;
 }
 
 bool PrefabSystem::IsInstanceOf(ecs::world& world, ecs::entity entity, const UUID<128>& prefabId)
 {
-    // auto* prefabComp = entity.try_get<PrefabComponent>();
-    // return prefabComp && prefabComp->m_PrefabGuid == prefabId;
-    return false;
+    if (!entity.all<PrefabComponent>())
+        return false;
+
+    auto& prefabComp = entity.get<PrefabComponent>();
+    return prefabComp.m_PrefabGuid == prefabId;
 }
 
 bool PrefabSystem::IsPrefabInstance(ecs::world& world, ecs::entity entity)
 {
-    // return entity.has<PrefabComponent>();
-    return false;
+    return entity.all<PrefabComponent>();
 }
 
 UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
@@ -483,28 +694,27 @@ ecs::entity PrefabSystem::InstantiateEntity(ecs::world& world, const PrefabEntit
                                             ecs::entity parent, const UUID<128>& prefabId)
 {
     // Create entity
-    // ecs::entity entity = world.create();
+    ecs::entity entity = world.add_entity();
 
     // Apply component data
-    // for (const auto& compData : prefabEntity.components)
-    // {
-    //     ApplyComponentData(world, entity, compData);
-    // }
+    for (const auto& compData : prefabEntity.components)
+    {
+        ApplyComponentData(world, entity, compData);
+    }
 
-    // Set parent if provided
-    // if (parent.is_valid())
-    // {
-    //     SceneGraph::SetParent(entity, parent);
-    // }
+    // Set parent if provided (check if parent is valid by trying to get a UUID)
+    if (parent.get_uuid() != 0)  // Valid entity has non-zero UUID
+    {
+        SceneGraph::SetParent(entity, parent, false);  // false = don't keep world transform
+    }
 
     // Recursively create children
-    // for (const auto& childData : prefabEntity.children)
-    // {
-    //     InstantiateEntity(world, childData, entity, prefabId);
-    // }
+    for (const auto& childData : prefabEntity.children)
+    {
+        InstantiateEntity(world, childData, entity, prefabId);
+    }
 
-    // return entity;
-    return ecs::entity();
+    return entity;
 }
 
 void PrefabSystem::ApplyPrefabDataToEntity(ecs::world& world, ecs::entity entity,
@@ -512,30 +722,51 @@ void PrefabSystem::ApplyPrefabDataToEntity(ecs::world& world, ecs::entity entity
                                            const PrefabComponent* prefabComp)
 {
     // Apply each component's data, respecting overrides
-    // for (const auto& compData : prefabEntity.components)
-    // {
-    //     // Skip if component was deleted in instance
-    //     if (prefabComp && prefabComp->HasDeletedComponent(compData.type))
-    //         continue;
-    //
-    //     ApplyComponentData(world, entity, compData);
-    // }
+    for (const auto& compData : prefabEntity.components)
+    {
+        // Skip if component was deleted in instance
+        if (prefabComp && prefabComp->HasDeletedComponent(compData.typeHash))
+            continue;
+
+        // Apply component data (this will create or update the component)
+        ApplyComponentData(world, entity, compData);
+
+        // TODO: Reapply property overrides after setting base values
+        // This would require looking up overrides for this component type hash
+        // and setting them back on the component
+    }
 }
 
 PrefabEntity PrefabSystem::SerializeEntityHierarchy(ecs::world& world, ecs::entity entity)
 {
     PrefabEntity prefabEntity;
 
-    // Serialize components
-    // TODO: Implement component serialization
-    // This would iterate over all components and serialize their data
+    auto& registry = world.impl.get_registry();
+    entt::entity enttEntity = ecs::world::detail::entt_entity_cast(entity);
+
+    // Iterate all registered component types via reflection
+    for (const auto& [typeHash, metaType] : ReflectionRegistry::types())
+    {
+        // Check if entity has this component
+        auto* storage = registry.storage(typeHash);
+        if (!storage || !storage->contains(enttEntity))
+            continue;  // Entity doesn't have this component
+
+        // Get component data pointer
+        const void* componentPtr = storage->value(enttEntity);
+
+        // Serialize using reflection
+        SerializedComponent serializedComp = SerializeComponentViaReflection(componentPtr, metaType);
+
+        prefabEntity.components.push_back(serializedComp);
+    }
 
     // Recursively serialize children
-    // auto children = SceneGraph::GetChildren(entity);
-    // for (auto child : children)
-    // {
-    //     prefabEntity.children.push_back(SerializeEntityHierarchy(world, child));
-    // }
+    auto children = SceneGraph::GetChildren(entity);
+    for (auto child : children)
+    {
+        prefabEntity.children.push_back(SerializeEntityHierarchy(world, child));
+    }
 
     return prefabEntity;
 }
@@ -543,17 +774,16 @@ PrefabEntity PrefabSystem::SerializeEntityHierarchy(ecs::world& world, ecs::enti
 void PrefabSystem::ApplyComponentData(ecs::world& world, ecs::entity entity,
                                       const SerializedComponent& componentData)
 {
-    // Apply component data based on type
-    // This would use a component factory or switch statement
-    // to create/update the appropriate component type
+    // Use reflection-based deserialization
+    DeserializeComponentViaReflection(world.impl.get_registry(), ecs::world::detail::entt_entity_cast(entity), componentData);
 }
 
 bool PrefabSystem::IsPropertyOverridden(const PrefabComponent* prefabComp,
-                                        Component::ComponentType componentType,
+                                        std::uint32_t componentTypeHash,
                                         const std::string& propertyPath)
 {
     if (!prefabComp)
         return false;
 
-    return prefabComp->GetPropertyOverride(componentType, propertyPath) != nullptr;
+    return prefabComp->GetPropertyOverride(componentTypeHash, propertyPath) != nullptr;
 }

@@ -30,18 +30,22 @@ using PropertyValue = std::variant<
  * @brief Represents an overridden property in a prefab instance
  *
  * Tracks a single property that differs from the prefab template.
- * Properties are identified by component type and a path string
- * (e.g., "TransformComponent.localPosition.x").
+ * Properties are identified by reflection type hash and a path string
+ * (e.g., "m_Translation" or "m_Translation.x").
+ *
+ * NOTE: Now uses reflection type hash (entt::id_type) instead of Component::ComponentType
+ * since actual gameplay components use the reflection system.
  */
 struct PropertyOverride
 {
-    Component::ComponentType componentType;  ///< Which component owns this property
-    std::string propertyPath;                ///< Path to the property (e.g., "localPosition.x")
+    std::uint32_t componentTypeHash = 0;     ///< Reflection type hash of component
+    std::string componentTypeName;            ///< Human-readable component type name
+    std::string propertyPath;                ///< Path to the property (e.g., "m_Translation")
     PropertyValue value;                     ///< The overridden value
 
     PropertyOverride() = default;
-    PropertyOverride(Component::ComponentType type, const std::string& path, PropertyValue val)
-        : componentType(type), propertyPath(path), value(val)
+    PropertyOverride(std::uint32_t typeHash, std::string typeName, const std::string& path, PropertyValue val)
+        : componentTypeHash(typeHash), componentTypeName(std::move(typeName)), propertyPath(path), value(val)
     {}
 };
 
@@ -66,11 +70,11 @@ public:
     // Reference to the prefab resource
     UUID<128> m_PrefabGuid;
 
-    // Components added to this instance (not in prefab)
-    std::vector<Component::ComponentType> m_AddedComponents;
+    // Components added to this instance (not in prefab) - stored as reflection type hashes
+    std::vector<std::uint32_t> m_AddedComponents;
 
-    // Components deleted from this instance (present in prefab)
-    std::vector<Component::ComponentType> m_DeletedComponents;
+    // Components deleted from this instance (present in prefab) - stored as reflection type hashes
+    std::vector<std::uint32_t> m_DeletedComponents;
 
     // Property overrides for this instance
     std::vector<PropertyOverride> m_OverriddenProperties;
@@ -98,14 +102,14 @@ public:
 
     /**
      * @brief Check if a component type has been added to this instance
-     * @param type The component type to check
+     * @param typeHash Reflection type hash to check
      * @return True if this component was added to the instance
      */
-    bool HasAddedComponent(ComponentType type) const
+    bool HasAddedComponent(std::uint32_t typeHash) const
     {
         for (const auto& comp : m_AddedComponents)
         {
-            if (comp == type)
+            if (comp == typeHash)
                 return true;
         }
         return false;
@@ -113,14 +117,14 @@ public:
 
     /**
      * @brief Check if a component type has been deleted from this instance
-     * @param type The component type to check
+     * @param typeHash Reflection type hash to check
      * @return True if this component was deleted from the instance
      */
-    bool HasDeletedComponent(ComponentType type) const
+    bool HasDeletedComponent(std::uint32_t typeHash) const
     {
         for (const auto& comp : m_DeletedComponents)
         {
-            if (comp == type)
+            if (comp == typeHash)
                 return true;
         }
         return false;
@@ -128,40 +132,41 @@ public:
 
     /**
      * @brief Add a component override to this instance
-     * @param type Component type being overridden
+     * @param typeHash Reflection type hash of component being added
      */
-    void AddComponentOverride(ComponentType type)
+    void AddComponentOverride(std::uint32_t typeHash)
     {
-        if (!HasAddedComponent(type))
+        if (!HasAddedComponent(typeHash))
         {
-            m_AddedComponents.push_back(type);
+            m_AddedComponents.push_back(typeHash);
         }
     }
 
     /**
      * @brief Mark a component as deleted in this instance
-     * @param type Component type being deleted
+     * @param typeHash Reflection type hash of component being deleted
      */
-    void DeleteComponentOverride(ComponentType type)
+    void DeleteComponentOverride(std::uint32_t typeHash)
     {
-        if (!HasDeletedComponent(type))
+        if (!HasDeletedComponent(typeHash))
         {
-            m_DeletedComponents.push_back(type);
+            m_DeletedComponents.push_back(typeHash);
         }
     }
 
     /**
      * @brief Add or update a property override
-     * @param componentType Type of component containing the property
-     * @param propertyPath Path to the property (e.g., "localPosition.x")
+     * @param typeHash Reflection type hash of component containing the property
+     * @param typeName Human-readable component type name
+     * @param propertyPath Path to the property (e.g., "m_Translation")
      * @param value The overridden value
      */
-    void SetPropertyOverride(ComponentType componentType, const std::string& propertyPath, PropertyValue value)
+    void SetPropertyOverride(std::uint32_t typeHash, const std::string& typeName, const std::string& propertyPath, PropertyValue value)
     {
         // Check if override already exists and update it
         for (auto& prop : m_OverriddenProperties)
         {
-            if (prop.componentType == componentType && prop.propertyPath == propertyPath)
+            if (prop.componentTypeHash == typeHash && prop.propertyPath == propertyPath)
             {
                 prop.value = value;
                 return;
@@ -169,20 +174,20 @@ public:
         }
 
         // Add new override
-        m_OverriddenProperties.emplace_back(componentType, propertyPath, value);
+        m_OverriddenProperties.emplace_back(typeHash, typeName, propertyPath, value);
     }
 
     /**
      * @brief Get a property override value if it exists
-     * @param componentType Type of component containing the property
+     * @param typeHash Reflection type hash of component containing the property
      * @param propertyPath Path to the property
      * @return Pointer to the override value, or nullptr if not overridden
      */
-    const PropertyValue* GetPropertyOverride(ComponentType componentType, const std::string& propertyPath) const
+    const PropertyValue* GetPropertyOverride(std::uint32_t typeHash, const std::string& propertyPath) const
     {
         for (const auto& prop : m_OverriddenProperties)
         {
-            if (prop.componentType == componentType && prop.propertyPath == propertyPath)
+            if (prop.componentTypeHash == typeHash && prop.propertyPath == propertyPath)
             {
                 return &prop.value;
             }
@@ -192,15 +197,15 @@ public:
 
     /**
      * @brief Remove a specific property override
-     * @param componentType Type of component containing the property
+     * @param typeHash Reflection type hash of component containing the property
      * @param propertyPath Path to the property
      * @return True if the override was found and removed
      */
-    bool RemovePropertyOverride(ComponentType componentType, const std::string& propertyPath)
+    bool RemovePropertyOverride(std::uint32_t typeHash, const std::string& propertyPath)
     {
         for (auto it = m_OverriddenProperties.begin(); it != m_OverriddenProperties.end(); ++it)
         {
-            if (it->componentType == componentType && it->propertyPath == propertyPath)
+            if (it->componentTypeHash == typeHash && it->propertyPath == propertyPath)
             {
                 m_OverriddenProperties.erase(it);
                 return true;
