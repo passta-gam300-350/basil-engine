@@ -1,5 +1,6 @@
 #pragma once
 #include "../Resources/Shader.h"
+#include "../Resources/OffsetTexture.h"
 #include "../Buffer/ShaderStorageBuffer.h"
 #include "../Utility/ShadowData.h"
 #include <memory>
@@ -98,6 +99,12 @@ public:
     void SetSpotShadowIntensity(float intensity) { m_SpotShadowIntensity = intensity; }
     float GetSpotShadowIntensity() const { return m_SpotShadowIntensity; }
 
+    // Shadow quality configuration
+    void SetShadowFilterSize(int filterSize);
+    void SetShadowRandomRadius(float radius);
+    int GetShadowFilterSize() const { return m_ShadowFilterSize; }
+    float GetShadowRandomRadius() const { return m_ShadowRandomRadius; }
+
 private:
     // Light storage (moved from InstancedRenderer)
     std::vector<PointLight> m_PointLights;
@@ -114,6 +121,14 @@ private:
 
     // Unified shadow data (SSBO-based, supports 50+ lights)
     std::unique_ptr<TypedShaderStorageBuffer<ShadowData>> m_ShadowSSBO;
+
+    // Shadow offset texture for random sampling
+    std::unique_ptr<OffsetTexture> m_ShadowOffsetTexture;
+
+    // Shadow quality configuration
+    int m_ShadowFilterSize = 8;        // 8x8 = 64 samples (balanced quality/performance)
+    int m_ShadowOffsetTextureSize = 16; // 16x16 screen-space tiling
+    float m_ShadowRandomRadius = 15.0f; // Softness control (1.0-20.0 range)
 
     // PERFORMANCE: Track which shader has lighting set up to avoid redundant uniform uploads
     std::shared_ptr<Shader> m_LastLightingShader;

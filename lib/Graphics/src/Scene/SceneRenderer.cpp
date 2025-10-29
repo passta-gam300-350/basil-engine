@@ -475,6 +475,43 @@ void SceneRenderer::ClearInstanceCache()
     }
 }
 
+void SceneRenderer::SetShadowFilterSize(int filterSize)
+{
+    assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized");
+
+    if (m_PBRLightingRenderer) {
+        m_PBRLightingRenderer->SetShadowFilterSize(filterSize);
+        spdlog::info("SceneRenderer: Shadow filter size set to {}x{} ({} samples)",
+                     filterSize, filterSize, filterSize * filterSize);
+    }
+}
+
+void SceneRenderer::SetShadowRandomRadius(float radius)
+{
+    assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized");
+
+    if (m_PBRLightingRenderer) {
+        m_PBRLightingRenderer->SetShadowRandomRadius(radius);
+        spdlog::info("SceneRenderer: Shadow softness (random radius) set to {}", radius);
+    }
+}
+
+int SceneRenderer::GetShadowFilterSize() const
+{
+    if (m_PBRLightingRenderer) {
+        return m_PBRLightingRenderer->GetShadowFilterSize();
+    }
+    return 0;
+}
+
+float SceneRenderer::GetShadowRandomRadius() const
+{
+    if (m_PBRLightingRenderer) {
+        return m_PBRLightingRenderer->GetShadowRandomRadius();
+    }
+    return 0.0f;
+}
+
 void SceneRenderer::SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos)
 {
     m_FrameData.viewMatrix = view;
