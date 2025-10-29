@@ -5,7 +5,7 @@
 #include "ecs/internal/world.h"
 #include "Prefab/PrefabData.hpp"
 #include "Component/PrefabComponent.hpp"
-#include "uuid/uuid.hpp"
+#include "serialisation/guid.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -67,11 +67,11 @@ public:
      * will be given a PrefabComponent to track its connection to the prefab.
      *
      * @param world The ECS world to create entities in
-     * @param prefabId UUID of the prefab to instantiate
+     * @param prefabId Guid of the prefab to instantiate
      * @param position World position for the root entity
      * @return The root entity of the created instance (invalid if failed)
      */
-    static ecs::entity InstantiatePrefab(ecs::world& world, const UUID<128>& prefabId, const glm::vec3& position = glm::vec3(0));
+    static ecs::entity InstantiatePrefab(ecs::world& world, const Resource::Guid& prefabId, const glm::vec3& position = glm::vec3(0));
 
     /**
      * @brief Instantiate a prefab with a specific entity ID (for loading from disk)
@@ -80,12 +80,12 @@ public:
      * loading a scene from disk where entity IDs must be preserved.
      *
      * @param world The ECS world to create entities in
-     * @param prefabId UUID of the prefab to instantiate
+     * @param prefabId Guid of the prefab to instantiate
      * @param rootEntityId Desired entity ID for the root entity
      * @param position World position for the root entity
      * @return The root entity of the created instance (invalid if failed)
      */
-    static ecs::entity InstantiatePrefabWithId(ecs::world& world, const UUID<128>& prefabId, ecs::entity rootEntityId, const glm::vec3& position = glm::vec3(0));
+    static ecs::entity InstantiatePrefabWithId(ecs::world& world, const Resource::Guid& prefabId, ecs::entity rootEntityId, const glm::vec3& position = glm::vec3(0));
 
     /**
      * @brief Sync all instances of a specific prefab
@@ -102,10 +102,10 @@ public:
      *    - Reapply overrides
      *
      * @param world The ECS world containing instances
-     * @param prefabId UUID of the prefab that changed
+     * @param prefabId Guid of the prefab that changed
      * @return Number of instances successfully synced
      */
-    static int SyncPrefab(ecs::world& world, const UUID<128>& prefabId);
+    static int SyncPrefab(ecs::world& world, const Resource::Guid& prefabId);
 
     /**
      * @brief Sync a single prefab instance
@@ -186,20 +186,20 @@ public:
      * @brief Get all instances of a specific prefab
      *
      * @param world The ECS world
-     * @param prefabId UUID of the prefab
+     * @param prefabId Guid of the prefab
      * @return Vector of entity handles
      */
-    static std::vector<ecs::entity> GetAllInstances(ecs::world& world, const UUID<128>& prefabId);
+    static std::vector<ecs::entity> GetAllInstances(ecs::world& world, const Resource::Guid& prefabId);
 
     /**
      * @brief Check if an entity is an instance of a specific prefab
      *
      * @param world The ECS world
      * @param entity The entity to check
-     * @param prefabId UUID of the prefab
+     * @param prefabId Guid of the prefab
      * @return True if the entity is an instance of the prefab
      */
-    static bool IsInstanceOf(ecs::world& world, ecs::entity entity, const UUID<128>& prefabId);
+    static bool IsInstanceOf(ecs::world& world, ecs::entity entity, const Resource::Guid& prefabId);
 
     /**
      * @brief Check if an entity is any prefab instance
@@ -240,11 +240,11 @@ public:
      * @param rootEntity Root entity to convert to prefab
      * @param prefabName Name for the new prefab
      * @param prefabPath Path to save the prefab file
-     * @return UUID of the created prefab (invalid if failed)
+     * @return Guid of the created prefab (invalid if failed)
      */
-    static UUID<128> CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
-                                            const std::string& prefabName,
-                                            const std::string& prefabPath);
+    static Resource::Guid CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
+                                                 const std::string& prefabName,
+                                                 const std::string& prefabPath);
 
 private:
     // Internal helper methods
@@ -253,7 +253,7 @@ private:
      * @brief Recursively create entities from prefab data
      */
     static ecs::entity InstantiateEntity(ecs::world& world, const PrefabEntity& prefabEntity,
-                                         ecs::entity parent, const UUID<128>& prefabId);
+                                         ecs::entity parent, const Resource::Guid& prefabId);
 
     /**
      * @brief Apply prefab data to an existing entity (for syncing)

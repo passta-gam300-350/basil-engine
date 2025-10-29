@@ -96,7 +96,7 @@ struct ReflectionRegistry {
 
 	static std::string const& GetTypeName(TypeID type_id) {
 		ReflectionRegistry::Detail& reg{ Registry() };
-		assert(reg.m_Names.find(type_id) != reg.m_Names.end());
+ 		assert(reg.m_Names.find(type_id) != reg.m_Names.end());
 		return reg.m_Names[type_id];
 	}
 
@@ -418,11 +418,11 @@ template<typename T, typename... Refs>
 void RegisterReflectionComponent(std::string_view type_name, Refs...) {
     auto hashtypename = ToTypeName(type_name);
     auto factory = entt::meta_factory<T>().type(hashtypename);
-    
+
     auto& field_table{ ReflectionRegistry::RegisterType(hashtypename, type_name) };
     // populate field tables
     (field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
-   
+
     (RegisterDataMember<Refs>(factory), ...);
 
 	factory.template func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
