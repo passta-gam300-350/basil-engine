@@ -5,6 +5,7 @@
 #include <thread>
 #include <semaphore>
 #include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 #include "Service.hpp"
 
 struct EngineContainerService : public Service
@@ -12,6 +13,47 @@ struct EngineContainerService : public Service
 public:
 
 	using entity_handle = std::uint64_t;
+
+	struct PickingRequest {
+		// Input parameters
+		int screenX{0};
+		int screenY{0};
+		int viewportWidth{0};
+		int viewportHeight{0};
+
+		// State flags
+		bool isActive{false};    // Request is pending
+		bool isComplete{false};  // Result is ready
+
+		// Output results
+		bool hasHit{false};
+		uint32_t objectID{0};
+		glm::vec3 worldPosition{0.0f};
+		float depth{0.0f};
+	};
+
+	struct FrameDataSnapshot {
+		uint32_t editorTextureID{0};
+		bool isValid{false};
+		float deltaTime{0.0f};
+	};
+
+	enum class RenderCommandType {
+		SetAmbientLight,
+		SetDebugVisualization
+	};
+
+	struct RenderCommand {
+		RenderCommandType type;
+		union {
+			struct {
+				float r, g, b;
+			} ambientLight;
+			struct {
+				bool showAABBs;
+			} debugVis;
+		} data;
+	};
 
 	struct EngineContainer {
 		std::mutex m_mtx;
@@ -26,11 +68,16 @@ public:
 		entity_handle m_snapshot_entity_handle{ ~0ull };
 		std::binary_semaphore m_container_is_closed{ 0 };
 		std::binary_semaphore m_container_is_presentable{ 0 };
+		PickingRequest m_pickingRequest;
+		FrameDataSnapshot m_frameDataSnapshot;
+		std::queue<RenderCommand> m_renderCommandQueue;
 
 	private:
 		void engine_service();
 		void engine_snapshot_callback();
 		void engine_snapshot_writeback();
+		void engine_process_picking();
+		void engine_process_render_commands();
 
 	public:
 		EngineContainer() : m_mtx{}, m_thread{ &EngineContainer::engine_service, std::ref(*this) } {}
@@ -38,6 +85,20 @@ public:
 			Engine::SetState(Engine::Info::State::Exit);
 			m_container_is_closed.acquire();
 		}
+
+		// Request object picking (called from editor thread)
+		void request_picking(int screenX, int screenY, int viewportWidth, int viewportHeight);
+
+		// Get picking result if ready (called from editor thread)
+		// Returns true if result is available
+		bool get_picking_result(PickingRequest& outResult);
+
+		// Get frame data snapshot (called from editor thread)
+		FrameDataSnapshot get_frame_data_snapshot();
+
+		// Submit render commands (called from editor thread)
+		void submit_set_ambient_light(float r, float g, float b);
+		void submit_set_debug_visualization(bool showAABBs);
 	};
 	std::unique_ptr<EngineContainer> m_cont{};
 	void reset();

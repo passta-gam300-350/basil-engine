@@ -8,10 +8,12 @@ void EngineContainerService::EngineContainer::engine_service() {
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine
 			engine_snapshot_callback();
+			engine_process_render_commands();
 			Engine::BeginFrame();
 			Engine::CoreUpdate();
 			Engine::EndFrame();
 			Engine::UpdateDebug();
+			engine_process_picking();
 			m_container_is_presentable.acquire();
 			engine_snapshot_writeback();
 		}
@@ -37,6 +39,21 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 	}
 	ecs::entity inspected_entity{ m_snapshot_entity_handle };
 	m_component_list_snapshot = inspected_entity.get_reflectible_components();
+
+	// Snapshot frame data for editor viewport (thread-safe texture ID access)
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+	if (sceneRenderer) {
+		auto& frameData = sceneRenderer->GetFrameData();
+		if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
+			m_frameDataSnapshot.editorTextureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
+			m_frameDataSnapshot.isValid = true;
+			m_frameDataSnapshot.deltaTime = frameData.deltaTime;
+		} else {
+			m_frameDataSnapshot.isValid = false;
+		}
+	} else {
+		m_frameDataSnapshot.isValid = false;
+	}
 }
 
 //can provide further abstractions in the future
@@ -157,4 +174,126 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 		return temp;
 	}()};
 	return s_id_type_name_list;
+}
+
+void EngineContainerService::EngineContainer::request_picking(int screenX, int screenY, int viewportWidth, int viewportHeight) {
+	std::lock_guard<std::mutex> lg{m_mtx};
+
+	// Set up new request
+	m_pickingRequest.screenX = screenX;
+	m_pickingRequest.screenY = screenY;
+	m_pickingRequest.viewportWidth = viewportWidth;
+	m_pickingRequest.viewportHeight = viewportHeight;
+	m_pickingRequest.isActive = true;
+	m_pickingRequest.isComplete = false;
+
+	// Clear previous results
+	m_pickingRequest.hasHit = false;
+	m_pickingRequest.objectID = 0;
+}
+
+bool EngineContainerService::EngineContainer::get_picking_result(PickingRequest& outResult) {
+	std::lock_guard<std::mutex> lg{m_mtx};
+
+	if (m_pickingRequest.isActive && m_pickingRequest.isComplete) {
+		// Copy result
+		outResult = m_pickingRequest;
+
+		// Reset for next request
+		m_pickingRequest.isActive = false;
+		m_pickingRequest.isComplete = false;
+
+		return true;
+	}
+
+	return false;
+}
+
+void EngineContainerService::EngineContainer::engine_process_picking() {
+	std::lock_guard<std::mutex> lg{m_mtx};
+
+	// Check if there's an active request to process
+	if (!m_pickingRequest.isActive || m_pickingRequest.isComplete) {
+		return;
+	}
+
+	// Perform picking on engine thread (correct OpenGL context)
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+	if (!sceneRenderer) {
+		m_pickingRequest.isComplete = true;
+		m_pickingRequest.hasHit = false;
+		return;
+	}
+
+	// Enable picking mode
+	sceneRenderer->EnablePicking(true);
+
+	// Create query from request parameters
+	PickingQuery query;
+	query.screenX = m_pickingRequest.screenX;
+	query.screenY = m_pickingRequest.screenY;
+	query.viewportWidth = m_pickingRequest.viewportWidth;
+	query.viewportHeight = m_pickingRequest.viewportHeight;
+
+	// Execute picking
+	PickingResult result = sceneRenderer->QueryObjectPicking(query);
+
+	// Disable picking mode
+	sceneRenderer->EnablePicking(false);
+
+	// Store results in shared state
+	m_pickingRequest.hasHit = result.hasHit;
+	m_pickingRequest.objectID = result.objectID;
+	m_pickingRequest.worldPosition = result.worldPosition;
+	m_pickingRequest.depth = result.depth;
+	m_pickingRequest.isComplete = true;
+}
+
+EngineContainerService::FrameDataSnapshot EngineContainerService::EngineContainer::get_frame_data_snapshot() {
+	std::lock_guard<std::mutex> lg{m_mtx};
+	return m_frameDataSnapshot;
+}
+
+void EngineContainerService::EngineContainer::submit_set_ambient_light(float r, float g, float b) {
+	std::lock_guard<std::mutex> lg{m_mtx};
+	RenderCommand cmd;
+	cmd.type = RenderCommandType::SetAmbientLight;
+	cmd.data.ambientLight.r = r;
+	cmd.data.ambientLight.g = g;
+	cmd.data.ambientLight.b = b;
+	m_renderCommandQueue.push(cmd);
+}
+
+void EngineContainerService::EngineContainer::submit_set_debug_visualization(bool showAABBs) {
+	std::lock_guard<std::mutex> lg{m_mtx};
+	RenderCommand cmd;
+	cmd.type = RenderCommandType::SetDebugVisualization;
+	cmd.data.debugVis.showAABBs = showAABBs;
+	m_renderCommandQueue.push(cmd);
+}
+
+void EngineContainerService::EngineContainer::engine_process_render_commands() {
+	std::lock_guard<std::mutex> lg{m_mtx};
+
+	while (!m_renderCommandQueue.empty()) {
+		RenderCommand cmd = m_renderCommandQueue.front();
+		m_renderCommandQueue.pop();
+
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (!sceneRenderer) continue;
+
+		switch (cmd.type) {
+		case RenderCommandType::SetAmbientLight:
+			sceneRenderer->SetAmbientLight(glm::vec3(
+				cmd.data.ambientLight.r,
+				cmd.data.ambientLight.g,
+				cmd.data.ambientLight.b
+			));
+			break;
+
+		case RenderCommandType::SetDebugVisualization:
+			sceneRenderer->SetAABBVisualization(cmd.data.debugVis.showAABBs);
+			break;
+		}
+	}
 }
