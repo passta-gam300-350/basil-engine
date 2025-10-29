@@ -60,28 +60,32 @@ YAML::Node SerializePropertyValue(const SerializedPropertyValue& value)
         node = std::get<std::string>(value);
     else if (std::holds_alternative<glm::vec2>(value)) {
         const auto& v = std::get<glm::vec2>(value);
-        node.push_back(v.x);
-        node.push_back(v.y);
+        // Output as map to match reflection registration
+        node["x"] = v.x;
+        node["y"] = v.y;
     }
     else if (std::holds_alternative<glm::vec3>(value)) {
         const auto& v = std::get<glm::vec3>(value);
-        node.push_back(v.x);
-        node.push_back(v.y);
-        node.push_back(v.z);
+        // Output as map to match reflection registration
+        node["x"] = v.x;
+        node["y"] = v.y;
+        node["z"] = v.z;
     }
     else if (std::holds_alternative<glm::vec4>(value)) {
         const auto& v = std::get<glm::vec4>(value);
-        node.push_back(v.x);
-        node.push_back(v.y);
-        node.push_back(v.z);
-        node.push_back(v.w);
+        // Output as map to match reflection registration
+        node["x"] = v.x;
+        node["y"] = v.y;
+        node["z"] = v.z;
+        node["w"] = v.w;
     }
     else if (std::holds_alternative<glm::quat>(value)) {
         const auto& v = std::get<glm::quat>(value);
-        node.push_back(v.x);
-        node.push_back(v.y);
-        node.push_back(v.z);
-        node.push_back(v.w);
+        // Output as map to match reflection registration (quat has x,y,z,w members)
+        node["x"] = v.x;
+        node["y"] = v.y;
+        node["z"] = v.z;
+        node["w"] = v.w;
     }
 
     return node;
@@ -111,6 +115,87 @@ SerializedPropertyValue DeserializePropertyValue(const YAML::Node& node, const s
     }
     else if (typeName == "quat") {
         return glm::quat(node[3].as<float>(), node[0].as<float>(), node[1].as<float>(), node[2].as<float>());
+    }
+
+    return 0; // Default fallback
+}
+
+// Convert YAML node to SerializedPropertyValue (auto-detect type)
+SerializedPropertyValue YamlNodeToPropertyValue(const YAML::Node& node)
+{
+    // Try to infer type from YAML node
+    if (node.IsMap())
+    {
+        // Check for vec2/vec3/vec4/quat by looking for x, y, z, w fields
+        if (node["x"] && node["y"])
+        {
+            if (node["z"])
+            {
+                if (node["w"])
+                {
+                    // vec4 or quat (both have x, y, z, w)
+                    return glm::vec4(
+                        node["x"].as<float>(),
+                        node["y"].as<float>(),
+                        node["z"].as<float>(),
+                        node["w"].as<float>()
+                    );
+                }
+                else
+                {
+                    // vec3
+                    return glm::vec3(
+                        node["x"].as<float>(),
+                        node["y"].as<float>(),
+                        node["z"].as<float>()
+                    );
+                }
+            }
+            else
+            {
+                // vec2
+                return glm::vec2(
+                    node["x"].as<float>(),
+                    node["y"].as<float>()
+                );
+            }
+        }
+    }
+    else if (node.IsSequence())
+    {
+        // Legacy: also support array format for backwards compatibility
+        size_t size = node.size();
+        if (size == 2)
+            return glm::vec2(node[0].as<float>(), node[1].as<float>());
+        else if (size == 3)
+            return glm::vec3(node[0].as<float>(), node[1].as<float>(), node[2].as<float>());
+        else if (size == 4)
+            return glm::vec4(node[0].as<float>(), node[1].as<float>(), node[2].as<float>(), node[3].as<float>());
+    }
+    else if (node.IsScalar())
+    {
+        // Try bool
+        try {
+            if (node.as<std::string>() == "true" || node.as<std::string>() == "false")
+                return node.as<bool>();
+        } catch (...) {}
+
+        // Try int
+        try {
+            auto val = node.as<std::string>();
+            if (val.find('.') == std::string::npos)
+                return node.as<int>();
+        } catch (...) {}
+
+        // Try float
+        try {
+            return node.as<float>();
+        } catch (...) {}
+
+        // Try string
+        try {
+            return node.as<std::string>();
+        } catch (...) {}
     }
 
     return 0; // Default fallback
@@ -221,91 +306,7 @@ std::string GetCurrentTimestamp()
 // ========================
 
 /**
- * @brief Convert entt::meta_any to SerializedPropertyValue
- * Supports: bool, int, float, double, string, vec2/3/4, quat
- */
-SerializedPropertyValue MetaAnyToPropertyValue(const entt::meta_any& value)
-{
-    // Try each supported type
-    if (auto* v = value.try_cast<bool>())
-        return *v;
-    if (auto* v = value.try_cast<int>())
-        return *v;
-    if (auto* v = value.try_cast<float>())
-        return *v;
-    if (auto* v = value.try_cast<double>())
-        return *v;
-    if (auto* v = value.try_cast<std::string>())
-        return *v;
-    if (auto* v = value.try_cast<glm::vec2>())
-        return *v;
-    if (auto* v = value.try_cast<glm::vec3>())
-        return *v;
-    if (auto* v = value.try_cast<glm::vec4>())
-        return *v;
-    if (auto* v = value.try_cast<glm::quat>())
-        return *v;
-
-    // Unsupported type - return default int
-    return 0;
-}
-
-/**
- * @brief Convert SerializedPropertyValue to entt::meta_any
- */
-entt::meta_any PropertyValueToMetaAny(const SerializedPropertyValue& value)
-{
-    return std::visit([](auto&& arg) -> entt::meta_any {
-        return entt::forward_as_meta(arg);
-    }, value);
-}
-
-/**
- * @brief Serialize a component using reflection
- * @param componentPtr Pointer to component data
- * @param metaType Reflection meta_type for the component
- * @return SerializedComponent with all reflected properties
- */
-SerializedComponent SerializeComponentViaReflection(const void* componentPtr, const entt::meta_type& metaType)
-{
-    // Create meta_any from raw pointer
-    entt::meta_any componentAny = metaType.from_void(componentPtr);
-
-    // Get type information from reflection
-    std::uint32_t typeHash = static_cast<std::uint32_t>(metaType.id());
-    std::string typeName = ReflectionRegistry::GetTypeName(metaType.id());
-
-    // Create serialized component with reflection type info
-    SerializedComponent serialized(typeHash, typeName);
-
-    // Get field name mapping
-    auto fieldNames = ReflectionRegistry::GetFieldNames(metaType.id());
-
-    // Iterate all reflected fields
-    for (const auto& [fieldId, fieldData] : metaType.data())
-    {
-        // Get field name
-        auto fieldNameIt = fieldNames.find(fieldId);
-        if (fieldNameIt == fieldNames.end())
-            continue;  // Skip if no name registered
-
-        std::string fieldName = fieldNameIt->second;
-
-        // Get field value
-        entt::meta_any fieldValue = fieldData.get(componentAny);
-
-        // Convert to PropertyValue
-        SerializedPropertyValue propValue = MetaAnyToPropertyValue(fieldValue);
-
-        // Store in serialized component
-        serialized.properties[fieldName] = propValue;
-    }
-
-    return serialized;
-}
-
-/**
- * @brief Apply serialized component data to entity using reflection
+ * @brief Apply serialized component data to entity using reflection (refactored to use reflection.h templates)
  * @param registry ECS registry
  * @param enttEntity EnTT entity handle
  * @param serialized Serialized component data
@@ -318,13 +319,16 @@ bool DeserializeComponentViaReflection(entt::registry& registry, entt::entity en
     if (serialized.typeName.empty())
         return false;  // No type name stored
 
-    // Find meta_type by name
+    // Find meta_type by name and get the actual C++ type hash
     entt::meta_type metaType;
+    entt::id_type cppTypeHash = 0;  // C++ type hash for storage lookup
     for (const auto& [typeHash, mt] : ReflectionRegistry::types())
     {
-        if (ReflectionRegistry::GetTypeName(typeHash) == serialized.typeName)
+        // Use metaType.id() to get the string hash for name lookup
+        if (ReflectionRegistry::GetTypeName(mt.id()) == serialized.typeName)
         {
             metaType = mt;
+            cppTypeHash = typeHash;  // Store the C++ type hash from types() for storage access
             break;
         }
     }
@@ -332,45 +336,46 @@ bool DeserializeComponentViaReflection(entt::registry& registry, entt::entity en
     if (!metaType)
         return false;  // Type not found in reflection registry
 
+    // Check if entity already has this component (use C++ type hash for storage access)
+    auto* storage = registry.storage(cppTypeHash);
+    if (storage && storage->contains(enttEntity))
+    {
+        // Component already exists - skip it to avoid "Slot not available" error
+        // This can happen when deserializing components that were already added
+        return true;
+    }
+
+    // Parse YAML data directly from the stored string
+    YAML::Node compNode;
+    auto yamlIt = serialized.properties.find("__yaml_data__");
+    if (yamlIt != serialized.properties.end() && std::holds_alternative<std::string>(yamlIt->second))
+    {
+        // Parse the YAML string back into a node
+        std::string yamlStr = std::get<std::string>(yamlIt->second);
+        compNode = YAML::Load(yamlStr);
+    }
+    else
+    {
+        // Fallback: try to reconstruct from individual properties (for backwards compatibility)
+        for (const auto& [propName, propValue] : serialized.properties)
+        {
+            if (propName != "__yaml_data__")
+                compNode[propName] = SerializePropertyValue(propValue);
+        }
+    }
+
     // Construct component instance
     entt::meta_any componentAny = metaType.construct();
     if (!componentAny)
         return false;  // Failed to construct
 
-    // Get field name mapping
-    auto fieldNames = ReflectionRegistry::GetFieldNames(metaType.id());
+    // Use reflection template to deserialize from YAML node
+    DeserializeType(compNode, componentAny);
 
-    // Set each property from serialized data
-    for (const auto& [fieldId, fieldData] : metaType.data())
-    {
-        // Get field name
-        auto fieldNameIt = fieldNames.find(fieldId);
-        if (fieldNameIt == fieldNames.end())
-            continue;
+    // Add component to entity using reflection
+    metaType.func("emplace_meta_any"_tn).invoke({}, entt::forward_as_meta(registry), enttEntity, entt::forward_as_meta(componentAny));
 
-        std::string fieldName = fieldNameIt->second;
-
-        // Check if property exists in serialized data
-        auto propIt = serialized.properties.find(fieldName);
-        if (propIt == serialized.properties.end())
-            continue;  // Property not in serialized data
-
-        // Convert PropertyValue to meta_any
-        entt::meta_any propValue = PropertyValueToMetaAny(propIt->second);
-
-        // Set field value
-        fieldData.set(componentAny, propValue);
-    }
-
-    // Add component to entity using reflection's emplace function
-    auto emplaceFunc = metaType.func("emplace_meta_any"_tn);
-    if (emplaceFunc)
-    {
-        emplaceFunc.invoke({}, entt::forward_as_meta(registry), enttEntity, entt::forward_as_meta(componentAny));
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 } // anonymous namespace
@@ -395,9 +400,9 @@ PrefabData PrefabSystem::LoadPrefabFromFile(const std::string& prefabPath)
             data.version = meta["version"].as<int>(1);
             data.createdDate = meta["created"].as<std::string>("");
 
-            // Parse UUID from string
+            // Parse Guid from string
             std::string uuidStr = meta["uuid"].as<std::string>();
-            data.uuid = UUID<128>::FromString(uuidStr);
+            data.uuid = Resource::Guid::to_guid(uuidStr);
         }
 
         // Load entity hierarchy
@@ -455,11 +460,10 @@ bool PrefabSystem::SavePrefabToFile(const PrefabData& data, const std::string& p
 // Core Prefab Operations
 // ========================
 
-ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const UUID<128>& prefabId, const glm::vec3& position)
+ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const Resource::Guid& prefabId, const glm::vec3& position)
 {
     // Load prefab data from cache
-    UUID<128> mutableId = prefabId;  // Make a mutable copy
-    std::string uuidStr = mutableId.ToString();
+    std::string uuidStr = prefabId.to_hex();
     auto it = s_PrefabCache.find(uuidStr);
     if (it == s_PrefabCache.end())
     {
@@ -488,13 +492,13 @@ ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const UUID<128>& 
     return rootEntity;
 }
 
-ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& world, const UUID<128>& prefabId, ecs::entity rootEntityId, const glm::vec3& position)
+ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& world, const Resource::Guid& prefabId, ecs::entity rootEntityId, const glm::vec3& position)
 {
     // Similar to InstantiatePrefab but uses provided entity ID
     return rootEntityId;
 }
 
-int PrefabSystem::SyncPrefab(ecs::world& world, const UUID<128>& prefabId)
+int PrefabSystem::SyncPrefab(ecs::world& world, const Resource::Guid& prefabId)
 {
     int syncCount = 0;
 
@@ -521,8 +525,7 @@ bool PrefabSystem::SyncInstance(ecs::world& world, ecs::entity instance)
     auto& prefabComp = instance.get<PrefabComponent>();
 
     // Load prefab data from cache
-    UUID<128> mutableGuid = prefabComp.m_PrefabGuid;
-    std::string uuidStr = mutableGuid.ToString();
+    std::string uuidStr = prefabComp.m_PrefabGuid.to_hex();
     auto it = s_PrefabCache.find(uuidStr);
     if (it == s_PrefabCache.end())
         return false;  // Prefab not in cache
@@ -633,7 +636,7 @@ bool PrefabSystem::ApplyInstanceToPrefab(ecs::world& world, ecs::entity instance
 // Queries
 // ========================
 
-std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const UUID<128>& prefabId)
+std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const Resource::Guid& prefabId)
 {
     std::vector<ecs::entity> instances;
 
@@ -651,7 +654,7 @@ std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const 
     return instances;
 }
 
-bool PrefabSystem::IsInstanceOf(ecs::world& world, ecs::entity entity, const UUID<128>& prefabId)
+bool PrefabSystem::IsInstanceOf(ecs::world& world, ecs::entity entity, const Resource::Guid& prefabId)
 {
     if (!entity.all<PrefabComponent>())
         return false;
@@ -665,9 +668,9 @@ bool PrefabSystem::IsPrefabInstance(ecs::world& world, ecs::entity entity)
     return entity.all<PrefabComponent>();
 }
 
-UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
-                                               const std::string& prefabName,
-                                               const std::string& prefabPath)
+Resource::Guid PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
+                                                    const std::string& prefabName,
+                                                    const std::string& prefabPath)
 {
     PrefabData prefabData(prefabName);
     prefabData.createdDate = GetCurrentTimestamp();
@@ -683,7 +686,7 @@ UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity ro
         return prefabData.uuid;
     }
 
-    return UUID<128>(); // Invalid UUID on failure
+    return Resource::null_guid; // Invalid Guid on failure
 }
 
 // ========================
@@ -691,7 +694,7 @@ UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity ro
 // ========================
 
 ecs::entity PrefabSystem::InstantiateEntity(ecs::world& world, const PrefabEntity& prefabEntity,
-                                            ecs::entity parent, const UUID<128>& prefabId)
+                                            ecs::entity parent, const Resource::Guid& prefabId)
 {
     // Create entity
     ecs::entity entity = world.add_entity();
@@ -747,16 +750,40 @@ PrefabEntity PrefabSystem::SerializeEntityHierarchy(ecs::world& world, ecs::enti
     // Iterate all registered component types via reflection
     for (const auto& [typeHash, metaType] : ReflectionRegistry::types())
     {
-        // Check if entity has this component
+        // typeHash is the C++ type hash, but we need the string hash for lookups
+        // metaType.id() returns the string hash that was registered
+        auto metaTypeId = metaType.id();
+
+        // Check if entity has this component using the C++ type hash
         auto* storage = registry.storage(typeHash);
         if (!storage || !storage->contains(enttEntity))
             continue;  // Entity doesn't have this component
 
-        // Get component data pointer
-        const void* componentPtr = storage->value(enttEntity);
+        // Get component type name using the meta type id (string hash)
+        std::string typeName = ReflectionRegistry::GetTypeName(metaTypeId);
 
-        // Serialize using reflection
-        SerializedComponent serializedComp = SerializeComponentViaReflection(componentPtr, metaType);
+        // Skip Identifier component - it's entity-specific, not prefab data
+        if (typeName == "Identifier")
+            continue;
+
+        // Get component data and convert to meta_any
+        const void* componentPtr = storage->value(enttEntity);
+        entt::meta_any componentAny = metaType.from_void(componentPtr);
+
+        // Use reflection template to serialize to YAML node
+        YAML::Node compNode;
+        SerializeType(componentAny, compNode);
+
+        // Convert YAML node to SerializedComponent
+        SerializedComponent serializedComp;
+        serializedComp.typeHash = static_cast<std::uint32_t>(metaTypeId);  // Store string hash for serialization
+        serializedComp.typeName = typeName;
+
+        // Store the entire YAML node as a string to avoid lossy conversion
+        // We'll parse it back when deserializing
+        YAML::Emitter emitter;
+        emitter << compNode;
+        serializedComp.properties["__yaml_data__"] = std::string(emitter.c_str());
 
         prefabEntity.components.push_back(serializedComp);
     }
