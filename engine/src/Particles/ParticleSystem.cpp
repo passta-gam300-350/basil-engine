@@ -18,6 +18,12 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 	}
 	auto& registry = world.impl.get_registry();
 	auto view = registry.view<ParticleComponent, PositionComponent>();
+	auto view2 = world.filter_entities<ParticleComponent, PositionComponent>();
+	for (auto& eachEntity : view2)
+	{
+		ParticleComponent& particleComponent = eachEntity.get<ParticleComponent>();
+		// implement later
+	}
 	view.each([&](auto entity, ParticleComponent& particleComp, PositionComponent& positionComp)
 		{
 			if (particleComp.emitter == nullptr)

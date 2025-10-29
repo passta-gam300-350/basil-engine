@@ -4,6 +4,8 @@
 
 #include "components/transform.h"
 #include "Render/Render.h"
+#include "Particles/ParticleComponent.h"
+
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -180,4 +182,18 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&CameraComponent::m_Yaw, "m_Yaw">,
 		MemberRegistrationV<&CameraComponent::m_Pitch, "m_Pitch">
 	);
+
+	RegisterReflectionComponent<ParticleComponent>(
+		"ParticleComponent",
+		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
+		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
+
+	);
+
+	RegisterReflectionComponent<ParticleComponent>(
+		"ParticleComponent",
+		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
+		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
+
+		);
 }
