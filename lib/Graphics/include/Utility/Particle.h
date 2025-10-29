@@ -5,7 +5,7 @@
 #include <memory>
 #include <cstdint>
 
-class Texture; // forward declaration, save compile time
+struct Texture; // forward declaration, save compile time
 
 /**
  * @brief Blend modes for particle rendering

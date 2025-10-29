@@ -64,9 +64,12 @@ public:
     {
         switch ((JPH::BroadPhaseLayer::Type)inLayer)
         {
-        case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
-        case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
-        default:													JPH_ASSERT(false); return "INVALID";
+            case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	
+                return "NON_MOVING";
+            case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		
+                return "MOVING";
+            default:									   
+                JPH_ASSERT(false); return "INVALID";
         }
     }
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
@@ -257,12 +260,12 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
     // Update kinematic bodies from ECS transforms
     auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent, ScaleComponent, RotationComponent>();
 
-    for (auto& entity : list_of_entities) {
+    for (auto const& entity : list_of_entities) 
+    {
         auto [RigidBody, Transform, Pos, Scale, Rot] {entity.get<RigidBodyComponent, TransformComponent , PositionComponent, ScaleComponent, RotationComponent>()};
 
-        if (RigidBody.motionType == JPH::EMotionType::Kinematic && RigidBody.isActive) {
-            m_bodyInterface->SetPositionAndRotation(RigidBody.bodyID, PhysicsUtils::ToJolt(Pos.m_WorldPos), PhysicsUtils::EulerToJoltQuat(Rot.m_Rotation), JPH::EActivation::DontActivate);
-        }
+        m_bodyInterface->SetPositionAndRotation(RigidBody.bodyID, PhysicsUtils::ToJolt(Pos.m_WorldPos), PhysicsUtils::EulerToJoltQuat(Rot.m_Rotation), JPH::EActivation::DontActivate);
+        //if (RigidBody.motionType == JPH::EMotionType::Kinematic && RigidBody.isActive)
     }
 }
 
@@ -272,7 +275,8 @@ void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
     // Update ECS transforms from dynamic bodies
     auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent, ScaleComponent, RotationComponent>();
 
-    for (auto& entity : list_of_entities) {
+    for (auto const& entity : list_of_entities) 
+    {
         auto [RigidBody, Transform, Pos, Scale, Rot] {entity.get<RigidBodyComponent, TransformComponent, PositionComponent, ScaleComponent, RotationComponent>()};
 
         if (RigidBody.motionType == JPH::EMotionType::Dynamic && RigidBody.isActive) {
@@ -326,6 +330,7 @@ void PhysicsSystem::ProcessCollisionEvents(ecs::world&) {
 //    }
 //}
 
+// Creates the body of a specific shape and returns the new bodyID
 JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider)
 {
     if (!m_bodyInterface) return JPH::BodyID();

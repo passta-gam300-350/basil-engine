@@ -1,4 +1,4 @@
-// THIS IS THE ACTUAL LEVEL EDITOR!!!,
+﻿// THIS IS THE ACTUAL LEVEL EDITOR!!!,
 
 #include <Render/Render.h>
 #include <Engine.hpp>
@@ -78,6 +78,7 @@ void EditorMain::init()
 	// Create demo scene with cubes for testing
 	CreateDemoScene();
 
+	SetupUnityStyle();
 	//std::jthread jth(&Engine::Update);
 }
 
@@ -205,6 +206,9 @@ void EditorMain::render()
 
 	ImGui::Begin("DockSpaceHost", nullptr, host_flags);
 
+	Render_MenuBar(); // The menu bar is attached to the dockspace therefore is fixed and should not be outside 
+	Render_StartStop(); // The startstop bar is attached to the dockspace therefore is fixed and should not be outside where it will become dockable
+
 	ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 
 	// kill bluish empty dockspace background
@@ -259,8 +263,11 @@ void EditorMain::render()
 	//RenderSystem::System().Update(world);
 	//Engine::EndFrame();
 	//Engine::UpdateDebug();
-
-	Render_MenuBar();
+	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 4.0f);
+	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.337f, 0.612f, 0.839f, 1.0f));
+	
 
 	if (showSceneExplorer)
 		Render_SceneExplorer();
@@ -275,7 +282,8 @@ void EditorMain::render()
 	Render_CameraControls();
 	Render_AssetBrowser();
 
-
+	ImGui::PopStyleColor(3);
+	ImGui::PopStyleVar();
 
 }
 
@@ -318,6 +326,173 @@ bool EditorMain::Activate()
 
 void EditorMain::Render_Inspector()
 {
+	ImGui::Begin("Inspector", &showInspector);
+
+	if (m_SelectedEntityID == static_cast<uint32_t>(-1)) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+		ImGui::SetCursorPosY(ImGui::GetWindowHeight() * 0.5f - 20);
+		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("No object selected").x) * 0.5f);
+		ImGui::Text("No object selected");
+		ImGui::PopStyleColor();
+		ImGui::End();
+		return;
+	}
+
+	ecs::world world = Engine::GetWorld();
+	auto entities = world.filter_entities<PositionComponent>();
+
+	bool entityFound = false;
+	for (auto entity : entities) {
+		if (static_cast<uint32_t>(entity.get_uid()) == m_SelectedEntityID) {
+			entityFound = true;
+
+			// Object name header (like Unity)
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 6));
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+
+			char nameBuffer[256];
+			snprintf(nameBuffer, sizeof(nameBuffer), "GameObject_%u", m_SelectedEntityID);
+			ImGui::SetNextItemWidth(-1);
+			ImGui::InputText("##ObjectName", nameBuffer, sizeof(nameBuffer));
+
+			ImGui::PopStyleColor();
+			ImGui::PopStyleVar();
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			//Render_Transform_Group_Component(ecs::entity entity_handle);
+
+			//// Transform Component (always first, like Unity)
+			//if (world.has_component<PositionComponent>(entity) &&
+			//	world.has_component<RotationComponent>(entity) &&
+			//	world.has_component<ScaleComponent>(entity))
+			//{
+			//	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+
+			//	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+			//	{
+			//		auto& pos = world.get_component_from_entity<PositionComponent>(entity);
+			//		auto& rot = world.get_component_from_entity<RotationComponent>(entity);
+			//		auto& scale = world.get_component_from_entity<ScaleComponent>(entity);
+
+			//		ImGui::Indent(8.0f);
+
+			//		// Position
+			//		ImGui::Text("Position");
+			//		ImGui::SameLine(100);
+			//		ImGui::SetNextItemWidth(-1);
+			//		ImGui::DragFloat3("##Position", &pos.m_WorldPos.x, 0.1f, 0.0f, 0.0f, "%.2f");
+
+			//		// Rotation
+			//		glm::vec3 rotDeg = glm::degrees(rot.m_Rotation);
+			//		ImGui::Text("Rotation");
+			//		ImGui::SameLine(100);
+			//		ImGui::SetNextItemWidth(-1);
+			//		if (ImGui::DragFloat3("##Rotation", &rotDeg.x, 1.0f, 0.0f, 0.0f, "%.2f"))
+			//		{
+			//			rot.m_Rotation = glm::radians(rotDeg);
+			//		}
+
+			//		// Scale
+			//		ImGui::Text("Scale");
+			//		ImGui::SameLine(100);
+			//		ImGui::SetNextItemWidth(-1);
+			//		ImGui::DragFloat3("##Scale", &scale.m_Scale.x, 0.1f, 0.0f, 0.0f, "%.2f");
+
+			//		ImGui::Unindent(8.0f);
+			//	}
+
+			//	ImGui::PopStyleVar();
+			//}
+
+			//ImGui::Spacing();
+
+			//// Mesh Renderer Component
+			//if (world.has_component<MeshComponent>(entity))
+			//{
+			//	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+
+			//	if (ImGui::CollapsingHeader("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
+			//	{
+			//		auto& mesh = world.get_component_from_entity<MeshComponent>(entity);
+
+			//		ImGui::Indent(8.0f);
+			//		ImGui::Text("Mesh GUID: %llu", mesh.m_MeshGuid);
+			//		ImGui::Text("Material GUID: %llu", mesh.m_MaterialGuid);
+			//		ImGui::Unindent(8.0f);
+			//	}
+
+			//	ImGui::PopStyleVar();
+			//}
+
+			//ImGui::Spacing();
+
+			//// Rigidbody Component
+			//if (world.has_component<RigidBodyComponent>(entity))
+			//{
+			//	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+
+			//	if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
+			//	{
+			//		auto& rb = world.get_component_from_entity<RigidBodyComponent>(entity);
+
+			//		ImGui::Indent(8.0f);
+			//		ImGui::Text("Body ID: %u", rb.body_id.GetIndexAndSequenceNumber());
+
+			//		// Mass
+			//		ImGui::Text("Mass");
+			//		ImGui::SameLine(100);
+			//		ImGui::SetNextItemWidth(-1);
+			//		float mass = 1.0f; // Get from physics system
+			//		ImGui::DragFloat("##Mass", &mass, 0.1f, 0.0f, 1000.0f, "%.2f");
+
+			//		// Use Gravity
+			//		ImGui::Text("Use Gravity");
+			//		ImGui::SameLine(100);
+			//		bool useGravity = true;
+			//		ImGui::Checkbox("##UseGravity", &useGravity);
+
+			//		ImGui::Unindent(8.0f);
+			//	}
+
+			//	ImGui::PopStyleVar();
+			//}
+
+			//ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			// Add Component button (Unity-style)
+			ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 150) * 0.5f);
+			if (ImGui::Button("Add Component", ImVec2(150, 0)))
+			{
+				ImGui::OpenPopup("AddComponentPopup");
+			}
+
+			if (ImGui::BeginPopup("AddComponentPopup"))
+			{
+				ImGui::Text("Add Component");
+				ImGui::Separator();
+				if (ImGui::Selectable("Mesh Renderer")) { /* Add mesh component */ }
+				if (ImGui::Selectable("Rigidbody")) { /* Add rigidbody */ }
+				if (ImGui::Selectable("Box Collider")) { /* Add collider */ }
+				ImGui::EndPopup();
+			}
+
+			break;
+		}
+	}
+
+	if (!entityFound) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.3f, 0.3f, 1.0f));
+		ImGui::Text("Entity not found!");
+		ImGui::PopStyleColor();
+	}
+
+	ImGui::End();
+	/*
 	ImGui::Begin("Inspector", nullptr);
 
 	// Show selected entity information
@@ -353,36 +528,8 @@ void EditorMain::Render_Inspector()
 				//	ImGui::Text("Transform Component: Present");
 				//}
 				Render_Transform_Group_Component(entity);
-
-				// Mesh Renderer Component
-				/*if (world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
-					auto& meshRenderer = world.get_component_from_entity<MeshRendererComponent>(entity);
-					ImGui::Text("Mesh Renderer Component:");
-					ImGui::Text("  Mesh GUID: %s", meshRenderer.m_MeshGuid.to_hex().c_str());
-					ImGui::Text("  Material GUID: %s", meshRenderer.m_MaterialGuid.to_hex().c_str());
-				}*/
 				Render_Mesh_Component(entity);
-
-				//// Light Component
-				//if (world.has_all_components_in_entity<LightComponent>(entity)) {
-				//	auto& light = world.get_component_from_entity<LightComponent>(entity);
-				//	ImGui::Text("Light Component:");
-				//	ImGui::Text("  Type: %d", static_cast<int>(light.m_Type));
-				//	ImGui::Text("  Color: (%.2f, %.2f, %.2f)", light.m_Color.r, light.m_Color.g, light.m_Color.b);
-				//	ImGui::Text("  Intensity: %.2f", light.m_Intensity);
-				//	ImGui::Text("  Enabled: %s", light.m_IsEnabled ? "Yes" : "No");
-				//}
-
 				Render_Lighting_Group_Component(entity);
-
-				// Camera Component
-				/*if (world.has_all_components_in_entity<CameraComponent>(entity)) {
-					auto& camera = world.get_component_from_entity<CameraComponent>(entity);
-					ImGui::Text("Camera Component:");
-					ImGui::Text("  Type: %s", camera.m_Type == CameraComponent::CameraType::PERSPECTIVE ? "Perspective" : "Orthographic");
-					ImGui::Text("  FOV: %.1f", camera.m_Fov);
-					ImGui::Text("  Active: %s", camera.m_IsActive ? "Yes" : "No");
-				}*/
 				Render_Camera_Group_Component(entity);
 
 				ImGui::Separator();
@@ -411,6 +558,7 @@ void EditorMain::Render_Inspector()
 	}
 
 	ImGui::End();
+	*/
 }
 
 
@@ -435,22 +583,25 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 
 	if (transformComponent)
 	{
-		bool containPos = world.has_all_components_in_entity<PositionComponent>(entity_handle);
-		bool containScale = world.has_all_components_in_entity<ScaleComponent>(entity_handle);
-		bool containRot = world.has_all_components_in_entity<RotationComponent>(entity_handle);
+		bool containComponents = world.has_all_components_in_entity<PositionComponent, ScaleComponent, RotationComponent>(entity_handle);
+		if (!containComponents)
+		{
+			return;
+		}
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+
 		if (ImGui::CollapsingHeader("Transform"))
 		{
-			PositionComponent* posComp = nullptr;
-			ScaleComponent* scaleComp = nullptr;
-			RotationComponent* rotComp = nullptr;
+			PositionComponent* posComp = &world.get_component_from_entity<PositionComponent>(entity_handle);
+			ScaleComponent* scaleComp = &world.get_component_from_entity<ScaleComponent>(entity_handle);
+			RotationComponent* rotComp = &world.get_component_from_entity<RotationComponent>(entity_handle);
 			glm::vec3 pos, scale{ 1 }, rot{};
 			bool edited{};
-			if (containPos) posComp = &world.get_component_from_entity<PositionComponent>(entity_handle);
-			if (containScale) scaleComp = &world.get_component_from_entity<ScaleComponent>(entity_handle);
-			if (containRot) rotComp = &world.get_component_from_entity<RotationComponent>(entity_handle);
-			if (posComp) pos = posComp->m_WorldPos;
-			if (scaleComp) scale = scaleComp->m_Scale;
-			if (rotComp) rot = rotComp->m_Rotation;
+			pos = posComp->m_WorldPos;
+			scale = scaleComp->m_Scale;
+			rot = rotComp->m_Rotation;
+
+			ImGui::Indent(8.0f);
 
 			if (posComp) {
 				ImGui::PushID("POSITION_INSPECTOR_INPUT_LABEL");
@@ -644,7 +795,108 @@ void EditorMain::Render_Mesh_Component(ecs::entity entity_handle)
 
 }
 
+/*
+By Default the physics is disabled, only collision is checked and displayed, but no resolution should happen, logic should also be disabled
+When we are playing, phyiscs and logic should be enabled fully.
+When Paused, phyics and logic should be paused.
+when Stepped, phyics and logic is stepped by one
+*/
+void EditorMain::Render_StartStop()
+{
+	// Toolbar background
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 6.0f));
 
+	ImGui::BeginChild("##StartStop", ImVec2(0, 40), true, ImGuiWindowFlags_NoScrollbar);
+
+	// Center the buttons
+	float windowWidth = ImGui::GetContentRegionAvail().x;
+	float buttonWidth = 60.0f; // Square buttons like Unity
+	float spacing = 4.0f;
+	float totalWidth = (buttonWidth * 3) + (spacing * 2);
+	float offsetX = (windowWidth - totalWidth) * 0.5f;
+
+	if (offsetX > 0)
+		ImGui::SetCursorPosX(offsetX);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, 0));
+
+	// Play Button
+	if (isPlaying)
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.337f, 0.612f, 0.839f, 1.0f)); // Unity blue when active
+	else
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
+
+	if (ImGui::Button(isPlaying ? "Stop" : "Play", ImVec2(buttonWidth, 28)))
+	{
+		isPlaying = !isPlaying;
+		if (isPlaying) // Starts game
+		{
+			
+		}
+		else // Stops Game
+		{
+			//OnPlayStop();
+			isPaused = false; // Resets paused game as we are stopping
+		}
+			
+	}
+	ImGui::PopStyleColor();
+
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip(isPlaying ? "Stop" : "Play");
+
+	ImGui::SameLine();
+
+	// Pause Button
+	if (!isPlaying)
+		ImGui::BeginDisabled();
+
+	if (isPaused)
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.6f, 0.2f, 1.0f));
+	else
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
+
+	if (ImGui::Button("Pause", ImVec2(buttonWidth, 28)))
+	{
+		isPaused = !isPaused;
+		//OnPauseToggle();
+	}
+	ImGui::PopStyleColor();
+
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip(isPaused ? "Resume" : "Pause");
+
+	if (!isPlaying)
+		ImGui::EndDisabled();
+
+	ImGui::SameLine();
+
+	// Step Button
+	if (!isPaused)
+		ImGui::BeginDisabled();
+
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
+	if (ImGui::Button("Step", ImVec2(buttonWidth, 28)))
+	{
+		//OnStep();
+	}
+	ImGui::PopStyleColor();
+
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Step Frame");
+
+	if (!isPaused)
+		ImGui::EndDisabled();
+
+	ImGui::PopStyleVar(2);
+
+	ImGui::EndChild();
+	ImGui::PopStyleVar();
+	ImGui::PopStyleColor();
+	
+}
 
 void EditorMain::Render_MenuBar()
 {
@@ -743,6 +995,96 @@ void EditorMain::Render_MenuBar()
 
 }
 
+void EditorMain::SetupUnityStyle()
+{
+	ImGuiStyle& style = ImGui::GetStyle();
+	ImVec4* colors = style.Colors;
+
+	// Main colors
+	colors[ImGuiCol_Text] = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
+	colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.196f, 0.196f, 0.196f, 1.00f); // #323232
+	colors[ImGuiCol_ChildBg] = ImVec4(0.196f, 0.196f, 0.196f, 1.00f);
+	colors[ImGuiCol_PopupBg] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_Border] = ImVec4(0.098f, 0.098f, 0.098f, 1.00f);
+	colors[ImGuiCol_BorderShadow] = ImVec4(0.000f, 0.000f, 0.000f, 0.00f);
+	colors[ImGuiCol_FrameBg] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f); // Input fields
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.275f, 0.275f, 0.275f, 1.00f);
+	colors[ImGuiCol_TitleBg] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_TitleBgActive] = ImVec4(0.196f, 0.196f, 0.196f, 1.00f);
+	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_MenuBarBg] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.275f, 0.275f, 0.275f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.314f, 0.314f, 0.314f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.353f, 0.353f, 0.353f, 1.00f);
+	colors[ImGuiCol_CheckMark] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f); // Unity blue
+	colors[ImGuiCol_SliderGrab] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f);
+	colors[ImGuiCol_SliderGrabActive] = ImVec4(0.400f, 0.690f, 0.890f, 1.00f);
+	colors[ImGuiCol_Button] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
+	colors[ImGuiCol_ButtonHovered] = ImVec4(0.275f, 0.275f, 0.275f, 1.00f);
+	colors[ImGuiCol_ButtonActive] = ImVec4(0.314f, 0.314f, 0.314f, 1.00f);
+	colors[ImGuiCol_Header] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f); // Collapsing header
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.275f, 0.275f, 0.275f, 1.00f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.314f, 0.314f, 0.314f, 1.00f);
+	colors[ImGuiCol_Separator] = ImVec4(0.098f, 0.098f, 0.098f, 1.00f);
+	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f);
+	colors[ImGuiCol_SeparatorActive] = ImVec4(0.400f, 0.690f, 0.890f, 1.00f);
+	colors[ImGuiCol_ResizeGrip] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
+	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f);
+	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.400f, 0.690f, 0.890f, 1.00f);
+	colors[ImGuiCol_Tab] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_TabHovered] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f);
+	colors[ImGuiCol_TabActive] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
+	colors[ImGuiCol_TabUnfocused] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.196f, 0.196f, 0.196f, 1.00f);
+	colors[ImGuiCol_DockingPreview] = ImVec4(0.337f, 0.612f, 0.839f, 0.70f);
+	colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.00f);
+	colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	colors[ImGuiCol_TableHeaderBg] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
+	colors[ImGuiCol_TableBorderStrong] = ImVec4(0.098f, 0.098f, 0.098f, 1.00f);
+	colors[ImGuiCol_TableBorderLight] = ImVec4(0.098f, 0.098f, 0.098f, 1.00f);
+	colors[ImGuiCol_TableRowBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.00f);
+	colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.000f, 1.000f, 1.000f, 0.06f);
+	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.337f, 0.612f, 0.839f, 0.35f);
+	colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+	colors[ImGuiCol_NavHighlight] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f);
+	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+
+	// Style adjustments
+	style.WindowPadding = ImVec2(8.0f, 8.0f);
+	style.FramePadding = ImVec2(4.0f, 3.0f);
+	style.ItemSpacing = ImVec2(8.0f, 4.0f);
+	style.ItemInnerSpacing = ImVec2(4.0f, 4.0f);
+	style.IndentSpacing = 21.0f;
+	style.ScrollbarSize = 14.0f;
+	style.GrabMinSize = 10.0f;
+
+	style.WindowBorderSize = 1.0f;
+	style.ChildBorderSize = 1.0f;
+	style.PopupBorderSize = 1.0f;
+	style.FrameBorderSize = 0.0f;
+	style.TabBorderSize = 0.0f;
+
+	style.WindowRounding = 0.0f;
+	style.ChildRounding = 0.0f;
+	style.FrameRounding = 3.0f;
+	style.PopupRounding = 0.0f;
+	style.ScrollbarRounding = 9.0f;
+	style.GrabRounding = 3.0f;
+	style.TabRounding = 4.0f;
+
+	style.WindowTitleAlign = ImVec2(0.5f, 0.5f); // Center window titles
+	style.ButtonTextAlign = ImVec2(0.5f, 0.5f); // Center button text
+}
+
+
 void EditorMain::Render_AboutUI()
 {
 	// Render About Modal
@@ -792,6 +1134,89 @@ void EditorMain::Setup_Dockspace(unsigned id)
 
 void EditorMain::Render_SceneExplorer()
 {
+	
+	ImGui::Begin("Hierarchy", &showSceneExplorer);
+
+	// Search bar (Unity-style)
+	/*
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+	static char searchBuffer[256] = "";
+	ImGui::SetNextItemWidth(-1);
+	ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, sizeof(searchBuffer));
+	ImGui::PopStyleVar();
+	*/
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	// Scene tree
+	ecs::world world = Engine::GetWorld();
+	auto entities = world.filter_entities<PositionComponent>();
+
+	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
+
+	if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+	{
+		int entityIndex = 0;
+		for (auto& entity : entities)
+		{
+			uint32_t entityID = static_cast<uint32_t>(entity.get_uid());
+
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf |
+				ImGuiTreeNodeFlags_NoTreePushOnOpen |
+				ImGuiTreeNodeFlags_SpanAvailWidth;
+
+			if (entityID == m_SelectedEntityID)
+				flags |= ImGuiTreeNodeFlags_Selected;
+
+
+			ImGui::TreeNodeEx((void*)(intptr_t)entityID, flags, "%s", entity.name().c_str());
+
+			if (ImGui::IsItemClicked())
+			{
+				m_SelectedEntityID = entityID;
+			}
+
+			// Right-click context menu
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
+				if (ImGui::MenuItem("Delete")) { /* Delete entity */ }
+				ImGui::Separator();
+				if (ImGui::MenuItem("Rename")) { /* Rename entity */ }
+				ImGui::EndPopup();
+			}
+
+			entityIndex++;
+		}
+
+		ImGui::TreePop();
+	}
+
+	ImGui::PopStyleVar();
+
+	// Right-click in empty space to create new objects
+	if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+	{
+		if (ImGui::BeginMenu("Create"))
+		{
+			if (ImGui::MenuItem("Empty GameObject")) { /* Create empty */ }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Cube")) { /* Create cube */ }
+			if (ImGui::MenuItem("Sphere")) { /* Create sphere */ }
+			if (ImGui::MenuItem("Plane")) { /* Create plane */ }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Camera")) { /* Create camera */ }
+			if (ImGui::MenuItem("Light")) { /* Create light */ }
+			ImGui::EndMenu();
+		}
+		ImGui::EndPopup();
+	}
+
+	ImGui::End();
+	
+	/*
 	ImGui::Begin("Hierarchy");
 
 	if (ImGui::CollapsingHeader("Create Entities")) {
@@ -888,6 +1313,7 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::End();
+	*/
 }
 
 
@@ -919,13 +1345,77 @@ void EditorMain::Render_Profiler()
 
 	ImGui::End();
 }
+
 void EditorMain::Render_Console()
 {
-	ImGui::Begin("Console");
-	// Example log messages
-	ImGui::Text("Log Message 1");
-	ImGui::Text("Log Message 2");
-	ImGui::Text("Log Message 3");
+	ImGui::Begin("Console", &showConsole);
+
+	// Toolbar with filter buttons
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 0));
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+
+	static bool showLogs = true;
+	static bool showWarnings = true;
+	static bool showErrors = true;
+
+	// Clear button
+	if (ImGui::Button("Clear"))
+	{
+		// Clear console logs
+	}
+
+	ImGui::SameLine();
+	ImGui::Separator();
+	ImGui::SameLine();
+
+	// Filter toggles with icons
+	ImGui::PushStyleColor(ImGuiCol_Button, showLogs ? ImVec4(0.235f, 0.235f, 0.235f, 1.0f) : ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+	if (ImGui::Button("Info"))
+		showLogs = !showLogs;
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine();
+
+	ImGui::PushStyleColor(ImGuiCol_Button, showWarnings ? ImVec4(0.6f, 0.5f, 0.2f, 1.0f) : ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+	if (ImGui::Button("Warning"))
+		showWarnings = !showWarnings;
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine();
+
+	ImGui::PushStyleColor(ImGuiCol_Button, showErrors ? ImVec4(0.7f, 0.2f, 0.2f, 1.0f) : ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+	if (ImGui::Button("Error"))
+		showErrors = !showErrors;
+	ImGui::PopStyleColor();
+
+	ImGui::PopStyleVar(2);
+
+	ImGui::Separator();
+
+	// Console output
+	ImGui::BeginChild("ConsoleOutput", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+	// Example log entries
+	if (showLogs) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+		ImGui::TextUnformatted("[Info] Application started successfully");
+		ImGui::PopStyleColor();
+	}
+
+	if (showWarnings) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.8f, 0.3f, 1.0f));
+		ImGui::TextUnformatted("[Warning] Texture not found, using default");
+		ImGui::PopStyleColor();
+	}
+
+	if (showErrors) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+		ImGui::TextUnformatted("[Error] Failed to load asset");
+		ImGui::PopStyleColor();
+	}
+
+	ImGui::EndChild();
+
 	ImGui::End();
 }
 

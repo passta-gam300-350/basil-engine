@@ -162,7 +162,7 @@ namespace PhysicsUtils {
     // Convert Euler angles (in radians) to Jolt quaternion
     inline JPH::Quat EulerToJoltQuat(const glm::vec3& eulerRadians) {
         // Create GLM quaternion from Euler angles
-        glm::quat glmQuat = glm::quat(eulerRadians);
+        glm::quat const glmQuat = glm::quat(eulerRadians);
 
         // Convert to Jolt
         return JPH::Quat(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
@@ -170,20 +170,20 @@ namespace PhysicsUtils {
 
     // If your angles are in degrees:
     inline JPH::Quat EulerDegreesToJoltQuat(const glm::vec3& eulerDegrees) {
-        glm::vec3 eulerRadians = glm::radians(eulerDegrees);
-        glm::quat glmQuat = glm::quat(eulerRadians);
+        glm::vec3 const eulerRadians = glm::radians(eulerDegrees);
+        glm::quat const glmQuat = glm::quat(eulerRadians);
         return JPH::Quat(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
     }
 
     // Convert Jolt quaternion to Euler angles (radians)
     inline glm::vec3 JoltQuatToEuler(const JPH::Quat& q) {
-        glm::quat glmQuat = ToQuatGLM(q);
+        glm::quat const glmQuat = ToQuatGLM(q);
         return glm::eulerAngles(glmQuat);  // Returns radians
     }
 
     // Convert Jolt quaternion to Euler angles (degrees)
     inline glm::vec3 JoltQuatToEulerDegrees(const JPH::Quat& q) {
-        glm::vec3 eulerRadians = JoltQuatToEuler(q);
+        glm::vec3 const eulerRadians = JoltQuatToEuler(q);
         return glm::degrees(eulerRadians);
     }
 }
