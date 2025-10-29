@@ -38,6 +38,7 @@ struct RenderableData {
     // Applied AFTER material properties to override specific values
     // Preserves GPU instancing unlike MaterialInstance
     std::shared_ptr<MaterialPropertyBlock> propertyBlock = nullptr;
+    uint32_t modelInstanceID = 0;  // ID shared by all meshes of the same model instance
 };
 
 struct SubmittedLightData {
@@ -45,7 +46,9 @@ struct SubmittedLightData {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f);
     glm::vec3 color = glm::vec3(1.0f);
-    float intensity = 1.0f;
+    float intensity = 1.0f;              // Legacy: for backward compatibility
+    float diffuseIntensity = 1.0f;       // Ogldev-style: direct light intensity
+    float ambientIntensity = 0.0f;       // Ogldev-style: per-light ambient contribution
     float range = 10.0f;
     float innerCone = 30.0f;
     float outerCone = 45.0f;

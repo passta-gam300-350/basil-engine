@@ -32,6 +32,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_STENCIL_BITS, 8);  // Request stencil buffer for outline rendering
 
 	// Create the GLFW window
 	m_Window = glfwCreateWindow(static_cast<int>(m_Width), static_cast<int>(m_Height), title.c_str(), nullptr, nullptr);

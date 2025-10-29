@@ -1,20 +1,3 @@
-/******************************************************************************/
-/*!
-\file   RenderCommandBuffer.cpp
-\author Team PASSTA
-        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
-        Tham Kang Ting (kangting.t@digipen.edu)
-        Cheong Jia Zen (jiazen.c@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief    Implementation of render command buffer for deferred OpenGL rendering
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #include "Core/RenderCommandBuffer.h"
 #include "Resources/TextureSlotManager.h"
 #include <algorithm>
@@ -62,15 +45,16 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ClearData& cmd)
     if (cmd.clearColor) {
         glClearColor(cmd.r, cmd.g, cmd.b, cmd.a);
     }
-    
+
+    if (cmd.clearStencil) {
+        glClearStencil(0);  // Clear stencil buffer to 0
+    }
+
     GLbitfield mask = 0;
-    if (cmd.clearColor) {
-        mask |= GL_COLOR_BUFFER_BIT;
-    }
-    if (cmd.clearDepth) {
-        mask |= GL_DEPTH_BUFFER_BIT;
-    }
-    
+    if (cmd.clearColor) mask |= GL_COLOR_BUFFER_BIT;
+    if (cmd.clearDepth) mask |= GL_DEPTH_BUFFER_BIT;
+    if (cmd.clearStencil) mask |= GL_STENCIL_BUFFER_BIT;
+
     if (mask != 0) {
         glClear(mask);
     }
@@ -116,17 +100,20 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsData&
            cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawElementsData mode must be a valid OpenGL primitive type");
 
     glBindVertexArray(cmd.vao);
-    glDrawElements(cmd.mode, static_cast<GLsizei>(cmd.indexCount), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
-    // Reset material texture state (but preserve shadow map binding)
-    if (m_TextureBindingSystem != nullptr)
+    // PERFORMANCE: Disabled texture unbinding after each draw call
+    // Rebinding textures for the next draw is sufficient - no need to unbind
+    // This saves hundreds of glBindTexture(slot, 0) calls per frame
+    // Original code was unbinding 8 slots × 90 meshes = 720 calls per frame!
+    /*if (m_TextureBindingSystem)
     {
         // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
         for (int i = 0; i < 8; ++i) {
             m_TextureBindingSystem->UnbindTexture(i);
         }
-    }
+    }*/
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindSSBOData& cmd)
@@ -147,12 +134,14 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
            cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawElementsInstancedData mode must be a valid OpenGL primitive type");
 
     glBindVertexArray(cmd.vao);
-    glDrawElementsInstanced(cmd.mode, static_cast<GLsizei>(cmd.indexCount), GL_UNSIGNED_INT, nullptr,
-                           static_cast<GLsizei>(cmd.instanceCount));
+    glDrawElementsInstanced(cmd.mode, cmd.indexCount, GL_UNSIGNED_INT, nullptr,
+                           cmd.instanceCount);
     glBindVertexArray(0);
 
-    // Reset material texture state (but preserve shadow map binding)
-    if (m_TextureBindingSystem != nullptr)
+    // PERFORMANCE: Disabled texture unbinding after each draw call
+    // Rebinding textures and SSBOs for the next draw is sufficient
+    // Original code: 90 meshes × (8 texture unbinds + 1 SSBO unbind) = 810 calls per frame!
+    /*if (m_TextureBindingSystem)
     {
         // Unbind material texture slots (0-7) but preserve shadow slot (8) and higher
         for (int i = 0; i < 8; ++i) {
@@ -161,39 +150,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawElementsInsta
     }
 
     // Unbind SSBO binding points to prevent state leakage
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO
-}
-
-void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetShadowUniformsData& cmd)
-{
-    assert(cmd.shader && "SetShadowUniformsData command must have a valid shader");
-    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
-    assert(cmd.shadowMapUnit >= 0 && cmd.shadowMapUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS &&
-           "Shadow map texture unit must be within OpenGL limits");
-
-    // Ensure shader is active
-    cmd.shader->use();
-
-    // Set light space matrix uniform
-    cmd.shader->setMat4("u_LightSpaceMatrix", cmd.lightSpaceMatrix);
-
-    // Bind shadow map texture to specified unit using TextureSlotManager
-    if (m_TextureBindingSystem != nullptr) {
-        m_TextureBindingSystem->BindTextureID(cmd.shadowMapTexture, cmd.shadowMapUnit);
-    } else {
-        // Fallback to manual binding
-        glActiveTexture(GL_TEXTURE0 + cmd.shadowMapUnit);
-        glBindTexture(GL_TEXTURE_2D, cmd.shadowMapTexture);
-    }
-
-    // Always set the uniform to point to the correct texture unit
-    cmd.shader->setInt("u_ShadowMap", cmd.shadowMapUnit);
-
-    // Set the shadow enable flag
-    cmd.shader->setBool("u_EnableShadows", cmd.enableShadows);
-
-    // Note: Shadow map texture will remain bound until explicitly unbound
-    // This is intentional as it needs to stay bound for the entire rendering pass
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);  // Unbind instance data SSBO*/
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BlitFramebufferData& cmd)
@@ -228,13 +185,97 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec3Dat
     cmd.shader->setVec3(cmd.uniformName, cmd.value);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformFloatData& cmd)
+{
+    assert(cmd.shader && "SetUniformFloatData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Float uniform
+    cmd.shader->setFloat(cmd.uniformName, cmd.value);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformIntData& cmd)
+{
+    assert(cmd.shader && "SetUniformIntData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Int uniform
+    cmd.shader->setInt(cmd.uniformName, cmd.value);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformBoolData& cmd)
+{
+    assert(cmd.shader && "SetUniformBoolData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the Bool uniform
+    cmd.shader->setBool(cmd.uniformName, cmd.value);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformMat4Data& cmd)
+{
+    assert(cmd.shader && "SetUniformMat4Data command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set the mat4 uniform
+    cmd.shader->setMat4(cmd.uniformName, cmd.value);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformMat4ArrayData& cmd)
+{
+    assert(cmd.shader && "SetUniformMat4ArrayData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(!cmd.uniformBaseName.empty() && "Uniform base name cannot be empty");
+    assert(!cmd.matrices.empty() && "Matrix array cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Set each matrix in the array using indexed uniform names
+    // e.g., "u_ShadowMatrices[0]", "u_ShadowMatrices[1]", etc.
+    for (size_t i = 0; i < cmd.matrices.size(); ++i) {
+        std::string uniformName = cmd.uniformBaseName + "[" + std::to_string(i) + "]";
+        cmd.shader->setMat4(uniformName, cmd.matrices[i]);
+    }
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetBlendingData& cmd)
 {
     if (cmd.enable) {
         glEnable(GL_BLEND);
         glBlendFunc(cmd.srcFactor, cmd.dstFactor);
+        glBlendEquation(cmd.blendEquation);
     } else {
         glDisable(GL_BLEND);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetViewportData& cmd)
+{
+    glViewport(cmd.x, cmd.y, cmd.width, cmd.height);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec2Data& cmd)
+{
+    if (cmd.shader) {
+        cmd.shader->use();
+        cmd.shader->setVec2(cmd.uniformName, cmd.value);
     }
 }
 
@@ -257,12 +298,23 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDepthTestData 
     }
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetFaceCullingData &cmd)
+{
+    if (cmd.enable)
+    {
+        glEnable(GL_CULL_FACE);
+        glCullFace(cmd.cullFace);
+    }
+    else
+    {
+        glDisable(GL_CULL_FACE);
+    }
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetObjectIDData& cmd)
 {
     assert(cmd.shader && "Shader cannot be null for object ID");
     assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
-    assert(cmd.objectID > 0 && "Object ID must be greater than 0 for picking to work");
-    assert(cmd.objectID < 16777215 && "Object ID exceeds 24-bit limit");
 
     // Ensure shader is active
     cmd.shader->use();
@@ -270,15 +322,7 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetObjectIDData& 
     // Convert object ID to normalized color (R channel for simplicity)
     // For 24-bit object IDs, we can use RGB channels if needed
     float normalizedID = static_cast<float>(cmd.objectID) / 16777215.0f; // 2^24 - 1
-
-    // Debug: Log the object ID being set
-    spdlog::info("SetObjectIDData: Setting object ID {} as normalized float {}", cmd.objectID, normalizedID);
-
     cmd.shader->setFloat("u_ObjectID", normalizedID);
-
-    // Assert uniform was set successfully
-    GLint location = glGetUniformLocation(cmd.shader->ID, "u_ObjectID");
-    assert(location != -1 && "u_ObjectID uniform not found in picking shader - check shader compilation");
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ReadPixelData& cmd)
@@ -294,6 +338,203 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::ReadPixelData& cm
     *cmd.outValue = static_cast<uint32_t>(pixel[0]) |
                    (static_cast<uint32_t>(pixel[1]) << 8) |
                    (static_cast<uint32_t>(pixel[2]) << 16);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &cmd)
+{
+    assert(cmd.shader && "BindCubemapData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    // Note: cubemapID can be 0 for unbinding
+    assert(cmd.textureUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS && "Texture unit must be within OpenGL limits");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Bind cubemap to specified texture unit (or unbind if ID is 0)
+    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapID);
+
+    // Set uniform sampler to point to the texture unit
+    cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTextureIDData &cmd)
+{
+    assert(cmd.shader && "BindTextureIDData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    // Note: textureID can be 0 for unbinding
+    assert(cmd.textureUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS && "Texture unit must be within OpenGL limits");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Bind 2D texture to specified texture unit (or unbind if ID is 0)
+    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
+    glBindTexture(GL_TEXTURE_2D, cmd.textureID);
+
+    // Set uniform sampler to point to the texture unit
+    cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawArraysData &cmd)
+{
+    assert(cmd.vao != 0 && "DrawArraysData command must have a valid VAO handle");
+    assert(cmd.vertexCount > 0 && "DrawArraysData command must have a positive vertex count");
+    assert(cmd.mode == GL_TRIANGLES || cmd.mode == GL_LINES || cmd.mode == GL_POINTS ||
+           cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawArraysData mode must be a valid OpenGL primitive type");
+
+    // Bind VAO
+    glBindVertexArray(cmd.vao);
+
+    // Draw arrays (non-indexed rendering)
+    glDrawArrays(cmd.mode, cmd.first, cmd.vertexCount);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DispatchComputeData &cmd)
+{
+    assert(cmd.computeShader && "DispatchComputeData command must have a valid compute shader");
+    assert(cmd.computeShader->ID != 0 && "Compute shader program must be compiled and linked");
+    assert(cmd.numGroupsX > 0 && "Number of X work groups must be positive");
+    assert(cmd.numGroupsY > 0 && "Number of Y work groups must be positive");
+    assert(cmd.numGroupsZ > 0 && "Number of Z work groups must be positive");
+
+    // Activate compute shader
+    cmd.computeShader->use();
+
+    // Dispatch compute shader work groups
+    glDispatchCompute(cmd.numGroupsX, cmd.numGroupsY, cmd.numGroupsZ);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::MemoryBarrierData &cmd)
+{
+    assert(cmd.barriers != 0 && "MemoryBarrierData command must have valid barrier flags");
+
+    // Insert memory barrier to ensure compute shader writes complete
+    glMemoryBarrier(cmd.barriers);
+}
+
+// ===== LIGHTING COMMAND EXECUTION (Option A) =====
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetPointLightsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for point lights");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of point lights
+    cmd.shader->setInt("u_NumPointLights", static_cast<int>(cmd.lights.size()));
+
+    // Set up each point light's properties
+    for (size_t i = 0; i < cmd.lights.size(); ++i) {
+        const auto& light = cmd.lights[i];
+        std::string prefix = "u_PointLights[" + std::to_string(i) + "].";
+
+        cmd.shader->setVec3(prefix + "position", light.position);
+        cmd.shader->setVec3(prefix + "color", light.color);
+        cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);
+        cmd.shader->setFloat(prefix + "constant", light.constant);
+        cmd.shader->setFloat(prefix + "linear", light.linear);
+        cmd.shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDirectionalLightsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for directional lights");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of directional lights
+    cmd.shader->setInt("u_NumDirectionalLights", static_cast<int>(cmd.lights.size()));
+
+    // Set up each directional light's properties
+    for (size_t i = 0; i < cmd.lights.size(); ++i) {
+        const auto& light = cmd.lights[i];
+        std::string prefix = "u_DirectionalLights[" + std::to_string(i) + "].";
+
+        cmd.shader->setVec3(prefix + "direction", light.direction);
+        cmd.shader->setVec3(prefix + "color", light.color);
+        cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetSpotLightsData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for spot lights");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set number of spot lights
+    cmd.shader->setInt("u_NumSpotLights", static_cast<int>(cmd.lights.size()));
+
+    // Set up each spot light's properties
+    for (size_t i = 0; i < cmd.lights.size(); ++i) {
+        const auto& light = cmd.lights[i];
+        std::string prefix = "u_SpotLights[" + std::to_string(i) + "].";
+
+        cmd.shader->setVec3(prefix + "position", light.position);
+        cmd.shader->setVec3(prefix + "direction", light.direction);
+        cmd.shader->setVec3(prefix + "color", light.color);
+        cmd.shader->setFloat(prefix + "intensity", light.intensity);
+        cmd.shader->setFloat(prefix + "ambientIntensity", light.ambientIntensity);
+        cmd.shader->setFloat(prefix + "cutOff", light.cutOff);
+        cmd.shader->setFloat(prefix + "outerCutOff", light.outerCutOff);
+        cmd.shader->setFloat(prefix + "constant", light.constant);
+        cmd.shader->setFloat(prefix + "linear", light.linear);
+        cmd.shader->setFloat(prefix + "quadratic", light.quadratic);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetMaterialPBRData& cmd)
+{
+    assert(cmd.shader && "Shader cannot be null for material properties");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+
+    // Activate shader
+    cmd.shader->use();
+
+    // Set PBR material properties
+    cmd.shader->setVec3("u_AlbedoColor", cmd.albedoColor);
+    cmd.shader->setFloat("u_MetallicValue", cmd.metallicValue);
+    cmd.shader->setFloat("u_RoughnessValue", cmd.roughnessValue);
+}
+
+// ===== STENCIL COMMAND EXECUTION =====
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::EnableStencilTestData& cmd)
+{
+    if (cmd.enable) {
+        glEnable(GL_STENCIL_TEST);
+    } else {
+        glDisable(GL_STENCIL_TEST);
+    }
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilFuncData& cmd)
+{
+    glStencilFunc(cmd.func, cmd.ref, cmd.mask);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilOpData& cmd)
+{
+    glStencilOp(cmd.sfail, cmd.dpfail, cmd.dppass);
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilMaskData& cmd)
+{
+    glStencilMask(cmd.mask);
 }
 
 void RenderCommandBuffer::CleanupGPUState()

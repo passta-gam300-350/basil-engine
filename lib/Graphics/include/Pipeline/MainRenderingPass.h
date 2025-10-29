@@ -18,11 +18,14 @@ Technology is prohibited.
 #pragma once
 
 #include "RenderPass.h"
+#include <memory>
 
 // Forward declarations
 class Renderer;
 class InstancedRenderer;
 class PBRLightingRenderer;
+class Mesh;
+class Shader;
 
 /**
  * Main Rendering Pass - Executes the main forward rendering
@@ -43,12 +46,29 @@ public:
     // Context-based execution
     void Execute(RenderContext& context) override;
 
+    // Skybox configuration (accessed by SceneRenderer)
+    void SetSkyboxCubemap(unsigned int cubemapID) { m_SkyboxCubemapID = cubemapID; }
+    void SetSkyboxShader(std::shared_ptr<Shader> shader) { m_SkyboxShader = shader; }
+    void SetSkyboxMesh(std::shared_ptr<Mesh> mesh) { m_SkyboxMesh = mesh; }
+    void EnableSkybox(bool enabled) { m_SkyboxEnabled = enabled; }
+    bool IsSkyboxEnabled() const { return m_SkyboxEnabled; }
+
+    // HDR texture access (for tone mapping pipeline)
+    uint32_t GetHDRTexture() const {
+        return GetFramebuffer() ? GetFramebuffer()->GetColorAttachmentRendererID(0) : 0;
+    }
+
 private:
     // Update framebuffer to match current window size
     void UpdateFramebufferSize();
 
-    // Create separate FBO copy for editor display
-    void CreateEditorFBOCopy(RenderContext &context);
+    // Render skybox if enabled
+    void RenderSkybox(RenderContext& context);
 
-    static constexpr uint8_t MAIN_PASS_ID = 1;  // Execute after shadow pass (ID 0)
+    // Skybox resources
+    unsigned int m_SkyboxCubemapID = 0;
+    std::shared_ptr<Shader> m_SkyboxShader;
+    std::shared_ptr<Mesh> m_SkyboxMesh;
+    bool m_SkyboxEnabled = false;
+
 };

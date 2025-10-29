@@ -1,20 +1,3 @@
-/******************************************************************************/
-/*!
-\file   Shader.cpp
-\author Team PASSTA
-        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
-        Tham Kang Ting (kangting.t@digipen.edu)
-        Cheong Jia Zen (jiazen.c@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief    Implementation of shader loading, compilation, and uniform management
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #include <Resources/Shader.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
@@ -39,8 +22,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
         // open files
         vShaderFile.open(vertexPath);
         fShaderFile.open(fragmentPath);
-        std::stringstream vShaderStream;
-        std::stringstream fShaderStream;
+        std::stringstream vShaderStream, fShaderStream;
         
         // read file's buffer contents into streams
         vShaderStream << vShaderFile.rdbuf();
@@ -73,8 +55,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
     const char* fShaderCode = fragmentCode.c_str();
     
     // 2. compile shaders
-    unsigned int vertex = 0;
-    unsigned int fragment = 0;
+    unsigned int vertex, fragment;
     
     // vertex shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -89,7 +70,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
     checkCompileErrors(fragment, "FRAGMENT");
     
     // if geometry shader is given, compile geometry shader
-    unsigned int geometry = 0;
+    unsigned int geometry;
     if(geometryPath != nullptr)
     {
         const char* gShaderCode = geometryCode.c_str();
@@ -103,23 +84,69 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
     glAttachShader(ID, fragment);
-    if(geometryPath != nullptr) {
+    if(geometryPath != nullptr)
         glAttachShader(ID, geometry);
-    }
     glLinkProgram(ID);
     checkCompileErrors(ID, "PROGRAM");
     
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
-    if(geometryPath != nullptr) {
+    if(geometryPath != nullptr)
         glDeleteShader(geometry);
-    }
 }
 
-void Shader::use() const 
-{ 
-    glUseProgram(ID); 
+// Compute shader constructor
+Shader::Shader(const char* computePath)
+{
+    // 1. Retrieve the compute shader source code from file
+    std::string computeCode;
+    std::ifstream cShaderFile;
+
+    // Ensure ifstream can throw exceptions
+    cShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try
+    {
+        // Open file
+        cShaderFile.open(computePath);
+        std::stringstream cShaderStream;
+
+        // Read file's buffer contents into stream
+        cShaderStream << cShaderFile.rdbuf();
+
+        // Close file handler
+        cShaderFile.close();
+
+        // Convert stream into string
+        computeCode = cShaderStream.str();
+    }
+    catch (std::ifstream::failure& e)
+    {
+        spdlog::error("COMPUTE_SHADER::FILE_NOT_SUCCESSFULLY_READ: {}", e.what());
+    }
+
+    const char* cShaderCode = computeCode.c_str();
+
+    // 2. Compile compute shader
+    unsigned int compute = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(compute, 1, &cShaderCode, NULL);
+    glCompileShader(compute);
+    checkCompileErrors(compute, "COMPUTE");
+
+    // 3. Create shader program
+    ID = glCreateProgram();
+    glAttachShader(ID, compute);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+
+    // 4. Delete the shader as it's linked into our program now
+    glDeleteShader(compute);
+}
+
+void Shader::use()
+{
+    glUseProgram(ID);
 }
 
 void Shader::setBool(const std::string &name, bool value) const
@@ -184,12 +211,12 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
 
 void Shader::checkCompileErrors(GLuint shader, std::string type)
 {
-    GLint success = 0;
+    GLint success;
     GLchar infoLog[1024];
     if(type != "PROGRAM")
     {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if(success == 0)
+        if(!success)
         {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
             spdlog::error("SHADER_COMPILATION_ERROR of type: {}\n{}\n -- --------------------------------------------------- --", type, infoLog);
@@ -198,7 +225,7 @@ void Shader::checkCompileErrors(GLuint shader, std::string type)
     else
     {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if(success == 0)
+        if(!success)
         {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
             spdlog::error("PROGRAM_LINKING_ERROR of type: {}\n{}\n -- --------------------------------------------------- --", type, infoLog);
