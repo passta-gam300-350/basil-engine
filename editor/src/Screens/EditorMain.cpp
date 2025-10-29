@@ -910,12 +910,12 @@ void EditorMain::Render_Scene()
 
 	// Check if editor framebuffer is available before trying to access it
 	auto& frameData = Engine::GetRenderSystem().m_SceneRenderer->GetFrameData();
-	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
+	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
 
 		// Get the color attachment texture ID (not the FBO handle)
-		uint32_t textureID = frameData.editorColorBuffer->GetColorAttachmentRendererID(0);
+		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
 
 		// Render the scene viewport using the texture ID
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
@@ -1022,9 +1022,9 @@ void EditorMain::Render_Scene()
 	}
 
 	// Show framebuffer status
-	ImGui::Text("Editor FBO: %s", frameData.editorColorBuffer ? "Valid" : "None");
-	if (frameData.editorColorBuffer) {
-		ImGui::Text("FBO Handle: %u", frameData.editorColorBuffer->GetFBOHandle());
+	ImGui::Text("Editor FBO: %s", frameData.editorResolvedBuffer ? "Valid" : "None");
+	if (frameData.editorResolvedBuffer) {
+		ImGui::Text("FBO Handle: %u", frameData.editorResolvedBuffer->GetFBOHandle());
 		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
 	}
 

@@ -18,6 +18,7 @@ Copyright (C) 2025 DigiPen Institute of Technology.
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/Shader.h>
+#include <Resources/Texture.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -385,6 +386,166 @@ TEST_F(MaterialInstanceManagerTest, IndependentInstances) {
     EXPECT_FLOAT_EQ(albedo2.y, 1.0f); // Green
 
     // Base material unchanged
+    EXPECT_FLOAT_EQ(baseMaterial->GetFloatProperty("u_Roughness", 0.0f), 0.5f);
+}
+
+// ============================================================================
+// Texture API Tests
+// ============================================================================
+
+// Helper function to create a mock texture for testing
+std::shared_ptr<Texture> CreateMockTexture(unsigned int id, const std::string& name) {
+    auto texture = std::make_shared<Texture>();
+    texture->id = id;
+    texture->type = "diffuse";
+    texture->path = name;
+    texture->target = GL_TEXTURE_2D;
+    return texture;
+}
+
+TEST_F(MaterialInstanceTest, TextureProperty) {
+    auto texture = CreateMockTexture(100, "test_texture.png");
+
+    // Set texture on base material
+    baseMaterial->SetTexture("u_DiffuseMap", texture, 0);
+
+    // Verify texture is stored
+    EXPECT_TRUE(baseMaterial->HasTexture("u_DiffuseMap"));
+    EXPECT_EQ(baseMaterial->GetTexture("u_DiffuseMap"), texture);
+}
+
+TEST_F(MaterialInstanceTest, TexturePropertyOverride) {
+    auto baseTexture = CreateMockTexture(100, "base_texture.png");
+    auto overrideTexture = CreateMockTexture(200, "override_texture.png");
+
+    // Set texture on base material
+    baseMaterial->SetTexture("u_DiffuseMap", baseTexture, 0);
+
+    MaterialInstance instance(baseMaterial);
+
+    // Initially should return base material's texture
+    EXPECT_EQ(instance.GetTexture("u_DiffuseMap"), baseTexture);
+    EXPECT_FALSE(instance.IsPropertyOverridden("u_DiffuseMap"));
+
+    // Override texture
+    instance.SetTexture("u_DiffuseMap", overrideTexture, 1);
+
+    // Should now return overridden texture
+    EXPECT_EQ(instance.GetTexture("u_DiffuseMap"), overrideTexture);
+    EXPECT_TRUE(instance.IsPropertyOverridden("u_DiffuseMap"));
+    EXPECT_TRUE(instance.HasOverrides());
+
+    // Base material should be unchanged
+    EXPECT_EQ(baseMaterial->GetTexture("u_DiffuseMap"), baseTexture);
+}
+
+TEST_F(MaterialInstanceTest, MultipleTextures) {
+    auto diffuseTexture = CreateMockTexture(100, "diffuse.png");
+    auto normalTexture = CreateMockTexture(200, "normal.png");
+    auto metallicTexture = CreateMockTexture(300, "metallic.png");
+
+    // Set multiple textures on base material
+    baseMaterial->SetTexture("u_DiffuseMap", diffuseTexture, 0);
+    baseMaterial->SetTexture("u_NormalMap", normalTexture, 1);
+    baseMaterial->SetTexture("u_MetallicMap", metallicTexture, 2);
+
+    // Verify all textures
+    EXPECT_TRUE(baseMaterial->HasTexture("u_DiffuseMap"));
+    EXPECT_TRUE(baseMaterial->HasTexture("u_NormalMap"));
+    EXPECT_TRUE(baseMaterial->HasTexture("u_MetallicMap"));
+    EXPECT_EQ(baseMaterial->GetTexture("u_DiffuseMap"), diffuseTexture);
+    EXPECT_EQ(baseMaterial->GetTexture("u_NormalMap"), normalTexture);
+    EXPECT_EQ(baseMaterial->GetTexture("u_MetallicMap"), metallicTexture);
+}
+
+TEST_F(MaterialInstanceTest, TextureAutoUnitAssignment) {
+    auto texture1 = CreateMockTexture(100, "texture1.png");
+    auto texture2 = CreateMockTexture(200, "texture2.png");
+
+    // Set textures with auto-assignment (unit = -1)
+    baseMaterial->SetTexture("u_Texture1", texture1, -1);
+    baseMaterial->SetTexture("u_Texture2", texture2, -1);
+
+    // Both should be assigned
+    EXPECT_TRUE(baseMaterial->HasTexture("u_Texture1"));
+    EXPECT_TRUE(baseMaterial->HasTexture("u_Texture2"));
+    EXPECT_EQ(baseMaterial->GetTexture("u_Texture1"), texture1);
+    EXPECT_EQ(baseMaterial->GetTexture("u_Texture2"), texture2);
+}
+
+TEST_F(MaterialInstanceTest, TextureOverrideClear) {
+    auto baseTexture = CreateMockTexture(100, "base.png");
+    auto overrideTexture = CreateMockTexture(200, "override.png");
+
+    baseMaterial->SetTexture("u_DiffuseMap", baseTexture, 0);
+
+    MaterialInstance instance(baseMaterial);
+    instance.SetTexture("u_DiffuseMap", overrideTexture, 1);
+
+    EXPECT_TRUE(instance.IsPropertyOverridden("u_DiffuseMap"));
+    EXPECT_EQ(instance.GetTexture("u_DiffuseMap"), overrideTexture);
+
+    // Clear overrides
+    instance.ClearOverrides();
+
+    // Should revert to base texture
+    EXPECT_FALSE(instance.IsPropertyOverridden("u_DiffuseMap"));
+    EXPECT_EQ(instance.GetTexture("u_DiffuseMap"), baseTexture);
+}
+
+TEST_F(MaterialInstanceTest, TextureNullHandling) {
+    // Getting non-existent texture should return nullptr
+    EXPECT_EQ(baseMaterial->GetTexture("u_NonExistent"), nullptr);
+    EXPECT_FALSE(baseMaterial->HasTexture("u_NonExistent"));
+
+    MaterialInstance instance(baseMaterial);
+    EXPECT_EQ(instance.GetTexture("u_NonExistent"), nullptr);
+}
+
+TEST_F(MaterialInstanceTest, TextureReplacement) {
+    auto texture1 = CreateMockTexture(100, "texture1.png");
+    auto texture2 = CreateMockTexture(200, "texture2.png");
+
+    // Set initial texture
+    baseMaterial->SetTexture("u_DiffuseMap", texture1, 0);
+    EXPECT_EQ(baseMaterial->GetTexture("u_DiffuseMap"), texture1);
+
+    // Replace with different texture
+    baseMaterial->SetTexture("u_DiffuseMap", texture2, 0);
+    EXPECT_EQ(baseMaterial->GetTexture("u_DiffuseMap"), texture2);
+}
+
+TEST_F(MaterialInstanceTest, TextureAndPropertyMixedOverrides) {
+    auto baseTexture = CreateMockTexture(100, "base.png");
+    auto overrideTexture = CreateMockTexture(200, "override.png");
+
+    // Set base properties
+    baseMaterial->SetTexture("u_DiffuseMap", baseTexture, 0);
+    baseMaterial->SetFloat("u_Roughness", 0.5f);
+    baseMaterial->SetVec3("u_Albedo", glm::vec3(0.8f, 0.8f, 0.8f));
+
+    MaterialInstance instance(baseMaterial);
+
+    // Override both texture and scalar properties
+    instance.SetTexture("u_DiffuseMap", overrideTexture, 1);
+    instance.SetFloat("u_Roughness", 0.2f);
+    instance.SetVec3("u_Albedo", glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // Verify all overrides
+    EXPECT_TRUE(instance.IsPropertyOverridden("u_DiffuseMap"));
+    EXPECT_TRUE(instance.IsPropertyOverridden("u_Roughness"));
+    EXPECT_TRUE(instance.IsPropertyOverridden("u_Albedo"));
+
+    EXPECT_EQ(instance.GetTexture("u_DiffuseMap"), overrideTexture);
+    EXPECT_FLOAT_EQ(instance.GetFloat("u_Roughness", 0.0f), 0.2f);
+
+    glm::vec3 albedo = instance.GetVec3("u_Albedo", glm::vec3(0.0f));
+    EXPECT_FLOAT_EQ(albedo.x, 1.0f);
+    EXPECT_FLOAT_EQ(albedo.y, 0.0f);
+    EXPECT_FLOAT_EQ(albedo.z, 0.0f);
+
+    // Base material should be unchanged
+    EXPECT_EQ(baseMaterial->GetTexture("u_DiffuseMap"), baseTexture);
     EXPECT_FLOAT_EQ(baseMaterial->GetFloatProperty("u_Roughness", 0.0f), 0.5f);
 }
 

@@ -93,6 +93,12 @@ public:
      */
     void SetMat4(const std::string& name, const glm::mat4& value);
 
+    /**
+     * @brief Set a texture property (creates override)
+     * @param textureUnit Optional texture unit (-1 for auto-assign)
+     */
+    void SetTexture(const std::string& name, std::shared_ptr<Texture> texture, int textureUnit = -1);
+
     // ===== Property Getters (With Fallback) =====
 
     /**
@@ -116,6 +122,11 @@ public:
     glm::mat4 GetMat4(const std::string& name, const glm::mat4& defaultValue = glm::mat4(1.0f)) const;
 
     /**
+     * @brief Get texture property (checks override first, then base material)
+     */
+    std::shared_ptr<Texture> GetTexture(const std::string& name) const;
+
+    /**
      * @brief Check if a property is overridden locally
      */
     bool IsPropertyOverridden(const std::string& name) const;
@@ -137,6 +148,7 @@ private:
     std::unordered_map<std::string, glm::vec3> m_Vec3Overrides;
     std::unordered_map<std::string, glm::vec4> m_Vec4Overrides;
     std::unordered_map<std::string, glm::mat4> m_Mat4Overrides;
+    std::unordered_map<std::string, std::pair<std::shared_ptr<Texture>, int>> m_TextureOverrides;
 
     // Track which properties are overridden (for efficient queries)
     std::unordered_set<std::string> m_OverriddenProperties;

@@ -339,7 +339,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
 }
 
-void InstancedRenderer::SetMeshData(const std::string& meshId, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
+void InstancedRenderer::SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material)
 {
     assert(!meshId.empty() && "Mesh ID cannot be empty");
     assert(mesh && "Mesh cannot be null");

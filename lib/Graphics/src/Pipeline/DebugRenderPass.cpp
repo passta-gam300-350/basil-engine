@@ -17,7 +17,7 @@ DebugRenderPass::DebugRenderPass()
 {
 }
 
-DebugRenderPass::DebugRenderPass(std::shared_ptr<Shader> primitiveShader)
+DebugRenderPass::DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader)
     : RenderPass("DebugPass"),  // No framebuffer needed
       m_PrimitiveShader(primitiveShader),
       m_LightCube(nullptr),

@@ -43,6 +43,7 @@ void MaterialInstance::ClearOverrides() {
     m_Vec3Overrides.clear();
     m_Vec4Overrides.clear();
     m_Mat4Overrides.clear();
+    m_TextureOverrides.clear();
     m_OverriddenProperties.clear();
 
     spdlog::debug("MaterialInstance: Cleared all overrides for '{}'", m_InstanceName);
@@ -67,6 +68,11 @@ void MaterialInstance::SetVec4(const std::string& name, const glm::vec4& value) 
 
 void MaterialInstance::SetMat4(const std::string& name, const glm::mat4& value) {
     m_Mat4Overrides[name] = value;
+    m_OverriddenProperties.insert(name);
+}
+
+void MaterialInstance::SetTexture(const std::string& name, std::shared_ptr<Texture> texture, int textureUnit) {
+    m_TextureOverrides[name] = std::make_pair(texture, textureUnit);
     m_OverriddenProperties.insert(name);
 }
 
@@ -116,6 +122,17 @@ glm::mat4 MaterialInstance::GetMat4(const std::string& name, const glm::mat4& de
     return m_BaseMaterial->GetMat4Property(name, defaultValue);
 }
 
+std::shared_ptr<Texture> MaterialInstance::GetTexture(const std::string& name) const {
+    // Check override first
+    auto it = m_TextureOverrides.find(name);
+    if (it != m_TextureOverrides.end()) {
+        return it->second.first;
+    }
+
+    // Fall back to base material
+    return m_BaseMaterial->GetTexture(name);
+}
+
 bool MaterialInstance::IsPropertyOverridden(const std::string& name) const {
     return m_OverriddenProperties.count(name) > 0;
 }
@@ -150,5 +167,16 @@ void MaterialInstance::ApplyProperties() {
 
     for (const auto& [name, value] : m_Mat4Overrides) {
         shader->setMat4(name, value);
+    }
+
+    for (const auto& [name, texturePair] : m_TextureOverrides) {
+        const auto& [texture, unit] = texturePair;
+        if (texture && texture->id != 0) {
+            // Use explicit unit if provided, otherwise let Material's auto-assignment handle it
+            int actualUnit = (unit >= 0) ? unit : 0; // Default to unit 0 if not specified
+            glActiveTexture(GL_TEXTURE0 + actualUnit);
+            glBindTexture(texture->target, texture->id);
+            shader->setInt(name, actualUnit);
+        }
     }
 }

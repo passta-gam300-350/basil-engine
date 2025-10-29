@@ -281,13 +281,13 @@ void FrameBuffer::ClearAttachments()
 	}
 }
 
-void FrameBuffer::Bind()
+void FrameBuffer::Bind() const
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
 	glViewport(0, 0, m_Specifications.Width, m_Specifications.Height);
 }
 
-void FrameBuffer::Unbind()
+void FrameBuffer::Unbind() const
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

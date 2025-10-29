@@ -76,7 +76,7 @@ void Material::SetShader(std::shared_ptr<Shader> shader)
             // The calling code is responsible for binding the shader
             spdlog::info("Material '{}': Shader changed, re-applying {} stored properties",
                         m_Name, m_FloatProperties.size() + m_Vec3Properties.size() +
-                        m_Vec4Properties.size() + m_Mat4Properties.size());
+                        m_Vec4Properties.size() + m_Mat4Properties.size() + m_TextureProperties.size());
         }
         else
         {
@@ -169,6 +169,50 @@ void Material::SetMat4(const std::string& name, const glm::mat4& value)
     }
 }
 
+void Material::SetTexture(const std::string& name, std::shared_ptr<Texture> texture, int textureUnit)
+{
+    // Determine the texture unit to use
+    int unitToUse = textureUnit;
+    if (unitToUse == -1) {
+        // Auto-assign: Find existing texture or use next available unit
+        auto it = m_TextureProperties.find(name);
+        if (it != m_TextureProperties.end()) {
+            // Texture already exists for this name, reuse its unit
+            unitToUse = it->second.second;
+        } else {
+            // Assign new unit
+            unitToUse = m_NextTextureUnit++;
+        }
+    }
+
+    // Dirty-checking: Only update if texture or unit changed
+    auto it = m_TextureProperties.find(name);
+    if (it != m_TextureProperties.end() &&
+        it->second.first == texture &&
+        it->second.second == unitToUse)
+    {
+        return; // Texture and unit unchanged, skip GPU update
+    }
+
+    // Store the texture property
+    m_TextureProperties[name] = std::make_pair(texture, unitToUse);
+
+    // Apply to shader immediately if shader is available and texture is valid
+    if (texture && texture->id != 0)
+    {
+        GLint location = GetUniformLocation(name);
+        if (location != -1)
+        {
+            // Bind texture to the assigned unit
+            glActiveTexture(GL_TEXTURE0 + unitToUse);
+            glBindTexture(texture->target, texture->id);
+
+            // Set the sampler uniform to the texture unit
+            glUniform1i(location, unitToUse);
+        }
+    }
+}
+
 void Material::ApplyPBRProperties()
 {
     if (!m_Shader) {
@@ -215,6 +259,11 @@ bool Material::HasMat4Property(const std::string& name) const
     return m_Mat4Properties.find(name) != m_Mat4Properties.end();
 }
 
+bool Material::HasTexture(const std::string& name) const
+{
+    return m_TextureProperties.find(name) != m_TextureProperties.end();
+}
+
 float Material::GetFloatProperty(const std::string& name, float defaultValue) const
 {
     auto it = m_FloatProperties.find(name);
@@ -237,6 +286,12 @@ glm::mat4 Material::GetMat4Property(const std::string& name, const glm::mat4& de
 {
     auto it = m_Mat4Properties.find(name);
     return (it != m_Mat4Properties.end()) ? it->second : defaultValue;
+}
+
+std::shared_ptr<Texture> Material::GetTexture(const std::string& name) const
+{
+    auto it = m_TextureProperties.find(name);
+    return (it != m_TextureProperties.end()) ? it->second.first : nullptr;
 }
 
 // ============================================================================
@@ -291,7 +346,23 @@ void Material::ApplyAllProperties()
         }
     }
 
-    spdlog::debug("Material '{}': Applied {} float, {} vec3, {} vec4, {} mat4 properties",
+    // Apply all stored texture properties
+    for (const auto& [name, texturePair] : m_TextureProperties)
+    {
+        const auto& [texture, unit] = texturePair;
+        if (texture && texture->id != 0)
+        {
+            GLint location = GetUniformLocation(name);
+            if (location != -1)
+            {
+                glActiveTexture(GL_TEXTURE0 + unit);
+                glBindTexture(texture->target, texture->id);
+                glUniform1i(location, unit);
+            }
+        }
+    }
+
+    spdlog::debug("Material '{}': Applied {} float, {} vec3, {} vec4, {} mat4, {} texture properties",
                   m_Name, m_FloatProperties.size(), m_Vec3Properties.size(),
-                  m_Vec4Properties.size(), m_Mat4Properties.size());
+                  m_Vec4Properties.size(), m_Mat4Properties.size(), m_TextureProperties.size());
 }
