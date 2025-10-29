@@ -18,6 +18,7 @@
 #include "Pipeline/BloomRenderPass.h"
 #include "Resources/Shader.h"
 #include "Resources/Mesh.h"
+#include "Core/Window.h"
 #include <glfw/glfw3.h>
 #include <cassert>
 #include <spdlog/spdlog.h>
@@ -127,7 +128,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 11. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
-    //mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
+    mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
     // 12. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
@@ -202,6 +203,22 @@ void SceneRenderer::Render()
     // Frame data updates happened automatically through context reference
     // No manual synchronization needed!
     ++m_FrameData.frameNumber;
+}
+
+void SceneRenderer::SetupResizeRendering(Window* window)
+{
+    if (!window) {
+        spdlog::warn("SceneRenderer::SetupResizeRendering: Window pointer is null");
+        return;
+    }
+
+    // Register our Render() method with the Window's resize callback
+    // This allows the scene to be rendered during window resize
+    window->SetResizeRenderCallback([this]() {
+        this->Render();
+    });
+
+    spdlog::info("SceneRenderer: Resize rendering enabled (scene will render during window resize)");
 }
 
 void SceneRenderer::SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const
@@ -336,8 +353,13 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
 
             // CRITICAL: Execute the picking pass to render object IDs before querying
             // This ensures the picking framebuffer contains up-to-date rendering
-            spdlog::info("QueryObjectPicking: Executing picking pass before query");
+            auto startTime = std::chrono::high_resolution_clock::now();
+            spdlog::info("QueryObjectPicking: Executing picking pass (buffer: {}x{}, {} renderables)",
+                         m_FrameData.viewportWidth, m_FrameData.viewportHeight, m_SubmittedRenderables.size());
             pickingPass->Execute(context);
+            auto endTime = std::chrono::high_resolution_clock::now();
+            float duration = std::chrono::duration<float, std::milli>(endTime - startTime).count();
+            spdlog::info("QueryObjectPicking: Picking pass completed in {:.2f}ms", duration);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -354,6 +376,7 @@ void SceneRenderer::EnablePicking(bool enable) const
     if (m_Pipeline) {
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass) {
+            spdlog::info("SceneRenderer: {} picking pass", enable ? "ENABLING" : "DISABLING");
             pickingPass->SetEnabled(enable);
             m_Pipeline->EnablePass("PickingPass", enable);
         }
