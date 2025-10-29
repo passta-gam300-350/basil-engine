@@ -11,7 +11,16 @@
 PBRLightingRenderer::PBRLightingRenderer()
     : m_ShadowSSBO(std::make_unique<TypedShaderStorageBuffer<ShadowData>>())
 {
+    // Create offset texture for random shadow sampling
+    // Using custom values: 16x16 tiling with 8x8 samples = 64 samples per pixel
+    m_ShadowOffsetTexture = std::make_unique<OffsetTexture>(
+        m_ShadowOffsetTextureSize,  // 16x16 window tiling pattern
+        m_ShadowFilterSize          // 8x8 filter = 64 total samples
+    );
+
     spdlog::info("PBRLightingRenderer: Initialized as lighting system with SSBO shadow support");
+    spdlog::info("PBRLightingRenderer: Random shadow sampling enabled ({}x{} samples, radius {})",
+                 m_ShadowFilterSize, m_ShadowFilterSize, m_ShadowRandomRadius);
 }
 
 void PBRLightingRenderer::ClearLights()
@@ -351,7 +360,33 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
             });
         }
 
-        spdlog::debug("PBRLightingRenderer: Uploaded {} shadows ({} 2D, {} cubemap) to SSBO",
+        // ===== BIND OFFSET TEXTURE FOR RANDOM SAMPLING =====
+        if (m_ShadowOffsetTexture) {
+            // Bind 3D offset texture
+            RenderCommands::BindTexture3DData offsetCmd{
+                m_ShadowOffsetTexture->GetTextureID(),
+                32,  // Texture unit 32 (after shadow maps on units 8-31)
+                shader,
+                "u_ShadowMapOffsetTexture"
+            };
+            renderPass.Submit(offsetCmd);
+
+            // Submit shadow sampling configuration uniforms
+            renderPass.Submit(RenderCommands::SetUniformIntData{
+                shader, "u_ShadowMapFilterSize", m_ShadowFilterSize
+            });
+
+            renderPass.Submit(RenderCommands::SetUniformIntData{
+                shader, "u_ShadowMapOffsetTextureSize", m_ShadowOffsetTextureSize
+            });
+
+            renderPass.Submit(RenderCommands::SetUniformFloatData{
+                shader, "u_ShadowMapRandomRadius", m_ShadowRandomRadius
+            });
+        }
+        // ===== END OFFSET TEXTURE BINDING =====
+
+        spdlog::debug("PBRLightingRenderer: Uploaded {} shadows ({} 2D, {} cubemap) to SSBO with random sampling",
                       frameData.shadowDataArray.size(),
                       frameData.shadow2DTextures.size(),
                       frameData.shadowCubemapTextures.size());
@@ -364,4 +399,31 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
         };
         renderPass.Submit(numShadowsCmd);
     }
+}
+
+void PBRLightingRenderer::SetShadowFilterSize(int filterSize)
+{
+    assert(filterSize > 0 && "Shadow filter size must be positive");
+    assert((filterSize % 2) == 0 && "Shadow filter size must be even");
+
+    if (m_ShadowFilterSize != filterSize) {
+        m_ShadowFilterSize = filterSize;
+
+        // Recreate offset texture with new filter size
+        m_ShadowOffsetTexture = std::make_unique<OffsetTexture>(
+            m_ShadowOffsetTextureSize,
+            m_ShadowFilterSize
+        );
+
+        spdlog::info("PBRLightingRenderer: Shadow filter size changed to {}x{} ({} samples)",
+                     filterSize, filterSize, filterSize * filterSize);
+    }
+}
+
+void PBRLightingRenderer::SetShadowRandomRadius(float radius)
+{
+    assert(radius >= 0.0f && "Shadow random radius must be non-negative");
+
+    m_ShadowRandomRadius = radius;
+    spdlog::debug("PBRLightingRenderer: Shadow random radius set to {}", radius);
 }

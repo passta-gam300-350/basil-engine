@@ -121,6 +121,12 @@ layout(std430, binding = 1) buffer ShadowBuffer {
 // Number of active shadows in the SSBO
 uniform int u_NumShadows = 0;
 
+// ===== RANDOM SHADOW SAMPLING CONFIGURATION =====
+uniform sampler3D u_ShadowMapOffsetTexture;  // 3D texture with Poisson disk offsets
+uniform int u_ShadowMapFilterSize = 8;       // Filter size (8 = 8x8 = 64 samples)
+uniform int u_ShadowMapOffsetTextureSize = 16; // Tiling pattern size
+uniform float u_ShadowMapRandomRadius = 15.0;  // Shadow softness control
+
 // Shadow texture arrays (indexed by shadowData.textureIndex)
 // We keep individual slots for now to avoid dynamic indexing issues
 // Slots 8-39 reserved for shadows (32 total shadow maps)
@@ -128,7 +134,8 @@ uniform int u_NumShadows = 0;
 // ===== UNIFIED SSBO-BASED SHADOW CALCULATION FUNCTIONS =====
 // These functions read shadow data from the SSBO and calculate shadows dynamically
 
-// Calculate 2D shadow (directional/spot) using unified texture array
+// ===== RANDOM SHADOW SAMPLING WITH ADAPTIVE QUALITY =====
+// Uses Poisson disk distribution for natural soft shadows without banding
 float Calculate2DShadow(vec3 fragPos, vec3 normal, vec3 lightDir, mat4 lightSpaceMatrix, int textureIndex)
 {
     // Transform fragment position to light space
@@ -136,26 +143,72 @@ float Calculate2DShadow(vec3 fragPos, vec3 normal, vec3 lightDir, mat4 lightSpac
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
+    // Discard fragments beyond light frustum
     if(projCoords.z > 1.0) return 0.0;
 
-    float closestDepth = texture(u_Shadow2DTextures[textureIndex], projCoords.xy).r;
-    float currentDepth = projCoords.z;
-
+    // Adaptive bias based on surface angle (reduces shadow acne)
     vec3 N = normalize(normal);
     vec3 L = normalize(-lightDir);
     float bias = max(0.005 * (1.0 - dot(N, L)), 0.001);
 
-    // PCF filtering
-    float shadow = 0.0;
+    // Get texture coordinates for offset lookup (screen-space tiling)
+    ivec3 offsetCoord;
+    vec2 f = mod(gl_FragCoord.xy, vec2(u_ShadowMapOffsetTextureSize));
+    offsetCoord.yz = ivec2(f);
+
+    // Get texel size for shadow map sampling
     vec2 texelSize = 1.0 / textureSize(u_Shadow2DTextures[textureIndex], 0);
-    for(int x = -1; x <= 1; ++x) {
-        for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(u_Shadow2DTextures[textureIndex], projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-        }
+
+    float currentDepth = projCoords.z;
+    float shadow = 0.0;
+
+    // ADAPTIVE SAMPLING PHASE 1: Quick 8 samples to detect full shadow/light
+    // This phase runs for ALL pixels (fully lit, fully shadowed, and penumbra)
+    int samplesDiv2 = (u_ShadowMapFilterSize * u_ShadowMapFilterSize) / 2;
+
+    for (int i = 0; i < 4; i++) {
+        offsetCoord.x = i;
+        // Fetch 4 offset values from 3D texture (RGBA = 2 offset pairs)
+        vec4 offsets = texelFetch(u_ShadowMapOffsetTexture, offsetCoord, 0) * u_ShadowMapRandomRadius;
+
+        // Sample 1: Use RG channels as offset
+        vec2 sampleCoord = projCoords.xy + offsets.rg * texelSize;
+        float depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
+        shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
+
+        // Sample 2: Use BA channels as offset
+        sampleCoord = projCoords.xy + offsets.ba * texelSize;
+        depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
+        shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
     }
-    shadow /= 9.0;
-    return shadow;
+
+    float shadowFactor = shadow / 8.0;
+
+    // ADAPTIVE SAMPLING PHASE 2: Additional samples only for penumbra regions
+    // This phase is SKIPPED for fully lit (shadowFactor = 0) and fully shadowed (shadowFactor = 1) pixels
+    // Provides massive performance boost in non-penumbra areas
+    if (shadowFactor > 0.0 && shadowFactor < 1.0) {
+        // We're in the penumbra (soft shadow edge) - continue sampling for better quality
+        for (int i = 4; i < samplesDiv2; i++) {
+            offsetCoord.x = i;
+            vec4 offsets = texelFetch(u_ShadowMapOffsetTexture, offsetCoord, 0) * u_ShadowMapRandomRadius;
+
+            // Sample 1: RG channels
+            vec2 sampleCoord = projCoords.xy + offsets.rg * texelSize;
+            float depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
+            shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
+
+            // Sample 2: BA channels
+            sampleCoord = projCoords.xy + offsets.ba * texelSize;
+            depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
+            shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
+        }
+
+        // Recalculate shadow factor with all samples
+        shadowFactor = shadow / float(samplesDiv2 * 2);
+    }
+
+    return shadowFactor;
 }
 
 // Calculate cubemap shadow (point) using unified texture array

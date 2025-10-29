@@ -87,6 +87,12 @@ public:
     void SetShadowIntensity(float directional, float point, float spot);
     void ClearInstanceCache();
 
+    // Shadow quality configuration
+    void SetShadowFilterSize(int filterSize);
+    void SetShadowRandomRadius(float radius);
+    int GetShadowFilterSize() const;
+    float GetShadowRandomRadius() const;
+
     // Camera control facade
     void SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos);
 
