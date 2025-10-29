@@ -118,6 +118,10 @@ public:
     void ToggleAABBVisualization();
     void SetAABBVisualization(bool show);
 
+    // Editor viewport size control (overrides glfwGetFramebufferSize)
+    void SetEditorViewportSize(int width, int height);
+    void UseWindowFramebufferSize(); // Revert to using GLFW window size
+
     // Pass control facade
     bool IsPassEnabled(const std::string& passName) const;
     void EnablePass(const std::string& passName, bool enable);
@@ -135,6 +139,11 @@ private:
     std::vector<RenderableData> m_SubmittedRenderables;
     std::vector<SubmittedLightData> m_SubmittedLights;
     glm::vec3 m_AmbientLight = glm::vec3(0.1f);
+
+    // Editor viewport override (for rendering to ImGui viewport instead of full window)
+    bool m_UseEditorViewport = false;
+    int m_EditorViewportWidth = 0;
+    int m_EditorViewportHeight = 0;
 
     // Single render pipeline
     std::unique_ptr<RenderPipeline> m_Pipeline;

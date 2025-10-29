@@ -1,0 +1,265 @@
+[2025-10-29 21:33:50.354] [info] EngineService: Initializing engine...
+[2025-10-29 21:33:50.771] [info] OpenGL Vendor: NVIDIA Corporation
+[2025-10-29 21:33:50.771] [info] OpenGL Renderer: NVIDIA GeForce RTX 3050 6GB Laptop GPU/PCIe/SSE2
+[2025-10-29 21:33:50.772] [info] OpenGL Version: 4.5.0 NVIDIA 580.88
+[2025-10-29 21:33:50.773] [info] GLSL Version: 4.50 NVIDIA
+[2025-10-29 21:33:50.775] [info] sRGB framebuffer enabled for linear color pipeline
+[2025-10-29 21:33:50.786] [info] Initializing ResourceManager...
+[2025-10-29 21:33:50.786] [info] ResourceManager initialized successfully.
+[2025-10-29 21:33:50.791] [info] OffsetTexture: Created 16x16 tiling with 8x8 samples (64 total)
+[2025-10-29 21:33:50.791] [info] PBRLightingRenderer: Initialized as lighting system with SSBO shadow support
+[2025-10-29 21:33:50.792] [info] PBRLightingRenderer: Random shadow sampling enabled (8x8 samples, radius 15)
+[2025-10-29 21:33:50.800] [info] PointShadowMappingPass: Initialized with 4 cubemap FBOs (size: 1024x1024)
+[2025-10-29 21:33:50.804] [info] SpotShadowMappingPass: Initialized with 4 framebuffers (size: 1024x1024)
+[2025-10-29 21:33:50.807] [info] BloomRenderPass: Created (will initialize on first execute)
+[2025-10-29 21:33:50.809] [info] ToneMapRenderPass: Full-screen quad created
+[2025-10-29 21:33:50.811] [info] ShaderLibrary: Initializing...
+[2025-10-29 21:33:50.817] [info] Shader 'main_pbr' loaded successfully
+[2025-10-29 21:33:50.817] [info] ShaderLibrary: PBR shader loaded successfully
+[2025-10-29 21:33:50.818] [info] Shader 'shadow_depth_instanced' loaded successfully
+[2025-10-29 21:33:50.819] [info] ShaderLibrary: Instanced shadow shader loaded successfully
+[2025-10-29 21:33:50.820] [info] Shader with geometry 'point_shadow_instanced' loaded successfully
+[2025-10-29 21:33:50.820] [info] ShaderLibrary: Instanced point shadow shader loaded successfully
+[2025-10-29 21:33:50.822] [info] Shader 'picking' loaded successfully
+[2025-10-29 21:33:50.822] [info] ShaderLibrary: Picking shader loaded successfully
+[2025-10-29 21:33:50.823] [info] Shader 'primitive' loaded successfully
+[2025-10-29 21:33:50.824] [info] ShaderLibrary: Primitive shader loaded successfully
+[2025-10-29 21:33:50.824] [info] Shader 'outline' loaded successfully
+[2025-10-29 21:33:50.825] [info] ShaderLibrary: Outline shader loaded successfully
+[2025-10-29 21:33:50.826] [info] Shader 'skybox' loaded successfully
+[2025-10-29 21:33:50.826] [info] ShaderLibrary: Skybox shader loaded successfully
+[2025-10-29 21:33:50.828] [info] Compute shader 'hdr_luminance' loaded successfully
+[2025-10-29 21:33:50.828] [info] ShaderLibrary: HDR compute shader loaded successfully
+[2025-10-29 21:33:50.829] [info] Shader 'tonemap' loaded successfully
+[2025-10-29 21:33:50.830] [info] ShaderLibrary: Tone mapping shader loaded successfully
+[2025-10-29 21:33:50.830] [info] ShaderLibrary: Essential shaders loaded successfully
+[2025-10-29 21:33:50.831] [info] SceneRenderer: Spot shadow depth shader configured
+[2025-10-29 21:33:50.831] [info] PrimitiveManager: Initializing...
+[2025-10-29 21:33:50.832] [info] PrimitiveManager: Initialized successfully
+[2025-10-29 21:33:50.833] [info] Debug visualization meshes configured
+[2025-10-29 21:33:50.834] [info] RenderSystem initialized
+[2025-10-29 21:33:50.834] [info] RenderSystem: Call SetupComponentObservers() and InitializeExistingEntities() after world is created
+[2025-10-29 21:33:50.835] [info] ComponentInitializer: Component observers registered
+[2025-10-29 21:33:50.835] [info] RenderSystem: MeshRendererComponent update observer registered
+[2025-10-29 21:33:50.836] [info] ComponentInitializer: Initialized 0 existing MeshRenderer entities
+[2025-10-29 21:33:50.837] [info] EngineService: Engine initialized, state set to Wait
+[2025-10-29 21:33:50.838] [info] Creating demo scene with cubes and lighting
+[2025-10-29 21:33:50.840] [info] Demo scene created with 9 cubes and enhanced lighting
+[2025-10-29 21:33:50.926] [info] Editor: Viewport size initialized to (1904x974)
+[2025-10-29 21:33:50.932] [info] EngineService: Entering render loop (state: 0)
+[2025-10-29 21:33:50.932] [info] Editor: Viewport size changed to (1044x581)
+[2025-10-29 21:33:50.933] [info] MainRenderingPass: Target viewport size set to 1904x974
+[2025-10-29 21:33:50.934] [info] SceneRenderer: Editor viewport size set to 1904x974
+[2025-10-29 21:33:50.934] [info] RenderSystem: Processing 9 renderable objects, 1 lights
+[2025-10-29 21:33:50.935] [info] RenderSystem: Entity UID assignment - Entity: 0, UID: 8, static_cast result: 8
+[2025-10-29 21:33:50.936] [info] RenderSystem: Entity UID assignment - Entity: 1, UID: 7, static_cast result: 7
+[2025-10-29 21:33:50.936] [info] RenderSystem: Entity UID assignment - Entity: 2, UID: 6, static_cast result: 6
+[2025-10-29 21:33:50.937] [info] RenderSystem: Entity UID assignment - Entity: 3, UID: 5, static_cast result: 5
+[2025-10-29 21:33:50.938] [info] RenderSystem: Entity UID assignment - Entity: 4, UID: 4, static_cast result: 4
+[2025-10-29 21:33:50.940] [info] MainRenderingPass: Resizing framebuffer from 1280x720 to 1904x974
+[2025-10-29 21:33:50.951] [info] HDRResolvePass: Created HDR resolved buffer (1904x974, RGB16F, 1x sample)
+[2025-10-29 21:33:50.959] [info] Created persistent mapped SSBO (size: 74872 bytes)
+[2025-10-29 21:33:50.960] [info] HDRLuminancePass: Initialized with persistent buffer (1904x974, 18718 tiles, 191x98 groups)
+[2025-10-29 21:33:50.978] [info] BloomRenderPass: Created mip 0 (952x487)
+[2025-10-29 21:33:50.993] [info] BloomRenderPass: Created mip 1 (476x243)
+[2025-10-29 21:33:50.995] [info] BloomRenderPass: Created mip 2 (238x121)
+[2025-10-29 21:33:50.996] [info] BloomRenderPass: Created mip 3 (119x60)
+[2025-10-29 21:33:51.010] [info] BloomRenderPass: Created mip 4 (59x30)
+[2025-10-29 21:33:51.011] [info] BloomRenderPass: Created mip 5 (29x15)
+[2025-10-29 21:33:51.059] [info] BloomRenderPass: Initialized with 6 mips
+[2025-10-29 21:33:51.126] [info] MainRenderingPass: Target viewport size set to 1044x581
+[2025-10-29 21:33:51.127] [info] SceneRenderer: Editor viewport size set to 1044x581
+[2025-10-29 21:33:51.128] [info] Editor: Viewport hover state changed: entered
+[2025-10-29 21:33:51.143] [info] MainRenderingPass: Resizing framebuffer from 1904x974 to 1044x581
+[2025-10-29 21:33:51.162] [info] HDRResolvePass: Created HDR resolved buffer (1044x581, RGB16F, 1x sample)
+[2025-10-29 21:33:51.162] [info] Editor: Viewport size changed to (1030x581)
+[2025-10-29 21:33:51.164] [info] Created persistent mapped SSBO (size: 24780 bytes)
+[2025-10-29 21:33:51.164] [info] HDRLuminancePass: Initialized with persistent buffer (1044x581, 6195 tiles, 105x59 groups)
+[2025-10-29 21:33:51.193] [info] MainRenderingPass: Target viewport size set to 1030x581
+[2025-10-29 21:33:51.194] [info] SceneRenderer: Editor viewport size set to 1030x581
+[2025-10-29 21:33:51.197] [info] MainRenderingPass: Resizing framebuffer from 1044x581 to 1030x581
+[2025-10-29 21:33:51.228] [info] HDRResolvePass: Created HDR resolved buffer (1030x581, RGB16F, 1x sample)
+[2025-10-29 21:33:51.243] [info] Created persistent mapped SSBO (size: 24308 bytes)
+[2025-10-29 21:33:51.243] [info] HDRLuminancePass: Initialized with persistent buffer (1030x581, 6077 tiles, 103x59 groups)
+[2025-10-29 21:33:52.277] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:52.278] [info] Editor: Mouse pos (1186, 353), viewport pos (488, 46), relative (698, 307)
+[2025-10-29 21:33:52.278] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:52.279] [info] Editor: Submitting entity picking request at viewport position (698.0, 307.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:52.310] [info] QueryPicking - Screen(698, 307) in Viewport(1030x581) -> Framebuffer(867, 340) [FB Size: 1280x720]
+[2025-10-29 21:33:52.312] [info] QueryPicking - Read pixel RGBA at (867, 340): (0, 0, 0, 0)
+[2025-10-29 21:33:52.313] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:52.314] [info] Engine::ProcessObjectPicking: Query at (698, 307) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:52.314] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:52.315] [info] Editor: Cleared entity selection (was Object ID: 0)
+[2025-10-29 21:33:52.327] [info] Engine: Cleared selected entity outline
+[2025-10-29 21:33:52.944] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:52.945] [info] Editor: Mouse pos (1251, 462), viewport pos (488, 46), relative (763, 416)
+[2025-10-29 21:33:52.946] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:52.947] [info] Editor: Submitting entity picking request at viewport position (763.0, 416.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:52.977] [info] QueryPicking - Screen(763, 416) in Viewport(1030x581) -> Framebuffer(948, 205) [FB Size: 1280x720]
+[2025-10-29 21:33:52.980] [info] QueryPicking - Read pixel RGBA at (948, 205): (0, 0, 0, 0)
+[2025-10-29 21:33:52.980] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:52.982] [info] Engine::ProcessObjectPicking: Query at (763, 416) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:52.984] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:53.561] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:53.562] [info] Editor: Mouse pos (1003, 480), viewport pos (488, 46), relative (515, 434)
+[2025-10-29 21:33:53.564] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:53.565] [info] Editor: Submitting entity picking request at viewport position (515.0, 434.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:53.578] [info] QueryPicking - Screen(515, 434) in Viewport(1030x581) -> Framebuffer(640, 183) [FB Size: 1280x720]
+[2025-10-29 21:33:53.581] [info] QueryPicking - Read pixel RGBA at (640, 183): (0, 0, 0, 0)
+[2025-10-29 21:33:53.582] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:53.583] [info] Engine::ProcessObjectPicking: Query at (515, 434) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:53.584] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:54.028] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:54.028] [info] Editor: Mouse pos (989, 365), viewport pos (488, 46), relative (501, 319)
+[2025-10-29 21:33:54.030] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:54.032] [info] Editor: Submitting entity picking request at viewport position (501.0, 319.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:54.060] [info] QueryPicking - Screen(501, 319) in Viewport(1030x581) -> Framebuffer(622, 325) [FB Size: 1280x720]
+[2025-10-29 21:33:54.063] [info] QueryPicking - Read pixel RGBA at (622, 325): (0, 0, 0, 0)
+[2025-10-29 21:33:54.064] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:54.068] [info] Engine::ProcessObjectPicking: Query at (501, 319) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:54.068] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:54.544] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:54.544] [info] Editor: Mouse pos (995, 279), viewport pos (488, 46), relative (507, 233)
+[2025-10-29 21:33:54.545] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:54.546] [info] Editor: Submitting entity picking request at viewport position (507.0, 233.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:54.577] [info] QueryPicking - Screen(507, 233) in Viewport(1030x581) -> Framebuffer(630, 432) [FB Size: 1280x720]
+[2025-10-29 21:33:54.581] [info] QueryPicking - Read pixel RGBA at (630, 432): (0, 0, 0, 0)
+[2025-10-29 21:33:54.583] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:54.586] [info] Engine::ProcessObjectPicking: Query at (507, 233) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:54.587] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:55.244] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:55.245] [info] Editor: Mouse pos (850, 289), viewport pos (488, 46), relative (362, 243)
+[2025-10-29 21:33:55.246] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:55.247] [info] Editor: Submitting entity picking request at viewport position (362.0, 243.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:55.260] [info] QueryPicking - Screen(362, 243) in Viewport(1030x581) -> Framebuffer(449, 419) [FB Size: 1280x720]
+[2025-10-29 21:33:55.263] [info] QueryPicking - Read pixel RGBA at (449, 419): (0, 0, 0, 0)
+[2025-10-29 21:33:55.264] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:55.267] [info] Engine::ProcessObjectPicking: Query at (362, 243) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:55.269] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:55.662] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:55.665] [info] Editor: Mouse pos (841, 370), viewport pos (488, 46), relative (353, 324)
+[2025-10-29 21:33:55.666] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:55.666] [info] Editor: Submitting entity picking request at viewport position (353.0, 324.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:55.693] [info] QueryPicking - Screen(353, 324) in Viewport(1030x581) -> Framebuffer(438, 319) [FB Size: 1280x720]
+[2025-10-29 21:33:55.697] [info] QueryPicking - Read pixel RGBA at (438, 319): (0, 0, 0, 0)
+[2025-10-29 21:33:55.698] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:55.699] [info] Engine::ProcessObjectPicking: Query at (353, 324) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:55.700] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:56.094] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:56.095] [info] Editor: Mouse pos (748, 486), viewport pos (488, 46), relative (260, 440)
+[2025-10-29 21:33:56.096] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:56.096] [info] Editor: Submitting entity picking request at viewport position (260.0, 440.0) in viewport (1030.0x581.0)
+[2025-10-29 21:33:56.098] [info] QueryPicking - Screen(260, 440) in Viewport(1030x581) -> Framebuffer(323, 175) [FB Size: 1280x720]
+[2025-10-29 21:33:56.112] [info] QueryPicking - Read pixel RGBA at (323, 175): (0, 0, 0, 0)
+[2025-10-29 21:33:56.112] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:56.113] [info] Engine::ProcessObjectPicking: Query at (260, 440) in viewport (1030x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:56.115] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:56.611] [info] Editor: Viewport hover state changed: exited
+[2025-10-29 21:33:58.194] [info] Editor: Viewport size changed to (1027x581)
+[2025-10-29 21:33:58.210] [info] MainRenderingPass: Target viewport size set to 1027x581
+[2025-10-29 21:33:58.210] [info] SceneRenderer: Editor viewport size set to 1027x581
+[2025-10-29 21:33:58.212] [info] MainRenderingPass: Resizing framebuffer from 1030x581 to 1027x581
+[2025-10-29 21:33:58.213] [info] Editor: Viewport size changed to (1018x581)
+[2025-10-29 21:33:58.217] [info] HDRResolvePass: Created HDR resolved buffer (1027x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.226] [info] Created persistent mapped SSBO (size: 24308 bytes)
+[2025-10-29 21:33:58.227] [info] HDRLuminancePass: Initialized with persistent buffer (1027x581, 6077 tiles, 103x59 groups)
+[2025-10-29 21:33:58.227] [info] Editor: Viewport size changed to (1003x581)
+[2025-10-29 21:33:58.230] [info] MainRenderingPass: Target viewport size set to 1018x581
+[2025-10-29 21:33:58.230] [info] SceneRenderer: Editor viewport size set to 1018x581
+[2025-10-29 21:33:58.231] [info] MainRenderingPass: Target viewport size set to 1003x581
+[2025-10-29 21:33:58.231] [info] SceneRenderer: Editor viewport size set to 1003x581
+[2025-10-29 21:33:58.243] [info] MainRenderingPass: Resizing framebuffer from 1027x581 to 1003x581
+[2025-10-29 21:33:58.243] [info] Editor: Viewport size changed to (988x581)
+[2025-10-29 21:33:58.262] [info] HDRResolvePass: Created HDR resolved buffer (1003x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.263] [info] Editor: Viewport size changed to (980x581)
+[2025-10-29 21:33:58.264] [info] Created persistent mapped SSBO (size: 23836 bytes)
+[2025-10-29 21:33:58.265] [info] HDRLuminancePass: Initialized with persistent buffer (1003x581, 5959 tiles, 101x59 groups)
+[2025-10-29 21:33:58.278] [info] Editor: Viewport size changed to (976x581)
+[2025-10-29 21:33:58.278] [info] MainRenderingPass: Target viewport size set to 988x581
+[2025-10-29 21:33:58.279] [info] SceneRenderer: Editor viewport size set to 988x581
+[2025-10-29 21:33:58.280] [info] MainRenderingPass: Target viewport size set to 980x581
+[2025-10-29 21:33:58.281] [info] SceneRenderer: Editor viewport size set to 980x581
+[2025-10-29 21:33:58.283] [info] MainRenderingPass: Resizing framebuffer from 1003x581 to 980x581
+[2025-10-29 21:33:58.295] [info] Editor: Viewport size changed to (972x581)
+[2025-10-29 21:33:58.296] [info] HDRResolvePass: Created HDR resolved buffer (980x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.298] [info] Created persistent mapped SSBO (size: 23128 bytes)
+[2025-10-29 21:33:58.299] [info] HDRLuminancePass: Initialized with persistent buffer (980x581, 5782 tiles, 98x59 groups)
+[2025-10-29 21:33:58.311] [info] Editor: Viewport size changed to (967x581)
+[2025-10-29 21:33:58.311] [info] MainRenderingPass: Target viewport size set to 976x581
+[2025-10-29 21:33:58.312] [info] SceneRenderer: Editor viewport size set to 976x581
+[2025-10-29 21:33:58.313] [info] MainRenderingPass: Target viewport size set to 972x581
+[2025-10-29 21:33:58.313] [info] SceneRenderer: Editor viewport size set to 972x581
+[2025-10-29 21:33:58.315] [info] MainRenderingPass: Resizing framebuffer from 980x581 to 972x581
+[2025-10-29 21:33:58.327] [info] Editor: Viewport size changed to (961x581)
+[2025-10-29 21:33:58.344] [info] Editor: Viewport size changed to (955x581)
+[2025-10-29 21:33:58.344] [info] HDRResolvePass: Created HDR resolved buffer (972x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.346] [info] Created persistent mapped SSBO (size: 23128 bytes)
+[2025-10-29 21:33:58.347] [info] HDRLuminancePass: Initialized with persistent buffer (972x581, 5782 tiles, 98x59 groups)
+[2025-10-29 21:33:58.360] [info] Editor: Viewport size changed to (953x581)
+[2025-10-29 21:33:58.361] [info] MainRenderingPass: Target viewport size set to 967x581
+[2025-10-29 21:33:58.362] [info] SceneRenderer: Editor viewport size set to 967x581
+[2025-10-29 21:33:58.363] [info] MainRenderingPass: Target viewport size set to 961x581
+[2025-10-29 21:33:58.363] [info] SceneRenderer: Editor viewport size set to 961x581
+[2025-10-29 21:33:58.364] [info] MainRenderingPass: Target viewport size set to 955x581
+[2025-10-29 21:33:58.365] [info] SceneRenderer: Editor viewport size set to 955x581
+[2025-10-29 21:33:58.365] [info] MainRenderingPass: Target viewport size set to 953x581
+[2025-10-29 21:33:58.366] [info] SceneRenderer: Editor viewport size set to 953x581
+[2025-10-29 21:33:58.376] [info] MainRenderingPass: Resizing framebuffer from 972x581 to 953x581
+[2025-10-29 21:33:58.395] [info] HDRResolvePass: Created HDR resolved buffer (953x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.411] [info] Created persistent mapped SSBO (size: 22656 bytes)
+[2025-10-29 21:33:58.412] [info] HDRLuminancePass: Initialized with persistent buffer (953x581, 5664 tiles, 96x59 groups)
+[2025-10-29 21:33:58.543] [info] Editor: Viewport size changed to (948x581)
+[2025-10-29 21:33:58.545] [info] MainRenderingPass: Target viewport size set to 948x581
+[2025-10-29 21:33:58.546] [info] SceneRenderer: Editor viewport size set to 948x581
+[2025-10-29 21:33:58.560] [info] MainRenderingPass: Resizing framebuffer from 953x581 to 948x581
+[2025-10-29 21:33:58.563] [info] Editor: Viewport size changed to (935x581)
+[2025-10-29 21:33:58.577] [info] Editor: Viewport size changed to (925x581)
+[2025-10-29 21:33:58.578] [info] HDRResolvePass: Created HDR resolved buffer (948x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.580] [info] Created persistent mapped SSBO (size: 22420 bytes)
+[2025-10-29 21:33:58.580] [info] HDRLuminancePass: Initialized with persistent buffer (948x581, 5605 tiles, 95x59 groups)
+[2025-10-29 21:33:58.594] [info] Editor: Viewport size changed to (922x581)
+[2025-10-29 21:33:58.594] [info] MainRenderingPass: Target viewport size set to 935x581
+[2025-10-29 21:33:58.596] [info] SceneRenderer: Editor viewport size set to 935x581
+[2025-10-29 21:33:58.598] [info] MainRenderingPass: Target viewport size set to 925x581
+[2025-10-29 21:33:58.599] [info] SceneRenderer: Editor viewport size set to 925x581
+[2025-10-29 21:33:58.601] [info] MainRenderingPass: Resizing framebuffer from 948x581 to 925x581
+[2025-10-29 21:33:58.628] [info] HDRResolvePass: Created HDR resolved buffer (925x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.644] [info] Created persistent mapped SSBO (size: 21948 bytes)
+[2025-10-29 21:33:58.645] [info] HDRLuminancePass: Initialized with persistent buffer (925x581, 5487 tiles, 93x59 groups)
+[2025-10-29 21:33:58.661] [info] MainRenderingPass: Target viewport size set to 922x581
+[2025-10-29 21:33:58.662] [info] SceneRenderer: Editor viewport size set to 922x581
+[2025-10-29 21:33:58.676] [info] MainRenderingPass: Resizing framebuffer from 925x581 to 922x581
+[2025-10-29 21:33:58.694] [info] HDRResolvePass: Created HDR resolved buffer (922x581, RGB16F, 1x sample)
+[2025-10-29 21:33:58.697] [info] Created persistent mapped SSBO (size: 21948 bytes)
+[2025-10-29 21:33:58.698] [info] HDRLuminancePass: Initialized with persistent buffer (922x581, 5487 tiles, 93x59 groups)
+[2025-10-29 21:33:58.702] [info] Editor: Viewport hover state changed: entered
+[2025-10-29 21:33:59.312] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:59.313] [info] Editor: Mouse pos (789, 476), viewport pos (597, 46), relative (192, 430)
+[2025-10-29 21:33:59.314] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:59.314] [info] Editor: Submitting entity picking request at viewport position (192.0, 430.0) in viewport (921.0x581.0)
+[2025-10-29 21:33:59.330] [info] QueryPicking - Screen(192, 430) in Viewport(921x581) -> Framebuffer(266, 188) [FB Size: 1280x720]
+[2025-10-29 21:33:59.346] [info] QueryPicking - Read pixel RGBA at (266, 188): (0, 0, 0, 0)
+[2025-10-29 21:33:59.347] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:59.349] [info] Engine::ProcessObjectPicking: Query at (192, 430) in viewport (921x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:59.351] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:33:59.861] [info] Editor: Viewport clicked detected by ImGui
+[2025-10-29 21:33:59.862] [info] Editor: Mouse pos (1039, 486), viewport pos (597, 46), relative (442, 440)
+[2025-10-29 21:33:59.863] [info] Editor: Click is within viewport bounds - performing picking
+[2025-10-29 21:33:59.863] [info] Editor: Submitting entity picking request at viewport position (442.0, 440.0) in viewport (921.0x581.0)
+[2025-10-29 21:33:59.879] [info] QueryPicking - Screen(442, 440) in Viewport(921x581) -> Framebuffer(614, 175) [FB Size: 1280x720]
+[2025-10-29 21:33:59.895] [info] QueryPicking - Read pixel RGBA at (614, 175): (0, 0, 0, 0)
+[2025-10-29 21:33:59.895] [info] QueryPicking - Converted to object ID: 0
+[2025-10-29 21:33:59.896] [info] Engine::ProcessObjectPicking: Query at (442, 440) in viewport (921x581) -> hasHit: false, objectID: 0, worldPos: (0.00, 0.00, 0.00)
+[2025-10-29 21:33:59.898] [info] Editor: No entity picked - clearing selection
+[2025-10-29 21:34:00.198] [info] Editor: Viewport hover state changed: exited
+[2025-10-29 21:34:01.444] [info] EngineService: Exited render loop
+[2025-10-29 21:34:01.444] [info] EngineService: Engine shutting down
+[2025-10-29 21:34:01.445] [info] RenderResourceCache: Cleared all entity resource caches
+[2025-10-29 21:34:01.446] [info] Shutting down ResourceManager...
+[2025-10-29 21:34:01.446] [info] ResourceManager shutdown complete.
+GLFW Error 65537: The GLFW library is not initialized
+
+C:\Users\thamk\gam300\bin\editor.exe (process 5604) exited with code 0 (0x0).
+To automatically close the console when debugging stops, enable Tools->Options->Debugging->Automatically close the console when debugging stops.
+Press any key to close this window . . .

@@ -99,7 +99,7 @@ void EditorMain::init()
 void EditorMain::update()
 {
 	if (!active) return;
-	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
+	// No need to lock mutex here - synchronization handled by semaphore in render()
 }
 
 
@@ -219,6 +219,7 @@ bool EditorMain::isWindowClosed()
 
 bool EditorMain::Activate()
 {
+	active = true;
 	return true;
 }
 
@@ -289,6 +290,12 @@ void EditorMain::Render_Components()
 			continue;
 		}
 		entt::meta_type type = type_map[type_id];
+
+		// Skip components that don't have type names registered (internal components)
+		if (!ReflectionRegistry::HasTypeName(type.id())) {
+			continue;
+		}
+
 		entt::meta_any comp = type.from_void(uptr.get());
 		if (ImGui::TreeNode(ReflectionRegistry::GetTypeName(type.id()).c_str())) {
 			bool is_dirty = false;
@@ -918,22 +925,33 @@ void EditorMain::Render_Scene()
 			m_EditorCamera->SetAspectRatio(m_ViewportWidth / m_ViewportHeight);
 		}
 
-		// Debug viewport size
+		// Update engine viewport size when ImGui viewport changes
 		static float lastWidth = 0, lastHeight = 0;
-		if (std::abs(lastWidth - viewportSize.x) > 1.0f || std::abs(lastHeight - viewportSize.y) > 1.0f) {
-			spdlog::info("Editor: Viewport size changed to ({:.0f}x{:.0f})", viewportSize.x, viewportSize.y);
+		static bool firstFrame = true;
+
+		// Always send viewport size on first frame, then only on changes
+		if (firstFrame || std::abs(lastWidth - viewportSize.x) > 1.0f || std::abs(lastHeight - viewportSize.y) > 1.0f) {
+			spdlog::info("Editor: Viewport size {} to ({:.0f}x{:.0f})",
+			             firstFrame ? "initialized" : "changed", viewportSize.x, viewportSize.y);
 			lastWidth = viewportSize.x;
 			lastHeight = viewportSize.y;
+			firstFrame = false;
+
+			// Submit viewport size to engine (thread-safe command queue)
+			engineService.m_cont->submit_set_editor_viewport_size(
+				static_cast<int>(viewportSize.x),
+				static_cast<int>(viewportSize.y)
+			);
 		}
 	}
 
 	// Use frame data snapshot (already fetched at start of function)
-	if (frameDataSnapshot.isValid && frameDataSnapshot.editorTextureID != 0) {
+	if (frameDataSnapshot.isValid && frameDataSnapshot.textureID != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
 
 		// Get the color attachment texture ID from snapshot
-		uint32_t textureID = frameDataSnapshot.editorTextureID;
+		uint32_t textureID = frameDataSnapshot.textureID;
 
 		// Render the scene viewport using the texture ID
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
@@ -957,6 +975,9 @@ void EditorMain::Render_Scene()
 			// Ensure click is within viewport bounds
 			if (relativeX >= 0 && relativeY >= 0 && relativeX < viewportSize.x && relativeY < viewportSize.y) {
 				spdlog::info("Editor: Click is within viewport bounds - performing picking");
+
+				// No coordinate transformation needed! Engine renders at ImGui viewport size.
+				// Picking coordinates are now 1:1 with the rendered scene.
 				PerformEntityPicking(relativeX, relativeY, viewportSize.x, viewportSize.y);
 			}
 			else {
@@ -1039,10 +1060,10 @@ void EditorMain::Render_Scene()
 		ImGui::Text("ImGui wants mouse: %s, keyboard: %s", io.WantCaptureMouse ? "Yes" : "No", io.WantCaptureKeyboard ? "Yes" : "No");
 	}
 
-	// Show framebuffer status
-	ImGui::Text("Editor FBO: %s", frameData.editorResolvedBuffer ? "Valid" : "None");
-	if (frameData.editorResolvedBuffer) {
-		ImGui::Text("FBO Handle: %u", frameData.editorResolvedBuffer->GetFBOHandle());
+	// Show framebuffer status (from snapshot)
+	ImGui::Text("Editor FBO: %s", frameDataSnapshot.isValid ? "Valid" : "None");
+	if (frameDataSnapshot.isValid) {
+		ImGui::Text("Texture ID: %u", frameDataSnapshot.textureID);
 		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
 	}
 
@@ -1394,8 +1415,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 	m_SelectedEntityID = objectID;
 	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
 	engineService.inspect_entity(ecs::entity(uint32_t(Engine::GetWorld()), objectID).get_uuid());
-	// TODO: Add visual feedback for selected entity (highlight, outline, etc.)
-	// This could involve setting a uniform or render state for the selected object
+
+	// Submit command to set outline for selected entity (thread-safe command queue)
+	engineService.m_cont->submit_set_selected_entity(objectID);
 }
 
 void EditorMain::ClearEntitySelection()
@@ -1403,6 +1425,9 @@ void EditorMain::ClearEntitySelection()
 	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
 		m_SelectedEntityID = static_cast<uint32_t>(-1);
+
+		// Submit command to clear outline (thread-safe command queue)
+		engineService.m_cont->submit_clear_selected_entity();
 	}
 }
 

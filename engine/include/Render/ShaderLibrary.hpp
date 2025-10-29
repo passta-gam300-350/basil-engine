@@ -66,6 +66,36 @@ public:
     std::shared_ptr<Shader> GetPrimitiveShader() const { return m_PrimitiveShader; }
 
     /**
+     * @brief Get shader for point shadow mapping (with geometry shader)
+     * @return Point shadow shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetPointShadowShader() const { return m_PointShadowShader; }
+
+    /**
+     * @brief Get shader for outline rendering
+     * @return Outline shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetOutlineShader() const { return m_OutlineShader; }
+
+    /**
+     * @brief Get shader for skybox rendering
+     * @return Skybox shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetSkyboxShader() const { return m_SkyboxShader; }
+
+    /**
+     * @brief Get compute shader for HDR luminance calculation
+     * @return HDR compute shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetHDRComputeShader() const { return m_HDRComputeShader; }
+
+    /**
+     * @brief Get shader for HDR tone mapping
+     * @return Tone mapping shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetToneMappingShader() const { return m_ToneMappingShader; }
+
+    /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
      * @param vertPath Path to vertex shader
@@ -76,6 +106,32 @@ public:
         const std::string& name,
         const std::string& vertPath,
         const std::string& fragPath
+    );
+
+    /**
+     * @brief Load a shader with geometry stage
+     * @param name Unique shader identifier
+     * @param vertPath Path to vertex shader
+     * @param fragPath Path to fragment shader
+     * @param geomPath Path to geometry shader
+     * @return Shader pointer, or nullptr on failure
+     */
+    std::shared_ptr<Shader> LoadWithGeometry(
+        const std::string& name,
+        const std::string& vertPath,
+        const std::string& fragPath,
+        const std::string& geomPath
+    );
+
+    /**
+     * @brief Load a compute shader
+     * @param name Unique shader identifier
+     * @param compPath Path to compute shader
+     * @return Shader pointer, or nullptr on failure
+     */
+    std::shared_ptr<Shader> LoadCompute(
+        const std::string& name,
+        const std::string& compPath
     );
 
     /**
@@ -102,9 +158,14 @@ private:
 
     // Essential shaders for engine rendering
     std::shared_ptr<Shader> m_PBRShader;
-    std::shared_ptr<Shader> m_ShadowShader;
+    std::shared_ptr<Shader> m_ShadowShader;          // Instanced shadow depth for directional/spot lights
     std::shared_ptr<Shader> m_PickingShader;
     std::shared_ptr<Shader> m_PrimitiveShader;
+    std::shared_ptr<Shader> m_PointShadowShader;     // Point shadow with geometry shader
+    std::shared_ptr<Shader> m_OutlineShader;
+    std::shared_ptr<Shader> m_SkyboxShader;
+    std::shared_ptr<Shader> m_HDRComputeShader;      // Compute shader for luminance
+    std::shared_ptr<Shader> m_ToneMappingShader;
 
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
@@ -114,6 +175,11 @@ private:
     bool LoadShadowShader();
     bool LoadPickingShader();
     bool LoadPrimitiveShader();
+    bool LoadPointShadowShader();
+    bool LoadOutlineShader();
+    bool LoadSkyboxShader();
+    bool LoadHDRComputeShader();
+    bool LoadToneMappingShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP

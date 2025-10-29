@@ -96,29 +96,53 @@ void MainRenderingPass::Execute(RenderContext& context)
 
 void MainRenderingPass::UpdateFramebufferSize()
 {
-    // Get current window size
-    GLFWwindow* currentWindow = glfwGetCurrentContext();
-    if (!currentWindow) return;
+    int targetWidth, targetHeight;
 
-    int windowWidth, windowHeight;
-    glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
+    if (m_UseTargetViewport) {
+        // Use editor-specified viewport size (ImGui viewport)
+        targetWidth = m_TargetViewportWidth;
+        targetHeight = m_TargetViewportHeight;
+    } else {
+        // Use full window framebuffer size (standalone mode)
+        GLFWwindow* currentWindow = glfwGetCurrentContext();
+        if (!currentWindow) return;
 
-    // Skip if window is minimized (framebuffer size = 0)
-    if (windowWidth == 0 || windowHeight == 0) {
+        glfwGetFramebufferSize(currentWindow, &targetWidth, &targetHeight);
+    }
+
+    // Skip if viewport is minimized
+    if (targetWidth == 0 || targetHeight == 0) {
         return;
     }
 
     // Check if we need to resize the framebuffer
     auto currentSpecs = m_Framebuffer->GetSpecification();
-    if (currentSpecs.Width != static_cast<uint32_t>(windowWidth) ||
-        currentSpecs.Height != static_cast<uint32_t>(windowHeight)) {
+    if (currentSpecs.Width != static_cast<uint32_t>(targetWidth) ||
+        currentSpecs.Height != static_cast<uint32_t>(targetHeight)) {
 
-        // Resize the framebuffer to match window size
-        m_Framebuffer->Resize(static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
+        spdlog::info("MainRenderingPass: Resizing framebuffer from {}x{} to {}x{}",
+                     currentSpecs.Width, currentSpecs.Height, targetWidth, targetHeight);
+
+        // Resize the framebuffer to match target viewport size
+        m_Framebuffer->Resize(static_cast<uint32_t>(targetWidth), static_cast<uint32_t>(targetHeight));
 
         // Update the viewport to match the new framebuffer size
-        SetViewport(Viewport(0, 0, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight)));
+        SetViewport(Viewport(0, 0, static_cast<uint32_t>(targetWidth), static_cast<uint32_t>(targetHeight)));
     }
+}
+
+void MainRenderingPass::SetTargetViewportSize(int width, int height)
+{
+    m_UseTargetViewport = true;
+    m_TargetViewportWidth = width;
+    m_TargetViewportHeight = height;
+    spdlog::info("MainRenderingPass: Target viewport size set to {}x{}", width, height);
+}
+
+void MainRenderingPass::UseWindowSize()
+{
+    m_UseTargetViewport = false;
+    spdlog::info("MainRenderingPass: Reverting to window size");
 }
 
 void MainRenderingPass::RenderSkybox(RenderContext& context)

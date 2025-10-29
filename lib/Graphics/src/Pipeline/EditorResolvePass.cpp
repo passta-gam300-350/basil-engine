@@ -37,20 +37,32 @@ void EditorResolvePass::Execute(RenderContext& context)
         return;
     }
 
-    // Create or resize resolved buffer if needed
-    if (!context.frameData.editorResolvedBuffer ||
+    // Check if we need to create a new buffer
+    bool needsNewBuffer = !context.frameData.editorResolvedBuffer ||
         context.frameData.editorResolvedBuffer->GetSpecification().Width != sourceSpec.Width ||
-        context.frameData.editorResolvedBuffer->GetSpecification().Height != sourceSpec.Height)
-    {
+        context.frameData.editorResolvedBuffer->GetSpecification().Height != sourceSpec.Height;
+
+    std::shared_ptr<FrameBuffer> targetBuffer;
+
+    if (needsNewBuffer) {
         // Create non-MSAA version with same format as source
         FBOSpecs resolvedSpec = sourceSpec;
         resolvedSpec.Samples = 1;  // Force non-MSAA
-        context.frameData.editorResolvedBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
+        targetBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
 
-        spdlog::debug("EditorResolvePass: Created resolved buffer ({}x{}, 1x sample)",
+        spdlog::info("EditorResolvePass: Created resolved buffer ({}x{}, 1x sample)",
             resolvedSpec.Width, resolvedSpec.Height);
+    } else {
+        // Reuse existing buffer
+        targetBuffer = context.frameData.editorResolvedBuffer;
     }
 
-    // Resolve MSAA source buffer to non-MSAA resolved buffer
-    sourceBuffer->ResolveToFramebuffer(context.frameData.editorResolvedBuffer.get());
+    // Resolve MSAA source buffer to target buffer
+    sourceBuffer->ResolveToFramebuffer(targetBuffer.get());
+
+    // CRITICAL: Only update pointer AFTER blit is complete
+    // This prevents editor thread from seeing an empty framebuffer during resize
+    if (needsNewBuffer) {
+        context.frameData.editorResolvedBuffer = targetBuffer;
+    }
 }

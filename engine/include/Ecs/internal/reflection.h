@@ -94,6 +94,11 @@ struct ReflectionRegistry {
 		return reg.m_FieldNames[type_id];
 	}
 
+	static bool HasTypeName(TypeID type_id) {
+		ReflectionRegistry::Detail& reg{ Registry() };
+		return reg.m_Names.find(type_id) != reg.m_Names.end();
+	}
+
 	static std::string const& GetTypeName(TypeID type_id) {
 		ReflectionRegistry::Detail& reg{ Registry() };
 		assert(reg.m_Names.find(type_id) != reg.m_Names.end());

@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <spdlog/stopwatch.h>
+#include <glm/glm.hpp>
 #include "Ecs/ecs.h"
 
 class Window;
@@ -12,6 +13,20 @@ namespace Logger {
 	class Sink;
 }
 struct GLFWwindow;
+
+// Simple data structures for editor-engine communication (no Graphics library dependencies)
+struct PickingResultData {
+	bool hasHit{false};
+	uint32_t objectID{0};
+	glm::vec3 worldPosition{0.0f};
+	float depth{0.0f};
+};
+
+struct FrameTextureData {
+	uint32_t textureID{0};
+	bool isValid{false};
+	float deltaTime{0.0f};
+};
 
 class Engine
 {
@@ -77,14 +92,23 @@ public:
 
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
-	
+
 	static Info::State GetState() { return Instance().m_Info.m_State; }
 	static void SetState(Info::State state) { Instance().m_Info.m_State = state; }
 
 	static bool ShouldClose() { return Instance().m_Info.m_State == Info::State::Error || Instance().m_Info.m_State == Info::State::Exit; }
 
+	// Editor facade methods - hide Graphics library details from editor
+	static void ProcessObjectPicking(int screenX, int screenY, int viewportWidth, int viewportHeight, PickingResultData& outResult);
+	static void SetAmbientLightColor(float r, float g, float b);
+	static void SetAABBVisualization(bool show);
+	static void GetEditorFrameTexture(FrameTextureData& outData);
+	static void SetSelectedEntity(uint32_t entityID);
+	static void ClearSelectedEntity();
+	static void SetEditorViewportSize(int width, int height);
+
 	//engine state management
-	void Coma();	//do not use recklessly, this will put the program into deadlock 
+	void Coma();	//do not use recklessly, this will put the program into deadlock
 	void Terminate();
 };
 

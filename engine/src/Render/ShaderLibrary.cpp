@@ -22,11 +22,26 @@ bool ShaderLibrary::Initialize() {
     if (!LoadShadowShader()) {
         spdlog::warn("ShaderLibrary: Shadow shader not loaded - shadows will be disabled");
     }
+    if (!LoadPointShadowShader()) {
+        spdlog::warn("ShaderLibrary: Point shadow shader not loaded - point light shadows will be disabled");
+    }
     if (!LoadPickingShader()) {
         spdlog::warn("ShaderLibrary: Picking shader not loaded - object picking will be disabled");
     }
     if (!LoadPrimitiveShader()) {
         spdlog::warn("ShaderLibrary: Primitive shader not loaded - debug visualization will be disabled");
+    }
+    if (!LoadOutlineShader()) {
+        spdlog::warn("ShaderLibrary: Outline shader not loaded - object outlines will be disabled");
+    }
+    if (!LoadSkyboxShader()) {
+        spdlog::warn("ShaderLibrary: Skybox shader not loaded - skybox rendering will be disabled");
+    }
+    if (!LoadHDRComputeShader()) {
+        spdlog::warn("ShaderLibrary: HDR compute shader not loaded - auto-exposure will be disabled");
+    }
+    if (!LoadToneMappingShader()) {
+        spdlog::warn("ShaderLibrary: Tone mapping shader not loaded - HDR tone mapping will be disabled");
     }
 
     if (success) {
@@ -61,6 +76,52 @@ std::shared_ptr<Shader> ShaderLibrary::Load(
     return shader;
 }
 
+std::shared_ptr<Shader> ShaderLibrary::LoadWithGeometry(
+    const std::string& name,
+    const std::string& vertPath,
+    const std::string& fragPath,
+    const std::string& geomPath)
+{
+    // Check if already loaded
+    if (m_Shaders.contains(name)) {
+        spdlog::debug("ShaderLibrary: Shader '{}' already loaded", name);
+        return m_Shaders[name];
+    }
+
+    // Load via ResourceManager
+    auto shader = m_ResourceManager->LoadShaderWithGeometry(name, vertPath, fragPath, geomPath);
+    if (shader) {
+        m_Shaders[name] = shader;
+        spdlog::debug("ShaderLibrary: Loaded geometry shader '{}'", name);
+    } else {
+        spdlog::error("ShaderLibrary: Failed to load geometry shader '{}'", name);
+    }
+
+    return shader;
+}
+
+std::shared_ptr<Shader> ShaderLibrary::LoadCompute(
+    const std::string& name,
+    const std::string& compPath)
+{
+    // Check if already loaded
+    if (m_Shaders.contains(name)) {
+        spdlog::debug("ShaderLibrary: Compute shader '{}' already loaded", name);
+        return m_Shaders[name];
+    }
+
+    // Load via ResourceManager
+    auto shader = m_ResourceManager->LoadComputeShader(name, compPath);
+    if (shader) {
+        m_Shaders[name] = shader;
+        spdlog::debug("ShaderLibrary: Loaded compute shader '{}'", name);
+    } else {
+        spdlog::error("ShaderLibrary: Failed to load compute shader '{}'", name);
+    }
+
+    return shader;
+}
+
 std::shared_ptr<Shader> ShaderLibrary::Get(const std::string& name) const {
     auto it = m_Shaders.find(name);
     return (it != m_Shaders.end()) ? it->second : nullptr;
@@ -76,6 +137,11 @@ void ShaderLibrary::Clear() {
     m_ShadowShader.reset();
     m_PickingShader.reset();
     m_PrimitiveShader.reset();
+    m_PointShadowShader.reset();
+    m_OutlineShader.reset();
+    m_SkyboxShader.reset();
+    m_HDRComputeShader.reset();
+    m_ToneMappingShader.reset();
     spdlog::info("ShaderLibrary: Cleared all shaders");
 }
 
@@ -94,15 +160,16 @@ bool ShaderLibrary::LoadPBRShader() {
 }
 
 bool ShaderLibrary::LoadShadowShader() {
-    m_ShadowShader = Load("shadow_depth",
-        "assets/shaders/shadow_depth.vert",
-        "assets/shaders/shadow_depth.frag");
+    // Load INSTANCED shadow shader (used for directional and spot lights)
+    m_ShadowShader = Load("shadow_depth_instanced",
+        "assets/shaders/shadow_depth_instanced.vert",
+        "assets/shaders/shadow_depth_instanced.frag");
 
     if (!m_ShadowShader) {
         return false;
     }
 
-    spdlog::info("ShaderLibrary: Shadow shader loaded successfully");
+    spdlog::info("ShaderLibrary: Instanced shadow shader loaded successfully");
     return true;
 }
 
@@ -129,5 +196,71 @@ bool ShaderLibrary::LoadPrimitiveShader() {
     }
 
     spdlog::info("ShaderLibrary: Primitive shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadPointShadowShader() {
+    // Load INSTANCED point shadow shader with geometry shader (for cubemap generation)
+    m_PointShadowShader = LoadWithGeometry("point_shadow_instanced",
+        "assets/shaders/point_shadow_instanced.vert",
+        "assets/shaders/point_shadow_instanced.frag",
+        "assets/shaders/point_shadow_instanced.geom");
+
+    if (!m_PointShadowShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: Instanced point shadow shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadOutlineShader() {
+    m_OutlineShader = Load("outline",
+        "assets/shaders/outline.vert",
+        "assets/shaders/outline.frag");
+
+    if (!m_OutlineShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: Outline shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadSkyboxShader() {
+    m_SkyboxShader = Load("skybox",
+        "assets/shaders/skybox.vert",
+        "assets/shaders/skybox.frag");
+
+    if (!m_SkyboxShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: Skybox shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadHDRComputeShader() {
+    m_HDRComputeShader = LoadCompute("hdr_luminance",
+        "assets/shaders/hdr_luminance.comp");
+
+    if (!m_HDRComputeShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: HDR compute shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadToneMappingShader() {
+    m_ToneMappingShader = Load("tonemap",
+        "assets/shaders/tonemap.vert",
+        "assets/shaders/tonemap.frag");
+
+    if (!m_ToneMappingShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: Tone mapping shader loaded successfully");
     return true;
 }

@@ -31,25 +31,37 @@ void HDRResolvePass::Execute(RenderContext& context)
         return;
     }
 
-    // Create or resize resolved HDR buffer if needed
-    if (!context.frameData.hdrResolvedBuffer ||
+    // Check if we need to create a new buffer
+    bool needsNewBuffer = !context.frameData.hdrResolvedBuffer ||
         context.frameData.hdrResolvedBuffer->GetSpecification().Width != mainSpec.Width ||
-        context.frameData.hdrResolvedBuffer->GetSpecification().Height != mainSpec.Height)
-    {
+        context.frameData.hdrResolvedBuffer->GetSpecification().Height != mainSpec.Height;
+
+    std::shared_ptr<FrameBuffer> targetBuffer;
+
+    if (needsNewBuffer) {
         // Create non-MSAA version with same HDR format as main
         FBOSpecs resolvedSpec = mainSpec;
         resolvedSpec.Samples = 1;  // Force non-MSAA
-        context.frameData.hdrResolvedBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
+        targetBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
 
         spdlog::info("HDRResolvePass: Created HDR resolved buffer ({}x{}, RGB16F, 1x sample)",
             resolvedSpec.Width, resolvedSpec.Height);
+    } else {
+        // Reuse existing buffer
+        targetBuffer = context.frameData.hdrResolvedBuffer;
     }
 
-    // Resolve MSAA main buffer to non-MSAA resolved buffer
-    mainFBO->ResolveToFramebuffer(context.frameData.hdrResolvedBuffer.get());
+    // Resolve MSAA main buffer to target buffer
+    mainFBO->ResolveToFramebuffer(targetBuffer.get());
 
-    // Store resolved HDR texture ID for HDR luminance and tone mapping passes
-    context.hdrTextureID = context.frameData.hdrResolvedBuffer->GetColorAttachmentRendererID(0);
+    // CRITICAL: Update pointer and texture ID AFTER blit is complete
+    // This prevents downstream passes (luminance, tone mapping) from reading empty buffers
+    if (needsNewBuffer) {
+        context.frameData.hdrResolvedBuffer = targetBuffer;
+    }
+
+    // Store resolved HDR texture ID - read from filled targetBuffer, not potentially-old context buffer
+    context.hdrTextureID = targetBuffer->GetColorAttachmentRendererID(0);
 
     // Validate texture ID
     if (context.hdrTextureID == 0) {
