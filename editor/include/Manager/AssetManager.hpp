@@ -4,6 +4,7 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <chrono>
 #include <importer/importer.hpp>
 
 //future improvements
@@ -25,6 +26,8 @@ struct AssetManager {
 	std::mutex m_DescriptorListMtx;
 
 	std::atomic<bool> m_ShouldClose;
+	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
+	std::atomic<bool> m_NeedsRescan;
 
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
@@ -40,6 +43,7 @@ struct AssetManager {
 	std::string ResolveAssetName(Resource::Guid);
 
 	void FileIndexingWorkerLoop();
+	void RescanDirectory();
 
 	void ImportAsset(Resource::ResourceDescriptor&);
 	void ImportAssetDirectory(std::string const&);
