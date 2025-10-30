@@ -1283,10 +1283,10 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
 
     // Handle the result
     if (result.hasHit) {
-        spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
+        /*spdlog::info("PICKED OBJECT: ID = {}, World Position = ({:.2f}, {:.2f}, {:.2f}), Depth = {:.3f}",
                     result.objectID,
                     result.worldPosition.x, result.worldPosition.y, result.worldPosition.z,
-                    result.depth);
+                    result.depth);*/
 
         // Find the modelInstanceID of the clicked object
         uint32_t clickedModelInstanceID = 0;
@@ -1305,8 +1305,8 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
             for (const auto& renderable : m_SceneObjects) {
                 if (renderable.modelInstanceID == clickedModelInstanceID) {
                     m_SceneRenderer->AddOutlinedObject(renderable.objectID);
-                    spdlog::info("  -> Outlining mesh with objectID: {} (modelInstanceID: {})",
-                               renderable.objectID, renderable.modelInstanceID);
+                    /*spdlog::info("  -> Outlining mesh with objectID: {} (modelInstanceID: {})",
+                               renderable.objectID, renderable.modelInstanceID);*/
                 }
             }
         }
