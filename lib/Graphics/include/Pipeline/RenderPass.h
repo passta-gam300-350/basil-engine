@@ -85,5 +85,5 @@ protected:
 	void CheckAndResizeIfNeeded(const RenderContext& context);
 
 	// Override this for custom resize logic (when ResizeMode::Custom)
-	virtual void OnResize(uint32_t newWidth, uint32_t newHeight) {}
+	virtual void OnResize(uint32_t newWidth, uint32_t newHeight);
 };
