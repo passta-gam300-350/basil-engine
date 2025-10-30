@@ -109,6 +109,16 @@ bool GraphicsTestDriver::Initialize()
     // Create scene renderer (owns all graphics systems now)
     m_SceneRenderer = std::make_unique<SceneRenderer>();
 
+    // Setup resize callback to render during window resize (prevents black flashes)
+    m_Window->SetResizeCallback([this]() {
+        // Simple render during resize - reuse last frame's data
+        if (m_SceneRenderer && m_Camera) {
+            m_SceneRenderer->Render();
+            m_Window->SwapBuffers();
+        }
+    });
+    spdlog::info("Window resize callback registered for smooth resizing");
+
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 

@@ -23,12 +23,15 @@ MainRenderingPass::MainRenderingPass()
 {
     // Create default skybox cube mesh
     m_SkyboxMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+
+    // Configure auto-resize to match viewport
+    SetResizeMode(ResizeMode::MatchViewport);
 }
 
 void MainRenderingPass::Execute(RenderContext& context)
 {
-    // Update framebuffer size to match current window before rendering
-    UpdateFramebufferSize();
+    // Auto-resize framebuffer to match viewport if needed
+    CheckAndResizeIfNeeded(context);
 
     // New context-based execution - use references instead of copies!
     Begin();
@@ -92,33 +95,6 @@ void MainRenderingPass::Execute(RenderContext& context)
     // HDR texture ID will be set by HDRResolvePass after MSAA resolve
 
     End();
-}
-
-void MainRenderingPass::UpdateFramebufferSize()
-{
-    // Get current window size
-    GLFWwindow* currentWindow = glfwGetCurrentContext();
-    if (!currentWindow) return;
-
-    int windowWidth, windowHeight;
-    glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
-
-    // Skip if window is minimized (framebuffer size = 0)
-    if (windowWidth == 0 || windowHeight == 0) {
-        return;
-    }
-
-    // Check if we need to resize the framebuffer
-    auto currentSpecs = m_Framebuffer->GetSpecification();
-    if (currentSpecs.Width != static_cast<uint32_t>(windowWidth) ||
-        currentSpecs.Height != static_cast<uint32_t>(windowHeight)) {
-
-        // Resize the framebuffer to match window size
-        m_Framebuffer->Resize(static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
-
-        // Update the viewport to match the new framebuffer size
-        SetViewport(Viewport(0, 0, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight)));
-    }
 }
 
 void MainRenderingPass::RenderSkybox(RenderContext& context)

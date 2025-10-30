@@ -9,6 +9,8 @@
 HDRLuminancePass::HDRLuminancePass()
     : RenderPass("HDRLuminancePass")
 {
+    // Configure custom resize logic
+    SetResizeMode(ResizeMode::Custom);
 }
 
 void HDRLuminancePass::Execute(RenderContext& context)
@@ -26,14 +28,31 @@ void HDRLuminancePass::Execute(RenderContext& context)
         return;
     }
 
-    // Initialize or resize buffer if viewport size changed
-    uint32_t currentWidth = context.frameData.viewportWidth;
-    uint32_t currentHeight = context.frameData.viewportHeight;
+    // Initialize buffer if needed (first frame only)
+    bool isFirstFrame = !m_LuminanceBuffer;
+    if (isFirstFrame) {
+        InitializeBuffer(context.frameData.viewportWidth, context.frameData.viewportHeight);
+        m_LastWidth = context.frameData.viewportWidth;
+        m_LastHeight = context.frameData.viewportHeight;
+    }
 
-    if (!m_LuminanceBuffer || m_LastWidth != currentWidth || m_LastHeight != currentHeight) {
-        InitializeBuffer(currentWidth, currentHeight);
-        m_LastWidth = currentWidth;
-        m_LastHeight = currentHeight;
+    // Detect if viewport size changed this frame (before calling CheckAndResizeIfNeeded)
+    bool resizeOccurred = !isFirstFrame && (m_LastWidth != context.frameData.viewportWidth ||
+                                            m_LastHeight != context.frameData.viewportHeight);
+
+    // Auto-handle resize (calls OnResize() if needed)
+    CheckAndResizeIfNeeded(context);
+
+    // If we just resized (not first frame), skip luminance calculation and freeze exposure
+    // This prevents calculating exposure from invalid zero-initialized buffer data
+    if (resizeOccurred) {
+        // Freeze exposure at previous value to maintain consistent brightness during resize
+        context.exposure = m_PreviousExposure;
+        context.avgLuminance = 0.5f;  // Placeholder value (not used during resize)
+
+        // Note: m_LastWidth/Height already updated by OnResize() callback
+        // Skip the rest of the pass
+        return;
     }
 
     // Begin the pass (no framebuffer needed for compute)
@@ -79,6 +98,10 @@ void HDRLuminancePass::Execute(RenderContext& context)
     // Calculate exposure and WRITE TO CONTEXT (framework pattern!)
     // This happens after ExecuteCommands() to ensure compute shader completed
     CalculateExposure(context);
+
+    // Update tracking after successful computation
+    m_LastWidth = context.frameData.viewportWidth;
+    m_LastHeight = context.frameData.viewportHeight;
 
     // Note: SSBO remains bound and persistently mapped - no need to unbind
 
@@ -153,9 +176,14 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     // Alternative (fixed exposure - use this to match ogldev exactly):
     // const float exposure = 0.4457f;  // Fixed value matching ogldev
 
+    // TEMPORAL SMOOTHING: Blend between previous and current exposure
+    // This prevents jarring brightness changes during window resize and scene transitions
+    float smoothedExposure = glm::mix(m_PreviousExposure, exposure, m_ExposureAdaptationSpeed);
+    m_PreviousExposure = smoothedExposure;  // Store for next frame
+
     // WRITE TO CONTEXT (framework pattern!)
     context.avgLuminance = avgLuminance;
-    context.exposure = exposure;
+    context.exposure = smoothedExposure;  // Use smoothed exposure instead of raw
 
     // Debug logging - enabled to diagnose brightness issue
     /*spdlog::info("HDRLuminancePass: AvgLum={:.4f}, Exposure={:.4f}",
@@ -195,4 +223,17 @@ void HDRLuminancePass::InitializeBuffer(uint32_t width, uint32_t height)
 
     spdlog::info("HDRLuminancePass: Initialized with persistent buffer ({}x{}, {} tiles, {}x{} groups)",
                  width, height, numTiles, m_NumGroupsX, m_NumGroupsY);
+}
+
+void HDRLuminancePass::OnResize(uint32_t newWidth, uint32_t newHeight)
+{
+    // Viewport size changed - recreate SSBO
+    spdlog::info("HDRLuminancePass: Viewport size changed to {}x{}, recreating luminance buffer", newWidth, newHeight);
+
+    // Reinitialize buffer with new dimensions
+    InitializeBuffer(newWidth, newHeight);
+
+    // Update tracking (will be used to detect resize in Execute)
+    m_LastWidth = newWidth;
+    m_LastHeight = newHeight;
 }

@@ -14,6 +14,9 @@ ToneMapRenderPass::ToneMapRenderPass()
     })
 {
     CreateFullScreenQuad();
+
+    // Configure auto-resize to match viewport
+    SetResizeMode(ResizeMode::MatchViewport);
 }
 
 void ToneMapRenderPass::Execute(RenderContext& context)
@@ -23,8 +26,8 @@ void ToneMapRenderPass::Execute(RenderContext& context)
         return;
     }
 
-    // Update framebuffer size to match current window before rendering
-    UpdateFramebufferSize();
+    // Auto-resize framebuffer to match viewport if needed
+    CheckAndResizeIfNeeded(context);
 
     // Begin pass (binds framebuffer and sets viewport)
     Begin();
@@ -180,31 +183,4 @@ void ToneMapRenderPass::CreateFullScreenQuad()
     glBindVertexArray(0);
 
     spdlog::info("ToneMapRenderPass: Full-screen quad created");
-}
-
-void ToneMapRenderPass::UpdateFramebufferSize()
-{
-    // Get current window size
-    GLFWwindow* currentWindow = glfwGetCurrentContext();
-    if (!currentWindow) return;
-
-    int windowWidth, windowHeight;
-    glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
-
-    // Skip if window is minimized (framebuffer size = 0)
-    if (windowWidth == 0 || windowHeight == 0) {
-        return;
-    }
-
-    // Check if we need to resize the framebuffer
-    auto currentSpecs = m_Framebuffer->GetSpecification();
-    if (currentSpecs.Width != static_cast<uint32_t>(windowWidth) ||
-        currentSpecs.Height != static_cast<uint32_t>(windowHeight)) {
-
-        // Resize the framebuffer to match window size
-        m_Framebuffer->Resize(static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
-
-        // Update the viewport to match the new framebuffer size
-        SetViewport(Viewport(0, 0, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight)));
-    }
 }

@@ -42,9 +42,6 @@ public:
     }
 
 private:
-    // Update framebuffer to match current window size
-    void UpdateFramebufferSize();
-
     // Render skybox if enabled
     void RenderSkybox(RenderContext& context);
 

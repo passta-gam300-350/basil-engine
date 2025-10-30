@@ -9,6 +9,9 @@ BloomRenderPass::BloomRenderPass()
 	: RenderPass("BloomPass")  // No base framebuffer (creates its own mip chain)
 {
 	spdlog::info("BloomRenderPass: Created (will initialize on first execute)");
+
+	// Configure custom resize logic
+	SetResizeMode(ResizeMode::Custom);
 }
 
 void BloomRenderPass::Initialize(uint32_t windowWidth, uint32_t windowHeight)
@@ -80,6 +83,9 @@ void BloomRenderPass::Execute(RenderContext& context)
 	if (!m_Initialized) {
 		Initialize(context.frameData.viewportWidth, context.frameData.viewportHeight);
 	}
+
+	// Auto-handle resize (calls OnResize() if needed)
+	CheckAndResizeIfNeeded(context);
 
 	// Get HDR resolved buffer (output of HDRResolvePass)
 	if (!context.frameData.hdrResolvedBuffer) {
@@ -313,4 +319,15 @@ uint32_t BloomRenderPass::GetBloomMip(int index) const
 		return m_MipChain[0].fbo->GetColorAttachmentRendererID(0);
 	}
 	return m_MipChain[index].fbo->GetColorAttachmentRendererID(0);
+}
+
+void BloomRenderPass::OnResize(uint32_t newWidth, uint32_t newHeight)
+{
+	// Viewport size changed - recreate mip chain
+	spdlog::info("BloomRenderPass: Viewport size changed to {}x{}, recreating mip chain", newWidth, newHeight);
+
+	// Clear existing mip chain and reinitialize
+	m_MipChain.clear();
+	m_Initialized = false;
+	Initialize(newWidth, newHeight);
 }

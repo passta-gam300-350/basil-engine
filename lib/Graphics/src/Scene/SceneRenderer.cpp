@@ -71,19 +71,19 @@ void SceneRenderer::InitializeDefaultPipeline()
     // Shadow pass will need shader to be set after creation by the application
     auto shadowPass = std::make_shared<DirectionalShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
-    mainPipeline->EnablePass("DirectionalShadowPass", false);
+    //mainPipeline->EnablePass("DirectionalShadowPass", false);
 
     // 2. Add point shadow mapping pass (geometry shader method)
     // Point shadow pass will need shader to be set after creation by the application
     auto pointShadowPass = std::make_shared<PointShadowMappingPass>();
     mainPipeline->AddPass(pointShadowPass);
-    mainPipeline->EnablePass("PointShadowPass", false);
+    //mainPipeline->EnablePass("PointShadowPass", false);
 
     // 3. Add spot shadow mapping pass (perspective projection, reuses directional shader)
     // Spot shadow pass will need shader to be set after creation by the application
     auto spotShadowPass = std::make_shared<SpotShadowMappingPass>();
     mainPipeline->AddPass(spotShadowPass);
-    mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
+    //mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
 
     // 4. Add main rendering pass (HDR output - RGB16F with 4x MSAA)
     auto mainPass = std::make_shared<MainRenderingPass>();
@@ -112,7 +112,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 8. Add physically based bloom pass (multi-scale blur with Karis average)
     auto bloomPass = std::make_shared<BloomRenderPass>();
     mainPipeline->AddPass(bloomPass);
-    spdlog::info("SceneRenderer: Added BloomRenderPass to pipeline");
+    //spdlog::info("SceneRenderer: Added BloomRenderPass to pipeline");
 
     // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();

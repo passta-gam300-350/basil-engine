@@ -63,6 +63,9 @@ private:
 	// Initialization
 	void Initialize(uint32_t windowWidth, uint32_t windowHeight);
 
+	// Custom resize handling (override from RenderPass)
+	void OnResize(uint32_t newWidth, uint32_t newHeight) override;
+
 	// Rendering
 	void RenderDownsamples(uint32_t srcTexture);
 	void RenderUpsamples();

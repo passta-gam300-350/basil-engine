@@ -104,5 +104,11 @@ void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 		windowInstance->m_Width = width;
 		windowInstance->m_Height = height;
 		glViewport(0, 0, width, height);
+
+		// Trigger render callback if set (enables rendering during window resize)
+		if (windowInstance->m_ResizeCallback)
+		{
+			windowInstance->m_ResizeCallback();
+		}
 	}
 }

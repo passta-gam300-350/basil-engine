@@ -58,5 +58,4 @@ private:
     uint32_t m_QuadVBO = 0;
 
     void CreateFullScreenQuad();
-    void UpdateFramebufferSize();  // Resize framebuffer to match window
 };
