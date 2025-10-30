@@ -18,6 +18,8 @@ PickingRenderPass::PickingRenderPass()
     }),
       m_PickingShader(nullptr)
 {
+    // Configure auto-resize to match viewport
+    SetResizeMode(ResizeMode::MatchViewport);
 }
 
 void PickingRenderPass::Execute(RenderContext& context)
@@ -29,15 +31,8 @@ void PickingRenderPass::Execute(RenderContext& context)
 
     //spdlog::info("PickingRenderPass::Execute - Starting picking render...");
 
-    // Update framebuffer size to match main framebuffer
-    if (context.frameData.mainColorBuffer) {
-        const auto& mainSpec = context.frameData.mainColorBuffer->GetSpecification();
-        if (m_Framebuffer->GetSpecification().Width != mainSpec.Width ||
-            m_Framebuffer->GetSpecification().Height != mainSpec.Height) {
-            m_Framebuffer->Resize(mainSpec.Width, mainSpec.Height);
-            SetViewport(Viewport(0, 0, mainSpec.Width, mainSpec.Height));
-        }
-    }
+    // Auto-resize framebuffer to match viewport if needed
+    CheckAndResizeIfNeeded(context);
 
     // Begin the pass
     Begin();

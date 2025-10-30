@@ -281,6 +281,10 @@ namespace RenderCommands {
         uint32_t mask;       // Stencil write mask (0x00 = no write, 0xFF = write all bits)
     };
 
+    struct SetColorMaskData {
+        bool r, g, b, a;     // Enable/disable writing to R, G, B, A channels
+    };
+
 
 }
 
@@ -323,7 +327,9 @@ using VariantRenderCommand = std::variant<
     RenderCommands::EnableStencilTestData,
     RenderCommands::SetStencilFuncData,
     RenderCommands::SetStencilOpData,
-    RenderCommands::SetStencilMaskData
+    RenderCommands::SetStencilMaskData,
+    // Color mask command
+    RenderCommands::SetColorMaskData
 >;
 
 // Modern command buffer with efficient storage and sorting
@@ -390,6 +396,8 @@ private:
     void ExecuteCommand(const RenderCommands::SetStencilFuncData& cmd);
     void ExecuteCommand(const RenderCommands::SetStencilOpData& cmd);
     void ExecuteCommand(const RenderCommands::SetStencilMaskData& cmd);
+    // Color mask command execution
+    void ExecuteCommand(const RenderCommands::SetColorMaskData& cmd);
 
     // GPU state cleanup
     void CleanupGPUState();

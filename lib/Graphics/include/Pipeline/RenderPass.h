@@ -26,6 +26,15 @@ Technology is prohibited.
 // Forward declaration
 struct RenderContext;
 
+/**
+ * @brief Defines how a render pass handles window resize events
+ */
+enum class ResizeMode {
+	Fixed,          // Fixed-size framebuffer (e.g., shadow maps) - never resizes
+	MatchViewport,  // Auto-resize framebuffer to match viewport dimensions
+	Custom          // Custom resize logic implemented via OnResize() callback
+};
+
 class RenderPass
 {
 public:
@@ -55,6 +64,10 @@ public:
 	void ExecuteCommands() const;
 	void ClearCommands();
 
+	// Resize handling API
+	void SetResizeMode(ResizeMode mode) { m_ResizeMode = mode; }
+	ResizeMode GetResizeMode() const { return m_ResizeMode; }
+
 protected:
 	std::string m_Name;
 	std::shared_ptr<FrameBuffer> m_Framebuffer; // Optional - can be nullptr
@@ -62,4 +75,15 @@ protected:
 
 	// Pass-isolated command buffer for state isolation
 	std::unique_ptr<RenderCommandBuffer> m_PassCommandBuffer;
+
+	// Resize handling
+	ResizeMode m_ResizeMode = ResizeMode::Fixed;
+	uint32_t m_LastViewportWidth = 0;
+	uint32_t m_LastViewportHeight = 0;
+
+	// Helper: Call this at the start of Execute() to auto-handle resize
+	void CheckAndResizeIfNeeded(const RenderContext& context);
+
+	// Override this for custom resize logic (when ResizeMode::Custom)
+	virtual void OnResize(uint32_t newWidth, uint32_t newHeight) {}
 };

@@ -38,6 +38,13 @@ private:
     uint32_t m_LastWidth = 0;
     uint32_t m_LastHeight = 0;
 
+    // Temporal smoothing for exposure adaptation
+    float m_PreviousExposure = 1.0f;           // Last frame's exposure value
+    float m_ExposureAdaptationSpeed = 0.05f;   // Blend factor (0.05 = 5% per frame, ~20 frames to adapt)
+
+    // Custom resize handling (override from RenderPass)
+    void OnResize(uint32_t newWidth, uint32_t newHeight) override;
+
     void CalculateExposure(RenderContext& context);
     uint32_t AlignUpToMultiple(uint32_t value, uint32_t multiple);
     void InitializeBuffer(uint32_t width, uint32_t height);

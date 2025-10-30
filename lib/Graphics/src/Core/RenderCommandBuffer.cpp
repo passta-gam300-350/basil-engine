@@ -555,6 +555,11 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetStencilMaskDat
     glStencilMask(cmd.mask);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetColorMaskData& cmd)
+{
+    glColorMask(cmd.r, cmd.g, cmd.b, cmd.a);
+}
+
 void RenderCommandBuffer::CleanupGPUState()
 {
     // Note: We don't reset shadow map texture (slot 8) here since it should persist
