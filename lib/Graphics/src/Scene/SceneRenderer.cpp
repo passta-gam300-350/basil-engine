@@ -97,7 +97,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 5. Add outline rendering pass (stencil-based outlines) - BEFORE HDR resolve!
     auto outlinePass = std::make_shared<OutlineRenderPass>();
     mainPipeline->AddPass(outlinePass);
-    mainPipeline->EnablePass("OutlinePass", false);  // Enabled by default
+    //mainPipeline->EnablePass("OutlinePass", false);  // Enabled by default
 
     // 6. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
     auto hdrResolvePass = std::make_shared<HDRResolvePass>();

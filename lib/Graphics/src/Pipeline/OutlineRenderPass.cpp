@@ -102,7 +102,8 @@ void OutlineRenderPass::RenderFirstPass(RenderContext& context)
     // Use LEQUAL instead of LESS so depth test passes for pixels at same depth
     Submit(RenderCommands::SetDepthTestData{ true, GL_LEQUAL, false });  // Don't write depth
 
-    // Render each outlined object
+    // Render each outlined object individually using manual draw calls
+    // (Don't use InstancedRenderer - it causes cache pollution and shadow corruption)
     for (const auto& renderable : context.renderables) {
         // Skip if this object is not in the outlined set
         if (m_OutlinedObjects.count(renderable.objectID) == 0) {
@@ -114,10 +115,28 @@ void OutlineRenderPass::RenderFirstPass(RenderContext& context)
             continue;
         }
 
-        // Use the instanced renderer to render this object
-        // This will use the object's normal material and shader
-        std::vector<RenderableData> singleObject = { renderable };
-        context.instancedRenderer.RenderToPass(*this, singleObject, context.frameData);
+        // Get shader from material
+        auto shader = renderable.material->GetShader();
+        if (!shader) {
+            continue;
+        }
+
+        // Bind shader and set uniforms
+        Submit(RenderCommands::BindShaderData{ shader });
+        Submit(RenderCommands::SetUniformsData{
+            shader,
+            renderable.transform,
+            context.frameData.viewMatrix,
+            context.frameData.projectionMatrix,
+            context.frameData.cameraPosition
+        });
+
+        // Draw the mesh
+        Submit(RenderCommands::DrawElementsData{
+            renderable.mesh->GetVertexArray()->GetVAOHandle(),
+            renderable.mesh->GetIndexCount(),
+            GL_TRIANGLES
+        });
     }
 }
 
@@ -142,7 +161,10 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
     // Set outline color uniform
     Submit(RenderCommands::SetUniformVec3Data{ m_OutlineShader, "u_OutlineColor", m_OutlineColor });
 
-    // Render each outlined object with scaled transform
+    // Collect all outlined objects first
+    std::vector<const RenderableData*> outlinedPtrs;
+    outlinedPtrs.reserve(m_OutlinedObjects.size());
+
     for (const auto& renderable : context.renderables) {
         // Skip if this object is not in the outlined set
         if (m_OutlinedObjects.count(renderable.objectID) == 0) {
@@ -154,8 +176,14 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
             continue;
         }
 
+        outlinedPtrs.push_back(&renderable);
+    }
+
+    // Render each outlined object with scaled transform
+    // (Must be done individually since each has a unique scaled transform)
+    for (const auto* renderable : outlinedPtrs) {
         // Calculate scaled transform
-        glm::mat4 scaledTransform = glm::scale(renderable.transform, glm::vec3(m_OutlineScale));
+        glm::mat4 scaledTransform = glm::scale(renderable->transform, glm::vec3(m_OutlineScale));
 
         // Set uniforms
         Submit(RenderCommands::SetUniformsData{
@@ -168,8 +196,8 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
 
         // Draw the mesh
         Submit(RenderCommands::DrawElementsData{
-            renderable.mesh->GetVertexArray()->GetVAOHandle(),
-            renderable.mesh->GetIndexCount(),
+            renderable->mesh->GetVertexArray()->GetVAOHandle(),
+            renderable->mesh->GetIndexCount(),
             GL_TRIANGLES
         });
     }
