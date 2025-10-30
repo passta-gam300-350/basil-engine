@@ -112,9 +112,6 @@ bool GraphicsTestDriver::Initialize()
     // Get references to systems owned by SceneRenderer
     m_ResourceManager = m_SceneRenderer->GetResourceManager();
 
-    // Setup resize rendering - allows scene to render during window resize
-    m_SceneRenderer->SetupResizeRendering(m_Window.get());
-
     // Enable HDR tone mapping pipeline (matches ogldev tutorial 63)
     m_SceneRenderer->ToggleHDRPipeline(true);
     m_HDREnabled = true;  // Update state variable
@@ -136,8 +133,8 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    SetupTinboxDemo();       // Tinbox grid - outline/PBR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupTinboxDemo();       // Tinbox grid - outline/PBR test
     
     
 
@@ -440,7 +437,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/tinbox/tin_box.obj");
+            "assets/models/chair/chair.obj");
 
         if (!tinBoxModel) {
             spdlog::error("Failed to load chair model!");
@@ -616,7 +613,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
         }
     }
     spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
@@ -1254,15 +1251,20 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
 
     // Enable picking temporarily
     m_SceneRenderer->EnablePicking(true);
+    //spdlog::info("Picking enabled, rendering picking frame...");
 
-    // Create picking query (QueryObjectPicking will execute the picking pass internally)
+    // Render a picking frame (this will execute the picking pass)
+    m_SceneRenderer->Render();
+    //spdlog::info("Picking frame rendered, querying result...");
+
+    // Create picking query
     MousePickingQuery query;
     query.screenX = static_cast<int>(mouseX);
     query.screenY = static_cast<int>(mouseY);
     query.viewportWidth = windowWidth;
     query.viewportHeight = windowHeight;
 
-    // Query the picking result (this will execute the picking pass and read the result)
+    // Query the picking result
     PickingResult result = m_SceneRenderer->QueryObjectPicking(query);
     //spdlog::info("Query completed, object ID: {}, hasHit: {}", result.objectID, result.hasHit);
 
@@ -1293,8 +1295,8 @@ void GraphicsTestDriver::HandleObjectPicking(double mouseX, double mouseY)
             for (const auto& renderable : m_SceneObjects) {
                 if (renderable.modelInstanceID == clickedModelInstanceID) {
                     m_SceneRenderer->AddOutlinedObject(renderable.objectID);
-                    /*spdlog::info("  -> Outlining mesh with objectID: {} (modelInstanceID: {})",
-                               renderable.objectID, renderable.modelInstanceID);*/
+                    spdlog::info("  -> Outlining mesh with objectID: {} (modelInstanceID: {})",
+                               renderable.objectID, renderable.modelInstanceID);
                 }
             }
         }
