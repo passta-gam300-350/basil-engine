@@ -71,19 +71,19 @@ void SceneRenderer::InitializeDefaultPipeline()
     // Shadow pass will need shader to be set after creation by the application
     auto shadowPass = std::make_shared<DirectionalShadowMappingPass>();
     mainPipeline->AddPass(shadowPass);
-    //mainPipeline->EnablePass("DirectionalShadowPass", false);
+    mainPipeline->EnablePass("DirectionalShadowPass", false);
 
     // 2. Add point shadow mapping pass (geometry shader method)
     // Point shadow pass will need shader to be set after creation by the application
     auto pointShadowPass = std::make_shared<PointShadowMappingPass>();
     mainPipeline->AddPass(pointShadowPass);
-    //mainPipeline->EnablePass("PointShadowPass", false);
+    mainPipeline->EnablePass("PointShadowPass", false);
 
     // 3. Add spot shadow mapping pass (perspective projection, reuses directional shader)
     // Spot shadow pass will need shader to be set after creation by the application
     auto spotShadowPass = std::make_shared<SpotShadowMappingPass>();
     mainPipeline->AddPass(spotShadowPass);
-    //mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
+    mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
 
     // 4. Add main rendering pass (HDR output - RGB16F with 4x MSAA)
     auto mainPass = std::make_shared<MainRenderingPass>();
@@ -97,7 +97,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 5. Add outline rendering pass (stencil-based outlines) - BEFORE HDR resolve!
     auto outlinePass = std::make_shared<OutlineRenderPass>();
     mainPipeline->AddPass(outlinePass);
-    //mainPipeline->EnablePass("OutlinePass", false);  // Enabled by default
+    mainPipeline->EnablePass("OutlinePass", false);  // Enabled by default
 
     // 6. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
     auto hdrResolvePass = std::make_shared<HDRResolvePass>();
@@ -112,7 +112,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 8. Add physically based bloom pass (multi-scale blur with Karis average)
     auto bloomPass = std::make_shared<BloomRenderPass>();
     mainPipeline->AddPass(bloomPass);
-    //spdlog::info("SceneRenderer: Added BloomRenderPass to pipeline");
+    spdlog::info("SceneRenderer: Added BloomRenderPass to pipeline");
 
     // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
@@ -127,7 +127,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 11. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
-    //mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
+    mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
     // 12. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
@@ -541,26 +541,6 @@ void SceneRenderer::ToggleAABBVisualization()
         else
         {
             spdlog::warn("SceneRenderer: Debug pass not found - cannot toggle AABB visualization");
-        }
-    }
-}
-
-void SceneRenderer::SetAABBVisualization(bool show)
-{
-    assert(m_Pipeline && "Pipeline must be initialized");
-
-    if (m_Pipeline)
-    {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass)
-        {
-            debugPass->SetShowAABBs(show);
-            spdlog::info("SceneRenderer: AABB wireframe visualization set to {}",
-                         show ? "ENABLED" : "DISABLED");
-        }
-        else
-        {
-            spdlog::warn("SceneRenderer: Debug pass not found - cannot set AABB visualization");
         }
     }
 }

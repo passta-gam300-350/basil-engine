@@ -116,7 +116,6 @@ public:
     // Debug rendering facade
     void SetDebugAABBs(const std::vector<DebugAABB>& aabbs);
     void ToggleAABBVisualization();
-    void SetAABBVisualization(bool show);
 
     // Pass control facade
     bool IsPassEnabled(const std::string& passName) const;
