@@ -447,7 +447,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/chair/chair.obj");
+            "assets/models/tinbox/tin_box.obj");
 
         if (!tinBoxModel) {
             spdlog::error("Failed to load chair model!");
@@ -623,7 +623,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
         }
     }
     spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
