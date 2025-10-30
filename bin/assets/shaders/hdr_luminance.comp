@@ -1,0 +1,59 @@
+#version 460 core
+
+// Work group size: 10x10 pixels per tile (100 pixels total)
+// This matches ogldev's implementation
+layout(local_size_x = 10, local_size_y = 10) in;
+
+// ===== Inputs =====
+// Binding 0: HDR texture from main rendering pass
+layout(binding = 0) uniform sampler2D u_HdrTexture;
+
+// ===== Outputs =====
+// Binding 1: SSBO to store per-tile luminance
+layout(std430, binding = 1) buffer LuminanceResult {
+    float tileLuminance[];  // One float per work group (tile)
+};
+
+// ===== Shared Memory =====
+// Each work group has 100 threads (10x10), share memory for parallel reduction
+shared float localLum[100];
+
+void main()
+{
+    // Get pixel coordinates in texture
+    ivec2 texCoord = ivec2(gl_GlobalInvocationID.xy);
+
+    // Sample HDR color value
+    vec3 hdrColor = texelFetch(u_HdrTexture, texCoord, 0).rgb;
+
+    // Calculate luminance (perceived brightness)
+    // ITU-R BT.709 standard weights for RGB to luminance
+    float luminance = dot(hdrColor, vec3(0.2126, 0.7152, 0.0722));
+
+    // Store LOG of luminance for geometric mean calculation
+    // Geometric mean is perceptually more accurate than arithmetic mean
+    // Use max() to ensure we NEVER take log of negative or zero (which causes NaN)
+    // Clamp to minimum of 0.0001 before taking log
+    float safeLuminance = max(luminance, 0.0001);
+    localLum[gl_LocalInvocationIndex] = log(safeLuminance);
+
+    // Synchronize all threads in this work group
+    barrier();
+
+    // Only thread 0 performs the reduction
+    if (gl_LocalInvocationIndex == 0) {
+        float sum = 0.0;
+
+        uint workGroupSize = gl_WorkGroupSize.x * gl_WorkGroupSize.y;  // 100
+
+        // Sum all log luminances in this tile
+        for (uint i = 0; i < workGroupSize; ++i) {
+            sum += localLum[i];
+        }
+
+        // Store sum for this tile in SSBO
+        // Tile index = (workGroupY * numGroupsX) + workGroupX
+        uint tileIndex = gl_WorkGroupID.y * gl_NumWorkGroups.x + gl_WorkGroupID.x;
+        tileLuminance[tileIndex] = sum;
+    }
+}
