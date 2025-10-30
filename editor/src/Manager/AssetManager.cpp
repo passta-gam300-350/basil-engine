@@ -261,9 +261,6 @@ void AssetManager::FileIndexingWorkerLoop() {
 			FILE_NOTIFY_INFORMATION* fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(buffer);
 			do {
 				std::wstring filename(fni->FileName, fni->FileNameLength / sizeof(WCHAR));
-				std::wcout << L"[RAW EVENT] " << (fni->Action == FILE_ACTION_ADDED ? L"ADDED" :
-					fni->Action == FILE_ACTION_MODIFIED ? L"MODIFIED" :
-					L"OTHER") << L": " << filename << L"\n";
 				std::string nfile{ normalizePath(GetRootPath() + "/" + normalizePath(wstring_to_string(filename))) };
 
 				// Update last notification time
