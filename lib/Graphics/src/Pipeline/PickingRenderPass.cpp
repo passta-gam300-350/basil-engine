@@ -32,11 +32,8 @@ void PickingRenderPass::Execute(RenderContext& context)
     // Update framebuffer size to match main framebuffer
     if (context.frameData.mainColorBuffer) {
         const auto& mainSpec = context.frameData.mainColorBuffer->GetSpecification();
-        auto pickingSpec = m_Framebuffer->GetSpecification();
-        if (pickingSpec.Width != mainSpec.Width ||
-            pickingSpec.Height != mainSpec.Height) {
-            spdlog::info("PickingRenderPass: Resizing picking buffer from {}x{} to {}x{} (following main buffer)",
-                         pickingSpec.Width, pickingSpec.Height, mainSpec.Width, mainSpec.Height);
+        if (m_Framebuffer->GetSpecification().Width != mainSpec.Width ||
+            m_Framebuffer->GetSpecification().Height != mainSpec.Height) {
             m_Framebuffer->Resize(mainSpec.Width, mainSpec.Height);
             SetViewport(Viewport(0, 0, mainSpec.Width, mainSpec.Height));
         }
@@ -139,29 +136,15 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
         return result;
     }
 
-    // Ensure picking buffer matches main buffer size before querying
-    // This is critical because picking may be queried before Execute() runs
-    if (context.frameData.mainColorBuffer) {
-        const auto& mainSpec = context.frameData.mainColorBuffer->GetSpecification();
-        auto pickingSpec = m_Framebuffer->GetSpecification();
-        if (pickingSpec.Width != mainSpec.Width || pickingSpec.Height != mainSpec.Height) {
-            spdlog::info("QueryPicking: Resizing buffer from {}x{} to {}x{} before query",
-                         pickingSpec.Width, pickingSpec.Height, mainSpec.Width, mainSpec.Height);
-            m_Framebuffer->Resize(mainSpec.Width, mainSpec.Height);
-            SetViewport(Viewport(0, 0, mainSpec.Width, mainSpec.Height));
-        }
-    }
-
     // Convert screen coordinates to framebuffer coordinates
     int fbX, fbY;
     ScreenToFramebuffer(query.screenX, query.screenY,
                        query.viewportWidth, query.viewportHeight,
                        fbX, fbY);
 
-    auto fbSpec = m_Framebuffer->GetSpecification();
-    spdlog::info("QueryPicking - Screen({}, {}) in Viewport({}x{}) -> Framebuffer({}, {}) [FB Size: {}x{}]",
-                query.screenX, query.screenY, query.viewportWidth, query.viewportHeight,
-                fbX, fbY, fbSpec.Width, fbSpec.Height);
+    /*spdlog::info("QueryPicking - Screen({}, {}) -> Framebuffer({}, {}) [Viewport: {}x{}]",
+                query.screenX, query.screenY, fbX, fbY,
+                query.viewportWidth, query.viewportHeight);*/
 
     // Bind the picking framebuffer for reading
     m_Framebuffer->Bind();
@@ -175,15 +158,14 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
     uint8_t pixel[4];
     glReadPixels(fbX, fbY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
 
-    spdlog::info("QueryPicking - Read pixel RGBA at ({}, {}): ({}, {}, {}, {})",
-                 fbX, fbY, pixel[0], pixel[1], pixel[2], pixel[3]);
+    //spdlog::info("QueryPicking - Read pixel RGBA: ({}, {}, {}, {})", pixel[0], pixel[1], pixel[2], pixel[3]);
 
     // Convert color back to object ID (match shader bit layout)
     objectID = (static_cast<uint32_t>(pixel[0]) << 16) |  // RED → high bits (16-23)
                (static_cast<uint32_t>(pixel[1]) << 8) |   // GREEN → mid bits (8-15)
                static_cast<uint32_t>(pixel[2]);
 
-    spdlog::info("QueryPicking - Converted to object ID: {}", objectID);
+    //spdlog::info("QueryPicking - Converted to object ID: {}", objectID);
 
     // Read depth value for world position calculation
     float depth;

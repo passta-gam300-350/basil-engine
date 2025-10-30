@@ -58,10 +58,6 @@ public:
         return GetFramebuffer() ? GetFramebuffer()->GetColorAttachmentRendererID(0) : 0;
     }
 
-    // Viewport size control (for editor mode)
-    void SetTargetViewportSize(int width, int height);
-    void UseWindowSize(); // Revert to using GLFW window size
-
 private:
     // Update framebuffer to match current window size
     void UpdateFramebufferSize();
@@ -74,10 +70,5 @@ private:
     std::shared_ptr<Shader> m_SkyboxShader;
     std::shared_ptr<Mesh> m_SkyboxMesh;
     bool m_SkyboxEnabled = false;
-
-    // Viewport size override (for rendering to editor viewport instead of full window)
-    bool m_UseTargetViewport = false;
-    int m_TargetViewportWidth = 0;
-    int m_TargetViewportHeight = 0;
 
 };

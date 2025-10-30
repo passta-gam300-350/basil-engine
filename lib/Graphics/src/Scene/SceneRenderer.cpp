@@ -157,28 +157,19 @@ void SceneRenderer::Render()
     assert(m_TextureSlotManager && "TextureSlotManager must be initialized before rendering");
 
     // Update viewport dimensions in frame data
-    int width, height;
-    if (m_UseEditorViewport) {
-        // Use editor-specified viewport size (ImGui viewport)
-        width = m_EditorViewportWidth;
-        height = m_EditorViewportHeight;
-    } else {
-        // Use full window framebuffer size (default behavior)
-        GLFWwindow* currentWindow = glfwGetCurrentContext();
-        if (currentWindow) {
-            glfwGetFramebufferSize(currentWindow, &width, &height);
-        } else {
-            return; // No context available
+    GLFWwindow* currentWindow = glfwGetCurrentContext();
+    if (currentWindow) {
+        int width, height;
+        glfwGetFramebufferSize(currentWindow, &width, &height);
+
+        // Skip rendering if window is minimized (framebuffer size = 0)
+        if (width == 0 || height == 0) {
+            return;
         }
-    }
 
-    // Skip rendering if viewport is minimized
-    if (width == 0 || height == 0) {
-        return;
+        m_FrameData.viewportWidth = static_cast<uint32_t>(width);
+        m_FrameData.viewportHeight = static_cast<uint32_t>(height);
     }
-
-    m_FrameData.viewportWidth = static_cast<uint32_t>(width);
-    m_FrameData.viewportHeight = static_cast<uint32_t>(height);
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
@@ -333,11 +324,6 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
             RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager);
-
-            // CRITICAL: Execute the picking pass to render object IDs before querying
-            // This ensures the picking framebuffer contains up-to-date rendering
-            spdlog::info("QueryObjectPicking: Executing picking pass before query");
-            pickingPass->Execute(context);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -577,38 +563,6 @@ void SceneRenderer::SetAABBVisualization(bool show)
             spdlog::warn("SceneRenderer: Debug pass not found - cannot set AABB visualization");
         }
     }
-}
-
-void SceneRenderer::SetEditorViewportSize(int width, int height)
-{
-    m_UseEditorViewport = true;
-    m_EditorViewportWidth = width;
-    m_EditorViewportHeight = height;
-
-    // Notify MainRenderingPass to use this viewport size for framebuffer
-    if (m_Pipeline) {
-        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
-        if (mainPass) {
-            mainPass->SetTargetViewportSize(width, height);
-        }
-    }
-
-    spdlog::info("SceneRenderer: Editor viewport size set to {}x{}", width, height);
-}
-
-void SceneRenderer::UseWindowFramebufferSize()
-{
-    m_UseEditorViewport = false;
-
-    // Notify MainRenderingPass to revert to window size
-    if (m_Pipeline) {
-        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
-        if (mainPass) {
-            mainPass->UseWindowSize();
-        }
-    }
-
-    spdlog::info("SceneRenderer: Reverting to window framebuffer size");
 }
 
 bool SceneRenderer::IsPassEnabled(const std::string& passName) const

@@ -3,22 +3,9 @@
 
 void EngineContainerService::EngineContainer::engine_service() {
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
-	spdlog::info("EngineService: Initializing engine...");
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
 	Engine::SetState(Engine::Info::State::Wait);
-	spdlog::info("EngineService: Engine initialized, state set to Wait");
-
 	while (!Engine::ShouldClose()) {
-		// Wait for state change
-		auto currentState = Engine::GetState();
-		if (currentState == Engine::Info::State::Wait) {
-			// Engine is paused, wait for state change
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			continue;
-		}
-
-		// Engine is running
-		spdlog::info("EngineService: Entering render loop (state: {})", static_cast<int>(currentState));
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine
 			engine_snapshot_callback();
 			engine_process_render_commands();
@@ -30,9 +17,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 			m_container_is_presentable.acquire();
 			engine_snapshot_writeback();
 		}
-		spdlog::info("EngineService: Exited render loop");
 	}
-	spdlog::info("EngineService: Engine shutting down");
 	Engine::Exit();
 	m_container_is_closed.release();
 }
@@ -49,17 +34,26 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 		m_entities_snapshot[i] = e.get_uuid();
 		m_names_snapshot[i++] = e.name();
 	}
-
-	// Snapshot frame data for editor viewport (uses Engine facade)
-	// This must happen every frame regardless of entity inspection
-	Engine::GetEditorFrameTexture(m_frameDataSnapshot);
-
-	// Early return if no entity is being inspected
 	if (m_snapshot_entity_handle == ~0ull) {
 		return;
 	}
 	ecs::entity inspected_entity{ m_snapshot_entity_handle };
 	m_component_list_snapshot = inspected_entity.get_reflectible_components();
+
+	// Snapshot frame data for editor viewport (thread-safe texture ID access)
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+	if (sceneRenderer) {
+		auto& frameData = sceneRenderer->GetFrameData();
+		if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
+			m_frameDataSnapshot.editorTextureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
+			m_frameDataSnapshot.isValid = true;
+			m_frameDataSnapshot.deltaTime = frameData.deltaTime;
+		} else {
+			m_frameDataSnapshot.isValid = false;
+		}
+	} else {
+		m_frameDataSnapshot.isValid = false;
+	}
 }
 
 //can provide further abstractions in the future
@@ -223,15 +217,29 @@ void EngineContainerService::EngineContainer::engine_process_picking() {
 		return;
 	}
 
-	// Perform picking on engine thread using Engine facade (encapsulates Graphics library)
-	PickingResultData result;
-	Engine::ProcessObjectPicking(
-		m_pickingRequest.screenX,
-		m_pickingRequest.screenY,
-		m_pickingRequest.viewportWidth,
-		m_pickingRequest.viewportHeight,
-		result
-	);
+	// Perform picking on engine thread (correct OpenGL context)
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+	if (!sceneRenderer) {
+		m_pickingRequest.isComplete = true;
+		m_pickingRequest.hasHit = false;
+		return;
+	}
+
+	// Enable picking mode
+	sceneRenderer->EnablePicking(true);
+
+	// Create query from request parameters
+	PickingQuery query;
+	query.screenX = m_pickingRequest.screenX;
+	query.screenY = m_pickingRequest.screenY;
+	query.viewportWidth = m_pickingRequest.viewportWidth;
+	query.viewportHeight = m_pickingRequest.viewportHeight;
+
+	// Execute picking
+	PickingResult result = sceneRenderer->QueryObjectPicking(query);
+
+	// Disable picking mode
+	sceneRenderer->EnablePicking(false);
 
 	// Store results in shared state
 	m_pickingRequest.hasHit = result.hasHit;
@@ -241,7 +249,7 @@ void EngineContainerService::EngineContainer::engine_process_picking() {
 	m_pickingRequest.isComplete = true;
 }
 
-FrameTextureData EngineContainerService::EngineContainer::get_frame_data_snapshot() {
+EngineContainerService::FrameDataSnapshot EngineContainerService::EngineContainer::get_frame_data_snapshot() {
 	std::lock_guard<std::mutex> lg{m_mtx};
 	return m_frameDataSnapshot;
 }
@@ -264,30 +272,6 @@ void EngineContainerService::EngineContainer::submit_set_debug_visualization(boo
 	m_renderCommandQueue.push(cmd);
 }
 
-void EngineContainerService::EngineContainer::submit_set_selected_entity(uint32_t entityID) {
-	std::lock_guard<std::mutex> lg{m_mtx};
-	RenderCommand cmd;
-	cmd.type = RenderCommandType::SetSelectedEntity;
-	cmd.data.selectedEntity.entityID = entityID;
-	m_renderCommandQueue.push(cmd);
-}
-
-void EngineContainerService::EngineContainer::submit_clear_selected_entity() {
-	std::lock_guard<std::mutex> lg{m_mtx};
-	RenderCommand cmd;
-	cmd.type = RenderCommandType::ClearSelectedEntity;
-	m_renderCommandQueue.push(cmd);
-}
-
-void EngineContainerService::EngineContainer::submit_set_editor_viewport_size(int width, int height) {
-	std::lock_guard<std::mutex> lg{m_mtx};
-	RenderCommand cmd;
-	cmd.type = RenderCommandType::SetEditorViewportSize;
-	cmd.data.viewportSize.width = width;
-	cmd.data.viewportSize.height = height;
-	m_renderCommandQueue.push(cmd);
-}
-
 void EngineContainerService::EngineContainer::engine_process_render_commands() {
 	std::lock_guard<std::mutex> lg{m_mtx};
 
@@ -295,30 +279,20 @@ void EngineContainerService::EngineContainer::engine_process_render_commands() {
 		RenderCommand cmd = m_renderCommandQueue.front();
 		m_renderCommandQueue.pop();
 
-		// Use Engine facade methods (no direct Graphics library access)
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (!sceneRenderer) continue;
+
 		switch (cmd.type) {
 		case RenderCommandType::SetAmbientLight:
-			Engine::SetAmbientLightColor(
+			sceneRenderer->SetAmbientLight(glm::vec3(
 				cmd.data.ambientLight.r,
 				cmd.data.ambientLight.g,
 				cmd.data.ambientLight.b
-			);
+			));
 			break;
 
 		case RenderCommandType::SetDebugVisualization:
-			Engine::SetAABBVisualization(cmd.data.debugVis.showAABBs);
-			break;
-
-		case RenderCommandType::SetSelectedEntity:
-			Engine::SetSelectedEntity(cmd.data.selectedEntity.entityID);
-			break;
-
-		case RenderCommandType::ClearSelectedEntity:
-			Engine::ClearSelectedEntity();
-			break;
-
-		case RenderCommandType::SetEditorViewportSize:
-			Engine::SetEditorViewportSize(cmd.data.viewportSize.width, cmd.data.viewportSize.height);
+			sceneRenderer->SetAABBVisualization(cmd.data.debugVis.showAABBs);
 			break;
 		}
 	}

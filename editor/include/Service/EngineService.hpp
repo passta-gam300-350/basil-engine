@@ -25,19 +25,22 @@ public:
 		bool isActive{false};    // Request is pending
 		bool isComplete{false};  // Result is ready
 
-		// Output results (uses Engine's PickingResultData internally)
+		// Output results
 		bool hasHit{false};
 		uint32_t objectID{0};
 		glm::vec3 worldPosition{0.0f};
 		float depth{0.0f};
 	};
 
+	struct FrameDataSnapshot {
+		uint32_t editorTextureID{0};
+		bool isValid{false};
+		float deltaTime{0.0f};
+	};
+
 	enum class RenderCommandType {
 		SetAmbientLight,
-		SetDebugVisualization,
-		SetSelectedEntity,
-		ClearSelectedEntity,
-		SetEditorViewportSize
+		SetDebugVisualization
 	};
 
 	struct RenderCommand {
@@ -49,12 +52,6 @@ public:
 			struct {
 				bool showAABBs;
 			} debugVis;
-			struct {
-				uint32_t entityID;
-			} selectedEntity;
-			struct {
-				int width, height;
-			} viewportSize;
 		} data;
 	};
 
@@ -72,7 +69,7 @@ public:
 		std::binary_semaphore m_container_is_closed{ 0 };
 		std::binary_semaphore m_container_is_presentable{ 0 };
 		PickingRequest m_pickingRequest;
-		FrameTextureData m_frameDataSnapshot;  // Uses Engine's FrameTextureData
+		FrameDataSnapshot m_frameDataSnapshot;
 		std::queue<RenderCommand> m_renderCommandQueue;
 
 	private:
@@ -97,14 +94,11 @@ public:
 		bool get_picking_result(PickingRequest& outResult);
 
 		// Get frame data snapshot (called from editor thread)
-		FrameTextureData get_frame_data_snapshot();
+		FrameDataSnapshot get_frame_data_snapshot();
 
 		// Submit render commands (called from editor thread)
 		void submit_set_ambient_light(float r, float g, float b);
 		void submit_set_debug_visualization(bool showAABBs);
-		void submit_set_selected_entity(uint32_t entityID);
-		void submit_clear_selected_entity();
-		void submit_set_editor_viewport_size(int width, int height);
 	};
 	std::unique_ptr<EngineContainer> m_cont{};
 	void reset();
