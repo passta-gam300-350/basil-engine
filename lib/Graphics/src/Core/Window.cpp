@@ -185,28 +185,6 @@ void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 	{
 		windowInstance->m_Width = width;
 		windowInstance->m_Height = height;
-
-		// Skip rendering if window is minimized
-		if (width == 0 || height == 0) {
-			return;
-		}
-
-		// If a render callback is registered, render the full scene during resize
-		// Otherwise, just clear to prevent black flash
-		if (windowInstance->m_ResizeRenderCallback)
-		{
-			// Render the actual scene during resize (smooth resize experience)
-			windowInstance->m_ResizeRenderCallback();
-		}
-		else
-		{
-			// Fallback: Clear and present a blank framebuffer
-			// This prevents black flash but doesn't show the scene
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Bind default framebuffer
-			glViewport(0, 0, width, height);
-			glClearColor(0.7f, 0.7f, 0.7f, 1.0f);  // Gray (matches MainRenderingPass clear color)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-			glfwSwapBuffers(window);  // Show cleared buffer immediately
-		}
+		glViewport(0, 0, width, height);
 	}
 }

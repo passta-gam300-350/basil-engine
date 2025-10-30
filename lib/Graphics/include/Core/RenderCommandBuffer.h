@@ -147,14 +147,6 @@ namespace RenderCommands {
         bool depthWrite = true;        // Enable/disable depth buffer writes
     };
 
-    struct SetColorMaskData
-    {
-        bool red;
-        bool green;
-        bool blue;
-        bool alpha;
-    };
-
     struct SetFaceCullingData
     {
         bool enable;
@@ -313,7 +305,6 @@ using VariantRenderCommand = std::variant<
     RenderCommands::SetUniformVec2Data,
     RenderCommands::SetLineWidthData,
     RenderCommands::SetDepthTestData,
-    RenderCommands::SetColorMaskData,
     RenderCommands::SetFaceCullingData,
     RenderCommands::SetObjectIDData,
     RenderCommands::ReadPixelData,
@@ -380,7 +371,6 @@ private:
     void ExecuteCommand(const RenderCommands::SetViewportData& cmd);
     void ExecuteCommand(const RenderCommands::SetLineWidthData& cmd);
     void ExecuteCommand(const RenderCommands::SetDepthTestData &cmd);
-    void ExecuteCommand(const RenderCommands::SetColorMaskData &cmd);
     void ExecuteCommand(const RenderCommands::SetFaceCullingData &cmd);
     void ExecuteCommand(const RenderCommands::SetObjectIDData& cmd);
     void ExecuteCommand(const RenderCommands::ReadPixelData& cmd);

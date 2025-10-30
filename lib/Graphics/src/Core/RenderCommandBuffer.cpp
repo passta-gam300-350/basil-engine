@@ -298,14 +298,6 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetDepthTestData 
     }
 }
 
-void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetColorMaskData &cmd)
-{
-    glColorMask(cmd.red ? GL_TRUE : GL_FALSE,
-                cmd.green ? GL_TRUE : GL_FALSE,
-                cmd.blue ? GL_TRUE : GL_FALSE,
-                cmd.alpha ? GL_TRUE : GL_FALSE);
-}
-
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetFaceCullingData &cmd)
 {
     if (cmd.enable)

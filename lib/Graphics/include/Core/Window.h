@@ -19,7 +19,6 @@ Technology is prohibited.
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <string>
-#include <functional>
 
 class Window
 {
@@ -48,17 +47,10 @@ public:
 
 	bool IsInitialized() const { return m_Initialized; }
 
-	// Resize render callback - allows rendering the scene during window resize
-	// instead of showing a blank clear color
-	void SetResizeRenderCallback(std::function<void()> callback) { m_ResizeRenderCallback = callback; }
-
 private:
 	GLFWwindow* m_Window;
 	uint32_t m_Width, m_Height;
 	bool m_Initialized = false;
-
-	// Callback to render scene during window resize (optional)
-	std::function<void()> m_ResizeRenderCallback;
 
 	static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 };

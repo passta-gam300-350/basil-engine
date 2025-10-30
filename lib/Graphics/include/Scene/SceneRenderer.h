@@ -52,10 +52,6 @@ public:
     // High-level scene rendering coordination
     void Render();
 
-    // Setup resize rendering - registers Render() with the window's resize callback
-    // This allows the scene to be rendered during window resize instead of showing a blank screen
-    void SetupResizeRendering(class Window* window);
-
     // Pipeline access
     RenderPipeline* GetPipeline() const { return m_Pipeline.get(); }
 
