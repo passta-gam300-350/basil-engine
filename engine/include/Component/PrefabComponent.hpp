@@ -2,7 +2,7 @@
 #define PREFABCOMPONENT_HPP
 
 #include "Component.hpp"
-#include "serialisation/guid.h"
+#include "uuid/uuid.hpp"
 #include <vector>
 #include <string>
 #include <variant>
@@ -68,7 +68,7 @@ class PrefabComponent : public Component
 {
 public:
     // Reference to the prefab resource
-    Resource::Guid m_PrefabGuid;
+    UUID<128> m_PrefabGuid;
 
     // Components added to this instance (not in prefab) - stored as reflection type hashes
     std::vector<std::uint32_t> m_AddedComponents;
@@ -87,9 +87,9 @@ public:
 
     /**
      * @brief Construct a prefab component with a specific prefab reference
-     * @param prefabGuid Guid of the source prefab
+     * @param prefabGuid UUID of the source prefab
      */
-    explicit PrefabComponent(const Resource::Guid& prefabGuid)
+    explicit PrefabComponent(const UUID<128>& prefabGuid)
         : m_PrefabGuid(prefabGuid)
     {}
 
@@ -233,11 +233,11 @@ public:
 
     /**
      * @brief Get the prefab GUID as a string
-     * @return String representation of the prefab Guid
+     * @return String representation of the prefab UUID
      */
     std::string GetPrefabGuidString() const
     {
-        return m_PrefabGuid.to_hex();
+        return const_cast<UUID<128>&>(m_PrefabGuid).ToString();
     }
 };
 

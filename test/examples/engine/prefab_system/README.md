@@ -1,136 +1,69 @@
-# Prefab System Examples
+# Prefab System Example
 
-This directory contains **self-contained, minimal tests** for the prefab system that work **without requiring full engine compilation**.
+This example demonstrates the basic functionality of the GAM300 prefab system.
 
-## Philosophy: Aligned with minimal_test Pattern
+## What This Example Tests
 
-Both tests follow the same philosophy as `minimal_test.cpp`:
-- **Self-contained**: No full engine dependencies
-- **Focused**: Tests one layer at a time
-- **Works independently**: Can compile and run without building the entire engine
-- **Clear output**: Shows exactly what's being tested and what passed
+1. ✓ **Creating entities** with TransformComponent and NameComponent
+2. ✓ **Creating prefabs** from entity hierarchies via `CreatePrefabFromEntity()`
+3. ✓ **Saving prefabs** to disk as YAML files
+4. ✓ **Loading prefabs** from disk with UUID parsing
+5. ✓ **Instantiating** multiple prefab instances at different positions
+6. ✓ **Property overrides** (modifying instance-specific values)
+7. ✓ **Querying instances** via `GetAllInstances()`, `IsInstanceOf()`, `IsPrefabInstance()`
 
-## What's Here
+## Prerequisites
 
+Before running this example, you need to:
+
+### 1. Register Components with Reflection System
+
+The prefab system uses reflection to serialize/deserialize components. You need to register your components first. Add this to your reflection registry initialization:
+
+```cpp
+// In your reflection registry setup code:
+ReflectionRegistry::RegisterType<TransformComponent>()
+    .RegisterField("m_Translation", &TransformComponent::m_Translation)
+    .RegisterField("m_Scale", &TransformComponent::m_Scale)
+    .RegisterField("m_Rotation", &TransformComponent::m_Rotation)
+    .RegisterField("isDirty", &TransformComponent::isDirty);
+
+ReflectionRegistry::RegisterType<NameComponent>()
+    .RegisterField("name", &NameComponent::name);
 ```
-test/examples/engine/prefab_system/
-├── minimal_test.cpp          # Tests UUID core functionality (Phase 1)
-├── main.cpp                  # Tests PrefabData structures and YAML (Phase 2)
-├── sample_player.prefab      # Example of expected YAML format
-├── CMakeLists.txt            # Build configuration
-├── README.md                 # This file
-└── QUICK_START.md           # Quick start guide
-```
 
-## Test 1: minimal_test.cpp (UUID Foundation)
+### 2. Ensure Dependencies Are Available
 
-### What It Tests
+- EnTT (for ECS and reflection)
+- GLM (for math types)
+- yaml-cpp (for YAML serialization)
+- UUID library (for prefab identification)
 
-✓ UUID generation
-✓ UUID ToString()
-✓ UUID FromString() parsing
-✓ UUID round-trip (generate → string → parse → compare)
-✓ UUID equality comparison
-✓ Uppercase/lowercase parsing
-✓ Parsing with/without dashes
+### 3. Implement SceneGraph::SetParent (if using hierarchies)
 
-### Dependencies
+The prefab system calls `SceneGraph::SetParent()` when creating child entities. Make sure this is implemented in your scene graph system.
 
-**ZERO dependencies** - Only includes `uuid/uuid.hpp`
+## Building
 
-### How to Build
+### Option 1: Using CMake
 
 ```bash
 cd test/examples/engine/prefab_system
-mkdir build && cd build
+mkdir build
+cd build
 cmake ..
-cmake --build . --target prefab_minimal_test
+cmake --build .
 ```
 
-### How to Run
+### Option 2: Add to Main Project
 
-```bash
-./prefab_minimal_test
+Add this directory to your main CMakeLists.txt:
+
+```cmake
+add_subdirectory(test/examples/engine/prefab_system)
 ```
 
-### Expected Output
-
-```
-==========================================
-   UUID System - Minimal Test Suite
-   (Phase 2: UUID Parsing)
-==========================================
-
-=== Testing UUID Generation ===
-UUID 1: 550e8400-e29b-41d4-a716-446655440000
-UUID 2: 7c9e6679-7425-40de-944b-e07fc1f90ae7
-[PASS] UUIDs are unique!
-
-=== Testing UUID ToString() ===
-Generated UUID: a3bb189e-8bf9-3888-9912-ace4e6543002
-[PASS] UUID format is correct (8-4-4-4-12)!
-
-=== Testing UUID FromString() ===
-Parsing: 550e8400-e29b-41d4-a716-446655440000
-Result:  550e8400-e29b-41d4-a716-446655440000
-[PASS] UUID parsing successful!
-
-... (more tests)
-
-==========================================
-  [PASS] All Tests Passed!
-==========================================
-
-What this proves:
-[+] UUID generation works
-[+] UUID ToString() produces correct format
-[+] UUID FromString() parses correctly (Phase 2)
-[+] Round-trip (generate -> string -> parse) preserves data
-[+] UUID equality comparison works
-[+] Both uppercase and lowercase parsing work
-[+] Parsing works with or without dashes
-
-This is the foundation for prefab UUID persistence.
-Prefabs can now be saved with UUIDs and loaded back!
-```
-
-## Test 2: main.cpp (PrefabData & YAML Serialization)
-
-### What It Tests
-
-✓ Creating PrefabData structures
-✓ Adding SerializedComponent to PrefabEntity
-✓ Property storage and retrieval
-✓ Writing prefab data to YAML files
-✓ Reading prefab data from YAML files
-✓ Round-trip serialization (create → save → load → compare)
-✓ Entity hierarchy construction (parent-child relationships)
-
-### Dependencies
-
-**Minimal dependencies** - Only requires:
-- `uuid/uuid.hpp` (UUID support)
-- `Prefab/PrefabData.hpp` (data structures - header only)
-- `yaml-cpp` (YAML serialization)
-- `glm` (math types)
-
-**Does NOT require:**
-- ❌ Compiled engine library
-- ❌ ECS world
-- ❌ Reflection system
-- ❌ Component implementations
-- ❌ PrefabSystem (the full system)
-
-### How to Build
-
-```bash
-cd test/examples/engine/prefab_system
-mkdir build && cd build
-cmake ..
-cmake --build . --target prefab_example
-```
-
-### How to Run
+## Running
 
 ```bash
 ./prefab_example
@@ -139,267 +72,167 @@ cmake --build . --target prefab_example
 ### Expected Output
 
 ```
-==========================================
-   PrefabData System - Minimal Test
-   (Serialization & Data Structures)
-==========================================
+========== Prefab System Example ==========
 
-This test validates PrefabData structures
-and YAML serialization without requiring
-the full engine compilation.
-
-========== Test 1: PrefabData Creation ==========
-Created prefab with:
+========== Step 1: Create Entity Hierarchy ==========
+Creating player entity with transform and name...
+Player Template:
   Name: Player
-  UUID: a3bb189e-8bf9-3888-9912-ace4e6543002
-  Version: 1
-  Created: 2025-10-29T12:00:00Z
-  Components: 2
-    - TransformComponent (hash: 123456789)
-      Properties: 4
-    - NameComponent (hash: 987654321)
-      Properties: 1
-[PASS] PrefabData creation works!
+  Position: (0, 0, 0)
+  Scale: (1, 1, 1)
 
-========== Test 2: Component Property Access ==========
-TransformComponent properties:
-  isDirty: true
-  m_Rotation: (0, 0, 0)
-  m_Scale: (1, 1, 1)
-  m_Translation: (0, 0, 0)
-[PASS] Component property access works!
+========== Step 2: Create Prefab from Entity ==========
+Creating prefab at: player.prefab
+Prefab created successfully!
+Prefab UUID: 550e8400-e29b-41d4-a716-446655440000
+Removed template entity
 
-========== Test 3: YAML Serialization ==========
-Saving prefab to: test_prefab.prefab
-[PASS] Prefab saved successfully!
-
-========== Test 4: YAML Deserialization ==========
-Loading prefab from: test_prefab.prefab
-Loaded prefab:
-  Name: Player
-  UUID: a3bb189e-8bf9-3888-9912-ace4e6543002
-  Version: 1
-  Created: 2025-10-29T12:00:00Z
-  Components: 2
-    - TransformComponent (hash: 123456789)
-      Properties: 4
-    - NameComponent (hash: 987654321)
-      Properties: 1
-[PASS] Prefab loaded successfully!
-
-========== Test 5: Round-Trip Serialization ==========
-Original UUID: a3bb189e-8bf9-3888-9912-ace4e6543002
-Loaded UUID:   a3bb189e-8bf9-3888-9912-ace4e6543002
-[PASS] Round-trip preserves data!
-
-========== Test 6: Load Sample Prefab ==========
-Loading sample prefab: sample_player.prefab
-Sample prefab loaded:
+========== Step 3: Load Prefab from Disk ==========
+Prefab loaded successfully!
   Name: Player
   UUID: 550e8400-e29b-41d4-a716-446655440000
   Version: 1
-  Created: 2025-10-29T12:00:00Z
   Components: 2
-    - TransformComponent (hash: 123456789)
-      Properties: 4
-    - NameComponent (hash: 987654321)
-      Properties: 1
-[PASS] Sample prefab loaded!
 
-========== Test 7: Entity Hierarchy ==========
-Created hierarchy:
-  Root components: 1
-  Children: 1
-  Child[0] components: 2
-[PASS] Hierarchy serialization works!
+========== Step 4: Instantiate Prefab ==========
+Instantiating 3 player instances...
+All instances created successfully!
 
-==========================================
-  [PASS] All Tests Passed!
-==========================================
+Player 1:
+  Name: Player
+  Position: (0, 0, 0)
+  Scale: (1, 1, 1)
+  [Prefab Instance] GUID: 550e8400-e29b-41d4-a716-446655440000
+  Override count: 0
 
-What this proves:
-[+] PrefabData structures work correctly
-[+] Component serialization works
-[+] Property storage and retrieval work
-[+] YAML serialization/deserialization work
-[+] Round-trip preserves all data
-[+] Entity hierarchies serialize correctly
+Player 2:
+  Name: Player
+  Position: (5, 0, 0)
+  Scale: (1, 1, 1)
+  [Prefab Instance] GUID: 550e8400-e29b-41d4-a716-446655440000
+  Override count: 0
+
+Player 3:
+  Name: Player
+  Position: (10, 0, 0)
+  Scale: (1, 1, 1)
+  [Prefab Instance] GUID: 550e8400-e29b-41d4-a716-446655440000
+  Override count: 0
+
+========== Step 5: Create Property Override ==========
+Modifying Player 2's scale to (2, 2, 2)...
+Modified Player 2:
+  Position: (5, 0, 0)
+  Scale: (2, 2, 2)
+  Override count: 1
+
+========== Step 6: Query Prefab Instances ==========
+Found 3 instances of the Player prefab
+  Instance 1: ✓ Valid
+  Instance 2: ✓ Valid
+  Instance 3: ✓ Valid
+
+========== Step 7: Check Instance Status ==========
+Player 1 is prefab instance: Yes
+Regular entity is prefab instance: No
+
+========== Step 8: Sync Instances ==========
+Note: SyncPrefab would reload from disk and update all instances
+while preserving property overrides.
+
+========== Cleanup ==========
+Prefab system shut down successfully
+
+========== Example Complete ==========
+
+The prefab system is working! ✓
 
 Generated files:
-  - test_prefab.prefab
-  - test_hierarchy.prefab
+  - player.prefab (YAML prefab data)
 
-This is the foundation for the prefab system.
-Next steps:
-1. Implement PrefabSystem::LoadPrefabFromFile() using this YAML code
-2. Implement PrefabSystem::SavePrefabToFile() using this YAML code
-3. Integrate with full engine and ECS for instantiation
+You can inspect the .prefab file to see the serialized format.
 ```
 
 ## Generated Files
 
-After running `prefab_example`, you'll see:
-
-### test_prefab.prefab
+After running, you'll see `player.prefab` in the working directory. It should look like:
 
 ```yaml
 metadata:
-  uuid: a3bb189e-8bf9-3888-9912-ace4e6543002
-  name: Player
+  uuid: "550e8400-e29b-41d4-a716-446655440000"
+  name: "Player"
   version: 1
-  created: 2025-10-29T12:00:00Z
+  created: "2025-10-29T12:00:00Z"
+
 root:
   components:
     - typeHash: 123456789
-      typeName: TransformComponent
+      typeName: "TransformComponent"
       properties:
+        m_Translation: [0.0, 0.0, 0.0]
+        m_Scale: [1.0, 1.0, 1.0]
+        m_Rotation: [0.0, 0.0, 0.0]
         isDirty: true
-        m_Rotation: [0, 0, 0]
-        m_Scale: [1, 1, 1]
-        m_Translation: [0, 0, 0]
     - typeHash: 987654321
-      typeName: NameComponent
+      typeName: "NameComponent"
       properties:
-        name: Player
+        name: "Player"
   children: []
 ```
 
-### test_hierarchy.prefab
-
-```yaml
-metadata:
-  uuid: <generated-uuid>
-  name: PlayerWithWeapon
-  version: 1
-  created: 2025-10-29T12:00:00Z
-root:
-  components:
-    - typeHash: 123456789
-      typeName: TransformComponent
-      properties:
-        m_Translation: [0, 0, 0]
-        m_Scale: [1, 1, 1]
-  children:
-    - components:
-        - typeHash: 123456789
-          typeName: TransformComponent
-          properties:
-            m_Translation: [1, 0, 0]
-            m_Scale: [0.5, 0.5, 0.5]
-        - typeHash: 987654321
-          typeName: NameComponent
-          properties:
-            name: Sword
-      children: []
-```
-
-## What This Proves
-
-### minimal_test Success ✓
-
-**Proves:** The UUID system is working correctly and can:
-- Generate unique UUIDs
-- Convert UUIDs to/from strings
-- Parse various UUID formats (with/without dashes, upper/lowercase)
-- Maintain UUID identity through round-trips
-
-**Foundation for:** Prefab identification and persistence
-
-### prefab_example Success ✓
-
-**Proves:** The PrefabData structures and YAML serialization work correctly:
-- PrefabData can be created programmatically
-- Components can be serialized with their properties
-- YAML serialization preserves all data
-- Hierarchies (parent-child relationships) serialize correctly
-- Round-trip serialization maintains data integrity
-
-**Foundation for:** The full PrefabSystem implementation (saving/loading prefabs)
-
-## Integration Path
-
-These tests are **foundational**. Here's how they fit into the full system:
-
-```
-Phase 1: UUID Foundation
-└─ minimal_test.cpp ✓ (You are here)
-
-Phase 2: PrefabData & Serialization
-└─ main.cpp ✓ (You are here)
-
-Phase 3: PrefabSystem Implementation
-├─ Implement PrefabSystem::LoadPrefabFromFile()
-│  └─ Use YAML code from main.cpp
-├─ Implement PrefabSystem::SavePrefabToFile()
-│  └─ Use YAML code from main.cpp
-└─ Implement PrefabSystem::CreatePrefabFromEntity()
-   └─ Use reflection to extract component data
-
-Phase 4: Full Engine Integration
-├─ InstantiatePrefab() - Create entities from prefab data
-├─ SyncPrefab() - Update instances when prefab changes
-├─ Property overrides - Track instance modifications
-└─ Editor integration - UI for creating/editing prefabs
-```
-
-## Comparison to Original (Broken) Version
-
-### Old main.cpp (BROKEN)
-
-❌ Required full engine compilation
-❌ Required ECS world implementation
-❌ Required reflection system setup
-❌ Required PrefabSystem to be fully implemented
-❌ Had TODOs and commented-out code
-❌ Couldn't compile without entire engine
-❌ Not self-contained
-
-### New main.cpp (WORKING)
-
-✅ Self-contained like minimal_test
-✅ Only requires headers and yaml-cpp
-✅ Works without engine compilation
-✅ Tests the data layer (PrefabData structures)
-✅ No TODOs, fully functional
-✅ Can run immediately
-✅ Provides foundation for PrefabSystem implementation
-
 ## Troubleshooting
 
-### Problem: "YAML::LoadFile failed"
+### Problem: "Reflection type not found"
 
-**Solution:** Make sure you run from the build directory, or that `sample_player.prefab` is in your working directory.
+**Solution**: Make sure you've registered all components with the reflection system before calling `PrefabSystem::Init()`.
 
-### Problem: "UUID methods not found"
+### Problem: "Failed to load prefab from disk"
 
-**Solution:** Ensure you have the Phase 2 UUID implementation with `FromString()`. Check `lib/uuid/include/uuid/uuid.inl` lines 241-287.
+**Solution**:
+1. Check that the .prefab file exists
+2. Verify YAML syntax is correct
+3. Ensure yaml-cpp library is linked
 
-### Problem: "Cannot find PrefabData.hpp"
+### Problem: "Failed to instantiate prefab"
 
-**Solution:** Check that `ENGINE_INCLUDE_DIR` in CMakeLists.txt points to the correct engine include directory.
+**Solution**:
+1. Check that the prefab was loaded successfully
+2. Verify all component types in the prefab are registered with reflection
+3. Check that the ECS world is properly initialized
 
-### Problem: Compilation errors about variant/glm
+### Problem: Compilation errors about missing methods
 
-**Solution:** Ensure you're using C++20 (`target_compile_features(... cxx_std_20)`) and that glm is properly linked.
+**Solution**: Make sure you've implemented:
+- `UUID<128>::FromString()` - Added in Phase 2
+- `UUID<128>::ToString()` - Should already exist
+- Reflection bridge functions in `PrefabSystem.cpp`
 
 ## Next Steps
 
-1. **Run both tests** to verify the foundation works
-2. **Inspect the generated YAML files** to understand the serialization format
-3. **Implement PrefabSystem::LoadPrefabFromFile()** using the YAML code from main.cpp
-4. **Implement PrefabSystem::SavePrefabFromFile()** using the YAML code from main.cpp
-5. **Copy the YAML converter templates** to your PrefabSystem implementation
-6. **Test with the full engine** once PrefabSystem is implemented
-7. **Add reflection integration** for automatic component serialization
+After verifying this basic example works:
 
-## Key Takeaway
+1. **Add child entities**: Test hierarchical prefabs with parent-child relationships
+2. **Test property overrides**: Modify instances and sync them
+3. **Test Apply to Prefab**: Update the prefab from an instance
+4. **Add more components**: Try with MeshRenderer, physics components, etc.
+5. **Write unit tests**: Use this example as a template for automated tests
 
-These tests prove that the **core data layer works**. They give you:
+## Comparison to Unity
 
-1. **Working YAML serialization code** - Copy the `YAML::convert<>` templates to your PrefabSystem
-2. **Confidence in PrefabData** - The structures are correct and work as designed
-3. **Foundation for PrefabSystem** - You now know the load/save logic works
-4. **Fast iteration** - No need to compile the entire engine to test prefabs
-5. **Clear success criteria** - If these tests pass, your foundation is solid
+This example is roughly equivalent to Unity's workflow:
 
-**The hard part (data structures and serialization) is done. Now you can implement the PrefabSystem with confidence!**
+| Unity | GAM300 |
+|-------|--------|
+| Create GameObject in scene | `world.add_entity()` + add components |
+| Drag to Project → Create Prefab | `CreatePrefabFromEntity()` |
+| Drag prefab to scene | `InstantiatePrefab()` |
+| Modify instance in Inspector | Modify components + `MarkPropertyOverridden()` |
+| Apply → "Apply to Prefab" | `ApplyInstanceToPrefab()` |
+| Prefab changes auto-sync | `SyncPrefab()` (manual for now) |
+
+## Known Limitations
+
+- **No nested prefabs**: Prefabs cannot contain other prefabs (matches your requirement)
+- **No prefab variants**: All instances share the same base prefab
+- **Manual syncing**: Unlike Unity's automatic sync, you must call `SyncPrefab()` manually
+- **No undo/redo**: Property overrides can be reverted but there's no undo stack

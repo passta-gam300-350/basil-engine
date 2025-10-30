@@ -1,7 +1,7 @@
 #ifndef PREFABDATA_HPP
 #define PREFABDATA_HPP
 
-#include "serialisation/guid.h"
+#include "uuid/uuid.hpp"
 #include "Component/Component.hpp"
 #include <string>
 #include <vector>
@@ -195,7 +195,7 @@ struct PrefabEntity
 struct PrefabData
 {
     // Metadata
-    Resource::Guid uuid;      ///< Unique identifier for this prefab
+    UUID<128> uuid;           ///< Unique identifier for this prefab
     std::string name;         ///< Human-readable prefab name
     int version = 1;          ///< Prefab format version (for future compatibility)
     std::string createdDate;  ///< ISO 8601 timestamp of creation
@@ -206,21 +206,21 @@ struct PrefabData
     PrefabData() = default;
 
     /**
-     * @brief Create a new prefab with generated Guid
+     * @brief Create a new prefab with generated UUID
      * @param prefabName Name of the prefab
      */
     explicit PrefabData(const std::string& prefabName)
-        : uuid(Resource::Guid::generate())
+        : uuid(UUID<128>::Generate())
         , name(prefabName)
     {}
 
     /**
-     * @brief Get the Guid as a string
-     * @return String representation of the Guid
+     * @brief Get the UUID as a string
+     * @return String representation of the UUID
      */
     std::string GetUuidString() const
     {
-        return uuid.to_hex();
+        return const_cast<UUID<128>&>(uuid).ToString();
     }
 
     /**
@@ -242,7 +242,7 @@ struct PrefabData
 struct PrefabInstanceSnapshot
 {
     ecs::entity entityId;                                    ///< Original entity ID
-    Resource::Guid prefabId;                                 ///< Prefab reference
+    UUID<128> prefabId;                                      ///< Prefab reference
     std::vector<Component::ComponentType> addedComponents;   ///< Added components
     std::vector<Component::ComponentType> deletedComponents; ///< Deleted components
 
