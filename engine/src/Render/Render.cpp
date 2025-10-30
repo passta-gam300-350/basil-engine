@@ -65,11 +65,26 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetShadowShader()) {
 		m_SceneRenderer->SetShadowDepthShader(m_ShaderLibrary->GetShadowShader());
 	}
+	if (m_ShaderLibrary->GetPointShadowShader()) {
+		m_SceneRenderer->SetPointShadowShader(m_ShaderLibrary->GetPointShadowShader());
+	}
 	if (m_ShaderLibrary->GetPickingShader()) {
 		m_SceneRenderer->SetPickingShader(m_ShaderLibrary->GetPickingShader());
 	}
 	if (m_ShaderLibrary->GetPrimitiveShader()) {
 		m_SceneRenderer->SetDebugPrimitiveShader(m_ShaderLibrary->GetPrimitiveShader());
+	}
+	if (m_ShaderLibrary->GetOutlineShader()) {
+		m_SceneRenderer->SetOutlineShader(m_ShaderLibrary->GetOutlineShader());
+	}
+	if (m_ShaderLibrary->GetSkyboxShader()) {
+		m_SceneRenderer->SetSkyboxShader(m_ShaderLibrary->GetSkyboxShader());
+	}
+	if (m_ShaderLibrary->GetHDRComputeShader()) {
+		m_SceneRenderer->SetHDRComputeShader(m_ShaderLibrary->GetHDRComputeShader());
+	}
+	if (m_ShaderLibrary->GetToneMappingShader()) {
+		m_SceneRenderer->SetToneMappingShader(m_ShaderLibrary->GetToneMappingShader());
 	}
 
 	// Initialize primitive manager

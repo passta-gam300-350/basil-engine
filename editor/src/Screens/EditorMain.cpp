@@ -1228,13 +1228,13 @@ void EditorMain::CreateDemoScene()
 	light.m_Type = Light::Type::Directional;
 	light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
 	light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-	light.m_Intensity = 1.0f;
+	light.m_Intensity = 2.5f;
 	light.m_IsEnabled = true;
 
 	world.add_component_to_entity<LightComponent>(lightEntity, light);
 
 	// Set stronger ambient light for better visibility
-	Engine::GetRenderSystem().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
+	Engine::GetRenderSystem().m_SceneRenderer->SetAmbientLight(glm::vec3(0.7f, 0.7f, 0.7f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
