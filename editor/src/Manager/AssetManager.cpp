@@ -233,7 +233,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 		std::cerr << "Filesystem error: " << e.what() << "\n";
 	}
 
-	char buffer[65536]; // 64KB buffer to handle multiple file notifications
+	char buffer[8192]; // 8KB buffer to handle multiple file notifications
 	DWORD bytesReturned;
 
 	while (!m_ShouldClose) {
