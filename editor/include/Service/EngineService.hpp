@@ -39,6 +39,14 @@ public:
 		// Each vector contains the component type IDs that entity has
 		std::vector<std::vector<std::uint32_t>> m_entity_components_snapshot;
 
+		// Pending picking query data (processed after next frame render)
+		bool m_hasPickingQuery{ false };
+		float m_pickingMouseX{ 0.0f };
+		float m_pickingMouseY{ 0.0f };
+		float m_pickingViewportWidth{ 0.0f };
+		float m_pickingViewportHeight{ 0.0f };
+		std::function<void(bool, uint32_t)> m_pickingCallback;
+
 	private:
 		void engine_service();
 		void engine_snapshot_callback();

@@ -19,6 +19,50 @@ void EngineContainerService::EngineContainer::engine_service() {
 			// This prevents screen tearing when editor reads the framebuffer texture
 			//glFinish();
 
+			if (m_hasPickingQuery)
+			{
+				auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+				if (sceneRenderer)
+				{
+					// Create picking query
+					MousePickingQuery query;
+					query.screenX = static_cast<int>(m_pickingMouseX);
+					query.screenY = static_cast<int>(m_pickingMouseY);
+					query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
+					query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
+
+					// Query the picking buffer (picking pass already rendered)
+					PickingResult result = sceneRenderer->QueryObjectPicking(query);
+
+					// Disable picking pass for subsequent frames
+					sceneRenderer->EnablePicking(false);
+
+					// Handle result immediately (we're on engine thread)
+					if (result.hasHit && result.objectID != 0)
+					{
+						spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+							result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+
+						// Set outline immediately
+						sceneRenderer->ClearOutlinedObjects();
+						sceneRenderer->AddOutlinedObject(result.objectID);
+
+						// Notify editor via callback
+						if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+					}
+					else
+					{
+						spdlog::info("EngineService: No entity picked");
+						sceneRenderer->ClearOutlinedObjects();
+						if (m_pickingCallback) m_pickingCallback(false, 0);
+					}
+				}
+
+				// Clear picking query flag
+				m_hasPickingQuery = false;
+				m_pickingCallback = nullptr;
+			}
+
 			m_container_is_presentable.acquire();
 			engine_snapshot_writeback();
 		}
@@ -324,32 +368,17 @@ void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, fl
 			return;
 		}
 
-		// Enable picking pass temporarily
+		// The main engine loop will enable picking, render normally, then query after render
+		m_cont->m_hasPickingQuery = true;
+		m_cont->m_pickingMouseX = mouseX;
+		m_cont->m_pickingMouseY = mouseY;
+		m_cont->m_pickingViewportWidth = viewportWidth;
+		m_cont->m_pickingViewportHeight = viewportHeight;
+		m_cont->m_pickingCallback = resultCallback;
+
+		// Enable picking pass for next frame
 		sceneRenderer->EnablePicking(true);
 
-		// Create picking query with viewport-relative coordinates
-		MousePickingQuery query;
-		query.screenX = static_cast<int>(mouseX);
-		query.screenY = static_cast<int>(mouseY);
-		query.viewportWidth = static_cast<int>(viewportWidth);
-		query.viewportHeight = static_cast<int>(viewportHeight);
-
-		// Perform picking query
-		PickingResult result = sceneRenderer->QueryObjectPicking(query);
-
-		// Disable picking pass after use
-		sceneRenderer->EnablePicking(false);
-
-		// Return result via callback
-		if (result.hasHit && result.objectID != 0) {
-			spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-				result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
-			if (resultCallback) resultCallback(true, result.objectID);
-		}
-		else {
-			spdlog::info("EngineService: No entity picked");
-			if (resultCallback) resultCallback(false, 0);
-		}
 	});
 }
 

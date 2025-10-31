@@ -99,6 +99,11 @@ private:
     // Injected dependencies
     PBRLightingRenderer* m_PBRLighting;
 
+    // Change detection for efficient rebuilding
+    size_t m_LastRenderableCount = 0;
+    std::vector<uint32_t> m_LastObjectIDs;
+
     void UpdateInstanceSSBO(const std::string& meshId);
     void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData);
+    bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
 };
