@@ -260,7 +260,7 @@ void EditorMain::Render_Inspector()
 
 void EditorMain::Render_Components()
 {
-	std::lock_guard lg(engineService.m_cont->m_mtx);
+	std::lock_guard lg{ engineService.m_cont->m_mtx };
 	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
 	auto& type_map{ ReflectionRegistry::types() };
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
