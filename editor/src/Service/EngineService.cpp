@@ -17,7 +17,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
 			// This prevents screen tearing when editor reads the framebuffer texture
-			glFinish();
+			//glFinish();
 
 			m_container_is_presentable.acquire();
 			engine_snapshot_writeback();
