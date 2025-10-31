@@ -94,7 +94,7 @@ namespace rp {
 				static_assert(sizeof(std::underlying_type_t<Type>) == 1, "Underlying type is unsupported! Supported types are 1byte char(std::int8_t) and unsigned char(std::uint8_t). Overload EnumBindings() for custom enum support");
 				
 				using underlying_type = std::underlying_type_t<Type>;
-				static constexpr std::size_t bruteforce_count = std::numeric_limits<std::uint8_t>::max() + 1ull;
+				static constexpr std::size_t bruteforce_count = (std::numeric_limits<std::uint8_t>::max)() + 1ull;
 
 				static consteval auto get_enum_bindings() {
 					constexpr auto bf_tmp{ [] <std::size_t...is>(std::index_sequence<is...>) {

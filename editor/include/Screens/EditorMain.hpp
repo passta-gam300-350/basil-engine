@@ -32,6 +32,7 @@ Technology is prohibited.
 
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
+#include <rsc-ext/rp.hpp>
 
 class EditorMain : public Screen
 {
@@ -144,4 +145,126 @@ private:
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);
 };
+
+namespace rp {
+	namespace serialization {
+		template <>
+		struct out_archive<"imgui"> {
+			std::string m_tag_name;
+			template <typename Type>
+			void write(Type& v, std::string const& label) {
+				if constexpr (std::is_enum_v<Type>) {
+					// Render enum as a combo box
+					auto names = reflection::get_enum_list<Type>();
+					int current = static_cast<int>(v);
+					if (ImGui::BeginCombo(label.c_str(), reflection::map_enum_name(v).data())) {
+						for (auto [enum_name, enum_value] : names) {
+							bool selected = (enum_value == v);
+							if (ImGui::Selectable(enum_name.data(), selected)) {
+								v = enum_value;
+							}
+							if (selected) ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, rp::Guid>) {
+					// GUID as hex string
+					std::string guid_str = v.to_hex();
+					char buf[64];
+					strncpy(buf, guid_str.c_str(), sizeof(buf));
+					if (ImGui::InputText(label.c_str(), buf, sizeof(buf))) {
+						v = rp::Guid::from_hex(buf);
+					}
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					char buf[256];
+					strncpy(buf, v.c_str(), sizeof(buf));
+					if (ImGui::InputText(label.c_str(), buf, sizeof(buf))) {
+						v = buf;
+					}
+				}
+				else if constexpr (std::is_same_v<Type, bool>) {
+					ImGui::Checkbox(label.c_str(), &v);
+				}
+				else if constexpr (std::is_integral_v<Type>) {
+					ImGui::InputInt(label.c_str(), reinterpret_cast<int*>(&v));
+				}
+				else if constexpr (std::is_floating_point_v<Type>) {
+					if constexpr (std::is_same_v<Type, double>) {
+						ImGui::InputDouble(label.c_str(), &v);
+					}
+					else {
+						ImGui::InputFloat(label.c_str(), reinterpret_cast<float*>(&v));
+					}
+				}
+				else if constexpr (std::is_same_v<Type, glm::vec3>) {
+					ImGui::DragFloat3(label.c_str(), &v.x);
+				}
+				else if constexpr (reflection::is_associative_container_v<Type>) {
+					ImGui::Text(label.c_str());
+					for (auto& [key, val] : v) {
+						ImGui::PushID(key.c_str());
+						write(val, label + "." + key);
+						ImGui::PopID();
+					}
+					if constexpr (std::is_same_v<typename Type::key_type, std::string>) {
+						char buf[256]{};
+						if (ImGui::InputText("##Add Item", buf, 256, ImGuiInputTextFlags_EnterReturnsTrue)) {
+							v.emplace(std::string(buf), typename Type::mapped_type{});
+						}
+					}
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					int idx = 0;
+					ImGui::Text(label.c_str());
+					for (auto& elem : v) {
+						ImGui::PushID(idx);
+						write(elem, label + "[" + std::to_string(idx) + "]");
+						ImGui::PopID();
+						++idx;
+					}
+					if (ImGui::Button(("Add Item (" + label +")").c_str())) {
+						v.emplace_back();
+					}
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					if (ImGui::TreeNode(label.c_str())) {
+						reflection::reflect(v).each([&](auto& field) {
+							write(*field.m_field_ptr,
+								std::string(field.m_field_name.begin(), field.m_field_name.end()));
+							});
+						ImGui::TreePop();
+					}
+				}
+			}
+			template <typename Type>
+			void write(Type& v) {
+				write(v, m_tag_name);
+			}
+		};
+
+
+		template <>
+		struct serializer<"imgui"> {
+			using out_archive_type = out_archive<"imgui">;
+			template <typename Type>
+			static void present(Type& val, std::string const& name) {
+				out_archive_type{ name }.write(val);
+			}
+			template <typename Type>
+			static void present(Type& val, out_archive_type& arc) {
+				arc.write(val);
+			}
+			template <typename Type>
+			static void present(Type& val, out_archive_type&& arc) {
+				arc.write(val);
+			}
+		};
+	}
+}
+
+using ImguiInspectItem = rp::serialization::out_archive<"imgui">;
+using ImguiInspectTypeRenderer = rp::serialization::serializer<"imgui">;
+
 #endif // EDITORMAIN_HPP

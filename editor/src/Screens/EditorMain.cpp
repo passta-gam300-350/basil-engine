@@ -46,6 +46,16 @@ Technology is prohibited.
 #include <Messaging/Messaging_System.h>
 #define UNREF_PARAM(x) x;
 
+template <>
+struct rp::reflection::ExternalTypeMetadata<glm::vec4> {
+	using ExternalTypeBinder = ExternalTypeBinderMetadata<glm::vec4, &glm::vec4::x, &glm::vec4::y, &glm::vec4::z, &glm::vec4::w>;
+};
+
+template <>
+struct rp::reflection::ExternalTypeMetadata<glm::vec3> {
+	using ExternalTypeBinder = ExternalTypeBinderMetadata<glm::vec3, &glm::vec3::x, &glm::vec3::y, &glm::vec3::z>;
+};
+
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
@@ -66,7 +76,7 @@ void EditorMain::init()
 	// Set maximized
 	glfwMaximizeWindow(window);
 
-	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+	//m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
@@ -102,6 +112,32 @@ void EditorMain::update()
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
 
+struct s2 {
+	std::string some_value;
+	bool is_true;
+};
+
+struct p {
+	s2 struct2;
+};
+
+enum class testemum : std::uint8_t {
+	pollo,
+	water,
+	enum1
+};
+
+struct test {
+	int t1;
+	double t2{3.14f};
+	testemum enum_test;
+	std::string t3;
+	glm::vec3 vec3;
+	std::vector<p> vector_of_ints;
+	std::map<std::string, s2> map_of_str_bool;
+};
+
+test testa{};
 
 void EditorMain::render()
 {
@@ -162,6 +198,10 @@ void EditorMain::render()
 	Render_CameraControls();
 	Render_AssetBrowser();
 
+	ImGui::Begin("TestReflection");
+	ImguiInspectTypeRenderer::present(testa, "testreflectmenu");
+	ImGui::End();
+
 	engineService.m_cont->m_container_is_presentable.release();
 	engineService.start();
 }
@@ -178,7 +218,7 @@ void EditorMain::cleanup()
 	//PhysSys.GetBodyInterface().DestroyBody(floorplan->GetID());
 
 	PhysSys.Exit();
-	m_AssetManager.reset(nullptr);
+	//m_AssetManager.reset(nullptr);
 	//Engine::Exit();
 	///Engine::
 	engineService.release();
@@ -260,6 +300,7 @@ void EditorMain::Render_Inspector()
 
 void EditorMain::Render_Components()
 {
+	std::lock_guard lg{ engineService.m_cont->m_mtx };
 	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
 	auto& type_map{ ReflectionRegistry::types() };
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
@@ -752,6 +793,7 @@ void EditorMain::Render_CameraControls()
 
 void EditorMain::Render_AssetBrowser()
 {
+	/*
 	ImGui::Begin("Files");
 	ImGui::Text(m_AssetManager->GetCurrentPath().c_str());
 	if (m_AssetManager->GetCurrentPath() != m_AssetManager->GetRootPath())
@@ -814,34 +856,6 @@ void EditorMain::Render_AssetBrowser()
 		ImGui::Button(filename.c_str(), { thumbnailSize, thumbnailSize }); // Creates a button for the folders
 		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
 		{
-			/*
-			if (ImGui::MenuItem("Rename Asset")) // popup asking to rename asset
-			{
-				renameFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to rename
-				if (FileName.find_last_of('.') == std::string::npos)
-				{
-					renameFileExtention = "";
-				}
-				else
-				{
-					renameFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to rename
-				}
-				showPopup = true; // Start the rename pop up
-			}
-			if (ImGui::MenuItem("Delete Asset")) // popup asking to delete asset
-			{
-				deleteFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to delete
-				if (FileName.find_last_of('.') == std::string::npos)
-				{
-					deleteFileExtention = "";
-				}
-				else
-				{
-					deleteFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to delete
-				}
-
-				deleteFile = true; // starts the delete popup
-			}*/
 			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
 			{
 				m_AssetManager->ImportAsset(it->second);
@@ -879,6 +893,7 @@ void EditorMain::Render_AssetBrowser()
 	}
 	ImGui::Columns(1);
 	ImGui::End();
+	*/
 }
 
 void EditorMain::Render_Scene()

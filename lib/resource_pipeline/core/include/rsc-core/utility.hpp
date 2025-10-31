@@ -86,7 +86,7 @@ namespace rp {
 				return string_hash(get_type_name<Type>());
 			}
 		};
-		std::string get_relative_path(std::string const& path, std::string const& base = {}) {
+		inline std::string get_relative_path(std::string const& path, std::string const& base = {}) {
 			std::filesystem::path pth{ path };
 			return pth.is_relative() ? path : std::filesystem::relative(path, base.empty() ? std::filesystem::current_path() : std::filesystem::path{base}).string();
 		}

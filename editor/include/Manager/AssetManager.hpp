@@ -31,7 +31,7 @@ struct AssetManager {
 	~AssetManager() {
 		m_ShouldClose = true;
 		m_IndexingWorker.join();
-		ExportAssetList();
+		//ExportAssetList();
 	}
 		
 	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);

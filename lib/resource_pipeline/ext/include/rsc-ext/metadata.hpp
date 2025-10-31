@@ -10,10 +10,6 @@ namespace rp {
 		std::string m_file_relative_path;
 		std::uint64_t m_file_hash;
 	};
-
-	inline MetaData Generate_Metadata(std::string const& path) {
-		return MetaData{};
-	}
 }
 
 #endif
