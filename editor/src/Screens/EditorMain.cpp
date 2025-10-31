@@ -596,7 +596,7 @@ void EditorMain::Render_SceneExplorer()
 		ImGui::PushID(static_cast<int>(i));
 
 		// Check if this entity is currently selected
-		uint32_t entityUID = static_cast<uint32_t>(ehdl);
+		uint32_t entityUID = ecs::entity(ehdl).get_uid();
 		bool isSelected = (m_SelectedEntityID == entityUID);
 
 		// Display entity info with selection highlighting

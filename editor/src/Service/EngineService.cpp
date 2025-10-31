@@ -288,7 +288,6 @@ const std::vector<EngineContainerService::entity_handle>& EngineContainerService
 	static const std::vector<entity_handle> empty;
 	if (!m_cont) return empty;
 
-	std::lock_guard lg{ m_cont->m_mtx };
 	return m_cont->m_entities_snapshot;
 }
 
@@ -296,7 +295,6 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 	static const std::vector<std::string> empty;
 	if (!m_cont) return empty;
 
-	std::lock_guard lg{ m_cont->m_mtx };
 	return m_cont->m_names_snapshot;
 }
 

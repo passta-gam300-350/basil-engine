@@ -153,14 +153,22 @@ namespace rp {
 			std::string m_tag_name;
 			template <typename Type>
 			void write(Type& v, std::string const& label) {
+				const auto same_line_label{ [](auto& ss) {
+					ImGui::Text(ss.c_str());
+					ImGui::SameLine(250);
+					ImGui::SetNextItemWidth(-1);
+					} };
+				auto strlabel{ ("##" + label) };
+				const char* cstrlabel{ strlabel.c_str() };
 				if constexpr (std::is_enum_v<Type>) {
 					// Render enum as a combo box
 					auto names = reflection::get_enum_list<Type>();
 					int current = static_cast<int>(v);
-					if (ImGui::BeginCombo(label.c_str(), reflection::map_enum_name(v).data())) {
+					same_line_label(label);
+					if (ImGui::BeginCombo(cstrlabel, std::string(reflection::map_enum_name(v)).c_str())) {
 						for (auto [enum_name, enum_value] : names) {
 							bool selected = (enum_value == v);
-							if (ImGui::Selectable(enum_name.data(), selected)) {
+							if (ImGui::Selectable(std::string(enum_name).c_str(), selected)) {
 								v = enum_value;
 							}
 							if (selected) ImGui::SetItemDefaultFocus();
@@ -173,33 +181,59 @@ namespace rp {
 					std::string guid_str = v.to_hex();
 					char buf[64];
 					strncpy(buf, guid_str.c_str(), sizeof(buf));
-					if (ImGui::InputText(label.c_str(), buf, sizeof(buf))) {
+					same_line_label(label);
+					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
 						v = rp::Guid::from_hex(buf);
 					}
 				}
 				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
 					char buf[256];
 					strncpy(buf, v.c_str(), sizeof(buf));
-					if (ImGui::InputText(label.c_str(), buf, sizeof(buf))) {
+					same_line_label(label);
+					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
 						v = buf;
 					}
 				}
 				else if constexpr (std::is_same_v<Type, bool>) {
-					ImGui::Checkbox(label.c_str(), &v);
+					same_line_label(label);
+					ImGui::Checkbox(cstrlabel, &v);
 				}
 				else if constexpr (std::is_integral_v<Type>) {
-					ImGui::InputInt(label.c_str(), reinterpret_cast<int*>(&v));
+					same_line_label(label);
+					ImGui::InputInt(cstrlabel, reinterpret_cast<int*>(&v));
 				}
 				else if constexpr (std::is_floating_point_v<Type>) {
+					same_line_label(label);
 					if constexpr (std::is_same_v<Type, double>) {
-						ImGui::InputDouble(label.c_str(), &v);
+						ImGui::InputDouble(cstrlabel, &v);
 					}
 					else {
-						ImGui::InputFloat(label.c_str(), reinterpret_cast<float*>(&v));
+						ImGui::InputFloat(cstrlabel, reinterpret_cast<float*>(&v));
 					}
 				}
+				else if constexpr (std::is_same_v<Type, glm::vec2>) {
+					same_line_label(label);
+					ImGui::DragFloat2(cstrlabel, &v.x);
+				}
 				else if constexpr (std::is_same_v<Type, glm::vec3>) {
-					ImGui::DragFloat3(label.c_str(), &v.x);
+					same_line_label(label);
+					ImGui::DragFloat3(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::vec4>) {
+					same_line_label(label);
+					ImGui::DragFloat4(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::ivec2>) {
+					same_line_label(label);
+					ImGui::DragInt2(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::ivec3>) {
+					same_line_label(label);
+					ImGui::DragInt3(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::ivec4>) {
+					same_line_label(label);
+					ImGui::DragInt4(cstrlabel, &v.x);
 				}
 				else if constexpr (reflection::is_associative_container_v<Type>) {
 					ImGui::Text(label.c_str());
@@ -224,7 +258,7 @@ namespace rp {
 						ImGui::PopID();
 						++idx;
 					}
-					if (ImGui::Button(("Add Item (" + label +")").c_str())) {
+					if (ImGui::Button(("Add Item##" + label).c_str())) {
 						v.emplace_back();
 					}
 				}
