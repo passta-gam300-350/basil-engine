@@ -42,26 +42,18 @@ class MaterialPropertyBlock;
  * Material properties can be stored per-entity for customization.
  */
 struct MeshRendererComponent {
-    bool isPrimitive;              ///< True if using a primitive mesh (cube/plane)
-    bool hasAttachedMaterial;      ///< True if using an external material asset
+    bool isPrimitive = false;              ///< True if using a primitive mesh (cube/plane)
+    bool hasAttachedMaterial = false;      ///< True if using an external material asset
 
     /// Primitive mesh types available
     enum struct PrimitiveType : std::uint8_t {
-        NONE,
-        CUBE,
-        PLANE
-	} m_PrimitiveType;
-    Resource::Guid m_MeshGuid;     ///< GUID of the mesh asset (or zero for primitives)
-    Resource::Guid m_MaterialGuid; ///< GUID of the material asset
+        NONE = 0,
+        CUBE = 1,
+        PLANE = 2
+	} m_PrimitiveType = PrimitiveType::NONE;
 
-    /// Per-entity material properties (used when hasAttachedMaterial is false)
-    struct Material
-    {
-        Resource::Guid m_MaterialGuid;
-        float metallic;            ///< Metallic value (0.0 = dielectric, 1.0 = metallic)
-		float roughness;           ///< Surface roughness (0.0 = smooth, 1.0 = rough)
-		glm::vec3 m_AlbedoColor;   ///< Base color (RGB)
-    } material;
+    Resource::Guid m_MeshGuid{};     ///< GUID of the mesh asset (or zero for primitives)
+    Resource::Guid m_MaterialGuid{}; ///< GUID of the material asset
 };
 
 /**

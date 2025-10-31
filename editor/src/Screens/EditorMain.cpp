@@ -349,15 +349,23 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
-				if (meta_type.size_of() <= sizeof(int))
-				{
-					int enum_value = *static_cast<const int*>(val_ptr);
-					ImGui::InputInt(field_name.c_str(), &enum_value);
+
+				// Properly read enum value based on its underlying type size
+				int enum_value = 0;
+				if (meta_type.size_of() == sizeof(uint8_t)) {
+					enum_value = *static_cast<const uint8_t*>(val_ptr);
 				}
-				else
-				{
+				else if (meta_type.size_of() == sizeof(uint16_t)) {
+					enum_value = *static_cast<const uint16_t*>(val_ptr);
+				}
+				else if (meta_type.size_of() == sizeof(uint32_t)) {
+					enum_value = *static_cast<const uint32_t*>(val_ptr);
+				}
+				else {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
+
+				ImGui::InputInt(field_name.c_str(), &enum_value);
 			}
 
 			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
