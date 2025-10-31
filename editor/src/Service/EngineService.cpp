@@ -1,5 +1,6 @@
 #include "Service/EngineService.hpp"
 #include "Editor.hpp"
+#include <Render/Render.h>  // For RenderSystem and FrameData
 
 void EngineContainerService::EngineContainer::engine_service() {
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
@@ -43,6 +44,20 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 {
 	std::lock_guard lg{ m_mtx };
+
+	// Execute queued commands FIRST (EditorMain → Engine communication)
+	while (!m_command_queue.empty()) {
+		auto command = std::move(m_command_queue.front());
+		m_command_queue.pop();
+
+		try {
+			command();  // Execute lambda on engine thread
+		} catch (const std::exception& e) {
+			spdlog::error("EngineService: Command execution failed: {}", e.what());
+		}
+	}
+
+	// Existing writeback operations
 	ecs::world w{ Engine::GetWorld() };
 	ecs::entity inspected_entity{ m_snapshot_entity_handle };
 	while (!m_write_back_queue.empty()) {
@@ -157,4 +172,173 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 		return temp;
 	}()};
 	return s_id_type_name_list;
+}
+
+// ============================================================================
+// NEW IMPLEMENTATIONS: Command Queue & Query API
+// ============================================================================
+
+void EngineContainerService::ExecuteOnEngineThread(std::function<void()> command) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot execute command, engine container not initialized");
+		return;
+	}
+
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_command_queue.push(std::move(command));
+}
+
+const std::vector<EngineContainerService::entity_handle>& EngineContainerService::GetEntitiesSnapshot() const {
+	static const std::vector<entity_handle> empty;
+	if (!m_cont) return empty;
+
+	std::lock_guard lg{ m_cont->m_mtx };
+	return m_cont->m_entities_snapshot;
+}
+
+const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot() const {
+	static const std::vector<std::string> empty;
+	if (!m_cont) return empty;
+
+	std::lock_guard lg{ m_cont->m_mtx };
+	return m_cont->m_names_snapshot;
+}
+
+FrameData& EngineContainerService::GetFrameData() {
+	// Safe: FrameData access is synchronized by m_container_is_presentable semaphore
+	// Editor reads after engine releases semaphore
+	return Engine::GetRenderSystem().m_SceneRenderer->GetFrameData();
+}
+
+Engine::Info EngineContainerService::GetEngineInfo() {
+	return Engine::Instance().GetInfo();  // Returns copy, thread-safe
+}
+
+double EngineContainerService::GetDeltaTime() {
+	return Engine::GetDeltaTime();
+}
+
+// ============================================================================
+// HIGH-LEVEL API IMPLEMENTATIONS: Complex Operations
+// ============================================================================
+
+void EngineContainerService::SelectEntityByObjectID(uint32_t objectID) {
+	ExecuteOnEngineThread([objectID, this]() {
+		ecs::entity entity(uint32_t(Engine::GetWorld()), objectID);
+		inspect_entity(entity.get_uuid());
+	});
+}
+
+void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight,
+                                                    std::function<void(bool hasHit, uint32_t objectID)> resultCallback) {
+	ExecuteOnEngineThread([mouseX, mouseY, viewportWidth, viewportHeight, resultCallback, this]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (!sceneRenderer) {
+			spdlog::error("EngineService: SceneRenderer not available for entity picking");
+			if (resultCallback) resultCallback(false, 0);
+			return;
+		}
+
+		spdlog::info("EngineService: Performing entity picking at viewport position ({:.1f}, {:.1f}) in viewport ({:.1f}x{:.1f})",
+			mouseX, mouseY, viewportWidth, viewportHeight);
+
+		// Debug: Check how many entities exist and have renderable components
+		ecs::world world = Engine::GetWorld();
+		auto renderableCount = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>().size();
+		auto totalEntities = m_cont->m_entities_snapshot.size();
+
+		spdlog::info("EngineService: World has {} total entities, {} with renderable components", totalEntities, renderableCount);
+
+		if (renderableCount == 0) {
+			spdlog::warn("EngineService: No renderable entities found - nothing to pick");
+			if (resultCallback) resultCallback(false, 0);
+			return;
+		}
+
+		// Enable picking pass temporarily
+		sceneRenderer->EnablePicking(true);
+
+		// Create picking query with viewport-relative coordinates
+		MousePickingQuery query;
+		query.screenX = static_cast<int>(mouseX);
+		query.screenY = static_cast<int>(mouseY);
+		query.viewportWidth = static_cast<int>(viewportWidth);
+		query.viewportHeight = static_cast<int>(viewportHeight);
+
+		// Perform picking query
+		PickingResult result = sceneRenderer->QueryObjectPicking(query);
+
+		// Disable picking pass after use
+		sceneRenderer->EnablePicking(false);
+
+		// Return result via callback
+		if (result.hasHit && result.objectID != 0) {
+			spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+				result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+			if (resultCallback) resultCallback(true, result.objectID);
+		}
+		else {
+			spdlog::info("EngineService: No entity picked");
+			if (resultCallback) resultCallback(false, 0);
+		}
+	});
+}
+
+void EngineContainerService::SetDebugVisualization(bool showAABBs) {
+	ExecuteOnEngineThread([showAABBs]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (!sceneRenderer) {
+			spdlog::warn("EngineService: SceneRenderer not available for debug visualization");
+			return;
+		}
+
+		auto* pipeline = sceneRenderer->GetPipeline();
+		if (!pipeline) {
+			spdlog::warn("EngineService: Pipeline not available for debug visualization");
+			return;
+		}
+
+		auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
+		if (debugPass) {
+			debugPass->SetShowAABBs(showAABBs);
+			spdlog::info("EngineService: Debug AABBs {}", showAABBs ? "enabled" : "disabled");
+		}
+	});
+}
+
+void EngineContainerService::SetAmbientLight(const glm::vec3& color) {
+	ExecuteOnEngineThread([color]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->SetAmbientLight(color);
+			spdlog::info("EngineService: Ambient light set to ({:.2f}, {:.2f}, {:.2f})", color.x, color.y, color.z);
+		}
+	});
+}
+
+void EngineContainerService::SaveScene(const char* path) {
+	if (!path) {
+		spdlog::error("EngineService: Cannot save scene - path is null");
+		return;
+	}
+
+	ExecuteOnEngineThread([path = std::string(path)]() {
+		ecs::world world = Engine::GetWorld();
+		world.SaveYAML(path.c_str());
+		spdlog::info("EngineService: Scene saved to {}", path);
+	});
+}
+
+void EngineContainerService::LoadScene(const char* path) {
+	if (!path) {
+		spdlog::error("EngineService: Cannot load scene - path is null");
+		return;
+	}
+
+	ExecuteOnEngineThread([path = std::string(path)]() {
+		ecs::world world = Engine::GetWorld();
+		world.UnloadAll();
+		world.LoadYAML(path.c_str());
+		spdlog::info("EngineService: Scene loaded from {}", path);
+	});
 }

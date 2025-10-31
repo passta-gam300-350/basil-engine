@@ -615,7 +615,7 @@ void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
 
-	auto& info = Engine::Instance().GetInfo();
+	auto info = engineService.GetEngineInfo();
 
 	// Update FPS/Delta display at intervals for readability
 	static double lastUpdateTime = 0.0;
@@ -884,7 +884,7 @@ void EditorMain::Render_AssetBrowser()
 void EditorMain::Render_Scene()
 {
 	// Get delta time for camera updates
-	float deltaTime = static_cast<float>(Engine::GetDeltaTime());
+	float deltaTime = static_cast<float>(engineService.GetDeltaTime());
 
 	ImGui::Begin("Scene");
 
@@ -909,7 +909,7 @@ void EditorMain::Render_Scene()
 	}
 
 	// Check if editor framebuffer is available before trying to access it
-	auto& frameData = Engine::GetRenderSystem().m_SceneRenderer->GetFrameData();
+	auto& frameData = engineService.GetFrameData();
 	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
@@ -1234,7 +1234,7 @@ void EditorMain::CreateDemoScene()
 	world.add_component_to_entity<LightComponent>(lightEntity, light);
 
 	// Set stronger ambient light for better visibility
-	Engine::GetRenderSystem().m_SceneRenderer->SetAmbientLight(glm::vec3(0.7f, 0.7f, 0.7f));
+	engineService.SetAmbientLight(glm::vec3(0.7f, 0.7f, 0.7f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
@@ -1353,72 +1353,27 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 
 void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight)
 {
-	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-	assert(sceneRenderer && "SceneRenderer must be available for entity picking");
-
-	// Assert input parameters are valid
-	assert(viewportWidth > 0.0f && viewportHeight > 0.0f && "Viewport dimensions must be positive");
-	assert(mouseX >= 0.0f && mouseY >= 0.0f && "Mouse coordinates must be non-negative");
-	assert(mouseX < viewportWidth && mouseY < viewportHeight && "Mouse coordinates must be within viewport");
-
-	spdlog::info("Editor: Performing entity picking at viewport position ({:.1f}, {:.1f}) in viewport ({:.1f}x{:.1f})",
-		mouseX, mouseY, viewportWidth, viewportHeight);
-
-	// Debug: Check how many entities exist and have renderable components
-	ecs::world world = Engine::GetWorld();
-	auto renderableCount = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>().size();
-
-	auto totalEntities = engineService.m_cont->m_entities_snapshot.size();
-
-	spdlog::info("Editor: World has {} total entities, {} with renderable components", totalEntities, renderableCount);
-
-	// Assert we have entities to pick from
-	assert(renderableCount > 0 && "No renderable entities found - nothing to pick");
-	assert(totalEntities > 0 && "No entities found in world - check entity creation");
-
-	// Enable picking pass temporarily
-	sceneRenderer->EnablePicking(true);
-
-	// Create picking query with viewport-relative coordinates
-	MousePickingQuery query;
-	query.screenX = static_cast<int>(mouseX);
-	query.screenY = static_cast<int>(mouseY);
-	query.viewportWidth = static_cast<int>(viewportWidth);
-	query.viewportHeight = static_cast<int>(viewportHeight);
-
-	// Assert picking system is properly configured
-	auto* pipeline = sceneRenderer->GetPipeline();
-	assert(pipeline && "SceneRenderer must have a valid pipeline");
-	auto pickingPass = pipeline->GetPass("PickingPass");
-	assert(pickingPass && "Pipeline must have a PickingPass for object picking");
-	assert(pipeline->IsPassEnabled("PickingPass") && "PickingPass must be enabled for picking to work");
-
-	// Perform picking query
-	PickingResult result = sceneRenderer->QueryObjectPicking(query);
-
-	// Assert picking query executed successfully
-	assert(result.depth >= 0.0f && result.depth <= 1.0f && "Depth value must be in valid range [0,1]");
-
-	// Disable picking pass after use
-	sceneRenderer->EnablePicking(false);
-
-	// Handle picking result
-	if (result.hasHit && result.objectID != 0) {
-		spdlog::info("Editor: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-			result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
-		SelectEntity(result.objectID);
-	}
-	else {
-		spdlog::info("Editor: No entity picked - clearing selection");
-		ClearEntitySelection();
-	}
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.PerformEntityPicking(mouseX, mouseY, viewportWidth, viewportHeight,
+		[this](bool hasHit, uint32_t objectID) {
+			// Callback executes on engine thread, but only calls EditorMain methods
+			if (hasHit) {
+				SelectEntity(objectID);
+			}
+			else {
+				ClearEntitySelection();
+			}
+		});
 }
 
 void EditorMain::SelectEntity(uint32_t objectID)
 {
 	m_SelectedEntityID = objectID;
 	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
-	engineService.inspect_entity(ecs::entity(uint32_t(Engine::GetWorld()), objectID).get_uuid());
+
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.SelectEntityByObjectID(objectID);
+
 	// TODO: Add visual feedback for selected entity (highlight, outline, etc.)
 	// This could involve setting a uniform or render state for the selected object
 }
@@ -1433,20 +1388,8 @@ void EditorMain::ClearEntitySelection()
 
 void EditorMain::SetDebugVisualization(bool showAABBs)
 {
-	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-	if (sceneRenderer == nullptr) {
-		return;
-	}
-
-	auto* pipeline = sceneRenderer->GetPipeline();
-	if (pipeline == nullptr) {
-		return;
-	}
-
-	auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
-	if (debugPass) {
-		debugPass->SetShowAABBs(showAABBs);
-	}
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.SetDebugVisualization(showAABBs);
 }
 
 void EditorMain::HandleViewportPicking()
@@ -1457,30 +1400,15 @@ void EditorMain::HandleViewportPicking()
 
 void EditorMain::SaveScene(const char* path)
 {
-	if (path == nullptr) {
-		spdlog::error("Editor: Cannot save scene - path is null");
-		return;
-	}
-	ecs::world world = Engine::GetWorld();
-
-	world.SaveYAML(path);
-	spdlog::info("Editor: Scene saved to {}", path);
-
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.SaveScene(path);
 }
 
 
 void EditorMain::LoadScene(const char* path)
 {
-	if (path == nullptr) {
-		spdlog::error("Editor: Cannot load scene - path is null");
-		return;
-	}
 	ClearEntitySelection();
-	ecs::world world = Engine::GetWorld();
-	world.UnloadAll();
-	world.LoadYAML(path);
-	spdlog::info("Editor: Scene loaded from {}", path);
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.LoadScene(path);
 	// Clear selection after loading new scene
-
-
 }
