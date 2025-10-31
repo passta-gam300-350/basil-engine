@@ -17,8 +17,7 @@ Technology is prohibited.
 #include "Render/Render.h"
 #include "Engine.hpp"
 #include "Manager/ResourceSystem.hpp"
-#include <Resources/MaterialInstance.h>
-#include <Resources/Material.h>
+#include <Resources/MaterialPropertyBlock.h>
 #include <Resources/Texture.h>
 #include <spdlog/spdlog.h>
 
@@ -30,6 +29,15 @@ void MaterialOverridesSystem::Init() {
     m_ResourceSystem = &ResourceSystem::Instance();
 
     m_EntitiesWithInstances.clear();
+
+    // Note: We don't set up observers here because MaterialOverridesSystem uses filter_entities()
+    // in Update() which automatically handles component addition/removal.
+    // Cleanup is handled by:
+    // 1. Update() Case 3: Clears property block when overrides are cleared
+    // 2. ComponentInitializer::OnMeshRendererDestroyed: Destroys property block when MeshRendererComponent is removed
+    // 3. Update() lines 91-101: Periodic cleanup of stale tracking entries
+
+    spdlog::info("MaterialOverridesSystem: Initialization complete");
 }
 
 void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
@@ -49,48 +57,42 @@ void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
         auto [meshRenderer, overrides] = entity.get<MeshRendererComponent, MaterialOverridesComponent>();
 
         const bool hasOverrides = overrides.HasOverrides();
-        const bool hasInstance = m_EntitiesWithInstances.find(entityUID) != m_EntitiesWithInstances.end();
+        const bool hasPropertyBlock = m_EntitiesWithInstances.find(entityUID) != m_EntitiesWithInstances.end();
 
-        // Case 1: Has overrides but no instance -> Create instance
-        if (hasOverrides && !hasInstance) {
-            // Get base material from cache (ComponentInitializer should have loaded it)
-            auto baseMaterial = renderSystem.GetEntityMaterial(entityUID);
-            if (!baseMaterial) {
-                spdlog::warn("MaterialOverridesSystem: Entity {} has overrides but no base material", entityUID);
-                continue;
-            }
-
-            // Create MaterialInstance via RenderSystem
-            auto instance = renderSystem.GetMaterialInstance(entityUID, baseMaterial);
-            if (instance) {
-                ApplyOverrides(instance, overrides);
+        // Case 1: Has overrides but no property block -> Create property block
+        if (hasOverrides && !hasPropertyBlock) {
+            // Get or create MaterialPropertyBlock via RenderSystem
+            auto propBlock = renderSystem.GetPropertyBlock(entityUID);
+            if (propBlock) {
+                ApplyOverridesToPropertyBlock(propBlock, overrides);
                 m_EntitiesWithInstances.insert(entityUID);
-                spdlog::debug("MaterialOverridesSystem: Created MaterialInstance for entity {}", entityUID);
+                spdlog::info("MaterialOverridesSystem: Created MaterialPropertyBlock for entity {} with {} properties",
+                    entityUID, propBlock->GetPropertyCount());
             }
         }
-        // Case 2: Has overrides and has instance -> Update instance (if changed)
-        else if (hasOverrides && hasInstance) {
-            auto instance = renderSystem.GetExistingMaterialInstance(entityUID);
-            if (instance) {
-                // TODO: Optimize by tracking component changes (dirty flag)
-                // For now, reapply all overrides every frame
-                ApplyOverrides(instance, overrides);
+        // Case 2: Has overrides and has property block -> Update property block
+        else if (hasOverrides && hasPropertyBlock) {
+            auto propBlock = renderSystem.GetPropertyBlock(entityUID);
+            if (propBlock) {
+                // Clear and reapply (simple approach, could optimize with dirty flags)
+                propBlock->Clear();
+                ApplyOverridesToPropertyBlock(propBlock, overrides);
             }
         }
-        // Case 3: No overrides but has instance -> Destroy instance
-        else if (!hasOverrides && hasInstance) {
-            renderSystem.DestroyMaterialInstance(entityUID);
+        // Case 3: No overrides but has property block -> Clear property block
+        else if (!hasOverrides && hasPropertyBlock) {
+            renderSystem.ClearPropertyBlock(entityUID);
             m_EntitiesWithInstances.erase(entityUID);
-            spdlog::debug("MaterialOverridesSystem: Destroyed MaterialInstance for entity {}", entityUID);
+            spdlog::debug("MaterialOverridesSystem: Cleared MaterialPropertyBlock for entity {}", entityUID);
         }
-        // Case 4: No overrides and no instance -> Nothing to do
+        // Case 4: No overrides and no property block -> Nothing to do
     }
 
     // Cleanup tracking for removed entities
     // (This prevents memory leaks if entities are destroyed without component removal)
     std::vector<uint64_t> toRemove;
     for (uint64_t entityUID : m_EntitiesWithInstances) {
-        if (!renderSystem.HasMaterialInstance(entityUID)) {
+        if (!renderSystem.HasPropertyBlock(entityUID)) {
             toRemove.push_back(entityUID);
         }
     }
@@ -105,52 +107,37 @@ void MaterialOverridesSystem::Exit() {
     m_ResourceSystem = nullptr;
 }
 
-std::shared_ptr<MaterialInstance> MaterialOverridesSystem::CreateMaterialInstance(
-    uint64_t entityUID,
-    std::shared_ptr<Material> baseMaterial,
+void MaterialOverridesSystem::ApplyOverridesToPropertyBlock(
+    std::shared_ptr<MaterialPropertyBlock> propBlock,
     const MaterialOverridesComponent& overrides)
 {
-    auto& renderSystem = Engine::GetRenderSystem();
-    auto instance = renderSystem.GetMaterialInstance(entityUID, baseMaterial);
-
-    if (instance) {
-        ApplyOverrides(instance, overrides);
-    }
-
-    return instance;
-}
-
-void MaterialOverridesSystem::ApplyOverrides(
-    std::shared_ptr<MaterialInstance> instance,
-    const MaterialOverridesComponent& overrides)
-{
-    if (!instance) return;
+    if (!propBlock) return;
 
     // Apply float overrides
     for (const auto& [name, value] : overrides.floatOverrides) {
-        instance->SetFloat(name, value);
+        propBlock->SetFloat(name, value);
     }
 
     // Apply vec3 overrides
     for (const auto& [name, value] : overrides.vec3Overrides) {
-        instance->SetVec3(name, value);
+        propBlock->SetVec3(name, value);
     }
 
     // Apply vec4 overrides
     for (const auto& [name, value] : overrides.vec4Overrides) {
-        instance->SetVec4(name, value);
+        propBlock->SetVec4(name, value);
     }
 
     // Apply mat4 overrides
     for (const auto& [name, value] : overrides.mat4Overrides) {
-        instance->SetMat4(name, value);
+        propBlock->SetMat4(name, value);
     }
 
     // Apply texture overrides
     for (const auto& [name, textureGuid] : overrides.textureOverrides) {
         auto texture = LoadTexture(textureGuid);
         if (texture) {
-            instance->SetTexture(name, texture);
+            propBlock->SetTexture(name, texture);
         } else {
             spdlog::warn("MaterialOverridesSystem: Failed to load texture for property '{}'", name);
         }

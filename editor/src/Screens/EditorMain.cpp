@@ -1099,14 +1099,6 @@ void EditorMain::CreatePlaneEntity()
 		meshRenderer.isPrimitive = true;
 		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
 		meshRenderer.hasAttachedMaterial = false;
-<<<<<<< Updated upstream
-		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
-		meshRenderer.material.metallic = 0.1f;
-		meshRenderer.material.roughness = 0.8f;
-		meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
-
-		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
-=======
 		meshRenderer.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
@@ -1117,7 +1109,6 @@ void EditorMain::CreatePlaneEntity()
 		materialOverrides.floatOverrides["u_MetallicValue"] = 0.1f;
 		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.8f;
 		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
->>>>>>> Stashed changes
 	});
 }
 
@@ -1389,16 +1380,6 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer.m_MeshGuid = meshGuid;
 	meshRenderer.hasAttachedMaterial = false;
-<<<<<<< Updated upstream
-	meshRenderer.material.m_MaterialGuid = materialGuid;
-	meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
-	meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
-		meshRenderer.material.roughness = 0.6f; // Medium roughness
-
-
-		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
-	}); // End of ExecuteOnEngineThread lambda
-=======
 	meshRenderer.m_MaterialGuid = materialGuid;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
@@ -1410,7 +1391,6 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
 	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 	});
->>>>>>> Stashed changes
 }
 
 void EditorMain::CreateCubeGrid(int gridSize, float spacing)

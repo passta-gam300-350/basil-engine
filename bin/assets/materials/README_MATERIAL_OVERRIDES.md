@@ -8,7 +8,8 @@ The Material Override System allows you to customize material properties per-ent
 
 1. **MeshRendererComponent**: References a base material (shared by multiple entities)
 2. **MaterialOverridesComponent**: Stores per-entity property overrides
-3. **MaterialOverridesSystem**: Creates MaterialInstances at runtime with the overrides applied
+3. **MaterialOverridesSystem**: Creates MaterialPropertyBlocks at runtime with the overrides applied
+4. **SceneRenderer**: Applies property blocks after base material during rendering (preserves GPU instancing!)
 
 ## Shader Property Names
 
@@ -109,8 +110,8 @@ green.floatOverrides["u_RoughnessValue"] = 1.0f;
 ✅ Reflection registration complete
 ✅ Inspector support for viewing/editing maps
 ✅ Serialization support (via reflection)
-⚠️ MaterialOverridesSystem runtime application - TODO
-⚠️ Instancing preservation with overrides - TODO
+✅ MaterialOverridesSystem runtime application (uses MaterialPropertyBlock)
+✅ GPU instancing preservation with overrides (property blocks don't break instancing!)
 
 ## Inspector Features
 
@@ -126,7 +127,7 @@ Empty maps show "(empty)" text.
 ## Troubleshooting
 
 **Q: My overrides aren't applying to the rendered mesh**
-A: MaterialOverridesSystem might not be implemented yet. Check if the system is registered in the ECS scheduler.
+A: Check that MaterialOverridesSystem is initialized in Engine::Init(). Look for log message: "MaterialOverridesSystem: Initialization complete"
 
 **Q: Inspector shows MaterialOverridesComponent but it's empty**
 A: This is normal if you haven't added any overrides yet. Use the code examples above to populate the maps.

@@ -233,11 +233,43 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         // Add instance data with actual material properties
         InstanceData instanceData;
         instanceData.modelMatrix = renderable.transform;
-        instanceData.color = glm::vec4(renderable.material->GetAlbedoColor(), 1.0f);
+
+        // Apply base material properties first
+        glm::vec3 albedoColor = renderable.material->GetAlbedoColor();
+        float metallicValue = renderable.material->GetMetallicValue();
+        float roughnessValue = renderable.material->GetRoughnessValue();
+
+        // Apply property block overrides if present
+        if (renderable.propertyBlock) {
+            glm::vec3 overrideColor;
+            if (renderable.propertyBlock->TryGetVec3("u_AlbedoColor", overrideColor)) {
+                albedoColor = overrideColor;
+
+                // Debug: Log property block application (only first few times)
+                static int propBlockApplyCount = 0;
+                if (propBlockApplyCount < 3) {
+                    spdlog::info("InstancedRenderer: Applied property block albedo color override ({}, {}, {})",
+                        overrideColor.x, overrideColor.y, overrideColor.z);
+                    propBlockApplyCount++;
+                }
+            }
+
+            float overrideMetallic;
+            if (renderable.propertyBlock->TryGetFloat("u_MetallicValue", overrideMetallic)) {
+                metallicValue = overrideMetallic;
+            }
+
+            float overrideRoughness;
+            if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", overrideRoughness)) {
+                roughnessValue = overrideRoughness;
+            }
+        }
+
+        instanceData.color = glm::vec4(albedoColor, 1.0f);
         instanceData.materialId = 0; // Not used yet, could be used for texture indexing
         instanceData.flags = 0;
-        instanceData.metallic = renderable.material->GetMetallicValue();
-        instanceData.roughness = renderable.material->GetRoughnessValue();
+        instanceData.metallic = metallicValue;
+        instanceData.roughness = roughnessValue;
 
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {

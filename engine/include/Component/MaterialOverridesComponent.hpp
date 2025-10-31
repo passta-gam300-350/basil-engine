@@ -28,7 +28,7 @@ Technology is prohibited.
  * @brief Component for per-entity material property overrides
  *
  * Stores serializable material property overrides that differ from the base material.
- * MaterialOverridesSystem creates MaterialInstances from this data at runtime.
+ * MaterialOverridesSystem creates MaterialPropertyBlocks from this data at runtime.
  *
  * Usage:
  * - Override float properties: floatOverrides["u_MetallicValue"] = 0.8f
@@ -37,10 +37,12 @@ Technology is prohibited.
  *
  * Property names must match shader uniform names (e.g., "u_MetallicValue" not "metallic").
  *
- * This follows Unity's approach:
+ * This follows Unity's MaterialPropertyBlock approach:
  * - MeshRendererComponent: References base material (shared)
- * - MaterialOverridesComponent: Stores per-entity customizations
- * - MaterialInstance: Runtime representation (created by MaterialOverridesSystem)
+ * - MaterialOverridesComponent: Stores per-entity customizations (serialized)
+ * - MaterialPropertyBlock: Runtime representation (created by MaterialOverridesSystem)
+ *
+ * @note Uses MaterialPropertyBlock (not MaterialInstance) to preserve GPU instancing.
  */
 struct MaterialOverridesComponent {
     /// Float property overrides (e.g., u_MetallicValue, u_RoughnessValue)

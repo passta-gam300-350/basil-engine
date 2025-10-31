@@ -246,29 +246,13 @@ void RenderSystem::Update(ecs::world& world) {
 
 		// Only render if we have both mesh and material
 		if (meshResource && materialResource) {
-			std::shared_ptr<Material> renderMaterial = materialResource;
-
-			// Check if entity has a material instance (Unity's Renderer.material behavior)
-			if (m_MaterialInstanceManager && m_MaterialInstanceManager->HasInstance(entityUID)) {
-				// Instance exists - use it instead of base material
-				auto instance = m_MaterialInstanceManager->GetExistingInstance(entityUID);
-				if (instance) {
-					// Apply instance properties (base + overrides) before rendering
-					// Note: ApplyProperties() sets shader uniforms directly
-					instance->ApplyProperties();
-
-					// Still use base material for RenderableData (shader is from base)
-					// The instance properties were already applied to the shader
-					renderMaterial = instance->GetBaseMaterial();
-				}
-			} else if (!mesh.hasAttachedMaterial) {
-				// No instance - sync component properties to base material (editor behavior)
-				// Material customization now handled by Material OverridesSystem
-			}
+			// Material customization is now handled by MaterialPropertyBlocks
+			// MaterialOverridesSystem creates property blocks from MaterialOverridesComponent
+			// Property blocks are applied by SceneRenderer after base material
 
 			RenderableData renderData;
 			renderData.mesh = meshResource;
-			renderData.material = renderMaterial;
+			renderData.material = materialResource;
 			renderData.transform = transform.m_Mtx;
 			renderData.visible = visible.m_IsVisible;
 			renderData.renderLayer = 1;
@@ -280,6 +264,14 @@ void RenderSystem::Update(ecs::world& world) {
 			auto propBlockIt = m_PropertyBlocks.find(entityUID);
 			if (propBlockIt != m_PropertyBlocks.end() && !propBlockIt->second->IsEmpty()) {
 				renderData.propertyBlock = propBlockIt->second;
+
+				// Debug: Log property block attachment
+				static int propBlockDebugCount = 0;
+				if (propBlockDebugCount < 5) {
+					spdlog::info("RenderSystem: Attaching property block for entity {} (properties: {})",
+						entityUID, propBlockIt->second->GetPropertyCount());
+					propBlockDebugCount++;
+				}
 			}
 
 			// Debug: Log entity UID assignment for first few entities

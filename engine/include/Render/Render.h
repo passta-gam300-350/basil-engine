@@ -282,6 +282,17 @@ public:
      */
     void DestroyMaterialInstance(uint64_t entityUID);
 
+    /**
+     * @brief Get the cached base material for an entity
+     *
+     * Returns the base material that was cached during component initialization.
+     * This is used by MaterialOverridesSystem to create MaterialInstances.
+     *
+     * @param entityUID Unique identifier for the entity
+     * @return Cached material, or nullptr if not found
+     */
+    std::shared_ptr<Material> GetEntityMaterial(uint64_t entityUID) const;
+
     // ========== Material Property Block Management ==========
 
     /**

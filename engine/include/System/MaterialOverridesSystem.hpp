@@ -27,26 +27,27 @@ Technology is prohibited.
 #include <cstdint>
 
 // Forward declarations
-class MaterialInstanceManager;
-class MaterialInstance;
-class Material;
-struct Texture;  // Note: Texture is a struct, not a class
+class MaterialPropertyBlock;
+struct Texture;
 class ResourceSystem;
 
 /**
- * @brief System that synchronizes MaterialOverridesComponent with MaterialInstance
+ * @brief System that synchronizes MaterialOverridesComponent with MaterialPropertyBlock
  *
  * Responsibilities:
- * 1. Lazy creation: Create MaterialInstance only when MaterialOverridesComponent has data
- * 2. Sync properties: Apply component overrides to MaterialInstance
+ * 1. Lazy creation: Create MaterialPropertyBlock only when MaterialOverridesComponent has data
+ * 2. Sync properties: Apply component overrides to MaterialPropertyBlock
  * 3. Load textures: Resolve texture GUIDs to loaded textures
- * 4. Cleanup: Destroy MaterialInstance when overrides are cleared or component removed
+ * 4. Cleanup: Clear MaterialPropertyBlock when overrides are cleared or component removed
  *
  * @requirements
  * - Entity MUST have MeshRendererComponent (for base material GUID)
  * - Entity MUST have MaterialOverridesComponent (for override data)
- * - RenderSystem MUST have MaterialInstanceManager initialized
+ * - RenderSystem MUST provide MaterialPropertyBlock management
  * - ResourceSystem MUST be available for texture loading
+ *
+ * @note MaterialPropertyBlock is used instead of MaterialInstance to preserve GPU instancing.
+ *       Property blocks are lightweight and applied per-draw call by SceneRenderer.
  *
  * @usage
  * @code
@@ -57,10 +58,10 @@ class ResourceSystem;
  * overrides.textureOverrides["u_AlbedoMap"] = someTextureGuid;
  *
  * // MaterialOverridesSystem will:
- * // 1. Create MaterialInstance (lazy)
+ * // 1. Create MaterialPropertyBlock (lazy)
  * // 2. Load texture from GUID
- * // 3. Apply all overrides to MaterialInstance
- * // 4. RenderSystem will use the MaterialInstance for rendering
+ * // 3. Apply all overrides to MaterialPropertyBlock
+ * // 4. SceneRenderer will apply property block after base material during rendering
  * @endcode
  */
 class MaterialOverridesSystem : public ecs::SystemBase
@@ -102,28 +103,15 @@ public:
 
 private:
     /**
-     * @brief Create MaterialInstance from MaterialOverridesComponent
+     * @brief Apply MaterialOverridesComponent properties to MaterialPropertyBlock
      *
-     * @param entityUID Entity unique ID (for MaterialInstanceManager lookup)
-     * @param baseMaterial Base material to instance from
-     * @param overrides Component containing override data
-     * @return Created MaterialInstance (or nullptr on failure)
-     */
-    std::shared_ptr<MaterialInstance> CreateMaterialInstance(
-        uint64_t entityUID,
-        std::shared_ptr<Material> baseMaterial,
-        const struct MaterialOverridesComponent& overrides);
-
-    /**
-     * @brief Apply MaterialOverridesComponent properties to MaterialInstance
+     * Syncs all override maps (floats, vec3s, vec4s, mat4s, textures) to the property block.
      *
-     * Syncs all override maps (floats, vec3s, vec4s, mat4s, textures) to the instance.
-     *
-     * @param instance Target MaterialInstance
+     * @param propBlock Target MaterialPropertyBlock
      * @param overrides Source override data
      */
-    void ApplyOverrides(
-        std::shared_ptr<MaterialInstance> instance,
+    void ApplyOverridesToPropertyBlock(
+        std::shared_ptr<MaterialPropertyBlock> propBlock,
         const struct MaterialOverridesComponent& overrides);
 
     /**
@@ -135,15 +123,12 @@ private:
     std::shared_ptr<Texture> LoadTexture(const Resource::Guid& textureGuid);
 
     /**
-     * @brief Track entities that have MaterialInstances created
+     * @brief Track entities that have MaterialPropertyBlocks created
      *
-     * This avoids per-frame MaterialInstanceManager queries.
-     * Key = entity UID, Value = true if instance exists
+     * This avoids per-frame property block queries.
+     * Key = entity UID
      */
     std::unordered_set<uint64_t> m_EntitiesWithInstances;
-
-    /// Pointer to MaterialInstanceManager (owned by RenderSystem)
-    MaterialInstanceManager* m_MaterialInstanceManager = nullptr;
 
     /// Pointer to ResourceSystem (for texture loading)
     ResourceSystem* m_ResourceSystem = nullptr;

@@ -270,7 +270,6 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 	return s_id_type_name_list;
 }
 
-<<<<<<< Updated upstream
 // ============================================================================
 // NEW IMPLEMENTATIONS: Command Queue & Query API
 // ============================================================================
@@ -452,40 +451,4 @@ void EngineContainerService::LoadScene(const char* path) {
 		world.LoadYAML(path.c_str());
 		spdlog::info("EngineService: Scene loaded from {}", path);
 	});
-=======
-void EngineContainerService::create_entity() {
-	if (!m_cont) {
-		spdlog::warn("EngineService: Cannot create entity - engine container is null");
-		return;
-	}
-	std::lock_guard lg{ m_cont->m_mtx };
-	m_cont->m_entity_create_count++;
-}
-
-void EngineContainerService::delete_entity(entity_handle ehdl) {
-	if (!m_cont) {
-		spdlog::warn("EngineService: Cannot delete entity - engine container is null");
-		return;
-	}
-	std::lock_guard lg{ m_cont->m_mtx };
-	m_cont->m_entity_delete_queue.push(ehdl);
-}
-
-void EngineContainerService::add_component(entity_handle ehdl, std::uint32_t type_id) {
-	if (!m_cont) {
-		spdlog::warn("EngineService: Cannot add component - engine container is null");
-		return;
-	}
-	std::lock_guard lg{ m_cont->m_mtx };
-	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, type_id, false));
-}
-
-void EngineContainerService::delete_component(entity_handle ehdl, std::uint32_t type_id) {
-	if (!m_cont) {
-		spdlog::warn("EngineService: Cannot delete component - engine container is null");
-		return;
-	}
-	std::lock_guard lg{ m_cont->m_mtx };
-	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, type_id, true));
->>>>>>> Stashed changes
 }
