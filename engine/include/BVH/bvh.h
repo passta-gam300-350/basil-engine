@@ -1,0 +1,200 @@
+/**
+ * @file
+ *  bvh.h
+ * @author
+ *  Jia Zen Cheong, , jiazen.c@digipen.edu
+ * @date
+ *  2025/06/10
+ * @brief
+ *  This file implemented the declaration of struct
+ *  and function needed to create a BVH using topdown
+ *  and insertion (incremental) approach
+ * @copyright
+ *  Copyright (C) 2025 DigiPen Institute of Technology.
+ */
+
+#ifndef __BVH_HPP__
+#define __BVH_HPP__
+
+#include "shapes.h"
+
+#include <iomanip>       // Format manipulators
+#include <unordered_map> //
+#include <limits>
+#include <optional>
+#include <vector>
+#include <queue>
+#include <ostream>
+#include <sstream>       // For DumpGraph string formatting
+#include <functional>    // Debug
+
+
+ /**
+      * @brief
+      *  Some rules for Bvh construction. Not all rules apply to all methods.
+      *  Feel free to add more rules.
+      */
+struct BvhBuildConfig {
+    unsigned maxDepth = std::numeric_limits<unsigned>::max();
+    unsigned minObjects = 1; // Nodes should have more than this amount of objects to be split
+    float    minVolume = 0; // Nodes with smaller volume than this will not be splitted
+};
+
+/**
+ * @brief
+ *  Bounding Volume Hierarchy for type T
+ *  Requires the following members of T.
+ *      Aabb T::bv
+ *      unsigned T::id
+ *      T T::bvhInfo.next
+ *      T T::bvhInfo.prev
+ *      Node* T::bvhInfo.node
+ */
+template <typename T>
+class Bvh {
+public: // Public for testing reasons
+    struct Node {
+        Aabb  bv;          // Node bounding volume
+        Node* children[2]; // Both children
+        T     firstObject; //
+        T     lastObject;  //
+
+        void                        AddObject(T object); //d 
+        int                         Depth() const; // Branches to leaves //d
+        int                         Size() const;  // Amount of nodes //d 
+        bool                        IsLeaf() const; // check if no child //d
+        unsigned                    ObjectCount() const;                      // Amount of objects in current node (not children) // d
+        template <typename Fn> void TraverseLevelOrder(Fn func) const;        // Traverses a tree from an starting point. `func` is of type void(Node const* node);
+        template <typename Fn> void TraverseLevelOrderObjects(Fn func) const; // Traverses a tree from an starting point. `func` is of type void(T const& node);
+    };
+
+private:
+    Node* mRoot;
+    unsigned mObjectCount;
+
+public:
+    Bvh(); // d
+    ~Bvh(); // d
+    Bvh(Bvh const&) = delete;
+    Bvh& operator=(Bvh const&) = delete;
+
+    template <typename IT> void BuildTopDown(IT begin, IT end, BvhBuildConfig const& config);
+    template <typename IT> void BuildBottomUp(IT begin, IT end, BvhBuildConfig const& config); // not needed
+    template <typename IT> void Insert(IT begin, IT end, BvhBuildConfig const& config);
+    void                        Insert(T object, BvhBuildConfig const& config);
+    void                        Clear(); // d
+    bool                        Empty() const; // d
+
+    int                         Depth() const; // d
+    int                         Size() const; // d
+    Node const* root() const; // d
+    std::vector<unsigned>       Query(Frustum const& frustum) const; //d
+    std::optional<unsigned>     QueryDebug(Ray const& ray, bool closest_only, std::vector<unsigned>& allIntersectedObjects, std::vector<Node const*>& debug_tested_nodes) const; //d
+
+    // Debug functions
+    void                        DumpGraph(std::ostream& os) const;               // Prints a graph script //d
+    void                        DumpInfo(std::ostream& os) const;                // Prints information of the tree //d
+    void                        DumpInfo(std::ostream& os, Node const* n) const; // Prints information of a particular node //d
+    template <typename Fn> void TraverseLevelOrder(Fn func) const;               // Traverses the tree. `func` is of type void(Node const* node); //d
+    template <typename Fn> void TraverseLevelOrderObjects(Fn func) const;        // Traverses the tree. `func` is of type void(T const& node); //d
+    unsigned                    objectCount() const { return mObjectCount; }
+
+private:
+    // ... helper function
+    void helper_clear(Node* rootNode); // helper to help to clear the bvh
+    Aabb compute_aabb(std::vector<T> const& objects) const; // helper that help to compute all objects AABB
+    float calculate_spatial_median(Aabb const& bv, int axis) const; // helper that help to calculate spatial median
+    Node* BuildTopDownRecursive(std::vector<T>& objects, unsigned depth, BvhBuildConfig const& config); // recursive function that help to build top down
+};
+
+/**
+ * @brief
+ *  Prints information about the BVH in a readable way
+ */
+template <typename T>
+void Bvh<T>::DumpInfo(std::ostream& os) const {
+    os << std::fixed;
+    os << "GENERAL INFO: \n"
+        << std::setw(20) << "Depth: " << Depth() << "\n"
+        << std::setw(20) << "Size: " << Size() << "\n"
+        << std::endl;
+    TraverseLevelOrder([&](Bvh<T>::Node const* n) { DumpInfo(os, n); });
+}
+
+/**
+ * @brief
+ *  Shows information about the node in a readable way
+ */
+template <typename T>
+void Bvh<T>::DumpInfo(std::ostream& os, Node const* n) const {
+    if (!n)
+        return;
+
+    // Node info
+    auto const& bv = n->bv;
+    os << "NODE [" << n << "] \n"
+        << std::setw(20) << "BV: " << bv << "\n"
+        << std::setw(20) << "Volume: " << bv.volume() << "\n"
+        << std::setw(20) << "Surface area: " << bv.surface_area() << "\n";
+
+    // Subchildren
+    if (n->IsLeaf()) {
+        os << std::setw(20) << "Children: "
+            << "NONE"
+            << "\n"
+            << std::setw(20) << "Objects count: " << n->ObjectCount() << "\n";
+
+    }
+    else {
+        os << std::setw(20) << "Children: "
+            << "\n"
+            << std::setw(25) << "NODE [" << n->children[0] << "] \n"
+            << std::setw(30) << "Depth: " << n->children[0]->Depth() << "\n"
+            << std::setw(30) << "Size: " << n->children[0]->Size() << "\n"
+            << std::setw(25) << "NODE [" << n->children[1] << "] \n"
+            << std::setw(30) << "Depth: " << n->children[1]->Depth() << "\n"
+            << std::setw(30) << "Size: " << n->children[1]->Size() << "\n";
+    }
+    os << std::endl;
+}
+
+template <typename T>
+void Bvh<T>::DumpGraph(std::ostream& os) const {
+    os << "digraph bvh {\n";
+    os << "\tnode[group=\"\", shape=none, style=\"rounded,filled\", fontcolor=\"#101010\"]\n";
+    // Create all nodes
+    int                                  lastNodeId = 0;
+    std::unordered_map<Node const*, int> nodeIds;
+    TraverseLevelOrder([&](Bvh<T>::Node const* node) {
+        nodeIds[node] = lastNodeId;
+        std::ostringstream labelStream;
+        labelStream << std::fixed << std::setprecision(2);
+        labelStream << "[" << node->bv.min.x << "," << node->bv.min.y << "," << node->bv.min.z << "]\\n"
+                    << "[" << node->bv.max.x << "," << node->bv.max.y << "," << node->bv.max.z << "]\\n"
+                    << "SA: " << node->bv.surface_area() << "\\n"
+                    << "VOL: " << node->bv.volume();
+        if (node->IsLeaf()) {
+            labelStream << "\\n" << node->ObjectCount() << " objects";
+        }
+        os << "\tNODE" << lastNodeId << "[label=\"" << labelStream.str() << "\"];\n";
+        lastNodeId++;
+        });
+
+    // Create all links
+    TraverseLevelOrder([&](Bvh<T>::Node const* node) {
+        auto nodeId = nodeIds.at(node);
+        if (!node->IsLeaf()) {
+            auto nodeLeft = nodeIds.at(node->children[0]);
+            os << "\tNODE" << nodeId << " -> NODE" << nodeLeft << ";\n";
+            auto nodeRight = nodeIds.at(node->children[1]);
+            os << "\tNODE" << nodeId << " -> NODE" << nodeRight << ";\n";
+        }
+        });
+    os << "}";
+}
+
+
+#include "bvh.inl"
+
+#endif // __BVH_HPP__
+#pragma once
