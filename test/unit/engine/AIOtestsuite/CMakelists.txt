@@ -11,6 +11,7 @@ set(ALL_LIBS
   PRIVATE engine_ecs_unit_test
   PRIVATE engine_reflection_unit_test
   PRIVATE engine_serialisation_unit_test
+  PRIVATE engine_scene_graph_unit_test
 )
 
 add_executable(${PROJECT_NAME} ${ALL_FILES})

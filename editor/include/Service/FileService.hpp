@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   FileService.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration for the FileService class, which
+provides file and folder dialog functionalities for opening and saving files.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef FileService_HPP
 #define FileService_HPP
 #include <string>

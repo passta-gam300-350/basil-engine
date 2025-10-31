@@ -95,6 +95,8 @@ std::vector<std::string> AssetManager::GetSubDirectories() {
 
 AssetManager::AssetManager(std::string const& root_dir, std::string const& import_dir)
 	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_IndexingWorker{ &AssetManager::FileIndexingWorkerLoop, std::ref(*this) } {
+	m_LastNotificationTime = std::chrono::steady_clock::now();
+	m_NeedsRescan = false;
 	if (!std::filesystem::exists(m_ImportedAssetPath)) {
 		std::filesystem::create_directories(m_ImportedAssetPath);
 	}
@@ -231,7 +233,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 		std::cerr << "Filesystem error: " << e.what() << "\n";
 	}
 
-	char buffer[1024];
+	char buffer[8192]; // 8KB buffer to handle multiple file notifications
 	DWORD bytesReturned;
 
 	while (!m_ShouldClose) {
@@ -244,36 +246,74 @@ void AssetManager::FileIndexingWorkerLoop() {
 		DWORD waitStatus = WaitForSingleObject(overlapped.hEvent, 1000); // 1s timeout
 		if (waitStatus == WAIT_OBJECT_0) {
 			DWORD bytes;
-			GetOverlappedResult(hDir, &overlapped, &bytes, FALSE);
+			if (!GetOverlappedResult(hDir, &overlapped, &bytes, FALSE)) {
+				std::cerr << "GetOverlappedResult failed, error: " << GetLastError() << "\n";
+				ResetEvent(overlapped.hEvent);
+				continue;
+			}
+			// Check for buffer overflow
+			if (bytes == 0) {
+				std::cerr << "Warning: Directory change notification buffer overflow. Some file changes may have been missed.\n";
+				ResetEvent(overlapped.hEvent);
+				continue;
+			}
 			// process notifications in buffer
 			FILE_NOTIFY_INFORMATION* fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(buffer);
 			do {
 				std::wstring filename(fni->FileName, fni->FileNameLength / sizeof(WCHAR));
 				std::string nfile{ normalizePath(GetRootPath() + "/" + normalizePath(wstring_to_string(filename))) };
+
+				// Update last notification time
+				m_LastNotificationTime = std::chrono::steady_clock::now();
+
+				// Skip directories early
+				if (std::filesystem::exists(nfile) && std::filesystem::is_directory(nfile)) {
+					if (fni->NextEntryOffset == 0) break;
+					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
+						reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
+					continue;
+				}
+
+				std::string file_ext{ getFileExtension(nfile) };
+
+				// Skip .desc files early (they're generated, not source assets)
+				if (file_ext == ".desc") {
+					if (fni->NextEntryOffset == 0) break;
+					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
+						reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
+					continue;
+				}
+
 				std::string dir_path{};
 				std::string descriptor_filepath{};
-				std::string file_ext{ getFileExtension(nfile) };
 				Resource::ResourceDescriptor descriptor;
 				switch (fni->Action) {
 				case FILE_ACTION_MODIFIED:
-					std::wcout << L"Modified: " << filename << "\n";
 				case FILE_ACTION_ADDED:
-					std::wcout << L"New file: " << filename << "\n";
-					if (file_ext.empty() || file_ext == ".desc") {
+					if (fni->Action == FILE_ACTION_MODIFIED) {
+						std::wcout << L"Modified: " << filename << "\n";
+					} else {
+						std::wcout << L"New file: " << filename << "\n";
+					}
+					if (file_ext.empty()) {
 						break;
 					}
+					// Mark that we need a rescan after quiet period
+					m_NeedsRescan = true;
 					dir_path = getParentPath(nfile);
 					descriptor = Resource::ResourceDescriptor::MakeDescriptor(nfile);
-					descriptor.SaveDescriptor();
-					{
-						std::lock_guard lg{ m_DescriptorListMtx };
-						m_Descriptors.emplace(dir_path, descriptor);
+					if (descriptor.m_RawFileInfo.m_FileChecksumHash) {
+						descriptor.SaveDescriptor();
+						{
+							std::lock_guard lg{ m_DescriptorListMtx };
+							m_Descriptors.emplace(dir_path, descriptor);
+						}
 					}
 					break;
 				case FILE_ACTION_REMOVED:
 					std::wcout << L"Removed: " << filename << "\n";
-					if (file_ext == ".desc") {
-						continue;
+					if (file_ext.empty()) {
+						break;
 					}
 					dir_path = getParentPath(nfile);
 					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
@@ -302,8 +342,62 @@ void AssetManager::FileIndexingWorkerLoop() {
 				fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
 					reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
 			} while (true);
+			// Reset the manual-reset event for next notification batch
+			ResetEvent(overlapped.hEvent);
+		}
+
+		// Check if we need to rescan after quiet period (2 seconds)
+		auto now = std::chrono::steady_clock::now();
+		auto time_since_last = std::chrono::duration_cast<std::chrono::seconds>(
+			now - m_LastNotificationTime.load()).count();
+
+		if (m_NeedsRescan && time_since_last >= 2) {
+			// Quiet for 2 seconds - do rescan to catch any dropped notifications
+			RescanDirectory();
+			m_NeedsRescan = false;
 		}
 	}
 
 	CloseHandle(hDir);
+}
+
+void AssetManager::RescanDirectory() {
+	try {
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_RootPath, std::filesystem::directory_options::follow_directory_symlink)) {
+			if (entry.is_directory()) {
+				continue;
+			}
+
+			std::string file_path = entry.path().string();
+			std::string ext_name = getFileExtension(file_path);
+			std::string desc_name = file_path.substr(0, file_path.find_last_of(".")) + ".desc";
+
+			// Skip files we don't process
+			if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl") {
+				continue;
+			}
+
+			// Skip if descriptor already exists
+			if (std::filesystem::exists(desc_name)) {
+				continue;
+			}
+
+			// This file is missing a descriptor - create one
+			std::string dir_path = getParentPath(file_path);
+			Resource::ResourceDescriptor desc = Resource::ResourceDescriptor::MakeDescriptor(file_path);
+			if (desc.m_RawFileInfo.m_FileChecksumHash) {
+				desc.SaveDescriptor();
+				{
+					std::lock_guard lg{ m_DescriptorListMtx };
+					m_Descriptors.emplace(dir_path, desc);
+				}
+				// Log recovered file
+				std::filesystem::path p(file_path);
+				std::wcout << L"Recovered: " << p.filename().wstring() << L"\n";
+			}
+		}
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		std::cerr << "Rescan error: " << e.what() << "\n";
+	}
 }

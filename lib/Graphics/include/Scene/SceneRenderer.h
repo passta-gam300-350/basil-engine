@@ -26,11 +26,11 @@ Technology is prohibited.
 #include <vector>
 
 // Forward declarations for rendering coordinators
-//class MeshRenderer;
 class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
 class PickingRenderPass;
+class OutlineRenderPass;
 
 class SceneRenderer {
 public:
@@ -69,18 +69,63 @@ public:
 
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
+    void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
+    void SetSpotShadowShader(const std::shared_ptr<Shader>& shader) const;
     void SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const;
     void SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
+    void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
     void EnablePicking(bool enable) const;
 
+    // Outline functionality
+    void AddOutlinedObject(uint32_t objectID) const;
+    void RemoveOutlinedObject(uint32_t objectID) const;
+    void ClearOutlinedObjects() const;
+    void SetOutlineColor(const glm::vec3& color) const;
+    void SetOutlineScale(float scale) const;
+    void EnableOutlineRendering(bool enable) const;
+
+    void SetSkyboxCubemap(unsigned int cubemapID);
+    void SetSkyboxShader(const std::shared_ptr<Shader> &shader);
+    void EnableSkybox(bool enable);
+    bool IsSkyboxEnabled() const;
+
+    // HDR configuration API
+    void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
+    void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
+
+    // Facade methods for decoupling (avoid exposing internal coordinators/pipeline)
+    void ToggleRenderPass(const std::string& passName);
+    void SetShadowIntensity(float directional, float point, float spot);
+    void ClearInstanceCache();
+
+    // Shadow quality configuration
+    void SetShadowFilterSize(int filterSize);
+    void SetShadowRandomRadius(float radius);
+    int GetShadowFilterSize() const;
+    float GetShadowRandomRadius() const;
+
+    // Camera control facade
+    void SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos);
+
+    // Debug rendering facade
+    void SetDebugAABBs(const std::vector<DebugAABB>& aabbs);
+    void ToggleAABBVisualization();
+
+    // Pass control facade
+    bool IsPassEnabled(const std::string& passName) const;
+    void EnablePass(const std::string& passName, bool enable);
+    void ToggleHDRPipeline(bool enable);
+
+    // Debug info (read-only access for debugging/logging)
+    const FrameData& GetFrameDataReadOnly() const { return m_FrameData; }
+
 private:
-    //void InitializePipeline();
     void InitializeRenderingCoordinators();
 
     void InitializeDefaultPipeline();
@@ -101,7 +146,6 @@ private:
     std::unique_ptr<TextureSlotManager> m_TextureSlotManager;
 
     // Rendering coordinators - SceneRenderer owns these
-    //std::unique_ptr<MeshRenderer> m_MeshRenderer;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;

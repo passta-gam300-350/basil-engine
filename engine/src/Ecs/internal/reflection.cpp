@@ -113,7 +113,9 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<MeshRendererComponent::Material>(
 		"Material",
 		MemberRegistrationV<&MeshRendererComponent::Material::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">
+		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">,
+		MemberRegistrationV<&MeshRendererComponent::Material::roughness, "roughness">,
+		MemberRegistrationV<&MeshRendererComponent::Material::metallic, "metallic">
 	);
 
 	RegisterReflectionComponent<VisibilityComponent>(
@@ -139,7 +141,15 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	);
 
-
+	//RegisterReflectionComponent<RigidBodyComponent>(
+	//			"RigidBodyComponent",
+	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
+	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
+	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+	//);
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",

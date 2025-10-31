@@ -5,6 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <rsc-ext/rp.hpp>
+#include <chrono>
 
 //future improvements
 // TODO: do not recompute the subdirectories, store it and update using filewatcher
@@ -20,6 +21,8 @@ struct AssetManager {
 	std::mutex m_DescriptorListMtx;
 
 	std::atomic<bool> m_ShouldClose;
+	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
+	std::atomic<bool> m_NeedsRescan;
 
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
@@ -35,6 +38,7 @@ struct AssetManager {
 	std::string ResolveAssetName(rp::BasicIndexedGuid);
 
 	void FileIndexingWorkerLoop();
+	void RescanDirectory();
 
 	void ImportAsset(rp::DescriptorWrapper&);
 	void ImportAssetDirectory(std::string const&);

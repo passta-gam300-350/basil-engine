@@ -494,18 +494,20 @@ function(hide_dependencies)
         yaml-cpp-read
         yaml-cpp-sandbox
         imgui_backends
+        freetype
+        Jolt
         PROPERTIES FOLDER dep)
     suppress_dep_warnings(
-        glad 
+        glad
         glfw
         uninstall
         update_mappings
-        glm 
-        assimp 
-        EnTT 
-        imgui 
-        UpdateAssimpLibsDebugSymbolsAndDLLs 
-        zlibstatic 
+        glm
+        assimp
+        EnTT
+        imgui
+        UpdateAssimpLibsDebugSymbolsAndDLLs
+        zlibstatic
         Catch2
         Catch2WithMain
         ddsloader
@@ -522,7 +524,9 @@ function(hide_dependencies)
         yaml-cpp-parse
         yaml-cpp-read
         yaml-cpp-sandbox
-        imgui_backends)
+        imgui_backends
+        freetype
+        Jolt)
 endfunction()
 
 # Macro to import all dependencies

@@ -32,6 +32,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_STENCIL_BITS, 8);  // Request stencil buffer for outline rendering
 
 	// Create the GLFW window
 	m_Window = glfwCreateWindow(static_cast<int>(m_Width), static_cast<int>(m_Height), title.c_str(), nullptr, nullptr);
@@ -162,6 +163,11 @@ void Window::SetVSync(bool enabled)
 	glfwSwapInterval(enabled ? 1 : 0);
 }
 
+void Window::SetTitle(const std::string& title)
+{
+	glfwSetWindowTitle(m_Window, title.c_str());
+}
+
 void Window::SetClearColor(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);
@@ -180,5 +186,11 @@ void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 		windowInstance->m_Width = width;
 		windowInstance->m_Height = height;
 		glViewport(0, 0, width, height);
+
+		// Trigger render callback if set (enables rendering during window resize)
+		if (windowInstance->m_ResizeCallback)
+		{
+			windowInstance->m_ResizeCallback();
+		}
 	}
 }

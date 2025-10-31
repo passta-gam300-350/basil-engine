@@ -84,18 +84,20 @@ struct SceneRegistry{
 private:
 	std::unordered_map<std::uint32_t, Resource::Guid> m_scenelist;
 	std::unordered_map<std::uint32_t, Scene> m_loaded_scenes;
-	SceneRegistry();
-	~SceneRegistry() {
-		for (auto& [sid, scn] : m_loaded_scenes) {
-			scn.Clear();
-		}
-	}
+	
 	inline static std::unique_ptr<SceneRegistry>& InstancePtr() {
 		static std::unique_ptr<SceneRegistry> s_scn_reg{std::make_unique<SceneRegistry>()};
 		return s_scn_reg;
 	}
 
 public:
+	SceneRegistry();
+	~SceneRegistry() {
+		for (auto& [sid, scn] : m_loaded_scenes) {
+			scn.Clear();
+		}
+	}
+
 	inline static SceneRegistry& Instance() {
 		return *InstancePtr();
 	}

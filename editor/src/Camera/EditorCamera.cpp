@@ -97,7 +97,7 @@ void EditorCamera::UpdateFlyMode(float deltaTime)
         if (glm::length(movement) > 0.0f)
         {
             movement = glm::normalize(movement);
-            m_Position += movement * currentSpeed * deltaTime;
+            m_Pos += movement * currentSpeed * deltaTime;
         }
     }
     else

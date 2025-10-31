@@ -1,4 +1,24 @@
-// THIS IS THE ACTUAL LEVEL EDITOR!!!,
+/******************************************************************************/
+/*!
+\file   EditorMain.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+		Eirwen (c.lau\@digipen.edu)
+		Hai Jie (haijie.w\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contain the implmentation for the EditorMain class, which is the
+main editor screen handling the viewport, entity management, and various editor panels.
+It integrates with the rendering system and ECS to provide a functional editor environment.
+It includes features like scene exploration, entity inspection, and camera controls. It allows
+for creating, selecting, and manipulating entities within the scene.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 
 #include <Render/Render.h>
 #include <Render/Camera.h>
@@ -86,7 +106,6 @@ void EditorMain::update()
 void EditorMain::render()
 {
 	if (!active) return;
-	Engine::BeginFrame();
 
 	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -595,16 +614,31 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
-	// Example profiling data
-	ImGui::Text("Frame Time: %.2fms", 16.67f);
-	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
+
+	auto& info = Engine::Instance().GetInfo();
+
+	// Update FPS/Delta display at intervals for readability
+	static double lastUpdateTime = 0.0;
+	static double displayFPS = 0.0;
+	static double displayDeltaTime = 0.0;
+	static float updateInterval = 0.25f; // Update every 0.25 seconds
+
+	double currentTime = glfwGetTime();
+	if (currentTime - lastUpdateTime >= updateInterval) {
+		displayFPS = info.m_FPS;
+		displayDeltaTime = info.m_DeltaTime;
+		lastUpdateTime = currentTime;
+	}
+
+	ImGui::Text("FPS: %.2f", displayFPS);
+	ImGui::Text("Delta Time: %.3f ms", displayDeltaTime * 1000.0);
+	ImGui::SliderFloat("Update Interval", &updateInterval, 0.1f, 2.0f, "%.2f s");
+	ImGui::Separator();
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
-	double frameMs = last.frameMs;
+	
 
-	ImGui::Text("Frame Time: %.2f ms", frameMs);
-	ImGui::Text("FPS: %.2f", (frameMs > 0.0) ? 1000.0 / frameMs : 0.0);
 
 	double totalMs = 0.0;
 	for (auto& kv : last.systemMs) {
@@ -849,19 +883,8 @@ void EditorMain::Render_AssetBrowser()
 
 void EditorMain::Render_Scene()
 {
-	// Update editor camera - will be done inside the Scene window with proper input handling
-	if (!m_IsPlayMode && m_EditorCamera) {
-		// Get delta time
-		static auto lastTime = std::chrono::steady_clock::now();
-		auto currentTime = std::chrono::steady_clock::now();
-		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-		lastTime = currentTime;
-
-		// Camera update will be moved inside the viewport handling to avoid input conflicts
-		// Store deltaTime for later use
-		static float s_deltaTime = deltaTime;
-		s_deltaTime = deltaTime;
-	}
+	// Get delta time for camera updates
+	float deltaTime = static_cast<float>(Engine::GetDeltaTime());
 
 	ImGui::Begin("Scene");
 
@@ -886,13 +909,13 @@ void EditorMain::Render_Scene()
 	}
 
 	// Check if editor framebuffer is available before trying to access it
-	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
-	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
+	auto& frameData = Engine::GetRenderSystem().m_SceneRenderer->GetFrameData();
+	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
 
 		// Get the color attachment texture ID (not the FBO handle)
-		uint32_t textureID = frameData.editorColorBuffer->GetColorAttachmentRendererID(0);
+		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
 
 		// Render the scene viewport using the texture ID
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
@@ -932,12 +955,6 @@ void EditorMain::Render_Scene()
 
 		// Handle camera input only when viewport is hovered and not clicking
 		if (!m_IsPlayMode && m_EditorCamera && viewportHovered && !viewportClicked) {
-			// Get stored delta time
-			static auto lastTime = std::chrono::steady_clock::now();
-			auto currentTime = std::chrono::steady_clock::now();
-			float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-			lastTime = currentTime;
-
 			// Temporarily disable ImGui input capture for camera control
 			ImGuiIO& io = ImGui::GetIO();
 			bool originalWantCaptureMouse = io.WantCaptureMouse;
@@ -1005,9 +1022,9 @@ void EditorMain::Render_Scene()
 	}
 
 	// Show framebuffer status
-	ImGui::Text("Editor FBO: %s", frameData.editorColorBuffer ? "Valid" : "None");
-	if (frameData.editorColorBuffer) {
-		ImGui::Text("FBO Handle: %u", frameData.editorColorBuffer->GetFBOHandle());
+	ImGui::Text("Editor FBO: %s", frameData.editorResolvedBuffer ? "Valid" : "None");
+	if (frameData.editorResolvedBuffer) {
+		ImGui::Text("FBO Handle: %u", frameData.editorResolvedBuffer->GetFBOHandle());
 		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
 	}
 
@@ -1125,9 +1142,13 @@ void EditorMain::CreatePhysicsDemoScene()
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	world.get_component_from_entity<TransformComponent>(entity).m_Scale = glm::vec3{ 50,1,50 };
+	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
+	transform.m_Scale = glm::vec3{ 50,1,50 };
 	auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
-	auto& [scale, rot, pos] = world.get_component_from_entity<TransformComponent>(entity);
+
+	const auto& scale = transform.m_Scale;
+	const auto& rot = transform.m_Rotation;
+	const auto& pos = transform.m_Translation;
 
 	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
 	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
@@ -1207,13 +1228,13 @@ void EditorMain::CreateDemoScene()
 	light.m_Type = Light::Type::Directional;
 	light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
 	light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-	light.m_Intensity = 1.0f;
+	light.m_Intensity = 2.5f;
 	light.m_IsEnabled = true;
 
 	world.add_component_to_entity<LightComponent>(lightEntity, light);
 
 	// Set stronger ambient light for better visibility
-	RenderSystem::Instance().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
+	Engine::GetRenderSystem().m_SceneRenderer->SetAmbientLight(glm::vec3(0.7f, 0.7f, 0.7f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
@@ -1332,7 +1353,7 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 
 void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight)
 {
-	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 	assert(sceneRenderer && "SceneRenderer must be available for entity picking");
 
 	// Assert input parameters are valid
@@ -1412,7 +1433,7 @@ void EditorMain::ClearEntitySelection()
 
 void EditorMain::SetDebugVisualization(bool showAABBs)
 {
-	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
+	auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 	if (sceneRenderer == nullptr) {
 		return;
 	}
