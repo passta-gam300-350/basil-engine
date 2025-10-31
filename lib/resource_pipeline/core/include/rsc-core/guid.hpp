@@ -3,7 +3,6 @@
 
 #include <chrono>
 #include <random>
-#include <string>
 #include <format>
 #include "rsc-core/utility.hpp"
 
@@ -120,15 +119,10 @@ namespace rp {
         };
 
         template <utility::static_string ss>
-        struct TypeNameGuid : public BasicIndexedGuid {
-        };
+        struct TypeNameGuid;
 
         template <typename Type>
-        struct TypedGuid : public BasicIndexedGuid {
-            using type = Type;
-            static constexpr auto type_index{ utility::type_hash<Type>::value() };
-            TypedGuid() : BasicIndexedGuid{null_guid, type_index} {}
-        };
+        struct TypedGuid;
     }
 }
 

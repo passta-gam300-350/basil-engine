@@ -1,0 +1,196 @@
+#ifndef RP_RSC_CORE_ARCHIVE_HPP
+#define RP_RSC_CORE_ARCHIVE_HPP
+
+#include <format>
+#include <fstream>
+#include "rsc-core/reflection/reflection.hpp"
+
+namespace rp{
+	namespace serialization {
+		template <utility::static_string format_name>
+		struct in_archive {
+			static_assert(std::false_type::value && "unsupported archive format! define your own archive format specialisation, see in_archive<\"bin\">");
+		};
+
+		template <utility::static_string format_name>
+		struct out_archive {
+			static_assert(std::false_type::value && "unsupported archive format! define your own archive format specialisation, see out_archive<\"bin\">");
+		};
+
+		template <>
+		struct in_archive<"bin"> {
+			std::ifstream m_ifs;
+			in_archive() = delete;
+			in_archive(std::string const& filepath) : m_ifs{filepath, std::ios::binary} {}
+			~in_archive() { m_ifs.close(); }
+			template <typename Type>
+			Type read() {
+				if constexpr (std::is_trivially_copyable_v<Type>) {
+					Type v{};
+					m_ifs.read(reinterpret_cast<char*>(&v), sizeof(Type));
+					return v;
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					std::size_t cont_sz{ read<std::size_t>() };
+					std::remove_cvref_t<Type> v(cont_sz, '\0');
+					m_ifs.read(reinterpret_cast<char*>(v.data()), cont_sz);
+					return v;
+				}
+				else if constexpr (reflection::is_associative_container_v<Type>) {
+					Type v{};
+					std::size_t cont_sz{ read<std::size_t>() };
+					auto cont_view{ reflection::reflect(v) };
+					//no reserve because not all containers supports reserve
+					while (cont_sz--) {
+						cont_view.emplace(read<decltype(cont_view)::input_type>());
+					}
+					return v;
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					Type v{};
+					std::size_t cont_sz{ read<std::size_t>() };
+					auto cont_view{ reflection::reflect(v) };
+					//no reserve because not all containers supports reserve
+					while (cont_sz--) {
+						cont_view.emplace(cont_view.cend(), read<decltype(cont_view)::underlying_type>());
+					}
+					return v;
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					Type v{};
+					reflection::reflect(v).each([&](auto& field) {
+						*field.m_field_ptr = read<std::remove_pointer_t<std::remove_cvref_t<decltype(field.m_field_ptr)>>>();
+						});
+					return v;
+				}
+				else {
+					return Type{};
+				}
+			}
+		};
+
+		template <>
+		struct out_archive<"bin"> {
+			std::ofstream m_ofs;
+			out_archive() = delete;
+			out_archive(std::string const& filepath) : m_ofs{ filepath, std::ios::binary } {}
+			~out_archive() { m_ofs.close(); }
+			template <typename Type>
+			void write(Type const& v) {
+				if constexpr (std::is_trivially_copyable_v<Type>) {
+					m_ofs.write(reinterpret_cast<const char*>(&v), sizeof(Type));
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					write(v.size());
+					m_ofs.write(reinterpret_cast<const char*>(v.data()), v.size());
+				}
+				else if constexpr (reflection::is_associative_container_v<Type>) {
+					auto cont{ reflection::reflect(v) };
+					write(cont.size());
+					cont.each([&](auto const& field) {
+						write(field);
+						});
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					auto cont{ reflection::reflect(v) };
+					write(cont.size());
+					cont.each([&](auto const& field) {
+						write(field);
+						});
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					reflection::reflect(v).each([&](auto const& field) {
+						write(*field.m_field_ptr);
+						});
+				}
+			}
+		};
+
+		template <>
+		struct in_archive<"txt"> {
+			std::ifstream m_ifs;
+			in_archive() = delete;
+			in_archive(std::string const& filepath) : m_ifs{ filepath, std::ios::in } {}
+			~in_archive() { m_ifs.close(); }
+			template <typename Type>
+			Type read() {
+				if constexpr (std::is_fundamental_v<Type>) {
+					Type v{};
+					m_ifs >> v;
+					return v;
+				}
+				if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					Type v{};
+					m_ifs >> v;
+					return v.substr(1, v.size()-2);
+				}
+				else if constexpr (reflection::is_associative_container_v<Type>) {
+					Type v{};
+					auto cont_view{ reflection::reflect(v) };
+					//no reserve because not all containers supports reserve
+					cont_view.emplace(read<decltype(cont_view)::input_type>());
+					return v;
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					Type v{};
+					std::size_t cont_sz{ read<std::size_t>() };
+					auto cont_view{ reflection::reflect(v) };
+					cont_view.reserve(cont_sz);
+					while (cont_sz--) {
+						cont_view.emplace(cont_view.cend(), read<decltype(cont_view)::underlying_type>());
+					}
+					return v;
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					Type v{};
+					reflection::reflect(v).each([&](auto& field) {
+						*field.m_field_ptr = read<std::remove_pointer_t<std::remove_cvref_t<decltype(field.m_field_ptr)>>>();
+						});
+					return v;
+				}
+				else {
+					return Type{};
+				}
+			}
+		};
+
+		template <>
+		struct out_archive<"txt"> {
+			std::ofstream m_ofs;
+			out_archive() = delete;
+			out_archive(std::string const& filepath) : m_ofs{ filepath, std::ios::out } {}
+			~out_archive() { m_ofs.close(); }
+			template <typename Type>
+			void write(Type const& v, std::size_t padding = 0) {
+				if constexpr (std::is_fundamental_v<Type>) {
+					m_ofs << v<<'\n';
+				}
+				if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					m_ofs << '\"' << v << "\"\n";
+				}
+				else if constexpr (reflection::is_associative_container_v<Type> || reflection::is_sequence_container_v<Type>) {
+					auto cont{ reflection::reflect(v) };
+					cont.each([&](auto const& field) {
+						write(field, padding);
+						});
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					if (padding) {
+						m_ofs << '\n';
+					}
+					reflection::reflect(v).each([&](auto const& field) {
+						m_ofs << std::string(padding, ' ') << field.m_field_name << ": ";
+						write(*field.m_field_ptr, padding + field.m_field_name.size());
+						});
+				}
+			}
+		};
+
+		using binary_in_archive = in_archive<"bin">;
+		using binary_out_archive = out_archive<"bin">;
+		using text_in_archive = in_archive<"txt">;
+		using text_out_archive = out_archive<"txt">;
+	}
+}
+
+#endif

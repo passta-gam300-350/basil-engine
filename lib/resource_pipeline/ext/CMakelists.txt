@@ -4,13 +4,20 @@ project(resource-pipeline-ext)
 file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
     ${CMAKE_CURRENT_LIST_DIR}/include/*.[ch]pp
     ${CMAKE_CURRENT_LIST_DIR}/include/*.h
+    ${CMAKE_CURRENT_LIST_DIR}/src/*.[ch]pp
 )
 
 set(ALL_LIBS
   INTERFACE resource-pipeline-core
+  PUBLIC yaml-cpp::yaml-cpp
 )
 
-add_library(${PROJECT_NAME} INTERFACE ${ALL_FILES})
+file(GLOB_RECURSE TEST_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+    ${CMAKE_CURRENT_LIST_DIR}/test/*.[ch]pp
+    ${CMAKE_CURRENT_LIST_DIR}/test/*.h
+)
+
+add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
 target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
