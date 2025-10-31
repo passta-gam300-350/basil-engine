@@ -118,7 +118,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
     toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - ToneMapPass uses SRGB8 format for hardware gamma via GL_FRAMEBUFFER_SRGB
     mainPipeline->AddPass(toneMapPass);
-    //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
+    mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
     // 10. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
