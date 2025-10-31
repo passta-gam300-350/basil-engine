@@ -167,6 +167,23 @@ public:
 	void EnableAABBVisualization(bool enable);
 
 	/**
+	 * @brief Add object outline for visual selection feedback
+	 * @param objectID Object ID to outline
+	 */
+	void AddOutlinedObject(uint32_t objectID);
+
+	/**
+	 * @brief Remove object outline
+	 * @param objectID Object ID to remove outline from
+	 */
+	void RemoveOutlinedObject(uint32_t objectID);
+
+	/**
+	 * @brief Clear all outlined objects
+	 */
+	void ClearOutlinedObjects();
+
+	/**
 	 * @brief Set ambient light color for the scene
 	 * @param color RGB color vector (0.0-1.0 range)
 	 */

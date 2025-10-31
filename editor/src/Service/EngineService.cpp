@@ -14,6 +14,11 @@ void EngineContainerService::EngineContainer::engine_service() {
 			Engine::CoreUpdate();
 			Engine::EndFrame();
 			Engine::UpdateDebug();
+
+			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
+			// This prevents screen tearing when editor reads the framebuffer texture
+			glFinish();
+
 			m_container_is_presentable.acquire();
 			engine_snapshot_writeback();
 		}
@@ -353,6 +358,33 @@ void EngineContainerService::EnableAABBVisualization(bool enable) {
 		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 		if (sceneRenderer) {
 			sceneRenderer->EnableAABBVisualization(enable);
+		}
+	});
+}
+
+void EngineContainerService::AddOutlinedObject(uint32_t objectID) {
+	ExecuteOnEngineThread([objectID]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->AddOutlinedObject(objectID);
+		}
+	});
+}
+
+void EngineContainerService::RemoveOutlinedObject(uint32_t objectID) {
+	ExecuteOnEngineThread([objectID]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->RemoveOutlinedObject(objectID);
+		}
+	});
+}
+
+void EngineContainerService::ClearOutlinedObjects() {
+	ExecuteOnEngineThread([]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->ClearOutlinedObjects();
 		}
 	});
 }

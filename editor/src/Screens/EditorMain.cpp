@@ -552,7 +552,7 @@ void EditorMain::Render_SceneExplorer()
 	ImGui::Text("Entities in scene:");
 	for (size_t i = 0; i < entityHandles.size(); ++i) {
 		auto ehdl = entityHandles[i];
-		ImGui::PushID(static_cast<int>(ehdl));
+		ImGui::PushID(static_cast<int>(i));
 
 		// Check if this entity is currently selected
 		uint32_t entityUID = static_cast<uint32_t>(ehdl);
@@ -1400,8 +1400,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
 	engineService.SelectEntityByObjectID(objectID);
 
-	// TODO: Add visual feedback for selected entity (highlight, outline, etc.)
-	// This could involve setting a uniform or render state for the selected object
+	// Add visual feedback: outline the selected entity
+	engineService.ClearOutlinedObjects();  // Clear previous selection
+	engineService.AddOutlinedObject(objectID);  // Outline new selection
 }
 
 void EditorMain::ClearEntitySelection()
@@ -1409,6 +1410,9 @@ void EditorMain::ClearEntitySelection()
 	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
 		m_SelectedEntityID = static_cast<uint32_t>(-1);
+
+		// Clear visual feedback
+		engineService.ClearOutlinedObjects();
 	}
 }
 
