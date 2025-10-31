@@ -94,7 +94,7 @@ Window::Window(GLFWwindow* ptr)
 
 	// Create the GLFW window
 	glfwGetWindowSize(ptr, (int32_t*)(&m_Width), (int32_t*)(&m_Height));
-	glfwMakeContextCurrent(ptr);
+	// glfwMakeContextCurrent(ptr);  // Commented out: Not needed - glfwCreateWindow doesn't require a current context
 	m_Window = glfwCreateWindow(m_Width, m_Height, "hidden", nullptr, ptr);
 	if (m_Window == nullptr)
 	{

@@ -120,14 +120,17 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(toneMapPass);
     mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
-    // 10. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
-    auto editorResolvePass = std::make_shared<EditorResolvePass>();
-    mainPipeline->AddPass(editorResolvePass);
+    
+    
 
-    // 11. Add picking pass (executes when needed, disabled by default)
+    // 10. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
+
+    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    auto editorResolvePass = std::make_shared<EditorResolvePass>();
+    mainPipeline->AddPass(editorResolvePass);
 
     // 12. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
@@ -541,6 +544,26 @@ void SceneRenderer::ToggleAABBVisualization()
         else
         {
             spdlog::warn("SceneRenderer: Debug pass not found - cannot toggle AABB visualization");
+        }
+    }
+}
+
+void SceneRenderer::EnableAABBVisualization(bool enable)
+{
+    assert(m_Pipeline && "Pipeline must be initialized");
+
+    if (m_Pipeline)
+    {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass)
+        {
+            debugPass->SetShowAABBs(enable);
+            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
+                         enable ? "ENABLED" : "DISABLED");
+        }
+        else
+        {
+            spdlog::warn("SceneRenderer: Debug pass not found - cannot set AABB visualization");
         }
     }
 }

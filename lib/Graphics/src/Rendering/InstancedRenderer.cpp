@@ -121,12 +121,18 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     if (renderables.empty()) {
+        // Clear cache if we transition from having objects to no objects
+        if (!m_MeshInstances.empty())
+        {
+            Clear();
+        }
         return;
     }
 
-    // Only build instance data if it doesn't exist yet (caching for static scenes)
-    // TODO: Add dirty flag system to rebuild when objects actually change
-    if (m_MeshInstances.empty()) {
+    // Only rebuild instance data when renderables actually change
+    // This avoids redundant work for static scenes while handling dynamic changes
+    if (HasRenderablesChanged(renderables))
+    {
         BuildDynamicInstanceData(renderables);
     }
 
@@ -144,9 +150,10 @@ void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::ve
         return;
     }
 
-    // Only build instance data if it doesn't exist yet (caching for static scenes)
-    // Shadow passes can reuse the same instance data built by the main render pass
-    if (m_MeshInstances.empty()) {
+    // Only rebuild instance data when renderables actually change
+    // Shadow passes reuse the same instance data as the main pass
+    if (HasRenderablesChanged(renderables))
+    {
         BuildDynamicInstanceData(renderables);
     }
 
@@ -361,6 +368,45 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, const std::shared
     auto& meshInstances = m_MeshInstances[meshId];
     meshInstances.mesh = mesh;
     meshInstances.material = material;
+}
+
+bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> &renderables)
+{
+    // Quick check: different count means definitely changed
+    if (renderables.size() != m_LastRenderableCount)
+    {
+        m_LastRenderableCount = renderables.size();
+
+        // Update tracked object IDs
+        m_LastObjectIDs.clear();
+        m_LastObjectIDs.reserve(renderables.size());
+        for (const auto &r : renderables)
+        {
+            m_LastObjectIDs.push_back(r.objectID);
+        }
+
+        return true;
+    }
+
+    // Same count - check if the object IDs match (detect entity replacement)
+    // This catches cases like: delete entity A, add entity B (same count, different entities)
+    for (size_t i = 0; i < renderables.size(); ++i)
+    {
+        if (i >= m_LastObjectIDs.size() || renderables[i].objectID != m_LastObjectIDs[i])
+        {
+            // IDs don't match - renderables have changed
+            m_LastObjectIDs.clear();
+            m_LastObjectIDs.reserve(renderables.size());
+            for (const auto &r : renderables)
+            {
+                m_LastObjectIDs.push_back(r.objectID);
+            }
+            return true;
+        }
+    }
+
+    // No changes detected - same count and same IDs
+    return false;
 }
 
 
