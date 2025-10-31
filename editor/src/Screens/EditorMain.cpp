@@ -24,6 +24,7 @@ Technology is prohibited.
 #include <Render/Camera.h>
 #include <Engine.hpp>
 #include <Component/Transform.hpp>
+#include <Component/MaterialOverridesComponent.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
@@ -599,6 +600,17 @@ void EditorMain::Render_SceneExplorer()
 		uint32_t entityUID = ecs::entity(ehdl).get_uid();
 		bool isSelected = (m_SelectedEntityID == entityUID);
 
+		// DEBUG: Log entity IDs for all entities
+		static bool loggedOnce = false;
+		if (!loggedOnce && i == 0) {
+			spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
+			for (size_t j = 0; j < entityHandles.size(); ++j) {
+				uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
+				spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
+			}
+			loggedOnce = true;
+		}
+
 		// Display entity info with selection highlighting
 		std::string entityName = entityNames[i];
 
@@ -619,7 +631,15 @@ void EditorMain::Render_SceneExplorer()
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow text for selected
 		}
 
-		if (ImGui::TreeNode(entityName.c_str())) {
+		bool nodeOpen = ImGui::TreeNode(entityName.c_str());
+
+		// Check if TreeNode header was clicked (must be done immediately after TreeNode call)
+		if (ImGui::IsItemClicked()) {
+			spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
+			SelectEntity(entityUID);
+		}
+
+		if (nodeOpen) {
 			// Show component info
 			if (hasVisibility) {
 				ImGui::Text("Has Visibility Component");
@@ -637,11 +657,6 @@ void EditorMain::Render_SceneExplorer()
 		// Pop the selection highlight color if it was applied
 		if (isSelected) {
 			ImGui::PopStyleColor();
-		}
-
-		// Allow clicking entity in hierarchy to select it
-		if (ImGui::IsItemClicked()) {
-			SelectEntity(entityUID);
 		}
 
 		ImGui::PopID();
@@ -1084,12 +1099,25 @@ void EditorMain::CreatePlaneEntity()
 		meshRenderer.isPrimitive = true;
 		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
 		meshRenderer.hasAttachedMaterial = false;
+<<<<<<< Updated upstream
 		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
 		meshRenderer.material.metallic = 0.1f;
 		meshRenderer.material.roughness = 0.8f;
 		meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+=======
+		meshRenderer.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+		// Add material overrides for customization (replaces embedded struct)
+		MaterialOverridesComponent materialOverrides;
+		materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f);
+		materialOverrides.floatOverrides["u_MetallicValue"] = 0.1f;
+		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.8f;
+		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+>>>>>>> Stashed changes
 	});
 }
 
@@ -1168,12 +1196,16 @@ void EditorMain::CreatePhysicsDemoScene()
 	meshRenderer.isPrimitive = true;
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
 	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
-	meshRenderer.material.metallic = 0.1f;
-	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+	meshRenderer.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	// Add material overrides for customization (replaces embedded struct)
+	MaterialOverridesComponent materialOverrides;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f);
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.1f;
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.8f;
+	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 
 	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
 	transform.m_Scale = glm::vec3{ 50,1,50 };
@@ -1224,12 +1256,16 @@ void EditorMain::CreatePhysicsDemoScene()
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer2.m_MeshGuid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.material.m_MaterialGuid = materialGuid2;
-	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
-	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+	meshRenderer2.m_MaterialGuid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides2;
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor * 1.2f; // Brighten the color slightly
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic for better color visibility
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
+	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
 	
@@ -1304,12 +1340,16 @@ void EditorMain::CreatePhysicsCube()
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer2.m_MeshGuid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.material.m_MaterialGuid = materialGuid2;
-	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
-	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+	meshRenderer2.m_MaterialGuid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides2;
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor * 1.2f; // Brighten the color slightly
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic for better color visibility
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
+	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
 
@@ -1349,6 +1389,7 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer.m_MeshGuid = meshGuid;
 	meshRenderer.hasAttachedMaterial = false;
+<<<<<<< Updated upstream
 	meshRenderer.material.m_MaterialGuid = materialGuid;
 	meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
 	meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
@@ -1357,6 +1398,19 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 	}); // End of ExecuteOnEngineThread lambda
+=======
+	meshRenderer.m_MaterialGuid = materialGuid;
+
+	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = color * 1.2f; // Brighten the color slightly
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic for better color visibility
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
+	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+	});
+>>>>>>> Stashed changes
 }
 
 void EditorMain::CreateCubeGrid(int gridSize, float spacing)

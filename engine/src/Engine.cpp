@@ -8,6 +8,7 @@
 #include "Ecs/ecs.h"
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
+#include "System/MaterialOverridesSystem.hpp"
 #include "Render/Camera.h"
 
 #ifdef _WIN32
@@ -123,6 +124,7 @@ void Engine::CoreUpdate() {
 	instance.m_World.pre_update();
 	TransformSystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
+	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
 	Engine::GetRenderSystem().Update(instance.m_World);

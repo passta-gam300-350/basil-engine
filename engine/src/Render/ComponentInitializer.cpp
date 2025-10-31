@@ -4,6 +4,7 @@
 #include "Render/PrimitiveManager.hpp"
 #include "Render/Render.h"
 #include "Manager/ResourceSystem.hpp"
+#include "Engine.hpp"
 #include <Resources/Material.h>
 #include <spdlog/spdlog.h>
 
@@ -82,10 +83,9 @@ void ComponentInitializer::Initialize(entt::registry& registry, entt::entity ent
                 return;
             }
 
+            // Create default PBR material (no per-entity customization here)
+            // Customization is handled by MaterialOverridesSystem
             materialResource = std::make_shared<Material>(pbrShader, "DefaultMaterial_Entity_" + std::to_string(entityUID));
-            materialResource->SetAlbedoColor(meshComp->material.m_AlbedoColor);
-            materialResource->SetMetallicValue(meshComp->material.metallic);
-            materialResource->SetRoughnessValue(meshComp->material.roughness);
         }
         else if (!materialResource) {
             // Try file-based registry
@@ -122,11 +122,40 @@ void ComponentInitializer::SetupObservers(ecs::world& world) {
 
     // Disconnect any existing observers first (in case this is called multiple times)
     registry.on_construct<MeshRendererComponent>().disconnect();
+    registry.on_destroy<MeshRendererComponent>().disconnect();
 
     // Set up observer for when MeshRendererComponent is added to an entity
     // EnTT requires either static functions or member function pointers with instance
     // We use the instance + member function pointer overload
     registry.on_construct<MeshRendererComponent>().connect<&ComponentInitializer::Initialize>(this);
 
-    spdlog::info("ComponentInitializer: Component observers registered");
+    // Set up observer for when MeshRendererComponent is destroyed
+    registry.on_destroy<MeshRendererComponent>().connect<&ComponentInitializer::OnMeshRendererDestroyed>(this);
+
+    spdlog::info("ComponentInitializer: Component observers registered (construct + destroy)");
+}
+
+void ComponentInitializer::OnMeshRendererDestroyed(entt::registry& registry, entt::entity entity) {
+    // Convert entt::entity to entity ID for cache lookup
+    const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
+
+    spdlog::debug("ComponentInitializer: Cleaning up resources for destroyed entity {}", entityUID);
+
+    // Clean up cached mesh and material resources
+    m_ResourceCache.ClearEntityResources(entityUID);
+
+    // Clean up material instances and property blocks via RenderSystem
+    auto& renderSystem = Engine::GetRenderSystem();
+
+    // Destroy material instance if it exists
+    if (renderSystem.HasMaterialInstance(entityUID)) {
+        renderSystem.DestroyMaterialInstance(entityUID);
+    }
+
+    // Destroy property block if it exists
+    if (renderSystem.HasPropertyBlock(entityUID)) {
+        renderSystem.DestroyPropertyBlock(entityUID);
+    }
+
+    spdlog::debug("ComponentInitializer: Successfully cleaned up all resources for entity {}", entityUID);
 }

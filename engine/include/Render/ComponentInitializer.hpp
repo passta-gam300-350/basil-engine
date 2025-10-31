@@ -72,6 +72,16 @@ public:
     void SetupObservers(ecs::world& world);
 
 private:
+    /**
+     * @brief Cleanup callback when MeshRendererComponent is destroyed
+     * @param registry EnTT registry containing the entity
+     * @param entity Entity being destroyed
+     *
+     * Called automatically by EnTT observers when MeshRendererComponent is removed.
+     * Cleans up cached rendering resources (meshes, materials, material instances).
+     */
+    void OnMeshRendererDestroyed(entt::registry& registry, entt::entity entity);
+
     // References to render subsystems (NOT owned by this class)
     RenderResourceCache& m_ResourceCache;
     ShaderLibrary& m_ShaderLibrary;

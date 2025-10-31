@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Component/Transform.hpp"
+#include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
 #include "Render/Camera.h"
 TypeInfo ResolveType(TypeName t_name) {
@@ -110,14 +111,6 @@ void ReflectionRegistry::SetupNativeTypes() {
 void ReflectionRegistry::SetupEngineTypes()
 {
 
-	RegisterReflectionComponent<MeshRendererComponent::Material>(
-		"Material",
-		MemberRegistrationV<&MeshRendererComponent::Material::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">,
-		MemberRegistrationV<&MeshRendererComponent::Material::roughness, "roughness">,
-		MemberRegistrationV<&MeshRendererComponent::Material::metallic, "metallic">
-	);
-
 	RegisterReflectionComponent<VisibilityComponent>(
 		"VisibilityComponent",
 		MemberRegistrationV<&VisibilityComponent::m_IsVisible, "m_IsVisible">
@@ -136,9 +129,7 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MeshRendererComponent::hasAttachedMaterial, "hasAttachedMaterial">,
 		MemberRegistrationV<&MeshRendererComponent::isPrimitive, "isPrimitive">,
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
-		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::material, "material">
-
+		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
 
 	//RegisterReflectionComponent<RigidBodyComponent>(
@@ -176,5 +167,14 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&CameraComponent::m_Front, "m_Front">,
 		MemberRegistrationV<&CameraComponent::m_Yaw, "m_Yaw">,
 		MemberRegistrationV<&CameraComponent::m_Pitch, "m_Pitch">
+	);
+
+	RegisterReflectionComponent<MaterialOverridesComponent>(
+		"MaterialOverridesComponent",
+		MemberRegistrationV<&MaterialOverridesComponent::floatOverrides, "floatOverrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::vec3Overrides, "vec3Overrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::vec4Overrides, "vec4Overrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::textureOverrides, "textureOverrides">
 	);
 }

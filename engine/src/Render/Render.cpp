@@ -263,10 +263,7 @@ void RenderSystem::Update(ecs::world& world) {
 				}
 			} else if (!mesh.hasAttachedMaterial) {
 				// No instance - sync component properties to base material (editor behavior)
-				// This allows direct component editing in editor
-				materialResource->SetAlbedoColor(mesh.material.m_AlbedoColor);
-				materialResource->SetMetallicValue(mesh.material.metallic);
-				materialResource->SetRoughnessValue(mesh.material.roughness);
+				// Material customization now handled by Material OverridesSystem
 			}
 
 			RenderableData renderData;
@@ -401,12 +398,11 @@ void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRende
 		return;
 	}
 
-	// Sync component material properties to cached material
-	material->SetAlbedoColor(meshRenderer.material.m_AlbedoColor);
-	material->SetMetallicValue(meshRenderer.material.metallic);
-	material->SetRoughnessValue(meshRenderer.material.roughness);
+	// NOTE: Material sync is now handled by MaterialOverridesSystem
+	// MeshRendererComponent no longer has embedded material properties
+	// Material customization is done via MaterialOverridesComponent → MaterialInstance
 
-	spdlog::debug("RenderSystem: Synced material properties for entity {}", entityUID);
+	spdlog::debug("RenderSystem: SyncMaterialFromComponent called for entity {} (no-op, handled by MaterialOverridesSystem)", entityUID);
 }
 
 void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity entity) {
@@ -433,6 +429,14 @@ std::shared_ptr<MaterialInstance> RenderSystem::GetMaterialInstance(
 	}
 
 	return m_MaterialInstanceManager->GetMaterialInstance(entityUID, baseMaterial);
+}
+
+std::shared_ptr<Material> RenderSystem::GetEntityMaterial(uint64_t entityUID) const {
+	if (!m_ResourceCache) {
+		return nullptr;
+	}
+
+	return m_ResourceCache->GetEntityMaterial(entityUID);
 }
 
 bool RenderSystem::HasMaterialInstance(uint64_t entityUID) const {
