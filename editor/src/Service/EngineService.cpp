@@ -1,6 +1,7 @@
 #include "Service/EngineService.hpp"
 #include "Editor.hpp"
 #include <Render/Render.h>  // For RenderSystem and FrameData
+#include <algorithm>  // For std::find
 
 void EngineContainerService::EngineContainer::engine_service() {
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
@@ -28,10 +29,20 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 	auto entities_rng{ w.get_all_entities() };
 	m_entities_snapshot.resize(entities_rng.size_hint());
 	m_names_snapshot.resize(entities_rng.size_hint());
+	m_entity_components_snapshot.resize(entities_rng.size_hint());
+
 	int i{};
 	for (auto e : entities_rng) {
 		m_entities_snapshot[i] = e.get_uuid();
-		m_names_snapshot[i++] = e.name();
+		m_names_snapshot[i] = e.name();
+
+		// Gather component type IDs for this entity
+		auto components = e.get_reflectible_components();
+		m_entity_components_snapshot[i].clear();
+		for (auto& [typeID, data] : components) {
+			m_entity_components_snapshot[i].push_back(typeID);
+		}
+		i++;
 	}
 	if (m_snapshot_entity_handle == ~0ull) {
 		return;
@@ -158,6 +169,42 @@ void EngineContainerService::end() {
 	release();
 }
 
+void EngineContainerService::create_entity() {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot create entity, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	++m_cont->m_entity_create_count;
+}
+
+void EngineContainerService::delete_entity(entity_handle ehdl) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot delete entity, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_entity_delete_queue.push(ehdl);
+}
+
+void EngineContainerService::add_component(entity_handle ehdl, std::uint32_t component_type_id) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot add component, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, component_type_id, false));
+}
+
+void EngineContainerService::delete_component(entity_handle ehdl, std::uint32_t component_type_id) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot delete component, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, component_type_id, true));
+}
+
 std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainerService::get_reflectible_component_id_name_list() {
 	static std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> s_id_type_name_list{ [] () {
 		std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> temp{};
@@ -202,6 +249,23 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 
 	std::lock_guard lg{ m_cont->m_mtx };
 	return m_cont->m_names_snapshot;
+}
+
+bool EngineContainerService::EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const {
+	if (!m_cont) return false;
+
+	std::lock_guard lg{ m_cont->m_mtx };
+
+	// Find the entity in the snapshot
+	for (size_t i = 0; i < m_cont->m_entities_snapshot.size(); ++i) {
+		if (m_cont->m_entities_snapshot[i] == entityHandle) {
+			// Check if this component type ID is in the entity's component list
+			const auto& components = m_cont->m_entity_components_snapshot[i];
+			return std::find(components.begin(), components.end(), componentTypeID) != components.end();
+		}
+	}
+
+	return false; // Entity not found in snapshot
 }
 
 FrameData& EngineContainerService::GetFrameData() {
@@ -284,24 +348,11 @@ void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, fl
 	});
 }
 
-void EngineContainerService::SetDebugVisualization(bool showAABBs) {
-	ExecuteOnEngineThread([showAABBs]() {
+void EngineContainerService::EnableAABBVisualization(bool enable) {
+	ExecuteOnEngineThread([enable]() {
 		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-		if (!sceneRenderer) {
-			spdlog::warn("EngineService: SceneRenderer not available for debug visualization");
-			return;
-		}
-
-		auto* pipeline = sceneRenderer->GetPipeline();
-		if (!pipeline) {
-			spdlog::warn("EngineService: Pipeline not available for debug visualization");
-			return;
-		}
-
-		auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
-		if (debugPass) {
-			debugPass->SetShowAABBs(showAABBs);
-			spdlog::info("EngineService: Debug AABBs {}", showAABBs ? "enabled" : "disabled");
+		if (sceneRenderer) {
+			sceneRenderer->EnableAABBVisualization(enable);
 		}
 	});
 }

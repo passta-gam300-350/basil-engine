@@ -100,6 +100,12 @@ struct ReflectionRegistry {
 		return reg.m_Names[type_id];
 	}
 
+	// Helper to get TypeID from a type (wrapper around entt::type_hash)
+	template<typename T>
+	static constexpr TypeID GetTypeID() {
+		return entt::type_hash<T>::value();
+	}
+
 	static std::vector<ComponentBinarySerializer>& BinSerializerRegistryInstance() {
 		return Registry().m_BinRegistry;
 	}

@@ -35,6 +35,10 @@ public:
 		// Command queue for EditorMain → Engine communication
 		std::queue<std::function<void()>> m_command_queue;
 
+		// Component type IDs per entity (parallel array to m_entities_snapshot)
+		// Each vector contains the component type IDs that entity has
+		std::vector<std::vector<std::uint32_t>> m_entity_components_snapshot;
+
 	private:
 		void engine_service();
 		void engine_snapshot_callback();
@@ -106,6 +110,15 @@ public:
 	const std::vector<std::string>& GetEntityNamesSnapshot() const;
 
 	/**
+	 * @brief Check if an entity has a specific component (from snapshot)
+	 * Thread-safe: Queries snapshot data
+	 * @param entityHandle Entity to check
+	 * @param componentTypeID Component type ID from ReflectionRegistry
+	 * @return True if entity has the component, false otherwise
+	 */
+	bool EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const;
+
+	/**
 	 * @brief Get frame data containing render targets and textures
 	 * Thread-safe: Synchronized by semaphore (editor reads, engine writes)
 	 * @return FrameData& containing editorResolvedBuffer for viewport rendering
@@ -148,10 +161,10 @@ public:
 	                          std::function<void(bool hasHit, uint32_t objectID)> resultCallback);
 
 	/**
-	 * @brief Set debug visualization (AABB bounding boxes) on/off
-	 * @param showAABBs True to show AABBs, false to hide
+	 * @brief Enable or disable AABB wireframe visualization for debugging
+	 * @param enable True to show AABBs, false to hide
 	 */
-	void SetDebugVisualization(bool showAABBs);
+	void EnableAABBVisualization(bool enable);
 
 	/**
 	 * @brief Set ambient light color for the scene

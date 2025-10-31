@@ -545,6 +545,26 @@ void SceneRenderer::ToggleAABBVisualization()
     }
 }
 
+void SceneRenderer::EnableAABBVisualization(bool enable)
+{
+    assert(m_Pipeline && "Pipeline must be initialized");
+
+    if (m_Pipeline)
+    {
+        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
+        if (debugPass)
+        {
+            debugPass->SetShowAABBs(enable);
+            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
+                         enable ? "ENABLED" : "DISABLED");
+        }
+        else
+        {
+            spdlog::warn("SceneRenderer: Debug pass not found - cannot set AABB visualization");
+        }
+    }
+}
+
 bool SceneRenderer::IsPassEnabled(const std::string& passName) const
 {
     assert(m_Pipeline && "Pipeline must be initialized");
