@@ -115,6 +115,7 @@ void EditorMain::update()
 struct s2 {
 	std::string some_value;
 	bool is_true;
+	glm::vec4 v4;
 };
 
 struct p {
