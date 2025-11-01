@@ -1,3 +1,22 @@
+/******************************************************************************/
+/*!
+\file   ProjectMenuScreen.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+		Eirwen (c.lau\@digipen.edu)
+		Hai Jie (haijie.w\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the implementation of the ProjectMenuScreen class, which
+is an IMGUI-based screen for managing and selecting projects within the editor.
+It provides an interface for users to create, open, and manage their projects.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Screens/ProjectMenuScreen.hpp"
 
 #include <algorithm>

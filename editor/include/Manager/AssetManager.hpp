@@ -4,20 +4,16 @@
 #include <map>
 #include <thread>
 #include <mutex>
-#include <importer/importer.hpp>
+#include <rsc-ext/rp.hpp>
+#include <chrono>
 
 //future improvements
 // TODO: do not recompute the subdirectories, store it and update using filewatcher
-struct ResourceTypeGuid {
-	Resource::ResourceType m_Type;
-	Resource::Guid m_Guid;
-};
-
 struct AssetManager {
-	std::map<std::string, ResourceTypeGuid> m_AssetNameGuid; //potentially unsafe
-	std::map<Resource::Guid, std::string> m_AssetReverse; //reverse lookup
+	std::map<std::string, rp::BasicIndexedGuid> m_AssetNameGuid; //potentially unsafe
+	std::map<rp::BasicIndexedGuid, std::string> m_AssetReverse; //reverse lookup
 
-	std::unordered_multimap<std::string, Resource::ResourceDescriptor> m_Descriptors;
+	std::unordered_multimap<std::string, rp::DescriptorWrapper> m_Descriptors;
 	std::string m_RootPath;
 	std::string m_CurrentPath;
 	std::string m_ImportedAssetPath;
@@ -25,6 +21,8 @@ struct AssetManager {
 	std::mutex m_DescriptorListMtx;
 
 	std::atomic<bool> m_ShouldClose;
+	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
+	std::atomic<bool> m_NeedsRescan;
 
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
@@ -33,22 +31,25 @@ struct AssetManager {
 	~AssetManager() {
 		m_ShouldClose = true;
 		m_IndexingWorker.join();
-		ExportAssetList();
+		//ExportAssetList();
 	}
 		
-	Resource::Guid ResolveAssetGuid(std::string const&);
-	std::string ResolveAssetName(Resource::Guid);
+	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);
+	std::string ResolveAssetName(rp::BasicIndexedGuid);
 
 	void FileIndexingWorkerLoop();
+	void RescanDirectory();
 
-	void ImportAsset(Resource::ResourceDescriptor&);
+	void ImportAsset(rp::DescriptorWrapper&);
 	void ImportAssetDirectory(std::string const&);
 
 	auto GetFiles(std::string const& dir) {
 		return m_Descriptors.equal_range(dir);
 	}
 
-	std::vector<std::string> GetAssetTypeNames(Resource::ResourceType);
+	using ResourceType = std::uint64_t;
+
+	std::vector<std::string> GetAssetTypeNames(ResourceType);
 
 	void ExportAssetList();
 

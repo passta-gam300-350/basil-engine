@@ -1,11 +1,35 @@
+/******************************************************************************/
+/*!
+\file   render.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    definition of the render system
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #include <Core/Window.h>
 #include "Render/Render.h"
-#include "Engine.hpp"
+#include "Render/ShaderLibrary.hpp"
+#include "Render/PrimitiveManager.hpp"
+#include "Render/RenderResourceCache.hpp"
+#include "Render/ComponentInitializer.hpp"
+#include "Engine.hpp"  // For Engine::GetRenderSystem()
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 
+#include <Resources/MaterialInstanceManager.h>
+#include <Resources/MaterialInstance.h>
+#include <Resources/MaterialPropertyBlock.h>
+
 #include "native/loader.h"
 #include "native/texture.h"
+#include "Render/Camera.h"
 
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
@@ -18,85 +42,149 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/ext.hpp>
 
-// Editor resource caches at file scope
-namespace {
-	std::unordered_map<Resource::Guid, std::shared_ptr<Mesh>> g_EditorMeshCache;
-	std::unordered_map<Resource::Guid, std::shared_ptr<Material>> g_EditorMaterialCache;
-}
+// Note: Resource caches moved to RenderResourceCache class
 
-// Static PBR shader storage for scene objects
-std::shared_ptr<Shader> RenderSystem::s_CubeShader = nullptr;
-
-void RenderSystem::InstanceData::Acquire() {
+RenderSystem::RenderSystem() {
+	// Initialize graphics rendering
 	m_SceneRenderer = std::make_unique<SceneRenderer>();
 	m_Camera = std::make_unique<Camera>(CameraType::Perspective);
 	m_Camera->SetPerspective(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
 	m_Camera->SetPosition(glm::vec3(0.0f, 2.0f, 8.0f));
 	m_Camera->SetRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
+
+	// Initialize shader library
+	m_ShaderLibrary = std::make_unique<ShaderLibrary>(
+		m_SceneRenderer->GetResourceManager()
+	);
+
+	if (!m_ShaderLibrary->Initialize()) {
+		spdlog::error("RenderSystem: Failed to initialize ShaderLibrary");
+	}
+
+	// Configure SceneRenderer with loaded shaders
+	if (m_ShaderLibrary->GetShadowShader()) {
+		m_SceneRenderer->SetShadowDepthShader(m_ShaderLibrary->GetShadowShader());
+	}
+	if (m_ShaderLibrary->GetPointShadowShader()) {
+		m_SceneRenderer->SetPointShadowShader(m_ShaderLibrary->GetPointShadowShader());
+	}
+	if (m_ShaderLibrary->GetPickingShader()) {
+		m_SceneRenderer->SetPickingShader(m_ShaderLibrary->GetPickingShader());
+	}
+	if (m_ShaderLibrary->GetPrimitiveShader()) {
+		m_SceneRenderer->SetDebugPrimitiveShader(m_ShaderLibrary->GetPrimitiveShader());
+	}
+	if (m_ShaderLibrary->GetOutlineShader()) {
+		m_SceneRenderer->SetOutlineShader(m_ShaderLibrary->GetOutlineShader());
+	}
+	if (m_ShaderLibrary->GetSkyboxShader()) {
+		m_SceneRenderer->SetSkyboxShader(m_ShaderLibrary->GetSkyboxShader());
+	}
+	if (m_ShaderLibrary->GetHDRComputeShader()) {
+		m_SceneRenderer->SetHDRComputeShader(m_ShaderLibrary->GetHDRComputeShader());
+	}
+	if (m_ShaderLibrary->GetToneMappingShader()) {
+		m_SceneRenderer->SetToneMappingShader(m_ShaderLibrary->GetToneMappingShader());
+	}
+
+	// Initialize primitive manager
+	m_PrimitiveManager = std::make_unique<PrimitiveManager>();
+	m_PrimitiveManager->Initialize();
+
+	// Initialize resource cache
+	m_ResourceCache = std::make_unique<RenderResourceCache>();
+
+	// Initialize material instance manager
+	m_MaterialInstanceManager = std::make_unique<MaterialInstanceManager>();
+
+	// Initialize component initializer (depends on all above subsystems)
+	m_ComponentInitializer = std::make_unique<ComponentInitializer>(
+		*m_ResourceCache,
+		*m_ShaderLibrary,
+		*m_PrimitiveManager
+	);
 }
 
-void RenderSystem::InstanceData::Release() {
+RenderSystem::~RenderSystem() {
+	// Release ComponentInitializer first (it depends on other subsystems)
+	m_ComponentInitializer.reset();
+	m_MaterialInstanceManager.reset();
+	m_ResourceCache.reset();
+	m_PrimitiveManager.reset();
+	m_ShaderLibrary.reset();
 	m_SceneRenderer.reset();
 	m_Camera.reset();
 }
 
 void RenderSystem::Init() {
-	Instance().Acquire();
-
-	// Load shaders and setup debug visualization meshes only
-	LoadBasicShaders();
+	// Constructor already initialized everything, just setup debug visualization
 	SetupDebugVisualization();
 
 	spdlog::info("RenderSystem initialized");
+	spdlog::info("RenderSystem: Call SetupComponentObservers() and InitializeExistingEntities() after world is created");
+}
 
+void RenderSystem::InitializeMeshRenderer(entt::registry& registry, entt::entity entity) {
+	if (m_ComponentInitializer) {
+		m_ComponentInitializer->Initialize(registry, entity);
+	} else {
+		spdlog::error("RenderSystem: ComponentInitializer not initialized");
+	}
+}
 
+void RenderSystem::SetupComponentObservers(ecs::world& world) {
+	if (m_ComponentInitializer) {
+		m_ComponentInitializer->SetupObservers(world);
+	} else {
+		spdlog::error("RenderSystem: ComponentInitializer not initialized");
+	}
 
+	// Setup observer for component updates (triggered by registry.patch())
+	entt::registry& registry = world.impl.get_registry();
+
+	// Disconnect existing update observers first
+	registry.on_update<MeshRendererComponent>().disconnect();
+
+	// Connect update observer to sync material properties when component changes
+	registry.on_update<MeshRendererComponent>().connect<&RenderSystem::OnMeshRendererUpdated>(this);
+
+	spdlog::info("RenderSystem: MeshRendererComponent update observer registered");
+}
+
+void RenderSystem::InitializeExistingEntities(ecs::world& world) {
+	if (m_ComponentInitializer) {
+		m_ComponentInitializer->InitializeAll(world);
+	} else {
+		spdlog::error("RenderSystem: ComponentInitializer not initialized");
+	}
 }
 
 void RenderSystem::Update(ecs::world& world) {
-	InstanceData& inst{ Instance() };
-
 	PF_SYSTEM("GraphicSystem");
 
 	//begin frame
-	inst.m_SceneRenderer->ClearFrame();
+	m_SceneRenderer->ClearFrame();
 
-	auto world_cameras = world.filter_entities<CameraComponent, PositionComponent>();
-	auto& frameData = inst.m_SceneRenderer->GetFrameData();
+	auto world_camera = CameraSystem::GetActiveCamera();
+	auto& frameData = m_SceneRenderer->GetFrameData();
 
-	// Camera management - upload ECS camera data to graphics lib camera
-	if (world_cameras) {
-		auto [camera, camera_pos] {(*world_cameras.begin()).get<CameraComponent, PositionComponent>()};
-
-		// Update graphics camera from ECS camera entity
-		inst.m_Camera->SetPosition(camera_pos.m_WorldPos);
-
-		// Set camera orientation using Front, Up, Right vectors
-		glm::mat4 view = glm::lookAt(
-			camera_pos.m_WorldPos,
-			camera_pos.m_WorldPos + camera.m_Front,  // Look at position + front vector
-			camera.m_Up
-		);
-
-		// Set the view matrix directly instead of using SetRotation
-		frameData.viewMatrix = view;
-
-		if (camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
-			inst.m_Camera->SetPerspective(camera.m_Fov, camera.m_AspectRatio, camera.m_Near, camera.m_Far);
-			frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
-		}
-
-		frameData.cameraPosition = camera_pos.m_WorldPos;
-	}
-	else {
-		// Fallback if no camera entity exists
-		frameData.viewMatrix = inst.m_Camera->GetViewMatrix();
-		frameData.projectionMatrix = inst.m_Camera->GetProjectionMatrix();
-		frameData.cameraPosition = inst.m_Camera->GetPosition();
+	//update camera
+	m_Camera->SetPosition(world_camera.m_Pos);
+	glm::mat4 view = glm::lookAt(
+		world_camera.m_Pos,
+		world_camera.m_Pos + world_camera.m_Front,  // Look at position + front vector
+		world_camera.m_Up
+	);
+	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
+		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
+		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
 	}
 
-	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>();
-	auto sceneLights = world.filter_entities<LightComponent, PositionComponent>();
+	frameData.viewMatrix = view;
+	frameData.cameraPosition = world_camera.m_Pos;
+
+	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
+	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = 0;
@@ -113,121 +201,119 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	for (auto obj : sceneObjects) {
-		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformComponent, VisibilityComponent>()};
+		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>()};
+		const uint64_t entityUID = obj.get_uid();
 
-		std::shared_ptr<Mesh> meshResource;
-		std::shared_ptr<Material> materialResource;
+		// === RESOURCE LOOKUP (READ-ONLY - RESOURCES INITIALIZED AT COMPONENT CREATION) ===
 
-
-
-		// Try editor cache first (for runtime-created assets)
-		if (g_EditorMeshCache.contains(mesh.m_MeshGuid)) {
-			meshResource = g_EditorMeshCache[mesh.m_MeshGuid];
+		// Get resource cache
+		if (!m_ResourceCache) {
+			spdlog::error("RenderSystem: ResourceCache not initialized");
+			continue;
 		}
-		else if (mesh.isPrimitive) {
 
+		// Look up pre-initialized resources from entity cache
+		std::shared_ptr<Mesh> meshResource = m_ResourceCache->GetEntityMesh(entityUID);
+		std::shared_ptr<Material> materialResource = m_ResourceCache->GetEntityMaterial(entityUID);
 
-			switch (mesh.m_PrimitiveType) {
-			case MeshRendererComponent::PrimitiveType::CUBE:
-				meshResource = GetSharedCubeMesh();
-				assert(meshResource && "Shared cube mesh must be available");
-				mesh.m_MeshGuid = Resource::Guid::generate();
-				RegisterEditorMesh(mesh.m_MeshGuid, meshResource);
-				break;
-			case MeshRendererComponent::PrimitiveType::PLANE:
-				meshResource = GetSharedPlaneMesh();
-				assert(meshResource && "Shared plane mesh must be available");
-				mesh.m_MeshGuid = Resource::Guid::generate();
-				RegisterEditorMesh(mesh.m_MeshGuid, meshResource);
-				break;
-			default:
-				assert(false && "Invalid GUID");
-
-
+		// If resources not found, entity wasn't initialized properly
+		// This can happen if observers weren't set up or InitializeExistingEntities wasn't called
+		if (!meshResource || !materialResource) {
+			// Fallback: Initialize on-demand (shouldn't happen in production)
+			static bool warningShown = false;
+			if (!warningShown) {
+				spdlog::warn("RenderSystem: Entity {} resources not initialized. Call SetupComponentObservers() and InitializeExistingEntities() after world load.", entityUID);
+				warningShown = true;
 			}
 
-		}
-		else {
-			// Fall back to file-based registry
-			auto* meshPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid);
-			if (meshPtr) {
-				meshResource = *meshPtr;
+			// Perform lazy initialization as fallback
+			entt::registry& registry = world.impl.get_registry();
+			entt::entity enttEntity = ecs::world::detail::entt_entity_cast(obj);
+			InitializeMeshRenderer(registry, enttEntity);
+
+			// Retry lookup
+			meshResource = m_ResourceCache->GetEntityMesh(entityUID);
+			materialResource = m_ResourceCache->GetEntityMaterial(entityUID);
+
+			if (!meshResource || !materialResource) {
+				continue; // Skip this entity if initialization failed
 			}
 		}
 
-		if (g_EditorMaterialCache.contains(mesh.m_MaterialGuid)) {
-			materialResource = g_EditorMaterialCache[mesh.m_MaterialGuid];
-		}
-		else if (!mesh.hasAttachedMaterial)
-		{
-			assert(s_CubeShader && "PBR shader must be available");
-
-			auto MeshMaterial = std::make_shared<Material>(s_CubeShader, "SCubeShaderDefault_" + std::to_string(obj.get_uid()));
-			assert(MeshMaterial && "Material creation failed");
-			MeshMaterial->SetAlbedoColor(mesh.material.m_AlbedoColor);
-			MeshMaterial->SetMetallicValue(mesh.material.metallic);
-			MeshMaterial->SetRoughnessValue(mesh.material.roughness);
-
-			mesh.m_MaterialGuid = Resource::Guid::generate();
-			RegisterEditorMaterial(mesh.m_MaterialGuid, MeshMaterial);
-			materialResource = MeshMaterial;
-		}
-		else {
-			// Fall back to file-based registry
-			auto* materialPtr = ResourceRegistry::Instance().Get<std::shared_ptr<Material>>(mesh.m_MaterialGuid);
-			if (materialPtr) {
-				materialResource = *materialPtr;
-			}
-
-		}
-
-		// Before render update material properties if needed
-		if (materialResource)
-		{
-			materialResource->SetAlbedoColor(mesh.material.m_AlbedoColor);
-		}
+		// NOTE: Material system follows Unity-style behavior:
+		// - Component properties: Used for editor/serialization (synced to base material)
+		// - Material instances: Runtime copy-on-write for per-entity customization
 
 		// Only render if we have both mesh and material
 		if (meshResource && materialResource) {
+			std::shared_ptr<Material> renderMaterial = materialResource;
+
+			// Check if entity has a material instance (Unity's Renderer.material behavior)
+			if (m_MaterialInstanceManager && m_MaterialInstanceManager->HasInstance(entityUID)) {
+				// Instance exists - use it instead of base material
+				auto instance = m_MaterialInstanceManager->GetExistingInstance(entityUID);
+				if (instance) {
+					// Apply instance properties (base + overrides) before rendering
+					// Note: ApplyProperties() sets shader uniforms directly
+					instance->ApplyProperties();
+
+					// Still use base material for RenderableData (shader is from base)
+					// The instance properties were already applied to the shader
+					renderMaterial = instance->GetBaseMaterial();
+				}
+			} else if (!mesh.hasAttachedMaterial) {
+				// No instance - sync component properties to base material (editor behavior)
+				// This allows direct component editing in editor
+				materialResource->SetAlbedoColor(mesh.material.m_AlbedoColor);
+				materialResource->SetMetallicValue(mesh.material.metallic);
+				materialResource->SetRoughnessValue(mesh.material.roughness);
+			}
+
 			RenderableData renderData;
 			renderData.mesh = meshResource;
-			renderData.material = materialResource;
-			renderData.transform = transform.m_trans;
+			renderData.material = renderMaterial;
+			renderData.transform = transform.m_Mtx;
 			renderData.visible = visible.m_IsVisible;
 			renderData.renderLayer = 1;
 
-			uint32_t entityUID = static_cast<uint32_t>(obj.get_uid());
-			renderData.objectID = entityUID;
+			// Use existing entityUID (uint64_t) and cast to uint32_t for objectID
+			renderData.objectID = static_cast<uint32_t>(entityUID);
+
+			// Attach property block if it exists and has properties
+			auto propBlockIt = m_PropertyBlocks.find(entityUID);
+			if (propBlockIt != m_PropertyBlocks.end() && !propBlockIt->second->IsEmpty()) {
+				renderData.propertyBlock = propBlockIt->second;
+			}
 
 			// Debug: Log entity UID assignment for first few entities
 			static int debugCount = 0;
 			if (debugCount < 5) {
 				spdlog::info("RenderSystem: Entity UID assignment - Entity: {}, UID: {}, static_cast result: {}",
-					debugCount, obj.get_uid(), entityUID);
+					debugCount, entityUID, static_cast<uint32_t>(entityUID));
 				debugCount++;
 			}
 
 			// Assert entity ID validity for debugging picking
-			assert(entityUID != 0 && "Entity UID should not be zero for picking to work");
-			assert(entityUID < 16777215 && "Entity UID exceeds 24-bit limit for picking system"); // 24-bit max for RGB encoding
+			assert(renderData.objectID != 0 && "Entity UID should not be zero for picking to work");
+			assert(renderData.objectID < 16777215 && "Entity UID exceeds 24-bit limit for picking system"); // 24-bit max for RGB encoding
 
 			// Assert mesh validity for rendering
 			assert(meshResource->GetVertexArray() && "Mesh must have valid VAO for rendering");
 			assert(meshResource->GetVertexArray()->GetVAOHandle() != 0 && "Mesh VAO must be bound to valid OpenGL handle");
 			assert(!meshResource->vertices.empty() && "Mesh must have vertices for rendering");
 
-			inst.m_SceneRenderer->SubmitRenderable(renderData);
+			m_SceneRenderer->SubmitRenderable(renderData);
 
 			// Submit AABB for debug visualization (using pre-calculated mesh AABB)
 			if (visible.m_IsVisible && meshResource->GetAABB().IsValid()) {
-				DebugAABB debugAABB(meshResource->GetAABB(), transform.m_trans, glm::vec3(1.0f, 0.0f, 0.0f));
+				DebugAABB debugAABB(meshResource->GetAABB(), transform.m_Mtx, glm::vec3(1.0f, 0.0f, 0.0f));
 				frameData.debugAABBs.push_back(debugAABB);
 			}
 		}
 	}
 
 	for (auto light : sceneLights) {
-		auto [lightComponent, position] {light.get<LightComponent, PositionComponent>()};
+		auto [lightComponent, position] {light.get<LightComponent, TransformComponent>()};
 		SubmittedLightData lightData;
 		lightData.type = lightComponent.m_Type;
 		lightData.color = lightComponent.m_Color;
@@ -237,174 +323,224 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.outerCone = lightComponent.m_OuterCone;
 		lightData.intensity = lightComponent.m_Intensity;
 		lightData.range = lightComponent.m_Range;
-		lightData.position = position.m_WorldPos;
-		inst.m_SceneRenderer->SubmitLight(lightData);
+		lightData.position = position.m_Translation;
+		m_SceneRenderer->SubmitLight(lightData);
 	}
 
 	//render frame
-	inst.m_SceneRenderer->Render();
+	m_SceneRenderer->Render();
 }
 void RenderSystem::FixedUpdate(ecs::world& w) {
 	Update(w);
 }
 void RenderSystem::Exit() {
-	Instance().Release();
-	InstancePtr().reset();
-}
+	// Clear all entity-specific caches before shutdown
+	ClearAllEntityCaches();
 
-std::unique_ptr<RenderSystem::InstanceData>& RenderSystem::InstancePtr() {
-	static std::unique_ptr<RenderSystem::InstanceData> instance{ new RenderSystem::InstanceData{} };
-	return instance;
-}
+	// Clear all material instances
+	if (m_MaterialInstanceManager) {
+		m_MaterialInstanceManager->ClearAllInstances();
+	}
 
-RenderSystem::InstanceData& RenderSystem::Instance() {
-	return *InstancePtr();
-}
+	// Clear all property blocks
+	m_PropertyBlocks.clear();
 
-RenderSystem RenderSystem::System() {
-	return RenderSystem();
+	// Destructor will handle cleanup automatically
 }
 
 
 void RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh) {
-	g_EditorMeshCache[guid] = mesh;
+	auto& renderSystem = Engine::GetRenderSystem();
+	if (renderSystem.m_ResourceCache) {
+		renderSystem.m_ResourceCache->RegisterEditorMesh(guid, mesh);
+	} else {
+		spdlog::error("RenderSystem: Cannot register editor mesh - ResourceCache not initialized");
+	}
 }
 
 void RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material) {
-	g_EditorMaterialCache[guid] = material;
-}
-
-// Shared primitive meshes for instancing
-namespace {
-	std::shared_ptr<Mesh> g_SharedCubeMesh = nullptr;
-	std::shared_ptr<Mesh> g_SharedPlaneMesh = nullptr;
-}
-
-std::shared_ptr<Mesh> RenderSystem::GetSharedCubeMesh() {
-	if (!g_SharedCubeMesh) {
-		g_SharedCubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
-		assert(g_SharedCubeMesh && "Cube mesh generation failed");
-		assert(!g_SharedCubeMesh->vertices.empty() && "Generated cube has no vertices");
+	auto& renderSystem = Engine::GetRenderSystem();
+	if (renderSystem.m_ResourceCache) {
+		renderSystem.m_ResourceCache->RegisterEditorMaterial(guid, material);
+	} else {
+		spdlog::error("RenderSystem: Cannot register editor material - ResourceCache not initialized");
 	}
-	return g_SharedCubeMesh;
 }
 
-std::shared_ptr<Mesh> RenderSystem::GetSharedPlaneMesh() {
-	if (!g_SharedPlaneMesh) {
-		g_SharedPlaneMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(2.0f, 2.0f, 1, 1));
-		assert(g_SharedPlaneMesh && "Plane mesh generation failed");
-		assert(!g_SharedPlaneMesh->vertices.empty() && "Generated plane has no vertices");
+void RenderSystem::ClearEntityResources(uint64_t entityUID) {
+	auto& renderSystem = Engine::GetRenderSystem();
+	if (renderSystem.m_ResourceCache) {
+		renderSystem.m_ResourceCache->ClearEntityResources(entityUID);
+	} else {
+		spdlog::error("RenderSystem: Cannot clear entity resources - ResourceCache not initialized");
 	}
-	return g_SharedPlaneMesh;
 }
 
-void RenderSystem::LoadBasicShaders() {
-	auto& instance = RenderSystem::Instance();
-	auto* resourceManager = instance.m_SceneRenderer->GetResourceManager();
+void RenderSystem::ClearAllEntityCaches() {
+	auto& renderSystem = Engine::GetRenderSystem();
+	if (renderSystem.m_ResourceCache) {
+		renderSystem.m_ResourceCache->ClearAllEntityCaches();
+	} else {
+		spdlog::error("RenderSystem: Cannot clear entity caches - ResourceCache not initialized");
+	}
+}
 
-	assert(resourceManager && "ResourceManager must be initialized");
+void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& meshRenderer) {
+	auto& renderSystem = Engine::GetRenderSystem();
 
-	// Load PBR shader for main scene objects (following GraphicsTestDriver pattern)
-	s_CubeShader = resourceManager->LoadShader("main_pbr",
-		"assets/shaders/main_pbr.vert",
-		"assets/shaders/main_pbr.frag");
-
-	if (!s_CubeShader) {
-		spdlog::error("Failed to load PBR shader for engine cubes");
-		assert(false && "PBR shader is required for cube rendering");
+	if (!renderSystem.m_ResourceCache) {
+		spdlog::error("RenderSystem: Cannot sync material - ResourceCache not initialized");
 		return;
 	}
 
-	// Load primitive shader for debug visualization only
-	auto primitiveShader = resourceManager->LoadShader("primitive",
-		"assets/shaders/primitive.vert",
-		"assets/shaders/primitive.frag");
+	// Get the cached material
+	auto material = renderSystem.m_ResourceCache->GetEntityMaterial(entityUID);
 
-	if (!primitiveShader) {
-		spdlog::warn("Failed to load primitive shader for debug visualization");
-	}
-	else {
-		// Configure debug render pass with primitive shader
-		instance.m_SceneRenderer->SetDebugPrimitiveShader(primitiveShader);
-		spdlog::info("Debug primitive shader loaded successfully");
+	if (!material) {
+		spdlog::warn("RenderSystem: Cannot sync material for entity {} - no cached material found", entityUID);
+		return;
 	}
 
-	// Load shadow depth shader for shadow mapping
-	auto shadowShader = resourceManager->LoadShader("shadow_depth",
-		"assets/shaders/shadow_depth.vert",
-		"assets/shaders/shadow_depth.frag");
+	// Sync component material properties to cached material
+	material->SetAlbedoColor(meshRenderer.material.m_AlbedoColor);
+	material->SetMetallicValue(meshRenderer.material.metallic);
+	material->SetRoughnessValue(meshRenderer.material.roughness);
 
-	if (!shadowShader) {
-		spdlog::warn("Failed to load shadow depth shader - shadows will be disabled");
-	}
-	else {
-		instance.m_SceneRenderer->SetShadowDepthShader(shadowShader);
-		spdlog::info("Shadow depth shader loaded successfully");
-	}
-
-	// Load picking shader for object selection
-	auto pickingShader = resourceManager->LoadShader("picking",
-		"assets/shaders/picking.vert",
-		"assets/shaders/picking.frag");
-
-	if (!pickingShader) {
-		spdlog::warn("Failed to load picking shader - object picking will be disabled");
-	}
-	else {
-		instance.m_SceneRenderer->SetPickingShader(pickingShader);
-		spdlog::info("Picking shader loaded successfully");
-	}
-
-	spdlog::info("Engine PBR shader system loaded successfully");
+	spdlog::debug("RenderSystem: Synced material properties for entity {}", entityUID);
 }
 
+void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity entity) {
+	// Get the updated component
+	auto* meshComp = registry.try_get<MeshRendererComponent>(entity);
+	if (!meshComp) return;
+
+	// Get entity UID
+	const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
+
+	// Sync to cached material
+	SyncMaterialFromComponent(entityUID, *meshComp);
+}
+
+// ========== Material Instance API Implementation ==========
+
+std::shared_ptr<MaterialInstance> RenderSystem::GetMaterialInstance(
+	uint64_t entityUID,
+	std::shared_ptr<Material> baseMaterial)
+{
+	if (!m_MaterialInstanceManager) {
+		spdlog::error("RenderSystem: MaterialInstanceManager not initialized");
+		return nullptr;
+	}
+
+	return m_MaterialInstanceManager->GetMaterialInstance(entityUID, baseMaterial);
+}
+
+bool RenderSystem::HasMaterialInstance(uint64_t entityUID) const {
+	if (!m_MaterialInstanceManager) {
+		return false;
+	}
+
+	return m_MaterialInstanceManager->HasInstance(entityUID);
+}
+
+std::shared_ptr<MaterialInstance> RenderSystem::GetExistingMaterialInstance(uint64_t entityUID) const {
+	if (!m_MaterialInstanceManager) {
+		return nullptr;
+	}
+
+	return m_MaterialInstanceManager->GetExistingInstance(entityUID);
+}
+
+void RenderSystem::DestroyMaterialInstance(uint64_t entityUID) {
+	if (!m_MaterialInstanceManager) {
+		spdlog::warn("RenderSystem: MaterialInstanceManager not initialized");
+		return;
+	}
+
+	m_MaterialInstanceManager->DestroyInstance(entityUID);
+}
+
+// ========== Material Property Block Management ==========
+
+std::shared_ptr<MaterialPropertyBlock> RenderSystem::GetPropertyBlock(uint64_t entityUID) {
+	// Check if property block already exists
+	auto it = m_PropertyBlocks.find(entityUID);
+	if (it != m_PropertyBlocks.end()) {
+		return it->second;
+	}
+
+	// Create new property block
+	auto propBlock = std::make_shared<MaterialPropertyBlock>();
+	m_PropertyBlocks[entityUID] = propBlock;
+	return propBlock;
+}
+
+bool RenderSystem::HasPropertyBlock(uint64_t entityUID) const {
+	auto it = m_PropertyBlocks.find(entityUID);
+	if (it == m_PropertyBlocks.end()) {
+		return false;
+	}
+
+	// Check if property block has any properties set
+	return !it->second->IsEmpty();
+}
+
+void RenderSystem::ClearPropertyBlock(uint64_t entityUID) {
+	auto it = m_PropertyBlocks.find(entityUID);
+	if (it != m_PropertyBlocks.end()) {
+		it->second->Clear();
+	}
+}
+
+void RenderSystem::DestroyPropertyBlock(uint64_t entityUID) {
+	m_PropertyBlocks.erase(entityUID);
+}
 
 void RenderSystem::SetupDebugVisualization() {
 	// Set up debug visualization meshes (required for DebugRenderPass)
-	auto& instance = RenderSystem::Instance();
-	auto* sceneRenderer = instance.m_SceneRenderer.get();
+	if (m_SceneRenderer && m_PrimitiveManager) {
+		// Create debug visualization meshes using PrimitiveManager
+		auto lightCube = m_PrimitiveManager->CreateDebugLightCube(5.0f);
+		auto lightRay = m_PrimitiveManager->CreateDebugDirectionalRay(3.0f);
+		auto wireframeCube = m_PrimitiveManager->CreateDebugWireframeCube(1.0f);
 
-	if (sceneRenderer) {
-		// Create debug visualization meshes
-		auto lightCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(5.0f));
-		auto lightRay = std::make_shared<Mesh>(PrimitiveGenerator::CreateDirectionalRay(3.0f));
-		auto wireframeCube = std::make_shared<Mesh>(PrimitiveGenerator::CreateWireframeCube(1.0f));
-
-		// Debug visualization uses primitive shader (already set in LoadBasicShaders)
-		sceneRenderer->SetDebugLightCubeMesh(lightCube);
-		sceneRenderer->SetDebugDirectionalRayMesh(lightRay);
-		sceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
+		// Debug visualization uses primitive shader (loaded by ShaderLibrary)
+		m_SceneRenderer->SetDebugLightCubeMesh(lightCube);
+		m_SceneRenderer->SetDebugDirectionalRayMesh(lightRay);
+		m_SceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
 
 		spdlog::info("Debug visualization meshes configured");
+	} else {
+		spdlog::error("RenderSystem: Cannot setup debug visualization - SceneRenderer or PrimitiveManager not initialized");
 	}
 }
 
-auto load_mesh_lambda = [](const char* data)->std::shared_ptr<Mesh> {
-	Resource::MeshAssetData dat = Resource::load_native_mesh_from_memory(data);
-	std::vector<Texture> textures{};
-	int i{};
-	for (auto tex_guid : dat.textures) {
-		Resource::TextureAssetData& tex = *ResourceRegistry::Instance().Get<Resource::TextureAssetData>(tex_guid);
-		Texture texture;
-		texture.id = TextureLoader::CreateGPUTextureCompressed(tex);
-		texture.type = Resource::GetTextureTypeName(static_cast<Resource::TextureType>(dat.texture_type[i]));
-		textures.emplace_back(texture);
-		i++;
-	}
-	std::vector<Vertex> vert{};
-	vert.resize(dat.vertices.size());
-	memcpy(vert.data(), dat.vertices.data(), dat.vertices.size() * sizeof(Vertex));
-	return std::make_shared<Mesh>(vert, dat.indices, textures);
-};
-
+// Resource type registration for Mesh (inline lambda to avoid file-scope variables)
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,
-	load_mesh_lambda, [](std::shared_ptr<Mesh>&) {});
+	[](const char* data)->std::shared_ptr<Mesh> {
+		Resource::MeshAssetData dat = Resource::load_native_mesh_from_memory(data);
+		std::vector<Texture> textures{};
+		int i{};
+		for (auto tex_guid : dat.textures) {
+			Resource::TextureAssetData& tex = *ResourceRegistry::Instance().Get<Resource::TextureAssetData>(tex_guid);
+			Texture texture;
+			texture.id = TextureLoader::CreateGPUTextureCompressed(tex);
+			texture.type = Resource::GetTextureTypeName(static_cast<Resource::TextureType>(dat.texture_type[i]));
+			textures.emplace_back(texture);
+			i++;
+		}
+		std::vector<Vertex> vert{};
+		vert.resize(dat.vertices.size());
+		memcpy(vert.data(), dat.vertices.data(), dat.vertices.size() * sizeof(Vertex));
+		return std::make_shared<Mesh>(vert, dat.indices, textures);
+	},
+	[](std::shared_ptr<Mesh>&) {});
 
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 	[](const char* data)->std::shared_ptr<Material> {
 	Resource::MaterialAssetData dat = Resource::load_native_material_from_memory(data);
 	Resource::ShaderAssetData shdr_dat = *ResourceRegistry::Instance().Get<Resource::ShaderAssetData>(dat.shader_guid);
-	std::shared_ptr<Shader> shdr = RenderSystem::Instance().m_SceneRenderer->GetResourceManager()->LoadShader(shdr_dat.m_Name, shdr_dat.m_VertPath, shdr_dat.m_FragPath);
+	std::shared_ptr<Shader> shdr = Engine::GetRenderSystem().m_SceneRenderer->GetResourceManager()->LoadShader(shdr_dat.m_Name, shdr_dat.m_VertPath, shdr_dat.m_FragPath);
 	std::shared_ptr<Material> mat = std::make_shared<Material>(shdr, dat.m_Name);
 	mat->SetAlbedoColor(dat.m_AlbedoColor);
 	mat->SetRoughnessValue(dat.m_RoughnessValue);

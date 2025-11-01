@@ -58,6 +58,7 @@ struct ReflectionRegistry {
 
 	struct Detail {
 		std::unordered_map<TypeID, entt::meta_type> m_Storage;
+		std::unordered_map<TypeID, TypeID> m_InternalTypeid;
 		std::unordered_map<TypeID, std::string> m_Names;
 		std::unordered_map<TypeID, std::unordered_map<TypeID, std::string>> m_FieldNames;
 		std::vector<ComponentBinarySerializer> m_BinRegistry;
@@ -70,6 +71,10 @@ struct ReflectionRegistry {
 
 	static std::unordered_map<TypeID, entt::meta_type>& types() {
 		return Registry().m_Storage;
+	}
+
+	static std::unordered_map<TypeID, TypeID>& InternalID() {
+		return Registry().m_InternalTypeid;
 	}
 
 	static std::unordered_map<TypeID, std::string>& TypeNames() {
@@ -93,6 +98,12 @@ struct ReflectionRegistry {
 		ReflectionRegistry::Detail& reg{ Registry() };
 		assert(reg.m_Names.find(type_id) != reg.m_Names.end());
 		return reg.m_Names[type_id];
+	}
+
+	// Helper to get TypeID from a type (wrapper around entt::type_hash)
+	template<typename T>
+	static constexpr TypeID GetTypeID() {
+		return entt::type_hash<T>::value();
 	}
 
 	static std::vector<ComponentBinarySerializer>& BinSerializerRegistryInstance() {
@@ -401,10 +412,10 @@ constexpr auto InterfaceRegistrationV = InterfaceRegistration<SetPtr, GetPtr, Na
 template<typename T>
 void RegisterDataMember(auto& factory) {
 	if constexpr (std::is_base_of_v<InterfaceRegistrationBasic, T>) {
-		factory.data<T::setptr, T::getptr>(T::hash);
+		factory.template data<T::setptr, T::getptr>(T::hash);
 	}
 	else {
-		factory.data<T::ptr>(T::hash);
+		factory.template data<T::ptr, entt::as_ref_t>(T::hash);
 	}
 }
 
@@ -420,9 +431,10 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
    
     (RegisterDataMember<Refs>(factory), ...);
 
-	factory.func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
-	factory.func < [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
+	factory.template func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
+	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
 	ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
+	ReflectionRegistry::InternalID()[entt::type_index<T>::value()] = entt::type_hash<T>::value();
 	ReflectionRegistry::BinSerializerRegistryInstance().push_back({
 		[](entt::snapshot& snap, std::ostream& os) {
 			auto out_archive{ [&os](auto const& value) {
@@ -436,78 +448,5 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 			loader.template get<T>(in_archive);
 		} });
 }
-
-/***********************/
-/*        usage        */
-/***********************/
-// Syntax: ReflectComponent(ComponentType, .data<&ComponentType::Member>("AssociatedName"_tn), ...)
-// eg: ReflectComponent(Position, .data<&Position::x>("x"_tn), .data<&Position::y>("y"_tn), .data<&Position::z>("z"_tn))
-// just live with this macro
-#define ReflectComponent(COMPONENT_TYPE, ...)                                                                            \
-namespace {                                                                                                              \
-    struct COMPONENT_TYPE##_Registration{                                                                                 \
-        COMPONENT_TYPE##_Registration() {                                                                                \
-            entt::meta<COMPONENT_TYPE>().type(#COMPONENT_TYPE##_tn) __VA_ARGS__;                                         \
-            entt::meta<COMPONENT_TYPE>().func<&entt::registry::emplace<COMPONENT_TYPE>, entt::as_void_t>("emplace"_tn);  \
-            ReflectionRegistry::BinSerializerRegistryInstance().push_back({                                              \
-                [](entt::snapshot& snap, std::ostream& os) {                                                             \
-                    auto out_archive{ [&os](auto value) {                                                                \
-                        os.write(reinterpret_cast<const char*>(&value), sizeof(value));                                  \
-                    } };                                                                                                 \
-                    snap.get<COMPONENT_TYPE>(out_archive); },                                                            \
-                [](entt::snapshot_loader& loader, std::istream& is) {                                                    \
-                    auto in_archive{ [&is](auto value) {                                                                 \
-                    is.read(reinterpret_cast<char*>(&value), sizeof(value));                                             \
-                    } };                                                                                                 \
-                    loader.get<COMPONENT_TYPE>(in_archive); }                                                            \
-            });                                                                                                          \
-        }                                                                                                                \
-    };                                                                                                                   \
-    static COMPONENT_TYPE##_Registration COMPONENT_TYPE##RegisterV{}                                                     \
-}                                                                           
-
-#define ReflectComponentLocal(COMPONENT_TYPE, ...)                                                                   \
-struct COMPONENT_TYPE##_Registration{                                                                                \
-    COMPONENT_TYPE##_Registration() {                                                                                \
-        entt::meta<COMPONENT_TYPE>().type(#COMPONENT_TYPE##_tn) __VA_ARGS__;                                         \
-        entt::meta<COMPONENT_TYPE>().func<&entt::registry::emplace<COMPONENT_TYPE>, entt::as_void_t>("emplace"_tn);  \
-        ReflectionRegistry::BinSerializerRegistryInstance().push_back({                                              \
-            [](entt::snapshot& snap, std::ostream& os) {                                                             \
-                auto out_archive{ [&os](auto value) {                                                                \
-                    os.write(reinterpret_cast<const char*>(&value), sizeof(value));                                  \
-                } };                                                                                                 \
-                snap.get<COMPONENT_TYPE>(out_archive); },                                                            \
-            [](entt::snapshot_loader& loader, std::istream& is) {                                                    \
-                auto in_archive{ [&is](auto value) {                                                                 \
-                is.read(reinterpret_cast<char*>(&value), sizeof(value));                                             \
-                } };                                                                                                 \
-                loader.get<COMPONENT_TYPE>(in_archive); }                                                            \
-        });                                                                                                          \
-    }                                                                                                                \
-    static COMPONENT_TYPE##_Registration COMPONENT_TYPE##RegisterV{}                                                     \
-};                                                                                                                                                                                              
-
-/*
-//macro free alternative. to use in code blocks no global space
-template<typename T, typename... MemberPairs>
-void RegisterReflectionComponent(std::string_view name, MemberPairs&&... members) {
-    auto meta_type = entt::meta<T>().type(entt::hashed_string{ name.data() });
-    (meta_type.data<typename AssociatedMemberTraits<std::decay_t<MemberPairs>>::MemberPointer>(members.second), ...);
-    meta_type.func<&entt::registry::emplace<T>, entt::as_void_t>("emplace"_tn);
-    ReflectionRegistry::types()[entt::type_hash<T>::value()] = meta_type;
-    ReflectionRegistry::BinSerializerRegistryInstance().push_back({
-        [](entt::snapshot& snap, std::ostream& os) { 
-            auto out_archive{ [&os](auto value) {
-                os.write(reinterpret_cast<const char*>(&value), sizeof(value));
-                } }; 
-            snap.template get<T>(out_archive); },
-        [](entt::snapshot_loader& loader, std::istream& is) { 
-            auto in_archive{ [&is](auto value) {
-            is.read(reinterpret_cast<char*>(&value), sizeof(value));
-            } };
-            loader.template get<T>(in_archive);
-        }});
-}*/
-
 
 #endif
