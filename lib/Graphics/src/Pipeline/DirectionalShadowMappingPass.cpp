@@ -56,24 +56,15 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
 
-    // Calculate scene bounds from actual renderables
-    glm::vec3 sceneMin(FLT_MAX);
-    glm::vec3 sceneMax(-FLT_MAX);
-    for (const auto& renderable : context.renderables) {
-        // Extract position from transform matrix (last column)
-        glm::vec3 position = glm::vec3(renderable.transform[3]);
-        sceneMin = glm::min(sceneMin, position);
-        sceneMax = glm::max(sceneMax, position);
-    }
-    glm::vec3 sceneCenter = (sceneMin + sceneMax) * 0.5f;
-    float sceneRadius = glm::length(sceneMax - sceneMin) * 0.5f;
+    // Update cached scene bounds (only recalculates if scene changed)
+    UpdateSceneBounds(context.renderables);
 
-    spdlog::debug("DirectionalShadow: SceneCenter=({:.1f},{:.1f},{:.1f}), Radius={:.1f}",
-                 sceneCenter.x, sceneCenter.y, sceneCenter.z, sceneRadius);
+    spdlog::debug("DirectionalShadow: Scene bounds - Center=({:.1f},{:.1f},{:.1f}), Radius={:.1f}",
+                 m_CachedSceneCenter.x, m_CachedSceneCenter.y, m_CachedSceneCenter.z, m_CachedSceneRadius);
 
-    // Calculate light-space matrices using actual scene bounds
-    glm::mat4 lightView = CalculateLightViewMatrix(directionalLight->direction, sceneCenter);
-    glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData, sceneRadius);
+    // Calculate light-space matrices using cached scene bounds
+    glm::mat4 lightView = CalculateLightViewMatrix(directionalLight->direction, m_CachedSceneCenter);
+    glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData, m_CachedSceneRadius);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
     // Add directional shadow to the unified shadow data array
@@ -174,4 +165,37 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm
                  orthoSize, nearPlane, farPlane, sceneRadius);
 
     return glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
+}
+
+void DirectionalShadowMappingPass::UpdateSceneBounds(const std::vector<RenderableData>& renderables)
+{
+    // Check if we need to recalculate (scene changed)
+    if (!m_BoundsDirty && renderables.size() == m_CachedRenderableCount) {
+        return;  // Use cached bounds (O(1) fast path)
+    }
+
+    // Recalculate scene bounds from renderables
+    m_CachedSceneMin = glm::vec3(FLT_MAX);
+    m_CachedSceneMax = glm::vec3(-FLT_MAX);
+
+    for (const auto& renderable : renderables) {
+        // Extract position from transform matrix (last column)
+        glm::vec3 position = glm::vec3(renderable.transform[3]);
+        m_CachedSceneMin = glm::min(m_CachedSceneMin, position);
+        m_CachedSceneMax = glm::max(m_CachedSceneMax, position);
+    }
+
+    // Calculate center and radius
+    m_CachedSceneCenter = (m_CachedSceneMin + m_CachedSceneMax) * 0.5f;
+    m_CachedSceneRadius = glm::length(m_CachedSceneMax - m_CachedSceneMin) * 0.5f;
+
+    // Clamp radius to reasonable range
+    m_CachedSceneRadius = glm::max(m_CachedSceneRadius, 5.0f);  // Minimum 5 units
+
+    // Update cache state
+    m_CachedRenderableCount = renderables.size();
+    m_BoundsDirty = false;
+
+    spdlog::info("DirectionalShadow: Scene bounds recalculated - {} renderables, radius={:.1f}",
+                 renderables.size(), m_CachedSceneRadius);
 }

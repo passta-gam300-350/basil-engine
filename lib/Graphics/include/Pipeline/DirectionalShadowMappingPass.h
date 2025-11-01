@@ -51,9 +51,18 @@ private:
     // Helper methods
     glm::mat4 CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter);
     glm::mat4 CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData, float sceneRadius);
+    void UpdateSceneBounds(const std::vector<RenderableData>& renderables);
 
     // Shader storage
     std::shared_ptr<Shader> m_ShadowDepthShader;
+
+    // Cached scene bounds (Option 1: Simple caching)
+    glm::vec3 m_CachedSceneMin = glm::vec3(FLT_MAX);
+    glm::vec3 m_CachedSceneMax = glm::vec3(-FLT_MAX);
+    glm::vec3 m_CachedSceneCenter = glm::vec3(0.0f);
+    float m_CachedSceneRadius = 10.0f;
+    size_t m_CachedRenderableCount = 0;
+    bool m_BoundsDirty = true;
 
     // Configuration
     static constexpr uint32_t SHADOW_MAP_SIZE = 2048;
