@@ -6,6 +6,10 @@
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
 #include "Render/Camera.h"
+#include "Particles/ParticleComponent.h"
+#include "Rendering/ParticleEmitter.h"
+#include "Utility/Particle.h"
+
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -179,4 +183,48 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">,
 		MemberRegistrationV<&MaterialOverridesComponent::textureOverrides, "textureOverrides">
 	);
+
+	// Register particle enums
+	RegisterReflectionComponent<EmissionType>("EmissionType");
+	RegisterReflectionComponent<BlendMode>("BlendMode");
+
+	// Register ParticleEmitterConfiguration (nested config struct)
+	RegisterReflectionComponent<ParticleEmitterConfiguration>(
+		"ParticleEmitterConfiguration",
+		// Emitter transform
+		MemberRegistrationV<&ParticleEmitterConfiguration::position, "Position">,
+		// Emission shape
+		MemberRegistrationV<&ParticleEmitterConfiguration::emissionType, "Emission Type">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::emitterSize, "Emitter Size (Box)">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::sphereRadius, "Sphere Radius">,
+		// Emission settings
+		MemberRegistrationV<&ParticleEmitterConfiguration::emissionRate, "Emission Rate">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::maxParticles, "Max Particles">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::looping, "Looping">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::duration, "Duration">,
+		// Particle lifetime
+		MemberRegistrationV<&ParticleEmitterConfiguration::minLifeTime, "Min Lifetime">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::maxLifeTime, "Max Lifetime">,
+		// Visual properties
+		MemberRegistrationV<&ParticleEmitterConfiguration::startColor, "Start Color">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::endColor, "End Color">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::startSize, "Start Size">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::endSize, "End Size">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::startRotation, "Start Rotation">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::rotationSpeed, "Rotation Speed">,
+		// Physics
+		MemberRegistrationV<&ParticleEmitterConfiguration::startVelocity, "Start Velocity">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::velocityRandomness, "Velocity Randomness">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::acceleration, "Acceleration">
+	);
+
+	RegisterReflectionComponent<ParticleComponent>(
+		"ParticleComponent",
+		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
+		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
+		MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
+		MemberRegistrationV<&ParticleComponent::autoPlay, "AutoPlay">,
+		MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">,
+		MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
+		);
 }

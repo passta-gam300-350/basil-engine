@@ -20,6 +20,7 @@ Technology is prohibited.
 #include "../Pipeline/RenderPipeline.h"
 #include "../Utility/RenderData.h"
 #include "../Utility/FrameData.h"
+#include "../utility/Particle.h"
 #include "../Resources/ResourceManager.h"
 #include "../Resources/TextureSlotManager.h"
 #include <memory>
@@ -31,6 +32,7 @@ class InstancedRenderer;
 class PBRLightingRenderer;
 class PickingRenderPass;
 class OutlineRenderPass;
+class ParticleRenderer;
 
 class SceneRenderer {
 public:
@@ -44,6 +46,7 @@ public:
     // Data submission API - application pushes data each frame
     void SubmitRenderable(const RenderableData& renderable);
     void SubmitLight(const SubmittedLightData& light);
+    void SubmitParticles(const ParticleRenderData& particleData);
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -66,7 +69,7 @@ public:
     PBRLightingRenderer* GetPBRLightingRenderer() const { return m_PBRLightingRenderer.get(); }
     ResourceManager* GetResourceManager() const { return m_ResourceManager.get(); }
     TextureSlotManager* GetTextureSlotManager() const { return m_TextureSlotManager.get(); }
-
+    ParticleRenderer* GetParticleRenderer() const { return m_ParticleRenderer.get(); }
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
     void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
@@ -151,5 +154,5 @@ private:
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;
-    
+    std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
 };
