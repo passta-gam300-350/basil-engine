@@ -328,62 +328,6 @@ macro(import_directxtex)
     set_target_properties(DirectXTex PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${directxtex_include_dirs}")
 endmacro()
 
-macro(import_freetype)
-    FetchContent_Declare(
-      freetype
-      GIT_REPOSITORY https://github.com/freetype/freetype.git
-      GIT_TAG VER-2-14-1
-    )
-
-    FetchContent_MakeAvailable(freetype)
-    include_directories(${freetype_SOURCE_DIR}/inc)
-endmacro()
-
-macro(import_fmod)
-    set(FMOD_API_DIR "${CMAKE_SOURCE_DIR}/dep/vendor/fmod")
-    set(FMOD_CORE_API_LIB_DIR "${FMOD_API_DIR}/api/core/lib/x64")
-    set(FMOD_CORE_API_INC_DIR "${FMOD_API_DIR}/api/core/inc")
-
-    set(FMOD_STUDIO_API_LIB_DIR "${FMOD_API_DIR}/api/studio/lib/x64")
-    set(FMOD_STUDIO_API_INC_DIR "${FMOD_API_DIR}/api/studio/inc")
-
-    find_library(FMOD_CORE_LIBRARY_DEBUG fmodL_vc PATHS ${FMOD_CORE_API_LIB_DIR})
-    find_library(FMOD_CORE_LIBRARY_RELEASE fmod_vc PATHS ${FMOD_CORE_API_LIB_DIR})
-
-    find_library(FMOD_STUDIO_LIBRARY_DEBUG fmodstudioL_vc PATHS ${FMOD_STUDIO_API_LIB_DIR})
-    find_library(FMOD_STUDIO_LIBRARY_RELEASE fmodstudio_vc PATHS ${FMOD_STUDIO_API_LIB_DIR})
-
-    add_library(fmod SHARED IMPORTED)
-    set_target_properties(fmod PROPERTIES
-        IMPORTED_LOCATION_DEBUG ${FMOD_CORE_API_LIB_DIR}/fmodL.dll
-        IMPORTED_IMPLIB_DEBUG ${FMOD_CORE_LIBRARY_DEBUG}
-        IMPORTED_LOCATION_RELEASE ${FMOD_CORE_API_LIB_DIR}/fmod.dll
-        IMPORTED_IMPLIB_RELEASE ${FMOD_CORE_LIBRARY_RELEASE}
-        IMPORTED_LOCATION_MINSIZEREL ${FMOD_CORE_API_LIB_DIR}/fmod.dll
-        IMPORTED_IMPLIB_MINSIZEREL ${FMOD_CORE_LIBRARY_RELEASE}
-        IMPORTED_LOCATION_RELWITHDEBINFO ${FMOD_CORE_API_LIB_DIR}/fmod.dll
-        IMPORTED_IMPLIB_RELWITHDEBINFO ${FMOD_CORE_LIBRARY_RELEASE}
-        IMPORTED_LOCATION_GAMERELEASE ${FMOD_CORE_API_LIB_DIR}/fmod.dll
-        IMPORTED_IMPLIB_GAMERELEASE ${FMOD_CORE_LIBRARY_RELEASE}
-        INTERFACE_INCLUDE_DIRECTORIES ${FMOD_CORE_API_INC_DIR}
-        )
-
-    add_library(fmodstudio SHARED IMPORTED)
-    set_target_properties(fmodstudio PROPERTIES
-        IMPORTED_LOCATION_DEBUG ${FMOD_STUDIO_API_LIB_DIR}/fmodstudioL.dll
-        IMPORTED_IMPLIB_DEBUG ${FMOD_STUDIO_LIBRARY_DEBUG}
-        IMPORTED_LOCATION_RELEASE ${FMOD_STUDIO_API_LIB_DIR}/fmodstudio.dll
-        IMPORTED_IMPLIB_RELEASE ${FMOD_STUDIO_LIBRARY_RELEASE}
-        IMPORTED_LOCATION_MINSIZEREL ${FMOD_STUDIO_API_LIB_DIR}/fmodstudio.dll
-        IMPORTED_IMPLIB_MINSIZEREL ${FMOD_STUDIO_LIBRARY_RELEASE}
-        IMPORTED_LOCATION_RELWITHDEBINFO ${FMOD_STUDIO_API_LIB_DIR}/fmodstudio.dll
-        IMPORTED_IMPLIB_RELWITHDEBINFO ${FMOD_STUDIO_LIBRARY_RELEASE}
-        IMPORTED_LOCATION_GAMERELEASE ${FMOD_CORE_API_LIB_DIR}/fmodstudio.dll
-        IMPORTED_IMPLIB_GAMERELEASE ${FMOD_STUDIO_LIBRARY_RELEASE}
-        INTERFACE_INCLUDE_DIRECTORIES ${FMOD_STUDIO_API_INC_DIR}
-        )
-endmacro()
-
 # Import Mono
 macro(import_mono)
     set(MONO_IMPORT_DIR "${CMAKE_SOURCE_DIR}/dep/vendor/mono")
@@ -494,20 +438,18 @@ function(hide_dependencies)
         yaml-cpp-read
         yaml-cpp-sandbox
         imgui_backends
-        freetype
-        Jolt
         PROPERTIES FOLDER dep)
     suppress_dep_warnings(
-        glad
+        glad 
         glfw
         uninstall
         update_mappings
-        glm
-        assimp
-        EnTT
-        imgui
-        UpdateAssimpLibsDebugSymbolsAndDLLs
-        zlibstatic
+        glm 
+        assimp 
+        EnTT 
+        imgui 
+        UpdateAssimpLibsDebugSymbolsAndDLLs 
+        zlibstatic 
         Catch2
         Catch2WithMain
         ddsloader
@@ -524,9 +466,7 @@ function(hide_dependencies)
         yaml-cpp-parse
         yaml-cpp-read
         yaml-cpp-sandbox
-        imgui_backends
-        freetype
-        Jolt)
+        imgui_backends)
 endfunction()
 
 # Macro to import all dependencies
@@ -551,8 +491,6 @@ macro(import_dependencies)
     import_yaml_cpp()
     #import_zlib()
 
-    import_freetype()
-    import_fmod()
     import_mono()
     import_xml()
     import_jolt()

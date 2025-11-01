@@ -2,11 +2,10 @@
 #include "Ecs/ecs.h"
 #include <glm/glm.hpp>
 
-#include "Component/Transform.hpp"
+#include "components/transform.h"
 #include "Render/Render.h"
 #include "Particles/ParticleComponent.h"
 
-#include "Render/Camera.h"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -115,9 +114,7 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<MeshRendererComponent::Material>(
 		"Material",
 		MemberRegistrationV<&MeshRendererComponent::Material::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">,
-		MemberRegistrationV<&MeshRendererComponent::Material::roughness, "roughness">,
-		MemberRegistrationV<&MeshRendererComponent::Material::metallic, "metallic">
+		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">
 	);
 
 	RegisterReflectionComponent<VisibilityComponent>(
@@ -125,11 +122,25 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&VisibilityComponent::m_IsVisible, "m_IsVisible">
 	);
 
+	RegisterReflectionComponent<PositionComponent>(
+		"PositionComponent",
+		MemberRegistrationV<&PositionComponent::m_WorldPos, "m_WorldPos">
+	);
+
+	RegisterReflectionComponent<ScaleComponent>(
+		"ScaleComponent",
+		MemberRegistrationV<&ScaleComponent::m_Scale, "m_Scale">
+	);
+
+	RegisterReflectionComponent<RotationComponent>(
+		"RotationComponent",
+		MemberRegistrationV<&RotationComponent::m_Rotation, "m_Rotation">
+
+	);
+
 	RegisterReflectionComponent<TransformComponent>(
 		"TransformComponent",
-		MemberRegistrationV<&TransformComponent::m_Scale, "m_Scale">,
-		MemberRegistrationV<&TransformComponent::m_Rotation, "m_Rotate">,
-		MemberRegistrationV<&TransformComponent::m_Translation, "m_Trans">
+		MemberRegistrationV<&TransformComponent::m_trans, "m_trans">
 	);
 
 	RegisterReflectionComponent<MeshRendererComponent>(
@@ -143,15 +154,7 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	);
 
-	//RegisterReflectionComponent<RigidBodyComponent>(
-	//			"RigidBodyComponent",
-	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
-	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
-	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
-	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
-	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
-	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
-	//);
+
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",

@@ -1,24 +1,3 @@
-/******************************************************************************/
-/*!
-\file   EditorMain.hpp
-\author Team PASSTA
-		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
-		Eirwen (c.lau\@digipen.edu)
-		Hai Jie (haijie.w\@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief This file contain the declaration for the EditorMain class, which is the
-main editor screen handling the viewport, entity management, and various editor panels.
-It integrates with the rendering system and ECS to provide a functional editor environment.
-It includes features like scene exploration, entity inspection, and camera controls. It allows
-for creating, selecting, and manipulating entities within the scene.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #ifndef EDITORMAIN_HPP
 #define EDITORMAIN_HPP
 
@@ -28,16 +7,12 @@ Technology is prohibited.
 #include "ecs/fwd.h"
 #include "Manager/AssetManager.hpp"
 #include <memory>
-#include <spdlog/spdlog.h>
 
 #include "Service/FileService.hpp"
-#include "Service/EngineService.hpp"
-#include <rsc-ext/rp.hpp>
 
 class EditorMain : public Screen
 {
 	FileService fileService;
-	EngineContainerService engineService;
 public:
 	bool showAboutModal = false;
 	bool showInspector = true;
@@ -97,12 +72,13 @@ public:
 	void Render_Game();
 	void Render_CameraControls();
 
-	void Render_Components();
-	void Render_Component_Member(auto&, bool& is_dirty);
 
-	void Render_Add_Component_Menu();
+	void Render_Transform_Group_Component(ecs::entity entity_handle);
 
-	void Render_Rigidbody_Component(ecs::entity entity_handle);
+	void Render_Lighting_Group_Component(ecs::entity entity_handle);
+
+	void Render_Camera_Group_Component(ecs::entity entity_handle);
+	void Render_Mesh_Component(ecs::entity entity_handle);
 
 private:
 	// Entity management
@@ -122,7 +98,7 @@ private:
 	void CreatePhysicsCube();
 
 	// Editor Camera
-	std::shared_ptr<EditorCamera> m_EditorCamera;
+	std::unique_ptr<EditorCamera> m_EditorCamera;
 
 	// Asset Manager
 	std::unique_ptr<AssetManager> m_AssetManager;
@@ -154,160 +130,4 @@ private:
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);
 };
-
-namespace rp {
-	namespace serialization {
-		template <>
-		struct out_archive<"imgui"> {
-			std::string m_tag_name;
-			template <typename Type>
-			void write(Type& v, std::string const& label) {
-				const auto same_line_label{ [](auto& ss) {
-					ImGui::Text(ss.c_str());
-					ImGui::SameLine(250);
-					ImGui::SetNextItemWidth(-1);
-					} };
-				auto strlabel{ ("##" + label) };
-				const char* cstrlabel{ strlabel.c_str() };
-				if constexpr (std::is_enum_v<Type>) {
-					// Render enum as a combo box
-					auto names = reflection::get_enum_list<Type>();
-					int current = static_cast<int>(v);
-					same_line_label(label);
-					if (ImGui::BeginCombo(cstrlabel, std::string(reflection::map_enum_name(v)).c_str())) {
-						for (auto [enum_name, enum_value] : names) {
-							bool selected = (enum_value == v);
-							if (ImGui::Selectable(std::string(enum_name).c_str(), selected)) {
-								v = enum_value;
-							}
-							if (selected) ImGui::SetItemDefaultFocus();
-						}
-						ImGui::EndCombo();
-					}
-				}
-				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, rp::Guid>) {
-					// GUID as hex string
-					std::string guid_str = v.to_hex();
-					char buf[64];
-					strncpy(buf, guid_str.c_str(), sizeof(buf));
-					same_line_label(label);
-					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
-						v = rp::Guid::from_hex(buf);
-					}
-				}
-				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
-					char buf[256];
-					strncpy(buf, v.c_str(), sizeof(buf));
-					same_line_label(label);
-					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
-						v = buf;
-					}
-				}
-				else if constexpr (std::is_same_v<Type, bool>) {
-					same_line_label(label);
-					ImGui::Checkbox(cstrlabel, &v);
-				}
-				else if constexpr (std::is_integral_v<Type>) {
-					same_line_label(label);
-					ImGui::InputInt(cstrlabel, reinterpret_cast<int*>(&v));
-				}
-				else if constexpr (std::is_floating_point_v<Type>) {
-					same_line_label(label);
-					if constexpr (std::is_same_v<Type, double>) {
-						ImGui::InputDouble(cstrlabel, &v);
-					}
-					else {
-						ImGui::InputFloat(cstrlabel, reinterpret_cast<float*>(&v));
-					}
-				}
-				else if constexpr (std::is_same_v<Type, glm::vec2>) {
-					same_line_label(label);
-					ImGui::DragFloat2(cstrlabel, &v.x);
-				}
-				else if constexpr (std::is_same_v<Type, glm::vec3>) {
-					same_line_label(label);
-					ImGui::DragFloat3(cstrlabel, &v.x);
-				}
-				else if constexpr (std::is_same_v<Type, glm::vec4>) {
-					same_line_label(label);
-					ImGui::DragFloat4(cstrlabel, &v.x);
-				}
-				else if constexpr (std::is_same_v<Type, glm::ivec2>) {
-					same_line_label(label);
-					ImGui::DragInt2(cstrlabel, &v.x);
-				}
-				else if constexpr (std::is_same_v<Type, glm::ivec3>) {
-					same_line_label(label);
-					ImGui::DragInt3(cstrlabel, &v.x);
-				}
-				else if constexpr (std::is_same_v<Type, glm::ivec4>) {
-					same_line_label(label);
-					ImGui::DragInt4(cstrlabel, &v.x);
-				}
-				else if constexpr (reflection::is_associative_container_v<Type>) {
-					ImGui::Text(label.c_str());
-					for (auto& [key, val] : v) {
-						ImGui::PushID(key.c_str());
-						write(val, label + "." + key);
-						ImGui::PopID();
-					}
-					if constexpr (std::is_same_v<typename Type::key_type, std::string>) {
-						char buf[256]{};
-						if (ImGui::InputText("##Add Item", buf, 256, ImGuiInputTextFlags_EnterReturnsTrue)) {
-							v.emplace(std::string(buf), typename Type::mapped_type{});
-						}
-					}
-				}
-				else if constexpr (reflection::is_sequence_container_v<Type>) {
-					int idx = 0;
-					ImGui::Text(label.c_str());
-					for (auto& elem : v) {
-						ImGui::PushID(idx);
-						write(elem, label + "[" + std::to_string(idx) + "]");
-						ImGui::PopID();
-						++idx;
-					}
-					if (ImGui::Button(("Add Item##" + label).c_str())) {
-						v.emplace_back();
-					}
-				}
-				else if constexpr (std::is_class_v<Type>) {
-					if (ImGui::TreeNode(label.c_str())) {
-						reflection::reflect(v).each([&](auto& field) {
-							write(*field.m_field_ptr,
-								std::string(field.m_field_name.begin(), field.m_field_name.end()));
-							});
-						ImGui::TreePop();
-					}
-				}
-			}
-			template <typename Type>
-			void write(Type& v) {
-				write(v, m_tag_name);
-			}
-		};
-
-
-		template <>
-		struct serializer<"imgui"> {
-			using out_archive_type = out_archive<"imgui">;
-			template <typename Type>
-			static void present(Type& val, std::string const& name) {
-				out_archive_type{ name }.write(val);
-			}
-			template <typename Type>
-			static void present(Type& val, out_archive_type& arc) {
-				arc.write(val);
-			}
-			template <typename Type>
-			static void present(Type& val, out_archive_type&& arc) {
-				arc.write(val);
-			}
-		};
-	}
-}
-
-using ImguiInspectItem = rp::serialization::out_archive<"imgui">;
-using ImguiInspectTypeRenderer = rp::serialization::serializer<"imgui">;
-
 #endif // EDITORMAIN_HPP

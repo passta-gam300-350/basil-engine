@@ -1,19 +1,3 @@
-/******************************************************************************/
-/*!
-\file   jobsystem.hpp
-\author Team PASSTA
-        Chew Bangxin Steven(bangxinsteven.chew@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief    Implementation of coroutine based jobsystem
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
-
 #ifndef LIB_JOBSYSTEM_HPP
 #define LIB_JOBSYSTEM_HPP
 
@@ -31,6 +15,8 @@ Technology is prohibited.
 #include <cont/queue.hpp>
 #include <cont/deque.hpp>
 
+// MAJOR TODO: fix std::vector<Worker> (temp solution to prealloc)(not threadsafe in submit access and destructor), fix JobPool (make it resizable, potential point of failure or inefficiency if workload is too high or too low) 
+// use ebr
 namespace JobSys {
     static constexpr uint32_t npos = ~0x0u;
     static constexpr uint64_t hi_dword_bitmask = static_cast<uint64_t>(~0x0u) << 32;
@@ -108,7 +94,7 @@ struct JobTask {
 template <typename F, typename... Args>
 struct CoroPackagedJob {
     CoroPackagedJob(F&& f, Args... args)
-        : fn{ std::forward<F>(f) }, m_args{ std::make_tuple(std::forward<Args>(args)...) }{
+        : fn{ std::forward<F>(f) }, m_args{ std::forward<Args>(args)... }{
     }
     JobTask operator()() {
         std::apply(fn, m_args);

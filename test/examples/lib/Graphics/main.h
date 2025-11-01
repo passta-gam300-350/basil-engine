@@ -4,7 +4,6 @@
 #include <Scene/SceneRenderer.h>
 #include <Resources/ResourceManager.h>
 #include <Utility/Camera.h>
-#include <Pipeline/ToneMapRenderPass.h>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
@@ -14,13 +13,7 @@
 #include <string>
 #include <chrono>
 
-enum class DemoType
-{
-    Sponza,
-    Tinbox
-};
-
-class GraphicsTestDriver
+class GraphicsTestDriver 
 {
 public:
     GraphicsTestDriver();
@@ -43,9 +36,6 @@ private:
     std::vector<RenderableData> m_SceneObjects;
     std::vector<SubmittedLightData> m_SceneLights;
 
-    // Current demo type
-    DemoType m_ActiveDemo;
-
     // Animation/Movement
     float m_Time;
     float m_DeltaTime;
@@ -59,13 +49,6 @@ private:
     // Animation controls
     bool m_RotationEnabled;
 
-    // HDR state tracking
-    bool m_HDREnabled;
-
-    // AABB caching (avoid recalculating from 2.6M vertices every frame)
-    std::vector<DebugAABB> m_CachedAABBs;
-    bool m_AABBsCached;
-
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -74,9 +57,8 @@ private:
     
     void ProcessInput();
 
-    // Demo scene setups (each includes: objects, lights, camera, outline mode)
-    void SetupSponzaDemo();      // Sponza cathedral - lighting test with HDR
-    void SetupTinboxDemo();      // Tinbox grid - outline and PBR testing
+    // Advanced demo scene
+    void SetupAdvancedScene();
 
     // Resource loading
     bool LoadTestResources();
@@ -85,14 +67,11 @@ private:
     // Utility functions
     void CreateModelInstance(const std::string& modelName, const std::string& materialName,
                            const glm::vec3& position, const glm::vec3& scale = glm::vec3(1.0f));
-    SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color,
-                                              float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f);
-    SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color,
-                                        float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f, float range = 10.0f);
+    SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity = 1.0f);
+    SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity = 1.0f, float range = 10.0f);
     SubmittedLightData CreateSpotLight(const glm::vec3& position, const glm::vec3& direction,
-                                       const glm::vec3& color, float diffuseIntensity = 1.0f,
-                                       float ambientIntensity = 0.0f, float range = 10.0f,
-                                       float innerCone = 30.0f, float outerCone = 45.0f);
+                                     const glm::vec3& color, float intensity = 1.0f, float range = 10.0f,
+                                     float innerCone = 30.0f, float outerCone = 45.0f);
 
     // AABB calculation and debug rendering
     void CalculateAndSubmitAABBs();
@@ -102,24 +81,14 @@ private:
     void PrintSystemInfo() const;
     void PrintSceneInfo() const;
     void PrintRenderPassStatus() const;
-    void PrintPointShadowInfo() const;
-    void PrintHDRInfo() const;
 
     // Render pass controls
-    void ToggleSkybox();
+    void ToggleRenderPass(const std::string& passName);
+    void ToggleAABBVisualization();
     //void RenderUI(); // For ImGui if available
 
     // Object picking
     void HandleObjectPicking(double mouseX, double mouseY);
-
-    // Outline modes
-    void SetupStaticOutlines();           // Outline first 5 objects (static demo)
-    void UpdateCameraBasedOutline();      // Outline object camera is looking at (dynamic)
-
-    // Ray-AABB intersection helper
-    bool RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
-                           const glm::vec3& aabbMin, const glm::vec3& aabbMax,
-                           float& tMin, float& tMax) const;
 
     // Static pointer for callbacks
     static GraphicsTestDriver* s_Instance;

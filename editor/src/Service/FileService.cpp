@@ -1,20 +1,3 @@
-/******************************************************************************/
-/*!
-\file   FileService.cpp
-\author Team PASSTA
-		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
-
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief This file contains the implementation for the FileService class, which
-provides file and folder dialog functionalities for opening and saving files.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #include "Service/Service.hpp"
 #include "Service/FileService.hpp"
 #ifdef _WIN32

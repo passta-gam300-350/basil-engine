@@ -24,12 +24,7 @@ enum class FBOTextureFormat
 {
 	None = 0,
 	RGBA8,
-	RGB8,           // 8-bit RGB (LDR, no alpha, linear)
-	SRGB8,          // 8-bit RGB (LDR, no alpha, sRGB - automatic gamma correction)
-	SRGB8_ALPHA8,   // sRGB format with alpha for automatic gamma correction
 	RGBA16F,        // 16-bit floating point for G-buffer precision
-	RGB16F,         // 16-bit float per channel, no alpha (HDR) ← ogldev uses this
-	RGB11F_G11F_B10F, // Packed HDR format for bloom (32 bits total: 11+11+10)
 	RED_INTEGER,
 	DEPTH24STENCIL8,
 	Depth = DEPTH24STENCIL8
@@ -62,7 +57,7 @@ struct FBOSpecs
 	uint32_t Width = 0, Height = 0;
 	FBOAttachmentSpecs Attachments;
 	uint32_t Samples = 1;
-	// bool SwapChainTarget = false;
+	bool SwapChainTarget = false;
 };
 
 class FrameBuffer
@@ -84,10 +79,6 @@ public:
 	{
 		return m_Specifications;
 	}
-
-	// MSAA support
-	bool IsMultisampled() const { return m_Specifications.Samples > 1; }
-	void ResolveToFramebuffer(FrameBuffer* destination) const;
 
 
 private:

@@ -24,7 +24,7 @@ ecs::entity ObjectManager::CreateGameObject()
 	// Transformation group
 	gameObject.add<TransformComponent>();
 	gameObject.add<PositionComponent>();
-	gameObject.add<RelationshipComponent>(); // Scene graph support
+	/*gameObject.add<RelationshipComponent>(0);*/
 
 
 

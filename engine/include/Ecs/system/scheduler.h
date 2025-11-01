@@ -124,15 +124,11 @@ namespace ecs {
             for (auto const& phase : scheduler.m_JobSchedulePhases) {
                 for (std::size_t node_idx : phase) {
                     //ensure that systemregistry do not destroy sysbase while scheduler is running
-                    //SystemBase* sys_fn{ SystemRegistry::GetSystem(jobgraph.nodes[node_idx].index) };
+                    SystemBase* sys_fn{ SystemRegistry::GetSystem(jobgraph.nodes[node_idx].index) };
                     for (auto dep_idx : scheduler.m_JobDependencies[node_idx]) {
                         jobdep.emplace_back(jobhandles[dep_idx]);
                     }
-                    //JobID jid = scheduler.m_JobSystem.submit({}, jobdep, JobSys::make_packaged_job([](world wrld, SystemBase* sys) {sys->FixedUpdate(wrld); }, w, SystemRegistry::GetSystem(jobgraph.nodes[node_idx].index)));
-                    JobID jid = scheduler.m_JobSystem.submit({}, jobdep, [](world wrld, SystemBase* sys) -> JobTask {
-                        sys->FixedUpdate(wrld); 
-                        co_return;
-                        }, w, SystemRegistry::GetSystem(jobgraph.nodes[node_idx].index));
+                    JobID jid = scheduler.m_JobSystem.submit({}, jobdep, JobSys::make_packaged_job([sys_fn](world wrld) {sys_fn->FixedUpdate(wrld); }, w));
                     jobhandles[node_idx] = jid;
                     jobdep.clear();
                 }

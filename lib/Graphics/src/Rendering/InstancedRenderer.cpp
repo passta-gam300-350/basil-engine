@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   InstancedRenderer.cpp
+\author Team PASSTA
+        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
+        Tham Kang Ting (kangting.t@digipen.edu)
+        Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Implementation of instanced rendering system for efficient batch rendering
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
 #include "Scene/SceneRenderer.h"
@@ -6,7 +23,6 @@
 #include "Utility/AABB.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
-#include <glad/glad.h>
 #include <spdlog/spdlog.h>
 #include <cassert>
 
@@ -99,20 +115,20 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 
     // Upload full InstanceData (not just matrices)
     const auto& instances = meshInstances.instances;
-    uint32_t instanceDataSize = instances.size() * sizeof(InstanceData);
+    uint64_t instanceDataSize = instances.size() * sizeof(InstanceData);
     assert(instanceDataSize > 0 && "Instance data size must be positive");
 
     // Create or get existing SSBO for full instance data
     auto& ssbo = m_InstanceSSBOs[meshId];
 
     if (!ssbo) {
-        ssbo = std::make_unique<ShaderStorageBuffer>(instances.data(), instanceDataSize, GL_DYNAMIC_DRAW);
+        ssbo = std::make_unique<ShaderStorageBuffer>(instances.data(), (unsigned int)(instanceDataSize), GL_DYNAMIC_DRAW);
         assert(ssbo && "Failed to create ShaderStorageBuffer");
         assert(ssbo->GetSSBOHandle() != 0 && "SSBO handle must be valid after creation");
     } else {
         // Update existing SSBO with full instance data
         assert(ssbo->GetSSBOHandle() != 0 && "Existing SSBO handle must be valid");
-        ssbo->SetData(instances.data(), instanceDataSize, 0);
+        ssbo->SetData(instances.data(), uint32_t(instanceDataSize), 0);
     }
 
     meshInstances.dirty = false;
@@ -121,95 +137,18 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
 {
     if (renderables.empty()) {
-        // Clear cache if we transition from having objects to no objects
-        if (!m_MeshInstances.empty())
-        {
-            Clear();
-        }
         return;
     }
 
-    // Only rebuild instance data when renderables actually change
-    // This avoids redundant work for static scenes while handling dynamic changes
-    if (HasRenderablesChanged(renderables))
-    {
-        BuildDynamicInstanceData(renderables);
-    }
+    // Always rebuild instance data based on currently visible renderables
+    // This handles dynamic frustum culling as camera moves
+    BuildDynamicInstanceData(renderables);
 
     // Render the instance batches to the specified pass
     for (const auto& pair : m_MeshInstances) {
         if (!pair.second.instances.empty()) {
             RenderInstancedMeshToPass(renderPass, pair.first, frameData);
         }
-    }
-}
-
-void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader)
-{
-    if (renderables.empty() || !shadowShader) {
-        return;
-    }
-
-    // Only rebuild instance data when renderables actually change
-    // Shadow passes reuse the same instance data as the main pass
-    if (HasRenderablesChanged(renderables))
-    {
-        BuildDynamicInstanceData(renderables);
-    }
-
-    // Render all instance batches with shadow shader (depth-only)
-    for (const auto& pair : m_MeshInstances) {
-        const auto& meshId = pair.first;
-        const auto& meshInstances = pair.second;
-
-        if (meshInstances.instances.empty()) {
-            continue;
-        }
-
-        // Get SSBO for this mesh
-        auto ssboIt = m_InstanceSSBOs.find(meshId);
-        if (ssboIt == m_InstanceSSBOs.end()) {
-            spdlog::error("No SSBO for mesh '{}' in shadow pass", meshId);
-            continue;
-        }
-
-        // Get mesh
-        if (!meshInstances.mesh) {
-            spdlog::error("Missing mesh for '{}' in shadow pass", meshId);
-            continue;
-        }
-
-        // 1. Bind shadow shader
-        RenderCommands::BindShaderData bindShaderCmd{shadowShader};
-        renderPass.Submit(bindShaderCmd);
-
-        // 2. Bind instance SSBO
-        RenderCommands::BindSSBOData bindSSBOCmd{
-            ssboIt->second->GetSSBOHandle(),
-            INSTANCE_SSBO_BINDING
-        };
-        renderPass.Submit(bindSSBOCmd);
-
-        // Note: View and projection matrices are set by the shadow pass itself
-        // We only need to bind SSBO and draw
-
-        // 3. Draw all instances
-        uint32_t indexCount = meshInstances.mesh->GetIndexCount();
-        uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
-        uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
-
-        assert(indexCount > 0 && "Index count must be positive for instanced shadow drawing");
-        assert(instanceCount > 0 && "Instance count must be positive for instanced shadow drawing");
-        assert(vaoHandle != 0 && "VAO handle must be valid for instanced shadow drawing");
-
-        RenderCommands::DrawElementsInstancedData drawCmd{
-            vaoHandle,
-            indexCount,
-            instanceCount,
-            0,  // Base instance
-            GL_TRIANGLES
-        };
-        renderPass.Submit(drawCmd);
     }
 }
 
@@ -231,7 +170,7 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
 
         // Add instance data with actual material properties
-        InstanceData instanceData;
+        InstanceData instanceData{};
         instanceData.modelMatrix = renderable.transform;
         instanceData.color = glm::vec4(renderable.material->GetAlbedoColor(), 1.0f);
         instanceData.materialId = 0; // Not used yet, could be used for texture indexing
@@ -310,15 +249,39 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     };
     renderPass.Submit(uniformsCmd);
 
-    // 4. Apply lighting setup via command submission (Option A - REFACTORED)
-    if (m_PBRLighting) {
-        // ✅ NEW: Submit lighting commands instead of direct OpenGL calls
-        m_PBRLighting->SubmitLightingCommands(renderPass, shader, nullptr);
-
-        // Submit unified shadow commands (includes all shadow types via SSBO)
-        m_PBRLighting->SubmitShadowCommands(renderPass, shader, frameData);
+    // 4. Apply lighting setup (material properties are now per-instance in SSBO)
+    if (m_PBRLighting != nullptr) {
+        // Apply lighting uniforms only (no per-instance material data)
+        m_PBRLighting->ApplyLightingToShader(shader, nullptr);  // Pass null since materials are per-instance
     } else {
         spdlog::warn("PBRLightingRenderer not available for lighting setup");
+    }
+
+    // 5. Set shadow mapping uniforms if available
+    if (!frameData.shadowMaps.empty() && !frameData.shadowMatrices.empty() && frameData.shadowMaps[0]) {
+        uint32_t shadowTexID = frameData.shadowMaps[0]->GetDepthAttachmentRendererID();
+
+        RenderCommands::SetShadowUniformsData shadowCmd{
+            shader,
+            frameData.shadowMatrices[0],
+            shadowTexID,
+            8,  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
+            true  // Enable shadows
+        };
+        renderPass.Submit(shadowCmd);
+    } else {
+        // No shadow data available - disable shadow mapping
+        // Bind a default/dummy shadow matrix and unbind shadow texture
+        glm::mat4 identityMatrix = glm::mat4(1.0f);
+
+        RenderCommands::SetShadowUniformsData disableShadowCmd{
+            shader,
+            identityMatrix,
+            0,  // Bind texture ID 0 (unbind)
+            8,  // Use texture unit 8 for shadow map (TEXTURE_SLOT_SHADOW)
+            false  // Disable shadows
+        };
+        renderPass.Submit(disableShadowCmd);
     }
 
 
@@ -368,45 +331,6 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, const std::shared
     auto& meshInstances = m_MeshInstances[meshId];
     meshInstances.mesh = mesh;
     meshInstances.material = material;
-}
-
-bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> &renderables)
-{
-    // Quick check: different count means definitely changed
-    if (renderables.size() != m_LastRenderableCount)
-    {
-        m_LastRenderableCount = renderables.size();
-
-        // Update tracked object IDs
-        m_LastObjectIDs.clear();
-        m_LastObjectIDs.reserve(renderables.size());
-        for (const auto &r : renderables)
-        {
-            m_LastObjectIDs.push_back(r.objectID);
-        }
-
-        return true;
-    }
-
-    // Same count - check if the object IDs match (detect entity replacement)
-    // This catches cases like: delete entity A, add entity B (same count, different entities)
-    for (size_t i = 0; i < renderables.size(); ++i)
-    {
-        if (i >= m_LastObjectIDs.size() || renderables[i].objectID != m_LastObjectIDs[i])
-        {
-            // IDs don't match - renderables have changed
-            m_LastObjectIDs.clear();
-            m_LastObjectIDs.reserve(renderables.size());
-            for (const auto &r : renderables)
-            {
-                m_LastObjectIDs.push_back(r.objectID);
-            }
-            return true;
-        }
-    }
-
-    // No changes detected - same count and same IDs
-    return false;
 }
 
 

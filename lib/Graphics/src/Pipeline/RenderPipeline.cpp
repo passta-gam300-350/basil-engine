@@ -18,11 +18,7 @@ Technology is prohibited.
 /******************************************************************************/
 #include "../../include/Pipeline/RenderPipeline.h"
 #include "../../include/Pipeline/RenderContext.h"
-#include "../../include/Pipeline/MainRenderingPass.h"
-#include "../../include/Pipeline/HDRLuminancePass.h"
-#include "../../include/Pipeline/ToneMapRenderPass.h"
 #include <algorithm>
-#include <glad/glad.h>
 
 RenderPipeline::RenderPipeline()
 {
@@ -65,13 +61,12 @@ void RenderPipeline::Execute(RenderContext& context) const
 		else
 		{
 			// Handle disabled passes that need cleanup
-			if (pass->GetName() == "ToneMapPass")
+			if (pass->GetName() == "ShadowPass")
 			{
-				// Clear post-process buffer when tone mapping is disabled
-				// This ensures PresentPass uses mainColorBuffer instead
-				context.frameData.postProcessBuffer = nullptr;
+				// Clear shadow data when shadow pass is disabled
+				context.frameData.shadowMaps.clear();
+				context.frameData.shadowMatrices.clear();
 			}
-			// Note: Shadow data is automatically cleared at the start of each frame in ClearFrame()
 		}
 	}
 }

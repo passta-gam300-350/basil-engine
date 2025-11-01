@@ -1,20 +1,3 @@
-/******************************************************************************/
-/*!
-\file   SplashScreen.hpp
-\author Team PASSTA
-		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief This file contains the declaration of the SplashScreen class, which
-is an IMGUI-based screen displayed during the application startup.
-It provides a visual loading indicator while the editor initializes.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #ifndef SPLASHSCREEN_HPP
 #define SPLASHSCREEN_HPP
 

@@ -22,7 +22,7 @@ namespace ecs {
 	template <typename ...types>
 	struct type_set {
 		using type = type_set;
-		static constexpr std::uint64_t elem_ct{ sizeof...(types) };
+		static constexpr std::uint64_t elem_ct{ sizeof(types...) };
 	};
 
 	template <typename ...excludes>

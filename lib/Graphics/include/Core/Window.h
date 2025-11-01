@@ -19,13 +19,11 @@ Technology is prohibited.
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <string>
-#include <functional>
 
 class Window
 {
 public:
 	Window(const std::string& title = "Engine", uint32_t width = 1280, uint32_t height = 720);
-	Window(GLFWwindow*);
 	Window(const Window&) = delete;
 	Window& operator=(const Window&) = delete;
 	Window(Window&&) = delete;
@@ -42,22 +40,15 @@ public:
 
 	void SwapBuffers();
 	void SetVSync(bool enabled);
-	void SetTitle(const std::string& title);
 	void SetClearColor(float r, float g, float b, float a = 1.0f);
 	void Clear();
 
 	bool IsInitialized() const { return m_Initialized; }
 
-	// Resize callback - called whenever window is resized (including during drag operations)
-	void SetResizeCallback(std::function<void()> callback) { m_ResizeCallback = callback; }
-
 private:
 	GLFWwindow* m_Window;
 	uint32_t m_Width, m_Height;
 	bool m_Initialized = false;
-
-	// Callback invoked on window resize to trigger re-rendering
-	std::function<void()> m_ResizeCallback;
 
 	static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 };

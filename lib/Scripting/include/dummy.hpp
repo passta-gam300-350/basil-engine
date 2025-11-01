@@ -1,4 +1,4 @@
-ifndef DUMMY_HPP
+#ifndef DUMMY_HPP
 #define DUMMY_HPP
 class Dummy {
 	public:

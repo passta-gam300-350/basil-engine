@@ -1,2 +1,0 @@
-add_subdirectory(scene_graph)
-add_subdirectory(prefab_system)

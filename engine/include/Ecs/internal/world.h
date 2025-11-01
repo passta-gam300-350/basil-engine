@@ -5,8 +5,6 @@
 #include <entt/entt.hpp>
 #include "ecs/fwd.h"
 #include "ecs/internal/entity.h"
-#include "Component/Transform.hpp"
-#include <jobsystem.hpp>
 
 namespace ecs {
 
@@ -78,8 +76,6 @@ namespace ecs {
 		void destroy_world();
 		void update(float);
 		void update();
-		void pre_update();
-		JobID update_async();
 
 		entity migrate_entity(entity);
 		entity add_entity();
@@ -100,13 +96,8 @@ namespace ecs {
 		template <typename... component_ts>
 		bool has_all_components_in_entity(entity) const;
 
-		ecs_iterative_container decltype(auto) get_all_entities() const;
-
 		template <typename... requires_t, typename... excludes_t>
 		ecs_iterative_container decltype(auto) filter_entities(excludes_t...) const;
-
-		template <typename... requires_t, typename... excludes_t>
-		ecs_iterative_container decltype(auto) query_components(excludes_t...) const;
 
 		template <ecs_system_callback ecs_system_callback_t>
 		auto add_system(ecs_system_callback_t sys_fn);
@@ -156,9 +147,6 @@ namespace ecs {
 	template<typename component_t, typename ...c_args>
 	inline component_t& world::add_component_to_entity(entity enty, c_args&&... cargs)
 	{
-		if constexpr (std::is_same_v<component_t, TransformComponent>) {
-			impl.get_registry().emplace<TransformMtxComponent>(detail::entt_entity_cast(enty));
-		}
 		return impl.get_registry().emplace<component_t>(detail::entt_entity_cast(enty), std::forward<c_args>(cargs)...);
 	}
 

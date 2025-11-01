@@ -1,14 +1,11 @@
 #include "Engine.hpp"
 #include "Core/Window.h"
-#include "Render/Render.h"
 #include "Profiler/profiler.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include "Input/InputManager.h"
-#include "Messaging/Messaging_System.h"
 #include "Ecs/ecs.h"
+#include "Render/render.h"
 #include <stdexcept>
-#include "System/TransformSystem.hpp"
-#include "Render/Camera.h"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -36,19 +33,13 @@ namespace {
 }
 
 Engine& Engine::Instance() {
-	return *InstancePtr();
-}
-
-std::unique_ptr<Engine>& Engine::InstancePtr() {
-	static std::unique_ptr<Engine> s_instance{std::make_unique<Engine>()};
-	return s_instance;
+	static Engine instance;
+	return instance;
 }
 
 using namespace ecs; //lazy
 
 void Engine::Init(std::string const& cfg ) {
-
-	Engine::SetState(Info::State::Init);
 
 	Instance().m_Info.m_FrameLogRate = 165;
 
@@ -57,14 +48,6 @@ void Engine::Init(std::string const& cfg ) {
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
-
-		// Create and initialize RenderSystem
-		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
-		Instance().m_RenderSystem->Init();
-		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-		Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
-
-		Scheduler::CompileJobSchedule();
 		//InputManager::Get_Instance()->Setup_Callbacks();
 		//ObjectManager::GetInstance().CreateGameObject();
 		return;
@@ -103,33 +86,11 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	// Create and initialize RenderSystem
-	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
-	Instance().m_RenderSystem->Init();
-
-	// Set up RenderSystem observers and initialize existing entities from loaded world
-	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
-
+	RenderSystem::System().Init();
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
-	Engine::Instance().m_Info.m_State = Info::State::Running;
-}
 
-void Engine::CoreUpdate() {
-	Engine& instance{ Instance() };
-	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
-	InputManager::Get_Instance()->Update();
-	instance.m_World.pre_update();
-	TransformSystem().FixedUpdate(instance.m_World);
-	CameraSystem::Instance().FixedUpdate(instance.m_World);
-	//instance.m_World.update();
-	//JobID last_job{ instance.m_World.update_async()};
-	Engine::GetRenderSystem().Update(instance.m_World);
-	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
-	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
-	//messagingSystem.Update();
-	//PF_END_FRAME();
+	
 }
 
 void Engine::Update() {
@@ -143,9 +104,16 @@ void Engine::Update() {
 					break;
 				}
 				
-				CoreUpdate();
+				InputManager::Get_Instance()->Update();
 
+				PF_BEGIN_FRAME(frame_number);
+				//instance.m_World.update();
+				RenderSystem::System().Update(instance.m_World);
+				PF_END_FRAME();
 				Engine::GetWindowInstance().SwapBuffers();
+
+
+
 
 				UpdateDebug();
 			}
@@ -172,7 +140,7 @@ void Engine::UpdateDebug() {
 	if (frame_log_rate && frame_counter >= frame_log_rate) {
 		Profiler::instance().printLastFrameSummary();
 		Engine::Instance().GetInfo().m_FPS = Profiler::instance().getLastFps();
-		Engine::Instance().GetInfo().m_DeltaTime = 1 / Engine::Instance().GetInfo().m_FPS;
+
 	}
 
 	frame_number++;
@@ -183,16 +151,7 @@ void Engine::ReportLastError() {
 	
 }
 
-
-void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
-	Engine::SetState(Info::State::Init);
-	Instance().m_Window = std::make_unique<Window>(wptr);
-	InitWithoutWindow(cfg);
-}
-
 void Engine::InitWithoutWindow(std::string const& cfg) {
-	Engine::SetState(Info::State::Init);
-
 	ReflectionRegistry::SetupNativeTypes();
 	ReflectionRegistry::SetupEngineTypes();
 	Instance().m_Info.m_FrameLogRate = 165;
@@ -226,41 +185,21 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	// Create and initialize RenderSystem
-	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
-	Instance().m_RenderSystem->Init();
-
-	// Set up RenderSystem observers and initialize existing entities from loaded world
-	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
-
+	RenderSystem::System().Init();
 	Scheduler::CompileJobSchedule();
-
-	auto e = Engine::GetWorld().add_entity();
-	e.destroy();
-
-	Engine::SetState(Info::State::Running);
 }
 
 void Engine::Exit() {
 	SystemRegistry::Exit();
 	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
-	if (Instance().m_RenderSystem) {
-		Instance().m_RenderSystem->Exit();
-		Instance().m_RenderSystem.reset();
-	}
+	RenderSystem::System().Exit();
 	ResourceSystem::Release();
 	Scheduler::Release();
-	InstancePtr().reset();
 }
 
 world Engine::GetWorld() {
 	return Instance().m_World;
-}
-
-double Engine::GetDeltaTime() {
-	return Instance().m_Info.m_DeltaTime;
 }
 
 void Engine::GenerateDefaultConfig() {
@@ -290,13 +229,6 @@ Window& Engine::GetWindowInstance() {
 	return *Instance().m_Window;
 }
 
-RenderSystem& Engine::GetRenderSystem() {
-	if (!Instance().m_RenderSystem) {
-		throw std::runtime_error("RenderSystem not created - call Engine::Init() first");
-	}
-	return *Instance().m_RenderSystem;
-}
-
 bool Engine::WindowShouldClose() {
 	return GetWindowInstance().ShouldClose();
 }
@@ -308,9 +240,7 @@ Logger::Sink* Engine::GetSink() {
 
 void Engine::BeginFrame()
 {
-	Engine& instance = Instance();
-
-	PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
+	PF_BEGIN_FRAME(Instance().m_Info.m_TotalFrameCt);
 }
 
 void Engine::EndFrame()

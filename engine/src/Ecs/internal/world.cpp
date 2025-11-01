@@ -174,14 +174,6 @@ namespace ecs {
 		Scheduler::RunUntilCompletion(*this);
 	}
 
-	void world::pre_update()
-	{
-	}
-
-	JobID world::update_async() {
-		return Scheduler::Run(*this);
-	}
-
 	void shutdown_ecs()
 	{
 		worlds.reset();

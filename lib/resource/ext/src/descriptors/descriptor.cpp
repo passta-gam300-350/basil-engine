@@ -2,7 +2,6 @@
 #include "descriptors/descriptor_registry.hpp"
 #include <chrono>
 #include <filesystem>
-#include <iostream>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -35,17 +34,7 @@ namespace Resource {
 		meta.m_RawSourcePath = p.lexically_normal().make_preferred().string();
 		std::size_t pos = meta.m_RawSourcePath.find(DescriptorRegistry::GetDescriptorRootDirectory());
 		pos == std::string::npos ? meta.m_RawSourcePath : meta.m_RawSourcePath = meta.m_RawSourcePath.substr(DescriptorRegistry::GetDescriptorRootDirectory().size());
-
-		try {
-			auto file_size = std::filesystem::file_size(s);
-			auto last_write = std::filesystem::last_write_time(s);
-			auto time_val = std::chrono::duration_cast<std::chrono::seconds>(last_write.time_since_epoch()).count();
-			meta.m_FileChecksumHash = (static_cast<uint64_t>(time_val) << 32) | (file_size & BITMASK32);
-		} catch (const std::filesystem::filesystem_error& e) {
-			std::cerr << "[GetFileMetadata] ERROR: " << e.what() << " (file: " << s << ")\n";
-			meta.m_FileChecksumHash = 0; // Explicitly set to 0 on error
-		}
-
+		meta.m_FileChecksumHash = (static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(std::filesystem::last_write_time(s).time_since_epoch()).count()) << 32) | (std::filesystem::file_size(s) & BITMASK32);
 		return meta;
 	}
 
