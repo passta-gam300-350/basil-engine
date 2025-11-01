@@ -437,8 +437,50 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
         }
     }
 
-    // No changes detected - same count and same IDs
+    // Check if transforms changed (important for editor mode where entities move/scale/rotate)
+    // Compare transform matrix hash for quick change detection
+    if (!m_LastTransformHashes.empty() && m_LastTransformHashes.size() == renderables.size())
+    {
+        for (size_t i = 0; i < renderables.size(); ++i)
+        {
+            // Hash transform matrix (sum diagonal + translation)
+            // GLM uses column-major: t[col][row]
+            // Translation is in column 3: t[3][0], t[3][1], t[3][2]
+            const glm::mat4& t = renderables[i].transform;
+            float currentHash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
+                               t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+            if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
+            {
+                // Transform changed - need to rebuild
+                UpdateTransformHashes(renderables);
+                return true;
+            }
+        }
+    }
+    else
+    {
+        // First time or size mismatch - initialize transform hashes
+        UpdateTransformHashes(renderables);
+        return true;
+    }
+
+    // No changes detected - same count, same IDs, same transforms
     return false;
 }
 
+void InstancedRenderer::UpdateTransformHashes(const std::vector<RenderableData>& renderables)
+{
+    m_LastTransformHashes.clear();
+    m_LastTransformHashes.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Hash transform matrix (sum diagonal + translation)
+        // GLM uses column-major: t[col][row]
+        // Translation is in column 3: t[3][0], t[3][1], t[3][2]
+        const glm::mat4& t = r.transform;
+        float hash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
+                    t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+        m_LastTransformHashes.push_back(hash);
+    }
+}
 
