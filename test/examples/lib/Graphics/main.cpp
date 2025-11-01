@@ -639,28 +639,28 @@ void GraphicsTestDriver::SetupTinboxDemo()
 
     // 3. CREATE LIGHTS
     // Directional light
-    /*m_SceneLights.push_back(CreateDirectionalLight(
+    m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(0.2f, -1.0f, 0.3f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         0.3f, 0.2f
-    ));*/
+    ));
     // Point light - positioned close to chair for visible lighting
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(-8.0f, 2.0f, 0.0f),         // Right above chair at (-8, 0, 0)
-        glm::vec3(1.0f, 0.9f, 0.7f),
-        5.0f, 0.1f, 50.0f                      // Increased intensity to 5.0
-    ));
+    //m_SceneLights.push_back(CreatePointLight(
+    //    glm::vec3(-8.0f, 2.0f, 0.0f),         // Right above chair at (-8, 0, 0)
+    //    glm::vec3(1.0f, 0.9f, 0.7f),
+    //    5.0f, 0.1f, 50.0f                      // Increased intensity to 5.0
+    //));
     // Spot light - positioned close to chair for visible shadows
-    m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(-8.0f, 3.0f, 0.0f),         // Lowered from 8.0 to 3.0 for stronger effect
-        glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
-        glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
-        8.0f,                                  // Increased intensity to 8.0
-        0.1f,                                  // AmbientIntensity: low ambient
-        30.0f,                                 // Range: covers chair area
-        15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
-        25.0f                                  // OuterCone: 25 degrees (cone angle)
-    ));
+    //m_SceneLights.push_back(CreateSpotLight(
+    //    glm::vec3(-8.0f, 3.0f, 0.0f),         // Lowered from 8.0 to 3.0 for stronger effect
+    //    glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
+    //    glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
+    //    8.0f,                                  // Increased intensity to 8.0
+    //    0.1f,                                  // AmbientIntensity: low ambient
+    //    30.0f,                                 // Range: covers chair area
+    //    15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
+    //    25.0f                                  // OuterCone: 25 degrees (cone angle)
+    //));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f)); // Reduced to let other lights show
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 
@@ -742,18 +742,44 @@ void GraphicsTestDriver::SetupEditorDemo()
     }
     spdlog::info("Created 3x3 cube grid: {} cubes", gridSize * gridSize);
 
-    // 3. CREATE DIRECTIONAL LIGHT - Match editor lighting
-    m_SceneLights.push_back(CreateDirectionalLight(
-        glm::vec3(0.2f, -0.8f, 0.3f),        // Direction (matching editor)
-        glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm sunlight (matching editor)
-        2.5f,                                 // Intensity (matching editor)
-        0.0f                                  // No per-light ambient
+    // 2.5. CREATE GROUND PLANE TO CATCH SHADOWS
+    auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(20.0f, 20.0f, 1, 1));
+    RenderableData groundPlane;
+    groundPlane.mesh = planeMesh;
+    groundPlane.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+
+    // Create property block for the ground plane with a neutral gray color
+    auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
+    groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 1.0f, 1.0f));  // Neutral gray
+    groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
+    groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
+    groundPlane.propertyBlock = groundPropertyBlock;
+
+    // Position plane below cubes (cubes are at y=0, so plane at y=-0.6 is below them)
+    groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    groundPlane.visible = true;
+    groundPlane.objectID = objectID++;
+    groundPlane.modelInstanceID = modelInstanceID++;
+
+    m_SceneObjects.push_back(groundPlane);
+    spdlog::info("Added ground plane at y=-0.6 to catch shadows");
+
+    // 3. CREATE SPOTLIGHT - Positioned above scene to cast shadows
+    m_SceneLights.push_back(CreateSpotLight(
+        glm::vec3(0.0f, 6.0f, 0.0f),        // Position: centered above the grid
+        glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
+        glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm sunlight
+        3.0f,                                 // DiffuseIntensity: bright spotlight
+        0.0f,                                 // AmbientIntensity: no per-light ambient
+        20.0f,                                // Range: covers entire scene
+        25.0f,                                // InnerCone: 25 degrees
+        35.0f                                 // OuterCone: 35 degrees
     ));
 
-    // Set strong ambient light to match editor
+    // Set ambient light
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f));
-    spdlog::info("Directional light created with intensity 2.5");
-    spdlog::info("Ambient light set to (0.7, 0.7, 0.7)");
+    spdlog::info("Spotlight created at (0, 10, 0) pointing down with intensity 3.0");
+    spdlog::info("Ambient light set to (0.03, 0.03, 0.03)");
 
     // 4. DISABLE SKYBOX - Editor doesn't use skybox
     m_SceneRenderer->EnableSkybox(false);
@@ -1311,7 +1337,7 @@ void GraphicsTestDriver::PrintPointShadowInfo() const
                     spdlog::info("  Point Light #{}: Position({:.1f}, {:.1f}, {:.1f}), Intensity={:.1f}, Range={:.1f}",
                                 pointLightCount,
                                 light.position.x, light.position.y, light.position.z,
-                                light.intensity, light.range);
+                                light.diffuseIntensity, light.range);
                 }
             }
 

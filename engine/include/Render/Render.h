@@ -65,16 +65,36 @@ struct VisibilityComponent{
 
 /**
  * @brief Component for light sources (directional, point, spotlight)
+ *
+ * Aligned with graphics library's SubmittedLightData structure.
+ * All fields are stored regardless of light type (Unity-style approach).
+ *
+ * USAGE GUIDE:
+ * - Directional: Use Direction only (infinite range)
+ * - Point: Use Range only (position from Transform)
+ * - Spot: Use Direction, Range, InnerCone, OuterCone
  */
 struct LightComponent {
-    Light::Type m_Type;           ///< Light type (Directional/Point/Spotlight)
-    glm::vec3 m_Direction;        ///< Direction for directional/spotlights
-    glm::vec3 m_Color;            ///< Light color (RGB)
-    float m_Intensity;            ///< Light intensity multiplier
-    float m_Range;                ///< Maximum range for point/spotlights
-    float m_InnerCone;            ///< Inner cone angle for spotlights (degrees)
-    float m_OuterCone;            ///< Outer cone angle for spotlights (degrees)
-    bool m_IsEnabled;             ///< Light enabled state
+    Light::Type m_Type = Light::Type::Directional;           ///< Light type (Directional/Point/Spotlight)
+
+    // === Common Properties (All Types) ===
+    glm::vec3 m_Color = glm::vec3(1.0f, 1.0f, 1.0f);         ///< Light color (RGB)
+    float m_DiffuseIntensity = 1.0f;                         ///< Direct light intensity (PBR)
+    float m_AmbientIntensity = 0.0f;                         ///< Ambient contribution (PBR)
+    bool m_IsEnabled = true;                                 ///< Enable/disable light
+
+    // === Shadow Settings (Unity-style) ===
+    bool m_CastShadows = true;                               ///< Enable shadow casting
+
+    // === Directional & Spot Only ===
+    glm::vec3 m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);    ///< [Dir/Spot] Light direction
+
+    // === Point & Spot Only ===
+    float m_Range = 10.0f;                                   ///< [Point/Spot] Max distance
+
+    // === Spot Only ===
+    float m_InnerCone = 30.0f;                               ///< [Spot] Inner angle (deg)
+    float m_OuterCone = 45.0f;                               ///< [Spot] Outer angle (deg)
 };
 
 struct RenderSystem : public ecs::SystemBase {

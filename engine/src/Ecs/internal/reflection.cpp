@@ -144,14 +144,16 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",
-		MemberRegistrationV<&LightComponent::m_Type, "m_Type">,
-		MemberRegistrationV<&LightComponent::m_Direction, "m_Direction">,
-		MemberRegistrationV<&LightComponent::m_Color, "m_Color">,
-		MemberRegistrationV<&LightComponent::m_Intensity, "m_Intensity">,
-		MemberRegistrationV<&LightComponent::m_Range, "m_Range">,
-		MemberRegistrationV<&LightComponent::m_InnerCone, "m_InnerCone">,
-		MemberRegistrationV<&LightComponent::m_OuterCone, "m_OuterCone">,
-		MemberRegistrationV<&LightComponent::m_IsEnabled, "m_IsEnabled">
+		MemberRegistrationV<&LightComponent::m_Type, "Type">,
+		MemberRegistrationV<&LightComponent::m_Color, "Color">,
+		MemberRegistrationV<&LightComponent::m_DiffuseIntensity, "Diffuse Intensity">,
+		MemberRegistrationV<&LightComponent::m_AmbientIntensity, "Ambient Intensity">,
+		MemberRegistrationV<&LightComponent::m_IsEnabled, "Enabled">,
+		MemberRegistrationV<&LightComponent::m_CastShadows, "Cast Shadows">,
+		MemberRegistrationV<&LightComponent::m_Direction, "[Dir/Spot] Direction">,
+		MemberRegistrationV<&LightComponent::m_Range, "[Point/Spot] Range">,
+		MemberRegistrationV<&LightComponent::m_InnerCone, "[Spot] Inner Cone Angle">,
+		MemberRegistrationV<&LightComponent::m_OuterCone, "[Spot] Outer Cone Angle">
 	);
 
 	RegisterReflectionComponent<CameraComponent>(

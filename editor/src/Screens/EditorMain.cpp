@@ -1214,16 +1214,18 @@ void EditorMain::CreateLightEntity()
 		// Add position
 		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
 
-		// Add light component
+		// Add light component (default initializers handle most fields)
 		LightComponent light;
 		light.m_Type = Light::Type::Directional;
 		light.m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);
 		light.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
-		light.m_Intensity = 1.0f;
+		light.m_DiffuseIntensity = 1.0f;
+		light.m_AmbientIntensity = 0.0f;
+		light.m_IsEnabled = true;
+		light.m_CastShadows = true;
 		light.m_Range = 10.0f;
 		light.m_InnerCone = 30.0f;
 		light.m_OuterCone = 45.0f;
-		light.m_IsEnabled = true;
 
 		world.add_component_to_entity<LightComponent>(entity, light);
 	});
@@ -1379,8 +1381,13 @@ void EditorMain::CreateDemoScene()
 		light.m_Type = Light::Type::Directional;
 		light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
 		light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-		light.m_Intensity = 2.5f;
+		light.m_DiffuseIntensity = 1.0f;
+		light.m_AmbientIntensity = 0.0f;
 		light.m_IsEnabled = true;
+		light.m_CastShadows = true;
+		light.m_Range = 10.0f;
+		light.m_InnerCone = 30.0f;
+		light.m_OuterCone = 45.0f;
 
 		world.add_component_to_entity<LightComponent>(lightEntity, light);
 	});

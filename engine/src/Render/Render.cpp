@@ -321,9 +321,11 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.color = lightComponent.m_Color;
 		lightData.direction = lightComponent.m_Direction;
 		lightData.enabled = lightComponent.m_IsEnabled;
+		lightData.castShadows = lightComponent.m_CastShadows;
 		lightData.innerCone = lightComponent.m_InnerCone;
 		lightData.outerCone = lightComponent.m_OuterCone;
-		lightData.intensity = lightComponent.m_Intensity;
+		lightData.diffuseIntensity = lightComponent.m_DiffuseIntensity;
+		lightData.ambientIntensity = lightComponent.m_AmbientIntensity;
 		lightData.range = lightComponent.m_Range;
 		lightData.position = position.m_Translation;
 		m_SceneRenderer->SubmitLight(lightData);

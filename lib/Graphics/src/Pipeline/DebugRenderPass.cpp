@@ -123,7 +123,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
         if (light.type == Light::Type::Point || light.type == Light::Type::Spot) {
 
             // Calculate cube size based on light intensity
-            float intensityBasedSize = m_BaseLightCubeSize + (light.intensity * m_IntensityScaleFactor);
+            float intensityBasedSize = m_BaseLightCubeSize + (light.diffuseIntensity * m_IntensityScaleFactor);
             intensityBasedSize = glm::clamp(intensityBasedSize, m_MinCubeSize, m_MaxCubeSize);
 
             // Calculate transform matrix for light position with intensity-based scaling
@@ -188,7 +188,7 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
             rayMesh = m_DirectionalRay;
 
             // Ray length directly represents light intensity
-            float intensityBasedLength = light.intensity * m_RayIntensityFactor;
+            float intensityBasedLength = light.diffuseIntensity * m_RayIntensityFactor;
             intensityBasedLength = glm::clamp(intensityBasedLength, 0.5f, 15.0f);
 
             // Spot lights have a specific position - draw single ray

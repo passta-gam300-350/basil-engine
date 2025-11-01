@@ -86,16 +86,16 @@ void PointShadowMappingPass::Execute(RenderContext& context)
         return;
     }
 
-    // Find all point lights
+    // Find all point lights with shadows enabled
     std::vector<const SubmittedLightData*> pointLights;
     for (const auto& light : context.lights) {
-        if (light.enabled && light.type == Light::Type::Point) {
+        if (light.enabled && light.castShadows && light.type == Light::Type::Point) {
             pointLights.push_back(&light);
         }
     }
 
     if (pointLights.empty()) {
-        // No point lights - return (frame data is already cleared)
+        // No point lights with shadows enabled - return (frame data is already cleared)
         return;
     }
 

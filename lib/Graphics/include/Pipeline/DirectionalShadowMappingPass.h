@@ -50,7 +50,7 @@ public:
 private:
     // Helper methods
     glm::mat4 CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter);
-    glm::mat4 CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData);
+    glm::mat4 CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData, float sceneRadius);
 
     // Shader storage
     std::shared_ptr<Shader> m_ShadowDepthShader;
