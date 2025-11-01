@@ -56,12 +56,13 @@ private:
     // Shader storage
     std::shared_ptr<Shader> m_ShadowDepthShader;
 
-    // Cached scene bounds (Option 1: Simple caching)
+    // Cached scene bounds with transform change detection
     glm::vec3 m_CachedSceneMin = glm::vec3(FLT_MAX);
     glm::vec3 m_CachedSceneMax = glm::vec3(-FLT_MAX);
     glm::vec3 m_CachedSceneCenter = glm::vec3(0.0f);
     float m_CachedSceneRadius = 10.0f;
     size_t m_CachedRenderableCount = 0;
+    size_t m_CachedTransformHash = 0;  // Hash of all transform positions and scales
     bool m_BoundsDirty = true;
 
     // Configuration

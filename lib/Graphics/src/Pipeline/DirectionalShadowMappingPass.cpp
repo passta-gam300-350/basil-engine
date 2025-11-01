@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 #include <cfloat>  // For FLT_MAX
+#include <functional>  // For std::hash
 
 DirectionalShadowMappingPass::DirectionalShadowMappingPass()
     : RenderPass("DirectionalShadowPass", FBOSpecs{
@@ -169,9 +170,36 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm
 
 void DirectionalShadowMappingPass::UpdateSceneBounds(const std::vector<RenderableData>& renderables)
 {
+    // Quick hash of all positions and scales to detect transform changes
+    size_t transformHash = 0;
+    for (const auto& renderable : renderables) {
+        // Extract position from transform matrix (last column)
+        glm::vec3 position = glm::vec3(renderable.transform[3]);
+
+        // Extract scale from transform matrix (length of basis vectors)
+        glm::vec3 scale = glm::vec3(
+            glm::length(glm::vec3(renderable.transform[0])),  // X-axis scale
+            glm::length(glm::vec3(renderable.transform[1])),  // Y-axis scale
+            glm::length(glm::vec3(renderable.transform[2]))   // Z-axis scale
+        );
+
+        // Hash combining for position and scale (good enough for change detection)
+        // Using bit shifts and XOR for fast hash
+        size_t px = std::hash<float>{}(position.x);
+        size_t py = std::hash<float>{}(position.y);
+        size_t pz = std::hash<float>{}(position.z);
+        size_t sx = std::hash<float>{}(scale.x);
+        size_t sy = std::hash<float>{}(scale.y);
+        size_t sz = std::hash<float>{}(scale.z);
+
+        transformHash ^= (px << 0) ^ (py << 1) ^ (pz << 2) ^ (sx << 3) ^ (sy << 4) ^ (sz << 5);
+    }
+
     // Check if we need to recalculate (scene changed)
-    if (!m_BoundsDirty && renderables.size() == m_CachedRenderableCount) {
-        return;  // Use cached bounds (O(1) fast path)
+    if (!m_BoundsDirty &&
+        renderables.size() == m_CachedRenderableCount &&
+        transformHash == m_CachedTransformHash) {
+        return;  // Use cached bounds (O(1) fast path) - no changes detected
     }
 
     // Recalculate scene bounds from renderables
@@ -194,8 +222,9 @@ void DirectionalShadowMappingPass::UpdateSceneBounds(const std::vector<Renderabl
 
     // Update cache state
     m_CachedRenderableCount = renderables.size();
+    m_CachedTransformHash = transformHash;
     m_BoundsDirty = false;
 
-    spdlog::info("DirectionalShadow: Scene bounds recalculated - {} renderables, radius={:.1f}",
+    spdlog::info("DirectionalShadow: Scene bounds recalculated - {} renderables, radius={:.1f} (position/scale changed)",
                  renderables.size(), m_CachedSceneRadius);
 }
