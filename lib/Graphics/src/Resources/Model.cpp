@@ -49,13 +49,17 @@ void Model::loadModel(std::string const &path)
 
 void Model::processNode(aiNode *node, const aiScene *scene)
 {
+    // Get node name for selection grouping
+    std::string nodeName = node->mName.C_Str();
+
     // process each mesh located at the current node
     for(unsigned int i = 0; i < node->mNumMeshes; ++i)
     {
-        // the node object only contains indices to index the actual objects in the scene. 
+        // the node object only contains indices to index the actual objects in the scene.
         // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(processMesh(mesh, scene));
+        meshNodeNames.push_back(nodeName);  // Store node name for this mesh
     }
     // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
     for(unsigned int i = 0; i < node->mNumChildren; ++i)

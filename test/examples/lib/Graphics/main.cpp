@@ -11,11 +11,11 @@
  *                        // - Animated point light (intensity 5.0)
  *                        // - HDR tone mapping
  *                        // - Camera positioned inside cathedral
- *                        // - NO OUTLINES (lighting test only)
+ *                        // - PER-NODE SELECTION (click individual objects like pillars/arches)
  *
  *   SetupTinboxDemo();   // Tinbox grid - OUTLINE & PBR TEST
  *                        // - Directional + point lights
- *                        // - CLICK-BASED OUTLINES (left-click to select)
+ *                        // - WHOLE-MODEL SELECTION (click selects entire tinbox, not just top/bottom)
  *                        // - Camera positioned to view grid
  *
  *   SetupEditorDemo();   // 3x3 cube grid - EDITOR COMPARISON TEST
@@ -33,9 +33,10 @@
  *
  * OUTLINE SELECTION:
  * ------------------
- * - Click-based: Left-click on any object to outline the entire model
+ * - Click-based: Left-click on any object to outline it
  * - Click on empty space to clear outlines
- * - All meshes of the same model instance will be outlined together
+ * - Sponza: Per-node selection (individual objects like pillars/arches)
+ * - Tinbox: Whole-model selection (all meshes outlined together)
  *
  * ===============================================
  */
@@ -150,9 +151,9 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     
     
 
@@ -558,7 +559,7 @@ void GraphicsTestDriver::CreateTestMaterials()
 void GraphicsTestDriver::SetupSponzaDemo()
 {
     m_ActiveDemo = DemoType::Sponza;
-    spdlog::info("=== SETTING UP SPONZA DEMO (Lighting & HDR Test) ===");
+    spdlog::info("=== SETTING UP SPONZA DEMO (Lighting & HDR Test with Per-Node Selection) ===");
 
     // 1. CREATE CAMERA
     m_Camera = std::make_unique<Camera>(CameraType::Perspective);
@@ -571,7 +572,7 @@ void GraphicsTestDriver::SetupSponzaDemo()
     spdlog::info("Camera positioned inside Sponza cathedral");
 
     // 2. CREATE SCENE OBJECTS
-    CreateModelInstance("sponza", "WhiteMaterial", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.05f));
+    CreateModelInstance("sponza", "WhiteMaterial", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.05f), true);  // true = per-node selection
     spdlog::info("Sponza model loaded: {} meshes", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
@@ -587,8 +588,8 @@ void GraphicsTestDriver::SetupSponzaDemo()
 
     spdlog::info("Sponza demo setup complete: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
-    spdlog::info("NOTE: This demo focuses on LIGHTING/HDR - NO OUTLINES");
-    spdlog::info("      In Run() loop, COMMENT OUT UpdateCameraBasedOutline()");
+    spdlog::info("NOTE: This demo uses PER-NODE SELECTION - click individual objects (pillars, arches, etc.)");
+    spdlog::info("      Left-click on any object to outline it independently");
 }
 
 // ===== DEMO 2: TINBOX GRID - OUTLINE & PBR TEST =====
@@ -623,7 +624,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     // Tinbox grid
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
-    const int gridSize = 1;
+    const int gridSize = 3;
     const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f;
 
@@ -669,7 +670,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
 
     spdlog::info("Tinbox demo setup complete: {} objects, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
-    spdlog::info("NOTE: Left-click on any tinbox to outline the entire model (all meshes)");
+    spdlog::info("NOTE: This demo uses WHOLE-MODEL SELECTION - clicking tinbox outlines all meshes together (top + bottom)");
     spdlog::info("NOTE: Press 'B' to toggle spot light shadows (spotlight centered above grid at [-8, 8, 0])");
 }
 
@@ -767,16 +768,40 @@ void GraphicsTestDriver::SetupEditorDemo()
 }
 
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
-                                            const glm::vec3& position, const glm::vec3& scale)
+                                            const glm::vec3& position, const glm::vec3& scale,
+                                            bool perNodeSelection)
 {
     auto model = m_ResourceManager->GetModel(modelName);
     if (!model || model->meshes.empty()) {
         return;
     }
 
-    // Assign a unique model instance ID for this model instance (shared by all meshes)
+    // Static counter for unique modelInstanceID values
     static uint32_t nextModelInstanceID = 1000;
-    uint32_t thisModelInstanceID = nextModelInstanceID++;
+
+    // Build a map of unique node names to modelInstanceID for THIS model instance
+    std::map<std::string, uint32_t> nodeNameToInstanceID;
+
+    if (perNodeSelection) {
+        // Per-node selection: Each unique node name gets its own modelInstanceID
+        // (e.g., individual pillars/arches in Sponza)
+        for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
+            const std::string& nodeName = model->meshNodeNames[meshIndex];
+
+            if (nodeNameToInstanceID.find(nodeName) == nodeNameToInstanceID.end()) {
+                // New node name, assign new modelInstanceID
+                nodeNameToInstanceID[nodeName] = nextModelInstanceID++;
+            }
+        }
+    } else {
+        // Whole-model selection: All meshes share one modelInstanceID
+        // (e.g., tinbox top and bottom should be outlined together)
+        uint32_t sharedModelInstanceID = nextModelInstanceID++;
+        for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
+            const std::string& nodeName = model->meshNodeNames[meshIndex];
+            nodeNameToInstanceID[nodeName] = sharedModelInstanceID;
+        }
+    }
 
     // Create a renderable for each mesh in the model
     for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
@@ -845,10 +870,12 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
         static uint32_t nextObjectID = 100;
         renderable.objectID = nextObjectID++;
 
-        // Assign the model instance ID (shared by all meshes of this model)
-        renderable.modelInstanceID = thisModelInstanceID;
+        // Assign the model instance ID based on node name (per-node selection)
+        const std::string& nodeName = model->meshNodeNames[meshIndex];
+        renderable.modelInstanceID = nodeNameToInstanceID[nodeName];
 
-        //spdlog::info("Created object with ID: {}, ModelInstanceID: {}", renderable.objectID, renderable.modelInstanceID);
+        //spdlog::info("Created object with ID: {}, ModelInstanceID: {}, NodeName: {}",
+        //             renderable.objectID, renderable.modelInstanceID, nodeName);
 
         m_SceneObjects.push_back(renderable);
     }
