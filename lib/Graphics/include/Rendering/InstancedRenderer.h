@@ -103,9 +103,11 @@ private:
     size_t m_LastRenderableCount = 0;
     std::vector<uint32_t> m_LastObjectIDs;
     std::vector<float> m_LastTransformHashes;  // Cache transform hashes for change detection
+    std::vector<float> m_LastPropertyBlockHashes;  // Cache property block hashes for MaterialOverrides changes
 
     void UpdateInstanceSSBO(const std::string& meshId);
     void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData);
     bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
     void UpdateTransformHashes(const std::vector<RenderableData>& renderables);
+    void UpdatePropertyBlockHashes(const std::vector<RenderableData>& renderables);
 };

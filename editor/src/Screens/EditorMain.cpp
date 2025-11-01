@@ -397,6 +397,88 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					is_dirty = true;
 				}
 			}
+			// Handle unordered_map<std::string, float>
+			else if (auto* map_float = value.try_cast<std::unordered_map<std::string, float>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_float->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_float) {
+							ImGui::PushID(idx++);
+							if (ImGui::InputFloat(key.c_str(), &val)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::vec3>
+			else if (auto* map_vec3 = value.try_cast<std::unordered_map<std::string, glm::vec3>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_vec3->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_vec3) {
+							ImGui::PushID(idx++);
+							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
+							if (ImGui::ColorEdit3(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::vec4>
+			else if (auto* map_vec4 = value.try_cast<std::unordered_map<std::string, glm::vec4>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_vec4->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_vec4) {
+							ImGui::PushID(idx++);
+							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
+							if (ImGui::ColorEdit4(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::mat4>
+			else if (auto* map_mat4 = value.try_cast<std::unordered_map<std::string, glm::mat4>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_mat4->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						for (auto& [key, val] : *map_mat4) {
+							ImGui::Text("%s: [mat4 - not editable]", key.c_str());
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, Resource::Guid>
+			else if (auto* map_guid = value.try_cast<std::unordered_map<std::string, Resource::Guid>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_guid->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						for (auto& [key, val] : *map_guid) {
+							ImGui::Text("%s: %s", key.c_str(), val.to_hex().c_str());
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
 		}
 		ImGui::PopID();
 	}
@@ -1113,9 +1195,9 @@ void EditorMain::CreatePlaneEntity()
 
 		// Add material overrides for customization (replaces embedded struct)
 		MaterialOverridesComponent materialOverrides;
-		materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f);
-		materialOverrides.floatOverrides["u_MetallicValue"] = 0.1f;
-		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.8f;
+		materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+		materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
 		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 	});
 }
@@ -1201,9 +1283,9 @@ void EditorMain::CreatePhysicsDemoScene()
 
 	// Add material overrides for customization (replaces embedded struct)
 	MaterialOverridesComponent materialOverrides;
-	materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f);
-	materialOverrides.floatOverrides["u_MetallicValue"] = 0.1f;
-	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.8f;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
 	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 
 	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
@@ -1261,9 +1343,9 @@ void EditorMain::CreatePhysicsDemoScene()
 
 	// Add material overrides
 	MaterialOverridesComponent materialOverrides2;
-	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor * 1.2f; // Brighten the color slightly
-	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic for better color visibility
-	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
 	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
@@ -1345,9 +1427,9 @@ void EditorMain::CreatePhysicsCube()
 
 	// Add material overrides
 	MaterialOverridesComponent materialOverrides2;
-	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor * 1.2f; // Brighten the color slightly
-	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic for better color visibility
-	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
 	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
@@ -1394,9 +1476,9 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 
 	// Add material overrides
 	MaterialOverridesComponent materialOverrides;
-	materialOverrides.vec3Overrides["u_AlbedoColor"] = color * 1.2f; // Brighten the color slightly
-	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic for better color visibility
-	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.6f; // Medium roughness
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = color; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
 	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 	});
 }
@@ -1406,13 +1488,13 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 	assert(gridSize > 0 && gridSize <= 10 && "Grid size must be between 1-10");
 	assert(spacing > 0.0f && "Spacing must be positive");
 
-	// Same colors as GraphicsTestDriver
+	// Vibrant colors for easy visual distinction
 	std::vector<glm::vec3> colors = {
-		glm::vec3(0.8f, 0.2f, 0.2f),  // Red
-		glm::vec3(0.2f, 0.8f, 0.2f),  // Green
-		glm::vec3(0.2f, 0.2f, 0.8f),  // Blue
-		glm::vec3(1.0f, 0.8f, 0.2f),  // Gold
-		glm::vec3(1.0f, 1.0f, 1.0f),  // White
+		glm::vec3(0.9f, 0.1f, 0.1f),  // Red - vibrant red
+		glm::vec3(0.1f, 0.9f, 0.1f),  // Green - vibrant green
+		glm::vec3(0.1f, 0.4f, 0.9f),  // Blue - vibrant blue
+		glm::vec3(0.95f, 0.75f, 0.05f),  // Gold - bright gold
+		glm::vec3(0.9f, 0.9f, 0.9f),  // Light gray - easier to see than white
 	};
 
 	const float startOffset = -(gridSize - 1) * spacing * 0.5f;
