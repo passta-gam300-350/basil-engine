@@ -86,6 +86,10 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetToneMappingShader()) {
 		m_SceneRenderer->SetToneMappingShader(m_ShaderLibrary->GetToneMappingShader());
 	}
+	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
+	// if (m_ShaderLibrary->GetEditorResolveShader()) {
+	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());
+	// }
 
 	// Initialize primitive manager
 	m_PrimitiveManager = std::make_unique<PrimitiveManager>();
@@ -122,6 +126,15 @@ void RenderSystem::Init() {
 
 	spdlog::info("RenderSystem initialized");
 	spdlog::info("RenderSystem: Call SetupComponentObservers() and InitializeExistingEntities() after world is created");
+}
+
+void RenderSystem::DisableHDRForEditor() {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->ToggleHDRPipeline(false);
+		spdlog::info("RenderSystem: HDR pipeline disabled for editor compatibility");
+	} else {
+		spdlog::error("RenderSystem: Cannot disable HDR - SceneRenderer not initialized");
+	}
 }
 
 void RenderSystem::InitializeMeshRenderer(entt::registry& registry, entt::entity entity) {

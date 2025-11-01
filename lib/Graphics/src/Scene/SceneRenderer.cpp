@@ -116,7 +116,7 @@ void SceneRenderer::InitializeDefaultPipeline()
 
     // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
-    toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - ToneMapPass uses SRGB8 format for hardware gamma via GL_FRAMEBUFFER_SRGB
+    toneMapPass->EnableGammaCorrection(true);  // Enable manual gamma - outputs RGB8 to avoid ImGui brightness issues
     mainPipeline->AddPass(toneMapPass);
     //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
@@ -438,6 +438,22 @@ void SceneRenderer::SetToneMappingShader(const std::shared_ptr<Shader>& shader) 
         }
     }
 }
+
+//void SceneRenderer::SetEditorResolveShader(const std::shared_ptr<Shader>& shader) const
+//{
+//    assert(shader && "Editor resolve shader cannot be null");
+//    assert(shader->ID != 0 && "Editor resolve shader must be compiled and linked");
+//    assert(m_Pipeline && "Pipeline must be initialized before setting editor resolve shader");
+//
+//    if (m_Pipeline)
+//    {
+//        auto editorResolvePass = std::dynamic_pointer_cast<EditorResolvePass>(m_Pipeline->GetPass("EditorResolvePass"));
+//        if (editorResolvePass)
+//        {
+//            editorResolvePass->SetConversionShader(shader);
+//        }
+//    }
+//}
 
 // ===== FACADE METHODS FOR DECOUPLING =====
 void SceneRenderer::ToggleRenderPass(const std::string& passName)

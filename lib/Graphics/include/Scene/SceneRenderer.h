@@ -98,6 +98,7 @@ public:
     // HDR configuration API
     void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
+    //void SetEditorResolveShader(const std::shared_ptr<Shader>& shader) const;
 
     // Facade methods for decoupling (avoid exposing internal coordinators/pipeline)
     void ToggleRenderPass(const std::string& passName);

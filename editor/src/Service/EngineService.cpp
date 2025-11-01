@@ -6,6 +6,10 @@
 void EngineContainerService::EngineContainer::engine_service() {
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
+
+	// Enable HDR pipeline (disabled by default in SceneRenderer)
+	Engine::GetRenderSystem().m_SceneRenderer->ToggleHDRPipeline(true);
+
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine

@@ -77,6 +77,7 @@ private:
     // Demo scene setups (each includes: objects, lights, camera, outline mode)
     void SetupSponzaDemo();      // Sponza cathedral - lighting test with HDR
     void SetupTinboxDemo();      // Tinbox grid - outline and PBR testing
+    void SetupEditorDemo();      // 3x3 cube grid - matches editor's default scene
 
     // Resource loading
     bool LoadTestResources();

@@ -125,6 +125,17 @@ public:
     void Init();
 
     /**
+     * @brief Disable HDR pipeline for editor compatibility
+     *
+     * When running inside the editor, HDR/tone mapping causes sRGB/gamma issues
+     * with ImGui rendering. This method disables the HDR pipeline to use linear
+     * RGB16F buffers directly, avoiding gamma correction conflicts.
+     *
+     * @note Only call this when running from the editor, not for standalone builds
+     */
+    void DisableHDRForEditor();
+
+    /**
      * @brief Update rendering system for current frame
      *
      * Processing order:

@@ -18,6 +18,13 @@
  *                        // - CLICK-BASED OUTLINES (left-click to select)
  *                        // - Camera positioned to view grid
  *
+ *   SetupEditorDemo();   // 3x3 cube grid - EDITOR COMPARISON TEST
+ *                        // - 9 cubes in 3x3 grid (matching editor scene)
+ *                        // - Directional light (intensity 2.5)
+ *                        // - Strong ambient lighting (0.7, 0.7, 0.7)
+ *                        // - Camera at (0, 5, 10) looking at origin
+ *                        // - Use this to compare with editor output
+ *
  * Each demo function sets up:
  *   - Scene objects
  *   - Lighting
@@ -143,8 +150,9 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    //SetupTinboxDemo();       // Tinbox grid - outline/PBR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
+    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     
     
 
@@ -663,6 +671,99 @@ void GraphicsTestDriver::SetupTinboxDemo()
                  m_SceneObjects.size(), m_SceneLights.size());
     spdlog::info("NOTE: Left-click on any tinbox to outline the entire model (all meshes)");
     spdlog::info("NOTE: Press 'B' to toggle spot light shadows (spotlight centered above grid at [-8, 8, 0])");
+}
+
+// ===== DEMO 3: EDITOR DEMO - 3X3 CUBE GRID MATCHING EDITOR SETUP =====
+void GraphicsTestDriver::SetupEditorDemo()
+{
+    m_ActiveDemo = DemoType::Tinbox;  // Reuse Tinbox enum for now
+    spdlog::info("=== SETTING UP EDITOR DEMO (3x3 Cube Grid) ===");
+
+    // 1. CREATE CAMERA - Match editor camera setup
+    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
+    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));  // Editor camera position
+    // Set rotation to look towards origin from (0,5,10): pitch down, yaw to face -Z direction
+    m_Camera->SetRotation(glm::vec3(-25.0f, -90.0f, 0.0f));
+    spdlog::info("Camera positioned at (0, 5, 10) looking at origin");
+
+    // 2. CREATE 3x3 CUBE GRID
+    // Same colors as editor (Red, Green, Blue, Gold, White)
+    std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
+                                          "GoldMaterial", "WhiteMaterial"};
+    const int gridSize = 3;
+    const float spacing = 3.0f;
+    const float startOffset = -(gridSize - 1) * spacing * 0.5f;
+
+    // Create cube mesh primitive
+    auto cubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+
+    // Use unique ID ranges for editor demo to avoid conflicts with other demos
+    uint32_t objectID = 2000;
+    uint32_t modelInstanceID = 3000;
+
+    for (int x = 0; x < gridSize; ++x) {
+        for (int z = 0; z < gridSize; ++z) {
+            glm::vec3 position(
+                startOffset + x * spacing,
+                0.0f,  // Ground level (matching editor)
+                startOffset + z * spacing
+            );
+
+            // Cycle through materials based on position (matching editor logic)
+            int materialIndex = (x + z) % materials.size();
+
+            // Create renderable for this cube
+            RenderableData cube;
+            cube.mesh = cubeMesh;
+
+            // Get material and create property block for color variation
+            auto baseMaterial = m_ResourceManager->GetMaterial(materials[materialIndex]);
+            cube.material = baseMaterial;
+
+            // Create property block to override albedo (brighten color like editor does)
+            auto propertyBlock = std::make_shared<MaterialPropertyBlock>();
+            glm::vec3 baseColor = baseMaterial->GetAlbedoColor();
+            propertyBlock->SetVec3("u_AlbedoColor", baseColor * 1.2f);  // Brighten like editor
+            propertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
+            propertyBlock->SetFloat("u_RoughnessValue", 0.6f);  // Medium roughness
+            cube.propertyBlock = propertyBlock;
+
+            cube.transform = glm::translate(glm::mat4(1.0f), position);
+            cube.visible = true;
+
+            // Assign unique IDs (each cube is its own model instance)
+            cube.objectID = objectID++;
+            cube.modelInstanceID = modelInstanceID++;
+
+            m_SceneObjects.push_back(cube);
+        }
+    }
+    spdlog::info("Created 3x3 cube grid: {} cubes", gridSize * gridSize);
+
+    // 3. CREATE DIRECTIONAL LIGHT - Match editor lighting
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(0.2f, -0.8f, 0.3f),        // Direction (matching editor)
+        glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm sunlight (matching editor)
+        2.5f,                                 // Intensity (matching editor)
+        0.0f                                  // No per-light ambient
+    ));
+
+    // Set strong ambient light to match editor
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f));
+    spdlog::info("Directional light created with intensity 2.5");
+    spdlog::info("Ambient light set to (0.7, 0.7, 0.7)");
+
+    // 4. DISABLE SKYBOX - Editor doesn't use skybox
+    m_SceneRenderer->EnableSkybox(false);
+    //spdlog::info("Skybox disabled (editor has no skybox)");
+
+    // 5. SETUP OUTLINE MODE
+    m_SceneRenderer->ClearOutlinedObjects();
+
+    spdlog::info("Editor demo setup complete: {} cubes, {} lights",
+                 m_SceneObjects.size(), m_SceneLights.size());
+    spdlog::info("NOTE: This demo matches the editor's default scene (CreateDemoScene)");
 }
 
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,

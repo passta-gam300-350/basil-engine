@@ -1,26 +1,31 @@
 #pragma once
 
 #include "RenderPass.h"
+#include "Resources/Shader.h"
 #include <memory>
 
 /**
- * EditorResolvePass - Resolves MSAA editor FBO to non-MSAA for ImGui
+ * EditorResolvePass - Resolves and copies rendering output for ImGui display
  *
- * Resolves the SAME buffer that PresentPass displays to screen, ensuring
- * the editor viewport shows identical content (with tone mapping if enabled).
+ * Uses glBlitFramebuffer for reliable, tear-free copying. The main editor thread
+ * has GL_FRAMEBUFFER_SRGB enabled, which correctly handles gamma when displaying
+ * SRGB8 textures from the tone mapping pass.
  *
  * Priority order (matches PresentPass logic):
- * 1. postProcessBuffer (if HDR tone mapping is active) - SRGB8 LDR
- * 2. mainColorBuffer (if no post-processing) - RGB16F HDR
- *
- * This pass has no framebuffer of its own - it performs a blit operation
- * between two existing framebuffers.
+ * 1. postProcessBuffer (if HDR tone mapping is active) - SRGB8
+ * 2. mainColorBuffer (if no post-processing) - RGB16F
  */
 class EditorResolvePass : public RenderPass
 {
 public:
     EditorResolvePass();
-    ~EditorResolvePass() override = default;
+    ~EditorResolvePass() override;
 
-    void Execute(RenderContext& context) override;
+    void Execute(RenderContext &context) override;
+
+private:
+    // Kept for potential future use, but not currently needed
+    void CreateFullScreenQuad();
+    uint32_t m_QuadVAO = 0;
+    uint32_t m_QuadVBO = 0;
 };
