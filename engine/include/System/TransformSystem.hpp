@@ -12,9 +12,12 @@ public:
     void FixedUpdate(ecs::world& w) {
         auto transforms = w.query_components<TransformComponent, TransformMtxComponent>();
         for (auto [transform, mtx] : transforms) {
-            glm::quat q = glm::quat(transform.m_Rotation);
-            glm::mat4 rotationMatrix = glm::toMat4(q);
-            mtx.m_Mtx = glm::translate(rotationMatrix * glm::scale(glm::mat4{1.f}, transform.m_Scale), transform.m_Translation);
+            // Build TRS matrix: Translation * Rotation * Scale
+            // m_Rotation is in degrees, must convert to radians for quaternion
+            glm::mat4 translation = glm::translate(glm::mat4(1.0f), transform.m_Translation);
+            glm::mat4 rotation = glm::mat4_cast(glm::quat(glm::radians(transform.m_Rotation)));
+            glm::mat4 scale = glm::scale(glm::mat4(1.0f), transform.m_Scale);
+            mtx.m_Mtx = translation * rotation * scale;  // T * R * S (correct order)
         }
     }
 };
