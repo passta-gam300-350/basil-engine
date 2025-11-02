@@ -98,6 +98,10 @@ public:
     void EnableSkybox(bool enable);
     bool IsSkyboxEnabled() const;
 
+    // Background color configuration
+    void SetBackgroundColor(const glm::vec4& color);
+    glm::vec4 GetBackgroundColor() const;
+
     // HDR configuration API
     void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;

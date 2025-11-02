@@ -422,6 +422,33 @@ bool SceneRenderer::IsSkyboxEnabled() const
     return false;
 }
 
+void SceneRenderer::SetBackgroundColor(const glm::vec4& color)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting background color");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetClearColor(color);
+        }
+    }
+}
+
+glm::vec4 SceneRenderer::GetBackgroundColor() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetClearColor();
+        }
+    }
+    return glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);  // Default gray
+}
+
 void SceneRenderer::SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const
 {
     assert(shader && "HDR compute shader cannot be null");

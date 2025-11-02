@@ -135,6 +135,11 @@ bool GraphicsTestDriver::Initialize()
     m_HDREnabled = true;  // Update state variable
     spdlog::info("HDR tone mapping pipeline enabled (matching ogldev tutorial 63)");
 
+    // Configure background color (visible when skybox is disabled)
+    // Options: White (1,1,1), Black (0,0,0), Gray (0.7,0.7,0.7), Sky Blue (0.53,0.81,0.92)
+    m_SceneRenderer->SetBackgroundColor(glm::vec4(0.f, 0.f, 0.f, 1.0f));  // Default gray
+    spdlog::info("Background clear color set to gray (0.7, 0.7, 0.7)");
+
     // Setup input callbacks
     glfwSetKeyCallback(m_Window->GetNativeWindow(), KeyCallback);
     glfwSetCursorPosCallback(m_Window->GetNativeWindow(), MouseCallback);
@@ -456,7 +461,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/tinbox/tin_box.obj");
+            "assets/models/shelf/shelf.obj");
 
         if (!tinBoxModel) {
             spdlog::error("Failed to load chair model!");
@@ -615,7 +620,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     );
     RenderableData ground;
     ground.mesh = planeMesh;
-    ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+    ground.material = m_ResourceManager->GetMaterial("GreenMaterial");
     ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
     ground.visible = true;
     ground.objectID = 1;
@@ -632,25 +637,25 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
         }
     }
     spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
     // Directional light
-    //m_SceneLights.push_back(CreateDirectionalLight(
-    //    glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
-    //    glm::vec3(1.0f, 0.95f, 0.9f),        // Color: warm sunlight
-    //    2.5f,                                 // DiffuseIntensity: bright sunlight (increased for steeper angle)
-    //    0.0f                                  // AmbientIntensity: no ambient (pure directional)
-    //));
-    // Point light - positioned close to chair for visible lighting
-    m_SceneLights.push_back(CreatePointLight(
-        glm::vec3(-8.0f, 8.0f, 0.0f),          // Right above chair at (-8, 0, 0) Position
-        glm::vec3(1.0f, 0.9f, 0.7f),           // Color
-        5.0f, 0.0f, 50.0f                      // Diffuse, Ambient, range
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
+        glm::vec3(1.0f, 0.95f, 0.9f),        // Color: warm sunlight
+        2.5f,                                 // DiffuseIntensity: bright sunlight (increased for steeper angle)
+        0.0f                                  // AmbientIntensity: no ambient (pure directional)
     ));
+    // Point light - positioned close to chair for visible lighting
+    //m_SceneLights.push_back(CreatePointLight(
+    //    glm::vec3(-8.0f, 8.0f, 0.0f),          // Right above chair at (-8, 0, 0) Position
+    //    glm::vec3(1.0f, 0.9f, 0.7f),           // Color
+    //    5.0f, 0.0f, 50.0f                      // Diffuse, Ambient, range
+    //));
     // Spot light - positioned close to chair for visible shadows
     //m_SceneLights.push_back(CreateSpotLight(
     //    glm::vec3(-8.0f, 3.0f, 0.0f),         // Lowered from 8.0 to 3.0 for stronger effect
@@ -664,6 +669,8 @@ void GraphicsTestDriver::SetupTinboxDemo()
     //));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f)); // Reduced to let other lights show
     spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
+
+    m_SceneRenderer->EnableSkybox(false);
 
     // 4. SETUP OUTLINE MODE - Click-based selection
     m_SceneRenderer->ClearOutlinedObjects();
