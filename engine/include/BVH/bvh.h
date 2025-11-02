@@ -82,6 +82,7 @@ public:
     template <typename IT> void BuildBottomUp(IT begin, IT end, BvhBuildConfig const& config); // not needed
     template <typename IT> void Insert(IT begin, IT end, BvhBuildConfig const& config);
     void                        Insert(T object, BvhBuildConfig const& config);
+    void                        Remove(T object); // Remove object from BVH
     void                        Clear(); // d
     bool                        Empty() const; // d
 

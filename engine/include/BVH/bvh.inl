@@ -898,4 +898,173 @@ void Bvh<T>::Insert(T object, BvhBuildConfig const& config)
 	}
 }
 
+/**
+* @brief
+*  This function removes an object from the BVH
+*  It removes the object from the linked list, and if the leaf
+*  becomes empty, removes the leaf and promotes its sibling
+* @param T object
+*  the object to remove
+* @return void
+*/
+template<typename T>
+void Bvh<T>::Remove(T object)
+{
+	// validate if the object is in the tree
+	if (object == nullptr || object->bvhInfo.node == nullptr)
+	{
+		return; // object not in tree
+	}
+
+	Node* leafNode = object->bvhInfo.node;
+
+	// remove object from the linked list in the leaf node
+	if (object->bvhInfo.prev != nullptr)
+	{
+		object->bvhInfo.prev->bvhInfo.next = object->bvhInfo.next;
+	}
+	else
+	{
+		// the object is first in list
+		leafNode->firstObject = object->bvhInfo.next;
+	}
+
+	if (object->bvhInfo.next != nullptr)
+	{
+		object->bvhInfo.next->bvhInfo.prev = object->bvhInfo.prev;
+	}
+	else
+	{
+		// the object is last in list
+		leafNode->lastObject = object->bvhInfo.prev;
+	}
+
+	// clear object's BVH info
+	object->bvhInfo.node = nullptr;
+	object->bvhInfo.prev = nullptr;
+	object->bvhInfo.next = nullptr;
+	--mObjectCount;
+
+	//----------LEAF Parts----------------------------------
+	// case 1: leaf still has objects - refit AABB and ancestors
+	if (leafNode->firstObject != nullptr)
+	{
+		// recompute leaf AABB from remaining objects
+		std::vector<T> remainingObjects;
+		T obj = leafNode->firstObject;
+		while (obj != nullptr)
+		{
+			remainingObjects.push_back(obj);
+			obj = obj->bvhInfo.next;
+		}
+		leafNode->bv = compute_aabb(remainingObjects);
+
+		// refit ancestors - need to find path from root to this leaf
+		if (mRoot != leafNode)
+		{
+			std::stack<Node*> pathToLeaf;
+			std::function<bool(Node*)> findAndRefitPath = [&](Node* current) -> bool
+			{
+				if (current == leafNode)
+				{
+					return true;
+				}
+				if (current->IsLeaf())
+				{
+					return false;
+				}
+				pathToLeaf.push(current);
+
+				// try left child
+				if (current->children[0] && findAndRefitPath(current->children[0]))
+				{
+					// Found it in left subtree, refit on way back up
+					current->bv = current->children[0]->bv.Merge(current->children[1]->bv);
+					return true;
+				}
+
+				// Try right child
+				if (current->children[1] && findAndRefitPath(current->children[1]))
+				{
+					// Found it in right subtree, refit on way back up
+					current->bv = current->children[0]->bv.Merge(current->children[1]->bv);
+					return true;
+				}
+
+				pathToLeaf.pop();
+				return false;
+			};
+			findAndRefitPath(mRoot);
+		}
+		return;
+	}
+
+	// Case 2: leaf is root and now empty - need to remove it from tree
+	if (leafNode == mRoot)
+	{
+		// removed last object in tree
+		delete mRoot;
+		mRoot = nullptr;
+		return;
+	}
+
+	// case 3: find parent and replace it with sibling
+	// this removes the empty leaf and promotes the sibling up
+	std::function<bool(Node*&)> findAndRemoveEmptyLeaf = [&](Node*& nodeRef) -> bool
+	{
+		Node* current = nodeRef;
+
+		if (current == nullptr || current->IsLeaf())
+		{
+			return false;
+		}
+
+		// Check if one of our children is the empty leaf
+		if (current->children[0] == leafNode)
+		{
+			// Left child is empty leaf, promote right child
+			Node* sibling = current->children[1];
+			delete leafNode;
+			delete current;
+			nodeRef = sibling;
+			return true;
+		}
+		else if (current->children[1] == leafNode)
+		{
+			// Right child is empty leaf, promote left child
+			Node* sibling = current->children[0];
+			delete leafNode;
+			delete current;
+			nodeRef = sibling;
+			return true;
+		}
+
+		// Recurse into left subtree
+		if (findAndRemoveEmptyLeaf(current->children[0]))
+		{
+			// Refit this node after removal
+			if (current->children[0] && current->children[1])
+			{
+				current->bv = current->children[0]->bv.Merge(current->children[1]->bv);
+			}
+			return true;
+		}
+
+		// Recurse into right subtree
+		if (findAndRemoveEmptyLeaf(current->children[1]))
+		{
+			// Refit this node after removal
+			if (current->children[0] && current->children[1])
+			{
+				current->bv = current->children[0]->bv.Merge(current->children[1]->bv);
+			}
+			return true;
+		}
+
+		return false;
+	};
+
+	findAndRemoveEmptyLeaf(mRoot);
+}
+
 #endif // BVH_INL

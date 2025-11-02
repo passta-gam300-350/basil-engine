@@ -3,7 +3,7 @@
  * @file
  *  shapes.hpp
  * @author
- *  Jia Zen Cheong, 670004724, jiazen.c@digipen.edu
+ *  Jia Zen Cheong, jiazen.c@digipen.edu
  * @date
  *  2025/05/24
  * @brief
