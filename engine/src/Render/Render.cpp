@@ -17,7 +17,6 @@ Technology is prohibited.
 #include "Render/Render.h"
 #include "Render/ShaderLibrary.hpp"
 #include "Render/PrimitiveManager.hpp"
-#include "Render/RenderResourceCache.hpp"
 #include "Render/ComponentInitializer.hpp"
 #include "Engine.hpp"  // For Engine::GetRenderSystem()
 #include "components/transform.h"
@@ -26,6 +25,8 @@ Technology is prohibited.
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
+
+#include <unordered_set>
 
 #include "native/loader.h"
 #include "native/texture.h"
@@ -95,25 +96,17 @@ RenderSystem::RenderSystem() {
 	m_PrimitiveManager = std::make_unique<PrimitiveManager>();
 	m_PrimitiveManager->Initialize();
 
-	// Initialize resource cache
-	m_ResourceCache = std::make_unique<RenderResourceCache>();
-
 	// Initialize material instance manager
 	m_MaterialInstanceManager = std::make_unique<MaterialInstanceManager>();
 
-	// Initialize component initializer (depends on all above subsystems)
-	m_ComponentInitializer = std::make_unique<ComponentInitializer>(
-		*m_ResourceCache,
-		*m_ShaderLibrary,
-		*m_PrimitiveManager
-	);
+	// Initialize component initializer (simplified, no longer needs subsystem references)
+	m_ComponentInitializer = std::make_unique<ComponentInitializer>();
 }
 
 RenderSystem::~RenderSystem() {
-	// Release ComponentInitializer first (it depends on other subsystems)
+	// Release subsystems in safe order
 	m_ComponentInitializer.reset();
 	m_MaterialInstanceManager.reset();
-	m_ResourceCache.reset();
 	m_PrimitiveManager.reset();
 	m_ShaderLibrary.reset();
 	m_SceneRenderer.reset();
@@ -125,7 +118,7 @@ void RenderSystem::Init() {
 	SetupDebugVisualization();
 
 	spdlog::info("RenderSystem initialized");
-	spdlog::info("RenderSystem: Call SetupComponentObservers() and InitializeExistingEntities() after world is created");
+	spdlog::info("RenderSystem: Call SetupComponentObservers() after world is created");
 }
 
 void RenderSystem::DisableHDRForEditor() {
@@ -134,14 +127,6 @@ void RenderSystem::DisableHDRForEditor() {
 		spdlog::info("RenderSystem: HDR pipeline disabled for editor compatibility");
 	} else {
 		spdlog::error("RenderSystem: Cannot disable HDR - SceneRenderer not initialized");
-	}
-}
-
-void RenderSystem::InitializeMeshRenderer(entt::registry& registry, entt::entity entity) {
-	if (m_ComponentInitializer) {
-		m_ComponentInitializer->Initialize(registry, entity);
-	} else {
-		spdlog::error("RenderSystem: ComponentInitializer not initialized");
 	}
 }
 
@@ -162,14 +147,6 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 	registry.on_update<MeshRendererComponent>().connect<&RenderSystem::OnMeshRendererUpdated>(this);
 
 	spdlog::info("RenderSystem: MeshRendererComponent update observer registered");
-}
-
-void RenderSystem::InitializeExistingEntities(ecs::world& world) {
-	if (m_ComponentInitializer) {
-		m_ComponentInitializer->InitializeAll(world);
-	} else {
-		spdlog::error("RenderSystem: ComponentInitializer not initialized");
-	}
 }
 
 void RenderSystem::Update(ecs::world& world) {
@@ -217,48 +194,34 @@ void RenderSystem::Update(ecs::world& world) {
 		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>()};
 		const uint64_t entityUID = obj.get_uid();
 
-		// === RESOURCE LOOKUP (READ-ONLY - RESOURCES INITIALIZED AT COMPONENT CREATION) ===
+		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
-		// Get resource cache
-		if (!m_ResourceCache) {
-			spdlog::error("RenderSystem: ResourceCache not initialized");
-			continue;
-		}
+		// Load mesh resource (from ResourceRegistry or PrimitiveManager)
+		std::shared_ptr<Mesh> meshResource = LoadMeshResource(mesh);
 
-		// Look up pre-initialized resources from entity cache
-		std::shared_ptr<Mesh> meshResource = m_ResourceCache->GetEntityMesh(entityUID);
-		std::shared_ptr<Material> materialResource = m_ResourceCache->GetEntityMaterial(entityUID);
+		// Load material resource (from ResourceRegistry or create default)
+		std::shared_ptr<Material> materialResource = LoadMaterialResource(
+			mesh.m_MaterialGuid,
+			mesh.hasAttachedMaterial,
+			entityUID
+		);
 
-		// If resources not found, entity wasn't initialized properly
-		// This can happen if observers weren't set up or InitializeExistingEntities wasn't called
+		// Skip if resources failed to load
 		if (!meshResource || !materialResource) {
-			// Fallback: Initialize on-demand (shouldn't happen in production)
-			static bool warningShown = false;
-			if (!warningShown) {
-				spdlog::warn("RenderSystem: Entity {} resources not initialized. Call SetupComponentObservers() and InitializeExistingEntities() after world load.", entityUID);
-				warningShown = true;
+			static std::unordered_set<uint64_t> warnedEntities;
+			if (warnedEntities.find(entityUID) == warnedEntities.end()) {
+				spdlog::warn("RenderSystem: Failed to load resources for entity {}", entityUID);
+				warnedEntities.insert(entityUID);
 			}
-
-			// Perform lazy initialization as fallback
-			entt::registry& registry = world.impl.get_registry();
-			entt::entity enttEntity = ecs::world::detail::entt_entity_cast(obj);
-			InitializeMeshRenderer(registry, enttEntity);
-
-			// Retry lookup
-			meshResource = m_ResourceCache->GetEntityMesh(entityUID);
-			materialResource = m_ResourceCache->GetEntityMaterial(entityUID);
-
-			if (!meshResource || !materialResource) {
-				continue; // Skip this entity if initialization failed
-			}
+			continue;
 		}
 
 		// NOTE: Material system follows Unity-style behavior:
 		// - Component properties: Used for editor/serialization (synced to base material)
 		// - Material instances: Runtime copy-on-write for per-entity customization
 
-		// Only render if we have both mesh and material
-		if (meshResource && materialResource) {
+		// Render the entity
+		{
 			// Material customization is now handled by MaterialPropertyBlocks
 			// MaterialOverridesSystem creates property blocks from MaterialOverridesComponent
 			// Property blocks are applied by SceneRenderer after base material
@@ -338,9 +301,6 @@ void RenderSystem::FixedUpdate(ecs::world& w) {
 	Update(w);
 }
 void RenderSystem::Exit() {
-	// Clear all entity-specific caches before shutdown
-	ClearAllEntityCaches();
-
 	// Clear all material instances
 	if (m_MaterialInstanceManager) {
 		m_MaterialInstanceManager->ClearAllInstances();
@@ -352,62 +312,20 @@ void RenderSystem::Exit() {
 	// Destructor will handle cleanup automatically
 }
 
-
-void RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh) {
-	auto& renderSystem = Engine::GetRenderSystem();
-	if (renderSystem.m_ResourceCache) {
-		renderSystem.m_ResourceCache->RegisterEditorMesh(guid, mesh);
-	} else {
-		spdlog::error("RenderSystem: Cannot register editor mesh - ResourceCache not initialized");
-	}
+bool RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh) {
+	return ResourceRegistry::Instance().RegisterInMemory(guid, mesh);
 }
 
-void RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material) {
-	auto& renderSystem = Engine::GetRenderSystem();
-	if (renderSystem.m_ResourceCache) {
-		renderSystem.m_ResourceCache->RegisterEditorMaterial(guid, material);
-	} else {
-		spdlog::error("RenderSystem: Cannot register editor material - ResourceCache not initialized");
-	}
-}
-
-void RenderSystem::ClearEntityResources(uint64_t entityUID) {
-	auto& renderSystem = Engine::GetRenderSystem();
-	if (renderSystem.m_ResourceCache) {
-		renderSystem.m_ResourceCache->ClearEntityResources(entityUID);
-	} else {
-		spdlog::error("RenderSystem: Cannot clear entity resources - ResourceCache not initialized");
-	}
-}
-
-void RenderSystem::ClearAllEntityCaches() {
-	auto& renderSystem = Engine::GetRenderSystem();
-	if (renderSystem.m_ResourceCache) {
-		renderSystem.m_ResourceCache->ClearAllEntityCaches();
-	} else {
-		spdlog::error("RenderSystem: Cannot clear entity caches - ResourceCache not initialized");
-	}
+bool RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material) {
+	return ResourceRegistry::Instance().RegisterInMemory(guid, material);
 }
 
 void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& meshRenderer) {
 	auto& renderSystem = Engine::GetRenderSystem();
 
-	if (!renderSystem.m_ResourceCache) {
-		spdlog::error("RenderSystem: Cannot sync material - ResourceCache not initialized");
-		return;
-	}
-
-	// Get the cached material
-	auto material = renderSystem.m_ResourceCache->GetEntityMaterial(entityUID);
-
-	if (!material) {
-		spdlog::warn("RenderSystem: Cannot sync material for entity {} - no cached material found", entityUID);
-		return;
-	}
-
 	// NOTE: Material sync is now handled by MaterialOverridesSystem
 	// MeshRendererComponent no longer has embedded material properties
-	// Material customization is done via MaterialOverridesComponent → MaterialInstance
+	// Material customization is done via MaterialOverridesComponent → MaterialPropertyBlock
 
 	spdlog::debug("RenderSystem: SyncMaterialFromComponent called for entity {} (no-op, handled by MaterialOverridesSystem)", entityUID);
 }
@@ -436,14 +354,6 @@ std::shared_ptr<MaterialInstance> RenderSystem::GetMaterialInstance(
 	}
 
 	return m_MaterialInstanceManager->GetMaterialInstance(entityUID, baseMaterial);
-}
-
-std::shared_ptr<Material> RenderSystem::GetEntityMaterial(uint64_t entityUID) const {
-	if (!m_ResourceCache) {
-		return nullptr;
-	}
-
-	return m_ResourceCache->GetEntityMaterial(entityUID);
 }
 
 bool RenderSystem::HasMaterialInstance(uint64_t entityUID) const {
@@ -525,6 +435,99 @@ void RenderSystem::SetupDebugVisualization() {
 		spdlog::error("RenderSystem: Cannot setup debug visualization - SceneRenderer or PrimitiveManager not initialized");
 	}
 }
+
+// ========== Resource Loading Helpers ==========
+
+std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent& meshComp) const {
+	// Handle primitives via PrimitiveManager
+	if (meshComp.isPrimitive) {
+		switch (meshComp.m_PrimitiveType) {
+		case MeshRendererComponent::PrimitiveType::CUBE:
+			return m_PrimitiveManager->GetSharedCubeMesh();
+		case MeshRendererComponent::PrimitiveType::PLANE:
+			return m_PrimitiveManager->GetSharedPlaneMesh();
+		default:
+			spdlog::warn("RenderSystem: Invalid primitive type");
+			return nullptr;
+		}
+	}
+
+	// Check for null GUID
+	if (meshComp.m_MeshGuid == Resource::null_guid) {
+		return nullptr;
+	}
+
+	// Check if already loaded (from file OR in-memory)
+	auto& registry = ResourceRegistry::Instance();
+	Handle meshHandle = registry.Find<std::shared_ptr<Mesh>>(meshComp.m_MeshGuid);
+
+	if (meshHandle) {  // Handle has operator bool()
+		// Already loaded (either from file or RegisterInMemory)
+		auto* pool = registry.Pool<std::shared_ptr<Mesh>>();
+		if (pool) {
+			auto* meshPtr = pool->Ptr(meshHandle);
+			if (meshPtr) return *meshPtr;
+		}
+	}
+
+	// Not found - mesh was not loaded from file and not registered in-memory
+	// This means the editor created a mesh but didn't call RegisterEditorMesh()
+	static std::unordered_set<std::string> warnedMeshGuids;
+	std::string guidStr = meshComp.m_MeshGuid.to_hex();
+	if (warnedMeshGuids.find(guidStr) == warnedMeshGuids.end()) {
+		spdlog::warn("RenderSystem: Mesh GUID {} not found (no file or in-memory registration). "
+			"If this is an editor-created mesh, call RenderSystem::RegisterEditorMesh().", guidStr);
+		warnedMeshGuids.insert(guidStr);
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<Material> RenderSystem::LoadMaterialResource(const Resource::Guid& materialGuid, bool hasAttachedMaterial, uint64_t entityUID) const {
+	// Check for null GUID
+	if (materialGuid == Resource::null_guid || !hasAttachedMaterial) {
+		// No material attached - create default
+		auto pbrShader = m_ShaderLibrary->GetPBRShader();
+		if (!pbrShader) {
+			spdlog::error("RenderSystem: PBR shader not available for default material");
+			return nullptr;
+		}
+		return std::make_shared<Material>(pbrShader, "DefaultMaterial_Entity_" + std::to_string(entityUID));
+	}
+
+	// Check if already loaded (from file OR in-memory via RegisterInMemory)
+	auto& registry = ResourceRegistry::Instance();
+	Handle matHandle = registry.Find<std::shared_ptr<Material>>(materialGuid);
+
+	if (matHandle) {  // Handle has operator bool()
+		// Already loaded (either from file or RegisterInMemory)
+		auto* pool = registry.Pool<std::shared_ptr<Material>>();
+		if (pool) {
+			auto* matPtr = pool->Ptr(matHandle);
+			if (matPtr) return *matPtr;
+		}
+	}
+
+	// Not found - material was not loaded from file and not registered in-memory
+	// This means the editor created a material but didn't call RegisterEditorMaterial()
+	// Create default material as fallback
+	static std::unordered_set<std::string> warnedGuids;
+	std::string guidStr = materialGuid.to_hex();
+	if (warnedGuids.find(guidStr) == warnedGuids.end()) {
+		spdlog::warn("RenderSystem: Material GUID {} not found (no file or in-memory registration). Using default material. "
+			"If this is an editor-created material, call RenderSystem::RegisterEditorMaterial().", guidStr);
+		warnedGuids.insert(guidStr);
+	}
+
+	auto pbrShader = m_ShaderLibrary->GetPBRShader();
+	if (!pbrShader) {
+		spdlog::error("RenderSystem: PBR shader not available for fallback material");
+		return nullptr;
+	}
+	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
+}
+
+// ========== Resource Type Registrations ==========
 
 // Resource type registration for Mesh (inline lambda to avoid file-scope variables)
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,

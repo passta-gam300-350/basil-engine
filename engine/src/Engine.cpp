@@ -63,7 +63,6 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 		Instance().m_RenderSystem->Init();
 		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-		Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
 
 		// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 		MaterialOverridesSystem::Instance().Init();
@@ -111,9 +110,8 @@ void Engine::Init(std::string const& cfg ) {
 	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 	Instance().m_RenderSystem->Init();
 
-	// Set up RenderSystem observers and initialize existing entities from loaded world
+	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
 
 	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 	MaterialOverridesSystem::Instance().Init();
@@ -238,9 +236,8 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 	Instance().m_RenderSystem->Init();
 
-	// Set up RenderSystem observers and initialize existing entities from loaded world
+	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
 
 	Scheduler::CompileJobSchedule();
 

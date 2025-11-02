@@ -29,7 +29,6 @@
 // Forward declarations
 class ShaderLibrary;
 class PrimitiveManager;
-class RenderResourceCache;
 class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
@@ -109,8 +108,8 @@ public:
      * - Camera (default perspective camera)
      * - ShaderLibrary (loads essential shaders)
      * - PrimitiveManager (creates common primitives)
-     * - RenderResourceCache (empty cache)
      * - ComponentInitializer (ready for observers)
+     * - MaterialInstanceManager (material instance caching)
      */
     RenderSystem();
 
@@ -118,8 +117,8 @@ public:
      * @brief Destroy RenderSystem and cleanup subsystems
      *
      * Destruction order ensures no dangling dependencies:
-     * 1. ComponentInitializer (depends on other subsystems)
-     * 2. RenderResourceCache
+     * 1. ComponentInitializer
+     * 2. MaterialInstanceManager
      * 3. PrimitiveManager
      * 4. ShaderLibrary
      * 5. SceneRenderer
@@ -139,8 +138,7 @@ public:
      * @brief Complete initialization after construction
      *
      * Sets up debug visualization meshes. Called by Engine::Init().
-     * @note Must call SetupComponentObservers() and InitializeExistingEntities()
-     *       after world is created/loaded
+     * @note Must call SetupComponentObservers() after world is created/loaded
      */
     void Init();
 
@@ -196,20 +194,10 @@ public:
     void SetupDebugVisualization();
 
     /**
-     * @brief Initialize rendering resources for all existing entities
+     * @brief Setup component observers for automatic cleanup
      *
-     * Must be called after loading a scene to initialize resources for
-     * entities that were created before observers were set up.
-     *
-     * @param world The ECS world containing existing entities
-     */
-    void InitializeExistingEntities(ecs::world& world);
-
-    /**
-     * @brief Setup component observers for automatic initialization
-     *
-     * Registers observers that automatically initialize rendering resources
-     * when MeshRendererComponent is added to an entity.
+     * Registers observers that clean up rendering resources
+     * when MeshRendererComponent is removed from an entity.
      *
      * @param world The ECS world to attach observers to
      */
@@ -218,43 +206,35 @@ public:
     // ========== Static API for External Access ==========
 
     /**
-     * @brief Register an editor-created mesh for use in rendering
+     * @brief Register an editor-created mesh for rendering (in-memory, no file backing)
      *
-     * Editor meshes are cached separately from entity meshes to allow
-     * reuse across multiple entities.
+     * Allows the editor to register meshes created at runtime (e.g., imported models,
+     * procedural geometry) before they are saved to disk. The mesh is immediately
+     * available for rendering via its GUID.
      *
-     * @param guid Unique identifier for the mesh
+     * @param guid GUID to associate with the mesh (editor-assigned)
      * @param mesh Shared pointer to the mesh resource
+     * @return true if registered successfully, false if GUID already exists
      *
-     * @note Delegates to Engine::GetRenderSystem() for backward compatibility
+     * @note When the asset is saved, it transitions from in-memory to file-based
+     *       automatically (GUID remains the same)
      */
-    static void RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh);
+    static bool RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh);
 
     /**
-     * @brief Register an editor-created material for use in rendering
+     * @brief Register an editor-created material for rendering (in-memory, no file backing)
      *
-     * @param guid Unique identifier for the material
+     * Allows the editor to register materials created at runtime before they are
+     * saved to disk. The material is immediately available for rendering via its GUID.
+     *
+     * @param guid GUID to associate with the material (editor-assigned)
      * @param material Shared pointer to the material resource
+     * @return true if registered successfully, false if GUID already exists
      *
-     * @note Delegates to Engine::GetRenderSystem() for backward compatibility
+     * @note When the asset is saved, it transitions from in-memory to file-based
+     *       automatically (GUID remains the same)
      */
-    static void RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material);
-
-    /**
-     * @brief Clear cached rendering resources for a specific entity
-     *
-     * Should be called when an entity is destroyed or its rendering components change.
-     *
-     * @param entityUID Unique identifier of the entity
-     */
-    static void ClearEntityResources(uint64_t entityUID);
-
-    /**
-     * @brief Clear all cached entity rendering resources
-     *
-     * Useful for scene unload or major state transitions.
-     */
-    static void ClearAllEntityCaches();
+    static bool RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material);
 
     /**
      * @brief Update cached material properties from MeshRendererComponent
@@ -304,17 +284,6 @@ public:
      * @param entityUID Unique identifier for the entity
      */
     void DestroyMaterialInstance(uint64_t entityUID);
-
-    /**
-     * @brief Get the cached base material for an entity
-     *
-     * Returns the base material that was cached during component initialization.
-     * This is used by MaterialOverridesSystem to create MaterialInstances.
-     *
-     * @param entityUID Unique identifier for the entity
-     * @return Cached material, or nullptr if not found
-     */
-    std::shared_ptr<Material> GetEntityMaterial(uint64_t entityUID) const;
 
     // ========== Material Property Block Management ==========
 
@@ -375,16 +344,6 @@ private:
     // ========== Internal Methods ==========
 
     /**
-     * @brief Initialize rendering resources for a MeshRendererComponent
-     *
-     * Called automatically by ComponentInitializer when MeshRendererComponent is added.
-     *
-     * @param registry EnTT registry containing the entity
-     * @param entity Entity handle with MeshRendererComponent
-     */
-    void InitializeMeshRenderer(entt::registry& registry, entt::entity entity);
-
-    /**
      * @brief Handle MeshRendererComponent updates (sync material properties)
      *
      * Called automatically when registry.patch<MeshRendererComponent>() is used.
@@ -394,12 +353,27 @@ private:
      */
     void OnMeshRendererUpdated(entt::registry& registry, entt::entity entity);
 
+    /**
+     * @brief Helper to load mesh resource from GUID or primitive type
+     * @param meshComp MeshRendererComponent containing resource info
+     * @return Mesh pointer, or nullptr if not found
+     */
+    std::shared_ptr<Mesh> LoadMeshResource(const MeshRendererComponent& meshComp) const;
+
+    /**
+     * @brief Helper to load material resource from GUID or create default
+     * @param materialGuid Material GUID to load
+     * @param hasAttachedMaterial Whether the component has an attached material
+     * @param entityUID Entity ID for default material naming
+     * @return Material pointer, or nullptr if failed
+     */
+    std::shared_ptr<Material> LoadMaterialResource(const Resource::Guid& materialGuid, bool hasAttachedMaterial, uint64_t entityUID) const;
+
     // ========== Render Subsystems ==========
 
     std::unique_ptr<ShaderLibrary> m_ShaderLibrary;             ///< Shader loading and caching
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
-    std::unique_ptr<RenderResourceCache> m_ResourceCache;       ///< Entity resource caching
-    std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
+    std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component lifecycle management
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
 
     // ========== Material Property Blocks ==========
