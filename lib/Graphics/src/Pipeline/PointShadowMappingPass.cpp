@@ -118,8 +118,11 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
     // Use pre-allocated cubemap FBO
     auto& cubemapFBO = m_ShadowCubemaps[lightIndex];
 
+    // Use light's range for far plane (with minimum clamp for safety)
+    float farPlane = glm::max(light.range, 1.0f);
+
     // Calculate shadow matrices for all 6 faces
-    auto shadowMatrices = CalculateShadowMatrices(light.position, m_ShadowFarPlane);
+    auto shadowMatrices = CalculateShadowMatrices(light.position, farPlane);
 
     // === BEGIN COMMAND-BASED RENDERING ===
 
@@ -159,7 +162,7 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
         RenderCommands::SetUniformFloatData farPlaneCmd{
             m_PointShadowShader,
             "u_FarPlane",
-            m_ShadowFarPlane
+            farPlane
         };
         Submit(farPlaneCmd);
 
@@ -184,7 +187,7 @@ void PointShadowMappingPass::RenderPointShadowCubemap(RenderContext& context,
     pointShadow.shadowType = ShadowData::Point;
     pointShadow.lightSpaceMatrix = glm::mat4(1.0f);  // Not used for point lights
     pointShadow.textureIndex = static_cast<int32_t>(context.frameData.shadowCubemapTextures.size());
-    pointShadow.farPlane = m_ShadowFarPlane;  // Used for depth normalization
+    pointShadow.farPlane = farPlane;  // Use light's actual range for depth normalization
     pointShadow.intensity = 0.8f;  // Default shadow intensity
 
     // Store shadow data and cubemap texture ID

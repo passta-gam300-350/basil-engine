@@ -152,8 +152,8 @@ bool GraphicsTestDriver::Initialize()
     // Uncomment ONE demo to run:
 
     //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    SetupTinboxDemo();     // Tinbox grid - outline/PBR test
+    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     
     
 
@@ -639,24 +639,25 @@ void GraphicsTestDriver::SetupTinboxDemo()
 
     // 3. CREATE LIGHTS
     // Directional light
-    m_SceneLights.push_back(CreateDirectionalLight(
-        glm::vec3(0.2f, -1.0f, 0.3f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        0.3f, 0.2f
-    ));
-    // Point light - positioned close to chair for visible lighting
-    //m_SceneLights.push_back(CreatePointLight(
-    //    glm::vec3(-8.0f, 2.0f, 0.0f),         // Right above chair at (-8, 0, 0)
-    //    glm::vec3(1.0f, 0.9f, 0.7f),
-    //    5.0f, 0.1f, 50.0f                      // Increased intensity to 5.0
+    //m_SceneLights.push_back(CreateDirectionalLight(
+    //    glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
+    //    glm::vec3(1.0f, 0.95f, 0.9f),        // Color: warm sunlight
+    //    2.5f,                                 // DiffuseIntensity: bright sunlight (increased for steeper angle)
+    //    0.0f                                  // AmbientIntensity: no ambient (pure directional)
     //));
+    // Point light - positioned close to chair for visible lighting
+    m_SceneLights.push_back(CreatePointLight(
+        glm::vec3(-8.0f, 8.0f, 0.0f),          // Right above chair at (-8, 0, 0) Position
+        glm::vec3(1.0f, 0.9f, 0.7f),           // Color
+        5.0f, 0.0f, 50.0f                      // Diffuse, Ambient, range
+    ));
     // Spot light - positioned close to chair for visible shadows
     //m_SceneLights.push_back(CreateSpotLight(
     //    glm::vec3(-8.0f, 3.0f, 0.0f),         // Lowered from 8.0 to 3.0 for stronger effect
     //    glm::vec3(0.0f, -1.0f, 0.0f),         // Direction: pointing straight down
     //    glm::vec3(1.0f, 0.8f, 0.6f),          // Color: warm white/yellow
     //    8.0f,                                  // Increased intensity to 8.0
-    //    0.1f,                                  // AmbientIntensity: low ambient
+    //    0.0f,                                  // AmbientIntensity: low ambient
     //    30.0f,                                 // Range: covers chair area
     //    15.0f,                                 // InnerCone: 15 degrees (sharp falloff)
     //    25.0f                                  // OuterCone: 25 degrees (cone angle)
@@ -746,14 +747,14 @@ void GraphicsTestDriver::SetupEditorDemo()
     auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(20.0f, 20.0f, 1, 1));
     RenderableData groundPlane;
     groundPlane.mesh = planeMesh;
-    groundPlane.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+    groundPlane.material = m_ResourceManager->GetMaterial("RedMaterial");
 
     // Create property block for the ground plane with a neutral gray color
-    auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
-    groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 1.0f, 1.0f));  // Neutral gray
-    groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
-    groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
-    groundPlane.propertyBlock = groundPropertyBlock;
+    //auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
+    //groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 1.0f, 1.0f));  // Neutral gray
+    //groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
+    //groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
+    //groundPlane.propertyBlock = groundPropertyBlock;
 
     // Position plane below cubes (cubes are at y=0, so plane at y=-0.6 is below them)
     groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
@@ -764,17 +765,24 @@ void GraphicsTestDriver::SetupEditorDemo()
     m_SceneObjects.push_back(groundPlane);
     spdlog::info("Added ground plane at y=-0.6 to catch shadows");
 
-    // 3. CREATE SPOTLIGHT - Positioned above scene to cast shadows
-    m_SceneLights.push_back(CreateSpotLight(
-        glm::vec3(0.0f, 6.0f, 0.0f),        // Position: centered above the grid
-        glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
-        glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm sunlight
-        3.0f,                                 // DiffuseIntensity: bright spotlight
-        0.0f,                                 // AmbientIntensity: no per-light ambient
-        20.0f,                                // Range: covers entire scene
-        25.0f,                                // InnerCone: 25 degrees
-        35.0f                                 // OuterCone: 35 degrees
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
+        glm::vec3(1.0f, 0.95f, 0.9f),        // Color: warm sunlight
+        2.5f,                                 // DiffuseIntensity: bright sunlight (increased for steeper angle)
+        0.0f                                  // AmbientIntensity: no ambient (pure directional)
     ));
+
+    // 3. CREATE SPOTLIGHT - Positioned above scene to cast shadows
+    //m_SceneLights.push_back(CreateSpotLight(
+    //    glm::vec3(0.0f, 6.0f, 0.0f),        // Position: centered above the grid
+    //    glm::vec3(0.0f, -1.0f, 0.0f),        // Direction: pointing straight down
+    //    glm::vec3(1.0f, 0.95f, 0.85f),       // Color: warm sunlight
+    //    3.0f,                                 // DiffuseIntensity: bright spotlight
+    //    0.0f,                                 // AmbientIntensity: no per-light ambient
+    //    20.0f,                                // Range: covers entire scene
+    //    25.0f,                                // InnerCone: 25 degrees
+    //    35.0f                                 // OuterCone: 35 degrees
+    //));
 
     // Set ambient light
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.01f));
