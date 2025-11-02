@@ -29,6 +29,9 @@ Technology is prohibited.
 #include "native/native.h"
 #include "Render/Camera.h"
 
+// Resource pipeline serialization
+#include <rsc-core/serialization/serializer.hpp>
+
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
 #include <Resources/PrimitiveGenerator.h>
@@ -194,11 +197,11 @@ void RenderSystem::Update(ecs::world& world) {
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
 		// Load mesh resource (from ResourceRegistry or PrimitiveManager)
-		std::shared_ptr<Mesh> meshResource = *ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid.m_guid);
+		std::shared_ptr<Mesh> meshResource = LoadMeshResource(mesh);
 
 		// Load material resource (from ResourceRegistry or create default)
 		std::shared_ptr<Material> materialResource = LoadMaterialResource(
-			mesh.m_MaterialGuid,
+			static_cast<rp::TypeNameGuid<"material">&>(mesh.m_MaterialGuid),
 			mesh.hasAttachedMaterial,
 			entityUID
 		);
@@ -454,21 +457,24 @@ std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent
 
 	// Check if already loaded (from file OR in-memory)
 	auto& registry = ResourceRegistry::Instance();
-	Handle meshHandle = registry.Find<std::shared_ptr<Mesh>>(meshComp.m_MeshGuid.m_guid);
-
-	if (meshHandle) {  // Handle has operator bool()
-		// Already loaded (either from file or RegisterInMemory)
-		auto* pool = registry.Pool<std::shared_ptr<Mesh>>();
-		if (pool) {
-			auto* meshPtr = pool->Ptr(meshHandle);
-			if (meshPtr) return *meshPtr;
-		}
-	}
+	//Handle meshHandle = registry.Find<std::shared_ptr<Mesh>>(meshComp.m_MeshGuid.m_guid);
+	//
+	//if (meshHandle) {  // Handle has operator bool()
+	//	// Already loaded (either from file or RegisterInMemory)
+	//	auto* pool = registry.Pool<std::shared_ptr<Mesh>>();
+	//	if (pool) {
+	//		auto* meshPtr = pool->Ptr(meshHandle);
+	//		if (meshPtr) return *meshPtr;
+	//	}
+	//}
+	Handle meshHandle{};
+	auto* ptr = registry.Get<std::vector<std::shared_ptr<Mesh>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
+	return ptr->at(0);
 
 	// Not found - mesh was not loaded from file and not registered in-memory
 	// This means the editor created a mesh but didn't call RegisterEditorMesh()
 	static std::unordered_set<std::string> warnedMeshGuids;
-	std::string guidStr = meshComp.m_MeshGuid.to_hex();
+	std::string guidStr = meshComp.m_MeshGuid.m_guid.to_hex();
 	if (warnedMeshGuids.find(guidStr) == warnedMeshGuids.end()) {
 		spdlog::warn("RenderSystem: Mesh GUID {} not found (no file or in-memory registration). "
 			"If this is an editor-created mesh, call RenderSystem::RegisterEditorMesh().", guidStr);
@@ -478,9 +484,13 @@ std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent
 	return nullptr;
 }
 
-std::shared_ptr<Material> RenderSystem::LoadMaterialResource(const Resource::Guid& materialGuid, bool hasAttachedMaterial, uint64_t entityUID) const {
+std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
+	const rp::TypeNameGuid<"material">& materialGuid,
+	bool hasAttachedMaterial,
+	uint64_t entityUID) const
+{
 	// Check for null GUID
-	if (materialGuid == Resource::null_guid || !hasAttachedMaterial) {
+	if (materialGuid.m_guid == rp::null_guid || !hasAttachedMaterial) {
 		// No material attached - create default
 		auto pbrShader = m_ShaderLibrary->GetPBRShader();
 		if (!pbrShader) {
@@ -492,7 +502,7 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(const Resource::Gui
 
 	// Check if already loaded (from file OR in-memory via RegisterInMemory)
 	auto& registry = ResourceRegistry::Instance();
-	Handle matHandle = registry.Find<std::shared_ptr<Material>>(materialGuid);
+	Handle matHandle = registry.Find<std::shared_ptr<Material>>(materialGuid.m_guid);
 
 	if (matHandle) {  // Handle has operator bool()
 		// Already loaded (either from file or RegisterInMemory)
@@ -507,7 +517,7 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(const Resource::Gui
 	// This means the editor created a material but didn't call RegisterEditorMaterial()
 	// Create default material as fallback
 	static std::unordered_set<std::string> warnedGuids;
-	std::string guidStr = materialGuid.to_hex();
+	std::string guidStr = materialGuid.m_guid.to_hex();
 	if (warnedGuids.find(guidStr) == warnedGuids.end()) {
 		spdlog::warn("RenderSystem: Material GUID {} not found (no file or in-memory registration). Using default material. "
 			"If this is an editor-created material, call RenderSystem::RegisterEditorMaterial().", guidStr);
@@ -522,57 +532,152 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(const Resource::Gui
 	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
 }
 
-// ========== Resource Type Registrations ==========
-REGISTER_RESOURCE_TYPE_ALIASE(std::vector<std::shared_ptr<Mesh>>, MESHES, [](const char* data)->std::vector<std::shared_ptr<Mesh>> {
-	MeshResourceData dat = rp::serialization::binary_serializer::serialize<MeshResourceData>(data);
+std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {
+	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
 	std::vector<std::shared_ptr<Mesh>> meshes;
-	for (auto mesh : dat.meshes) {
-		std::vector<Vertex> vert{};
-		vert.resize(dat.vertices.size());
-		memcpy(vert.data(), dat.vertices.data(), dat.vertices.size() * sizeof(Vertex));
-		meshes.emplace_back(std::make_shared<Mesh>(vert, mesh.indices, {}));
+	for (const auto& mesh : dat.meshes) {
+		std::vector<Vertex> vert{}; vert.resize(mesh.vertices.size());
+		for (size_t i = 0; i < mesh.vertices.size(); ++i) {
+			vert[i].Position = mesh.vertices[i].Position;
+			vert[i].Normal = mesh.vertices[i].Normal;
+			vert[i].TexCoords = mesh.vertices[i].TexCoords;
+			vert[i].Tangent = mesh.vertices[i].Tangent;
+			vert[i].Bitangent = mesh.vertices[i].Bitangent;
+		}
+		meshes.emplace_back(std::make_shared<Mesh>(vert, mesh.indices, std::vector<Texture>{}));
 	}
-	return meshes;
-	},
-	[](std::vector<std::shared_ptr<Mesh>>&) {})
+	return meshes; 
+}
+
+// ========== Resource Type Registrations ==========
+namespace {
+	struct MESHES_resource_registrar {
+		MESHES_resource_registrar() {
+			ResourceRegistry::Instance().RegisterType<std::vector<std::shared_ptr<Mesh>>>(
+				loadmesh, [](std::vector<std::shared_ptr<Mesh>>&) {}, "MESHES");
+		}
+	}; static MESHES_resource_registrar g_MESHES_resource_registrar;
+}
 
 
 // Resource type registration for Mesh (inline lambda to avoid file-scope variables)
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,
 	[](const char* data)->std::shared_ptr<Mesh> {
-		Resource::MeshAssetData dat = Resource::load_native_mesh_from_memory(data);
-		std::vector<Texture> textures{};
-		int i{};
-		for (auto tex_guid : dat.textures) {
-			Resource::TextureAssetData& tex = *ResourceRegistry::Instance().Get<Resource::TextureAssetData>(tex_guid);
-			Texture texture;
-			texture.id = TextureLoader::CreateGPUTextureCompressed(tex);
-			texture.type = Resource::GetTextureTypeName(static_cast<Resource::TextureType>(dat.texture_type[i]));
-			textures.emplace_back(texture);
-			i++;
+		// Deserialize MeshResourceData from binary
+		MeshResourceData meshData = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(
+			reinterpret_cast<const std::byte*>(data)
+		);
+
+		// MeshResourceData has a vector of meshes (LODs)
+		// For now, take the first LOD (index 0)
+		if (meshData.meshes.empty()) {
+			spdlog::error("MeshResourceData has no mesh data (empty meshes vector)");
+			return nullptr;
 		}
-		std::vector<Vertex> vert{};
-		vert.resize(dat.vertices.size());
-		memcpy(vert.data(), dat.vertices.data(), dat.vertices.size() * sizeof(Vertex));
-		return std::make_shared<Mesh>(vert, dat.indices, textures);
+
+		const auto& firstMesh = meshData.meshes[0];
+
+		// Extract vertices and indices from the first mesh
+		std::vector<Vertex> vertices;
+		vertices.reserve(firstMesh.vertices.size());
+
+		for (const auto& v : firstMesh.vertices) {
+			Vertex vertex;
+			vertex.Position = v.Position;
+			vertex.Normal = v.Normal;
+			vertex.TexCoords = v.TexCoords;
+			vertex.Tangent = v.Tangent;
+			vertex.Bitangent = v.Bitangent;
+			vertices.push_back(vertex);
+		}
+
+		// Create Mesh instance (assuming constructor takes vertices and indices)
+		// Note: Textures are not loaded here yet - that would require additional GUID lookups
+		std::vector<Texture> textures{}; // Empty for now
+		auto mesh = std::make_shared<Mesh>(vertices, firstMesh.indices, textures);
+
+		spdlog::info("Successfully loaded mesh from resource pipeline ({} vertices, {} indices)",
+					vertices.size(), firstMesh.indices.size());
+		return mesh;
 	},
 	[](std::shared_ptr<Mesh>&) {});
 
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 	[](const char* data)->std::shared_ptr<Material> {
-	Resource::MaterialAssetData dat = Resource::load_native_material_from_memory(data);
-	Resource::ShaderAssetData shdr_dat = *ResourceRegistry::Instance().Get<Resource::ShaderAssetData>(dat.shader_guid);
-	std::shared_ptr<Shader> shdr = Engine::GetRenderSystem().m_SceneRenderer->GetResourceManager()->LoadShader(shdr_dat.m_Name, shdr_dat.m_VertPath, shdr_dat.m_FragPath);
-	std::shared_ptr<Material> mat = std::make_shared<Material>(shdr, dat.m_Name);
-	mat->SetAlbedoColor(dat.m_AlbedoColor);
-	mat->SetRoughnessValue(dat.m_RoughnessValue);
-	mat->SetMetallicValue(dat.m_MetallicValue);
-	return mat;
-}, [](std::shared_ptr<Material>&) {});
+		// Deserialize MaterialResourceData from binary
+		MaterialResourceData matData = rp::serialization::serializer<"bin">::deserialize<MaterialResourceData>(
+			reinterpret_cast<const std::byte*>(data)
+		);
+
+		// Get RenderSystem to access shader library and resource manager
+		auto& renderSystem = Engine::GetRenderSystem();
+		auto sceneRenderer = renderSystem.GetSceneRenderer();
+		auto resourceManager = sceneRenderer->GetResourceManager();
+
+		// Load shader by name (using vert_name and frag_name from MaterialResourceData)
+		std::string vertPath = "assets/shaders/" + matData.vert_name;
+		std::string fragPath = "assets/shaders/" + matData.frag_name;
+
+		// Ensure .vert and .frag extensions
+		if (vertPath.find(".vert") == std::string::npos) {
+			vertPath += ".vert";
+		}
+		if (fragPath.find(".frag") == std::string::npos) {
+			fragPath += ".frag";
+		}
+
+		auto shader = resourceManager->LoadShader(matData.material_name, vertPath, fragPath);
+		if (!shader) {
+			spdlog::error("Failed to load shader for material '{}': {} / {}",
+						 matData.material_name, vertPath, fragPath);
+			// Try to use default PBR shader as fallback
+			shader = renderSystem.GetShaderLibrary()->GetPBRShader();
+			if (!shader) {
+				spdlog::error("No fallback shader available for material '{}'", matData.material_name);
+				return nullptr;
+			}
+		}
+
+		// Create Material instance
+		auto material = std::make_shared<Material>(shader, matData.material_name);
+
+		// Apply PBR base properties
+		material->SetAlbedoColor(matData.albedo);
+		material->SetMetallicValue(matData.metallic);
+		material->SetRoughnessValue(matData.roughness);
+
+		// Apply extended float properties
+		for (const auto& [name, value] : matData.float_properties) {
+			material->SetFloat(name, value);
+		}
+
+		// Apply extended vec3 properties
+		for (const auto& [name, value] : matData.vec3_properties) {
+			material->SetVec3(name, value);
+		}
+
+		// Apply extended vec4 properties
+		for (const auto& [name, value] : matData.vec4_properties) {
+			material->SetVec4(name, value);
+		}
+
+		// TODO: Load and apply textures from texture_properties (GUID map)
+		// This requires synchronous texture loading from GUIDs
+		if (!matData.texture_properties.empty()) {
+			spdlog::warn("Material '{}' has {} texture properties, but texture loading from GUIDs not yet implemented",
+						matData.material_name, matData.texture_properties.size());
+		}
+
+		spdlog::info("Successfully loaded material '{}' from resource pipeline", matData.material_name);
+		return material;
+	},
+	[](std::shared_ptr<Material>&) {
+		// Cleanup - Material destructor handles GPU resource cleanup
+		// No additional cleanup needed
+	});
 
 //REGISTER_RESOURCE_TYPE(Texture, [](const char* data)->Texture {return Texture(); }, [](Texture&) {});
 
-namespace Resource {
-	REGISTER_RESOURCE_TYPE(ShaderAssetData, load_native_shader_from_memory, [](ShaderAssetData&) {});
-	REGISTER_RESOURCE_TYPE(TextureAssetData, load_dds_texture_from_memory, [](TextureAssetData&) {});
-}
+// Note: ShaderAssetData and TextureAssetData registration removed
+// Shaders are now loaded by name from MaterialResourceData
+// Textures will be loaded directly from TextureResourceData when needed

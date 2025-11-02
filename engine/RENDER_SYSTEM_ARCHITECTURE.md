@@ -386,8 +386,8 @@ world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
 ```cpp
 // Load mesh and material assets in editor
-Resource::Guid meshGuid = /* loaded from file */;
-Resource::Guid materialGuid = /* loaded from file */;
+rp::Guid meshGuid = /* loaded from file */;
+rp::Guid materialGuid = /* loaded from file */;
 
 std::shared_ptr<Mesh> mesh = /* load mesh */;
 std::shared_ptr<Material> material = /* load material */;
