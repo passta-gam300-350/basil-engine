@@ -461,7 +461,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/shelf/shelf.obj");
+            "assets/models/tinbox/tin_box.obj");
 
         if (!tinBoxModel) {
             spdlog::error("Failed to load chair model!");
@@ -620,7 +620,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     );
     RenderableData ground;
     ground.mesh = planeMesh;
-    ground.material = m_ResourceManager->GetMaterial("GreenMaterial");
+    ground.material = m_ResourceManager->GetMaterial("WhiteMaterial");
     ground.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
     ground.visible = true;
     ground.objectID = 1;
@@ -637,7 +637,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
         }
     }
     spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
@@ -668,9 +668,9 @@ void GraphicsTestDriver::SetupTinboxDemo()
     //    25.0f                                  // OuterCone: 25 degrees (cone angle)
     //));
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f)); // Reduced to let other lights show
-    spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
+    //spdlog::info("Lights created: 1 directional, 1 point, 1 spot");
 
-    m_SceneRenderer->EnableSkybox(false);
+    //m_SceneRenderer->EnableSkybox(false);
 
     // 4. SETUP OUTLINE MODE - Click-based selection
     m_SceneRenderer->ClearOutlinedObjects();
