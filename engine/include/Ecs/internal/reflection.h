@@ -1,6 +1,6 @@
 #ifndef LIB_REFLECTION_REGISTRATION_H
 #define LIB_REFLECTION_REGISTRATION_H
-#include "serialisation/guid.h"
+#include <rsc-core/rp.hpp>
 #include <entt/entt.hpp>
 #include <entt/meta/meta.hpp>
 #include <vector>
@@ -206,8 +206,8 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 				}
 			}
 			
-			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
-				out[field_name] = v->to_hex_no_delimiter();
+			if (rp::Guid* v = value.try_cast<rp::Guid>())
+				out[field_name] = v->to_hex();
 			
 
 			// primitives
@@ -332,9 +332,9 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 			continue;
 		}
 
-		if (mid == entt::type_hash<Resource::Guid>::value()) {
+		if (mid == entt::type_hash<rp::Guid>::value()) {
 			std::string guid_str = in[field_name].template as<std::string>();
-			Resource::Guid guid = Resource::Guid::to_guid(guid_str);
+			rp::Guid guid = rp::Guid::to_guid(guid_str);
 			data.set(obj, guid);
 			continue;
 		}

@@ -22,7 +22,7 @@ Technology is prohibited.
 #include <unordered_map>
 #include <string>
 #include <glm/glm.hpp>
-#include <serialisation/guid.h>
+#include <native/native.h>
 
 /**
  * @brief Component for per-entity material property overrides
@@ -59,7 +59,7 @@ struct MaterialOverridesComponent {
 
     /// Texture property overrides (stores asset GUIDs, not loaded textures)
     /// Maps uniform name (e.g., "u_AlbedoMap") to texture asset GUID
-    std::unordered_map<std::string, Resource::Guid> textureOverrides;
+    std::unordered_map<std::string, rp::Guid> textureOverrides;
 
     /**
      * @brief Check if this component has any overrides

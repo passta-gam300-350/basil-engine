@@ -194,7 +194,7 @@ void RenderSystem::Update(ecs::world& world) {
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
 		// Load mesh resource (from ResourceRegistry or PrimitiveManager)
-		std::shared_ptr<Mesh> meshResource = LoadMeshResource(mesh);
+		std::shared_ptr<Mesh> meshResource = *ResourceRegistry::Instance().Get<std::shared_ptr<Mesh>>(mesh.m_MeshGuid.m_guid);
 
 		// Load material resource (from ResourceRegistry or create default)
 		std::shared_ptr<Material> materialResource = LoadMaterialResource(
@@ -281,11 +281,9 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.color = lightComponent.m_Color;
 		lightData.direction = lightComponent.m_Direction;
 		lightData.enabled = lightComponent.m_IsEnabled;
-		lightData.castShadows = lightComponent.m_CastShadows;
 		lightData.innerCone = lightComponent.m_InnerCone;
 		lightData.outerCone = lightComponent.m_OuterCone;
-		lightData.diffuseIntensity = lightComponent.m_DiffuseIntensity;
-		lightData.ambientIntensity = lightComponent.m_AmbientIntensity;
+		lightData.diffuseIntensity = lightComponent.m_Intensity;
 		lightData.range = lightComponent.m_Range;
 		lightData.position = position.m_Translation;
 		m_SceneRenderer->SubmitLight(lightData);
@@ -450,13 +448,13 @@ std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent
 	}
 
 	// Check for null GUID
-	if (meshComp.m_MeshGuid == Resource::null_guid) {
+	if (meshComp.m_MeshGuid.m_guid == rp::null_guid) {
 		return nullptr;
 	}
 
 	// Check if already loaded (from file OR in-memory)
 	auto& registry = ResourceRegistry::Instance();
-	Handle meshHandle = registry.Find<std::shared_ptr<Mesh>>(meshComp.m_MeshGuid);
+	Handle meshHandle = registry.Find<std::shared_ptr<Mesh>>(meshComp.m_MeshGuid.m_guid);
 
 	if (meshHandle) {  // Handle has operator bool()
 		// Already loaded (either from file or RegisterInMemory)
@@ -525,6 +523,19 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(const Resource::Gui
 }
 
 // ========== Resource Type Registrations ==========
+REGISTER_RESOURCE_TYPE_ALIASE(std::vector<std::shared_ptr<Mesh>>, MESHES, [](const char* data)->std::vector<std::shared_ptr<Mesh>> {
+	MeshResourceData dat = rp::serialization::binary_serializer::serialize<MeshResourceData>(data);
+	std::vector<std::shared_ptr<Mesh>> meshes;
+	for (auto mesh : dat.meshes) {
+		std::vector<Vertex> vert{};
+		vert.resize(dat.vertices.size());
+		memcpy(vert.data(), dat.vertices.data(), dat.vertices.size() * sizeof(Vertex));
+		meshes.emplace_back(std::make_shared<Mesh>(vert, mesh.indices, {}));
+	}
+	return meshes;
+	},
+	[](std::vector<std::shared_ptr<Mesh>>&) {})
+
 
 // Resource type registration for Mesh (inline lambda to avoid file-scope variables)
 REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,

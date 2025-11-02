@@ -144,7 +144,7 @@ void MaterialOverridesSystem::ApplyOverridesToPropertyBlock(
     }
 }
 
-std::shared_ptr<Texture> MaterialOverridesSystem::LoadTexture(const Resource::Guid& textureGuid) {
+std::shared_ptr<Texture> MaterialOverridesSystem::LoadTexture(const rp::Guid& textureGuid) {
     if (!m_ResourceSystem) {
         spdlog::error("MaterialOverridesSystem: ResourceSystem not available");
         return nullptr;

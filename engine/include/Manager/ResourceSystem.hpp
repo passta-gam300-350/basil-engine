@@ -113,7 +113,7 @@ public:
      * @param resource Already-constructed resource to insert
      * @return true if inserted, false if GUID already exists
      */
-    bool InsertPreloaded(Resource::Guid guid, T resource) {
+    bool InsertPreloaded(rp::Guid guid, T resource) {
         // Check if GUID already exists
         auto it = m_GuidSlots.find(guid);
         if (it != m_GuidSlots.end()) {
@@ -326,7 +326,7 @@ struct ResourceRegistry {
      * @note Editor is responsible for unregistering resources when deleted
      */
     template <typename T>
-    bool RegisterInMemory(Resource::Guid guid, T resource) {
+    bool RegisterInMemory(rp::Guid guid, T resource) {
         auto* pool = Pool<T>();
         if (!pool) {
             spdlog::error("ResourceRegistry: Cannot register in-memory resource - type not registered");
@@ -351,7 +351,7 @@ struct ResourceRegistry {
      * @return true if unregistered, false if not found
      */
     template <typename T>
-    bool UnregisterInMemory(Resource::Guid guid) {
+    bool UnregisterInMemory(rp::Guid guid) {
         return Unload<T>(guid);  // Unload handles cleanup
     }
 
@@ -520,6 +520,16 @@ private:
         static T##_resource_registrar g_##T##_resource_registrar;    \
     }
 
+#define REGISTER_RESOURCE_TYPE_ALIASE(T, A, loader_fn, unloader_fn)            \
+    namespace {                                                      \
+        struct A##_resource_registrar {                              \
+            A##_resource_registrar() {                               \
+                ResourceRegistry::Instance().RegisterType<T>(       \
+                    loader_fn, unloader_fn, #A);                     \
+            }                                                        \
+        };                                                           \
+        static A##_resource_registrar g_##A##_resource_registrar;    \
+    }
 
 
 template <typename T, stl_allocator_t<T> A>

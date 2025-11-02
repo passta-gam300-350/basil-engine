@@ -22,7 +22,7 @@ Technology is prohibited.
 
 #include "ecs/system/system.h"
 #include "ecs/internal/world.h"
-#include <serialisation/guid.h>
+#include <native/native.h>
 #include <unordered_set>
 #include <cstdint>
 
@@ -120,7 +120,7 @@ private:
      * @param textureGuid Asset GUID
      * @return Loaded texture (or nullptr if load fails)
      */
-    std::shared_ptr<Texture> LoadTexture(const Resource::Guid& textureGuid);
+    std::shared_ptr<Texture> LoadTexture(const rp::Guid& textureGuid);
 
     /**
      * @brief Track entities that have MaterialPropertyBlocks created

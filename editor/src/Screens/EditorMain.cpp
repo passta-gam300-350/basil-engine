@@ -889,7 +889,6 @@ void EditorMain::Render_CameraControls()
 
 void EditorMain::Render_AssetBrowser()
 {
-	/*
 	ImGui::Begin("Files");
 	ImGui::Text(m_AssetManager->GetCurrentPath().c_str());
 	if (m_AssetManager->GetCurrentPath() != m_AssetManager->GetRootPath())
@@ -989,7 +988,6 @@ void EditorMain::Render_AssetBrowser()
 	}
 	ImGui::Columns(1);
 	ImGui::End();
-	*/
 }
 
 void EditorMain::Render_Scene()
@@ -1184,7 +1182,7 @@ void EditorMain::CreatePlaneEntity()
 		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
 		meshRenderer.material.metallic = 0.1f;
 		meshRenderer.material.roughness = 0.8f;
-		meshRenderer.material.m_MaterialGuid = rp::Guid{}; // Use 0 for default material
+		meshRenderer.material.m_MaterialGuid.m_guid = rp::null_guid; // Use 0 for default material
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
@@ -1214,10 +1212,8 @@ void EditorMain::CreateLightEntity()
 		light.m_Type = Light::Type::Directional;
 		light.m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);
 		light.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
-		light.m_DiffuseIntensity = 1.0f;
-		light.m_AmbientIntensity = 0.0f;
 		light.m_IsEnabled = true;
-		light.m_CastShadows = true;
+		light.m_Intensity = 1.f;
 		light.m_Range = 10.0f;
 		light.m_InnerCone = 30.0f;
 		light.m_OuterCone = 45.0f;
@@ -1379,10 +1375,8 @@ void EditorMain::CreateDemoScene()
 		light.m_Type = Light::Type::Directional;
 		light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
 		light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-		light.m_DiffuseIntensity = 1.0f;
-		light.m_AmbientIntensity = 0.0f;
+		light.m_Intensity = 1.0f;
 		light.m_IsEnabled = true;
-		light.m_CastShadows = true;
 		light.m_Range = 10.0f;
 		light.m_InnerCone = 30.0f;
 		light.m_OuterCone = 45.0f;

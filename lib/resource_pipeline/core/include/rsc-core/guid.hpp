@@ -111,12 +111,13 @@ namespace rp {
             }
         };
 
-        static constexpr Guid null_guid{ 0x0ull, 0x0ull };
-
         struct BasicIndexedGuid {
             Guid m_guid;
             std::uint64_t m_typeindex;
         };
+
+        static constexpr Guid null_guid{ 0x0ull, 0x0ull };
+        static constexpr BasicIndexedGuid null_indexed_guid{ null_guid, 0x0ull };
 
         template <utility::static_string ss>
         struct TypeNameGuid;
@@ -132,6 +133,17 @@ public:
     std::size_t operator() (rp::Guid const& key) const noexcept {
         std::size_t hash_val{ std::hash<std::uint64_t>{}(key.m_high) };
         rp::Detail::hash_combine(hash_val, key.m_low);
+        return hash_val;
+    }
+};
+
+template <>
+class std::hash<rp::BasicIndexedGuid> {
+public:
+    std::size_t operator() (rp::BasicIndexedGuid const& key) const noexcept {
+        std::size_t hash_val{ std::hash<std::uint64_t>{}(key.m_guid.m_high) };
+        rp::Detail::hash_combine(hash_val, key.m_guid.m_low);
+        rp::Detail::hash_combine(hash_val, std::hash<std::uint64_t>{}(key.m_typeindex));
         return hash_val;
     }
 };

@@ -20,8 +20,11 @@ namespace rp{
 		template <>
 		struct in_archive<"bin"> {
 			std::ifstream m_ifs;
+			std::byte const* m_data;
+			std::byte const* m_read_ptr;
 			in_archive() = delete;
-			in_archive(std::string const& filepath) : m_ifs{filepath, std::ios::binary} {}
+			in_archive(std::byte const* data) : m_ifs{}, m_data{data}, m_read_ptr{data} {}
+			in_archive(std::string const& filepath) : m_ifs{filepath, std::ios::binary}, m_data{}, m_read_ptr{} {}
 			~in_archive() { m_ifs.close(); }
 			template <typename Type>
 			Type read() {
@@ -34,6 +37,54 @@ namespace rp{
 					std::size_t cont_sz{ read<std::size_t>() };
 					std::remove_cvref_t<Type> v(cont_sz, '\0');
 					m_ifs.read(reinterpret_cast<char*>(v.data()), cont_sz);
+					return v;
+				}
+				else if constexpr (reflection::is_associative_container_v<Type>) {
+					Type v{};
+					std::size_t cont_sz{ read<std::size_t>() };
+					auto cont_view{ reflection::reflect(v) };
+					//no reserve because not all containers supports reserve
+					while (cont_sz--) {
+						cont_view.emplace(read<decltype(cont_view)::input_type>());
+					}
+					return v;
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					Type v{};
+					std::size_t cont_sz{ read<std::size_t>() };
+					auto cont_view{ reflection::reflect(v) };
+					//no reserve because not all containers supports reserve
+					while (cont_sz--) {
+						cont_view.emplace(cont_view.cend(), read<decltype(cont_view)::underlying_type>());
+					}
+					return v;
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					Type v{};
+					reflection::reflect(v).each([&](auto& field) {
+						*field.m_field_ptr = read<std::remove_pointer_t<std::remove_cvref_t<decltype(field.m_field_ptr)>>>();
+						});
+					return v;
+				}
+				else {
+					return Type{};
+				}
+			}
+			void blob_read_bytes(char* v, std::uint64_t sz) {
+				std::memcpy(v, m_read_ptr, sz);
+				m_read_ptr += sz;
+			}
+			template <typename Type>
+			Type read_blob() {
+				if constexpr (std::is_trivially_copyable_v<Type>) {
+					Type v{};
+					blob_read_bytes(reinterpret_cast<char*>(&v), sizeof(Type));
+					return v;
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					std::size_t cont_sz{ read<std::size_t>() };
+					std::remove_cvref_t<Type> v(cont_sz, '\0');
+					blob_read_bytes(reinterpret_cast<char*>(v.data()), cont_sz);
 					return v;
 				}
 				else if constexpr (reflection::is_associative_container_v<Type>) {

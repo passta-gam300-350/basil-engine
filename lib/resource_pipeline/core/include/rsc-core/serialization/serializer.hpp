@@ -26,6 +26,10 @@ namespace rp {
 				arc.write(val);
 			}
 			template <typename Type>
+			[[nodiscard]] static Type deserialize(std::byte const* blob) {
+				return in_archive_type{ blob }.read_blob<Type>();
+			}
+			template <typename Type>
 			[[nodiscard]] static Type deserialize(std::string const& arcpath) {
 				return in_archive_type{ arcpath }.read<Type>();
 			}

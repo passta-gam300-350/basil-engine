@@ -64,7 +64,7 @@ template <> struct rp::ResourceTypeLoader<rp::utility::string_hash(TYPENAME)>{		
 	using type = TYPE;																		\
 	static constexpr auto type_hash{ rp::utility::string_hash(TYPENAME) };					\
 	inline static type Load(std::byte const* data) {										\
-		return LOADER(rp::serialization::binary_serializer::deserialize<NATIVE>(data))		\
+		return LOADER(rp::serialization::binary_serializer::deserialize<NATIVE>(data));		\
 	}																						\
 	inline static void Unload(type&& data) {												\
 		return UNLOADER(std::forward<type>(data));											\

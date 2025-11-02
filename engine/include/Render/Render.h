@@ -29,6 +29,7 @@
 // Forward declarations
 class ShaderLibrary;
 class PrimitiveManager;
+class RenderResourceCache;
 class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
@@ -45,15 +46,15 @@ RegisterResourceType(MaterialResourceData, "material", MaterialResourceData, [](
  * Material properties can be stored per-entity for customization.
  */
 struct MeshRendererComponent {
-    bool isPrimitive = false;              ///< True if using a primitive mesh (cube/plane)
-    bool hasAttachedMaterial = false;      ///< True if using an external material asset
+    bool isPrimitive;              ///< True if using a primitive mesh (cube/plane)
+    bool hasAttachedMaterial;      ///< True if using an external material asset
 
     /// Primitive mesh types available
     enum struct PrimitiveType : std::uint8_t {
         NONE,
         CUBE,
         PLANE
-	} m_PrimitiveType{PrimitiveType::NONE};
+	} m_PrimitiveType;
     rp::TypeNameGuid<"mesh"> m_MeshGuid;     ///< GUID of the mesh asset (or zero for primitives)
     rp::TypeNameGuid<"material"> m_MaterialGuid; ///< GUID of the material asset
 
@@ -76,36 +77,16 @@ struct VisibilityComponent{
 
 /**
  * @brief Component for light sources (directional, point, spotlight)
- *
- * Aligned with graphics library's SubmittedLightData structure.
- * All fields are stored regardless of light type (Unity-style approach).
- *
- * USAGE GUIDE:
- * - Directional: Use Direction only (infinite range)
- * - Point: Use Range only (position from Transform)
- * - Spot: Use Direction, Range, InnerCone, OuterCone
  */
 struct LightComponent {
-    Light::Type m_Type = Light::Type::Directional;           ///< Light type (Directional/Point/Spotlight)
-
-    // === Common Properties (All Types) ===
-    glm::vec3 m_Color = glm::vec3(1.0f, 1.0f, 1.0f);         ///< Light color (RGB)
-    float m_DiffuseIntensity = 1.0f;                         ///< Direct light intensity (PBR)
-    float m_AmbientIntensity = 0.0f;                         ///< Ambient contribution (PBR)
-    bool m_IsEnabled = true;                                 ///< Enable/disable light
-
-    // === Shadow Settings (Unity-style) ===
-    bool m_CastShadows = true;                               ///< Enable shadow casting
-
-    // === Directional & Spot Only ===
-    glm::vec3 m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);    ///< [Dir/Spot] Light direction
-
-    // === Point & Spot Only ===
-    float m_Range = 10.0f;                                   ///< [Point/Spot] Max distance
-
-    // === Spot Only ===
-    float m_InnerCone = 30.0f;                               ///< [Spot] Inner angle (deg)
-    float m_OuterCone = 45.0f;                               ///< [Spot] Outer angle (deg)
+    Light::Type m_Type;           ///< Light type (Directional/Point/Spotlight)
+    glm::vec3 m_Direction;        ///< Direction for directional/spotlights
+    glm::vec3 m_Color;            ///< Light color (RGB)
+    float m_Intensity;            ///< Light intensity multiplier
+    float m_Range;                ///< Maximum range for point/spotlights
+    float m_InnerCone;            ///< Inner cone angle for spotlights (degrees)
+    float m_OuterCone;            ///< Outer cone angle for spotlights (degrees)
+    bool m_IsEnabled;             ///< Light enabled state
 };
 
 struct RenderSystem : public ecs::SystemBase {
@@ -120,8 +101,8 @@ public:
      * - Camera (default perspective camera)
      * - ShaderLibrary (loads essential shaders)
      * - PrimitiveManager (creates common primitives)
+     * - RenderResourceCache (empty cache)
      * - ComponentInitializer (ready for observers)
-     * - MaterialInstanceManager (material instance caching)
      */
     RenderSystem();
 
@@ -129,8 +110,8 @@ public:
      * @brief Destroy RenderSystem and cleanup subsystems
      *
      * Destruction order ensures no dangling dependencies:
-     * 1. ComponentInitializer
-     * 2. MaterialInstanceManager
+     * 1. ComponentInitializer (depends on other subsystems)
+     * 2. RenderResourceCache
      * 3. PrimitiveManager
      * 4. ShaderLibrary
      * 5. SceneRenderer
@@ -150,20 +131,10 @@ public:
      * @brief Complete initialization after construction
      *
      * Sets up debug visualization meshes. Called by Engine::Init().
-     * @note Must call SetupComponentObservers() after world is created/loaded
+     * @note Must call SetupComponentObservers() and InitializeExistingEntities()
+     *       after world is created/loaded
      */
     void Init();
-
-    /**
-     * @brief Disable HDR pipeline for editor compatibility
-     *
-     * When running inside the editor, HDR/tone mapping causes sRGB/gamma issues
-     * with ImGui rendering. This method disables the HDR pipeline to use linear
-     * RGB16F buffers directly, avoiding gamma correction conflicts.
-     *
-     * @note Only call this when running from the editor, not for standalone builds
-     */
-    void DisableHDRForEditor();
 
     /**
      * @brief Update rendering system for current frame
@@ -193,6 +164,8 @@ public:
      */
     void Exit();
 
+    void DisableHDRForEditor();
+
     // ========== System Setup Methods ==========
 
     /**
@@ -206,10 +179,20 @@ public:
     void SetupDebugVisualization();
 
     /**
-     * @brief Setup component observers for automatic cleanup
+     * @brief Initialize rendering resources for all existing entities
      *
-     * Registers observers that clean up rendering resources
-     * when MeshRendererComponent is removed from an entity.
+     * Must be called after loading a scene to initialize resources for
+     * entities that were created before observers were set up.
+     *
+     * @param world The ECS world containing existing entities
+     */
+    void InitializeExistingEntities(ecs::world& world);
+
+    /**
+     * @brief Setup component observers for automatic initialization
+     *
+     * Registers observers that automatically initialize rendering resources
+     * when MeshRendererComponent is added to an entity.
      *
      * @param world The ECS world to attach observers to
      */
@@ -218,36 +201,43 @@ public:
     // ========== Static API for External Access ==========
 
     /**
-     * @brief Register an editor-created mesh for rendering (in-memory, no file backing)
+     * @brief Register an editor-created mesh for use in rendering
      *
-     * Allows the editor to register meshes created at runtime (e.g., imported models,
-     * procedural geometry) before they are saved to disk. The mesh is immediately
-     * available for rendering via its GUID.
+     * Editor meshes are cached separately from entity meshes to allow
+     * reuse across multiple entities.
      *
-     * @param guid GUID to associate with the mesh (editor-assigned)
+     * @param guid Unique identifier for the mesh
      * @param mesh Shared pointer to the mesh resource
-     * @return true if registered successfully, false if GUID already exists
      *
-     * @note When the asset is saved, it transitions from in-memory to file-based
-     *       automatically (GUID remains the same)
+     * @note Delegates to Engine::GetRenderSystem() for backward compatibility
      */
-    static void RegisterEditorMesh(rp::Guid guid, std::shared_ptr<Mesh> mesh);
+    static bool RegisterEditorMesh(rp::Guid guid, std::shared_ptr<Mesh> mesh);
 
     /**
-     * @brief Register an editor-created material for rendering (in-memory, no file backing)
+     * @brief Register an editor-created material for use in rendering
      *
-     * Allows the editor to register materials created at runtime before they are
-     * saved to disk. The material is immediately available for rendering via its GUID.
-     *
-     * @param guid GUID to associate with the material (editor-assigned)
+     * @param guid Unique identifier for the material
      * @param material Shared pointer to the material resource
-     * @return true if registered successfully, false if GUID already exists
      *
-     * @note When the asset is saved, it transitions from in-memory to file-based
-     *       automatically (GUID remains the same)
+     * @note Delegates to Engine::GetRenderSystem() for backward compatibility
      */
-    static void RegisterEditorMaterial(rp::Guid guid, std::shared_ptr<Material> material);
+    static bool RegisterEditorMaterial(rp::Guid guid, std::shared_ptr<Material> material);
 
+    /**
+     * @brief Clear cached rendering resources for a specific entity
+     *
+     * Should be called when an entity is destroyed or its rendering components change.
+     *
+     * @param entityUID Unique identifier of the entity
+     */
+    static void ClearEntityResources(uint64_t entityUID);
+
+    /**
+     * @brief Clear all cached entity rendering resources
+     *
+     * Useful for scene unload or major state transitions.
+     */
+    static void ClearAllEntityCaches();
 
     /**
      * @brief Update cached material properties from MeshRendererComponent
@@ -357,6 +347,16 @@ private:
     // ========== Internal Methods ==========
 
     /**
+     * @brief Initialize rendering resources for a MeshRendererComponent
+     *
+     * Called automatically by ComponentInitializer when MeshRendererComponent is added.
+     *
+     * @param registry EnTT registry containing the entity
+     * @param entity Entity handle with MeshRendererComponent
+     */
+    void InitializeMeshRenderer(entt::registry& registry, entt::entity entity);
+
+    /**
      * @brief Handle MeshRendererComponent updates (sync material properties)
      *
      * Called automatically when registry.patch<MeshRendererComponent>() is used.
@@ -366,27 +366,12 @@ private:
      */
     void OnMeshRendererUpdated(entt::registry& registry, entt::entity entity);
 
-    /**
-     * @brief Helper to load mesh resource from GUID or primitive type
-     * @param meshComp MeshRendererComponent containing resource info
-     * @return Mesh pointer, or nullptr if not found
-     */
-    std::shared_ptr<Mesh> LoadMeshResource(const MeshRendererComponent& meshComp) const;
-
-    /**
-     * @brief Helper to load material resource from GUID or create default
-     * @param materialGuid Material GUID to load
-     * @param hasAttachedMaterial Whether the component has an attached material
-     * @param entityUID Entity ID for default material naming
-     * @return Material pointer, or nullptr if failed
-     */
-    std::shared_ptr<Material> LoadMaterialResource(const Resource::Guid& materialGuid, bool hasAttachedMaterial, uint64_t entityUID) const;
-
     // ========== Render Subsystems ==========
 
     std::unique_ptr<ShaderLibrary> m_ShaderLibrary;             ///< Shader loading and caching
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
-    std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component lifecycle management
+    std::unique_ptr<RenderResourceCache> m_ResourceCache;       ///< Entity resource caching
+    std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
 
     // ========== Material Property Blocks ==========

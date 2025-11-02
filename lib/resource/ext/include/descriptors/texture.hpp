@@ -2,18 +2,20 @@
 #define RESOURCE_DESCRIPTOR_TEXTURE
 
 #include <rsc-ext/descriptor.hpp>
-#include <tinyddsloader.h>
+#include "serialization/serializer.h"
 
-enum CompressionLevel {
-	BC1,
-	BC3,
-	BC4,
-	BC5
+enum CompressionLevel : std::uint8_t {
+	BC1_RGB4 = 71u, //4bit rgb, no alpha or 1 bit alpha
+	BC3_RGBA8 = 77u, //full 8bit rgba
+	BC4_R4 = 80u, //single channel for height maps and stuff
+	BC5_RG8 = 83u //dual channel 8 bit, for normals
 };
 
 struct TextureDescriptor {
+	rp::descriptor_base base;
+
 	std::string file_source;
-	CompressionLevel compression
+	CompressionLevel compression;
 };
 
 #endif

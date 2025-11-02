@@ -27,7 +27,7 @@ namespace YAML {
         static bool decode(const Node& node, ResourceSystem::FileEntry& rhs) {
             if (!node.IsMap() || !node["guid"] || !node["path"])
                 return false;
-            rhs.m_Guid = Resource::Guid::to_guid(node["guid"].as<std::string>());
+            rhs.m_Guid = rp::Guid::to_guid(node["guid"].as<std::string>());
             rhs.m_Path = node["path"].as<std::string>();
             rhs.m_Offset = node["byte"].as<std::uint64_t>();
             rhs.m_Size = node["size"].as<std::uint64_t>();
@@ -36,7 +36,7 @@ namespace YAML {
     };
 }
 
-const char* ResourceSystem::GetMappedFilePtr(Resource::Guid guid)
+const char* ResourceSystem::GetMappedFilePtr(rp::Guid guid)
 {
     assert(m_FileEntries.find(guid) != m_FileEntries.end() && "File entry does not exist!");
     //assert(m_FileEntries.exist(guid) && "File entry does not exist!");

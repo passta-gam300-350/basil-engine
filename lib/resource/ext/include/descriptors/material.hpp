@@ -1,18 +1,17 @@
-#ifndef RESOURCE_DESCRIPTOR_TEXTURE
-#define RESOURCE_DESCRIPTOR_TEXTURE
+#ifndef RESOURCE_DESCRIPTOR_MATERIAL
+#define RESOURCE_DESCRIPTOR_MATERIAL
 
 #include <rsc-ext/descriptor.hpp>
+#include <native/material.h>
 
 struct MaterialDescriptor {
 	rp::descriptor_base base;
 
-	std::string vert_name;
-	std::string frag_name;
-
-	std::unordered_map<std::string, float> FloatProperties;
-	std::unordered_map<std::string, glm::vec3> Vec3Properties;
-	std::unordered_map<std::string, glm::vec4> Vec4Properties;
-	std::unordered_map<std::string, rp::Guid> TextureProperties;
+	MaterialResourceData material;
 };
+
+inline void CreateMaterial(MaterialDescriptor const& matDesc) {
+	SerializeBinary(matDesc.material, matDesc.base.m_guid, ".material");
+}
 
 #endif

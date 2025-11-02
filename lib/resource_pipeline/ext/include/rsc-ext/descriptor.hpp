@@ -8,6 +8,8 @@ namespace rp {
 	struct descriptor_base {
 		Guid m_guid;
 		std::string m_importer;
+		std::string m_name;
+		std::uint64_t m_importer_type;
 	};
 }
 
