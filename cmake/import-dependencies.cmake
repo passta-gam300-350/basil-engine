@@ -382,18 +382,6 @@ macro(import_fmod)
         IMPORTED_IMPLIB_GAMERELEASE ${FMOD_STUDIO_LIBRARY_RELEASE}
         INTERFACE_INCLUDE_DIRECTORIES ${FMOD_STUDIO_API_INC_DIR}
         )
-
-            # Support custom configuration: Debug_Static_Analysis
-    set_target_properties(fmod PROPERTIES
-        IMPORTED_LOCATION_DEBUG_STATIC_ANALYSIS ${FMOD_CORE_API_LIB_DIR}/fmodL.dll
-        IMPORTED_IMPLIB_DEBUG_STATIC_ANALYSIS ${FMOD_CORE_LIBRARY_DEBUG}
-    )
-
-    set_target_properties(fmodstudio PROPERTIES
-        IMPORTED_LOCATION_DEBUG_STATIC_ANALYSIS ${FMOD_STUDIO_API_LIB_DIR}/fmodstudioL.dll
-        IMPORTED_IMPLIB_DEBUG_STATIC_ANALYSIS ${FMOD_STUDIO_LIBRARY_DEBUG}
-    )
-
 endmacro()
 
 # Import Mono
