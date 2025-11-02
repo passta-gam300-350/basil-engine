@@ -1,8 +1,10 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleComponent.h"
-#include "components/transform.h"  
+#include "components/transform.h"
 #include "Scene/SceneRenderer.h"
 #include "Ecs/ecs.h"
+#include "Manager/ResourceSystem.hpp"
+#include "Resources/Texture.h"
 
 
 void ParticleSystem::Init()
@@ -38,7 +40,15 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 			particleComp.emitter->Update(dt);
 			ParticleRenderData renderData;
 			renderData.particles = particleComp.emitter->GetParticles();
-			renderData.texture = particleComp.texture;
+
+			// Resolve texture GUID to actual texture resource
+			if (particleComp.texture != Resource::null_guid) {
+				auto* texturePtr = ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(particleComp.texture);
+				if (texturePtr) {
+					renderData.texture = *texturePtr;
+				}
+			}
+
 			renderData.blendMode = particleComp.blendSettings;
 			renderData.depthWrite = particleComp.depthWrite;
 			renderData.renderLayer = particleComp.renderLayer;
