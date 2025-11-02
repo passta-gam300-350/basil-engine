@@ -58,6 +58,10 @@ public:
         return GetFramebuffer() ? GetFramebuffer()->GetColorAttachmentRendererID(0) : 0;
     }
 
+    // Background clear color configuration
+    void SetClearColor(const glm::vec4& color) { m_ClearColor = color; }
+    glm::vec4 GetClearColor() const { return m_ClearColor; }
+
 private:
     // Render skybox if enabled
     void RenderSkybox(RenderContext& context);
@@ -67,5 +71,8 @@ private:
     std::shared_ptr<Shader> m_SkyboxShader;
     std::shared_ptr<Mesh> m_SkyboxMesh;
     bool m_SkyboxEnabled = false;
+
+    // Background clear color (default: light gray)
+    glm::vec4 m_ClearColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 
 };

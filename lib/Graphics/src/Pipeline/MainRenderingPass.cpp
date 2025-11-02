@@ -48,7 +48,7 @@ void MainRenderingPass::Execute(RenderContext& context)
 
     // Clear color, depth, and stencil buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 1.0f,  // Gray background
+        m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a,  // Configurable background color
         true,                      // clearColor
         true,                      // clearDepth
         true                       // clearStencil (needed for outline rendering)
