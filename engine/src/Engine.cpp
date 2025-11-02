@@ -24,6 +24,7 @@ extern "C" {
 #endif
 #include "Manager/ObjectManager.hpp"
 #include "Manager/MonoEntityManager.hpp"
+#include <System/BindingSystem.hpp>
 
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -102,6 +103,7 @@ void Engine::Init(std::string const& cfg ) {
 	MonoEntityManager::GetInstance().initialize();
 	MonoEntityManager::GetInstance().StartCompilation();
 	BehaviourSystem::Instance().Init();
+	BindingSystem::RegisterBindings();
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
@@ -126,7 +128,7 @@ void Engine::CoreUpdate() {
 void Engine::Update() {
 	try {
 		Engine& instance{ Instance() };
-		std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
+		//std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
 				if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
@@ -226,6 +228,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	RenderSystem::System().Init();
 	BehaviourSystem::Instance().Init();
+	BindingSystem::RegisterBindings();
 
 	Scheduler::CompileJobSchedule();
 

@@ -5,10 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using Engine.Bindings;
 namespace BasilEngine.Components
 {
+    [Disabled]
     public class Transform : Component
     {
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern void SetPosition(in Vector3 position);
 

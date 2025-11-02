@@ -14,6 +14,18 @@ struct CSKlassInstance;
 
 struct CSKlass
 {
+	struct FieldInfo
+	{
+		MonoClassField* field;
+		MonoType* type;
+		const char* name;
+		unsigned offset;
+
+	};
+
+
+	std::vector<FieldInfo> m_FieldInfos;
+
 	CSKlass() = default;
 	CSKlass(MonoImage* image, std::string_view namespaceName, std::string_view className);
 
@@ -35,6 +47,9 @@ struct CSKlass
 
 	MonoMethod* GetMethod(const char* methodName, int paramCount = -1) const;
 
+	FieldInfo* ResolveField(const char* fieldName);
+	FieldInfo* MakeField(MonoClassField* field);
+	
 private:
 	MonoMethod* ResolveMethod(const char* methodName, int paramCount) const;
 	std::string BuildCacheKey(const char* methodName, int paramCount) const;
@@ -58,7 +73,7 @@ struct CSKlassInstance
 	[[nodiscard]] bool IsValid() const noexcept;
 	[[nodiscard]] const CSKlass* Klass() const noexcept;
 	[[nodiscard]] MonoObject* Object() const noexcept;
-	[[nodiscard]] void UpdateManaged() noexcept;
+	 void UpdateManaged() noexcept;
 
 	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
 

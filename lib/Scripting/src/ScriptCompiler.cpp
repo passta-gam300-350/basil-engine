@@ -157,7 +157,7 @@ void ScriptCompiler::CompileAsync()
 	*/
 	MonoString* output = mono_string_new(compiler_d, compile_settings.output_name.c_str());
 	MonoString* output_dir = mono_string_new(compiler_d, compile_settings.output_directory.c_str());
-	mono_bool val = compile_settings.optimize ? 1 : 0;
+	//[[maybe_unused]] mono_bool val = compile_settings.optimize ? 1 : 0;
 	mono_bool isdll = compile_settings.isDLL ? 1 : 0;
 	mono_bool debug = compile_settings.debug ? 1 : 0;
 	mono_bool optimize = compile_settings.optimize ? 1 : 0;

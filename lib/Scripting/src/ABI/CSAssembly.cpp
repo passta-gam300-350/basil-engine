@@ -7,6 +7,7 @@
 CSAssembly::CSAssembly(std::filesystem::path assemblyPath)
 	: m_path(std::move(assemblyPath))
 {
+	m_name = m_path.stem().string();
 }
 
 bool CSAssembly::Load()

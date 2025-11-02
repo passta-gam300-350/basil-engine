@@ -1,12 +1,13 @@
 
 using BasilEngine.Components;
-using BasilEngine.Mathematics;  
+using BasilEngine.Mathematics;
+using BasilEngine.Debug;
 using System;
 using System.Numerics;
 
 public class UserTest : Behavior
 {
-    int counter = 0;
+    public int counter = 0;
     public void Init()
     {
 
@@ -14,7 +15,9 @@ public class UserTest : Behavior
     public void Update()
     {
         counter++;
-        Console.WriteLine($"Hello from C# :) {counter}");
+        Logger.Log($"Hello from C# :) {counter}");
+        Logger.Warn($"This is a warning message {counter}");
+        Logger.Error($"This is an error message {counter}");
     }
     
     public void FixedUpdate()

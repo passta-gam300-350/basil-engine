@@ -55,7 +55,7 @@ void BehaviourSystem::Init()
 
 
 }
-void BehaviourSystem::Update(ecs::world& world, float dt)
+void BehaviourSystem::Update(ecs::world& world, float)
 {
 	for (auto entity : world.filter_entities<behaviour>()) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
@@ -128,7 +128,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 			return;
 		}
 	}
-	bool derived = klass->IsDerivedFrom("BasilEngine.Components.Behaviour");
+	bool derived = klass->IsDerivedFrom("BasilEngine.Components.Behavior");
 	if (!derived) {
 		spdlog::warn("[BehaviourSystem] Class {}.{} is not derived from BasilEngine.Behaviour", klass_ns, klassname);
 		return;

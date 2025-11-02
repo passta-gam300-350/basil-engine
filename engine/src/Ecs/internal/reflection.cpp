@@ -5,6 +5,7 @@
 #include "Component/Transform.hpp"
 #include "Render/Render.h"
 #include "Render/Camera.h"
+#include <components/behaviour.hpp>
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -44,7 +45,7 @@ void ReflectionRegistry::SetupNativeTypes() {
 		MemberRegistrationV<&glm::vec3::x, "x">,
 		MemberRegistrationV<&glm::vec3::y, "y">,
 		MemberRegistrationV<&glm::vec3::z, "z">
-	);
+	);	
 
 	RegisterReflectionComponent<glm::vec4>(
 		"vec4",
@@ -102,6 +103,17 @@ void ReflectionRegistry::SetupNativeTypes() {
 		InterfaceRegistrationV < &SetMatCellValue<glm::mat4, 3, 3>, &GetMatCellValue<glm::mat4,3, 3>, "m33" >
 	);
 
+	// Register vector of strings
+	
+	/*RegisterReflectionContainer<std::vector<std::string>, std::string>(
+		"vector<string>",
+		nullptr
+	);*/
+
+	/*RegisterReflectionContainer<std::vector<std::string>>(
+		"vector<string>",
+		nullptr
+	);*/
 
 	
 
@@ -139,6 +151,7 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	);
 
+
 	//RegisterReflectionComponent<RigidBodyComponent>(
 	//			"RigidBodyComponent",
 	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
@@ -175,4 +188,10 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&CameraComponent::m_Yaw, "m_Yaw">,
 		MemberRegistrationV<&CameraComponent::m_Pitch, "m_Pitch">
 	);
+
+	RegisterReflectionComponent<behaviour>(
+		"Behaviour",
+		MemberRegistrationV<&behaviour::classesName, "classesName">
+	);
+	
 }

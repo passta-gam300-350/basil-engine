@@ -9,7 +9,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 	std::string working_dir = Editor::GetInstance().GetConfig().project_workingDir;
 	std::string asset_dir = working_dir + "assets";
 
-	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "scripts";
+	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "assets"/ "scripts";
 	if (std::filesystem::exists(scripts_dir)) {
 		MonoEntityManager::GetInstance().AddSearchDirectory(scripts_dir.string().c_str());
 	}
@@ -77,34 +77,12 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 			}
 		}
 	}
-	int create_ct = m_entity_create_count;
-	m_entity_create_count = 0;
-	while (create_ct-- > 0) {
-		w.add_entity();
+	while (!m_main_thread_tasks.empty()) {
+		auto& task = m_main_thread_tasks.front();
+		task();
+		m_main_thread_tasks.pop();
 	}
-	while (!m_entity_component_update_queue.empty()) {
-		auto [ehdl, type_id, is_delete] = m_entity_component_update_queue.front();
-		m_entity_component_update_queue.pop();
-		ecs::entity entity{ ehdl };
-		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
-		if (auto* storage = w.impl.get_registry().storage(ReflectionRegistry::types()[type_id].info().index())) {
-			if (!storage->contains(enttntt)) {
-				continue;
-			}
-			if (is_delete) {
-				storage->erase(enttntt);
-			}
-			else {
-				storage->push(enttntt);
-			}
-		}
-	}
-	while (!m_entity_delete_queue.empty()) {
-		auto ehdl = m_entity_delete_queue.front();
-		m_entity_delete_queue.pop();
-		ecs::entity entity{ ehdl };
-		entity.destroy();
-	}
+	
 }
 
 void EngineContainerService::reset() {
@@ -158,6 +136,9 @@ void EngineContainerService::init() {
 
 void EngineContainerService::pause() {
 	Engine::SetState(Engine::Info::State::Pause);
+}
+
+void EngineContainerService::create_cube() {
 }
 
 void EngineContainerService::end() {

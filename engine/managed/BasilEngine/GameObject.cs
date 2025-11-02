@@ -13,7 +13,7 @@ namespace BasilEngine
     /// <summary>
     /// Represents a game object in the Basil Engine.
     /// </summary>
-
+    [Disabled]
     public class GameObject : NativeObject
     {
         // TODO: Add Glue Gen Attribute

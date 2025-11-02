@@ -5,7 +5,7 @@ set(CSPROJPath ${ASM_NAME}/${ASM_NAME}.csproj)
 set(OUTPUT_DIR ../CPPGlue)
 
 
-option(GEN_CS "Use Csharp glue generator" OFF)
+option(GEN_CS "Use Csharp glue generator" ON)
 
 
 # Engine API Side
@@ -27,7 +27,7 @@ execute_process(
 
 message(STATUS "Managed output: ${DOTNET_OUTPUT}")
 
-if (GEN_CS)
+if (TRUE)
 add_custom_command(
   OUTPUT "${DOTNET_OUTPUT}.timestamp"
   COMMAND ${TOOL_DOTNET} build ${CSPROJPath} -c ${DOTNET_BUILDCONFIG}
@@ -54,7 +54,8 @@ execute_process(
 )
 message(STATUS  "${TOOL_CSBRIDGE} ${DOTNET_OUTPUT} -v -o ${OUTPUT_DIR}")
 # Call CSBridge
-if (GEN_CS)
+if (TRUE)
+message(STATUS "Building CS CODE")
 execute_process(
     COMMAND "${TOOL_CSBRIDGE}" "${DOTNET_OUTPUT}" -v -o ${OUTPUT_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Bindings;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace BasilEngine.Mathematics
 {
+    [Disabled]
     /// <summary>
     /// A Vector2D struct that provides 2D vector operations.
     /// </summary>

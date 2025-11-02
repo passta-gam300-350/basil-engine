@@ -3,9 +3,16 @@
 #include "MonoManager.hpp"
 #include "MonoLoader.hpp"
 #include "ScriptCompiler.hpp"
+#include "Manager/MonoTypeResolver.hpp"
+#include "Manager/MonoReflectionRegistry.hpp"
+#include "Reflection/MonoReflectionBackend.hpp"
+#include "MonoResolver/MonoTypeDescriptor.hpp"
 
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <mono/metadata/metadata.h>
+#include <mono/metadata/attrdefs.h>
 
 
 MonoEntityManager::MonoEntityManager() {
@@ -91,6 +98,47 @@ void MonoEntityManager::AddNamedKlass(const char* klassName, const char* klassNa
 
 	m_TypeRegistry.Register(fullName, klassID);
 
+	MonoTypeDescriptor descriptor{};
+	descriptor.kind = Kind::Custom;
+	descriptor.managedKind = ManagedKind::Custom;
+	descriptor.managed_name = fullName;
+	descriptor.cpp_name = fullName;
+	descriptor.isEngineType = isBackend;
+	descriptor.isUserType = !isBackend;
+	descriptor.isSerializable = true;
+	descriptor.isPublic = true;
+	descriptor.guid = klassID;
+
+	const MonoTypeDescriptor* typeDescriptor = MonoTypeResolver::Instance().RegisterDescriptor(std::move(descriptor));
+
+	ManagedAssembly* assembly = GetAssembly(isBackend ? BACKEND_ASSEMBLY_ID : PRIMARY_ASSEMBLY_ID);
+	if (assembly)
+	{
+		const std::string assemblyName(assembly->Name());
+		const std::string fullNameCopy = fullName;
+		MonoReflectionRegistry& registry = MonoReflectionRegistry::Instance();
+		ClassNode* classNode = registry.GetOrAddClass(assemblyName, fullNameCopy);
+		if (classNode)
+		{
+			if (!classNode->descriptor)
+			{
+				classNode->descriptor = typeDescriptor;
+			}
+
+			if (CSKlass* klassPtr = GetKlass(klassID))
+			{
+				MonoReflectionBackend::EnumerateField(klassPtr, [assemblyName, fullNameCopy, &registry](const char* fieldName, const char* typeName, CSKlass* klass, MonoClassField* field)
+					{
+						(void)klass;
+						const bool isStatic = (mono_field_get_flags(field) & MONO_FIELD_ATTR_STATIC) != 0;
+						const uint32_t accessMask = mono_field_get_flags(field) & MONO_FIELD_ATTR_FIELD_ACCESS_MASK;
+						const bool isPublic = accessMask == MONO_FIELD_ATTR_PUBLIC;
+						registry.RegisterField(assemblyName, fullNameCopy, fieldName ? fieldName : "", typeName ? typeName : "", isStatic, isPublic);
+					});
+			}
+		}
+	}
+
 }
 
 
@@ -104,6 +152,58 @@ void MonoEntityManager::AddNamedKlass(std::shared_ptr<CSKlass> klass) {
 		fullName = std::string(klass->Namespace()) + "." + std::string(klass->Name());
 	}
 	m_TypeRegistry.Register(fullName, klassID);
+
+	MonoTypeDescriptor descriptor{};
+	descriptor.kind = Kind::Custom;
+	descriptor.managedKind = ManagedKind::Custom;
+	descriptor.managed_name = fullName;
+	descriptor.cpp_name = fullName;
+	descriptor.isEngineType = false;
+	descriptor.isUserType = true;
+	descriptor.isSerializable = true;
+	descriptor.isPublic = true;
+	descriptor.guid = klassID;
+
+	const MonoTypeDescriptor* typeDescriptor = MonoTypeResolver::Instance().RegisterDescriptor(std::move(descriptor));
+
+	ManagedAssembly* owningAssembly = nullptr;
+	if (klass)
+	{
+		MonoImage* image = klass->Image();
+		if (image)
+		{
+			for (auto& assemblyPtr : m_Assemblies)
+			{
+				if (assemblyPtr && assemblyPtr->Image() == image)
+				{
+					owningAssembly = assemblyPtr.get();
+					break;
+				}
+			}
+		}
+	}
+
+	if (owningAssembly && klass)
+	{
+		const std::string assemblyName(owningAssembly->Name());
+		const std::string fullNameCopy = fullName;
+
+		MonoReflectionRegistry& registry = MonoReflectionRegistry::Instance();
+		ClassNode* classNode = registry.GetOrAddClass(assemblyName, fullNameCopy);
+		if (classNode && !classNode->descriptor)
+		{
+			classNode->descriptor = typeDescriptor;
+		}
+
+	MonoReflectionBackend::EnumerateField(klass.get(), [assemblyName, fullNameCopy, &registry](const char* fieldName, const char* typeName, CSKlass* csKlass, MonoClassField* field)
+		{
+			(void)csKlass;
+			const bool isStatic = (mono_field_get_flags(field) & MONO_FIELD_ATTR_STATIC) != 0;
+			const uint32_t accessMask = mono_field_get_flags(field) & MONO_FIELD_ATTR_FIELD_ACCESS_MASK;
+			const bool isPublic = accessMask == MONO_FIELD_ATTR_PUBLIC;
+			registry.RegisterField(assemblyName, fullNameCopy, fieldName ? fieldName : "", typeName ? typeName : "", isStatic, isPublic);
+		});
+}
 }
 
 
@@ -168,6 +268,7 @@ void MonoEntityManager::ClearAll() {
 	m_EntityMap.clear();
 	m_NamedKlassMap.clear();
 	m_TypeRegistry = MonoTypeRegistry{};
+	MonoReflectionRegistry::Instance().Clear();
 }
 
 const char* scriptBuckets[] = {
@@ -185,6 +286,8 @@ void MonoEntityManager::initialize() {
 	m_EntityMap.clear();
 
 	MonoManager::Initialize();
+	MonoTypeResolver::Instance();
+	MonoReflectionRegistry::Instance().Clear();
 
 
 
@@ -202,7 +305,7 @@ void MonoEntityManager::StartCompilation() {
 	std::filesystem::path asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
 
 	//TODO: Move it to cmake build
-	std::filesystem::path backendPath = R"(C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\BasilEngine.dll)";
+	std::filesystem::path backendPath = R"(C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll)";
 
 	if (preCompiled) {
 		std::cout << "Using pre-compiled assemblies." << std::endl;

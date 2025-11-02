@@ -41,13 +41,17 @@ Technology is prohibited.
 #include "Core/Window.h"
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
+#include "Bindings/MANAGED_CONSOLE.hpp"
+#include "serialisation/guid.h"
 
 #include "Physics/Physics_System.h"
 #include "Manager/ObjectManager.hpp"
 #include <components/behaviour.hpp>
 #include <System/BehaviourSystem.hpp>
 #include <Manager/MonoEntityManager.hpp>
+#include <Manager/MonoReflectionRegistry.hpp>
 #include <Messaging/Messaging_System.h>
+#include "MonoResolver/MonoTypeDescriptor.hpp"
 #define UNREF_PARAM(x) x;
 
 PhysicsSystem PhysSys;
@@ -69,7 +73,7 @@ void EditorMain::init()
 	UNREF_PARAM(mode);
 	// Set maximized
 	glfwMaximizeWindow(window);
-	
+
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
@@ -456,6 +460,100 @@ void EditorMain::Render_MenuBar()
 
 	if (ImGui::BeginMenu("Help"))
 	{
+		if (ImGui::MenuItem("Dump Mono Reflection Tree"))
+		{
+			MonoReflectionRegistry::Instance().VisitAssemblies([](const AssemblyNode& assembly)
+			{
+				const std::string assemblyName = assembly.name.empty() ? std::string("<Unnamed>") : assembly.name;
+				SPDLOG_INFO("[Reflection] Assembly: {}", assemblyName);
+
+				for (const auto& [className, classNodePtr] : assembly.classes)
+				{
+					if (!classNodePtr)
+					{
+						continue;
+					}
+
+					const ClassNode& classNode = *classNodePtr;
+					const MonoTypeDescriptor* classDescriptor = classNode.descriptor;
+					const std::string classManaged = classDescriptor ? classDescriptor->managed_name : className;
+				const std::string classCpp = classDescriptor && !classDescriptor->cpp_name.empty()
+					? classDescriptor->cpp_name
+					: std::string("<cpp unknown>");
+				std::string classGuidStr;
+				if (classDescriptor && classDescriptor->guid != Resource::null_guid)
+				{
+					classGuidStr = classDescriptor->guid.to_hex();
+				}
+			std::string classExtra;
+			if (!classGuidStr.empty())
+			{
+				classExtra += " | guid=";
+				classExtra += classGuidStr;
+			}
+			SPDLOG_INFO("[Reflection]   Class: {} | managed=\"{}\" | cpp=\"{}\"{}", className, classManaged, classCpp, classExtra);
+
+			for (const auto& [fieldName, fieldNodePtr] : classNode.fields)
+			{
+				if (!fieldNodePtr)
+				{
+					continue;
+				}
+
+				const FieldNode& fieldNode = *fieldNodePtr;
+				if (!fieldNode.isPublic)
+				{
+					continue;
+				}
+
+				const MonoTypeDescriptor* fieldDescriptor = fieldNode.descriptor;
+				const std::string fieldManaged = fieldDescriptor ? fieldDescriptor->managed_name : fieldNode.type;
+				const std::string fieldCpp = fieldDescriptor && !fieldDescriptor->cpp_name.empty()
+					? fieldDescriptor->cpp_name
+					: std::string("<cpp unknown>");
+			std::string fieldGuidStr;
+			if (fieldDescriptor && fieldDescriptor->guid != Resource::null_guid)
+			{
+				fieldGuidStr = fieldDescriptor->guid.to_hex();
+			}
+			std::string fieldExtra;
+			if (fieldNode.isStatic)
+			{
+				fieldExtra += " [static]";
+			}
+			if (!fieldGuidStr.empty())
+			{
+				if (!fieldExtra.empty())
+				{
+					fieldExtra += " ";
+				}
+				fieldExtra += "| guid=";
+				fieldExtra += fieldGuidStr;
+			}
+			SPDLOG_INFO("[Reflection]     Field: {} -> managed=\"{}\" | cpp=\"{}\"{}", fieldName, fieldManaged, fieldCpp, fieldExtra);
+				if (fieldDescriptor && fieldDescriptor->elementDescriptor)
+				{
+					const MonoTypeDescriptor* element = fieldDescriptor->elementDescriptor;
+					const std::string elementManaged = element->managed_name;
+					const std::string elementCpp = !element->cpp_name.empty() ? element->cpp_name : std::string("<cpp unknown>");
+				std::string elementGuidStr;
+				if (element->guid != Resource::null_guid)
+				{
+					elementGuidStr = element->guid.to_hex();
+				}
+				std::string elementExtra;
+				if (!elementGuidStr.empty())
+				{
+					elementExtra += " | guid=";
+					elementExtra += elementGuidStr;
+				}
+				SPDLOG_INFO("[Reflection]       Element -> managed=\"{}\" | cpp=\"{}\"{}", elementManaged, elementCpp, elementExtra);
+				}
+					}
+				}
+			});
+		}
+
 		ImGui::MenuItem("Documentation");
 		if (ImGui::MenuItem("About"))
 		{
@@ -647,11 +745,119 @@ void EditorMain::Render_Profiler()
 }
 void EditorMain::Render_Console()
 {
+
 	ImGui::Begin("Console");
+	
+	ImGui::PushID("ConsoleClearBtn");
+	bool clearConsole = ImGui::Button("Clear Console");
+	ImGui::PopID();
+	static unsigned char filterType = 0x07; // All types enabled by default (Info, Warning, Error)
+	auto consoleMessages = ManagedConsole::TryGetMessages(filterType);
+	if (filterType & 0x01) {
+		//Dark green color for info and ux
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.0f, 1.0f)); // Green
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.7f, 0.0f, 1.0f));
+
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("InfoFilterBtn");
+	if (ImGui::Button("Info")) {
+		// Toggle Info filter
+		filterType ^= 0x01;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	if (filterType & 0x02) {
+		//Dark yellow color for warning
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.0f, 1.0f)); // Yellow
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.7f, 0.0f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("WarningFilterBtn");
+	if (ImGui::Button("Warning")) {
+		// Toggle Warning filter
+		filterType ^= 0x02;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	if (filterType & 0x04) {
+		//Dark red color for error
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.0f, 0.0f, 1.0f)); // Red
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.0f, 0.0f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("ErrorFilterBtn");
+	if (ImGui::Button("Error")) {
+		// Toggle Error filter
+		filterType ^= 0x04;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+
 	// Example log messages
-	ImGui::Text("Log Message 1");
-	ImGui::Text("Log Message 2");
-	ImGui::Text("Log Message 3");
+
+	if (!consoleMessages.empty())
+	{
+		ImGui::BeginChild("ConsoleScrollRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+		for (const auto& msg : consoleMessages) {
+			switch (msg.second.type) {
+			case ManagedConsole::Message::Type::Info:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[INFO]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[INFO]: %s", msg.second.content.c_str());
+				break;
+			case ManagedConsole::Message::Type::Warning:
+				//Yellow color
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[WARNING]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[WARNING]: %s", msg.second.content.c_str());
+				break;
+			case ManagedConsole::Message::Type::Error:
+				//Red color
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[ERROR]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[ERROR]: %s", msg.second.content.c_str());
+				break;
+			default:
+				ImGui::Text("[UNKNOWN]: %s", msg.second.content.c_str());
+				break;
+			}
+		}
+
+		if (clearConsole)
+		{
+			ManagedConsole::Shutdown();
+		}
+		ImGui::EndChild();
+	}
+
+
+
+
 	ImGui::End();
 }
 
@@ -1055,31 +1261,35 @@ void EditorMain::CreateDefaultEntity()
 
 void EditorMain::CreatePlaneEntity()
 {
-	ecs::world world = Engine::GetWorld();
+	auto func = [] {
+		ecs::world world = Engine::GetWorld();
 
-	// Create new entity
-	auto entity = ObjectManager::GetInstance().CreateGameObject({}, { 1,1,1 }, {});
-
-
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
+		// Create new entity
+		auto entity = ObjectManager::GetInstance().CreateGameObject({}, { 1,1,1 }, {});
 
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer;
-	meshRenderer.isPrimitive = true;
-	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
-	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
-	meshRenderer.material.metallic = 0.1f;
-	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	world.add_component_to_entity<behaviour>(entity, behaviour{ {"UserTest"},{} });
-	BehaviourSystem::Instance().RegisterComponent(entity);
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer;
+		meshRenderer.isPrimitive = true;
+		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
+		meshRenderer.hasAttachedMaterial = false;
+		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
+		meshRenderer.material.metallic = 0.1f;
+		meshRenderer.material.roughness = 0.8f;
+		meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+		world.add_component_to_entity<behaviour>(entity, behaviour{ {"UserTest"},{} });
+		BehaviourSystem::Instance().RegisterComponent(entity);
+	};
+
+	engineService.m_cont->m_main_thread_tasks.push(func);
 
 
 
@@ -1304,31 +1514,41 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 {
 	assert(scale.x > 0 && scale.y > 0 && scale.z > 0 && "Scale must be positive");
 
-	auto world = Engine::GetWorld();
-	auto entity = world.add_entity();
+
 
 	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ scale, glm::vec3{}, position });
+	engineService.m_cont->m_main_thread_tasks.push([position, scale, color] {
+		auto world = Engine::GetWorld();
+		auto entity = world.add_entity();
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ scale, glm::vec3{}, position });
 
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid{}; // Use 0 for default material
+		// Use shared primitive mesh and default material
+		Resource::Guid meshGuid{}; // Use 0 for primitive shared meshes
+		Resource::Guid materialGuid{}; // Use 0 for default material
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer;
-	meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
-	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer.m_MeshGuid = meshGuid;
-	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_MaterialGuid = materialGuid;
-	meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
-	meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer.material.roughness = 0.6f; // Medium roughness
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer;
+		meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
+		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
+		meshRenderer.m_MeshGuid = meshGuid;
+		meshRenderer.hasAttachedMaterial = false;
+		meshRenderer.material.m_MaterialGuid = materialGuid;
+		meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
+		meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
+		meshRenderer.material.roughness = 0.6f; // Medium roughness
 
 
-	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	});
+
+
+
+
+
+
 }
 
 void EditorMain::CreateCubeGrid(int gridSize, float spacing)

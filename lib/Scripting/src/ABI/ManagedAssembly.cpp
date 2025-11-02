@@ -5,6 +5,7 @@
 ManagedAssembly::ManagedAssembly(std::unique_ptr<CSAssembly> assembly)
 	: assembly(std::move(assembly)), assemblyHandle(nullptr), isLoaded(false)
 {
+	
 }
 
 bool ManagedAssembly::Load(MonoDomain* domain)

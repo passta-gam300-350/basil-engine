@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Engine.Bindings;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace BasilEngine.Rendering
 {
+    [Disabled]
     public struct Color32
     {
         byte r, g, b, a;

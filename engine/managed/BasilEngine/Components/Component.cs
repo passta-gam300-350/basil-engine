@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace BasilEngine.Components
 {
+    [Disabled]
     [NativeClass("Component", "Engine::Mono")]
     [NativeHeader("Engine/Component.h")]
     [NativeHeader("Engine/GameObject.h")]
+        
 
     public class Component : NativeObject
     {

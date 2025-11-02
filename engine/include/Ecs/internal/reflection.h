@@ -3,6 +3,8 @@
 #include "serialisation/guid.h"
 #include <entt/entt.hpp>
 #include <entt/meta/meta.hpp>
+#include <entt/meta/container.hpp>
+#include <entt/core/hashed_string.hpp>
 #include <vector>
 #include <functional>
 #include <iostream>
@@ -24,15 +26,15 @@ struct TypeData {
 	void* m_Raw;
 	entt::meta_type m_TypeInfo;
 
-    TypeData& SetRaw(void*);
-    std::string TypeName();
-    entt::id_type TypeId();
-    bool IsPrimitive();
-    auto begin() { //lowercase for compatibility with std::ranges
-        entt::meta_any any = m_TypeInfo.from_void(m_Raw);
-        return any.type().data().begin();
-    }
-    auto end(); //lowercase for compatibility with std::ranges
+	TypeData& SetRaw(void*);
+	std::string TypeName();
+	entt::id_type TypeId();
+	bool IsPrimitive();
+	auto begin() { //lowercase for compatibility with std::ranges
+		entt::meta_any any = m_TypeInfo.from_void(m_Raw);
+		return any.type().data().begin();
+	}
+	auto end(); //lowercase for compatibility with std::ranges
 };
 
 TypeInfo ResolveType(TypeName t_name);
@@ -199,10 +201,10 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 			}
-			
+
 			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
 				out[field_name] = v->to_hex_no_delimiter();
-			
+
 
 			// primitives
 			else if (int* vi = value.try_cast<int>())
@@ -215,7 +217,7 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 				out[field_name] = *vs;
 			else if (bool* vb = value.try_cast<bool>())
 				out[field_name] = *vb;
-		
+
 
 		}
 	}
@@ -268,7 +270,7 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 
 		if (member_type.is_enum()) {
 
-			
+
 			if (member_type.size_of() == sizeof(int)) {
 				int underlying_value = in[field_name].template as<int>();
 				auto enum_any = member_type.from_void(&underlying_value);
@@ -391,10 +393,10 @@ struct MemberRegistration {
 
 template<auto SetPtr, auto GetPtr, static_string Name>
 struct InterfaceRegistration : public InterfaceRegistrationBasic {
-    static constexpr auto setptr = SetPtr;
-    static constexpr auto getptr = GetPtr;
-    static constexpr std::string_view name = Name.data;
-    static constexpr auto hash = ToTypeName(name);
+	static constexpr auto setptr = SetPtr;
+	static constexpr auto getptr = GetPtr;
+	static constexpr std::string_view name = Name.data;
+	static constexpr auto hash = ToTypeName(name);
 };
 
 template<auto Ptr, static_string Name>
@@ -414,19 +416,23 @@ void RegisterDataMember(auto& factory) {
 }
 
 
+
+
+
+
 template<typename T, typename... Refs>
 void RegisterReflectionComponent(std::string_view type_name, Refs...) {
-    auto hashtypename = ToTypeName(type_name);
-    auto factory = entt::meta_factory<T>().type(hashtypename);
-    
-    auto& field_table{ ReflectionRegistry::RegisterType(hashtypename, type_name) };
-    // populate field tables
-    (field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
-   
-    (RegisterDataMember<Refs>(factory), ...);
+	auto hashtypename = ToTypeName(type_name);
+	auto factory = entt::meta_factory<T>().type(hashtypename);
+
+	auto& field_table{ ReflectionRegistry::RegisterType(hashtypename, type_name) };
+	// populate field tables
+	(field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
+
+	(RegisterDataMember<Refs>(factory), ...);
 
 	factory.template func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
-	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
+	factory.template func < [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
 	ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
 	ReflectionRegistry::InternalID()[entt::type_index<T>::value()] = entt::type_hash<T>::value();
 	ReflectionRegistry::BinSerializerRegistryInstance().push_back({
@@ -441,6 +447,25 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 			} };
 			loader.template get<T>(in_archive);
 		} });
+}
+
+template <typename T, typename Ref=void>
+void RegisterReflectionContainer(std::string_view type_name, Ref ref) {
+	using namespace entt::literals;
+	auto hashtypename = ToTypeName(type_name);
+	auto factory = entt::meta_factory<T>().type(hashtypename);
+
+	if constexpr (
+			requires { T::value_type; }
+		) {
+		// Its a container
+		factory.template base<entt::meta_sequence_container>()
+			.template data<T>();
+
+
+		ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
+		ReflectionRegistry::InternalID()[entt::type_index<T>::value()] = entt::type_hash<T>::value();
+	}
 }
 
 #endif

@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Engine.Bindings;
 namespace BasilEngine.Rendering
 {
     // Color struct representing RGBA color normalized between 0 and 1
+    [Disabled]
     public struct Color
     {
+        
         float r,g, b, a;
         public Color(float r, float g, float b, float a = 1.0f)
         {
