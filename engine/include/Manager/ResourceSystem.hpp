@@ -107,6 +107,37 @@ public:
         return true;
     }
 
+    /**
+     * @brief Insert a pre-loaded resource directly into the pool (for in-memory editor resources)
+     * @param guid GUID to associate with the resource
+     * @param resource Already-constructed resource to insert
+     * @return true if inserted, false if GUID already exists
+     */
+    bool InsertPreloaded(Resource::Guid guid, T resource) {
+        // Check if GUID already exists
+        auto it = m_GuidSlots.find(guid);
+        if (it != m_GuidSlots.end()) {
+            return false;  // Already exists
+        }
+
+        // Allocate slot and insert resource
+        std::uint32_t idx = AllocateSlot();
+        auto& slot = m_Slots[idx];
+        slot.m_Guid = guid;
+        slot.m_Alive = true;
+        slot.m_Ready = true;  // Immediately ready (no async loading)
+
+        // Move-construct or copy-construct into slot storage
+        if constexpr (std::is_move_constructible_v<T>) {
+            new (slot.storage) T(std::move(resource));
+        } else {
+            new (slot.storage) T(resource);
+        }
+
+        m_GuidSlots.emplace(guid, idx);
+        return true;
+    }
+
     void Clear() {
         for (std::uint32_t i = 0; i < m_Slots.size(); ++i) {
             if (m_Slots[i].m_Alive) {
@@ -267,6 +298,51 @@ struct ResourceRegistry {
     bool Unload(Resource::Guid guid) {
         auto* pool = Pool<T>();
         return pool ? pool->Unload(guid) : false;
+    }
+
+    /**
+     * @brief Register an in-memory resource (for editor-created assets without files)
+     *
+     * This allows registering resources that don't have backing files, such as
+     * materials/meshes created by the editor at runtime. These resources can later
+     * transition to file-based when saved.
+     *
+     * @tparam T Resource type (e.g., std::shared_ptr<Material>)
+     * @param guid GUID to associate with the resource
+     * @param resource The resource instance to register
+     * @return true if registered successfully, false if GUID already exists
+     *
+     * @note The resource type must be registered via REGISTER_RESOURCE_TYPE before use
+     * @note Editor is responsible for unregistering resources when deleted
+     */
+    template <typename T>
+    bool RegisterInMemory(Resource::Guid guid, T resource) {
+        auto* pool = Pool<T>();
+        if (!pool) {
+            spdlog::error("ResourceRegistry: Cannot register in-memory resource - type not registered");
+            return false;
+        }
+
+        bool success = pool->InsertPreloaded(guid, std::move(resource));
+        if (!success) {
+            spdlog::warn("ResourceRegistry: GUID {} already exists, skipping registration", guid.to_hex());
+        }
+        return success;
+    }
+
+    /**
+     * @brief Unregister an in-memory resource
+     *
+     * Removes a resource previously registered via RegisterInMemory(). This should
+     * be called when deleting unsaved editor assets.
+     *
+     * @tparam T Resource type
+     * @param guid GUID of the resource to unregister
+     * @return true if unregistered, false if not found
+     */
+    template <typename T>
+    bool UnregisterInMemory(Resource::Guid guid) {
+        return Unload<T>(guid);  // Unload handles cleanup
     }
 
 private:
