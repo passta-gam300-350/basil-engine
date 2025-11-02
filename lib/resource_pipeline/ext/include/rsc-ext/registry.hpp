@@ -8,27 +8,51 @@
 #include "rsc-core/guid.hpp"
 
 namespace rp {
-	struct TypeUnsafeTypeErasedWrapper {
-		std::unique_ptr<std::byte[]> m_data;
-		TypeUnsafeTypeErasedWrapper() = delete;
-		template <typename Type>
-		TypeUnsafeTypeErasedWrapper(Type&& v) : m_data{ std::make_unique<std::byte[]>(sizeof(Type)) } {
-			std::memcpy(m_data.get(), &v, sizeof(Type));
-		}
-		TypeUnsafeTypeErasedWrapper(TypeUnsafeTypeErasedWrapper&& w) : m_data{ std::move(w.m_data) } {}
-		~TypeUnsafeTypeErasedWrapper() = default;
-		operator std::byte* () {
-			return m_data.get();
-		}
-	};
+	inline namespace v2 {
+		struct TypeUnsafeTypeErasedWrapper {
+			std::byte* m_data;
+			std::function<void(void)> m_deleter;
+			TypeUnsafeTypeErasedWrapper() = delete;
+			template <typename Type>
+			TypeUnsafeTypeErasedWrapper(Type* v, std::function<void(void)> del) : m_data{ reinterpret_cast<std::byte*>(v) }, m_deleter{ del } {}
+			TypeUnsafeTypeErasedWrapper(TypeUnsafeTypeErasedWrapper&& w) : m_data{ w.m_data }, m_deleter{ w.m_deleter } {
+				w.m_deleter = nullptr;
+			}
+			~TypeUnsafeTypeErasedWrapper() {
+				if (m_deleter) {
+					m_deleter();
+				}
+			};
+			operator std::byte* () {
+				return m_data;
+			}
+		};
+	}
+	/*namespace v1 {
+		struct TypeUnsafeTypeErasedWrapper {
+			std::unique_ptr<std::byte[]> m_data;
+			TypeUnsafeTypeErasedWrapper() = delete;
+			template <typename Type>
+			TypeUnsafeTypeErasedWrapper(Type&& v) : m_data{ std::make_unique<std::byte[]>(sizeof(Type)) } {
+				std::memcpy(m_data.get(), &v, sizeof(Type));
+			}
+			TypeUnsafeTypeErasedWrapper(TypeUnsafeTypeErasedWrapper&& w) : m_data{ std::move(w.m_data) } {}
+			~TypeUnsafeTypeErasedWrapper() = default;
+			operator std::byte* () {
+				return m_data.get();
+			}
+		};
+	}*/
 
 	struct DescriptorWrapper {
 		TypeUnsafeTypeErasedWrapper m_wrap;
 		std::uint64_t m_desc_importer_hash;
 		DescriptorWrapper(DescriptorWrapper const&) = delete;
 		DescriptorWrapper(DescriptorWrapper&&) = default;
+		template <typename Type>
+		DescriptorWrapper(Type&& v, std::uint64_t importer_hash) : m_wrap{ std::forward<Type>(v) }, m_desc_importer_hash { importer_hash } {}
 		operator std::byte* () {
-			return m_wrap.m_data.get();
+			return m_wrap.m_data;
 		}
 	};
 
@@ -69,6 +93,9 @@ namespace rp {
 		}
 		static void RegisterImporter(std::uint64_t typehash, std::function<void(std::string const&, std::string const&)> fn) {
 			Instance().m_importers.emplace(typehash, fn);
+		}
+		static void RegisterLoader(std::uint64_t typehash, std::function<DescriptorWrapper(std::string const&)> fn) {
+			Instance().m_descriptor_loader.emplace(typehash, fn);
 		}
 		static void RegisterSerializer(std::uint64_t typehash, std::string const& serializer_name, std::function<void(std::string const&, std::byte*)> fn) {
 			Instance().m_serializers.emplace(typehash, std::pair<std::string, std::function<void(std::string const&, std::byte*)>>{serializer_name, fn});
@@ -354,15 +381,21 @@ namespace {																						\
 			DESC& desc{ *reinterpret_cast<DESC*>(data) };																											\
 			rp::serialization::yaml_serializer::serialize(desc, str);																								\
 			});																																						\
-		rp::ResourceTypeImporterRegistry::RegisterFactory(type_hash, []() -> rp::TypeUnsafeTypeErasedWrapper {DESC desc{}; desc.base.m_guid = rp::Guid::generate(); desc.base.m_importer = NATIVETYPESUFFIX; desc.base.m_importer_type = rp::utility::type_hash<DESC>::value(); return rp::TypeUnsafeTypeErasedWrapper{ desc }; });	\
+		rp::ResourceTypeImporterRegistry::RegisterFactory(type_hash, []() -> rp::TypeUnsafeTypeErasedWrapper {DESC* desc{new DESC{}}; desc->base.m_guid = rp::Guid::generate(); desc->base.m_importer = NATIVETYPESUFFIX; desc->base.m_importer_type = rp::utility::type_hash<DESC>::value(); return rp::TypeUnsafeTypeErasedWrapper{ desc, [desc]{delete desc;} }; });	\
 		auto ext_names{std::array{__VA_ARGS__}};																													\
 		for (auto& ext : ext_names) {																																\
 			rp::ResourceTypeImporterRegistry::RegisterExtNameImporter(type_hash, ext);																				\
 		}																																							\
 		rp::ResourceTypeImporterRegistry::RegisterImporterNativeType(type_hash, rp::utility::string_hash(NATIVETYPENAME));											\
 		rp::ResourceTypeImporterRegistry::RegisterImporterNativeSuffix(type_hash, NATIVETYPESUFFIX);																\
+		rp::ResourceTypeImporterRegistry::RegisterLoader(type_hash, [](std::string const& str) -> rp::DescriptorWrapper{											\
+			DESC* dptr{ new DESC{rp::serialization::yaml_serializer::deserialize<DESC>(str)} };																		\
+			return rp::DescriptorWrapper{ rp::TypeUnsafeTypeErasedWrapper{dptr , [dptr]{delete dptr; } }, type_hash};												\
+		});																																							\
 		return 1u;																																					\
 		}() };																																						\
 }
+
+/*delete reinterpret_cast<DESC*>(ptr) potentially undefined behaviour, very dangerous*/
 
 #endif

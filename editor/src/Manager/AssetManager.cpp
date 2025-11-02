@@ -136,6 +136,41 @@ void AssetManager::ImportAssetDirectory(std::string const& dir) {
 	}
 }
 
+void AssetManager::LoadImportSettings(std::string const& is)
+{
+	if (!m_InspectedDescriptor) {
+		m_InspectedDescriptor.reset(new rp::DescriptorWrapper{ rp::ResourceTypeImporterRegistry::LoadDescriptor(is) });
+		m_InspectedDescriptorPath = is;
+	}
+}
+
+void AssetManager::UnloadImportSetting(std::string const& is)
+{
+	if (m_InspectedDescriptor) {
+		rp::ResourceTypeImporterRegistry::Serialize(m_InspectedDescriptor->m_desc_importer_hash, "yaml", is.empty() ? m_InspectedDescriptorPath : is, *m_InspectedDescriptor);
+		m_InspectedDescriptor.reset(nullptr);
+		m_InspectedDescriptorPath.clear();
+	}
+}
+
+void AssetManager::ClearImportSetting()
+{
+	if (m_InspectedDescriptor) {
+		m_InspectedDescriptor.reset(nullptr);
+		m_InspectedDescriptorPath.clear();
+	}
+}
+
+rp::DescriptorWrapper& AssetManager::GetImportSettings()
+{
+	return *m_InspectedDescriptor;
+}
+
+std::string AssetManager::GetImportSettingsPath()
+{
+	return m_InspectedDescriptorPath;
+}
+
 void AssetManager::ExportAssetList() {
 	std::string filename{ m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(),cx_AssetListFilename.end()) };
 	rp::serialization::yaml_serializer::serialize(m_ImportedAssetPath, filename);
@@ -258,11 +293,14 @@ void AssetManager::FileIndexingWorkerLoop() {
 					}
 					// Mark that we need a rescan after quiet period
 					m_NeedsRescan = true;
+					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
 					dir_path = getParentPath(nfile);
-					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile);
-					{
-						std::lock_guard lg{ m_DescriptorListMtx };
-						m_FileList.emplace(dir_path, nfile);
+					if (!std::filesystem::exists(descriptor_filepath)) {
+						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile);
+						{
+							std::lock_guard lg{ m_DescriptorListMtx };
+							m_FileList.emplace(dir_path, descriptor_filepath);
+						}
 					}
 					break;
 				case FILE_ACTION_REMOVED:

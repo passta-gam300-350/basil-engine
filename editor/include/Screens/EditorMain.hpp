@@ -83,6 +83,7 @@ public:
 	void Render_Console();
 
 	void Render_AssetBrowser();
+	void Render_ImporterSettings();
 
 	void Render_Scene();
 	void Render_Game();
@@ -183,11 +184,11 @@ namespace rp {
 					strncpy(buf, guid_str.c_str(), sizeof(buf));
 					same_line_label(label);
 					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
-						v = rp::Guid::from_hex(buf);
+						v = rp::Guid::to_guid(buf);
 					}
 				}
 				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
-					char buf[256];
+					char buf[512];
 					strncpy(buf, v.c_str(), sizeof(buf));
 					same_line_label(label);
 					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
@@ -300,5 +301,17 @@ namespace rp {
 
 using ImguiInspectItem = rp::serialization::out_archive<"imgui">;
 using ImguiInspectTypeRenderer = rp::serialization::serializer<"imgui">;
+
+#define RegisterImguiDescriptorInspector(DESC) \
+namespace {																															\
+	inline static auto DESC##imgui_regi{ []{																						\
+		constexpr auto type_hash{rp::utility::type_hash<DESC>::value()};															\
+		rp::ResourceTypeImporterRegistry::RegisterSerializer(type_hash, "imgui", [](std::string const& str, std::byte* data) {		\
+		DESC& desc{ *reinterpret_cast<DESC*>(data) };																				\
+		ImguiInspectTypeRenderer::present(desc, str);																				\
+		});																															\
+		return 1u;																													\
+	}() };																															\
+}
 
 #endif // EDITORMAIN_HPP
