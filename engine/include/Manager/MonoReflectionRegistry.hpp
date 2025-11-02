@@ -68,6 +68,8 @@ public:
 
 	const AssemblyNode* FindAssembly(std::string_view assemblyName) const;
 	const ClassNode* FindClass(std::string_view assemblyName, std::string_view className) const;
+	ClassNode* FindClassByManagedName(std::string_view className);
+	const ClassNode* FindClassByManagedName(std::string_view className) const;
 
 	void Clear();
 	void ForEachAssembly(const std::function<void(const AssemblyNode&)>& visitor) const;
@@ -97,6 +99,8 @@ public:
 
 	const AssemblyNode* FindAssembly(std::string_view assemblyName) const;
 	const ClassNode* FindClass(std::string_view assemblyName, std::string_view className) const;
+    ClassNode* FindClassByManagedName(std::string_view className);
+    const ClassNode* FindClassByManagedName(std::string_view className) const;
 
 	void Clear();
 	void VisitAssemblies(const std::function<void(const AssemblyNode&)>& visitor) const;

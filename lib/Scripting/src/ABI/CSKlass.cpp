@@ -326,12 +326,12 @@ CSKlassInstance::CSKlassInstance(const CSKlass* klass, MonoObject* instance, boo
 	Attach(klass, instance, isNative);
 }
 
-void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance, bool isNative)
+void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance, [[maybe_unused]] bool isNative)
 {
 	m_klass = klass;
 	m_instance = instance;
 	if (instance)
-		m_instanceHandle = (isNative) ? mono_gchandle_new(instance, false) : mono_gchandle_new_weakref(instance, false);
+		m_instanceHandle = (true) ? mono_gchandle_new(instance, false) : mono_gchandle_new_weakref(instance, false);
 	else m_instanceHandle = 0;
 }
 

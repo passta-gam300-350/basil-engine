@@ -29,6 +29,7 @@ Technology is prohibited.
 #include "Manager/AssetManager.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <components/behaviour.hpp>
 
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
@@ -89,6 +90,7 @@ public:
 
 	void Render_Components();
 	void Render_Component_Member(auto&, bool& is_dirty);
+    void Render_Behaviour_Component(behaviour& component);
 
 	void Render_Add_Component_Menu();
 

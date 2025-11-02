@@ -22,7 +22,7 @@ public:
 
 	void AddClass(const char* name, const char* klassNamespace = "");
 
-	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, Resource::Guid scriptID);
+	bool AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, Resource::Guid scriptID);
 
 
 	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns="");

@@ -42,6 +42,7 @@ void BehaviourSystem::Init()
 	auto entities = world.filter_entities<behaviour>();
 	for (auto entity : entities) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		component.scriptIDs.clear();
 		for (auto val : component.classesName) {
 			std::string className, namespaceName;
 			parse_class_name(val, namespaceName, className);
@@ -83,16 +84,16 @@ void BehaviourSystem::Exit()
 {
 }
 
-void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, Resource::Guid scriptID) {
+bool BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, Resource::Guid scriptID) {
 	behaviour& component = world.get_component_from_entity<behaviour>(entity);
 
-	
+
 
 	CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 	
 	if (!instance || !instance->IsValid()) {
 		spdlog::warn("[BehaviourSystem] Failed to create instance for script ID: {}", scriptID.to_hex());
-		return;
+		return false;
 	}
 	const CSKlass* klass = instance->Klass();
 	auto derivedClass = MonoEntityManager::GetInstance().GetNamedKlass("Behavior", "BasilEngine.Components");
@@ -101,17 +102,17 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		derivedClass = MonoEntityManager::GetInstance().GetNamedKlass("Behavior", "BasilEngine.Components");
 		if (!derivedClass) {
 			spdlog::warn("[BehaviourSystem] BasilEngine.Components.Behaviour class not found in assembly!");
-			return;
+			return false;
 		}
 	}
 	bool derived = klass->IsDerivedFrom(*derivedClass);
 	if (!derived) {
 		spdlog::warn("[BehaviorSystem] Script ID: {} is not derived from BasilEngine.Behavior", scriptID.to_hex());
-		return;
+		return false;
 	}
 
-	
-	component.scriptIDs.push_back(scriptID);
+
+	return true;
 
 }
 
@@ -134,22 +135,26 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		return;
 	}
 	Resource::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns);
-	AddScriptToEntityComponent(entity, world, scriptID);
+	if (AddScriptToEntityComponent(entity, world, scriptID))
+	{
+		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		component.scriptIDs.push_back(scriptID);
+	}
 
 }
 
 void BehaviourSystem::RegisterComponent(ecs::entity& entity) {
 	behaviour& component = Engine::GetWorld().get_component_from_entity<behaviour>(entity);
 	auto world = Engine::GetWorld();
-	for (auto name : component.classesName) {
-		if (component.scriptIDs.size() > 0) continue; //already registered
+
+	component.scriptIDs.clear();
+	for (const auto& name : component.classesName) {
 		std::string className, namespaceName;
 		parse_class_name(name, namespaceName, className);
 		if (namespaceName.empty()) {
 			AddScriptToEntityComponent(entity, world, className.c_str());
 		}
 		else {
-
 			AddScriptToEntityComponent(entity, world, className.c_str(), namespaceName.c_str());
 		}
 	}

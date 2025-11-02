@@ -50,13 +50,16 @@ Technology is prohibited.
 #include <System/BehaviourSystem.hpp>
 #include <Manager/MonoEntityManager.hpp>
 #include <Manager/MonoReflectionRegistry.hpp>
+#include <Manager/MonoTypeRegistry.hpp>
 #include <Messaging/Messaging_System.h>
 #include "MonoResolver/MonoTypeDescriptor.hpp"
+#include "Manager/MonoImGuiRenderer.hpp"
 #define UNREF_PARAM(x) x;
 
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
+
 
 EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 {
@@ -276,14 +279,38 @@ void EditorMain::Render_Components()
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
 
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
+    ReflectionRegistry::TypeID behaviour_component{};
+    auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
+    if (behaviourIt != internal_type_map.end())
+    {
+        behaviour_component = behaviourIt->second;
+    }
 
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component) {
 			continue;
 		}
+        if (behaviour_component && type_id == behaviour_component)
+        {
+            if (behaviour* behaviour_component_ptr = reinterpret_cast<behaviour*>(uptr.get()))
+            {
+                if (ImGui::TreeNode("Behaviour"))
+                {
+                    Render_Behaviour_Component(*behaviour_component_ptr);
+                    ImGui::TreePop();
+                }
+            }
+            continue;
+        }
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
-		if (ImGui::TreeNode(ReflectionRegistry::GetTypeName(type.id()).c_str())) {
+		const char* componentLabel = "Component";
+		auto& typeNames = ReflectionRegistry::TypeNames();
+		if (auto itName = typeNames.find(type.id()); itName != typeNames.end())
+		{
+			componentLabel = itName->second.c_str();
+		}
+		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
 			Render_Component_Member(comp, is_dirty);
 			ImGui::TreePop();
@@ -372,6 +399,37 @@ void EditorMain::Render_Add_Component_Menu()
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {
 
+		}
+	}
+}
+
+void EditorMain::Render_Behaviour_Component(behaviour& component)
+{
+	if (component.classesName.empty())
+	{
+		ImGui::Text("No scripts attached.");
+		return;
+	}
+
+	//auto& entityManager = MonoEntityManager::GetInstance();
+	//auto& typeRegistry = entityManager.GetTypeRegistry();
+
+	for (std::size_t i = 0; i < component.classesName.size(); ++i)
+	{
+		const std::string& fullName = component.classesName[i];
+		std::string label = fullName.empty() ? std::string("<Unnamed Script>") : fullName;
+		label.append("##BehaviourScript");
+		label.append(std::to_string(i));
+		Resource::Guid scriptGuid = (i < component.scriptIDs.size()) ? component.scriptIDs[i] : Resource::Guid{};
+		if (!scriptGuid)
+		{
+			continue;
+		}
+
+		if (ImGui::TreeNode(label.c_str()))
+		{
+			MonoImGuiRenderer::RenderBehaviourFields(fullName, scriptGuid);
+			ImGui::TreePop();
 		}
 	}
 }

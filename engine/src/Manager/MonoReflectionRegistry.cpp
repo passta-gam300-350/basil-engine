@@ -138,6 +138,56 @@ void MonoReflectionTree::ForEachAssembly(const std::function<void(const Assembly
 	}
 }
 
+ClassNode* MonoReflectionTree::FindClassByManagedName(std::string_view className)
+{
+	if (className.empty())
+	{
+		return nullptr;
+	}
+
+	std::string key{ className };
+	for (auto& [_, assemblyNode] : m_assemblies)
+	{
+		if (!assemblyNode)
+		{
+			continue;
+		}
+
+		auto it = assemblyNode->classes.find(key);
+		if (it != assemblyNode->classes.end() && it->second)
+		{
+			return it->second.get();
+		}
+	}
+
+	return nullptr;
+}
+
+const ClassNode* MonoReflectionTree::FindClassByManagedName(std::string_view className) const
+{
+	if (className.empty())
+	{
+		return nullptr;
+	}
+
+	std::string key{ className };
+	for (const auto& [_, assemblyNode] : m_assemblies)
+	{
+		if (!assemblyNode)
+		{
+			continue;
+		}
+
+		auto it = assemblyNode->classes.find(key);
+		if (it != assemblyNode->classes.end() && it->second)
+		{
+			return it->second.get();
+		}
+	}
+
+	return nullptr;
+}
+
 MonoReflectionRegistry& MonoReflectionRegistry::Instance()
 {
 	static MonoReflectionRegistry instance;
@@ -177,4 +227,14 @@ void MonoReflectionRegistry::Clear()
 void MonoReflectionRegistry::VisitAssemblies(const std::function<void(const AssemblyNode&)>& visitor) const
 {
 	m_tree.ForEachAssembly(visitor);
+}
+
+ClassNode* MonoReflectionRegistry::FindClassByManagedName(std::string_view className)
+{
+	return m_tree.FindClassByManagedName(className);
+}
+
+const ClassNode* MonoReflectionRegistry::FindClassByManagedName(std::string_view className) const
+{
+	return m_tree.FindClassByManagedName(className);
 }
