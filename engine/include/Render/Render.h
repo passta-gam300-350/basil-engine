@@ -20,9 +20,9 @@
 #include <memory>
 #include <Scene/SceneRenderer.h>
 #include <Utility/Camera.h>
-#include <serialisation/guid.h>
+#include <rsc-core/rp.hpp>
 #include "Manager/ResourceSystem.hpp"
-#include <native/mesh.h>
+#include <native/native.h>
 
 #include "Ecs/ecs.h"
 
@@ -34,6 +34,10 @@ class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
 class MaterialPropertyBlock;
+
+
+RegisterResourceType(MeshResourceData, "mesh", MeshResourceData, [](MeshResourceData const& mr) {return mr; }, [](MeshResourceData&& mr) {})
+RegisterResourceType(MaterialResourceData, "material", MaterialResourceData, [](MaterialResourceData const& mat) {return mat; }, [](MaterialResourceData&& mres) {})
 
 /**
  * @brief Component for rendering meshes on entities
@@ -51,13 +55,13 @@ struct MeshRendererComponent {
         CUBE,
         PLANE
 	} m_PrimitiveType;
-    Resource::Guid m_MeshGuid;     ///< GUID of the mesh asset (or zero for primitives)
-    Resource::Guid m_MaterialGuid; ///< GUID of the material asset
+    rp::TypeNameGuid<"mesh"> m_MeshGuid;     ///< GUID of the mesh asset (or zero for primitives)
+    rp::TypeNameGuid<"material"> m_MaterialGuid; ///< GUID of the material asset
 
     /// Per-entity material properties (used when hasAttachedMaterial is false)
     struct Material
     {
-        Resource::Guid m_MaterialGuid;
+        rp::TypeNameGuid<"material"> m_MaterialGuid;
         float metallic;            ///< Metallic value (0.0 = dielectric, 1.0 = metallic)
 		float roughness;           ///< Surface roughness (0.0 = smooth, 1.0 = rough)
 		glm::vec3 m_AlbedoColor;   ///< Base color (RGB)
@@ -205,7 +209,7 @@ public:
      *
      * @note Delegates to Engine::GetRenderSystem() for backward compatibility
      */
-    static void RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh);
+    static void RegisterEditorMesh(rp::Guid guid, std::shared_ptr<Mesh> mesh);
 
     /**
      * @brief Register an editor-created material for use in rendering
@@ -215,7 +219,7 @@ public:
      *
      * @note Delegates to Engine::GetRenderSystem() for backward compatibility
      */
-    static void RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material);
+    static void RegisterEditorMaterial(rp::Guid guid, std::shared_ptr<Material> material);
 
     /**
      * @brief Clear cached rendering resources for a specific entity

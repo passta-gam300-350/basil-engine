@@ -44,17 +44,9 @@ Technology is prohibited.
 
 #include "Physics/Physics_System.h"
 #include <Messaging/Messaging_System.h>
+
+
 #define UNREF_PARAM(x) x;
-
-template <>
-struct rp::reflection::ExternalTypeMetadata<glm::vec4> {
-	using ExternalTypeBinder = ExternalTypeBinderMetadata<glm::vec4, &glm::vec4::x, &glm::vec4::y, &glm::vec4::z, &glm::vec4::w>;
-};
-
-template <>
-struct rp::reflection::ExternalTypeMetadata<glm::vec3> {
-	using ExternalTypeBinder = ExternalTypeBinderMetadata<glm::vec3, &glm::vec3::x, &glm::vec3::y, &glm::vec3::z>;
-};
 
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
@@ -359,7 +351,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 			}
 
-			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
+			if (rp::Guid* v = value.try_cast<rp::Guid>())
 				ImGui::Text((field_name + v->to_hex_no_delimiter()).c_str());
 
 
@@ -1087,7 +1079,7 @@ void EditorMain::CreatePlaneEntity()
 		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
 		meshRenderer.material.metallic = 0.1f;
 		meshRenderer.material.roughness = 0.8f;
-		meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+		meshRenderer.material.m_MaterialGuid = rp::Guid{}; // Use 0 for default material
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 	});
@@ -1171,7 +1163,7 @@ void EditorMain::CreatePhysicsDemoScene()
 	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
 	meshRenderer.material.metallic = 0.1f;
 	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+	meshRenderer.material.m_MaterialGuid = rp::Guid{}; // Use 0 for default material
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
@@ -1215,8 +1207,8 @@ void EditorMain::CreatePhysicsDemoScene()
 	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
 	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid2{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid2{}; // Use 0 for default material
+	rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+	rp::Guid materialGuid2{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer2;
@@ -1295,8 +1287,8 @@ void EditorMain::CreatePhysicsCube()
 	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
 	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid2{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid2{}; // Use 0 for default material
+	rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+	rp::Guid materialGuid2{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer2;
@@ -1340,8 +1332,8 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid{}; // Use 0 for default material
+	rp::Guid meshGuid{}; // Use 0 for primitive shared meshes
+	rp::Guid materialGuid{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer;

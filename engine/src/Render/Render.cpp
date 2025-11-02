@@ -27,8 +27,7 @@ Technology is prohibited.
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
 
-#include "native/loader.h"
-#include "native/texture.h"
+#include "native/native.h"
 #include "Render/Camera.h"
 
 #include <tinyddsloader.h>
@@ -349,7 +348,7 @@ void RenderSystem::Exit() {
 }
 
 
-void RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh> mesh) {
+void RenderSystem::RegisterEditorMesh(rp::Guid guid, std::shared_ptr<Mesh> mesh) {
 	auto& renderSystem = Engine::GetRenderSystem();
 	if (renderSystem.m_ResourceCache) {
 		renderSystem.m_ResourceCache->RegisterEditorMesh(guid, mesh);
@@ -358,7 +357,7 @@ void RenderSystem::RegisterEditorMesh(Resource::Guid guid, std::shared_ptr<Mesh>
 	}
 }
 
-void RenderSystem::RegisterEditorMaterial(Resource::Guid guid, std::shared_ptr<Material> material) {
+void RenderSystem::RegisterEditorMaterial(rp::Guid guid, std::shared_ptr<Material> material) {
 	auto& renderSystem = Engine::GetRenderSystem();
 	if (renderSystem.m_ResourceCache) {
 		renderSystem.m_ResourceCache->RegisterEditorMaterial(guid, material);

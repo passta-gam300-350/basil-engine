@@ -39,22 +39,22 @@ void RenderResourceCache::ClearAllEntityCaches() {
 
 // ========== Editor Resource Cache ==========
 
-std::shared_ptr<Mesh> RenderResourceCache::GetEditorMesh(const Resource::Guid& guid) const {
+std::shared_ptr<Mesh> RenderResourceCache::GetEditorMesh(const rp::Guid& guid) const {
     auto it = m_EditorMeshCache.find(guid);
     return (it != m_EditorMeshCache.end()) ? it->second : nullptr;
 }
 
-std::shared_ptr<Material> RenderResourceCache::GetEditorMaterial(const Resource::Guid& guid) const {
+std::shared_ptr<Material> RenderResourceCache::GetEditorMaterial(const rp::Guid& guid) const {
     auto it = m_EditorMaterialCache.find(guid);
     return (it != m_EditorMaterialCache.end()) ? it->second : nullptr;
 }
 
-void RenderResourceCache::RegisterEditorMesh(const Resource::Guid& guid, std::shared_ptr<Mesh> mesh) {
+void RenderResourceCache::RegisterEditorMesh(const rp::Guid& guid, std::shared_ptr<Mesh> mesh) {
     m_EditorMeshCache[guid] = mesh;
     spdlog::debug("RenderResourceCache: Registered editor mesh with GUID {}", guid.to_hex());
 }
 
-void RenderResourceCache::RegisterEditorMaterial(const Resource::Guid& guid, std::shared_ptr<Material> material) {
+void RenderResourceCache::RegisterEditorMaterial(const rp::Guid& guid, std::shared_ptr<Material> material) {
     m_EditorMaterialCache[guid] = material;
     spdlog::debug("RenderResourceCache: Registered editor material with GUID {}", guid.to_hex());
 }

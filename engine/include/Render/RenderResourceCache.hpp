@@ -4,7 +4,7 @@
 
 #include <Resources/Mesh.h>
 #include <Resources/Material.h>
-#include <serialisation/guid.h>
+#include <rsc-core/rp.hpp>
 #include <memory>
 #include <unordered_map>
 
@@ -89,28 +89,28 @@ public:
      * @param guid Resource GUID
      * @return Mesh pointer, or nullptr if not registered
      */
-    std::shared_ptr<Mesh> GetEditorMesh(const Resource::Guid& guid) const;
+    std::shared_ptr<Mesh> GetEditorMesh(const rp::Guid& guid) const;
 
     /**
      * @brief Get editor-registered material by GUID
      * @param guid Resource GUID
      * @return Material pointer, or nullptr if not registered
      */
-    std::shared_ptr<Material> GetEditorMaterial(const Resource::Guid& guid) const;
+    std::shared_ptr<Material> GetEditorMaterial(const rp::Guid& guid) const;
 
     /**
      * @brief Register an editor mesh (in-memory asset)
      * @param guid Resource GUID
      * @param mesh Mesh to register
      */
-    void RegisterEditorMesh(const Resource::Guid& guid, std::shared_ptr<Mesh> mesh);
+    void RegisterEditorMesh(const rp::Guid& guid, std::shared_ptr<Mesh> mesh);
 
     /**
      * @brief Register an editor material (in-memory asset)
      * @param guid Resource GUID
      * @param material Material to register
      */
-    void RegisterEditorMaterial(const Resource::Guid& guid, std::shared_ptr<Material> material);
+    void RegisterEditorMaterial(const rp::Guid& guid, std::shared_ptr<Material> material);
 
     /**
      * @brief Clear all editor resource caches
@@ -130,8 +130,8 @@ private:
 
     // Editor-provided resource mappings (keyed by GUID)
     // These are populated by editor before entity initialization
-    std::unordered_map<Resource::Guid, std::shared_ptr<Mesh>> m_EditorMeshCache;
-    std::unordered_map<Resource::Guid, std::shared_ptr<Material>> m_EditorMaterialCache;
+    std::unordered_map<rp::Guid, std::shared_ptr<Mesh>> m_EditorMeshCache;
+    std::unordered_map<rp::Guid, std::shared_ptr<Material>> m_EditorMaterialCache;
 };
 
 #endif // ENGINE_RENDER_RESOURCE_CACHE_HPP

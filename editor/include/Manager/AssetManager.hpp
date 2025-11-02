@@ -5,7 +5,10 @@
 #include <thread>
 #include <mutex>
 #include <rsc-ext/rp.hpp>
+#include <importer/importer.hpp>
 #include <chrono>
+
+using ResourceType = std::uint64_t;
 
 //future improvements
 // TODO: do not recompute the subdirectories, store it and update using filewatcher
@@ -13,7 +16,7 @@ struct AssetManager {
 	std::map<std::string, rp::BasicIndexedGuid> m_AssetNameGuid; //potentially unsafe
 	std::map<rp::BasicIndexedGuid, std::string> m_AssetReverse; //reverse lookup
 
-	std::unordered_multimap<std::string, rp::DescriptorWrapper> m_Descriptors;
+	std::unordered_multimap<std::string, std::string> m_FileList;
 	std::string m_RootPath;
 	std::string m_CurrentPath;
 	std::string m_ImportedAssetPath;
@@ -40,11 +43,11 @@ struct AssetManager {
 	void FileIndexingWorkerLoop();
 	void RescanDirectory();
 
-	void ImportAsset(rp::DescriptorWrapper&);
+	void ImportAsset(std::string const&);
 	void ImportAssetDirectory(std::string const&);
 
 	auto GetFiles(std::string const& dir) {
-		return m_Descriptors.equal_range(dir);
+		return m_FileList.equal_range(dir);
 	}
 
 	using ResourceType = std::uint64_t;
