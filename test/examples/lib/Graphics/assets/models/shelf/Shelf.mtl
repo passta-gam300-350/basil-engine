@@ -1,0 +1,75 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+# Updated to use standard PBR keywords
+
+newmtl Shelf_Wooden
+
+# Base properties
+Kd 0.4107 0.1882 0
+illum 1
+
+# Base color / diffuse map (map_Kd - standard)
+map_Kd Shelf_combined_Shelf_Wooden_BaseColor.png
+
+# Normal map (norm - PBR standard)
+norm Shelf_combined_Shelf_Wooden_Normal.png
+
+# Metallic map (map_Pm - PBR standard)
+map_Pm Shelf_combined_Shelf_Wooden_Metallic.png
+
+# Roughness map (map_Pr - PBR standard)
+map_Pr Shelf_combined_Shelf_Wooden_Roughness.png
+
+# Emissive map (map_Ke - standard)
+map_Ke Shelf_combined_Shelf_Wooden_Emissive.png
+
+# Height / displacement map (disp - standard)
+disp Shelf_combined_Shelf_Wooden_Height.png
+
+newmtl KnobMetal
+
+# Base properties
+Kd 0.4709 0.4083 0
+illum 1
+
+# Base color / diffuse map (map_Kd - standard)
+map_Kd Shelf_combined_KnobMetal_BaseColor.png
+
+# Normal map (norm - PBR standard)
+norm Shelf_combined_KnobMetal_Normal.png
+
+# Metallic map (map_Pm - PBR standard)
+map_Pm Shelf_combined_KnobMetal_Metallic.png
+
+# Roughness map (map_Pr - PBR standard)
+map_Pr Shelf_combined_KnobMetal_Roughness.png
+
+# Emissive map (map_Ke - standard)
+map_Ke Shelf_combined_KnobMetal_Emissive.png
+
+# Height / displacement map (disp - standard)
+disp Shelf_combined_KnobMetal_Height.png
+
+newmtl DoorknobMetal
+
+# Base properties
+Kd 0.4709 0.2717 0
+illum 1
+
+# Base color / diffuse map (map_Kd - standard)
+map_Kd Shelf_combined_DoorknobMetal_BaseColor.png
+
+# Normal map (norm - PBR standard)
+norm Shelf_combined_DoorknobMetal_Normal.png
+
+# Metallic map (map_Pm - PBR standard)
+map_Pm Shelf_combined_DoorknobMetal_Metallic.png
+
+# Roughness map (map_Pr - PBR standard)
+map_Pr Shelf_combined_DoorknobMetal_Roughness.png
+
+# Emissive map (map_Ke - standard)
+map_Ke Shelf_combined_DoorknobMetal_Emissive.png
+
+# Height / displacement map (disp - standard)
+disp Shelf_combined_DoorknobMetal_Height.png

@@ -66,9 +66,10 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Enable sRGB framebuffer for automatic linear-to-sRGB conversion
-	glEnable(GL_FRAMEBUFFER_SRGB);
-	spdlog::info("sRGB framebuffer enabled for linear color pipeline");
+	// Disable sRGB framebuffer - ToneMapPass uses manual gamma correction to RGB8
+	// This matches the editor behavior and avoids double gamma correction
+	glDisable(GL_FRAMEBUFFER_SRGB);
+	spdlog::info("sRGB framebuffer disabled - using manual gamma correction in shaders");
 
 	m_Initialized = true;
 
@@ -126,9 +127,10 @@ Window::Window(GLFWwindow* ptr)
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Enable sRGB framebuffer for automatic linear-to-sRGB conversion
-	glEnable(GL_FRAMEBUFFER_SRGB);
-	spdlog::info("sRGB framebuffer enabled for linear color pipeline");
+	// Disable sRGB framebuffer - ToneMapPass uses manual gamma correction to RGB8
+	// This matches the editor behavior and avoids double gamma correction
+	glDisable(GL_FRAMEBUFFER_SRGB);
+	spdlog::info("sRGB framebuffer disabled - using manual gamma correction in shaders");
 
 	m_Initialized = true;
 

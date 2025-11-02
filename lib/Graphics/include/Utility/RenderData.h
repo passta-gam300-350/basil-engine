@@ -46,13 +46,13 @@ struct SubmittedLightData {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f);
     glm::vec3 color = glm::vec3(1.0f);
-    float intensity = 1.0f;              // Legacy: for backward compatibility
-    float diffuseIntensity = 1.0f;       // Ogldev-style: direct light intensity
-    float ambientIntensity = 0.0f;       // Ogldev-style: per-light ambient contribution
+    float diffuseIntensity = 1.0f;       // Direct light intensity (PBR)
+    float ambientIntensity = 0.0f;       // Per-light ambient contribution (PBR)
     float range = 10.0f;
     float innerCone = 30.0f;
     float outerCone = 45.0f;
     bool enabled = true;
+    bool castShadows = true;             // Per-light shadow control (Unity-style)
 };
 
 // Picking data structures

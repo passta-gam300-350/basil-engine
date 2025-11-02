@@ -8,7 +8,7 @@ ToneMapRenderPass::ToneMapRenderPass()
     : RenderPass("ToneMapPass", FBOSpecs{
         1280, 720,
         {
-            { FBOTextureFormat::SRGB8 },  // sRGB output (automatic hardware gamma correction via GL_FRAMEBUFFER_SRGB)
+            { FBOTextureFormat::RGB8 },  // RGB8 output with manual gamma correction in shader
         },
         1  // No MSAA for post-process
     })
@@ -28,6 +28,13 @@ void ToneMapRenderPass::Execute(RenderContext& context)
 
     // Auto-resize framebuffer to match viewport if needed
     CheckAndResizeIfNeeded(context);
+
+    // Disable GL_FRAMEBUFFER_SRGB since we're using manual gamma correction
+    // (RGB8 output, not SRGB8, to avoid ImGui brightness issues on main thread)
+    GLboolean srgbWasEnabled = glIsEnabled(GL_FRAMEBUFFER_SRGB);
+    if (srgbWasEnabled) {
+        glDisable(GL_FRAMEBUFFER_SRGB);
+    }
 
     // Begin pass (binds framebuffer and sets viewport)
     Begin();
@@ -142,6 +149,11 @@ void ToneMapRenderPass::Execute(RenderContext& context)
 
     // End pass
     End();
+
+    // Restore GL_FRAMEBUFFER_SRGB state
+    if (srgbWasEnabled) {
+        glEnable(GL_FRAMEBUFFER_SRGB);
+    }
 }
 
 void ToneMapRenderPass::SetToneMappingShader(std::shared_ptr<Shader> shader)

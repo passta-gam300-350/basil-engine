@@ -6,6 +6,8 @@
 #include "../../include/Rendering/InstancedRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
+#include <cfloat>  // For FLT_MAX
+#include <functional>  // For std::hash
 
 DirectionalShadowMappingPass::DirectionalShadowMappingPass()
     : RenderPass("DirectionalShadowPass", FBOSpecs{
@@ -38,14 +40,14 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
     const SubmittedLightData* directionalLight = nullptr;
 
     for (const auto& light : lights) {
-        if (light.enabled && light.type == Light::Type::Directional) {
+        if (light.enabled && light.castShadows && light.type == Light::Type::Directional) {
             directionalLight = &light;
             break;  // Use first directional light
         }
     }
 
     if (!directionalLight) {
-        // No directional light found - skip shadow mapping
+        // No directional light found or shadows disabled - skip shadow mapping
         return;
     }
 
@@ -55,10 +57,15 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
 
-    // Calculate light-space matrices
-    glm::vec3 sceneCenter(0.0f, 0.0f, 0.0f);  // Center of our 2x2 grid
-    glm::mat4 lightView = CalculateLightViewMatrix(directionalLight->direction, sceneCenter);
-    glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData);
+    // Update cached scene bounds (only recalculates if scene changed)
+    UpdateSceneBounds(context.renderables);
+
+    spdlog::debug("DirectionalShadow: Scene bounds - Center=({:.1f},{:.1f},{:.1f}), Radius={:.1f}",
+                 m_CachedSceneCenter.x, m_CachedSceneCenter.y, m_CachedSceneCenter.z, m_CachedSceneRadius);
+
+    // Calculate light-space matrices using cached scene bounds
+    glm::mat4 lightView = CalculateLightViewMatrix(directionalLight->direction, m_CachedSceneCenter);
+    glm::mat4 lightProjection = CalculateLightProjectionMatrix(directionalLight->direction, context.frameData, m_CachedSceneRadius);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
     // Add directional shadow to the unified shadow data array
@@ -141,16 +148,77 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightViewMatrix(const glm::vec3
     return glm::lookAt(lightPosition, sceneCenter, up);
 }
 
-glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData)
+glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData, float sceneRadius)
 {
-    // Create orthographic projection that covers the scene
-    // Sponza cathedral is ~200 units wide (scaled 0.05), so we need large coverage
-    // Tinbox demo uses smaller orthoSize (15.0f) for tighter shadows
-    float orthoSize = 100.0f;  // Large enough to cover entire Sponza cathedral
-    float nearPlane = 1.0f;
-    float farPlane = 150.0f;   // Increased to cover Sponza's height
+    // Use scene radius to calculate optimal ortho size
+    // Add 20% padding to ensure all objects are covered
+    float orthoSize = sceneRadius * 1.2f;
 
-    // Orthographic projection calculated
+    // Clamp to reasonable range (minimum 10 units, maximum 500 units)
+    orthoSize = glm::clamp(orthoSize, 10.0f, 500.0f);
+
+    // Near/far planes based on scene size
+    float nearPlane = 0.1f;
+    float farPlane = sceneRadius * 4.0f;  // Far enough to cover scene depth
+    farPlane = glm::max(farPlane, 50.0f);  // Minimum 50 units
+
+    spdlog::debug("DirectionalShadow: orthoSize={}, near={}, far={}, sceneRadius={}",
+                 orthoSize, nearPlane, farPlane, sceneRadius);
 
     return glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
+}
+
+void DirectionalShadowMappingPass::UpdateSceneBounds(const std::vector<RenderableData>& renderables)
+{
+    // Quick hash of all transform matrices to detect any transform changes
+    // This includes position, rotation, and scale - all affect world-space AABB
+    size_t transformHash = 0;
+    for (const auto& renderable : renderables) {
+        // Hash all 16 elements of the transform matrix for complete change detection
+        // Rotation affects AABB size (rotated box = larger axis-aligned bounds)
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                size_t elementHash = std::hash<float>{}(renderable.transform[i][j]);
+                transformHash ^= elementHash + 0x9e3779b9 + (transformHash << 6) + (transformHash >> 2);
+            }
+        }
+    }
+
+    // Check if we need to recalculate (scene changed)
+    if (!m_BoundsDirty &&
+        renderables.size() == m_CachedRenderableCount &&
+        transformHash == m_CachedTransformHash) {
+        return;  // Use cached bounds (O(1) fast path) - no changes detected
+    }
+
+    // Recalculate scene bounds from renderables
+    m_CachedSceneMin = glm::vec3(FLT_MAX);
+    m_CachedSceneMax = glm::vec3(-FLT_MAX);
+
+    for (const auto& renderable : renderables) {
+        if (!renderable.mesh) continue;
+
+        // Get mesh's local AABB and transform to world space
+        const AABB& localAABB = renderable.mesh->GetAABB();
+        AABB worldAABB = localAABB.Transform(renderable.transform);
+
+        // Expand scene bounds to include this AABB
+        m_CachedSceneMin = glm::min(m_CachedSceneMin, worldAABB.min);
+        m_CachedSceneMax = glm::max(m_CachedSceneMax, worldAABB.max);
+    }
+
+    // Calculate center and radius
+    m_CachedSceneCenter = (m_CachedSceneMin + m_CachedSceneMax) * 0.5f;
+    m_CachedSceneRadius = glm::length(m_CachedSceneMax - m_CachedSceneMin) * 0.5f;
+
+    // Clamp radius to reasonable range
+    m_CachedSceneRadius = glm::max(m_CachedSceneRadius, 5.0f);  // Minimum 5 units
+
+    // Update cache state
+    m_CachedRenderableCount = renderables.size();
+    m_CachedTransformHash = transformHash;
+    m_BoundsDirty = false;
+
+    spdlog::info("DirectionalShadow: Scene bounds recalculated - {} renderables, radius={:.1f} (position/scale changed)",
+                 renderables.size(), m_CachedSceneRadius);
 }

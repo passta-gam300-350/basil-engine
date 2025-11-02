@@ -5,6 +5,7 @@
 #include "../../include/Rendering/PBRLightingRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
 #include "../../include/Resources/PrimitiveGenerator.h"
+#include "../../include/Rendering/ParticleRenderer.h"
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -47,7 +48,7 @@ void MainRenderingPass::Execute(RenderContext& context)
 
     // Clear color, depth, and stencil buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 1.0f,  // Gray background
+        m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a,  // Configurable background color
         true,                      // clearColor
         true,                      // clearDepth
         true                       // clearStencil (needed for outline rendering)
@@ -84,6 +85,9 @@ void MainRenderingPass::Execute(RenderContext& context)
 
         // 3. Forward instanced rendering with visible renderables using pass-local buffer
         context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData);
+
+        // 4. Particle rendering
+        context.particleRenderer.RenderToPass(*this, context.frameData);
     }
 
     // Execute all commands submitted to this pass's command buffer

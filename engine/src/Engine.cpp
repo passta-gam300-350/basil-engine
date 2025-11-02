@@ -8,6 +8,7 @@
 #include "Ecs/ecs.h"
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
+#include "System/MaterialOverridesSystem.hpp"
 #include "Render/Camera.h"
 
 #ifdef _WIN32
@@ -62,7 +63,9 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 		Instance().m_RenderSystem->Init();
 		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-		Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
+
+		// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
+		MaterialOverridesSystem::Instance().Init();
 
 		Scheduler::CompileJobSchedule();
 		//InputManager::Get_Instance()->Setup_Callbacks();
@@ -107,9 +110,11 @@ void Engine::Init(std::string const& cfg ) {
 	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 	Instance().m_RenderSystem->Init();
 
-	// Set up RenderSystem observers and initialize existing entities from loaded world
+	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
+
+	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
+	MaterialOverridesSystem::Instance().Init();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
@@ -123,6 +128,7 @@ void Engine::CoreUpdate() {
 	instance.m_World.pre_update();
 	TransformSystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
+	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
 	Engine::GetRenderSystem().Update(instance.m_World);
@@ -230,9 +236,8 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 	Instance().m_RenderSystem->Init();
 
-	// Set up RenderSystem observers and initialize existing entities from loaded world
+	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-	Instance().m_RenderSystem->InitializeExistingEntities(Instance().m_World);
 
 	Scheduler::CompileJobSchedule();
 

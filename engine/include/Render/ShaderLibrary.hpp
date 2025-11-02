@@ -96,6 +96,12 @@ public:
     std::shared_ptr<Shader> GetToneMappingShader() const { return m_ToneMappingShader; }
 
     /**
+     * @brief Get shader for editor resolve (gamma correction for ImGui display)
+     * @return Editor resolve shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetEditorResolveShader() const { return m_EditorResolveShader; }
+
+    /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
      * @param vertPath Path to vertex shader
@@ -166,6 +172,7 @@ private:
     std::shared_ptr<Shader> m_SkyboxShader;
     std::shared_ptr<Shader> m_HDRComputeShader;      // Compute shader for luminance
     std::shared_ptr<Shader> m_ToneMappingShader;
+    std::shared_ptr<Shader> m_EditorResolveShader;   // Editor resolve with gamma correction
 
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
@@ -180,6 +187,7 @@ private:
     bool LoadSkyboxShader();
     bool LoadHDRComputeShader();
     bool LoadToneMappingShader();
+    bool LoadEditorResolveShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP

@@ -27,10 +27,10 @@ SpotShadowMappingPass::SpotShadowMappingPass(std::shared_ptr<Shader> shadowDepth
 
 void SpotShadowMappingPass::Execute(RenderContext& context)
 {
-    // Collect all enabled spot lights
+    // Collect all enabled spot lights with shadows enabled
     std::vector<const SubmittedLightData*> spotLights;
     for (const auto& light : context.lights) {
-        if (light.enabled && light.type == Light::Type::Spot) {
+        if (light.enabled && light.castShadows && light.type == Light::Type::Spot) {
             spotLights.push_back(&light);
             if (spotLights.size() >= MAX_SPOT_LIGHTS) {
                 spdlog::warn("SpotShadowMappingPass: Exceeded maximum spot lights ({}), ignoring extras", MAX_SPOT_LIGHTS);
@@ -39,7 +39,7 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
         }
     }
 
-    // If no spot lights, return (frame data is already cleared)
+    // If no spot lights with shadows enabled, return (frame data is already cleared)
     if (spotLights.empty()) {
         return;
     }

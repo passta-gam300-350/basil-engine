@@ -233,11 +233,43 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         // Add instance data with actual material properties
         InstanceData instanceData;
         instanceData.modelMatrix = renderable.transform;
-        instanceData.color = glm::vec4(renderable.material->GetAlbedoColor(), 1.0f);
+
+        // Apply base material properties first
+        glm::vec3 albedoColor = renderable.material->GetAlbedoColor();
+        float metallicValue = renderable.material->GetMetallicValue();
+        float roughnessValue = renderable.material->GetRoughnessValue();
+
+        // Apply property block overrides if present
+        if (renderable.propertyBlock) {
+            glm::vec3 overrideColor;
+            if (renderable.propertyBlock->TryGetVec3("u_AlbedoColor", overrideColor)) {
+                albedoColor = overrideColor;
+
+                // Debug: Log property block application (only first few times)
+                static int propBlockApplyCount = 0;
+                if (propBlockApplyCount < 3) {
+                    spdlog::info("InstancedRenderer: Applied property block albedo color override ({}, {}, {})",
+                        overrideColor.x, overrideColor.y, overrideColor.z);
+                    propBlockApplyCount++;
+                }
+            }
+
+            float overrideMetallic;
+            if (renderable.propertyBlock->TryGetFloat("u_MetallicValue", overrideMetallic)) {
+                metallicValue = overrideMetallic;
+            }
+
+            float overrideRoughness;
+            if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", overrideRoughness)) {
+                roughnessValue = overrideRoughness;
+            }
+        }
+
+        instanceData.color = glm::vec4(albedoColor, 1.0f);
         instanceData.materialId = 0; // Not used yet, could be used for texture indexing
         instanceData.flags = 0;
-        instanceData.metallic = renderable.material->GetMetallicValue();
-        instanceData.roughness = renderable.material->GetRoughnessValue();
+        instanceData.metallic = metallicValue;
+        instanceData.roughness = roughnessValue;
 
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
@@ -405,8 +437,134 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
         }
     }
 
-    // No changes detected - same count and same IDs
+    // Check if transforms changed (important for editor mode where entities move/scale/rotate)
+    // Compare transform matrix hash for quick change detection
+    if (!m_LastTransformHashes.empty() && m_LastTransformHashes.size() == renderables.size())
+    {
+        for (size_t i = 0; i < renderables.size(); ++i)
+        {
+            // Hash transform matrix (sum diagonal + translation)
+            // GLM uses column-major: t[col][row]
+            // Translation is in column 3: t[3][0], t[3][1], t[3][2]
+            const glm::mat4& t = renderables[i].transform;
+            float currentHash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
+                               t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+            if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
+            {
+                // Transform changed - need to rebuild
+                UpdateTransformHashes(renderables);
+                return true;
+            }
+        }
+    }
+    else
+    {
+        // First time or size mismatch - initialize transform hashes
+        UpdateTransformHashes(renderables);
+        return true;
+    }
+
+    // Check if property blocks changed (material override edits in Inspector)
+    // This catches cases where MaterialOverridesComponent is edited
+    if (!m_LastPropertyBlockHashes.empty() && m_LastPropertyBlockHashes.size() == renderables.size())
+    {
+        for (size_t i = 0; i < renderables.size(); ++i)
+        {
+            const auto& renderable = renderables[i];
+
+            // Compute hash of property block data
+            float currentPropHash = 0.0f;
+            if (renderable.propertyBlock)
+            {
+                // Hash albedo color if it exists
+                glm::vec3 albedoColor(0.0f);
+                if (renderable.propertyBlock->TryGetVec3("u_AlbedoColor", albedoColor))
+                {
+                    currentPropHash += albedoColor.r + albedoColor.g + albedoColor.b;
+                }
+
+                // Hash metallic/roughness if they exist
+                float metallic = 0.0f, roughness = 0.0f;
+                if (renderable.propertyBlock->TryGetFloat("u_MetallicValue", metallic))
+                {
+                    currentPropHash += metallic * 10.0f;
+                }
+                if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", roughness))
+                {
+                    currentPropHash += roughness * 10.0f;
+                }
+            }
+
+            // Compare with cached hash
+            if (std::abs(currentPropHash - m_LastPropertyBlockHashes[i]) > 0.0001f)
+            {
+                // Property block changed - rebuild instance data
+                UpdateTransformHashes(renderables);
+                UpdatePropertyBlockHashes(renderables);
+                return true;
+            }
+        }
+    }
+    else
+    {
+        // First time or size mismatch - initialize property block hashes
+        UpdatePropertyBlockHashes(renderables);
+        if (!m_LastPropertyBlockHashes.empty())
+        {
+            // Has property blocks - need to build instance data
+            return true;
+        }
+    }
+
+    // No changes detected - same count, same IDs, same transforms, same properties
     return false;
 }
 
+void InstancedRenderer::UpdateTransformHashes(const std::vector<RenderableData>& renderables)
+{
+    m_LastTransformHashes.clear();
+    m_LastTransformHashes.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Hash transform matrix (sum diagonal + translation)
+        // GLM uses column-major: t[col][row]
+        // Translation is in column 3: t[3][0], t[3][1], t[3][2]
+        const glm::mat4& t = r.transform;
+        float hash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
+                    t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+        m_LastTransformHashes.push_back(hash);
+    }
+}
+
+void InstancedRenderer::UpdatePropertyBlockHashes(const std::vector<RenderableData>& renderables)
+{
+    m_LastPropertyBlockHashes.clear();
+    m_LastPropertyBlockHashes.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Hash property block data (if present)
+        float hash = 0.0f;
+        if (r.propertyBlock)
+        {
+            // Hash albedo color
+            glm::vec3 albedoColor(0.0f);
+            if (r.propertyBlock->TryGetVec3("u_AlbedoColor", albedoColor))
+            {
+                hash += albedoColor.r + albedoColor.g + albedoColor.b;
+            }
+
+            // Hash metallic/roughness
+            float metallic = 0.0f, roughness = 0.0f;
+            if (r.propertyBlock->TryGetFloat("u_MetallicValue", metallic))
+            {
+                hash += metallic * 10.0f;
+            }
+            if (r.propertyBlock->TryGetFloat("u_RoughnessValue", roughness))
+            {
+                hash += roughness * 10.0f;
+            }
+        }
+        m_LastPropertyBlockHashes.push_back(hash);
+    }
+}
 

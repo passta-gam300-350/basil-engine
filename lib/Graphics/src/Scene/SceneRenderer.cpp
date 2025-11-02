@@ -18,6 +18,7 @@
 #include "Pipeline/BloomRenderPass.h"
 #include "Resources/Shader.h"
 #include "Resources/Mesh.h"
+#include "Rendering/ParticleRenderer.h"
 #include <glfw/glfw3.h>
 #include <cassert>
 #include <spdlog/spdlog.h>
@@ -50,6 +51,12 @@ void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
 
+void SceneRenderer::SubmitParticles(const ParticleRenderData& particleData) {
+    if (m_ParticleRenderer)
+    {
+        m_ParticleRenderer->SubmitParticleSystem(particleData);
+    }
+}
 void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();
@@ -59,6 +66,10 @@ void SceneRenderer::ClearFrame()
 	m_FrameData.shadowDataArray.clear();
 	m_FrameData.shadow2DTextures.clear();
 	m_FrameData.shadowCubemapTextures.clear();
+    if (m_ParticleRenderer)
+    {
+        m_ParticleRenderer->ClearFrame();
+    }
 }
 
 
@@ -116,7 +127,7 @@ void SceneRenderer::InitializeDefaultPipeline()
 
     // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
-    toneMapPass->EnableGammaCorrection(false);  // Disable manual gamma - ToneMapPass uses SRGB8 format for hardware gamma via GL_FRAMEBUFFER_SRGB
+    toneMapPass->EnableGammaCorrection(true);  // Enable manual gamma - outputs RGB8 to avoid ImGui brightness issues
     mainPipeline->AddPass(toneMapPass);
     //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
@@ -150,6 +161,9 @@ void SceneRenderer::InitializeRenderingCoordinators()
 
     m_InstancedRenderer = std::make_unique<InstancedRenderer>(m_PBRLightingRenderer.get());
     assert(m_InstancedRenderer && "Failed to create InstancedRenderer");
+
+    m_ParticleRenderer = std::make_unique<ParticleRenderer>();
+    assert(m_ParticleRenderer && "Failed to create ParticleRenderers");
 }
 
 void SceneRenderer::Render()
@@ -158,7 +172,7 @@ void SceneRenderer::Render()
     assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized before rendering");
     assert(m_ResourceManager && "ResourceManager must be initialized before rendering");
     assert(m_TextureSlotManager && "TextureSlotManager must be initialized before rendering");
-
+    assert(m_ParticleRenderer && "ParticleRenderer must be initialized before rendering");
     // Update viewport dimensions in frame data
     GLFWwindow* currentWindow = glfwGetCurrentContext();
     if (currentWindow) {
@@ -183,7 +197,8 @@ void SceneRenderer::Render()
         *m_InstancedRenderer,    // ref to instanced renderer
         *m_PBRLightingRenderer,  // ref to PBR lighting
         *m_ResourceManager,      // ref to resource manager
-        *m_TextureSlotManager    // ref to texture slot manager
+        *m_TextureSlotManager,   // ref to texture slot manager
+        *m_ParticleRenderer      // ref to particle renderer
     );
 
     // Execute the single pipeline
@@ -326,7 +341,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -407,6 +422,33 @@ bool SceneRenderer::IsSkyboxEnabled() const
     return false;
 }
 
+void SceneRenderer::SetBackgroundColor(const glm::vec4& color)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting background color");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetClearColor(color);
+        }
+    }
+}
+
+glm::vec4 SceneRenderer::GetBackgroundColor() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetClearColor();
+        }
+    }
+    return glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);  // Default gray
+}
+
 void SceneRenderer::SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const
 {
     assert(shader && "HDR compute shader cannot be null");
@@ -438,6 +480,22 @@ void SceneRenderer::SetToneMappingShader(const std::shared_ptr<Shader>& shader) 
         }
     }
 }
+
+//void SceneRenderer::SetEditorResolveShader(const std::shared_ptr<Shader>& shader) const
+//{
+//    assert(shader && "Editor resolve shader cannot be null");
+//    assert(shader->ID != 0 && "Editor resolve shader must be compiled and linked");
+//    assert(m_Pipeline && "Pipeline must be initialized before setting editor resolve shader");
+//
+//    if (m_Pipeline)
+//    {
+//        auto editorResolvePass = std::dynamic_pointer_cast<EditorResolvePass>(m_Pipeline->GetPass("EditorResolvePass"));
+//        if (editorResolvePass)
+//        {
+//            editorResolvePass->SetConversionShader(shader);
+//        }
+//    }
+//}
 
 // ===== FACADE METHODS FOR DECOUPLING =====
 void SceneRenderer::ToggleRenderPass(const std::string& passName)

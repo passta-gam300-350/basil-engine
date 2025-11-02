@@ -24,6 +24,7 @@ Technology is prohibited.
 #include <Render/Camera.h>
 #include <Engine.hpp>
 #include <Component/Transform.hpp>
+#include <Component/MaterialOverridesComponent.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
@@ -340,15 +341,23 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
-				if (meta_type.size_of() <= sizeof(int))
-				{
-					int enum_value = *static_cast<const int*>(val_ptr);
-					ImGui::InputInt(field_name.c_str(), &enum_value);
+
+				// Properly read enum value based on its underlying type size
+				int enum_value = 0;
+				if (meta_type.size_of() == sizeof(uint8_t)) {
+					enum_value = *static_cast<const uint8_t*>(val_ptr);
 				}
-				else
-				{
+				else if (meta_type.size_of() == sizeof(uint16_t)) {
+					enum_value = *static_cast<const uint16_t*>(val_ptr);
+				}
+				else if (meta_type.size_of() == sizeof(uint32_t)) {
+					enum_value = *static_cast<const uint32_t*>(val_ptr);
+				}
+				else {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
+
+				ImGui::InputInt(field_name.c_str(), &enum_value);
 			}
 
 			if (rp::Guid* v = value.try_cast<rp::Guid>())
@@ -378,6 +387,88 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			else if (bool* vb = value.try_cast<bool>()) {
 				if (ImGui::Checkbox(field_name.c_str(), vb)) {
 					is_dirty = true;
+				}
+			}
+			// Handle unordered_map<std::string, float>
+			else if (auto* map_float = value.try_cast<std::unordered_map<std::string, float>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_float->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_float) {
+							ImGui::PushID(idx++);
+							if (ImGui::InputFloat(key.c_str(), &val)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::vec3>
+			else if (auto* map_vec3 = value.try_cast<std::unordered_map<std::string, glm::vec3>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_vec3->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_vec3) {
+							ImGui::PushID(idx++);
+							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
+							if (ImGui::ColorEdit3(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::vec4>
+			else if (auto* map_vec4 = value.try_cast<std::unordered_map<std::string, glm::vec4>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_vec4->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_vec4) {
+							ImGui::PushID(idx++);
+							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
+							if (ImGui::ColorEdit4(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::mat4>
+			else if (auto* map_mat4 = value.try_cast<std::unordered_map<std::string, glm::mat4>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_mat4->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						for (auto& [key, val] : *map_mat4) {
+							ImGui::Text("%s: [mat4 - not editable]", key.c_str());
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, Resource::Guid>
+			else if (auto* map_guid = value.try_cast<std::unordered_map<std::string, Resource::Guid>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_guid->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						for (auto& [key, val] : *map_guid) {
+							ImGui::Text("%s: %s", key.c_str(), val.to_hex().c_str());
+						}
+					}
+					ImGui::TreePop();
 				}
 			}
 		}
@@ -591,6 +682,17 @@ void EditorMain::Render_SceneExplorer()
 		uint32_t entityUID = ecs::entity(ehdl).get_uid();
 		bool isSelected = (m_SelectedEntityID == entityUID);
 
+		// DEBUG: Log entity IDs for all entities
+		static bool loggedOnce = false;
+		if (!loggedOnce && i == 0) {
+			spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
+			for (size_t j = 0; j < entityHandles.size(); ++j) {
+				uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
+				spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
+			}
+			loggedOnce = true;
+		}
+
 		// Display entity info with selection highlighting
 		std::string entityName = entityNames[i];
 
@@ -611,7 +713,15 @@ void EditorMain::Render_SceneExplorer()
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow text for selected
 		}
 
-		if (ImGui::TreeNode(entityName.c_str())) {
+		bool nodeOpen = ImGui::TreeNode(entityName.c_str());
+
+		// Check if TreeNode header was clicked (must be done immediately after TreeNode call)
+		if (ImGui::IsItemClicked()) {
+			spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
+			SelectEntity(entityUID);
+		}
+
+		if (nodeOpen) {
 			// Show component info
 			if (hasVisibility) {
 				ImGui::Text("Has Visibility Component");
@@ -629,11 +739,6 @@ void EditorMain::Render_SceneExplorer()
 		// Pop the selection highlight color if it was applied
 		if (isSelected) {
 			ImGui::PopStyleColor();
-		}
-
-		// Allow clicking entity in hierarchy to select it
-		if (ImGui::IsItemClicked()) {
-			SelectEntity(entityUID);
 		}
 
 		ImGui::PopID();
@@ -1082,6 +1187,13 @@ void EditorMain::CreatePlaneEntity()
 		meshRenderer.material.m_MaterialGuid = rp::Guid{}; // Use 0 for default material
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+		// Add material overrides for customization (replaces embedded struct)
+		MaterialOverridesComponent materialOverrides;
+		materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+		materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
+		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 	});
 }
 
@@ -1097,16 +1209,18 @@ void EditorMain::CreateLightEntity()
 		// Add position
 		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
 
-		// Add light component
+		// Add light component (default initializers handle most fields)
 		LightComponent light;
 		light.m_Type = Light::Type::Directional;
 		light.m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);
 		light.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
-		light.m_Intensity = 1.0f;
+		light.m_DiffuseIntensity = 1.0f;
+		light.m_AmbientIntensity = 0.0f;
+		light.m_IsEnabled = true;
+		light.m_CastShadows = true;
 		light.m_Range = 10.0f;
 		light.m_InnerCone = 30.0f;
 		light.m_OuterCone = 45.0f;
-		light.m_IsEnabled = true;
 
 		world.add_component_to_entity<LightComponent>(entity, light);
 	});
@@ -1167,6 +1281,13 @@ void EditorMain::CreatePhysicsDemoScene()
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
+	// Add material overrides for customization (replaces embedded struct)
+	MaterialOverridesComponent materialOverrides;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
+	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+
 	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
 	transform.m_Scale = glm::vec3{ 50,1,50 };
 	auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
@@ -1216,12 +1337,16 @@ void EditorMain::CreatePhysicsDemoScene()
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer2.m_MeshGuid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.material.m_MaterialGuid = materialGuid2;
-	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
-	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+	meshRenderer2.m_MaterialGuid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides2;
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
 	
@@ -1254,14 +1379,19 @@ void EditorMain::CreateDemoScene()
 		light.m_Type = Light::Type::Directional;
 		light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
 		light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-		light.m_Intensity = 2.5f;
+		light.m_DiffuseIntensity = 1.0f;
+		light.m_AmbientIntensity = 0.0f;
 		light.m_IsEnabled = true;
+		light.m_CastShadows = true;
+		light.m_Range = 10.0f;
+		light.m_InnerCone = 30.0f;
+		light.m_OuterCone = 45.0f;
 
 		world.add_component_to_entity<LightComponent>(lightEntity, light);
 	});
 
 	// Set stronger ambient light for better visibility
-	engineService.SetAmbientLight(glm::vec3(0.7f, 0.7f, 0.7f));
+	engineService.SetAmbientLight(glm::vec3(0.03f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
@@ -1296,12 +1426,16 @@ void EditorMain::CreatePhysicsCube()
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer2.m_MeshGuid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.material.m_MaterialGuid = materialGuid2;
-	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
-	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+	meshRenderer2.m_MaterialGuid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides2;
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
 
@@ -1341,14 +1475,17 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 	meshRenderer.m_MeshGuid = meshGuid;
 	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_MaterialGuid = materialGuid;
-	meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
-	meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
-		meshRenderer.material.roughness = 0.6f; // Medium roughness
+	meshRenderer.m_MaterialGuid = materialGuid;
 
+	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
-	}); // End of ExecuteOnEngineThread lambda
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = color; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+	});
 }
 
 void EditorMain::CreateCubeGrid(int gridSize, float spacing)
@@ -1356,13 +1493,13 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 	assert(gridSize > 0 && gridSize <= 10 && "Grid size must be between 1-10");
 	assert(spacing > 0.0f && "Spacing must be positive");
 
-	// Same colors as GraphicsTestDriver
+	// Vibrant colors for easy visual distinction
 	std::vector<glm::vec3> colors = {
-		glm::vec3(0.8f, 0.2f, 0.2f),  // Red
-		glm::vec3(0.2f, 0.8f, 0.2f),  // Green
-		glm::vec3(0.2f, 0.2f, 0.8f),  // Blue
-		glm::vec3(1.0f, 0.8f, 0.2f),  // Gold
-		glm::vec3(1.0f, 1.0f, 1.0f),  // White
+		glm::vec3(0.9f, 0.1f, 0.1f),  // Red - vibrant red
+		glm::vec3(0.1f, 0.9f, 0.1f),  // Green - vibrant green
+		glm::vec3(0.1f, 0.4f, 0.9f),  // Blue - vibrant blue
+		glm::vec3(0.95f, 0.75f, 0.05f),  // Gold - bright gold
+		glm::vec3(0.9f, 0.9f, 0.9f),  // Light gray - easier to see than white
 	};
 
 	const float startOffset = -(gridSize - 1) * spacing * 0.5f;

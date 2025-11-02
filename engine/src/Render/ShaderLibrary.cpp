@@ -43,6 +43,9 @@ bool ShaderLibrary::Initialize() {
     if (!LoadToneMappingShader()) {
         spdlog::warn("ShaderLibrary: Tone mapping shader not loaded - HDR tone mapping will be disabled");
     }
+    if (!LoadEditorResolveShader()) {
+        spdlog::warn("ShaderLibrary: Editor resolve shader not loaded - editor viewport gamma correction will be disabled");
+    }
 
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
@@ -264,5 +267,18 @@ bool ShaderLibrary::LoadToneMappingShader() {
     }
 
     spdlog::info("ShaderLibrary: Tone mapping shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadEditorResolveShader() {
+    m_EditorResolveShader = Load("editor_resolve",
+        "assets/shaders/editor_resolve.vert",
+        "assets/shaders/editor_resolve.frag");
+
+    if (!m_EditorResolveShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: Editor resolve shader loaded successfully");
     return true;
 }

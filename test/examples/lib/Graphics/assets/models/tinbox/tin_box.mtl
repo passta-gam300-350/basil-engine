@@ -19,8 +19,8 @@ Ks 0.50 0.50 0.50
 Ns 96.0
 Tf 1.00 1.00 1.00
 map_Kd tin_can_lambert1_BaseColor.png
-map_Ks tin_can_lambert1_Metallic.png
-bump tin_can_lambert1_Normal.png
-map_Ns tin_can_lambert1_Roughness.png
+map_Pm tin_can_lambert1_Metallic.png
+norm tin_can_lambert1_Normal.png
+map_Pr tin_can_lambert1_Roughness.png
 disp tin_can_lambert1_Height.png
 Ni 1.00

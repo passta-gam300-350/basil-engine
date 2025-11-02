@@ -6,6 +6,10 @@
 void EngineContainerService::EngineContainer::engine_service() {
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
+
+	// Enable HDR pipeline (disabled by default in SceneRenderer)
+	Engine::GetRenderSystem().m_SceneRenderer->ToggleHDRPipeline(true);
+
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine
@@ -124,10 +128,19 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		ReflectionRegistry::TypeID type_id = m_write_back_queue.front();
 		m_write_back_queue.pop();
 
-		if (auto* storage = w.impl.get_registry().storage(ReflectionRegistry::types()[type_id].info().hash())) {
+		auto meta_type = ReflectionRegistry::types()[type_id];
+		if (auto* storage = w.impl.get_registry().storage(meta_type.info().hash())) {
 			auto it = std::find_if(m_component_list_snapshot.begin(), m_component_list_snapshot.end(), [type_id](std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>& kvpair) { return kvpair.first == type_id; });
 			if (storage->contains(ecs::world::detail::entt_entity_cast(inspected_entity)) && it != m_component_list_snapshot.end()) {
-				std::memcpy(storage->value(ecs::world::detail::entt_entity_cast(inspected_entity)), it->second.get(), ReflectionRegistry::types()[type_id].size_of());
+				void* dest = storage->value(ecs::world::detail::entt_entity_cast(inspected_entity));
+				void* src = it->second.get();
+
+				// Use entt meta assignment for proper copy (handles non-trivial types like unordered_map)
+				entt::meta_any dest_any = meta_type.from_void(dest);
+				entt::meta_any src_any = meta_type.from_void(src);
+
+				// Assign using meta system (properly handles copy constructors)
+				dest_any.assign(src_any);
 			}
 		}
 	}

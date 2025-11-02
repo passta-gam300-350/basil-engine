@@ -4,14 +4,31 @@
 #include <glad/glad.h>
 
 EditorResolvePass::EditorResolvePass()
-    : RenderPass("EditorResolvePass", FBOSpecs{1, 1, {{FBOTextureFormat::RGBA8}}})  // Minimal valid spec (unused)
+    : RenderPass("EditorResolvePass", FBOSpecs{ 1, 1, {{FBOTextureFormat::RGBA8}} })  // Minimal valid spec (unused)
 {
     // This pass doesn't render to its own framebuffer
-    // It performs a resolve blit from mainColorBuffer
+    // It creates a separate editorResolvedBuffer for the editor
     // The 1x1 FBO is never used, just needed to satisfy RenderPass requirements
+
+    // Create fullscreen quad for shader-based gamma correction
+    CreateFullScreenQuad();
 }
 
-void EditorResolvePass::Execute(RenderContext& context)
+EditorResolvePass::~EditorResolvePass()
+{
+    if (m_QuadVAO != 0)
+    {
+        glDeleteVertexArrays(1, &m_QuadVAO);
+        m_QuadVAO = 0;
+    }
+    if (m_QuadVBO != 0)
+    {
+        glDeleteBuffers(1, &m_QuadVBO);
+        m_QuadVBO = 0;
+    }
+}
+
+void EditorResolvePass::Execute(RenderContext &context)
 {
     // Determine which buffer to use for editor display (same logic as PresentPass)
     std::shared_ptr<FrameBuffer> sourceBuffer;
@@ -34,31 +51,28 @@ void EditorResolvePass::Execute(RenderContext& context)
 
     const auto &sourceSpec = sourceBuffer->GetSpecification();
 
-    // Always create or resize a separate buffer for editor
-    // This prevents read-write conflicts when the same buffer is used for both rendering and editor display
+    // Create final editor buffer - keep it simple with same format as source
+    // We'll rely on pure glBlitFramebuffer (proven to work without tearing)
     if (!context.frameData.editorResolvedBuffer ||
         context.frameData.editorResolvedBuffer->GetSpecification().Width != sourceSpec.Width ||
         context.frameData.editorResolvedBuffer->GetSpecification().Height != sourceSpec.Height)
     {
-        // Create non-MSAA version with same format as source
+        // Match source format exactly (SRGB8 if HDR, RGB16F if no HDR)
         FBOSpecs resolvedSpec = sourceSpec;
         resolvedSpec.Samples = 1;  // Force non-MSAA
         context.frameData.editorResolvedBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
 
-        spdlog::debug("EditorResolvePass: Created editor buffer ({}x{}, 1x sample)",
+        spdlog::debug("EditorResolvePass: Created editor buffer ({}x{}, same format as source)",
             resolvedSpec.Width, resolvedSpec.Height);
     }
 
-    // Blit or resolve the source buffer to the editor buffer
+    // Use ONLY glBlitFramebuffer - the proven reliable method
     if (sourceBuffer->IsMultisampled())
     {
-        // Resolve MSAA source buffer to non-MSAA editor buffer
         sourceBuffer->ResolveToFramebuffer(context.frameData.editorResolvedBuffer.get());
     }
     else
     {
-        // Source is not multisampled, perform a simple blit copy
-        // This creates a separate buffer for the editor, preventing flickering
         glBindFramebuffer(GL_READ_FRAMEBUFFER, sourceBuffer->GetFBOHandle());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context.frameData.editorResolvedBuffer->GetFBOHandle());
 
@@ -66,9 +80,48 @@ void EditorResolvePass::Execute(RenderContext& context)
             0, 0, sourceSpec.Width, sourceSpec.Height,
             0, 0, sourceSpec.Width, sourceSpec.Height,
             GL_COLOR_BUFFER_BIT,
-            GL_NEAREST  // Use nearest for exact copy
+            GL_NEAREST
         );
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
+    // Ensure GPU is completely done before releasing to main thread
+    // This might help with any residual tearing issues
+    glFinish();
+}
+
+void EditorResolvePass::CreateFullScreenQuad()
+{
+    // Full-screen quad in NDC coordinates
+    float quadVertices[] = {
+        // Positions   // TexCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,  // Top-left
+        -1.0f, -1.0f,  0.0f, 0.0f,  // Bottom-left
+         1.0f, -1.0f,  1.0f, 0.0f,  // Bottom-right
+
+        -1.0f,  1.0f,  0.0f, 1.0f,  // Top-left
+         1.0f, -1.0f,  1.0f, 0.0f,  // Bottom-right
+         1.0f,  1.0f,  1.0f, 1.0f   // Top-right
+    };
+
+    glGenVertexArrays(1, &m_QuadVAO);
+    glGenBuffers(1, &m_QuadVBO);
+
+    glBindVertexArray(m_QuadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    // Position attribute (location = 0)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+
+    // TexCoord attribute (location = 1)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+        (void *)(2 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    spdlog::info("EditorResolvePass: Full-screen quad created");
 }
