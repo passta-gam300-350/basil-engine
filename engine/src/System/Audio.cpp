@@ -1,114 +1,112 @@
 #include "System/Audio.hpp"
-#include <vector>
+#include "spdlog/spdlog.h"
+#include <chrono>
+#include <cmath>
 
-FMOD_RESULT result;
 FMOD::System* p_system;
 FMOD::ChannelGroup* master_group;
 std::vector<FMOD::ChannelGroup*> v_group;		// Need to pull data of created channel groups
 std::unordered_map<std::string, FMOD::Sound*> m_sound;
 std::vector<FMOD::Channel*> v_channel;
-FMOD_MODE mode = FMOD_DEFAULT;
 bool paused{ false };
+static std::unordered_map<FMOD::Channel*, std::vector<FMOD::DSP*>> channelToDsps;
+static std::unordered_map<FMOD::Channel*, std::pair<glm::vec3, glm::vec3>> channelTo3DPos; // channel -> (position, velocity)
 
 #pragma region TEMP VARIABLES & FUNCTIONS
-FMOD_VECTOR listener_pos{ 0.0f, 0.0f, 0.0f };
-FMOD_VECTOR listener_vel{ 0.0f, 0.0f, 0.0f };
+glm::vec3 listener_pos{ 0.0f, 0.0f, 0.0f };
+glm::vec3 listener_vel{ 0.0f, 0.0f, 0.0f };
 FMOD_VECTOR sound_pos{ 0.0f, 0.0f, 0.0f };
 FMOD_VECTOR sound_vel{ 0.0f, 0.0f, 0.0f };
-FMOD_VECTOR right{ 1.0f, 0.0f, 0.0f };
-FMOD_VECTOR up{ 0.0f, 1.0f, 0.0f };
-FMOD_VECTOR forward{ 0.0f, 0.0f, 1.0f };
+glm::vec3 right{ 1.0f, 0.0f, 0.0f };
+glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+glm::vec3 forward{ 0.0f, 0.0f, 1.0f };
 std::vector<FMOD::DSP*> dsp = { 0, 0, 0, 0 };
 std::vector<bool> dsp_bypass = { true, true, true, true };
 #pragma endregion
 
-void AudioSystem::FMOD_ErrorCheck(FMOD_RESULT _result)
-{
+void AudioSystem::FMOD_ErrorCheck(FMOD_RESULT _result) {
 	if (_result != FMOD_OK)
 	{
-		std::cerr << "FMOD ERROR! " << FMOD_ErrorString(_result);
+		spdlog::warn("FMOD ERROR! {}", FMOD_ErrorString(_result));
 		assert(false);
 		//exit(-1);
 	}
 }
 
-void AudioSystem::Play_Temp_Audio()
-{
-	std::cout << "Playing audio\n";
-	FMOD::Channel* p_channel = nullptr;
-	FMOD::Sound* p_sound = nullptr;
-	FMOD_MODE mode = FMOD_DEFAULT;
-	mode |= FMOD_LOOP_NORMAL;
-	mode |= FMOD_3D;
-	mode |= FMOD_CREATESTREAM;
-	result = p_system->createSound("test/examples/lib/resource/assets/audio/drumloop.wav", mode, nullptr, &p_sound);
-	FMOD_ErrorCheck(result);
-	result = p_system->playSound(p_sound, nullptr, false, &v_channel[0]);
-	FMOD_ErrorCheck(result);
+FMOD_VECTOR AudioSystem::Vec3_To_FMOD(const glm::vec3& v) noexcept {
+	FMOD_VECTOR fVec;
+	fVec.x = v.x;
+	fVec.y = v.y;
+	fVec.z = v.z;
+	return fVec;
 }
 
-void AudioSystem::Play_Audio()
-{
-	std::cout << "Playing audio\n";
+glm::vec3 AudioSystem::FMOD_to_Vec3(const FMOD_VECTOR& fv) noexcept {
+	return glm::vec3(fv.x, fv.y, fv.z);
 }
 
-void AudioSystem::Stop_Audio()
-{
-	std::cout << "Stopping audio\n";
+void AudioSystem::Play_Audio(std::string const& path, float volume) {
+    auto it = m_sound.find(path);
+    if (it == m_sound.end()) {
+		spdlog::warn("Audio: Sound not loaded: {}", path);
+        return;
+    }
+    FMOD::Sound* p_sound = it->second;
+    FMOD::Channel* ch = nullptr;
+    FMOD_ErrorCheck(p_system->playSound(p_sound, nullptr, false, &ch));
+	FMOD_ErrorCheck(ch->setVolume(volume));
+	spdlog::info("Audio: Playing audio: {}", path);
+    if (ch) {
+        if (!v_group.empty() && v_group[0])
+            FMOD_ErrorCheck(ch->setChannelGroup(v_group[0]));
+        v_channel.push_back(ch);
+    }
+}
+
+void AudioSystem::Stop_Audio() {
+	spdlog::info("Audio: Stopping audio");
 	if (paused)
 	{
-		std::cerr << "WARNING: Stopping audio on a paused channel!\n";
+		spdlog::warn("Audio: Stopping audio on a paused channel!");
 		return;
 	}
 }
 
-void AudioSystem::Stop_All_Audio()
-{
+void AudioSystem::Stop_All_Audio() {
+	spdlog::info("Audio: Stopping all audio");
 	for (int i{ 0 }; i < v_group.size(); ++i)
-	{
-		result = v_group[i]->stop();
-		FMOD_ErrorCheck(result);
-	}
+		FMOD_ErrorCheck(v_group[i]->stop());
 }
 
-void AudioSystem::Load_Audio(std::string _dir, bool _loop, bool _stream, bool _3d, bool _ambient, bool _linear)
-{
-	std::cout << "Loading audio\n";
-	mode |= (_loop) ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
-	mode |= (_stream) ? FMOD_CREATESTREAM : FMOD_CREATESAMPLE;
-	mode |= (_3d) ? FMOD_3D : FMOD_2D;
-	if (_3d)
-		mode |= (_ambient) ? FMOD_3D_INVERSETAPEREDROLLOFF : FMOD_3D_INVERSEROLLOFF;
-	mode |= (_linear) ? FMOD_3D_LINEARROLLOFF : FMOD_3D_INVERSETAPEREDROLLOFF; // [TEMP] Just to test linear rolloff
+void AudioSystem::Load_Audio(std::string dir, bool stream, bool ambient, bool dimension, bool linear, bool playOnAwake, bool loop, float minDistance, float maxDistance) {
 	FMOD::Sound* p_sound = nullptr;
-	result = p_system->createSound(_dir.c_str(), mode, nullptr, &p_sound);
-	FMOD_ErrorCheck(result);
-	if (_3d)
-	{
-		result = p_sound->set3DMinMaxDistance(MINDISTANCE, MAXDISTANCE);
-		FMOD_ErrorCheck(result);
+	FMOD_MODE mode = FMOD_DEFAULT;
+	mode |= (stream) ? FMOD_CREATESTREAM : FMOD_CREATESAMPLE;
+	mode |= (dimension) ? FMOD_3D : FMOD_2D;
+	mode |= (loop) ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+	if (dimension) mode |= (ambient) ? FMOD_3D_INVERSETAPEREDROLLOFF : FMOD_3D_INVERSEROLLOFF;
+    mode |= (linear) ? FMOD_3D_LINEARROLLOFF : FMOD_3D_INVERSETAPEREDROLLOFF; // [TEMP] Just to test linear rolloff
+	FMOD_ErrorCheck(p_system->createSound(dir.c_str(), mode, nullptr, &p_sound));
+	if (p_sound) {
+		if (dimension)
+			FMOD_ErrorCheck(p_sound->set3DMinMaxDistance(minDistance, maxDistance));
+		m_sound[dir] = p_sound;
 	}
-	if (p_sound)
-		m_sound[_dir] = p_sound;
+	spdlog::info("Audio: Loading audio: {}", dir);
 }
 
-void AudioSystem::Unload_Audio()
-{
-	std::cout << "Unloading audio\n";
+void AudioSystem::Unload_Audio() {
+	spdlog::info("Audio: Unloading audio");
 }
 
-void AudioSystem::Unload_All_Audio()
-{
+void AudioSystem::Unload_All_Audio() {
+	spdlog::info("Audio: Unloading all audio");
 	for (auto& sound : m_sound)
-	{
-		result = sound.second->release();
-		FMOD_ErrorCheck(result);
-	}
+		FMOD_ErrorCheck(sound.second->release());
 	m_sound.clear();
 }
 
-FMOD_MODE AudioSystem::Mode_Selector(Sound_Mode _mode)
-{
+FMOD_MODE AudioSystem::Mode_Selector(Sound_Mode _mode) noexcept {
 	switch (_mode)
 	{
 	case LOOP:		return FMOD_LOOP_NORMAL;
@@ -117,8 +115,7 @@ FMOD_MODE AudioSystem::Mode_Selector(Sound_Mode _mode)
 	}
 }
 
-FMOD_DSP_TYPE AudioSystem::Filter_Selector(Filter _filter)
-{
+FMOD_DSP_TYPE AudioSystem::Filter_Selector(Filter _filter) noexcept {
 	switch (_filter)
 	{
 	case LOW_PASS:		return FMOD_DSP_TYPE_LOWPASS;
@@ -129,273 +126,150 @@ FMOD_DSP_TYPE AudioSystem::Filter_Selector(Filter _filter)
 	}
 }
 
-AudioSystem AudioSystem::System() {
+float  AudioSystem::dbToVolume(float dB) noexcept {
+	return powf(10.0f, 0.05f * dB);
+}
+
+float  AudioSystem::VolumeTodB(float volume) noexcept {
+	return 20.0f * log10f(volume);
+}
+
+void AudioSystem::Set3DListenerAttributes(const glm::vec3& vPos, const glm::vec3& vVel, const glm::vec3& vFwd, const glm::vec3& vUp) {
+	const FMOD_VECTOR fPos = Vec3_To_FMOD(vPos);
+	const FMOD_VECTOR fVel = Vec3_To_FMOD(vVel);
+	const FMOD_VECTOR fFwd = Vec3_To_FMOD(vFwd);
+	const FMOD_VECTOR fUp = Vec3_To_FMOD(vUp);
+	FMOD_ErrorCheck(p_system->set3DListenerAttributes(0, &fPos, &fVel, &fFwd, &fUp));
+}
+
+void AudioSystem::Set3DSoundAttributes(FMOD::Channel* ch, const glm::vec3& vPos, const glm::vec3& vVel) {
+	if (!ch) return;
+	const FMOD_VECTOR pos = Vec3_To_FMOD(vPos);
+	const FMOD_VECTOR vel = Vec3_To_FMOD(vVel);
+	FMOD_ErrorCheck(ch->set3DAttributes(&pos, &vel));
+}
+
+void AudioSystem::RegisterChannel3DPosition(FMOD::Channel* ch, const glm::vec3& vPos, const glm::vec3& vVel) {
+	if (!ch) return;
+	channelTo3DPos[ch] = { vPos, vVel };
+}
+
+void AudioSystem::UpdateAllChannel3DAttributes() {
+	for (auto it = channelTo3DPos.begin(); it != channelTo3DPos.end();) {
+		FMOD::Channel* ch = it->first;
+		if (!ch) {
+			it = channelTo3DPos.erase(it);
+			continue;
+		}
+		
+		bool is_playing = false;
+		if (ch->isPlaying(&is_playing) == FMOD_OK && is_playing) {
+			Set3DSoundAttributes(ch, it->second.first, it->second.second);
+			++it;
+		} else {
+			it = channelTo3DPos.erase(it);
+		}
+	}
+}
+
+AudioSystem AudioSystem::System() noexcept {
 	return AudioSystem();
 }
 
 void AudioSystem::Init(void* extradriverdata) {
-	std::cout << "Creating audio system\n";
-	result = FMOD::System_Create(&p_system);
-	FMOD_ErrorCheck(result);
+	spdlog::info("Audio: Creating audio system");
+	FMOD_ErrorCheck(FMOD::System_Create(&p_system));
 
-	std::cout << "Initializing FMOD\n";
-	result = p_system->init(512, FMOD_INIT_NORMAL, extradriverdata);
-	FMOD_ErrorCheck(result);
+	spdlog::info("Audio: Initializing FMOD");
+	FMOD_ErrorCheck(p_system->init(512, FMOD_INIT_NORMAL, extradriverdata));
 
-	std::cout << "Setting 3D parameters\n";
-	result = p_system->set3DSettings(DOPPLERSCALE, DISTANCEFACTOR, ROLLOFFSCALE); //TEMP (Set saved 3D settings)
-	FMOD_ErrorCheck(result);
+	spdlog::info("Audio: Setting 3D parameters");
+	FMOD_ErrorCheck(p_system->set3DSettings(DOPPLERSCALE, DISTANCEFACTOR, ROLLOFFSCALE)); //TEMP (Set saved 3D settings)
 
 	// Need to pull data of created channel groups
-	std::cout << "Creating Channel Groups\n";
+	spdlog::info("Audio: Creating Channel Groups");
 	v_group.resize(1); // [TEMP]
-	for (int i{ 0 }; i < v_group.size(); ++i)
-	{
-		result = p_system->createChannelGroup(nullptr, &v_group[i]);
-		FMOD_ErrorCheck(result);
+	for (int i{ 0 }; i < v_group.size(); ++i) {
+		FMOD_ErrorCheck(p_system->createChannelGroup(nullptr, &v_group[i]));
 		// result = Set saved volume here
 		// FMOD_ErrorCheck(result);
 	}
 
 	// [TEMP]
-	// Set channel to channel group
-	v_channel.resize(1); // [TEMP]
-	result = v_channel[0]->setChannelGroup(v_group[0]);
 
-	std::cout << "Getting Master Channel Group\n";
-	result = p_system->getMasterChannelGroup(&master_group);
-	FMOD_ErrorCheck(result);
-	result = master_group->setVolume(0.5f); // [TEMP] (Set saved master volume)
-	FMOD_ErrorCheck(result);
+	spdlog::info("Audio: Getting Master Channel Group");
+	FMOD_ErrorCheck(p_system->getMasterChannelGroup(&master_group));
+	FMOD_ErrorCheck(master_group->setVolume(0.5f)); // [TEMP] (Set saved master volume)
 
 	// createSound here when serialization is done
-
-	std::cout << "Creating drumloop.wave\n";
-	//Load_Audio("test/examples/lib/resource/assets/audio/drumloop.wav", true, true, false, false); // [TEMP] (Add path to audio file)
-
-	Play_Temp_Audio();
-	FMOD_ErrorCheck(result);
-
-	// createDSP every possible built in DSP (custom DSP plugins when serialization is done)
-	dsp.reserve(SIZE_OF_FILTERS);
-
-	for (int i{ 0 }; i < SIZE_OF_FILTERS; ++i)
-	{
-		result = p_system->createDSPByType(Filter_Selector(static_cast<Filter>(i)), &dsp[i]);
-		FMOD_ErrorCheck(result);
-		result = v_channel[0]->addDSP(0, dsp[i]);
-		FMOD_ErrorCheck(result);
-		result = dsp[i]->setBypass(dsp_bypass[i]);
-		FMOD_ErrorCheck(result);
-	}
-	// Need to find a way to separate DSP on different channels (DSP is shared across all channels)
 
 	// [ENDTEMP]
 }
 
 
-void AudioSystem::Update(ecs::world&)
-{
+void AudioSystem::Update(ecs::world&) {
 	std::vector<FMOD::Channel*> stopped_channels;
-	for (auto it = v_channel.begin(); it != v_channel.end(); ++it)
-	{
+	for (auto it = v_channel.begin(); it != v_channel.end(); ++it) {
+		FMOD::Channel* ch = *it;
+		if (!ch)
+			continue;
 		bool is_playing = false;
-		result = (*it)->isPlaying(&is_playing);
-		FMOD_ErrorCheck(result);
+		FMOD_ErrorCheck(ch->isPlaying(&is_playing));
 		if (!is_playing)
-		{
-			stopped_channels.push_back(*it);
-		}
+			stopped_channels.push_back(ch);
 	}
-	for (auto& channel : stopped_channels)
-	{
+
+	for (auto& channel : stopped_channels) {
 		auto it = std::find(v_channel.begin(), v_channel.end(), channel);
-		if (it != v_channel.end())
-		{
+		if (it != v_channel.end()){
+			auto d = channelToDsps.find(*it);
+			if (d != channelToDsps.end()) {
+				for (auto* node : d->second) {
+					if (!node) continue;
+					node->release();
+				}
+				channelToDsps.erase(d);
+			}
+			channelTo3DPos.erase(*it);
 			v_channel.erase(it);
 		}
 	}
 
-	{
-	// [TEMP]
-	//{
-	//	if (Common_BtnDown(BTN_Q))
-	//	{
-	//		listener_pos.y -= 1.0f * DISTANCEFACTOR;
-	//		if (listener_pos.y < -20.0f * DISTANCEFACTOR)
-	//		{
-	//			listener_pos.y = -20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
+	Set3DListenerAttributes(listener_pos, listener_vel, forward, up);
+	UpdateAllChannel3DAttributes();
 
-	//	if (Common_BtnDown(BTN_E))
-	//	{
-	//		listener_pos.y += 1.0f * DISTANCEFACTOR;
-	//		if (listener_pos.y > 20.0f * DISTANCEFACTOR)
-	//		{
-	//			listener_pos.y = 20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_A))
-	//	{
-	//		listener_pos.x += 1.0f * DISTANCEFACTOR;
-	//		if (listener_pos.x > 20.0f * DISTANCEFACTOR)
-	//		{
-	//			listener_pos.x = 20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_D))
-	//	{
-	//		listener_pos.x -= 1.0f * DISTANCEFACTOR;
-	//		if (listener_pos.x < -20.0f * DISTANCEFACTOR)
-	//		{
-	//			listener_pos.x = -20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_W))
-	//	{
-	//		listener_pos.z += 1.0f * DISTANCEFACTOR;
-	//		if (listener_pos.z > 20.0f * DISTANCEFACTOR)
-	//		{
-	//			listener_pos.z = 20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_S))
-	//	{
-	//		listener_pos.z -= 1.0f * DISTANCEFACTOR;
-	//		if (listener_pos.z < -20.0f * DISTANCEFACTOR)
-	//		{
-	//			listener_pos.z = -20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_Y))
-	//	{
-	//		sound_pos.y -= 1.0f * DISTANCEFACTOR;
-	//		if (sound_pos.y < -20.0f * DISTANCEFACTOR)
-	//		{
-	//			sound_pos.y = -20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_I))
-	//	{
-	//		sound_pos.y += 1.0f * DISTANCEFACTOR;
-	//		if (sound_pos.y > 20.0f * DISTANCEFACTOR)
-	//		{
-	//			sound_pos.y = 20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_H))
-	//	{
-	//		sound_pos.x += 1.0f * DISTANCEFACTOR;
-	//		if (sound_pos.x > 20.0f * DISTANCEFACTOR)
-	//		{
-	//			sound_pos.x = 20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_K))
-	//	{
-	//		sound_pos.x -= 1.0f * DISTANCEFACTOR;
-	//		if (sound_pos.x < -20.0f * DISTANCEFACTOR)
-	//		{
-	//			sound_pos.x = -20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_U))
-	//	{
-	//		sound_pos.z += 1.0f * DISTANCEFACTOR;
-	//		if (sound_pos.z > 20.0f * DISTANCEFACTOR)
-	//		{
-	//			sound_pos.z = 20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnDown(BTN_J))
-	//	{
-	//		sound_pos.z -= 1.0f * DISTANCEFACTOR;
-	//		if (sound_pos.z < -20.0f * DISTANCEFACTOR)
-	//		{
-	//			sound_pos.z = -20.0f * DISTANCEFACTOR;
-	//		}
-	//	}
-
-	//	if (Common_BtnPress(BTN_MORE))
-	//	{
-	//		paused = !paused;
-	//		if (v_channel[0])
-	//		{
-	//			result = v_channel[0]->setPaused(paused);
-	//			FMOD_ErrorCheck(result);
-	//		}
-	//	}
-	//}
-	// [ENDTEMP]
+	// [TEMP] Update temp sound position (remove this once ECS integration is complete)
+	if (!v_channel.empty() && v_channel[0]) {
+		static auto startTime = std::chrono::steady_clock::now();
+		const auto currentTime = std::chrono::steady_clock::now();
+		auto elapsed = std::chrono::duration<float>(currentTime - startTime).count();
+		
+		constexpr float radius = 10.0f * DISTANCEFACTOR;
+		const float speed = 0.1f;
+		const float angle = elapsed * speed * 2.0f * 3.14159265f;
+		
+		sound_pos.x = radius * std::cos(angle);
+		sound_pos.y = 0.0f;
+		sound_pos.z = radius * std::sin(angle);
+		
+		sound_vel.x = -radius * speed * 2.0f * 3.14159265f * std::sin(angle);
+		sound_vel.y = 0.0f;
+		sound_vel.z = radius * speed * 2.0f * 3.14159265f * std::cos(angle);
+		
+		const glm::vec3 vPos = FMOD_to_Vec3(sound_pos);
+		const glm::vec3 vVel = FMOD_to_Vec3(sound_vel);
+		Set3DSoundAttributes(v_channel[0], vPos, vVel);
+		RegisterChannel3DPosition(v_channel[0], vPos, vVel);
 	}
 
-	result = p_system->set3DListenerAttributes(0, &listener_pos, &listener_vel, &forward, &up);
-	FMOD_ErrorCheck(result);
-
-	result = v_channel[0]->set3DAttributes(&sound_pos, &sound_vel);
-	FMOD_ErrorCheck(result);
-
-	{
-	// [TEMP]
-	//{
-	//	if (Common_BtnPress(BTN_ACTION1))
-	//	{
-	//		dsp_bypass[0] = !dsp_bypass[0];
-	//		result = dsp[0]->setBypass(dsp_bypass[0]);
-	//		FMOD_ErrorCheck(result);
-	//	}
-
-	//	if (Common_BtnPress(BTN_ACTION2))
-	//	{
-	//		dsp_bypass[1] = !dsp_bypass[1];
-	//		result = dsp[1]->setBypass(dsp_bypass[1]);
-	//		FMOD_ErrorCheck(result);
-	//	}
-
-	//	if (Common_BtnPress(BTN_ACTION3))
-	//	{
-	//		dsp_bypass[2] = !dsp_bypass[2];
-	//		result = dsp[2]->setBypass(dsp_bypass[2]);
-	//		FMOD_ErrorCheck(result);
-	//	}
-
-	//	if (Common_BtnPress(BTN_ACTION4))
-	//	{
-	//		dsp_bypass[3] = !dsp_bypass[3];
-	//		result = dsp[3]->setBypass(dsp_bypass[3]);
-	//		FMOD_ErrorCheck(result);
-	//	}
-	//}
-	// [ENDTEMP]
-	}
-
-	result = p_system->update();
-	FMOD_ErrorCheck(result);
+	FMOD_ErrorCheck(p_system->update());
 }
 
 
-void AudioSystem::Exit()
-{
-	std::cout << "Exiting\n";
-	//Release all created sounds here
-	for (auto& sound : m_sound)
-	{
-		result = sound.second->release();
-		FMOD_ErrorCheck(result);
-	}
-	FMOD_ErrorCheck(result);
+void AudioSystem::Exit() {
+	spdlog::info("Audio: Exiting");
+	Unload_All_Audio();
 	//Release all created channel groups here
-	result = p_system->release();
-	FMOD_ErrorCheck(result);
+	//
+	FMOD_ErrorCheck(p_system->release());
 }

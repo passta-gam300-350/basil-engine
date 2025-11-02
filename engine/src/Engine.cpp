@@ -100,7 +100,6 @@ void Engine::Init(std::string const& cfg ) {
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
-	AudioSystem::System().Init(); // [TEMP]
 }
 
 void Engine::CoreUpdate() {
@@ -214,8 +213,19 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
+	AudioSystem::System().Init(); // [TEMP]
 	RenderSystem::System().Init();
 	Scheduler::CompileJobSchedule();
+
+	// [TEMP] Test loading and playing sound until level loading is implemented
+	AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/in_game_placeholderOld.ogg", true, false, true, false, false, true);
+	AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/ambient_wind_howling.ogg", true, true, true, false, false, true);
+	AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/in_game_placeholderOld.ogg", 6.0f);
+	AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/ambient_wind_howling.ogg", 1.0f);
+	//AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/drumloop.wav", false, false, true, false, true, true);
+	//AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/heal.ogg", false, false, true, false, false, true);
+	//AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/drumloop.wav");
+	//AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/heal.ogg");
 
 	auto e = Engine::GetWorld().add_entity();
 	e.destroy();
