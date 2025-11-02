@@ -167,7 +167,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(
-        desc.mesh_asset_source,
+        desc.base.m_source,
         aiProcess_Triangulate |
         aiProcess_GenSmoothNormals |
         aiProcess_CalcTangentSpace |
@@ -175,7 +175,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
     );
 
     if (!scene || !scene->HasMeshes()) {
-        throw std::runtime_error("Failed to load model: " + desc.mesh_asset_source);
+        throw std::runtime_error("Failed to load model: " + desc.base.m_source);
     }
 
     glm::mat4 transform = BuildTransform(desc);
@@ -234,6 +234,6 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
     return result;
 }
 
-RegisterResourceTypeImporter(ModelDescriptor, MeshResourceData, ".mesh", ImportModel, ".gltf", ".obj", ".fbx")
+RegisterResourceTypeImporter(ModelDescriptor, MeshResourceData, "mesh", ".mesh", ImportModel, ".gltf", ".obj", ".fbx")
 
 #endif

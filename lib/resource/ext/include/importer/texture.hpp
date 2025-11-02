@@ -24,6 +24,6 @@ inline TextureResourceData ImportTexture(TextureDescriptor const& texDesc) {
 	return texdata;
 }
 
-RegisterResourceTypeImporter(TextureDescriptor, TextureResourceData, ".texture", ImportTexture, ".png", ".jpeg", ".jpg")
+RegisterResourceTypeImporter(TextureDescriptor, TextureResourceData, "texture", ".texture", ImportTexture, ".png", ".jpeg", ".jpg")
 
 #endif

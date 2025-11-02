@@ -29,7 +29,6 @@
 // Forward declarations
 class ShaderLibrary;
 class PrimitiveManager;
-class RenderResourceCache;
 class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
@@ -55,13 +54,13 @@ struct MeshRendererComponent {
         CUBE,
         PLANE
 	} m_PrimitiveType;
-    rp::TypeNameGuid<"mesh"> m_MeshGuid;     ///< GUID of the mesh asset (or zero for primitives)
-    rp::TypeNameGuid<"material"> m_MaterialGuid; ///< GUID of the material asset
+    rp::BasicIndexedGuid m_MeshGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"mesh">{}) };     ///< GUID of the mesh asset (or zero for primitives)
+    rp::BasicIndexedGuid m_MaterialGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}) }; ///< GUID of the material asset
 
     /// Per-entity material properties (used when hasAttachedMaterial is false)
     struct Material
     {
-        rp::TypeNameGuid<"material"> m_MaterialGuid;
+        rp::BasicIndexedGuid m_MaterialGuid;
         float metallic;            ///< Metallic value (0.0 = dielectric, 1.0 = metallic)
 		float roughness;           ///< Surface roughness (0.0 = smooth, 1.0 = rough)
 		glm::vec3 m_AlbedoColor;   ///< Base color (RGB)
@@ -197,6 +196,20 @@ public:
      * @param world The ECS world to attach observers to
      */
     void SetupComponentObservers(ecs::world& world);
+
+    // ========== Public Accessors ==========
+
+    /**
+     * @brief Get the SceneRenderer instance
+     * @return Pointer to SceneRenderer (may be nullptr if not initialized)
+     */
+    SceneRenderer* GetSceneRenderer() const { return m_SceneRenderer.get(); }
+
+    /**
+     * @brief Get the ShaderLibrary instance
+     * @return Pointer to ShaderLibrary (may be nullptr if not initialized)
+     */
+    ShaderLibrary* GetShaderLibrary() const { return m_ShaderLibrary.get(); }
 
     // ========== Static API for External Access ==========
 
@@ -366,11 +379,31 @@ private:
      */
     void OnMeshRendererUpdated(entt::registry& registry, entt::entity entity);
 
+    // ========== Resource Loading Helpers ==========
+
+    /**
+     * @brief Load mesh resource from ResourceRegistry or fallback to primitive
+     * @param meshComp MeshRendererComponent containing mesh GUID
+     * @return Loaded mesh or primitive fallback
+     */
+    std::shared_ptr<Mesh> LoadMeshResource(const MeshRendererComponent& meshComp) const;
+
+    /**
+     * @brief Load material resource from ResourceRegistry or create default
+     * @param materialGuid GUID of material to load
+     * @param hasAttachedMaterial Whether entity has attached material
+     * @param entityUID Entity UID for fallback material naming
+     * @return Loaded material or default/fallback material
+     */
+    std::shared_ptr<Material> LoadMaterialResource(
+        const rp::TypeNameGuid<"material">& materialGuid,
+        bool hasAttachedMaterial,
+        uint64_t entityUID) const;
+
     // ========== Render Subsystems ==========
 
     std::unique_ptr<ShaderLibrary> m_ShaderLibrary;             ///< Shader loading and caching
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
-    std::unique_ptr<RenderResourceCache> m_ResourceCache;       ///< Entity resource caching
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
 

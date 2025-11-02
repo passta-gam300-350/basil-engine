@@ -114,6 +114,16 @@ namespace rp {
         struct BasicIndexedGuid {
             Guid m_guid;
             std::uint64_t m_typeindex;
+            
+            bool operator==(BasicIndexedGuid const& other) const {
+                return m_guid == other.m_guid && other.m_typeindex == m_typeindex;
+            }
+            bool operator!=(BasicIndexedGuid const& other) const {
+                return !(*this == other);
+            }
+            bool operator<(BasicIndexedGuid const& other) const {
+                return m_guid < other.m_guid;
+            }
         };
 
         static constexpr Guid null_guid{ 0x0ull, 0x0ull };

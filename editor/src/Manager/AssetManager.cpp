@@ -111,13 +111,14 @@ std::vector<std::string> AssetManager::GetAssetTypeNames(ResourceType ty) {
 
 void AssetManager::ImportAsset(std::string const& rdesc) {
 	auto importertype{ rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(rdesc) };
-	rp::ResourceTypeImporterRegistry::Import(importertype, rdesc);
-	rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc);
 	auto biguid{ rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc) };
+	auto file_path{ normalizePath(m_ImportedAssetPath + "/" + biguid.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetImporterSuffix(importertype)) };
+	rp::ResourceTypeImporterRegistry::Import(importertype, rdesc, file_path);
+	rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc);
 	m_AssetNameGuid.emplace(rp::ResourceTypeImporterRegistry::GetDescriptorName(rdesc), biguid);
 	ResourceSystem::FileEntry fentry{};
 	fentry.m_Guid = biguid.m_guid;
-	fentry.m_Path = m_ImportedAssetPath + "/" + biguid.m_guid.to_hex() + "." + rp::ResourceTypeImporterRegistry::GetImporterSuffix(importertype);
+	fentry.m_Path = file_path;
 	fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 	ResourceSystem::Instance().m_FileEntries.emplace(fentry.m_Guid, fentry);
 }
@@ -136,20 +137,15 @@ void AssetManager::ImportAssetDirectory(std::string const& dir) {
 }
 
 void AssetManager::ExportAssetList() {
-	std::ofstream ofs{ m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(),cx_AssetListFilename.end()), std::ios::out };
-	YAML::Node root{};
-	root["asset list"] = m_AssetNameGuid;
-	ofs << root;
+	std::string filename{ m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(),cx_AssetListFilename.end()) };
+	rp::serialization::yaml_serializer::serialize(m_ImportedAssetPath, filename);
 }
 
 void AssetManager::ImportAssetList() {
 	std::string assetfilename = m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(), cx_AssetListFilename.end());
 	if (!std::filesystem::exists(assetfilename))
 		return;
-	YAML::Node root{ YAML::LoadFile(assetfilename) };
-	if (!root["asset list"].IsNull()) {
-		m_AssetNameGuid = root["asset list"].as<std::map<std::string, rp::BasicIndexedGuid>>();
-	}
+	m_AssetNameGuid = rp::serialization::yaml_serializer::deserialize<std::map<std::string, rp::BasicIndexedGuid>>(assetfilename);
 	for (auto [name, typed] : m_AssetNameGuid) {
 		ResourceSystem::FileEntry fentry{};
 		fentry.m_Guid = typed.m_guid;

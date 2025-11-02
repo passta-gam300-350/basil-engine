@@ -127,6 +127,12 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&TransformComponent::m_Translation, "m_Trans">
 	);
 
+	/*RegisterReflectionComponent<rp::BasicIndexedGuid>(
+		"IndexedGuid",
+		MemberRegistrationV<&rp::BasicIndexedGuid::m_guid, "Guid">,
+		MemberRegistrationV<&rp::BasicIndexedGuid::m_typeindex, "Type Index">
+	);*/
+
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
 		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
