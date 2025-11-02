@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   StringManager.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration for the StringManager class, which
+provides functionality for managing and interning strings.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef StringManager_HPP
 #define StringManager_HPP
 #include <cstdint>

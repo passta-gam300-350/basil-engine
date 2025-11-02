@@ -1,20 +1,3 @@
-/******************************************************************************/
-/*!
-\file   DebugRenderPass.cpp
-\author Team PASSTA
-        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
-        Tham Kang Ting (kangting.t@digipen.edu)
-        Cheong Jia Zen (jiazen.c@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief    Implementation of debug rendering pass for visualizing lights and AABBs
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #include "../../include/Pipeline/DebugRenderPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
@@ -45,32 +28,73 @@ DebugRenderPass::DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader)
 
 void DebugRenderPass::Execute(RenderContext& context)
 {
-    // Check if we have a main buffer to copy to editor FBO
+    // Render to the main color buffer for proper alpha blending
     if (!context.frameData.mainColorBuffer)
     {
-        return; // No main buffer to copy
+        return; // No main buffer to render to
     }
 
-	// Render debug visualizations if enabled
-	if (m_ShowAABBs) {
-		// Clear any previous commands
-		ClearCommands();
+    // Begin the pass (no framebuffer binding since we don't have one)
+    Begin();
 
-		// Bind the main color buffer to draw AABBs on top of the rendered scene
-		if (context.frameData.mainColorBuffer) {
-			context.frameData.mainColorBuffer->Bind();
+    // Bind the main framebuffer for rendering
+    context.frameData.mainColorBuffer->Bind();
 
-			RenderAABBs(context);
+    // Set viewport to match main framebuffer
+    const auto &mainFBOSpecs = context.frameData.mainColorBuffer->GetSpecification();
+    glViewport(0, 0, static_cast<int>(mainFBOSpecs.Width), static_cast<int>(mainFBOSpecs.Height));
 
-			// Execute all submitted commands on the main color buffer
-			ExecuteCommands();
+    // Setup command buffer with systems from context
+    SetupCommandBuffer(context);
 
-			context.frameData.mainColorBuffer->Unbind();
-		}
-	}
+    // Enable alpha blending for debug overlay rendering
+    // Make sure blending doesn't affect depth writes
+    RenderCommands::SetBlendingData enableBlendCmd{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
+    Submit(enableBlendCmd);
 
-    // Copy main scene (now with AABBs drawn on it) to editor FBO
-    UpdateEditorFBOWithDebug(context);
+    // Disable depth writing but keep depth testing for proper overlay rendering
+    RenderCommands::SetDepthTestData depthTestCmd{
+        true,           // enable depth testing (to respect scene depth)
+        GL_LEQUAL,      // depth function (allow equal depth for overlays)
+        false           // disable depth writing (preserve main pass depth)
+    };
+    Submit(depthTestCmd);
+
+    // Render light cubes for visualization
+    if (m_ShowLightCubes && !context.lights.empty()) {
+        RenderLightCubes(context);
+    }
+
+    // Render light rays for visualization
+    if (m_ShowLightRays && !context.lights.empty()) {
+        RenderLightRays(context);
+    }
+
+    // Render AABB wireframes for visualization
+    if (m_ShowAABBs && !context.frameData.debugAABBs.empty()) {
+        RenderAABBs(context);
+    }
+
+    // Disable blending after debug rendering
+    RenderCommands::SetBlendingData disableBlendCmd{ false };
+    Submit(disableBlendCmd);
+
+    // Restore depth testing and writing to default state
+    RenderCommands::SetDepthTestData restoreDepthCmd{
+        true,           // enable depth testing
+        GL_LESS,        // default depth function
+        true            // enable depth writing
+    };
+    Submit(restoreDepthCmd);
+
+    // Execute all commands submitted to this pass's command buffer
+    ExecuteCommands();
+
+    // Unbind the main framebuffer
+    context.frameData.mainColorBuffer->Unbind();
+
+    // End the pass (no framebuffer unbinding since we don't have one)
+    End();
 }
 
 void DebugRenderPass::RenderLightCubes(RenderContext& context)
@@ -81,7 +105,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
     }
 
     // Use injected primitive shader
-    if (m_PrimitiveShader == nullptr) {
+    if (!m_PrimitiveShader) {
         spdlog::error("DebugRenderPass: No primitive shader available for light cube rendering.");
         return;
     }
@@ -92,9 +116,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 
     // Get the cube's VAO handle
     auto cubeVAO = m_LightCube->GetVertexArray();
-    if (!cubeVAO) {
-        return;
-    }
+    if (!cubeVAO) return;
 
     // Render each point and spot light as a cube
     for (const auto& light : context.lights) {
@@ -120,10 +142,12 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
             Submit(uniformsCmd);
 
             // Set the light color using the command buffer
+            // Boost color for HDR visibility (light cubes should be bright emissive objects)
+            glm::vec3 cubeColor = light.color * 10.0f;  // Make very bright for HDR
             RenderCommands::SetUniformVec3Data colorCmd{
                 m_PrimitiveShader,
                 "u_Color",
-                light.color
+                cubeColor
             };
             Submit(colorCmd);
 
@@ -141,7 +165,7 @@ void DebugRenderPass::RenderLightCubes(RenderContext& context)
 void DebugRenderPass::RenderLightRays(RenderContext& context)
 {
     // Use injected primitive shader
-    if (m_PrimitiveShader == nullptr) {
+    if (!m_PrimitiveShader) {
         spdlog::error("DebugRenderPass: No primitive shader available for light ray rendering.");
         return;
     }
@@ -202,9 +226,7 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
         if (rayMesh) {
             // Get the ray mesh VAO handle
             auto rayVAO = rayMesh->GetVertexArray();
-            if (!rayVAO) {
-                continue;
-            }
+            if (!rayVAO) continue;
 
             // Set uniforms using the available SetUniformsData command
             RenderCommands::SetUniformsData uniformsCmd{
@@ -242,21 +264,17 @@ void DebugRenderPass::RenderLightRays(RenderContext& context)
 
 void DebugRenderPass::RenderSingleRay(RenderContext& context, const std::shared_ptr<Mesh>& rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light)
 {
-    if (!rayMesh) {
-        return;
-    }
+    if (!rayMesh) return;
 
     // Use injected primitive shader
-    if (m_PrimitiveShader == nullptr) {
+    if (!m_PrimitiveShader) {
         spdlog::error("DebugRenderPass: No primitive shader available for single ray rendering.");
         return;
     }
 
     // Get the ray mesh VAO handle
     auto rayVAO = rayMesh->GetVertexArray();
-    if (!rayVAO) {
-        return;
-    }
+    if (!rayVAO) return;
 
     // Set uniforms using the available SetUniformsData command
     RenderCommands::SetUniformsData uniformsCmd{
@@ -288,13 +306,15 @@ void DebugRenderPass::RenderSingleRay(RenderContext& context, const std::shared_
 
 void DebugRenderPass::RenderAABBs(RenderContext& context)
 {
+    assert(m_PrimitiveShader && "Primitive shader must be set for AABB rendering");
+
     if (!m_AABBWireframe) {
         spdlog::warn("DebugRenderPass: No AABB wireframe mesh available for rendering.");
         return;
     }
 
     // Use injected primitive shader
-    if (m_PrimitiveShader == nullptr) {
+    if (!m_PrimitiveShader) {
         spdlog::error("DebugRenderPass: No primitive shader available for AABB rendering.");
         return;
     }
@@ -386,42 +406,4 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
     // Restore normal line width
     RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };
     Submit(restoreLineWidthCmd);
-}
-
-void DebugRenderPass::UpdateEditorFBOWithDebug(RenderContext &context)
-{
-    // Only update editor FBO if main buffer exists (we can create editor buffer if needed)
-    if (!context.frameData.mainColorBuffer)
-    {
-        return;
-    }
-
-    auto mainFBO = context.frameData.mainColorBuffer;
-    const auto &mainSpec = mainFBO->GetSpecification();
-
-    // Create or update editor FBO to match main FBO size
-    if (!context.frameData.editorColorBuffer ||
-        context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||
-        context.frameData.editorColorBuffer->GetSpecification().Height != mainSpec.Height)
-    {
-        // Create identical FBO specs for editor copy
-        FBOSpecs editorSpec = mainSpec;
-        context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
-    }
-
-    auto editorFBO = context.frameData.editorColorBuffer;
-
-    // Copy main scene content to editor FBO
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
-
-    glBlitFramebuffer(
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST
-    );
-
-    // Restore framebuffer binding
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }

@@ -67,6 +67,8 @@ set(ALL_LIBS
     PUBLIC job_system_lib
     PUBLIC data_structure_lib
     PUBLIC Jolt
+    PUBLIC fmod
+    PUBLIC fmodstudio
 )
 
 

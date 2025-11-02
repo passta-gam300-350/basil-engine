@@ -76,9 +76,9 @@ void EditorCamera::UpdateFlyMode(float deltaTime)
         glm::vec3 movement(0.0f);
 
         if (input->Is_KeyPressed(GLFW_KEY_W))
-            movement += m_Forward;
+            movement += m_Front;
         if (input->Is_KeyPressed(GLFW_KEY_S))
-            movement -= m_Forward;
+            movement -= m_Front;
         if (input->Is_KeyPressed(GLFW_KEY_A))
             movement -= m_Right;
         if (input->Is_KeyPressed(GLFW_KEY_D))
@@ -97,7 +97,7 @@ void EditorCamera::UpdateFlyMode(float deltaTime)
         if (glm::length(movement) > 0.0f)
         {
             movement = glm::normalize(movement);
-            m_Position += movement * currentSpeed * deltaTime;
+            m_Pos += movement * currentSpeed * deltaTime;
         }
     }
     else
@@ -235,11 +235,11 @@ void EditorCamera::UpdateVectors()
     forward.x = cos(glm::radians(m_Rotation.y)) * cos(glm::radians(m_Rotation.x));
     forward.y = sin(glm::radians(m_Rotation.x));
     forward.z = sin(glm::radians(m_Rotation.y)) * cos(glm::radians(m_Rotation.x));
-    m_Forward = glm::normalize(forward);
+    m_Front = glm::normalize(forward);
 
     // Calculate right and up vectors
-    m_Right = glm::normalize(glm::cross(m_Forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-    m_Up = glm::normalize(glm::cross(m_Right, m_Forward));
+    m_Right = glm::normalize(glm::cross(m_Front, glm::vec3(0.0f, 1.0f, 0.0f)));
+    m_Up = glm::normalize(glm::cross(m_Right, m_Front));
 }
 
 void EditorCamera::UpdateView()
@@ -250,17 +250,17 @@ void EditorCamera::UpdateView()
     }
     else
     {
-        m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Forward, m_Up);
+        m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
     }
 }
 
 void EditorCamera::UpdateProjection()
 {
     m_ProjectionMatrix = glm::perspective(
-        glm::radians(m_FOV),
+        glm::radians(m_Fov),
         m_AspectRatio,
-        m_NearPlane,
-        m_FarPlane
+        m_Near,
+        m_Far
     );
 }
 

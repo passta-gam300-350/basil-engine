@@ -94,3 +94,49 @@ void RenderPass::ClearCommands()
 	// Clear the pass command buffer
 	m_PassCommandBuffer->Clear();
 }
+
+void RenderPass::CheckAndResizeIfNeeded(const RenderContext& context)
+{
+	uint32_t currentWidth = context.frameData.viewportWidth;
+	uint32_t currentHeight = context.frameData.viewportHeight;
+
+	// Check if resize is needed
+	bool needsResize = (m_LastViewportWidth != currentWidth ||
+	                    m_LastViewportHeight != currentHeight);
+
+	if (!needsResize) {
+		return; // No resize needed
+	}
+
+	// Handle resize based on mode
+	switch (m_ResizeMode) {
+		case ResizeMode::Fixed:
+			// Fixed-size framebuffer - never resize, just update tracking
+			m_LastViewportWidth = currentWidth;
+			m_LastViewportHeight = currentHeight;
+			break;
+
+		case ResizeMode::MatchViewport:
+			// Auto-resize framebuffer to match viewport
+			if (m_Framebuffer && currentWidth > 0 && currentHeight > 0) {
+				m_Framebuffer->Resize(currentWidth, currentHeight);
+				SetViewport(Viewport(0, 0, currentWidth, currentHeight));
+			}
+			m_LastViewportWidth = currentWidth;
+			m_LastViewportHeight = currentHeight;
+			break;
+
+		case ResizeMode::Custom:
+			// Delegate to subclass via virtual callback
+			OnResize(currentWidth, currentHeight);
+			m_LastViewportWidth = currentWidth;
+			m_LastViewportHeight = currentHeight;
+			break;
+	}
+}
+
+void RenderPass::OnResize(uint32_t newWidth, uint32_t newHeight)
+{
+	// Default implementation does nothing
+	// Subclasses can override this for custom resize logic
+}

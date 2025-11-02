@@ -77,8 +77,6 @@ public:
     bool GetClearColorBuffer() const { return m_ClearColorBuffer; }
 
 private:
-    // Update editor FBO with debug overlays (similar to MainRenderingPass)
-    void UpdateEditorFBOWithDebug(RenderContext& context);
     // Light visualization
     void RenderLightCubes(RenderContext& context);
     void RenderLightRays(RenderContext& context);
@@ -114,6 +112,4 @@ private:
 
     // Debug buffer settings
     bool m_ClearColorBuffer = true;        // Whether to clear color buffer (enabled by default)
-
-    static constexpr uint8_t DEBUG_PASS_ID = 2;  // Execute after main pass (ID 1)
 };

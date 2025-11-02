@@ -58,6 +58,11 @@ struct RenderContext {
     TextureSlotManager& textureSlotManager;
     ParticleRenderer& particleRenderer;
 
+    // HDR pipeline data (mutable) - set by HDR passes
+    uint32_t hdrTextureID = 0;        // Set by MainRenderingPass
+    float avgLuminance = 0.5f;        // Set by HDRLuminancePass
+    float exposure = 1.0f;            // Set by HDRLuminancePass
+
     // Constructor
     RenderContext(
         const std::vector<RenderableData>& renderables_,

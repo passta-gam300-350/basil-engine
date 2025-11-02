@@ -61,6 +61,9 @@ public:
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData);
 
+    // Shadow-specific rendering (depth-only, no lighting)
+    void RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader);
+
     // Build dynamic instance data based on visible renderables
     void BuildDynamicInstanceData(const std::vector<RenderableData>& renderables);
     
@@ -96,6 +99,11 @@ private:
     // Injected dependencies
     PBRLightingRenderer* m_PBRLighting;
 
+    // Change detection for efficient rebuilding
+    size_t m_LastRenderableCount = 0;
+    std::vector<uint32_t> m_LastObjectIDs;
+
     void UpdateInstanceSSBO(const std::string& meshId);
     void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData);
+    bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
 };
