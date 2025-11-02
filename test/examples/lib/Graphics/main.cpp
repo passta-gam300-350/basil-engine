@@ -151,9 +151,9 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     
     
 
@@ -777,7 +777,7 @@ void GraphicsTestDriver::SetupEditorDemo()
     ));
 
     // Set ambient light
-    m_SceneRenderer->SetAmbientLight(glm::vec3(0.03f));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.01f));
     spdlog::info("Spotlight created at (0, 10, 0) pointing down with intensity 3.0");
     spdlog::info("Ambient light set to (0.03, 0.03, 0.03)");
 

@@ -170,29 +170,18 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm
 
 void DirectionalShadowMappingPass::UpdateSceneBounds(const std::vector<RenderableData>& renderables)
 {
-    // Quick hash of all positions and scales to detect transform changes
+    // Quick hash of all transform matrices to detect any transform changes
+    // This includes position, rotation, and scale - all affect world-space AABB
     size_t transformHash = 0;
     for (const auto& renderable : renderables) {
-        // Extract position from transform matrix (last column)
-        glm::vec3 position = glm::vec3(renderable.transform[3]);
-
-        // Extract scale from transform matrix (length of basis vectors)
-        glm::vec3 scale = glm::vec3(
-            glm::length(glm::vec3(renderable.transform[0])),  // X-axis scale
-            glm::length(glm::vec3(renderable.transform[1])),  // Y-axis scale
-            glm::length(glm::vec3(renderable.transform[2]))   // Z-axis scale
-        );
-
-        // Hash combining for position and scale (good enough for change detection)
-        // Using bit shifts and XOR for fast hash
-        size_t px = std::hash<float>{}(position.x);
-        size_t py = std::hash<float>{}(position.y);
-        size_t pz = std::hash<float>{}(position.z);
-        size_t sx = std::hash<float>{}(scale.x);
-        size_t sy = std::hash<float>{}(scale.y);
-        size_t sz = std::hash<float>{}(scale.z);
-
-        transformHash ^= (px << 0) ^ (py << 1) ^ (pz << 2) ^ (sx << 3) ^ (sy << 4) ^ (sz << 5);
+        // Hash all 16 elements of the transform matrix for complete change detection
+        // Rotation affects AABB size (rotated box = larger axis-aligned bounds)
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                size_t elementHash = std::hash<float>{}(renderable.transform[i][j]);
+                transformHash ^= elementHash + 0x9e3779b9 + (transformHash << 6) + (transformHash >> 2);
+            }
+        }
     }
 
     // Check if we need to recalculate (scene changed)
@@ -207,10 +196,15 @@ void DirectionalShadowMappingPass::UpdateSceneBounds(const std::vector<Renderabl
     m_CachedSceneMax = glm::vec3(-FLT_MAX);
 
     for (const auto& renderable : renderables) {
-        // Extract position from transform matrix (last column)
-        glm::vec3 position = glm::vec3(renderable.transform[3]);
-        m_CachedSceneMin = glm::min(m_CachedSceneMin, position);
-        m_CachedSceneMax = glm::max(m_CachedSceneMax, position);
+        if (!renderable.mesh) continue;
+
+        // Get mesh's local AABB and transform to world space
+        const AABB& localAABB = renderable.mesh->GetAABB();
+        AABB worldAABB = localAABB.Transform(renderable.transform);
+
+        // Expand scene bounds to include this AABB
+        m_CachedSceneMin = glm::min(m_CachedSceneMin, worldAABB.min);
+        m_CachedSceneMax = glm::max(m_CachedSceneMax, worldAABB.max);
     }
 
     // Calculate center and radius
