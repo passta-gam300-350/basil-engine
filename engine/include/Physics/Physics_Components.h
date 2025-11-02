@@ -47,3 +47,28 @@ struct ColliderComponent {
     // Collision filtering
     uint32_t collisionMask;
 };
+
+struct CharacterControllerComponent {
+    JPH::Ref<JPH::Character> character;
+    JPH::BodyID bodyID;
+
+    // Character settings
+    float maxSlopeAngle = 45.0f;  // degrees
+    float mass = 70.0f;           // kg
+    float friction = 0.5f;
+    float gravityFactor = 1.0f;
+
+    // Movement parameters
+    float moveSpeed = 5.0f;       // m/s
+    float jumpSpeed = 7.0f;       // m/s
+    float capsuleHeight = 1.8f;   // meters
+    float capsuleRadius = 0.3f;   // meters
+
+    // State
+    bool isOnGround = false;
+    //glm::vec3 movementInput = glm::vec3(0.0f);
+    bool wantsToJump = false;
+
+    // Cached velocity
+    JPH::Vec3 velocity = JPH::Vec3::sZero();
+};

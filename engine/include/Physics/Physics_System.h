@@ -25,6 +25,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Character/Character.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
 // STL includes
 #include <iostream>
@@ -68,23 +70,23 @@ namespace JPH {
 
 struct PhysicsSystem : public ecs::SystemBase {
 public:
-    //~PhysicsSystem() override = default;
-
     // SystemBase interface implementation
     void Init();
     void FixedUpdate(ecs::world& world);
     void Exit();
-
+    
 
     // Body creation/destruction
     JPH::BodyID CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider = nullptr);
-
     void DestroyRigidBody(JPH::BodyID bodyID);
 
+    // Character controller methods
+    JPH::BodyID CreateCharacterController(ecs::world& world, ecs::entity entity, const CharacterControllerComponent& charComp, const PositionComponent& pos, const RotationComponent& rot);
+    void UpdateCharacterControllers(ecs::world& world, float deltaTime);
 
     // Accessors
-    JPH::PhysicsSystem* GetJoltPhysicsSystem() { return m_physicsSystem.get(); }
-    JPH::BodyInterface& GetBodyInterface() { return *m_bodyInterface; }
+    JPH::PhysicsSystem* GetJoltPhysicsSystem() noexcept { return m_physicsSystem.get(); } // Returns a pointer to the Jolt Engine
+    JPH::BodyInterface& GetBodyInterface() noexcept { return *m_bodyInterface; } // Returns a reference to the Body Interface
 
     //void SetGravity(const JPH::Vec3& gravity);
     void SyncTransformsToPhysics(ecs::world& world);
@@ -95,29 +97,22 @@ private:
 
 
     // Jolt core objects
-    std::unique_ptr<JPH::TempAllocatorImpl> m_tempAllocator;
-    std::unique_ptr<JPH::JobSystemThreadPool> m_jobSystem;
+    std::unique_ptr<JPH::TempAllocatorImpl> m_tempAllocator; // Used for Jolt Update
+    std::unique_ptr<JPH::JobSystemThreadPool> m_jobSystem; // Used for Jolt Update
 
-    std::unique_ptr<JPH::PhysicsSystem> m_physicsSystem;
-    JPH::BodyInterface* m_bodyInterface; // Non-owning pointer
+    JPH::BodyInterface* m_bodyInterface; // Non-owning pointer, Used for accessing Jolt's body's paramemters
+
+    std::unique_ptr<JPH::PhysicsSystem> m_physicsSystem; // Used for keeping Jolt's engine
+    
 
     // Contact listener
     std::unique_ptr<JPH::ContactListener> m_contactListener;
 
     // Mapping between entities and bodies
     std::vector<JPH::BodyID> m_JoltBodyIDs;
-    //std::unordered_map<ecs::entity, JPH::BodyID> m_entityToBody;
-    //std::unordered_map<JPH::BodyID, ecs::entity> m_bodyToEntity;
-
-    // Timing
-    float m_accumulator = 0.0f;
-
-    // Initialization state
-    bool m_initialized = false;
 };
 
-// In a utility header (e.g., PhysicsUtils.h)
-
+// Utils for conveerting vectors, mat4 and angles from glm to jolt and vice versa
 namespace PhysicsUtils {
     // GLM to Jolt
     inline JPH::Vec3 ToJolt(const glm::vec3& v) {

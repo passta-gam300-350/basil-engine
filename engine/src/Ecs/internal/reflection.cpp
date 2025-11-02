@@ -186,14 +186,8 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<ParticleComponent>(
 		"ParticleComponent",
 		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
-		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
+		MemberRegistrationV<&ParticleComponent::texture, "Texture">
 
 	);
 
-	RegisterReflectionComponent<ParticleComponent>(
-		"ParticleComponent",
-		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
-		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
-
-		);
 }

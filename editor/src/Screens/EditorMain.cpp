@@ -326,6 +326,7 @@ bool EditorMain::Activate()
 
 void EditorMain::Render_Inspector()
 {
+	
 	ImGui::Begin("Inspector", &showInspector);
 
 	if (m_SelectedEntityID == static_cast<uint32_t>(-1)) {
@@ -341,8 +342,11 @@ void EditorMain::Render_Inspector()
 	ecs::world world = Engine::GetWorld();
 	auto entities = world.filter_entities<PositionComponent>();
 
+	// === HEADER SECTION ===
+	std::string currentName{};
+
 	bool entityFound = false;
-	for (auto entity : entities) {
+	for (auto& entity : entities) {
 		if (static_cast<uint32_t>(entity.get_uid()) == m_SelectedEntityID) {
 			entityFound = true;
 
@@ -350,11 +354,36 @@ void EditorMain::Render_Inspector()
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 6));
 			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
 
+			currentName = entity.name();
 			char nameBuffer[256];
-			snprintf(nameBuffer, sizeof(nameBuffer), "GameObject_%u", m_SelectedEntityID);
-			ImGui::SetNextItemWidth(-1);
-			ImGui::InputText("##ObjectName", nameBuffer, sizeof(nameBuffer));
+			snprintf(nameBuffer, sizeof(nameBuffer), entity.name().c_str(), entity.name().size());
 
+			ImGui::PushItemWidth(-1); // Full width
+
+			// Input text with callback flags
+			ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue |
+				ImGuiInputTextFlags_AutoSelectAll;
+
+			if (ImGui::InputText("##EntityName", nameBuffer, 256, flags))
+			{
+				// User pressed Enter
+				std::string newName(nameBuffer);
+				entity.name() = newName;
+				spdlog::info("Renamed entity to: {}", newName);
+			}
+
+			// Also handle when field loses focus
+			if (ImGui::IsItemDeactivatedAfterEdit())
+			{
+				std::string newName(nameBuffer);
+				if (newName != currentName)
+				{
+					entity.name() = newName;
+					spdlog::info("Renamed entity to: {}", newName);
+				}
+			}
+
+			ImGui::PopItemWidth();
 			ImGui::PopStyleColor();
 			ImGui::PopStyleVar();
 
@@ -362,50 +391,50 @@ void EditorMain::Render_Inspector()
 			ImGui::Separator();
 			ImGui::Spacing();
 
+			
 			//Render_Transform_Group_Component(ecs::entity entity_handle);
 
-			//// Transform Component (always first, like Unity)
-			//if (world.has_component<PositionComponent>(entity) &&
-			//	world.has_component<RotationComponent>(entity) &&
-			//	world.has_component<ScaleComponent>(entity))
-			//{
-			//	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+			// Transform Component (always first, like Unity)
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
 
-			//	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
-			//	{
-			//		auto& pos = world.get_component_from_entity<PositionComponent>(entity);
-			//		auto& rot = world.get_component_from_entity<RotationComponent>(entity);
-			//		auto& scale = world.get_component_from_entity<ScaleComponent>(entity);
+			if (world.has_all_components_in_entity<PositionComponent, ScaleComponent, RotationComponent>(entity))
+			{
+				if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					auto& pos = world.get_component_from_entity<PositionComponent>(entity);
+					auto& rot = world.get_component_from_entity<RotationComponent>(entity);
+					auto& scale = world.get_component_from_entity<ScaleComponent>(entity);
 
-			//		ImGui::Indent(8.0f);
+					ImGui::Indent(8.0f);
+					// Position
+					ImGui::Text("Position");
+					ImGui::SameLine(150);
+					ImGui::SetNextItemWidth(-1);
+					ImGui::DragFloat3("##Position", &pos.m_WorldPos.x, 0.1f, 0.0f, 0.0f, "%.2f");
 
-			//		// Position
-			//		ImGui::Text("Position");
-			//		ImGui::SameLine(100);
-			//		ImGui::SetNextItemWidth(-1);
-			//		ImGui::DragFloat3("##Position", &pos.m_WorldPos.x, 0.1f, 0.0f, 0.0f, "%.2f");
+					// Rotation
+					glm::vec3 rotDeg = glm::degrees(rot.m_Rotation);
+					ImGui::Text("Rotation");
+					ImGui::SameLine(150);
+					ImGui::SetNextItemWidth(-1);
+					if (ImGui::DragFloat3("##Rotation", &rotDeg.x, 1.0f, 0.0f, 0.0f, "%.2f"))
+					{
+						rot.m_Rotation = glm::radians(rotDeg);
+					}
 
-			//		// Rotation
-			//		glm::vec3 rotDeg = glm::degrees(rot.m_Rotation);
-			//		ImGui::Text("Rotation");
-			//		ImGui::SameLine(100);
-			//		ImGui::SetNextItemWidth(-1);
-			//		if (ImGui::DragFloat3("##Rotation", &rotDeg.x, 1.0f, 0.0f, 0.0f, "%.2f"))
-			//		{
-			//			rot.m_Rotation = glm::radians(rotDeg);
-			//		}
+					// Scale
+					ImGui::Text("Scale");
+					ImGui::SameLine(150);
+					ImGui::SetNextItemWidth(-1);
+					ImGui::DragFloat3("##Scale", &scale.m_Scale.x, 0.1f, 0.0f, 0.0f, "%.2f");
 
-			//		// Scale
-			//		ImGui::Text("Scale");
-			//		ImGui::SameLine(100);
-			//		ImGui::SetNextItemWidth(-1);
-			//		ImGui::DragFloat3("##Scale", &scale.m_Scale.x, 0.1f, 0.0f, 0.0f, "%.2f");
+					ImGui::Unindent(8.0f);
+				}
+			}
+			
 
-			//		ImGui::Unindent(8.0f);
-			//	}
-
-			//	ImGui::PopStyleVar();
-			//}
+			ImGui::PopStyleVar();
+			
 
 			//ImGui::Spacing();
 
@@ -461,6 +490,7 @@ void EditorMain::Render_Inspector()
 			//}
 
 			//ImGui::Spacing();
+			
 			ImGui::Separator();
 			ImGui::Spacing();
 
@@ -475,9 +505,9 @@ void EditorMain::Render_Inspector()
 			{
 				ImGui::Text("Add Component");
 				ImGui::Separator();
-				if (ImGui::Selectable("Mesh Renderer")) { /* Add mesh component */ }
-				if (ImGui::Selectable("Rigidbody")) { /* Add rigidbody */ }
-				if (ImGui::Selectable("Box Collider")) { /* Add collider */ }
+				if (ImGui::Selectable("Mesh Renderer")) {}
+				if (ImGui::Selectable("Rigidbody")) {}
+				if (ImGui::Selectable("Box Collider")) { }
 				ImGui::EndPopup();
 			}
 
@@ -492,6 +522,7 @@ void EditorMain::Render_Inspector()
 	}
 
 	ImGui::End();
+	
 	/*
 	ImGui::Begin("Inspector", nullptr);
 
@@ -516,17 +547,6 @@ void EditorMain::Render_Inspector()
 				// Show entity components
 				ImGui::Text("Entity UID: %llu", entity.get_uid());
 
-				//// Position Component
-				//if (world.has_all_components_in_entity<PositionComponent>(entity)) {
-				//	auto& pos = world.get_component_from_entity<PositionComponent>(entity);
-				//	ImGui::Text("Position Component:");
-				//	ImGui::Text("  World Pos: (%.2f, %.2f, %.2f)", pos.m_WorldPos.x, pos.m_WorldPos.y, pos.m_WorldPos.z);
-				//}
-
-				//// Transform Component
-				//if (world.has_all_components_in_entity<TransformComponent>(entity)) {
-				//	ImGui::Text("Transform Component: Present");
-				//}
 				Render_Transform_Group_Component(entity);
 				Render_Mesh_Component(entity);
 				Render_Lighting_Group_Component(entity);
@@ -667,6 +687,8 @@ void EditorMain::Render_Transform_Group_Component(ecs::entity entity_handle)
 
 
 		}
+
+		ImGui::PopStyleVar();
 	}
 
 }
@@ -974,6 +996,53 @@ void EditorMain::Render_MenuBar()
 		if (ImGui::MenuItem("Show Bounding Boxes", nullptr, &m_ShowAABBs))
 		{
 			SetDebugVisualization(m_ShowAABBs);
+		}
+
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("GameObject"))
+	{
+		if (ImGui::MenuItem("Create Empty"))
+		{
+			// Create Entity with transform
+		}
+		
+		ImGui::Separator();
+
+		if (ImGui::BeginMenu("3D Object"))
+		{
+			if (ImGui::MenuItem("Cube"))
+			{
+
+			}
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Lights"))
+		{
+			if (ImGui::MenuItem("Point Light"))
+			{
+
+			}
+
+			if (ImGui::MenuItem("Spot Light"))
+			{
+
+			}
+
+			if (ImGui::MenuItem("Directional Light"))
+			{
+
+			}
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::MenuItem("Create Camera"))
+		{
+			// Create Entity with transform
 		}
 
 		ImGui::EndMenu();

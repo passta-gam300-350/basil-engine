@@ -178,19 +178,15 @@ void PhysicsSystem::Init() {
     JPH::Factory::sInstance = new JPH::Factory();
 
     // Register all physics types with the factory and install their collision handlers with the CollisionDispatch class.
-// If you have your own custom shape types you probably need to register their handlers with the CollisionDispatch before calling this function.
-// If you implement your own default material (PhysicsMaterial::sDefault) make sure to initialize it before this function or else this function will create one for you.
+    // If you have your own custom shape types you probably need to register their handlers with the CollisionDispatch before calling this function.
+    // If you implement your own default material (PhysicsMaterial::sDefault) make sure to initialize it before this function or else this function will create one for you.
     JPH::RegisterTypes();
 
     // Create temp allocator (10 MB)
     m_tempAllocator = std::make_unique<JPH::TempAllocatorImpl>(10 * 1024 * 1024);
 
     // Create job system
-    m_jobSystem = std::make_unique<JPH::JobSystemThreadPool>(
-        JPH::cMaxPhysicsJobs,
-        JPH::cMaxPhysicsBarriers,
-        std::thread::hardware_concurrency() - 1
-    );
+    m_jobSystem = std::make_unique<JPH::JobSystemThreadPool>(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
 
 
     // Now we can create the actual physics system.
@@ -208,49 +204,127 @@ void PhysicsSystem::Init() {
     m_physicsSystem->SetGravity(JPH::Vec3(0.0f, -9.81f, 0.0f));
 }
 
-void PhysicsSystem::Exit() {
+JPH::BodyID PhysicsSystem::CreateCharacterController(
+    ecs::world& world,
+    ecs::entity entity,
+    const CharacterControllerComponent& charComp,
+    const PositionComponent& pos,
+    const RotationComponent& rot)
+{
+    if (!m_bodyInterface) return JPH::BodyID();
 
-    // Destroy all bodies
-    if (m_bodyInterface) {
-        for (auto& bodyID : m_JoltBodyIDs) {
-            m_bodyInterface->RemoveBody(bodyID);
-            m_bodyInterface->DestroyBody(bodyID);
-        }
-    }
-    m_JoltBodyIDs.clear();
-    //m_entityToBody.clear();
-    //m_bodyToEntity.clear();
+    // Create capsule shape for character
+    JPH::Ref<JPH::Shape> capsuleShape = new JPH::CapsuleShape(
+        charComp.capsuleHeight * 0.5f,  // Half height
+        charComp.capsuleRadius
+    );
 
-    // Clear body interface pointer before destroying physics system
-    m_bodyInterface = nullptr;
+    // Create character settings
+    JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
+    settings->mMaxSlopeAngle = JPH::DegreesToRadians(charComp.maxSlopeAngle);
+    settings->mMass = charComp.mass;
+    settings->mFriction = charComp.friction;
+    settings->mGravityFactor = charComp.gravityFactor;
+    settings->mShape = capsuleShape;
+    settings->mLayer = Layers::MOVING;
 
-    // Clean up Jolt (unique_ptrs handle deletion automatically in reverse order)
-    m_contactListener.reset();
-    m_physicsSystem.reset();
-    m_jobSystem.reset();
-    m_tempAllocator.reset();
+    // Create the character
+    JPH::Character* character = new JPH::Character(
+        settings,
+        PhysicsUtils::ToJolt(pos.m_WorldPos),
+        PhysicsUtils::EulerToJoltQuat(rot.m_Rotation),
+        entity.get_uuid(),  // Store entity ID as user data
+        m_physicsSystem.get()
+    );
 
-    // Unregister types and clean up factory
-    JPH::UnregisterTypes();
-    delete JPH::Factory::sInstance;
-    JPH::Factory::sInstance = nullptr;
+    // Add character to physics system
+    character->AddToPhysicsSystem(JPH::EActivation::Activate);
+
+    JPH::BodyID bodyID = character->GetBodyID();
+
+
+
+    return bodyID;
 }
+
+void PhysicsSystem::UpdateCharacterControllers(ecs::world& world, float deltaTime) {
+    if (!m_bodyInterface) return;
+
+    auto characterEntities = world.filter_entities<
+        CharacterControllerComponent,
+        PositionComponent,
+        RotationComponent
+    >();
+
+    for (auto const& entity : characterEntities) {
+        auto [charComp, pos, rot] = entity.get<
+            CharacterControllerComponent,
+            PositionComponent,
+            RotationComponent
+        >();
+
+        if (!charComp.character || charComp.bodyID.IsInvalid()) continue;
+
+        JPH::Character* character = charComp.character.GetPtr();
+
+        // Get current velocity
+        JPH::Vec3 velocity = character->GetLinearVelocity();
+
+        // Apply horizontal movement input
+        JPH::Vec3 horizontalVelocity{};// = charComp.moveSpeed; // PhysicsUtils::ToJolt(charComp.movementInput) * charComp.moveSpeed;
+
+        // Preserve vertical velocity (gravity)
+        horizontalVelocity.SetY(velocity.GetY());
+
+        // Check ground state
+        JPH::Character::EGroundState groundState = character->GetGroundState();
+        charComp.isOnGround = (groundState == JPH::Character::EGroundState::OnGround);
+
+        // Handle jumping
+        if (charComp.wantsToJump && charComp.isOnGround) {
+            horizontalVelocity.SetY(charComp.jumpSpeed);
+            charComp.wantsToJump = false;  // Reset jump flag
+        }
+
+        // Apply velocity to character
+        character->SetLinearVelocity(horizontalVelocity);
+
+        // Update character physics (important!)
+        character->PostSimulation(0.05f);  // Max separation distance
+
+        // Sync position back to ECS
+        JPH::Vec3 newPosition = character->GetPosition();
+        JPH::Quat newRotation = character->GetRotation();
+
+        pos.m_WorldPos = PhysicsUtils::ToGLM(newPosition);
+        rot.m_Rotation = PhysicsUtils::JoltQuatToEuler(newRotation);
+
+        // Cache velocity for external queries
+        charComp.velocity = character->GetLinearVelocity();
+    }
+}
+
 
 void PhysicsSystem::FixedUpdate(ecs::world& world) {
     PF_SYSTEM("PhysicsSystem");
     if (!m_physicsSystem || !m_bodyInterface) return;
 
-    // 1. Sync transforms from ECS to physics (for kinematic bodies), Bodies that have their transforms directly manipulated by the scripts without using jolt's interface
+    const float deltaTime = 1.0f / 60.0f;
+
+    // 1. Update character controllers BEFORE physics step
+    UpdateCharacterControllers(world, deltaTime);
+
+    // 2. Sync transforms from ECS to physics (for kinematic bodies)
     SyncTransformsToPhysics(world);
 
-    // 2. Step the physics simulation
+    // 3. Step the physics simulation
     const int collisionSteps = 1;
-    m_physicsSystem->Update(1.0f / 60.0f, collisionSteps, m_tempAllocator.get(), m_jobSystem.get());
+    m_physicsSystem->Update(deltaTime, collisionSteps, m_tempAllocator.get(), m_jobSystem.get());
 
-    // 3. Sync transforms from physics back to ECS (for dynamic bodies)
+    // 4. Sync transforms from physics back to ECS (for dynamic bodies)
     SyncTransformsFromPhysics(world);
 
-    // 4. Process collision events
+    // 5. Process collision events
     ProcessCollisionEvents(world);
 }
 
@@ -346,13 +420,7 @@ JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, ecs::entity entity
     }
 
     // Create body settings
-    JPH::BodyCreationSettings bodySettings(
-        shape,
-        PhysicsUtils::ToJolt(Pos.m_WorldPos),
-        PhysicsUtils::EulerToJoltQuat(rot.m_Rotation),
-        rbComp.motionType,
-        rbComp.motionType == JPH::EMotionType::Static ? Layers::NON_MOVING : Layers::MOVING
-    );
+    JPH::BodyCreationSettings bodySettings(shape, PhysicsUtils::ToJolt(Pos.m_WorldPos), PhysicsUtils::EulerToJoltQuat(rot.m_Rotation), rbComp.motionType, rbComp.motionType == JPH::EMotionType::Static ? Layers::NON_MOVING : Layers::MOVING);
 
     // Set mass properties
     if (rbComp.motionType == JPH::EMotionType::Dynamic) {
@@ -380,8 +448,6 @@ JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, ecs::entity entity
 
     // Store mapping
     m_JoltBodyIDs.push_back(bodyID);
-    //m_entityToBody[entity] = bodyID;
-    //m_bodyToEntity[bodyID] = entity;
 
     return bodyID;
 }
@@ -389,15 +455,33 @@ JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, ecs::entity entity
 void PhysicsSystem::DestroyRigidBody(JPH::BodyID bodyID) {
     if (bodyID.IsInvalid() || !m_bodyInterface) return;
 
-    //// Remove from mappings
-    //auto it = m_bodyToEntity.find(bodyID);
-    //if (it != m_bodyToEntity.end()) {
-    //    m_entityToBody.erase(it->second);
-    //    m_bodyToEntity.erase(it);
-    //}
-
     // Remove and destroy body
     m_bodyInterface->RemoveBody(bodyID);
     m_bodyInterface->DestroyBody(bodyID);
 }
 
+void PhysicsSystem::Exit() {
+
+    // Destroy all bodies
+    if (m_bodyInterface) {
+        for (auto& bodyID : m_JoltBodyIDs) {
+            m_bodyInterface->RemoveBody(bodyID);
+            m_bodyInterface->DestroyBody(bodyID);
+        }
+    }
+    m_JoltBodyIDs.clear();
+
+    // Clear body interface pointer before destroying physics system
+    m_bodyInterface = nullptr;
+
+    // Clean up Jolt (unique_ptrs handle deletion automatically in reverse order)
+    m_contactListener.reset();
+    m_physicsSystem.reset();
+    m_jobSystem.reset();
+    m_tempAllocator.reset();
+
+    // Unregister types and clean up factory
+    JPH::UnregisterTypes();
+    delete JPH::Factory::sInstance;
+    JPH::Factory::sInstance = nullptr;
+}

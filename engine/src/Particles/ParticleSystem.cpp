@@ -39,7 +39,7 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 			particleComp.emitter->Update(dt);
 			ParticleRenderData renderData;
 			renderData.particles = particleComp.emitter->GetParticles();
-			renderData.texture = particleComp.texture;
+			//renderData.texture = particleComp.texture;
 			if (particleComp.texture != Resource::null_guid)
 			{
 				auto* texturePtr = ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(particleComp.texture);
