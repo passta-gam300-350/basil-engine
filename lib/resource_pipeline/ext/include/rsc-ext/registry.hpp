@@ -43,7 +43,7 @@ namespace rp {
 		std::unordered_map<std::string, ImporterTypeId> m_known_file_ext_importer;
 		std::unordered_map<ImporterTypeId, NativeTypeId> m_importer_native_type;
 		std::unordered_map<ImporterTypeId, std::string> m_importer_native_suffix;
-		std::unordered_map<ImporterTypeId, std::function<void(std::string const&)>> m_importers;
+		std::unordered_map<ImporterTypeId, std::function<void(std::string const&, std::string const&)>> m_importers;
 		std::unordered_map<NativeTypeId, std::string> m_native_suffix;
 		std::unordered_map<ImporterTypeId, std::function<TypeUnsafeTypeErasedWrapper()>> m_descriptor_factory;
 		std::unordered_map<ImporterTypeId, std::function<DescriptorWrapper(std::string const&)>> m_descriptor_loader;
@@ -67,7 +67,7 @@ namespace rp {
 				}
 			}
 		}
-		static void RegisterImporter(std::uint64_t typehash, std::function<void(std::string const&)> fn) {
+		static void RegisterImporter(std::uint64_t typehash, std::function<void(std::string const&, std::string const&)> fn) {
 			Instance().m_importers.emplace(typehash, fn);
 		}
 		static void RegisterSerializer(std::uint64_t typehash, std::string const& serializer_name, std::function<void(std::string const&, std::byte*)> fn) {
@@ -79,11 +79,17 @@ namespace rp {
 		static void RegisterExtNameImporter(std::uint64_t typehash, std::string const& ext_name) {
 			Instance().m_known_file_ext_importer.emplace(ext_name, typehash);
 		}
-		static void Import(std::uint64_t typehash, std::string const& file_name) {
+		static void RegisterImporterNativeType(std::uint64_t typehash, std::uint64_t nativetypehash) {
+			Instance().m_importer_native_type.emplace(typehash, nativetypehash);
+		}
+		static void RegisterImporterNativeSuffix(std::uint64_t typehash, std::string const& str) {
+			Instance().m_importer_native_suffix.emplace(typehash, str);
+		}
+		static void Import(std::uint64_t typehash, std::string const& file_name, std::string const& out_name = {}) {
 			auto& imp{ Instance().m_importers };
 			auto res{ imp.find(typehash) };
 			assert(res != imp.end() && "importer not registered or not found");
-			res->second(file_name);
+			res->second(file_name, out_name);
 		}
 		/*
 		static void Import(DescriptorWrapper& desc) {
@@ -109,6 +115,32 @@ namespace rp {
 			auto it{ Instance().m_importer_native_type.find(GetDescriptorImporterType(str)) };
 			return it == Instance().m_importer_native_type.end() ? rp::null_indexed_guid : rp::BasicIndexedGuid{rp::Guid::to_guid(nd["base"]["m_guid"].as<std::string>()), it->second};
 		}
+		static void SetDescriptorBase(rp::descriptor_base desc_base, std::string const& str) {
+			YAML::Node nd{ YAML::LoadFile(str) };
+			nd["base"]["m_guid"] = desc_base.m_guid.to_hex();
+			nd["base"]["m_importer"] = desc_base.m_importer;
+			nd["base"]["m_name"] = desc_base.m_name;
+			nd["base"]["m_importer_type"] = desc_base.m_importer_type;
+			nd["base"]["m_source"] = desc_base.m_source;
+			std::ofstream ofs{str};
+			ofs << nd;
+		}
+		static void SetDescriptorBaseSource(std::string const& src, std::string const& str) {
+			YAML::Node nd{ YAML::LoadFile(str) };
+			nd["base"]["m_source"] = src;
+			std::ofstream ofs{ str };
+			ofs << nd;
+		}
+		static rp::descriptor_base GetDescriptorBase(std::string const& str) {
+			YAML::Node const nd{ YAML::LoadFile(str) };
+			rp::descriptor_base desc_base;
+			desc_base.m_guid = rp::Guid::to_guid(nd["base"]["m_guid"].as<std::string>());
+			desc_base.m_importer = nd["base"]["m_importer"].as<std::string>();
+			desc_base.m_name = nd["base"]["m_name"].as<std::string>();
+			desc_base.m_importer_type = nd["base"]["m_importer_type"].as<std::uint64_t>();
+			desc_base.m_source = nd["base"]["m_source"].as<std::string>();
+			return desc_base;
+		}
 		static std::string GetImporterSuffix(std::uint64_t typehash) {
 			return Instance().m_importer_native_suffix[typehash];
 		}
@@ -128,6 +160,7 @@ namespace rp {
 		static void CreateDefaultDescriptor(std::string const& str) {
 			auto pos{ str.rfind('.') };
 			std::string ext{ pos == std::string::npos ? "" : str.substr(pos) };
+			std::string desc_name{ str.substr(0, pos) + ".desc" };
 			auto imp{ Instance().m_known_file_ext_importer };
 			std::uint64_t descimpid{};
 			for (auto& [xname, imp_id] : imp) {
@@ -137,7 +170,12 @@ namespace rp {
 				}
 			}
 			if (descimpid) {
-				CreateDescriptor(descimpid);
+				auto d{ CreateDescriptor(descimpid) };
+				Serialize(descimpid, "yaml", desc_name, d);
+				rp::descriptor_base desc{ GetDescriptorBase(desc_name) };
+				desc.m_source = str;
+				desc.m_name = str.substr(str.rfind('\\') + 1);
+				SetDescriptorBase(desc, desc_name);
 			}
 		}
 	};
@@ -265,9 +303,11 @@ namespace rp {
 	}
 }
 
+#include <iostream>
+
 //put header guards if this is declared in header
-//RegisterResourceTypeImporter(descriptor, native, importer, known aliases...)
-#define RegisterResourceTypeImporter(DESC, NATIVETYPE, NATIVETYPESUFFIX, IMPORTER, ...)		\
+//RegisterResourceTypeImporter(descriptor, native, importer, known aliases...) match NATIVETYPENAME with RegisterResourceType
+#define RegisterResourceTypeImporter(DESC, NATIVETYPE, NATIVETYPENAME, NATIVETYPESUFFIX, IMPORTER, ...)		\
 template <> struct rp::ResourceTypeImporter<rp::utility::type_hash<DESC>::value()>{			\
 	using type = NATIVETYPE;																\
 	static constexpr auto type_hash{ rp::utility::type_hash<DESC>::value() };				\
@@ -277,18 +317,20 @@ template <> struct rp::ResourceTypeImporter<rp::utility::type_hash<DESC>::value(
 	inline static DESC GetDescriptor(std::string const& path) {								\
 		return rp::serialization::yaml_serializer::deserialize<DESC>(path);					\
 	}																						\
-	inline static void ImportSerialize(std::string const& path) {							\
+	inline static void ImportSerialize(std::string const& path, std::string const& out) {	\
 		auto data{ Import(path) };															\
 		[](auto const& ds, std::string const& str){															\
 			if constexpr (rp::reflection::is_sequence_container_v<std::remove_cvref_t<decltype(ds)>>) {		\
+				auto parent{str.substr(0,str.rfind('\\')+1)};												\
 				for (auto& [guid, d] : ds) {																\
-					rp::serialization::binary_serializer::serialize(d, guid.to_hex() + NATIVETYPESUFFIX);	\
+					rp::serialization::binary_serializer::serialize(d, parent + guid.to_hex() + NATIVETYPESUFFIX);	\
+					assert(std::filesystem::exists(parent + guid.to_hex() + NATIVETYPESUFFIX));				\
 				}																							\
 			}																								\
 			else {																							\
 				rp::serialization::binary_serializer::serialize(ds, str);									\
 			}																								\
-		}(data, GetDescriptor(path).base.m_guid.to_hex() + NATIVETYPESUFFIX);								\
+		}(data, out.empty() ? GetDescriptor(path).base.m_guid.to_hex() + NATIVETYPESUFFIX : out);			\
 	}																						\
 	inline static void ImportSerializeDirect(DESC const& desc) {							\
 		auto data{ IMPORTER(desc) };														\
@@ -302,7 +344,7 @@ template <> struct rp::ResourceTypeImporter<rp::utility::type_hash<DESC>::value(
 				rp::serialization::binary_serializer::serialize(ds, str);									\
 			}																								\
 		}(data, desc.base.m_guid.to_hex() + NATIVETYPESUFFIX);												\
-	}																																\
+	}																										\
 };																								\
 namespace {																						\
 	inline const std::uint32_t registrar##DESC{ [] {											\
@@ -312,11 +354,13 @@ namespace {																						\
 			DESC& desc{ *reinterpret_cast<DESC*>(data) };																											\
 			rp::serialization::yaml_serializer::serialize(desc, str);																								\
 			});																																						\
-		rp::ResourceTypeImporterRegistry::RegisterFactory(type_hash, []() -> rp::TypeUnsafeTypeErasedWrapper {DESC desc{}; desc.base.m_importer_type = rp::utility::type_hash<DESC>::value(); return rp::TypeUnsafeTypeErasedWrapper{ desc }; });	\
+		rp::ResourceTypeImporterRegistry::RegisterFactory(type_hash, []() -> rp::TypeUnsafeTypeErasedWrapper {DESC desc{}; desc.base.m_guid = rp::Guid::generate(); desc.base.m_importer = NATIVETYPESUFFIX; desc.base.m_importer_type = rp::utility::type_hash<DESC>::value(); return rp::TypeUnsafeTypeErasedWrapper{ desc }; });	\
 		auto ext_names{std::array{__VA_ARGS__}};																													\
 		for (auto& ext : ext_names) {																																\
 			rp::ResourceTypeImporterRegistry::RegisterExtNameImporter(type_hash, ext);																				\
 		}																																							\
+		rp::ResourceTypeImporterRegistry::RegisterImporterNativeType(type_hash, rp::utility::string_hash(NATIVETYPENAME));											\
+		rp::ResourceTypeImporterRegistry::RegisterImporterNativeSuffix(type_hash, NATIVETYPESUFFIX);																\
 		return 1u;																																					\
 		}() };																																						\
 }

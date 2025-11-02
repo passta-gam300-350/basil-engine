@@ -82,35 +82,35 @@ namespace rp{
 					return v;
 				}
 				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
-					std::size_t cont_sz{ read<std::size_t>() };
+					std::size_t cont_sz{ read_blob<std::size_t>() };
 					std::remove_cvref_t<Type> v(cont_sz, '\0');
 					blob_read_bytes(reinterpret_cast<char*>(v.data()), cont_sz);
 					return v;
 				}
 				else if constexpr (reflection::is_associative_container_v<Type>) {
 					Type v{};
-					std::size_t cont_sz{ read<std::size_t>() };
+					std::size_t cont_sz{ read_blob<std::size_t>() };
 					auto cont_view{ reflection::reflect(v) };
 					//no reserve because not all containers supports reserve
 					while (cont_sz--) {
-						cont_view.emplace(read<decltype(cont_view)::input_type>());
+						cont_view.emplace(read_blob<decltype(cont_view)::input_type>());
 					}
 					return v;
 				}
 				else if constexpr (reflection::is_sequence_container_v<Type>) {
 					Type v{};
-					std::size_t cont_sz{ read<std::size_t>() };
+					std::size_t cont_sz{ read_blob<std::size_t>() };
 					auto cont_view{ reflection::reflect(v) };
 					//no reserve because not all containers supports reserve
 					while (cont_sz--) {
-						cont_view.emplace(cont_view.cend(), read<decltype(cont_view)::underlying_type>());
+						cont_view.emplace(cont_view.cend(), read_blob<decltype(cont_view)::underlying_type>());
 					}
 					return v;
 				}
 				else if constexpr (std::is_class_v<Type>) {
 					Type v{};
 					reflection::reflect(v).each([&](auto& field) {
-						*field.m_field_ptr = read<std::remove_pointer_t<std::remove_cvref_t<decltype(field.m_field_ptr)>>>();
+						*field.m_field_ptr = read_blob<std::remove_pointer_t<std::remove_cvref_t<decltype(field.m_field_ptr)>>>();
 						});
 					return v;
 				}

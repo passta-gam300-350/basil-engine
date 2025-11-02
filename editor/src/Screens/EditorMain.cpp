@@ -69,7 +69,7 @@ void EditorMain::init()
 	// Set maximized
 	glfwMaximizeWindow(window);
 
-	//m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
@@ -360,9 +360,31 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::InputInt(field_name.c_str(), &enum_value);
 			}
 
-			if (rp::Guid* v = value.try_cast<rp::Guid>())
-				ImGui::Text((field_name + v->to_hex_no_delimiter()).c_str());
-
+			if (rp::BasicIndexedGuid* v = value.try_cast<rp::BasicIndexedGuid>()) {
+				std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(v->m_typeindex);
+				std::string currentselectionname = m_AssetManager->ResolveAssetName(*v);
+				std::size_t type = v->m_typeindex;
+				assetnames.emplace_back("");
+				auto it{ std::find_if(assetnames.begin(), assetnames.end(), [currentselectionname](std::string const& a) {return currentselectionname == a; }) };
+				if (it != assetnames.end()) {
+					std::swap(*it, assetnames.front());
+				}
+				int current_item{};
+				ImGui::Text(field_name.c_str());
+				ImGui::SameLine(150);
+				ImGui::SetNextItemWidth(-1);
+				ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+					auto& vec = *static_cast<std::vector<std::string>*>(data);
+					if (idx < 0 || idx >= vec.size()) return false;
+					*out_text = vec[idx].c_str();
+					return true;
+					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
+				if (current_item != 0) {
+					*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+					v->m_typeindex = type;
+					is_dirty = true;
+				}
+			}
 
 			// primitives
 			else if (int* vi = value.try_cast<int>()) {
@@ -459,7 +481,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 			}
 			// Handle unordered_map<std::string, Resource::Guid>
-			else if (auto* map_guid = value.try_cast<std::unordered_map<std::string, Resource::Guid>>()) {
+			else if (auto* map_guid = value.try_cast<std::unordered_map<std::string, rp::Guid>>()) {
 				if (ImGui::TreeNode(field_name.c_str())) {
 					if (map_guid->empty()) {
 						ImGui::TextDisabled("(empty)");
@@ -942,7 +964,7 @@ void EditorMain::Render_AssetBrowser()
 
 	auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
 	for (auto it = files.first; it != files.second; ++it) {
-		std::filesystem::path filepath{ it->second.m_RawFileInfo.m_RawSourcePath };
+		std::filesystem::path filepath{ it->second };
 		std::string filename = filepath.filename().string();
 
 		if (filename.empty()) continue;
@@ -1273,7 +1295,7 @@ void EditorMain::CreatePhysicsDemoScene()
 	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
 	meshRenderer.material.metallic = 0.1f;
 	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid = rp::Guid{}; // Use 0 for default material
+	meshRenderer.material.m_MaterialGuid.m_guid = rp::null_guid; // Use 0 for default material
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
@@ -1331,9 +1353,9 @@ void EditorMain::CreatePhysicsDemoScene()
 	MeshRendererComponent meshRenderer2;
 	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer2.m_MeshGuid = meshGuid2;
+	meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.m_MaterialGuid = materialGuid2;
+	meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
 
@@ -1418,9 +1440,9 @@ void EditorMain::CreatePhysicsCube()
 	MeshRendererComponent meshRenderer2;
 	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer2.m_MeshGuid = meshGuid2;
+	meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.m_MaterialGuid = materialGuid2;
+	meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
 
@@ -1467,9 +1489,9 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	MeshRendererComponent meshRenderer;
 	meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer.m_MeshGuid = meshGuid;
+	meshRenderer.m_MeshGuid.m_guid = meshGuid;
 	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.m_MaterialGuid = materialGuid;
+	meshRenderer.m_MaterialGuid.m_guid = materialGuid;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 

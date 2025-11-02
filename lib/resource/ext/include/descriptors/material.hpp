@@ -14,4 +14,6 @@ inline void CreateMaterial(MaterialDescriptor const& matDesc) {
 	SerializeBinary(matDesc.material, matDesc.base.m_guid, ".material");
 }
 
+//RegisterResourceTypeImporter(TextureDescriptor, TextureResourceData, "texture", ".texture", ImportTexture, ".png", ".jpeg", ".jpg")
+
 #endif
