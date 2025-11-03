@@ -62,6 +62,19 @@ Resource::Guid MonoEntityManager::AddKlass(const char* klassName, const char* kl
 	return AddKlass(std::move(klass));
 }
 
+
+MonoEntityManager::ScriptID MonoEntityManager::GetPrimaryAssembly()
+{
+	return PRIMARY_ASSEMBLY_ID;
+}
+
+MonoEntityManager::ScriptID MonoEntityManager::GetEngineAssembly()
+{
+	return BACKEND_ASSEMBLY_ID;
+}
+
+
+
 Resource::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend) {
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
@@ -245,6 +258,14 @@ CSKlass* MonoEntityManager::GetNamedKlass(const char* klassName, const char* kla
 	auto const id = m_TypeRegistry.GetMonoEntityID(fullName);
 	return GetKlass(id);
 }
+void MonoEntityManager::VisitAssembly(ManagedAssembly* assembly, const ClassVisitor& visitor)
+{
+	for (auto& klass : m_Klasses) {
+		if (klass->Image() == assembly->Image()) {
+			visitor(*klass);
+		}
+	}
+}
 
 void MonoEntityManager::AddKlassFromAssembly(const ScriptID assemblyID) {
 	auto assembly = GetAssembly(assemblyID);
@@ -323,6 +344,7 @@ void MonoEntityManager::StartCompilation() {
 
 		// Load all klasses from assemblies - Backend first
 		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
+		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
 	}
 	else {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
@@ -330,6 +352,7 @@ void MonoEntityManager::StartCompilation() {
 
 		// Load all klasses from assemblies - Backend first
 		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
+		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
 		std::cout << "Info generated, see logs above." << std::endl;
 	}
 }

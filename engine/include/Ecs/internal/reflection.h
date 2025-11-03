@@ -202,20 +202,20 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 				}
 			}
 
-			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
+			if (Resource::Guid const* v = value.try_cast<const Resource::Guid>())
 				out[field_name] = v->to_hex_no_delimiter();
 
 
 			// primitives
-			else if (int* vi = value.try_cast<int>())
+			else if (int const* vi = value.try_cast<const int>())
 				out[field_name] = *vi;
-			else if (float* vf = value.try_cast<float>())
+			else if (float const* vf = value.try_cast<const float>())
 				out[field_name] = *vf;
-			else if (double* vd = value.try_cast<double>())
+			else if (double const* vd = value.try_cast<const double>())
 				out[field_name] = *vd;
-			else if (std::string* vs = value.try_cast<std::string>())
+			else if (std::string const* vs = value.try_cast<const std::string>())
 				out[field_name] = *vs;
-			else if (bool* vb = value.try_cast<bool>())
+			else if (bool const* vb = value.try_cast<const bool>())
 				out[field_name] = *vb;
 
 

@@ -279,29 +279,29 @@ void EditorMain::Render_Components()
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
 
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
-    ReflectionRegistry::TypeID behaviour_component{};
-    auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
-    if (behaviourIt != internal_type_map.end())
-    {
-        behaviour_component = behaviourIt->second;
-    }
+	ReflectionRegistry::TypeID behaviour_component{};
+	auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
+	if (behaviourIt != internal_type_map.end())
+	{
+		behaviour_component = behaviourIt->second;
+	}
 
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component) {
 			continue;
 		}
-        if (behaviour_component && type_id == behaviour_component)
-        {
-            if (behaviour* behaviour_component_ptr = reinterpret_cast<behaviour*>(uptr.get()))
-            {
-                if (ImGui::TreeNode("Behaviour"))
-                {
-                    Render_Behaviour_Component(*behaviour_component_ptr);
-                    ImGui::TreePop();
-                }
-            }
-            continue;
-        }
+		if (behaviour_component && type_id == behaviour_component)
+		{
+			if (behaviour* behaviour_component_ptr = reinterpret_cast<behaviour*>(uptr.get()))
+			{
+				if (ImGui::TreeNode("Behaviour"))
+				{
+					Render_Behaviour_Component(*behaviour_component_ptr);
+					ImGui::TreePop();
+				}
+			}
+			continue;
+		}
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
 		const char* componentLabel = "Component";
@@ -398,13 +398,29 @@ void EditorMain::Render_Add_Component_Menu()
 			continue;
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {
-
+			if (type_name == "Behaviour")
+			{
+				ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), m_SelectedEntityID };
+				entity.add<behaviour>();
+			}
 		}
 	}
 }
 
 void EditorMain::Render_Behaviour_Component(behaviour& component)
 {
+	auto localSelectedEntityID = m_SelectedEntityID;
+
+
+	bool addScript = ImGui::Button("Add Script");
+
+	if (addScript)
+	{
+		ImGui::OpenPopup("Add Script Popup");
+
+	}
+	Add_Script_Menu();
+
 	if (component.classesName.empty())
 	{
 		ImGui::Text("No scripts attached.");
@@ -414,8 +430,10 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 	//auto& entityManager = MonoEntityManager::GetInstance();
 	//auto& typeRegistry = entityManager.GetTypeRegistry();
 
+
 	for (std::size_t i = 0; i < component.classesName.size(); ++i)
 	{
+		ImGui::Separator();
 		const std::string& fullName = component.classesName[i];
 		std::string label = fullName.empty() ? std::string("<Unnamed Script>") : fullName;
 		label.append("##BehaviourScript");
@@ -431,8 +449,83 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 			MonoImGuiRenderer::RenderBehaviourFields(fullName, scriptGuid);
 			ImGui::TreePop();
 		}
+
+
+		// Pad the button downward living a bit of space from the tree nod
+		// to the separator
+		ImVec2 padding = { 0.0f, 10.0f };
+		ImGui::Dummy(padding);
+		std::string const id = "REMOVE_SCRIPT_BTN_" + scriptGuid.to_hex_no_delimiter();
+		ImGui::PushID(id.c_str());
+		if (ImGui::Button("Remove Script"))
+		{
+			spdlog::info("Remove Script is clicked");
+			std::cout << "classesName size=" << component.classesName.size()
+				<< ", scriptIDs size=" << component.scriptIDs.size()
+				<< ", i=" << i << std::endl;
+
+			auto RemoveScripts = [i, localSelectedEntityID]()
+			{
+				ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), localSelectedEntityID };
+				behaviour& behaviour_component = entity.get<behaviour>();
+				if (i < behaviour_component.classesName.size())
+				{
+					behaviour_component.classesName.erase(behaviour_component.classesName.begin() + i);
+				}
+				if (i < behaviour_component.scriptIDs.size())
+				{
+					behaviour_component.scriptIDs.erase(behaviour_component.scriptIDs.begin() + i);
+				}
+
+			};
+			engineService.m_cont->m_main_thread_tasks.push(RemoveScripts);
+			ImGui::PopID();
+			break;
+		}
+		ImGui::PopID();
+		ImGui::Separator();
+	}
+
+}
+
+void EditorMain::Add_Script_Menu()
+{
+	// TODO: Implement Add Script Menu
+	if (ImGui::BeginPopup("Add Script Popup"))
+	{
+		std::vector<std::string> scriptClasses{};
+		auto gameAssemblyID = MonoEntityManager::GetInstance().GetPrimaryAssembly();
+		MonoReflectionRegistry::Instance().VisitAssemblies([gameAssemblyID, &scriptClasses](AssemblyNode const& node)
+		{
+			if (node.name == "BasilEngine") return;
+			for (auto const& [className, classNodePtr] : node.classes)
+			{
+				scriptClasses.push_back(className);
+
+			}
+		});
+
+		// List all script classes
+		for (const auto& className : scriptClasses)
+		{
+			if (ImGui::MenuItem(className.c_str()))
+			{
+				auto add_script_to_behaviour = [className, localSelectedEntityID = m_SelectedEntityID]()
+				{
+					ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), localSelectedEntityID };
+					behaviour& behaviour_component = entity.get<behaviour>();
+					behaviour_component.classesName.push_back(className);
+					ecs::world temp{ Engine::GetWorld() };
+					BehaviourSystem::Instance().AddScriptToEntityComponent(entity, temp, className.c_str());
+				};
+				engineService.m_cont->m_main_thread_tasks.push(add_script_to_behaviour);
+			}
+		}
+
+		ImGui::EndPopup();
 	}
 }
+
 
 void EditorMain::Render_MenuBar()
 {
@@ -535,78 +628,78 @@ void EditorMain::Render_MenuBar()
 					const ClassNode& classNode = *classNodePtr;
 					const MonoTypeDescriptor* classDescriptor = classNode.descriptor;
 					const std::string classManaged = classDescriptor ? classDescriptor->managed_name : className;
-				const std::string classCpp = classDescriptor && !classDescriptor->cpp_name.empty()
-					? classDescriptor->cpp_name
-					: std::string("<cpp unknown>");
-				std::string classGuidStr;
-				if (classDescriptor && classDescriptor->guid != Resource::null_guid)
-				{
-					classGuidStr = classDescriptor->guid.to_hex();
-				}
-			std::string classExtra;
-			if (!classGuidStr.empty())
-			{
-				classExtra += " | guid=";
-				classExtra += classGuidStr;
-			}
-			SPDLOG_INFO("[Reflection]   Class: {} | managed=\"{}\" | cpp=\"{}\"{}", className, classManaged, classCpp, classExtra);
+					const std::string classCpp = classDescriptor && !classDescriptor->cpp_name.empty()
+						? classDescriptor->cpp_name
+						: std::string("<cpp unknown>");
+					std::string classGuidStr;
+					if (classDescriptor && classDescriptor->guid != Resource::null_guid)
+					{
+						classGuidStr = classDescriptor->guid.to_hex();
+					}
+					std::string classExtra;
+					if (!classGuidStr.empty())
+					{
+						classExtra += " | guid=";
+						classExtra += classGuidStr;
+					}
+					SPDLOG_INFO("[Reflection]   Class: {} | managed=\"{}\" | cpp=\"{}\"{}", className, classManaged, classCpp, classExtra);
 
-			for (const auto& [fieldName, fieldNodePtr] : classNode.fields)
-			{
-				if (!fieldNodePtr)
-				{
-					continue;
-				}
+					for (const auto& [fieldName, fieldNodePtr] : classNode.fields)
+					{
+						if (!fieldNodePtr)
+						{
+							continue;
+						}
 
-				const FieldNode& fieldNode = *fieldNodePtr;
-				if (!fieldNode.isPublic)
-				{
-					continue;
-				}
+						const FieldNode& fieldNode = *fieldNodePtr;
+						if (!fieldNode.isPublic)
+						{
+							continue;
+						}
 
-				const MonoTypeDescriptor* fieldDescriptor = fieldNode.descriptor;
-				const std::string fieldManaged = fieldDescriptor ? fieldDescriptor->managed_name : fieldNode.type;
-				const std::string fieldCpp = fieldDescriptor && !fieldDescriptor->cpp_name.empty()
-					? fieldDescriptor->cpp_name
-					: std::string("<cpp unknown>");
-			std::string fieldGuidStr;
-			if (fieldDescriptor && fieldDescriptor->guid != Resource::null_guid)
-			{
-				fieldGuidStr = fieldDescriptor->guid.to_hex();
-			}
-			std::string fieldExtra;
-			if (fieldNode.isStatic)
-			{
-				fieldExtra += " [static]";
-			}
-			if (!fieldGuidStr.empty())
-			{
-				if (!fieldExtra.empty())
-				{
-					fieldExtra += " ";
-				}
-				fieldExtra += "| guid=";
-				fieldExtra += fieldGuidStr;
-			}
-			SPDLOG_INFO("[Reflection]     Field: {} -> managed=\"{}\" | cpp=\"{}\"{}", fieldName, fieldManaged, fieldCpp, fieldExtra);
-				if (fieldDescriptor && fieldDescriptor->elementDescriptor)
-				{
-					const MonoTypeDescriptor* element = fieldDescriptor->elementDescriptor;
-					const std::string elementManaged = element->managed_name;
-					const std::string elementCpp = !element->cpp_name.empty() ? element->cpp_name : std::string("<cpp unknown>");
-				std::string elementGuidStr;
-				if (element->guid != Resource::null_guid)
-				{
-					elementGuidStr = element->guid.to_hex();
-				}
-				std::string elementExtra;
-				if (!elementGuidStr.empty())
-				{
-					elementExtra += " | guid=";
-					elementExtra += elementGuidStr;
-				}
-				SPDLOG_INFO("[Reflection]       Element -> managed=\"{}\" | cpp=\"{}\"{}", elementManaged, elementCpp, elementExtra);
-				}
+						const MonoTypeDescriptor* fieldDescriptor = fieldNode.descriptor;
+						const std::string fieldManaged = fieldDescriptor ? fieldDescriptor->managed_name : fieldNode.type;
+						const std::string fieldCpp = fieldDescriptor && !fieldDescriptor->cpp_name.empty()
+							? fieldDescriptor->cpp_name
+							: std::string("<cpp unknown>");
+						std::string fieldGuidStr;
+						if (fieldDescriptor && fieldDescriptor->guid != Resource::null_guid)
+						{
+							fieldGuidStr = fieldDescriptor->guid.to_hex();
+						}
+						std::string fieldExtra;
+						if (fieldNode.isStatic)
+						{
+							fieldExtra += " [static]";
+						}
+						if (!fieldGuidStr.empty())
+						{
+							if (!fieldExtra.empty())
+							{
+								fieldExtra += " ";
+							}
+							fieldExtra += "| guid=";
+							fieldExtra += fieldGuidStr;
+						}
+						SPDLOG_INFO("[Reflection]     Field: {} -> managed=\"{}\" | cpp=\"{}\"{}", fieldName, fieldManaged, fieldCpp, fieldExtra);
+						if (fieldDescriptor && fieldDescriptor->elementDescriptor)
+						{
+							const MonoTypeDescriptor* element = fieldDescriptor->elementDescriptor;
+							const std::string elementManaged = element->managed_name;
+							const std::string elementCpp = !element->cpp_name.empty() ? element->cpp_name : std::string("<cpp unknown>");
+							std::string elementGuidStr;
+							if (element->guid != Resource::null_guid)
+							{
+								elementGuidStr = element->guid.to_hex();
+							}
+							std::string elementExtra;
+							if (!elementGuidStr.empty())
+							{
+								elementExtra += " | guid=";
+								elementExtra += elementGuidStr;
+							}
+							SPDLOG_INFO("[Reflection]       Element -> managed=\"{}\" | cpp=\"{}\"{}", elementManaged, elementCpp, elementExtra);
+						}
 					}
 				}
 			});
@@ -805,7 +898,7 @@ void EditorMain::Render_Console()
 {
 
 	ImGui::Begin("Console");
-	
+
 	ImGui::PushID("ConsoleClearBtn");
 	bool clearConsole = ImGui::Button("Clear Console");
 	ImGui::PopID();
@@ -1342,9 +1435,6 @@ void EditorMain::CreatePlaneEntity()
 		meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
-
-		world.add_component_to_entity<behaviour>(entity, behaviour{ {"UserTest"},{} });
-		BehaviourSystem::Instance().RegisterComponent(entity);
 	};
 
 	engineService.m_cont->m_main_thread_tasks.push(func);
@@ -1752,10 +1842,15 @@ void EditorMain::SaveScene(const char* path)
 		spdlog::error("Editor: Cannot save scene - path is null");
 		return;
 	}
-	ecs::world world = Engine::GetWorld();
+	std::string p{ path };
+	auto fnSave = [p]
+	{
+		ecs::world world = Engine::GetWorld();
 
-	world.SaveYAML(path);
-	spdlog::info("Editor: Scene saved to {}", path);
+		world.SaveYAML(p.c_str());
+		spdlog::info("Editor: Scene saved to {}", p);
+	};
+	engineService.m_cont->m_main_thread_tasks.push(fnSave);
 
 }
 
@@ -1767,10 +1862,15 @@ void EditorMain::LoadScene(const char* path)
 		return;
 	}
 	ClearEntitySelection();
-	ecs::world world = Engine::GetWorld();
-	world.UnloadAll();
-	world.LoadYAML(path);
-	spdlog::info("Editor: Scene loaded from {}", path);
+	std::string p{ path };
+	auto LoadScene = [p]()
+	{
+		ecs::world world = Engine::GetWorld();
+		world.UnloadAll();
+		world.LoadYAML(p.c_str());
+		spdlog::info("Editor: Scene loaded from {}", p.c_str());
+	};
+	engineService.m_cont->m_main_thread_tasks.push(LoadScene);
 	// Clear selection after loading new scene
 
 
