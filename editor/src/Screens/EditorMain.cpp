@@ -599,10 +599,70 @@ void EditorMain::Render_Inspector()
 	ImGui::Text("Object ID: %u", m_SelectedEntityID);
 
 	auto& entities = engineService.m_cont->m_entities_snapshot;
+	auto& entityNames = engineService.m_cont->m_names_snapshot;
 
 	if (auto it{ std::find_if(entities.begin(), entities.end(), [this](std::size_t ehdl) {return ecs::entity(ehdl).get_uid() == m_SelectedEntityID; }) }; it != entities.end()) {
 		// Show entity components
 		ImGui::Text("Entity UID: %llu", m_SelectedEntityID);
+
+		auto i = it - entities.begin();
+
+		// Object name header (like Unity)
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 6));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+		auto const& currentName = entityNames[i];
+
+		char nameBuffer[256];
+		snprintf(nameBuffer, sizeof(nameBuffer), currentName.c_str(), currentName.size());
+
+		ImGui::PushItemWidth(-1); // Full width
+
+		// Input text with callback flags
+		ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue |
+			ImGuiInputTextFlags_AutoSelectAll;
+
+		if (ImGui::InputText("##EntityName", nameBuffer, 256, flags))
+		{
+			// User pressed Enter
+			std::string newName(nameBuffer);
+			engineService.ExecuteOnEngineThread([newName, this]() {
+				ecs::world world = Engine::GetWorld();
+				for (auto& entity : world.get_all_entities()) {
+					if (entity.get_uid() == m_SelectedEntityID) {
+						entity.name() = newName;
+						break;
+					}
+				}
+				spdlog::info("Renamed entity to: {}", newName);
+				});
+		}
+
+		// Also handle when field loses focus
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			std::string newName(nameBuffer);
+			if (newName != currentName)
+			{
+				engineService.ExecuteOnEngineThread([newName, this]() {
+					ecs::world world = Engine::GetWorld();
+					for (auto& entity : world.get_all_entities()) {
+						if (entity.get_uid() == m_SelectedEntityID) {
+							entity.name() = newName;
+							break;
+						}
+					}
+					spdlog::info("Renamed entity to: {}", newName);
+					});
+			}
+		}
+
+		ImGui::PopItemWidth();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
 
 		// renders all reflectible components
 		Render_Components();
