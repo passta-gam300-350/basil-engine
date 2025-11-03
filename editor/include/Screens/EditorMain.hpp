@@ -145,6 +145,7 @@ private:
 
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);
+	void NewScene();
 };
 
 namespace rp {

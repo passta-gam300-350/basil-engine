@@ -206,20 +206,25 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 				}
 			}
 			
-			if (rp::Guid* v = value.try_cast<rp::Guid>())
+			if (rp::BasicIndexedGuid const* v = value.try_cast<rp::BasicIndexedGuid const>()) {
+				out[field_name]["guid"] = v->m_guid.to_hex();
+				out[field_name]["type"] = v->m_typeindex;
+			}
+			else if (rp::Guid const* v = value.try_cast<rp::Guid const>())
 				out[field_name] = v->to_hex();
+
 			
 
 			// primitives
-			else if (int* vi = value.try_cast<int>())
+			else if (int const* vi = value.try_cast<int const>())
 				out[field_name] = *vi;
-			else if (float* vf = value.try_cast<float>())
+			else if (float const* vf = value.try_cast<float const>())
 				out[field_name] = *vf;
-			else if (double* vd = value.try_cast<double>())
+			else if (double const* vd = value.try_cast<double const>())
 				out[field_name] = *vd;
-			else if (std::string* vs = value.try_cast<std::string>())
+			else if (std::string const* vs = value.try_cast<std::string const>())
 				out[field_name] = *vs;
-			else if (bool* vb = value.try_cast<bool>())
+			else if (bool const* vb = value.try_cast<bool const>())
 				out[field_name] = *vb;
 		
 
@@ -238,8 +243,12 @@ Node SerializeEntity(entt::registry& reg, entt::entity e) {
 			auto comp_any = meta_type.from_void(storage->value(e));
 			Node comp_node;
 			std::string test = ReflectionRegistry::GetTypeName(meta_type.id());
+			std::string val{};
+			if (test == "entity name") {
+				val = *reinterpret_cast<std::string*>(storage->value(e));
+			}
 			SerializeType(comp_any, comp_node);
-			entity_node[ReflectionRegistry::GetTypeName(meta_type.id())] = comp_node;
+ 			entity_node[ReflectionRegistry::GetTypeName(meta_type.id())] = comp_node;
 		}
 	}
 
@@ -335,6 +344,15 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 		if (mid == entt::type_hash<rp::Guid>::value()) {
 			std::string guid_str = in[field_name].template as<std::string>();
 			rp::Guid guid = rp::Guid::to_guid(guid_str);
+			data.set(obj, guid);
+			continue;
+		}
+
+		if (mid == entt::type_hash<rp::BasicIndexedGuid>::value()) {
+			std::string guid_str = in[field_name]["guid"].template as<std::string>();
+			rp::BasicIndexedGuid guid{};
+			guid.m_guid = rp::Guid::to_guid(guid_str);
+			guid.m_typeindex = in[field_name]["type"].template as<std::uint64_t>();
 			data.set(obj, guid);
 			continue;
 		}

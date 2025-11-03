@@ -538,16 +538,16 @@ void EditorMain::Render_MenuBar()
 
 	if (ImGui::BeginMenu("Scene"))
 	{
-		ImGui::MenuItem("New Scene", "Ctrl+N");
+		if (ImGui::MenuItem("New Scene", "Ctrl+N")) {
+			NewScene();
+		}
 		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
 		{
 			std::string path{};
 			if (fileService.OpenFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), path, FileService::FILE_TYPE_LIST{ {L"Scene Files", L"*.scene"} }))
 			{
 				LoadScene(path.c_str());
-				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{path}.filename().string()).c_str());
-
-				
+				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{path}.filename().string()).c_str());	
 			}
 		}
 		if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
@@ -1651,5 +1651,13 @@ void EditorMain::LoadScene(const char* path)
 	ClearEntitySelection();
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
 	engineService.LoadScene(path);
+	// Clear selection after loading new scene
+}
+
+void EditorMain::NewScene()
+{
+	ClearEntitySelection();
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.NewScene();
 	// Clear selection after loading new scene
 }

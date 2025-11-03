@@ -465,3 +465,11 @@ void EngineContainerService::LoadScene(const char* path) {
 		spdlog::info("EngineService: Scene loaded from {}", path);
 	});
 }
+
+void EngineContainerService::NewScene() {
+	ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
+		world.UnloadAll();
+		spdlog::info("EngineService: New Scene created");
+		});
+}
