@@ -417,35 +417,6 @@ void EditorMain::update()
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
 
-struct s2 {
-	std::string some_value;
-	bool is_true;
-	glm::vec4 v4;
-};
-
-struct p {
-	s2 struct2;
-};
-
-enum class testemum : std::uint8_t {
-	pollo,
-	water,
-	enum1
-};
-
-struct test {
-	int t1;
-	double t2{3.14f};
-	testemum enum_test;
-	std::string t3;
-	glm::vec3 vec3;
-	std::vector<p> vector_of_ints;
-	std::map<std::string, s2> map_of_str_bool;
-};
-
-test testa{};
-
-
 void EditorMain::render()
 {
 	if (!active) return;
@@ -504,10 +475,6 @@ void EditorMain::render()
 	Render_Game();
 	Render_CameraControls();
 	Render_AssetBrowser();
-
-	ImGui::Begin("TestReflection");
-	ImguiInspectTypeRenderer::present(testa, "testreflectmenu");
-	ImGui::End();
 
 	engineService.m_cont->m_container_is_presentable.release();
 	engineService.start();
