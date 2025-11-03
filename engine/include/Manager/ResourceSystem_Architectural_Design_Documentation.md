@@ -65,8 +65,8 @@ Resolves resource acquisition request and maintains guid to resource handle mapp
 ### Structure
 ```cxx
 struct ResourceRegistry{
-    std::unordered_map<Resource::Guid, std::unique_ptr<ResourceTypeBase>> m_RawResources;
-    std::unordered_map<Resource::Guid, ResourceControlBlock> m_ManagedResources;
+    std::unordered_map<rp::Guid, std::unique_ptr<ResourceTypeBase>> m_RawResources;
+    std::unordered_map<rp::Guid, ResourceControlBlock> m_ManagedResources;
     ...
 };
 ```

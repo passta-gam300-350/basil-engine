@@ -513,6 +513,8 @@ function(hide_dependencies)
         yaml-cpp-read
         yaml-cpp-sandbox
         imgui_backends
+        freetype
+        Jolt
         PROPERTIES FOLDER dep)
     suppress_dep_warnings(
         glad
@@ -541,7 +543,9 @@ function(hide_dependencies)
         yaml-cpp-parse
         yaml-cpp-read
         yaml-cpp-sandbox
-        imgui_backends)
+        imgui_backends
+        freetype
+        Jolt)
 endfunction()
 
 # Macro to import all dependencies

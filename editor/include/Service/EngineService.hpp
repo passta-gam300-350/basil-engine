@@ -4,8 +4,13 @@
 #include <Engine.hpp>
 #include <thread>
 #include <semaphore>
+#include <functional>
+#include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
 #include "Service.hpp"
+
+// Forward declarations to reduce coupling
+struct FrameData;
 
 struct EngineContainerService : public Service
 {
@@ -24,6 +29,21 @@ public:
 		std::binary_semaphore m_container_is_closed{ 0 };
 		std::binary_semaphore m_container_is_presentable{ 0 };
 		std::queue<std::function<void()>> m_main_thread_tasks;
+
+		// Command queue for EditorMain → Engine communication
+		std::queue<std::function<void()>> m_command_queue;
+
+		// Component type IDs per entity (parallel array to m_entities_snapshot)
+		// Each vector contains the component type IDs that entity has
+		std::vector<std::vector<std::uint32_t>> m_entity_components_snapshot;
+
+		// Pending picking query data (processed after next frame render)
+		bool m_hasPickingQuery{ false };
+		float m_pickingMouseX{ 0.0f };
+		float m_pickingMouseY{ 0.0f };
+		float m_pickingViewportWidth{ 0.0f };
+		float m_pickingViewportHeight{ 0.0f };
+		std::function<void(bool, uint32_t)> m_pickingCallback;
 
 	private:
 		void engine_service();
@@ -56,8 +76,144 @@ public:
 	void delete_component(entity_handle, std::uint32_t);
 	
 
-	//safe to return reference, registration is done during startup with its data determined during compile time and reflection registry is not expected to change, unless reset is called. 
+	//safe to return reference, registration is done during startup with its data determined during compile time and reflection registry is not expected to change, unless reset is called.
 	std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& get_reflectible_component_id_name_list();
 
+	// ============================================================================
+	// NEW API: Command Queue & Thread-Safe Queries
+	// ============================================================================
+
+	/**
+	 * @brief Execute a command on the engine thread during the next writeback cycle
+	 *
+	 * This is the primary decoupling mechanism. EditorMain queues lambdas that will
+	 * execute on the engine thread, allowing safe access to Engine APIs.
+	 *
+	 * @param command Lambda or function to execute (captured by value for thread safety)
+	 *
+	 * @example
+	 * // Set ambient light
+	 * engineService.ExecuteOnEngineThread([]() {
+	 *     Engine::GetRenderSystem().m_SceneRenderer->SetAmbientLight(glm::vec3(0.7f));
+	 * });
+	 *
+	 * // Create entity with components
+	 * engineService.ExecuteOnEngineThread([position, scale]() {
+	 *     ecs::world world = Engine::GetWorld();
+	 *     auto entity = world.add_entity();
+	 *     entity.add_component<TransformComponent>(position, glm::quat(), scale);
+	 * });
+	 */
+	void ExecuteOnEngineThread(std::function<void()> command);
+
+	/**
+	 * @brief Get snapshot of all entity handles (updated each frame)
+	 * Thread-safe: Returns const reference to main thread snapshot
+	 */
+	const std::vector<entity_handle>& GetEntitiesSnapshot() const;
+
+	/**
+	 * @brief Get snapshot of all entity names (updated each frame)
+	 * Thread-safe: Returns const reference to main thread snapshot
+	 */
+	const std::vector<std::string>& GetEntityNamesSnapshot() const;
+
+	/**
+	 * @brief Check if an entity has a specific component (from snapshot)
+	 * Thread-safe: Queries snapshot data
+	 * @param entityHandle Entity to check
+	 * @param componentTypeID Component type ID from ReflectionRegistry
+	 * @return True if entity has the component, false otherwise
+	 */
+	bool EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const;
+
+	/**
+	 * @brief Get frame data containing render targets and textures
+	 * Thread-safe: Synchronized by semaphore (editor reads, engine writes)
+	 * @return FrameData& containing editorResolvedBuffer for viewport rendering
+	 */
+	FrameData& GetFrameData();
+
+	/**
+	 * @brief Get current engine info (FPS, delta time, frame count)
+	 * Thread-safe: Returns copy of info struct
+	 */
+	Engine::Info GetEngineInfo();
+
+	/**
+	 * @brief Get delta time for frame-rate independent operations
+	 * Thread-safe: Read-only access to atomic/synchronized value
+	 */
+	double GetDeltaTime();
+
+	// ============================================================================
+	// HIGH-LEVEL API: Complex Operations (Lambdas in EngineService.cpp)
+	// ============================================================================
+
+	/**
+	 * @brief Select an entity by its object ID (executes on engine thread)
+	 *
+	 * @param objectID The object ID to select
+	 */
+	void SelectEntityByObjectID(uint32_t objectID);
+
+	/**
+	 * @brief Perform entity picking at mouse position (executes on engine thread)
+	 *
+	 * @param mouseX Mouse X coordinate in viewport space
+	 * @param mouseY Mouse Y coordinate in viewport space
+	 * @param viewportWidth Viewport width
+	 * @param viewportHeight Viewport height
+	 * @param resultCallback Callback with picking result (hasHit, objectID)
+	 */
+	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight,
+	                          std::function<void(bool hasHit, uint32_t objectID)> resultCallback);
+
+	/**
+	 * @brief Enable or disable AABB wireframe visualization for debugging
+	 * @param enable True to show AABBs, false to hide
+	 */
+	void EnableAABBVisualization(bool enable);
+
+	/**
+	 * @brief Add object outline for visual selection feedback
+	 * @param objectID Object ID to outline
+	 */
+	void AddOutlinedObject(uint32_t objectID);
+
+	/**
+	 * @brief Remove object outline
+	 * @param objectID Object ID to remove outline from
+	 */
+	void RemoveOutlinedObject(uint32_t objectID);
+
+	/**
+	 * @brief Clear all outlined objects
+	 */
+	void ClearOutlinedObjects();
+
+	/**
+	 * @brief Set ambient light color for the scene
+	 * @param color RGB color vector (0.0-1.0 range)
+	 */
+	void SetAmbientLight(const glm::vec3& color);
+
+	/**
+	 * @brief Save current scene to file (executes on engine thread)
+	 * @param path File path to save to
+	 */
+	void SaveScene(const char* path);
+
+	/**
+	 * @brief Load scene from file (executes on engine thread)
+	 * @param path File path to load from
+	 */
+	void LoadScene(const char* path);
+
+	/**
+	 * @brief creates a new scene (executes on engine thread)
+	 * @param path File path to load from
+	 */
+	void NewScene();
 };
 #endif // FileService_HPP

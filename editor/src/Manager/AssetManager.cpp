@@ -5,35 +5,7 @@
 #include <iostream>
 #include <Utility/StringConversion.hpp>
 
-#include <importer/importer_registry.hpp>
-#include <descriptors/descriptor_registry.hpp>
-
-
-namespace YAML {
-	template<>
-	struct convert<std::map<std::string, ResourceTypeGuid>> {
-		static Node encode(const std::map<std::string, ResourceTypeGuid>& rhs) {
-			Node node;
-			for (const auto& kv : rhs) {
-				node[kv.first]["guid"] = kv.second.m_Guid.to_hex_no_delimiter();
-				node[kv.first]["type"] = Resource::GetResourceTypeName(kv.second.m_Type);
-			}
-			return node;
-		}
-
-		static bool decode(const Node& node, std::map<std::string, ResourceTypeGuid>& rhs) {
-			if (!node.IsMap()) return false;
-			rhs.clear();
-			for (auto it = node.begin(); it != node.end(); ++it) {
-				ResourceTypeGuid typed{};
-				typed.m_Guid = Resource::Guid::to_guid(it->second["guid"].as<std::string>());
-				typed.m_Type = Resource::GetResourceTypeFromName(it->second["type"].as<std::string>());
-				rhs[it->first.as<std::string>()] = typed;
-			}
-			return true;
-		}
-	};
-}
+#include <importer/importer.hpp>
 
 template<typename K, typename V>
 static std::map<V, K> reverseMap(const std::map<K, V>& m) {
@@ -43,10 +15,10 @@ static std::map<V, K> reverseMap(const std::map<K, V>& m) {
 	return r;
 }
 
-static std::map<Resource::Guid, std::string> reverseMapGuid(const std::map<std::string, ResourceTypeGuid>& m) {
-	std::map<Resource::Guid, std::string> r;
+static std::map<rp::BasicIndexedGuid, std::string> reverseMapGuid(const std::map<std::string, rp::BasicIndexedGuid>& m) {
+	std::map<rp::BasicIndexedGuid, std::string> r;
 	for (const auto& kv : m)
-		r[kv.second.m_Guid] = kv.first;
+		r[kv.second] = kv.first;
 	return r;
 }
 
@@ -95,6 +67,8 @@ std::vector<std::string> AssetManager::GetSubDirectories() {
 
 AssetManager::AssetManager(std::string const& root_dir, std::string const& import_dir)
 	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_IndexingWorker{ &AssetManager::FileIndexingWorkerLoop, std::ref(*this) } {
+	m_LastNotificationTime = std::chrono::steady_clock::now();
+	m_NeedsRescan = false;
 	if (!std::filesystem::exists(m_ImportedAssetPath)) {
 		std::filesystem::create_directories(m_ImportedAssetPath);
 	}
@@ -104,10 +78,10 @@ AssetManager::AssetManager(std::string const& root_dir, std::string const& impor
 	hideFolder(string_to_wstring(m_ImportedAssetPath));
 }
 
-Resource::Guid AssetManager::ResolveAssetGuid(std::string const& name) {
-	return m_AssetNameGuid.find(name) != m_AssetNameGuid.end() ? m_AssetNameGuid[name].m_Guid : Resource::null_guid;
+rp::BasicIndexedGuid AssetManager::ResolveAssetGuid(std::string const& name) {
+	return m_AssetNameGuid.find(name) != m_AssetNameGuid.end() ? m_AssetNameGuid[name] : rp::null_indexed_guid;
 }
-std::string AssetManager::ResolveAssetName(Resource::Guid guid) {
+std::string AssetManager::ResolveAssetName(rp::BasicIndexedGuid guid) {
 	auto it = m_AssetReverse.find(guid);
 	if (it == m_AssetReverse.end()) {
 		m_AssetReverse = reverseMapGuid(m_AssetNameGuid); //lazy construction
@@ -125,30 +99,28 @@ std::string AssetManager::getFileExtension(std::string const& file) {
 	return path.extension().string();
 }
 
-std::vector<std::string> AssetManager::GetAssetTypeNames(Resource::ResourceType ty) {
+std::vector<std::string> AssetManager::GetAssetTypeNames(ResourceType ty) {
 	std::vector<std::string> asstype{};
 	for (auto [name, typed] : m_AssetNameGuid) {
-		if (typed.m_Type == ty) {
+		if (typed.m_typeindex == ty) {
 			asstype.emplace_back(name);
 		}
 	}
 	return asstype;
 }
 
-void AssetManager::ImportAsset(Resource::ResourceDescriptor& rdesc) {
-	Resource::ImporterRegistry::SetImportDirectory(m_ImportedAssetPath);
-	Resource::Import(rdesc);
-	for (auto [type, entry] : rdesc.m_DescriptorEntries) {
-		ResourceTypeGuid typed;
-		typed.m_Guid = entry.m_Guid;
-		typed.m_Type = type;
-		m_AssetNameGuid.emplace(entry.m_Name, typed);
-		ResourceSystem::FileEntry fentry{};
-		fentry.m_Guid = entry.m_Guid;
-		fentry.m_Path = m_ImportedAssetPath + "/" + entry.m_Guid.to_hex_no_delimiter() + "." + Resource::GetResourceTypeName(type);
-		fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
-		ResourceSystem::Instance().m_FileEntries.emplace(entry.m_Guid, fentry);
-	}
+void AssetManager::ImportAsset(std::string const& rdesc) {
+	auto importertype{ rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(rdesc) };
+	auto biguid{ rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc) };
+	auto file_path{ normalizePath(m_ImportedAssetPath + "/" + biguid.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetImporterSuffix(importertype)) };
+	rp::ResourceTypeImporterRegistry::Import(importertype, rdesc, file_path);
+	rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc);
+	m_AssetNameGuid.emplace(rp::ResourceTypeImporterRegistry::GetDescriptorName(rdesc), biguid);
+	ResourceSystem::FileEntry fentry{};
+	fentry.m_Guid = biguid.m_guid;
+	fentry.m_Path = file_path;
+	fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
+	ResourceSystem::Instance().m_FileEntries.emplace(fentry.m_Guid, fentry);
 }
 
 //this might cause issues if there are too many directories cos of recursion
@@ -164,27 +136,57 @@ void AssetManager::ImportAssetDirectory(std::string const& dir) {
 	}
 }
 
+void AssetManager::LoadImportSettings(std::string const& is)
+{
+	if (!m_InspectedDescriptor) {
+		m_InspectedDescriptor.reset(new rp::DescriptorWrapper{ rp::ResourceTypeImporterRegistry::LoadDescriptor(is) });
+		m_InspectedDescriptorPath = is;
+	}
+}
+
+void AssetManager::UnloadImportSetting(std::string const& is)
+{
+	if (m_InspectedDescriptor) {
+		rp::ResourceTypeImporterRegistry::Serialize(m_InspectedDescriptor->m_desc_importer_hash, "yaml", is.empty() ? m_InspectedDescriptorPath : is, *m_InspectedDescriptor);
+		m_InspectedDescriptor.reset(nullptr);
+		m_InspectedDescriptorPath.clear();
+	}
+}
+
+void AssetManager::ClearImportSetting()
+{
+	if (m_InspectedDescriptor) {
+		m_InspectedDescriptor.reset(nullptr);
+		m_InspectedDescriptorPath.clear();
+	}
+}
+
+rp::DescriptorWrapper& AssetManager::GetImportSettings()
+{
+	return *m_InspectedDescriptor;
+}
+
+std::string AssetManager::GetImportSettingsPath()
+{
+	return m_InspectedDescriptorPath;
+}
+
 void AssetManager::ExportAssetList() {
-	std::ofstream ofs{ m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(),cx_AssetListFilename.end()), std::ios::out };
-	YAML::Node root{};
-	root["asset list"] = m_AssetNameGuid;
-	ofs << root;
+	std::string filename{ m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(),cx_AssetListFilename.end()) };
+	rp::serialization::yaml_serializer::serialize(m_ImportedAssetPath, filename);
 }
 
 void AssetManager::ImportAssetList() {
 	std::string assetfilename = m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(), cx_AssetListFilename.end());
 	if (!std::filesystem::exists(assetfilename))
 		return;
-	YAML::Node root{ YAML::LoadFile(assetfilename) };
-	if (!root["asset list"].IsNull()) {
-		m_AssetNameGuid = root["asset list"].as<std::map<std::string, ResourceTypeGuid>>();
-	}
+	m_AssetNameGuid = rp::serialization::yaml_serializer::deserialize<std::map<std::string, rp::BasicIndexedGuid>>(assetfilename);
 	for (auto [name, typed] : m_AssetNameGuid) {
 		ResourceSystem::FileEntry fentry{};
-		fentry.m_Guid = typed.m_Guid;
-		fentry.m_Path = m_ImportedAssetPath + "/" + typed.m_Guid.to_hex_no_delimiter() + "." + Resource::GetResourceTypeName(typed.m_Type);
+		fentry.m_Guid = typed.m_guid;
+		fentry.m_Path = m_ImportedAssetPath + "/" + typed.m_guid.to_hex() + "." + rp::ResourceTypeImporterRegistry::GetResourceExt(typed.m_typeindex);
 		fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
-		ResourceSystem::Instance().m_FileEntries.emplace(typed.m_Guid, fentry);
+		ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
 	}
 }
 
@@ -197,7 +199,6 @@ void AssetManager::FileIndexingWorkerLoop() {
 		return;
 	}
 
-	Resource::DescriptorRegistry::SetDescriptorRootDirectory(m_RootPath);
 	ImportAssetList();
 
 	try {
@@ -215,15 +216,9 @@ void AssetManager::FileIndexingWorkerLoop() {
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
 				if (!std::filesystem::exists(desc_name)) {
-					Resource::ResourceDescriptor desc = Resource::ResourceDescriptor::MakeDescriptor(entry.path().string());
-					if (desc.m_RawFileInfo.m_FileChecksumHash) {
-						desc.SaveDescriptor();
-						m_Descriptors.emplace(dir_path, desc);
-					}
+					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string());
 				}
-				else {
-					m_Descriptors.emplace(dir_path, Resource::ResourceDescriptor::LoadDescriptor(desc_name));
-				}
+				m_FileList.emplace(dir_path, desc_name);
 			}
 		}
 	}
@@ -231,7 +226,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 		std::cerr << "Filesystem error: " << e.what() << "\n";
 	}
 
-	char buffer[1024];
+	char buffer[8192]; // 8KB buffer to handle multiple file notifications
 	DWORD bytesReturned;
 
 	while (!m_ShouldClose) {
@@ -244,36 +239,74 @@ void AssetManager::FileIndexingWorkerLoop() {
 		DWORD waitStatus = WaitForSingleObject(overlapped.hEvent, 1000); // 1s timeout
 		if (waitStatus == WAIT_OBJECT_0) {
 			DWORD bytes;
-			GetOverlappedResult(hDir, &overlapped, &bytes, FALSE);
+			if (!GetOverlappedResult(hDir, &overlapped, &bytes, FALSE)) {
+				std::cerr << "GetOverlappedResult failed, error: " << GetLastError() << "\n";
+				ResetEvent(overlapped.hEvent);
+				continue;
+			}
+			// Check for buffer overflow
+			if (bytes == 0) {
+				std::cerr << "Warning: Directory change notification buffer overflow. Some file changes may have been missed.\n";
+				ResetEvent(overlapped.hEvent);
+				continue;
+			}
 			// process notifications in buffer
 			FILE_NOTIFY_INFORMATION* fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(buffer);
 			do {
 				std::wstring filename(fni->FileName, fni->FileNameLength / sizeof(WCHAR));
 				std::string nfile{ normalizePath(GetRootPath() + "/" + normalizePath(wstring_to_string(filename))) };
+
+				// Update last notification time
+				m_LastNotificationTime = std::chrono::steady_clock::now();
+
+				// Skip directories early
+				if (std::filesystem::exists(nfile) && std::filesystem::is_directory(nfile)) {
+					if (fni->NextEntryOffset == 0) break;
+					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
+						reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
+					continue;
+				}
+
+				std::string file_ext{ getFileExtension(nfile) };
+
+				// Skip .desc files early (they're generated, not source assets)
+				if (file_ext == ".desc") {
+					if (fni->NextEntryOffset == 0) break;
+					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
+						reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
+					continue;
+				}
+
 				std::string dir_path{};
 				std::string descriptor_filepath{};
-				std::string file_ext{ getFileExtension(nfile) };
-				Resource::ResourceDescriptor descriptor;
 				switch (fni->Action) {
 				case FILE_ACTION_MODIFIED:
-					std::wcout << L"Modified: " << filename << "\n";
 				case FILE_ACTION_ADDED:
-					std::wcout << L"New file: " << filename << "\n";
-					if (file_ext.empty() || file_ext == ".desc") {
+					if (fni->Action == FILE_ACTION_MODIFIED) {
+						std::wcout << L"Modified: " << filename << "\n";
+					}
+					else {
+						std::wcout << L"New file: " << filename << "\n";
+					}
+					if (file_ext.empty()) {
 						break;
 					}
+					// Mark that we need a rescan after quiet period
+					m_NeedsRescan = true;
+					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
 					dir_path = getParentPath(nfile);
-					descriptor = Resource::ResourceDescriptor::MakeDescriptor(nfile);
-					descriptor.SaveDescriptor();
-					{
-						std::lock_guard lg{ m_DescriptorListMtx };
-						m_Descriptors.emplace(dir_path, descriptor);
+					if (!std::filesystem::exists(descriptor_filepath)) {
+						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile);
+						{
+							std::lock_guard lg{ m_DescriptorListMtx };
+							m_FileList.emplace(dir_path, descriptor_filepath);
+						}
 					}
 					break;
 				case FILE_ACTION_REMOVED:
 					std::wcout << L"Removed: " << filename << "\n";
-					if (file_ext == ".desc") {
-						continue;
+					if (file_ext.empty()) {
+						break;
 					}
 					dir_path = getParentPath(nfile);
 					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
@@ -283,8 +316,8 @@ void AssetManager::FileIndexingWorkerLoop() {
 							std::lock_guard lg{ m_DescriptorListMtx };
 							auto files = GetFiles(dir_path);
 							for (auto it = files.first; it != files.second; ++it) {
-								if (normalizePath(it->second.m_RawFileInfo.m_RawSourcePath) == nfile) {
-									m_Descriptors.erase(it); // erase just this one
+								if (normalizePath(it->second) == nfile) {
+									m_FileList.erase(it); // erase just this one
 									break;
 								}
 							}
@@ -302,8 +335,59 @@ void AssetManager::FileIndexingWorkerLoop() {
 				fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
 					reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
 			} while (true);
+			// Reset the manual-reset event for next notification batch
+			ResetEvent(overlapped.hEvent);
+		}
+
+		// Check if we need to rescan after quiet period (2 seconds)
+		auto now = std::chrono::steady_clock::now();
+		auto time_since_last = std::chrono::duration_cast<std::chrono::seconds>(
+			now - m_LastNotificationTime.load()).count();
+
+		if (m_NeedsRescan && time_since_last >= 2) {
+			// Quiet for 2 seconds - do rescan to catch any dropped notifications
+			RescanDirectory();
+			m_NeedsRescan = false;
 		}
 	}
 
 	CloseHandle(hDir);
+}
+
+void AssetManager::RescanDirectory() {
+	try {
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_RootPath, std::filesystem::directory_options::follow_directory_symlink)) {
+			if (entry.is_directory()) {
+				continue;
+			}
+
+			std::string file_path = entry.path().string();
+			std::string ext_name = getFileExtension(file_path);
+			std::string desc_name = file_path.substr(0, file_path.find_last_of(".")) + ".desc";
+
+			// Skip files we don't process
+			if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl") {
+				continue;
+			}
+
+			// Skip if descriptor already exists
+			if (std::filesystem::exists(desc_name)) {
+				continue;
+			}
+
+			// This file is missing a descriptor - create one
+			std::string dir_path = getParentPath(file_path);
+			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path);
+			{
+				std::lock_guard lg{ m_DescriptorListMtx };
+				m_FileList.emplace(dir_path, file_path);
+			}
+				// Log recovered file
+				std::filesystem::path p(file_path);
+				std::wcout << L"Recovered: " << p.filename().wstring() << L"\n";
+			}
+		}
+	catch (const std::filesystem::filesystem_error& e) {
+		std::cerr << "Rescan error: " << e.what() << "\n";
+	}
 }

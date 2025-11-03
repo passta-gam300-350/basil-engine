@@ -1,7 +1,5 @@
 #include <vector>
-#include "ecs/internal/world.h"
-#include "ecs/internal/entity.h"
-#include "ecs/internal/reflection.h"
+#include "ecs/ecs.h"
 #include "ecs/utility/utility.h"
 #include "ecs/system/scheduler.h"
 
@@ -194,6 +192,10 @@ namespace ecs {
 		for (const auto& entity_node : entities) {
 			DeserializeEntity(impl.get_registry(), entity_node);
 		}
+		auto transforms{ filter_entities<TransformComponent>() };
+		std::for_each(transforms.begin(), transforms.end(), [](ecs::entity e) {
+			e.add<TransformMtxComponent>();
+			});
 	}
 
 	void world::SaveYAML(std::string const& path) {

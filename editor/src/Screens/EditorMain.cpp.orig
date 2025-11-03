@@ -847,8 +847,9 @@ void EditorMain::CreatePlaneEntity()
 	assert(material && "Material creation failed");
 
 	// Generate GUIDs for the resources
-	auto meshGuid = Resource::Guid::generate();
-	auto materialGuid = Resource::Guid::generate();
+	auto meshGuid = 
+	::generate();
+	auto materialGuid = rp::Guid::generate();
 
 	// Register resources with the RenderSystem's editor cache
 	RenderSystem::RegisterEditorMesh(meshGuid, planeMesh);
@@ -975,8 +976,8 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	assert(material && "Material creation failed");
 
 	// Register in editor cache (use shared mesh for all cubes!)
-	auto meshGuid = Resource::Guid::generate();
-	auto materialGuid = Resource::Guid::generate();
+	auto meshGuid = rp::Guid::generate();
+	auto materialGuid = rp::Guid::generate();
 
 	RenderSystem::RegisterEditorMesh(meshGuid, cubeMesh);
 	RenderSystem::RegisterEditorMaterial(materialGuid, material);

@@ -1,0 +1,25 @@
+// TEMPORARY: Replace the old shadow function definitions (lines 134-272) with these stubs:
+
+// Stub functions for compilation - shadows temporarily disabled
+float DirectionalShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
+{
+    return 0.0;  // TODO: Implement SSBO-based shadows
+}
+
+float SpotShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir, int lightIndex)
+{
+    return 0.0;  // TODO: Implement SSBO-based shadows
+}
+
+float PointShadowCalculation(vec3 fragPos, vec3 lightPos, int lightIndex, float farPlane)
+{
+    return 0.0;  // TODO: Implement SSBO-based shadows
+}
+
+// Also add these dummy uniforms for now (add after line 48):
+uniform float u_DirectionalShadowIntensity = 0.8;
+uniform float u_PointShadowIntensity = 0.8;
+uniform float u_SpotShadowIntensity = 0.8;
+uniform float u_PointShadowFarPlanes[4];
+uniform int u_NumPointShadowMaps = 0;
+uniform int u_NumSpotShadowMaps = 0;

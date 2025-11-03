@@ -3,7 +3,6 @@
 
 #include <chrono>
 #include <random>
-#include <string>
 #include <format>
 #include "rsc-core/utility.hpp"
 
@@ -112,23 +111,29 @@ namespace rp {
             }
         };
 
-        static constexpr Guid null_guid{ 0x0ull, 0x0ull };
-
         struct BasicIndexedGuid {
             Guid m_guid;
             std::uint64_t m_typeindex;
+            
+            bool operator==(BasicIndexedGuid const& other) const {
+                return m_guid == other.m_guid && other.m_typeindex == m_typeindex;
+            }
+            bool operator!=(BasicIndexedGuid const& other) const {
+                return !(*this == other);
+            }
+            bool operator<(BasicIndexedGuid const& other) const {
+                return m_guid < other.m_guid;
+            }
         };
+
+        static constexpr Guid null_guid{ 0x0ull, 0x0ull };
+        static constexpr BasicIndexedGuid null_indexed_guid{ null_guid, 0x0ull };
 
         template <utility::static_string ss>
-        struct TypeNameGuid : public BasicIndexedGuid {
-        };
+        struct TypeNameGuid;
 
         template <typename Type>
-        struct TypedGuid : public BasicIndexedGuid {
-            using type = Type;
-            static constexpr auto type_index{ utility::type_hash<Type>::value() };
-            TypedGuid() : BasicIndexedGuid{null_guid, type_index} {}
-        };
+        struct TypedGuid;
     }
 }
 
@@ -138,6 +143,17 @@ public:
     std::size_t operator() (rp::Guid const& key) const noexcept {
         std::size_t hash_val{ std::hash<std::uint64_t>{}(key.m_high) };
         rp::Detail::hash_combine(hash_val, key.m_low);
+        return hash_val;
+    }
+};
+
+template <>
+class std::hash<rp::BasicIndexedGuid> {
+public:
+    std::size_t operator() (rp::BasicIndexedGuid const& key) const noexcept {
+        std::size_t hash_val{ std::hash<std::uint64_t>{}(key.m_guid.m_high) };
+        rp::Detail::hash_combine(hash_val, key.m_guid.m_low);
+        rp::Detail::hash_combine(hash_val, std::hash<std::uint64_t>{}(key.m_typeindex));
         return hash_val;
     }
 };

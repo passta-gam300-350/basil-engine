@@ -44,7 +44,7 @@ struct Subscene {
 	std::uint32_t m_ssid;
 	std::string m_name;
 	std::unordered_map<std::uint32_t, ecs::entity> m_ss_entities;
-	std::vector<Resource::Guid> m_subscene_dependencies;
+	std::vector<rp::Guid> m_subscene_dependencies;
 
 	inline void Clear() {
 		for (auto [seid, e] : m_ss_entities) {
@@ -76,33 +76,35 @@ struct Scene
 	std::uint32_t m_scene_id;
 	std::string m_name;
 	std::unordered_map<std::uint32_t, Subscene> m_loaded_ss;
-	std::vector<Resource::Guid> m_scene_dependencies;
+	std::vector<rp::Guid> m_scene_dependencies;
 	float m_proximity_load_radius;
 };
 
 struct SceneRegistry{
 private:
-	std::unordered_map<std::uint32_t, Resource::Guid> m_scenelist;
+	std::unordered_map<std::uint32_t, rp::Guid> m_scenelist;
 	std::unordered_map<std::uint32_t, Scene> m_loaded_scenes;
-	SceneRegistry();
-	~SceneRegistry() {
-		for (auto& [sid, scn] : m_loaded_scenes) {
-			scn.Clear();
-		}
-	}
+	
 	inline static std::unique_ptr<SceneRegistry>& InstancePtr() {
 		static std::unique_ptr<SceneRegistry> s_scn_reg{std::make_unique<SceneRegistry>()};
 		return s_scn_reg;
 	}
 
 public:
+	SceneRegistry();
+	~SceneRegistry() {
+		for (auto& [sid, scn] : m_loaded_scenes) {
+			scn.Clear();
+		}
+	}
+
 	inline static SceneRegistry& Instance() {
 		return *InstancePtr();
 	}
 	inline static void Release() {
 		InstancePtr().reset(nullptr);
 	}
-	inline static void AddSceneGuid(std::uint32_t sid, Resource::Guid sguid) {
+	inline static void AddSceneGuid(std::uint32_t sid, rp::Guid sguid) {
 		Instance().m_scenelist.try_emplace(sid, sguid);
 	}
 	inline static void EraseSceneGuid(std::uint32_t sid) {

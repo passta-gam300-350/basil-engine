@@ -27,18 +27,19 @@ Technology is prohibited.
 #include <iostream>
 #include <vector>
 
-class Model 
+class Model
 {
 public:
     // model data
     std::vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     std::vector<Mesh>    meshes;
+    std::vector<std::string> meshNodeNames;  // Node name for each mesh (for per-node selection)
     std::string directory;
     bool gammaCorrection;
 
     // constructor, expects a filepath to a 3D model.
     Model(std::string const &path, bool gamma = false);
-    
+
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const &path);

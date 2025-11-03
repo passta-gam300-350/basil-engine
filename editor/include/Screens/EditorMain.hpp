@@ -33,6 +33,7 @@ Technology is prohibited.
 
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
+#include <rsc-ext/rp.hpp>
 
 class EditorMain : public Screen
 {
@@ -83,6 +84,7 @@ public:
 	void Render_Console();
 
 	void Render_AssetBrowser();
+	void Render_ImporterSettings();
 
 	void Render_Scene();
 	void Render_Game();
@@ -146,5 +148,174 @@ private:
 
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);
+	void NewScene();
 };
+
+namespace rp {
+	namespace serialization {
+		template <>
+		struct out_archive<"imgui"> {
+			std::string m_tag_name;
+			template <typename Type>
+			void write(Type& v, std::string const& label) {
+				const auto same_line_label{ [](auto& ss) {
+					ImGui::Text(ss.c_str());
+					ImGui::SameLine(250);
+					ImGui::SetNextItemWidth(-1);
+					} };
+				auto strlabel{ ("##" + label) };
+				const char* cstrlabel{ strlabel.c_str() };
+				if constexpr (std::is_enum_v<Type>) {
+					// Render enum as a combo box
+					auto names = reflection::get_enum_list<Type>();
+					int current = static_cast<int>(v);
+					same_line_label(label);
+					if (ImGui::BeginCombo(cstrlabel, std::string(reflection::map_enum_name(v)).c_str())) {
+						for (auto [enum_name, enum_value] : names) {
+							bool selected = (enum_value == v);
+							if (ImGui::Selectable(std::string(enum_name).c_str(), selected)) {
+								v = enum_value;
+							}
+							if (selected) ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, rp::Guid>) {
+					// GUID as hex string
+					std::string guid_str = v.to_hex();
+					char buf[64];
+					strncpy(buf, guid_str.c_str(), sizeof(buf));
+					same_line_label(label);
+					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
+						v = rp::Guid::to_guid(buf);
+					}
+				}
+				else if constexpr (std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
+					char buf[512];
+					strncpy(buf, v.c_str(), sizeof(buf));
+					same_line_label(label);
+					if (ImGui::InputText(cstrlabel, buf, sizeof(buf))) {
+						v = buf;
+					}
+				}
+				else if constexpr (std::is_same_v<Type, bool>) {
+					same_line_label(label);
+					ImGui::Checkbox(cstrlabel, &v);
+				}
+				else if constexpr (std::is_integral_v<Type>) {
+					same_line_label(label);
+					ImGui::InputInt(cstrlabel, reinterpret_cast<int*>(&v));
+				}
+				else if constexpr (std::is_floating_point_v<Type>) {
+					same_line_label(label);
+					if constexpr (std::is_same_v<Type, double>) {
+						ImGui::InputDouble(cstrlabel, &v);
+					}
+					else {
+						ImGui::InputFloat(cstrlabel, reinterpret_cast<float*>(&v));
+					}
+				}
+				else if constexpr (std::is_same_v<Type, glm::vec2>) {
+					same_line_label(label);
+					ImGui::DragFloat2(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::vec3>) {
+					same_line_label(label);
+					ImGui::DragFloat3(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::vec4>) {
+					same_line_label(label);
+					ImGui::DragFloat4(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::ivec2>) {
+					same_line_label(label);
+					ImGui::DragInt2(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::ivec3>) {
+					same_line_label(label);
+					ImGui::DragInt3(cstrlabel, &v.x);
+				}
+				else if constexpr (std::is_same_v<Type, glm::ivec4>) {
+					same_line_label(label);
+					ImGui::DragInt4(cstrlabel, &v.x);
+				}
+				else if constexpr (reflection::is_associative_container_v<Type>) {
+					ImGui::Text(label.c_str());
+					for (auto& [key, val] : v) {
+						ImGui::PushID(key.c_str());
+						write(val, label + "." + key);
+						ImGui::PopID();
+					}
+					if constexpr (std::is_same_v<typename Type::key_type, std::string>) {
+						char buf[256]{};
+						if (ImGui::InputText("##Add Item", buf, 256, ImGuiInputTextFlags_EnterReturnsTrue)) {
+							v.emplace(std::string(buf), typename Type::mapped_type{});
+						}
+					}
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					int idx = 0;
+					ImGui::Text(label.c_str());
+					for (auto& elem : v) {
+						ImGui::PushID(idx);
+						write(elem, label + "[" + std::to_string(idx) + "]");
+						ImGui::PopID();
+						++idx;
+					}
+					if (ImGui::Button(("Add Item##" + label).c_str())) {
+						v.emplace_back();
+					}
+				}
+				else if constexpr (std::is_class_v<Type>) {
+					if (ImGui::TreeNode(label.c_str())) {
+						reflection::reflect(v).each([&](auto& field) {
+							write(*field.m_field_ptr,
+								std::string(field.m_field_name.begin(), field.m_field_name.end()));
+							});
+						ImGui::TreePop();
+					}
+				}
+			}
+			template <typename Type>
+			void write(Type& v) {
+				write(v, m_tag_name);
+			}
+		};
+
+
+		template <>
+		struct serializer<"imgui"> {
+			using out_archive_type = out_archive<"imgui">;
+			template <typename Type>
+			static void present(Type& val, std::string const& name) {
+				out_archive_type{ name }.write(val);
+			}
+			template <typename Type>
+			static void present(Type& val, out_archive_type& arc) {
+				arc.write(val);
+			}
+			template <typename Type>
+			static void present(Type& val, out_archive_type&& arc) {
+				arc.write(val);
+			}
+		};
+	}
+}
+
+using ImguiInspectItem = rp::serialization::out_archive<"imgui">;
+using ImguiInspectTypeRenderer = rp::serialization::serializer<"imgui">;
+
+#define RegisterImguiDescriptorInspector(DESC) \
+namespace {																															\
+	inline static auto DESC##imgui_regi{ []{																						\
+		constexpr auto type_hash{rp::utility::type_hash<DESC>::value()};															\
+		rp::ResourceTypeImporterRegistry::RegisterSerializer(type_hash, "imgui", [](std::string const& str, std::byte* data) {		\
+		DESC& desc{ *reinterpret_cast<DESC*>(data) };																				\
+		ImguiInspectTypeRenderer::present(desc, str);																				\
+		});																															\
+		return 1u;																													\
+	}() };																															\
+}
+
 #endif // EDITORMAIN_HPP

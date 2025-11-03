@@ -114,6 +114,10 @@ int main(int, char**)
 	}
 	glfwSwapInterval(1); // Enable vsync
 
+	// Do NOT enable GL_FRAMEBUFFER_SRGB - it would make ImGui UI too bright
+	// ToneMapPass uses manual gamma correction to output RGB8 instead
+	// glEnable(GL_FRAMEBUFFER_SRGB);
+
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();

@@ -22,12 +22,14 @@ set(RESOURCE_CORE_DEP_LIBS
     PUBLIC glm
     PUBLIC tinyddsloader
     PUBLIC yaml-cpp::yaml-cpp
+    PUBLIC resource-pipeline-core
 )
 
 set(RESOURCE_EXT_DEP_LIBS
     PUBLIC assimp::assimp
     PUBLIC meshoptimizer
     PUBLIC DirectXTex
+    PUBLIC resource-pipeline-ext
     ${RESOURCE_CORE_DEP_LIBS}
 )
 

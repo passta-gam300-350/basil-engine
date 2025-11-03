@@ -1,6 +1,9 @@
 #ifndef SMR_EPOCH_BASED_RECLAIMATION_INLINE_IMPLEMENTATION_HPP
 #define SMR_EPOCH_BASED_RECLAIMATION_INLINE_IMPLEMENTATION_HPP
 
+#undef min
+#undef max
+
 inline ebr_thread_record::~ebr_thread_record() {
 	ebr_node_record* head = m_retired_head.exchange(nullptr, std::memory_order_acq_rel);
 	while (head) {

@@ -1,46 +1,38 @@
-/******************************************************************************/
-/*!
-\file   MainRenderingPass.cpp
-\author Team PASSTA
-        Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
-        Tham Kang Ting (kangting.t@digipen.edu)
-        Cheong Jia Zen (jiazen.c@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/10/04
-\brief    Implementation of main rendering pass for PBR lighting and instanced rendering
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 #include "../../include/Pipeline/MainRenderingPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
+#include "../../include/Resources/PrimitiveGenerator.h"
+#include "../../include/Rendering/ParticleRenderer.h"
 #include <glfw/glfw3.h>
-
-#include "spdlog/spdlog.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <spdlog/spdlog.h>
 
 MainRenderingPass::MainRenderingPass()
     : RenderPass("MainPass", FBOSpecs
 	{
         1280, 720,
 {
-            { FBOTextureFormat::RGBA8 },
+            { FBOTextureFormat::RGB16F },  // HDR format (16-bit float) - ogldev style
             { FBOTextureFormat::DEPTH24STENCIL8 }
-		}
+		},
+        4  // 4x MSAA (resolved by HDRResolvePass before tone mapping)
     })
 {
+    // Create default skybox cube mesh
+    m_SkyboxMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(1.0f));
+
+    // Configure auto-resize to match viewport
+    SetResizeMode(ResizeMode::MatchViewport);
 }
 
 void MainRenderingPass::Execute(RenderContext& context)
 {
-    // Update framebuffer size to match current window before rendering
-    UpdateFramebufferSize();
+    // Auto-resize framebuffer to match viewport if needed
+    CheckAndResizeIfNeeded(context);
 
     // New context-based execution - use references instead of copies!
     Begin();
@@ -48,14 +40,31 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
 
-    // Clear color and depth buffers using command buffer
+    // Ensure stencil testing is disabled before clearing (clean state)
+    Submit(RenderCommands::EnableStencilTestData{ false });
+
+    // Ensure stencil write mask is enabled before clearing
+    Submit(RenderCommands::SetStencilMaskData{ 0xFF });
+
+    // Clear color, depth, and stencil buffers using command buffer
     RenderCommands::ClearData clearCmd{
-        0.7f, 0.7f, 0.7f, 1.0f,  // r, g, b, a
+        m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a,  // Configurable background color
         true,                      // clearColor
-        true                       // clearDepth
+        true,                      // clearDepth
+        true                       // clearStencil (needed for outline rendering)
     };
 
     Submit(clearCmd);
+
+    // Render skybox first (after clear) if enabled
+    RenderSkybox(context);
+
+    // Re-enable face culling for normal scene objects
+    RenderCommands::SetFaceCullingData cullingReenableCmd{
+        true,     // enable face culling
+        GL_BACK   // cull back faces
+    };
+    Submit(cullingReenableCmd);
 
     // Ensure proper depth testing state for opaque objects
     RenderCommands::SetDepthTestData depthTestCmd{
@@ -76,6 +85,9 @@ void MainRenderingPass::Execute(RenderContext& context)
 
         // 3. Forward instanced rendering with visible renderables using pass-local buffer
         context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData);
+
+        // 4. Particle rendering
+        context.particleRenderer.RenderToPass(*this, context.frameData);
     }
 
     // Execute all commands submitted to this pass's command buffer
@@ -84,79 +96,79 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
 
-    // Debug: Log framebuffer info
-    auto mainFBO = GetFramebuffer();
-    const auto& spec = mainFBO->GetSpecification();
-    static uint32_t lastWidth = 0;
-    static uint32_t lastHeight = 0;
-    if (spec.Width != lastWidth || spec.Height != lastHeight) {
-        spdlog::info("MainRenderingPass: Framebuffer size {}x{}, Handle: {}",
-                    spec.Width, spec.Height, mainFBO->GetFBOHandle());
-        lastWidth = spec.Width;
-        lastHeight = spec.Height;
-    }
-
-    // Note: Editor FBO copy is now handled by DebugRenderPass (final visual pass)
-    // This ensures the editor sees the complete rendered result with all overlays
-    // CreateEditorFBOCopy(context);
+    // HDR texture ID will be set by HDRResolvePass after MSAA resolve
 
     End();
 }
 
-void MainRenderingPass::UpdateFramebufferSize()
+void MainRenderingPass::RenderSkybox(RenderContext& context)
 {
-    // Get current window size
-    GLFWwindow* currentWindow = glfwGetCurrentContext();
-    if (currentWindow == nullptr) {
-        return;
-    }
-
-    int windowWidth = 0;
-    int windowHeight = 0;
-    glfwGetFramebufferSize(currentWindow, &windowWidth, &windowHeight);
-
-    // Check if we need to resize the framebuffer
-    auto currentSpecs = m_Framebuffer->GetSpecification();
-    if (currentSpecs.Width != static_cast<uint32_t>(windowWidth) ||
-        currentSpecs.Height != static_cast<uint32_t>(windowHeight)) {
-
-        // Resize the framebuffer to match window size
-        m_Framebuffer->Resize(static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
-
-        // Update the viewport to match the new framebuffer size
-        SetViewport(Viewport(0, 0, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight)));
-    }
-}
-
-void MainRenderingPass::CreateEditorFBOCopy(RenderContext &context)
-{
-    // Create editor FBO if it doesn't exist or size changed
-    auto mainFBO = GetFramebuffer();
-    const auto &mainSpec = mainFBO->GetSpecification();
-
-    if (!context.frameData.editorColorBuffer ||
-        context.frameData.editorColorBuffer->GetSpecification().Width != mainSpec.Width ||
-        context.frameData.editorColorBuffer->GetSpecification().Height != mainSpec.Height)
+    if (!m_SkyboxEnabled || !m_SkyboxShader || !m_SkyboxMesh || m_SkyboxCubemapID == 0)
     {
-        // Create identical FBO specs for editor copy
-        FBOSpecs editorSpec = mainSpec;
-        context.frameData.editorColorBuffer = std::make_shared<FrameBuffer>(editorSpec);
+       /* spdlog::warn("Skybox not rendering - Enabled: {}, Shader: {}, Mesh: {}, CubemapID: {}",
+                     m_SkyboxEnabled, m_SkyboxShader != nullptr, m_SkyboxMesh != nullptr, m_SkyboxCubemapID);*/
+        return; // Skip if not properly configured
     }
 
-    // Blit main FBO to editor FBO
-    auto editorFBO = context.frameData.editorColorBuffer;
+    //spdlog::info("Rendering skybox with cubemap ID: {}", m_SkyboxCubemapID);
 
-    // Use OpenGL blit directly since we're not going through command buffer
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFBO->GetFBOHandle());
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, editorFBO->GetFBOHandle());
+    // Disable face culling - we're inside the cube looking out
+    RenderCommands::SetFaceCullingData cullingCmd{
+        false  // disable face culling for skybox
+    };
+    Submit(cullingCmd);
 
-    glBlitFramebuffer(
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        0, 0, static_cast<int>(mainSpec.Width), static_cast<int>(mainSpec.Height),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST
-    );
+    // Configure depth testing for skybox
+    // Skybox should be rendered with depth = 1.0 (farthest)
+    // Use LEQUAL so skybox pixels pass when depth buffer is cleared to 1.0
+    RenderCommands::SetDepthTestData depthCmd{
+        true,           // enable depth testing
+        GL_LEQUAL,      // depth function (allow equal depth values)
+        false           // disable depth writing (skybox shouldn't update depth)
+    };
+    Submit(depthCmd);
 
-    // Restore framebuffer binding
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    // Bind skybox shader
+    RenderCommands::BindShaderData shaderCmd{ m_SkyboxShader };
+    Submit(shaderCmd);
+
+    // Bind skybox cubemap
+    RenderCommands::BindCubemapData cubemapCmd{
+        m_SkyboxCubemapID,
+        0,              // Texture unit 0
+        m_SkyboxShader,
+        "u_Skybox"
+    };
+    Submit(cubemapCmd);
+
+    // Set up matrices for skybox rendering
+    // Remove translation from view matrix so skybox appears infinitely far
+    glm::mat4 skyboxView = glm::mat4(glm::mat3(context.frameData.viewMatrix));
+
+    RenderCommands::SetUniformsData uniformCmd{
+        m_SkyboxShader,
+        glm::mat4(1.0f),                    // Identity model matrix
+        skyboxView,                         // View matrix without translation
+        context.frameData.projectionMatrix, // Normal projection matrix
+        context.frameData.cameraPosition    // Camera position (for potential effects)
+    };
+    Submit(uniformCmd);
+
+    // Draw skybox geometry
+    RenderCommands::DrawElementsData drawCmd{
+        m_SkyboxMesh->GetVertexArray()->GetVAOHandle(),
+        m_SkyboxMesh->GetIndexCount(),
+        GL_TRIANGLES
+    };
+    Submit(drawCmd);
+
+    // CRITICAL: Unbind cubemap from texture unit 0 to prevent conflicts
+    // Scene objects will try to bind 2D textures to unit 0, which conflicts with cubemap
+    RenderCommands::BindCubemapData unbindCmd{
+        0,              // Unbind by binding texture ID 0
+        0,              // Texture unit 0
+        m_SkyboxShader,
+        "u_Skybox"
+    };
+    Submit(unbindCmd);
 }

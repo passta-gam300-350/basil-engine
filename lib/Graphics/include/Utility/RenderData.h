@@ -19,6 +19,7 @@ Technology is prohibited.
 
 #include "../Resources/Mesh.h"
 #include "../Resources/Material.h"
+#include "../Resources/MaterialPropertyBlock.h"
 #include "Light.h"
 #include "AABB.h"
 #include <memory>
@@ -32,6 +33,12 @@ struct RenderableData {
     bool visible = true;
     uint32_t renderLayer = 0;
     uint32_t objectID = 0;  // Unique ID for object picking (0 = no picking)
+
+    // Optional property block for per-object material customization
+    // Applied AFTER material properties to override specific values
+    // Preserves GPU instancing unlike MaterialInstance
+    std::shared_ptr<MaterialPropertyBlock> propertyBlock = nullptr;
+    uint32_t modelInstanceID = 0;  // ID shared by all meshes of the same model instance
 };
 
 struct SubmittedLightData {
@@ -39,11 +46,13 @@ struct SubmittedLightData {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f);
     glm::vec3 color = glm::vec3(1.0f);
-    float intensity = 1.0f;
+    float diffuseIntensity = 1.0f;       // Direct light intensity (PBR)
+    float ambientIntensity = 0.0f;       // Per-light ambient contribution (PBR)
     float range = 10.0f;
     float innerCone = 30.0f;
     float outerCone = 45.0f;
     bool enabled = true;
+    bool castShadows = true;             // Per-light shadow control (Unity-style)
 };
 
 // Picking data structures
