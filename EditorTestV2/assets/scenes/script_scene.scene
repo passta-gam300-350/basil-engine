@@ -1,0 +1,310 @@
+entities:
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0
+        y: 0
+        z: 0
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour: ~
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3
+        y: 0
+        z: 3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac12741ebe920b91129e4663
+      m_MaterialGuid: 128dac127aeba2886a771df90025
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 1.20000005
+          y: 1.20000005
+          z: 1.20000005
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3
+        y: 0
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac127f7c8c9843fb2015e609
+      m_MaterialGuid: 128dac12797ea08eb603f4409571
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 1.20000005
+          y: 0.960000038
+          z: 0.24000001
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3
+        y: 0
+        z: -3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac1379dda6143e2efb86aad0
+      m_MaterialGuid: 128dac1370378380b07b7ffccb20
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.24000001
+          z: 0.960000038
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac1376fea2553fe1cdbdaddc
+      m_MaterialGuid: 128dac137c878d99b6ac48a28207
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 1.20000005
+          y: 0.960000038
+          z: 0.24000001
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac14703ebc4826191832e233
+      m_MaterialGuid: 128dac14738991897dc1c10ffa99
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.24000001
+          z: 0.960000038
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: -3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac147911a2cbe05debac95c3
+      m_MaterialGuid: 128dac1470258c35456affe674ee
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.960000038
+          z: 0.24000001
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -3
+        y: 0
+        z: 3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac1474fabd670b4e7995b9a1
+      m_MaterialGuid: 128dac1474209821b45d7b01156c
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.24000001
+          z: 0.960000038
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -3
+        y: 0
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac147246b777d15d767d6ca0
+      m_MaterialGuid: 128dac147aeb9489146a9e0771ba
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.24000001
+          y: 0.960000038
+          z: 0.24000001
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -3
+        y: 0
+        z: -3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid: 128dac147e7f960e369a354ce8f4
+      m_MaterialGuid: 128dac1479f3bf83f3d0b0b2087c
+      material:
+        m_MaterialGuid: 00
+        m_AlbedoColor:
+          x: 0.960000038
+          y: 0.24000001
+          z: 0.24000001
+  - entity name:
+      name: unnamed
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 5
+        z: 0
+    LightComponent:
+      m_Type: 0
+      m_Direction:
+        x: 0.200000003
+        y: -0.800000012
+        z: 0.300000012
+      m_Color:
+        x: 1
+        y: 0.949999988
+        z: 0.850000024
+      m_Intensity: 1
+      m_Range: -107374176
+      m_InnerCone: -107374176
+      m_OuterCone: -107374176
+      m_IsEnabled: true

@@ -35,7 +35,7 @@ public:
 	
 
 	static StringManager& GetInstance();
-	StringID Intern_String(std::string const&& str);
+	StringID Intern_String(std::string&& str);
 	std::string_view Get_String(StringID id);
 	void Clear();
 	

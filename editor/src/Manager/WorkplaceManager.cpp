@@ -97,11 +97,13 @@ void WorkplaceManager::SetupWorkspace(Workplace& wp)
 		// Create subdirectories
 		std::filesystem::create_directories(dir + "/schemas");
 		std::filesystem::create_directories(dir + "/library");
+		std::filesystem::create_directories(dir + "/config");
+		std::filesystem::create_directories(dir + "/managed");
 		std::filesystem::create_directories(dir + "/assets");
 		std::filesystem::create_directories(dir + "/assets/models");
-		std::filesystem::create_directories(dir + "/config");
 		std::filesystem::create_directories(dir + "/assets/scenes");
 		std::filesystem::create_directories(dir + "/assets/scripts");
+
 
 		// Create default files if they don't exist
 		std::string marker = dir + "/.basil";

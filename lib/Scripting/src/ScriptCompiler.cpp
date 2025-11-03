@@ -15,6 +15,7 @@ without the prior written consent of DigiPen Institute of
 Technology is prohibited.
 */
 /******************************************************************************/
+#include "ABI/ABI.h"
 #include "ScriptCompiler.hpp"
 #include <filesystem>
 #include <iostream>
@@ -31,8 +32,8 @@ void ScriptCompiler::Init(MonoLoader* ptrLoader, std::string const& compiler_dir
 	compiler_path = compiler_dir;
 
 	loader->Enable_Compiler();
-	compilerAssembly = loader->LoadAssembly(compiler_path);
-	compilerImage = loader->LoadImage(compilerAssembly);
+	compilerAssembly = loader->LoadAssembly(compiler_path, loader->GetCompilerDomain());
+	compilerImage = loader->LoadImage(*compilerAssembly);
 
 	compilerKlass = mono_class_from_name(compilerImage, "", "CSCompiler");
 	/*
@@ -117,7 +118,7 @@ void ScriptCompiler::RemoveScript(std::string const& path)
 {
 	auto it = std::remove_if(scripts.begin(), scripts.end(), [&](ScriptInfo const& info) {
 		return info.path == path;
-		});
+	});
 	scripts.erase(it, scripts.end());
 }
 
@@ -154,19 +155,21 @@ void ScriptCompiler::CompileAsync()
 	 *public static void Setup(string output, string outputDirectory, string[] sources, string[] references, bool isDLL = false, bool debug = false,
 	 *bool optimize = false, bool verbose = false)
 	*/
-	MonoString* output = mono_string_new(compiler_d, "UserApplication");
-	MonoString* output_dir = mono_string_new(compiler_d, "bin");
-	mono_bool val = false;
-	mono_bool isdll = false;
-	//mono_bool debug = false;
+	MonoString* output = mono_string_new(compiler_d, compile_settings.output_name.c_str());
+	MonoString* output_dir = mono_string_new(compiler_d, compile_settings.output_directory.c_str());
+	//[[maybe_unused]] mono_bool val = compile_settings.optimize ? 1 : 0;
+	mono_bool isdll = compile_settings.isDLL ? 1 : 0;
+	mono_bool debug = compile_settings.debug ? 1 : 0;
+	mono_bool optimize = compile_settings.optimize ? 1 : 0;
+	mono_bool verbose = compile_settings.verbose ? 1 : 0;
 	args[0] = output;
 	args[1] = output_dir;
 	args[2] = mono_paths;
 	args[3] = mono_refs;
 	args[4] = &isdll; // isDLL
-	args[5] = &val; // debug
-	args[6] = &val; // optimize
-	args[7] = &val; // verbose
+	args[5] = &debug; // debug
+	args[6] = &optimize; // optimize
+	args[7] = &verbose; // verbose
 
 
 	std::string n = mono_method_full_name(current_method, true);
@@ -227,8 +230,8 @@ void ScriptCompiler::EndProcesses()
 
 void ScriptCompiler::printLog() const
 {
-	
-	for (const auto& entry : log)
+
+	for (const auto& entry : diagnostics)
 	{
 		std::cout << entry << std::endl;
 	}
@@ -277,10 +280,45 @@ void ScriptCompiler::GetManagedLogs()
 	uint64_t length = mono_array_length(arr);
 	for (uint64_t i = 0; i < length; ++i)
 	{
-		MonoString* monoStr = mono_array_get(arr, MonoString*, i);
-		char* cStr = mono_string_to_utf8(monoStr);
+		MonoArray* inner = mono_array_get(arr, MonoArray*, i);
+		if (!inner)
+			continue;
+		DiagnosticLog logEntry;
+		MonoString* path = mono_array_get(inner, MonoString*, 0);
+		MonoString* position = mono_array_get(inner, MonoString*, 1);
+		MonoString* severity = mono_array_get(inner, MonoString*, 2);
+		MonoString* diagID = mono_array_get(inner, MonoString*, 3);
+		MonoString* message = mono_array_get(inner, MonoString*, 4);
+		char const * fn = mono_string_to_utf8(path);
+		char const* pos = mono_string_to_utf8(position);
+		char const* sev = mono_string_to_utf8(severity);
+		char const* did = mono_string_to_utf8(diagID);
+		char const* msg = mono_string_to_utf8(message);
+
+		logEntry.filename = fn;
+		logEntry.position = pos;
+		logEntry.severity = sev;
+		logEntry.diagnosticID = did;
+		logEntry.message = msg;
+		diagnostics.push_back(logEntry);
+		std::string fullLog = logEntry.filename + "(" + logEntry.position + "): " + logEntry.severity + " " + logEntry.diagnosticID + ": " + logEntry.message;
+		log.emplace_back(fullLog);
+		
+		mono_free((void*)fn);
+		mono_free((void*)pos);
+		mono_free((void*)sev);
+		mono_free((void*)did);
+		mono_free((void*)msg);
+
+
+
+
+
+
+
+		/*char* cStr = mono_string_to_utf8(monoStr);
 		log.emplace_back(cStr);
-		mono_free(cStr);
+		mono_free(cStr);*/
 	}
 
 	mono_domain_set(current, false);
@@ -299,4 +337,57 @@ void ScriptCompiler::RemoveReferences(std::string const& name)
 void ScriptCompiler::ClearReferences()
 {
 	assemblies_references.clear();
+}
+
+void ScriptCompiler::SetCompileOutputName(std::string const& name)
+{
+	compile_settings.output_name = name;
+}
+std::string const& ScriptCompiler::GetCompileOutputName() const
+{
+	return compile_settings.output_name;
+}
+void ScriptCompiler::SetCompileOutputDirectory(std::string const& dir)
+{
+	compile_settings.output_directory = dir;
+}
+std::string const& ScriptCompiler::GetCompileOutputDirectory() const
+{
+	return compile_settings.output_directory;
+}
+void ScriptCompiler::SetCompileAsDLL(bool isDLL)
+{
+	compile_settings.isDLL = isDLL;
+}
+bool ScriptCompiler::IsCompileAsDLL() const
+{
+	return compile_settings.isDLL;
+}
+void ScriptCompiler::SetOptimizeCompile(bool optimize)
+{
+	compile_settings.optimize = optimize;
+}
+bool ScriptCompiler::IsOptimizeCompile() const
+{
+	return compile_settings.optimize;
+}
+bool ScriptCompiler::IsVerboseCompile() const
+{
+	return compile_settings.verbose;
+}
+void ScriptCompiler::SetVerboseCompile(bool verbose)
+{
+	compile_settings.verbose = verbose;
+}
+
+ScriptCompiler::~ScriptCompiler()
+{
+	EndProcesses();
+	compilerAssembly.reset();
+}
+
+std::ostream& operator<<(std::ostream& os, const ScriptCompiler::DiagnosticLog& log)
+{
+	os << log.filename << "(" << log.position << "): " << log.severity << " " << log.diagnosticID << ": " << log.message;
+	return os;
 }

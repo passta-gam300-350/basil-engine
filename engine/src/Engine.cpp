@@ -6,6 +6,7 @@
 #include "Input/InputManager.h"
 #include "Messaging/Messaging_System.h"
 #include "Ecs/ecs.h"
+#include "System/BehaviourSystem.hpp"
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
 #include "System/MaterialOverridesSystem.hpp"
@@ -23,6 +24,8 @@ extern "C" {
 }
 #endif
 #include "Manager/ObjectManager.hpp"
+#include "Manager/MonoEntityManager.hpp"
+#include <System/BindingSystem.hpp>
 
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -117,6 +120,10 @@ void Engine::Init(std::string const& cfg ) {
 	MaterialOverridesSystem::Instance().Init();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
+	MonoEntityManager::GetInstance().SetPreCompiled(true);
+	MonoEntityManager::GetInstance().initialize();
+	MonoEntityManager::GetInstance().StartCompilation();
+	BindingSystem::RegisterBindings();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
 }
@@ -141,7 +148,7 @@ void Engine::CoreUpdate() {
 void Engine::Update() {
 	try {
 		Engine& instance{ Instance() };
-		std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
+		//std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
 				if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
@@ -183,6 +190,9 @@ void Engine::UpdateDebug() {
 
 	frame_number++;
 	frame_counter--;
+
+	//TODO: DEBUG REMOVE LATER
+	BehaviourSystem::Instance().Update(instance.m_World, 0.f);
 }
 
 void Engine::ReportLastError() {
@@ -193,6 +203,7 @@ void Engine::ReportLastError() {
 void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 	Engine::SetState(Info::State::Init);
 	Instance().m_Window = std::make_unique<Window>(wptr);
+
 	InitWithoutWindow(cfg);
 }
 
@@ -238,6 +249,12 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+
+	MonoEntityManager::GetInstance().SetPreCompiled(false);
+	MonoEntityManager::GetInstance().StartCompilation();
+
+	BehaviourSystem::Instance().Init();
+	BindingSystem::RegisterBindings();
 
 	Scheduler::CompileJobSchedule();
 

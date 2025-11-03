@@ -1,0 +1,6 @@
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\EngineAPI\obj\Debug\net48\EngineAPI.csproj.AssemblyReference.cache
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\EngineAPI\obj\Debug\net48\EngineAPI.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\EngineAPI\obj\Debug\net48\EngineAPI.AssemblyInfoInputs.cache
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\EngineAPI\obj\Debug\net48\EngineAPI.AssemblyInfo.cs
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\EngineAPI\obj\Debug\net48\EngineAPI.csproj.CoreCompileInputs.cache
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\EngineAPI\obj\Debug\net48\EngineAPI.sourcelink.json

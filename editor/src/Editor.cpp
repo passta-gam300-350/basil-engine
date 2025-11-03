@@ -68,6 +68,8 @@ void Editor::Init(GLFWwindow* _win)
 
 	ChangeState(EditorState::EDITOR_PROJECT);
 
+	
+
 
 }
 

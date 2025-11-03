@@ -3,6 +3,8 @@
 #include <rsc-core/rp.hpp>
 #include <entt/entt.hpp>
 #include <entt/meta/meta.hpp>
+#include <entt/meta/container.hpp>
+#include <entt/core/hashed_string.hpp>
 #include <vector>
 #include <functional>
 #include <iostream>
@@ -24,15 +26,15 @@ struct TypeData {
 	void* m_Raw;
 	entt::meta_type m_TypeInfo;
 
-    TypeData& SetRaw(void*);
-    std::string TypeName();
-    entt::id_type TypeId();
-    bool IsPrimitive();
-    auto begin() { //lowercase for compatibility with std::ranges
-        entt::meta_any any = m_TypeInfo.from_void(m_Raw);
-        return any.type().data().begin();
-    }
-    auto end(); //lowercase for compatibility with std::ranges
+	TypeData& SetRaw(void*);
+	std::string TypeName();
+	entt::id_type TypeId();
+	bool IsPrimitive();
+	auto begin() { //lowercase for compatibility with std::ranges
+		entt::meta_any any = m_TypeInfo.from_void(m_Raw);
+		return any.type().data().begin();
+	}
+	auto end(); //lowercase for compatibility with std::ranges
 };
 
 TypeInfo ResolveType(TypeName t_name);
@@ -415,10 +417,10 @@ struct MemberRegistration {
 
 template<auto SetPtr, auto GetPtr, static_string Name>
 struct InterfaceRegistration : public InterfaceRegistrationBasic {
-    static constexpr auto setptr = SetPtr;
-    static constexpr auto getptr = GetPtr;
-    static constexpr std::string_view name = Name.data;
-    static constexpr auto hash = ToTypeName(name);
+	static constexpr auto setptr = SetPtr;
+	static constexpr auto getptr = GetPtr;
+	static constexpr std::string_view name = Name.data;
+	static constexpr auto hash = ToTypeName(name);
 };
 
 template<auto Ptr, static_string Name>

@@ -3,6 +3,7 @@
 #include "../../include/Core/RenderCommandBuffer.h"
 #include "../../include/Rendering/InstancedRenderer.h"
 #include "../../include/Rendering/PBRLightingRenderer.h"
+#include "../../include/Rendering/ParticleRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
 #include "../../include/Resources/PrimitiveGenerator.h"
 #include "../../include/Rendering/ParticleRenderer.h"

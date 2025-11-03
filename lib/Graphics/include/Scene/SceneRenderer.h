@@ -31,6 +31,7 @@ class FrustumCuller;
 class InstancedRenderer;
 class PBRLightingRenderer;
 class PickingRenderPass;
+class ParticleRenderer;
 class OutlineRenderPass;
 class ParticleRenderer;
 

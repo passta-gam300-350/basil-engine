@@ -5,11 +5,14 @@
 #include "Component/Transform.hpp"
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
+#include "Particles/ParticleComponent.h"
+
 #include "Render/Camera.h"
 #include "Particles/ParticleComponent.h"
 #include "Rendering/ParticleEmitter.h"
 #include "Utility/Particle.h"
 
+#include <components/behaviour.hpp>
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -49,7 +52,7 @@ void ReflectionRegistry::SetupNativeTypes() {
 		MemberRegistrationV<&glm::vec3::x, "x">,
 		MemberRegistrationV<&glm::vec3::y, "y">,
 		MemberRegistrationV<&glm::vec3::z, "z">
-	);
+	);	
 
 	RegisterReflectionComponent<glm::vec4>(
 		"vec4",
@@ -107,6 +110,17 @@ void ReflectionRegistry::SetupNativeTypes() {
 		InterfaceRegistrationV < &SetMatCellValue<glm::mat4, 3, 3>, &GetMatCellValue<glm::mat4,3, 3>, "m33" >
 	);
 
+	// Register vector of strings
+	
+	/*RegisterReflectionContainer<std::vector<std::string>, std::string>(
+		"vector<string>",
+		nullptr
+	);*/
+
+	/*RegisterReflectionContainer<std::vector<std::string>>(
+		"vector<string>",
+		nullptr
+	);*/
 
 	
 
@@ -141,6 +155,7 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
 		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
+
 
 	//RegisterReflectionComponent<RigidBodyComponent>(
 	//			"RigidBodyComponent",
@@ -231,4 +246,9 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">,
 		MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
 		);
+
+	RegisterReflectionComponent<behaviour>(
+		"Behaviour",
+		MemberRegistrationV<&behaviour::classesName, "classesName">
+	);
 }
