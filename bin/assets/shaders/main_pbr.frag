@@ -281,13 +281,13 @@ float CalculateShadowFromSSBO(int shadowIndex, vec3 fragPos, vec3 normal, vec3 l
 }
 
 // Enhanced normal mapping helper with BC5 format support
-vec3 getNormalFromMap() {
+vec3 getNormalFromMap(vec2 texCoords) {
     if (!u_HasNormalMap) {
         return normalize(fs_in.Normal);
     }
 
     // Sample normal map (BC5 format stores only RG channels)
-    vec3 tangentNormal = texture(u_NormalMap, fs_in.TexCoords).xyz;
+    vec3 tangentNormal = texture(u_NormalMap, texCoords).xyz;
 
     // Unpack RG from [0,1] to [-1,1]
     tangentNormal.xy = tangentNormal.xy * 2.0 - 1.0;
@@ -512,42 +512,45 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
 }
 
 void main() {
+    // Flip V coordinate for DDS textures (DirectX top-down vs OpenGL bottom-up)
+    vec2 texCoords = vec2(fs_in.TexCoords.x, 1.0 - fs_in.TexCoords.y);
+
     // Sample traditional textures
     vec3 albedo = fs_in.InstanceColor.rgb;
     if (u_HasDiffuseMap) {
-        vec4 texSample = texture(u_DiffuseMap, fs_in.TexCoords);
+        vec4 texSample = texture(u_DiffuseMap, texCoords);
         albedo *= texSample.rgb;
     }
 
     float metallic = fs_in.InstanceMetallic;
     if (u_HasMetallicMap) {
-        metallic = texture(u_MetallicMap, fs_in.TexCoords).r;
+        metallic = texture(u_MetallicMap, texCoords).r;
     }
 
     float roughness = fs_in.InstanceRoughness;
     if (u_HasRoughnessMap) {
         // Modern PBR: Use roughness texture directly
-        roughness = texture(u_RoughnessMap, fs_in.TexCoords).r;
+        roughness = texture(u_RoughnessMap, texCoords).r;
     }
     else if (u_HasSpecularMap) {
         // Legacy Blinn-Phong: Convert specular to roughness (backwards compatibility)
         // Specular maps are glossy (high = shiny), roughness is opposite (high = rough)
-        float specular = texture(u_SpecularMap, fs_in.TexCoords).r;
+        float specular = texture(u_SpecularMap, texCoords).r;
         roughness = 1.0 - specular;  // Direct linear conversion (Option 1: more glossy)
     }
 
     float ao = 1.0;
     if (u_HasAOMap) {
-        ao = texture(u_AOMap, fs_in.TexCoords).r;
+        ao = texture(u_AOMap, texCoords).r;
     }
 
     vec3 emissive = vec3(0.0);
     if (u_HasEmissiveMap) {
-        emissive = texture(u_EmissiveMap, fs_in.TexCoords).rgb;
+        emissive = texture(u_EmissiveMap, texCoords).rgb;
     }
 
     // Get normal from traditional normal map
-    vec3 normal = getNormalFromMap();
+    vec3 normal = getNormalFromMap(texCoords);
 
     // Calculate multi-light PBR lighting (shadows are calculated per-light now)
     vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao);
