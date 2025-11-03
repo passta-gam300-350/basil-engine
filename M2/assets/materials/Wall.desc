@@ -1,0 +1,28 @@
+base:
+  m_guid: 7faf527a8db0df2ae3b9b6f1a9
+  m_importer: .material
+  m_source: ""
+  m_name: Wall
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: Wall
+  albedo:
+    x: 1
+    y: 0.990526974
+    z: 0.758007109
+  metallic: 0
+  roughness: 0.5
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 00
+    u_DiffuseMap: 00
+    u_EmissiveMap: 00
+    u_NormalMap: 00
+    u_HeightMap: 00
+    u_SpecularMap: 00
+    u_MetallicMap: 00

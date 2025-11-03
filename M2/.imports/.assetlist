@@ -1,0 +1,87 @@
+"Ground":
+  "m_guid": "7dd0957743a428edfa309ff168"
+  "m_typeindex": "175488002581160416"
+"Table":
+  "m_guid": "72930e72c09ba2d6ca447578d5"
+  "m_typeindex": "175488002581160416"
+"Table.obj":
+  "m_guid": "582a34726aa5690e1bab76cc66"
+  "m_typeindex": "4838001395392124604"
+"Table2":
+  "m_guid": "76dc527c19a677afc8f07cecc2"
+  "m_typeindex": "175488002581160416"
+"Wall":
+  "m_guid": "7faf527a8db0df2ae3b9b6f1a9"
+  "m_typeindex": "175488002581160416"
+"table_new_TableBottom_BaseColor.png":
+  "m_guid": "57830878e58774ed522ac61d52"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Emissive.png":
+  "m_guid": "57831b74deb37e37612abcd650"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Height.png":
+  "m_guid": "57832770ea96c232f249094c68"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Metallic.png":
+  "m_guid": "578332705d92dc119a005aa0e8"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Normal.png":
+  "m_guid": "57833c7519b9dc5ff22d368978"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Roughness.png":
+  "m_guid": "57834772cd94be9a397d33816a"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_BaseColor.png":
+  "m_guid": "57835170aa8ad727e7a8666157"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Emissive.png":
+  "m_guid": "57835d7c139f163d2cea88736e"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Height.png":
+  "m_guid": "578367761d918fcb077e349240"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Metallic.png":
+  "m_guid": "5783727433a9e57b20cc50dfd3"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Normal.png":
+  "m_guid": "57837e755091f73e6b7babdbbf"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Roughness.png":
+  "m_guid": "57838a7c17aaacc6ae452c106c"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_BaseColor.png":
+  "m_guid": "5783e678d9a6f92a7c0d1c6cea"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Emissive.png":
+  "m_guid": "5783f17786ac71e44b379b5e1a"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Height.png":
+  "m_guid": "5784017bd09ae481a1a809849e"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Metallic.png":
+  "m_guid": "5784107c00a22831e7530711e2"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Normal.png":
+  "m_guid": "57841d7795b99d8a9f7d5e6791"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Roughness.png":
+  "m_guid": "57842c7e49b5782fc6d316d4d7"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_BaseColor.png":
+  "m_guid": "5783947f1c969db18465e9dd0f"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Emissive.png":
+  "m_guid": "57839f79128d2938b726d1b5e5"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Height.png":
+  "m_guid": "5783aa73cfb84593252c092a6d"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Metallic.png":
+  "m_guid": "5783bb77799d17386ff02ebe39"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Normal.png":
+  "m_guid": "5783ca7896ac75904890b3afc0"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Roughness.png":
+  "m_guid": "5783d87f62bcb07600953bd184"
+  "m_typeindex": "126269861530532084"

@@ -1,0 +1,109 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for table model
+# Generated for GAM300 Graphics Engine
+
+newmtl TableDetails
+# Base color / diffuse map
+map_Kd table_new_TableDetails_BaseColor.png
+
+# Normal map
+map_Bump table_new_TableDetails_Normal.png
+bump table_new_TableDetails_Normal.png
+
+# Metallic map
+map_Ks table_new_TableDetails_Metallic.png
+
+# Roughness map
+map_Ns table_new_TableDetails_Roughness.png
+
+# Emissive map
+map_Ke table_new_TableDetails_Emissive.png
+
+# Height / displacement map
+map_d table_new_TableDetails_Height.png
+disp table_new_TableDetails_Height.png
+
+# Material properties
+kd 0.3581 0 0
+illum 1
+
+newmtl TableTop
+
+# Base color / diffuse map
+map_Kd table_new_TableTop_BaseColor.png
+
+# Normal map
+map_Bump table_new_TableTop_Normal.png
+bump table_new_TableTop_Normal.png
+
+# Metallic map
+map_Ks table_new_TableTop_Metallic.png
+
+# Roughness map
+map_Ns table_new_TableTop_Roughness.png
+
+# Emissive map
+map_Ke table_new_TableTop_Emissive.png
+
+# Height / displacement map
+map_d table_new_TableTop_Height.png
+disp table_new_TableTop_Height.png
+
+# Material properties
+kd 0.5783 0.4359 0.1814
+illum 1
+
+newmtl TableBottom
+
+# Base color / diffuse map
+map_Kd table_new_TableBottom_BaseColor.png
+
+# Normal map
+map_Bump table_new_TableBottom_Normal.png
+bump table_new_TableBottom_Normal.png
+
+# Metallic map
+map_Ks table_new_TableBottom_Metallic.png
+
+# Roughness map
+map_Ns table_new_TableBottom_Roughness.png
+
+# Emissive map
+map_Ke table_new_TableBottom_Emissive.png
+
+# Height / displacement map
+map_d table_new_TableBottom_Height.png
+disp table_new_TableBottom_Height.png
+
+# Material properties
+kd 0.2916 0.2378 0
+illum 1
+
+newmtl tableGlass
+
+# Base color / diffuse map
+map_Kd table_new_tableGlass_BaseColor.png
+
+# Normal map
+map_Bump table_new_tableGlass_Normal.png
+bump table_new_tableGlass_Normal.png
+
+# Metallic map
+map_Ks table_new_tableGlass_Metallic.png
+
+# Roughness map
+map_Ns table_new_tableGlass_Roughness.png
+
+# Emissive map
+map_Ke table_new_tableGlass_Emissive.png
+
+# Height / displacement map
+map_d table_new_tableGlass_Height.png
+disp table_new_tableGlass_Height.png
+
+# Material properties
+kd 0.2916 0.2916 0.2916
+illum 1
+
