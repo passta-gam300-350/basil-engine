@@ -1266,7 +1266,12 @@ void EditorMain::Render_AssetBrowser()
 		{
 			if (ImGui::MenuItem("Import All")) // popup asking to import asset
 			{
-				m_AssetManager->ImportAssetDirectory(subd);
+				auto biguids{ m_AssetManager->ImportAssetDirectory(subd) };
+				engineService.ExecuteOnEngineThread([biguids] {
+					std::for_each(biguids.begin(), biguids.end(), [](rp::BasicIndexedGuid biguid) {
+						ResourceRegistry::Instance().Unload(biguid);
+						});
+					});
 			}
 			ImGui::EndPopup();
 		}
@@ -1292,7 +1297,10 @@ void EditorMain::Render_AssetBrowser()
 		{
 			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
 			{
-				m_AssetManager->ImportAsset(it->second);
+				rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(it->second) };
+				engineService.ExecuteOnEngineThread([biguid] {
+					ResourceRegistry::Instance().Unload(biguid);
+					});
 			}
 			if (ImGui::MenuItem("Import Settings")) // popup asking to import asset
 			{

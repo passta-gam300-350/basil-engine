@@ -88,7 +88,20 @@ namespace rp {
 		};
 		inline std::string get_relative_path(std::string const& path, std::string const& base = {}) {
 			std::filesystem::path pth{ path };
-			return pth.is_relative() ? path : std::filesystem::relative(path, base.empty() ? std::filesystem::current_path() : std::filesystem::path{base}).string();
+			return pth.is_relative() ? path : std::filesystem::relative(path, base.empty() ? std::filesystem::current_path().string() : std::filesystem::path{base}).string();
+		}
+		inline std::string& working_path() {
+			static std::string working_dir{ std::filesystem::current_path().string() };
+			return working_dir;
+		}
+		inline std::string& output_path() {
+			static std::string out_dir{ std::filesystem::current_path().string() };
+			return out_dir;
+		}
+		inline std::string resolve_path(std::string const& path) {
+			std::filesystem::path pth{ path };
+			std::string curr{ working_path() };
+			return pth.is_relative() ? curr + "\\" + path : pth.string();
 		}
 	}
 	template <std::uint64_t bit>

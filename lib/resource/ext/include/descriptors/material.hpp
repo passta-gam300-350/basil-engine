@@ -10,8 +10,8 @@ struct MaterialDescriptor {
 	MaterialResourceData material;
 };
 
-inline MaterialResourceData CreateMaterial(MaterialDescriptor const& matDesc) {
-	SerializeBinary(matDesc.material, matDesc.base.m_guid, ".material");
+inline MaterialResourceData CreateMaterial(MaterialDescriptor const& matDesc, std::string const& path = {}) {
+	SerializeBinary(matDesc.material, matDesc.base.m_guid, ".material", path);
 	return matDesc.material;
 }
 

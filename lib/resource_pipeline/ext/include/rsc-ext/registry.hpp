@@ -187,7 +187,7 @@ namespace rp {
 			assert(res != ldr.end() && "type not registered or not found");
 			return res->second(str);
 		}
-		static void CreateDefaultDescriptor(std::string const& str) {
+		static void CreateDefaultDescriptor(std::string const& str, std::string const& relativepath = {}) {
 			auto pos{ str.rfind('.') };
 			std::string ext{ pos == std::string::npos ? "" : str.substr(pos) };
 			std::string desc_name{ str.substr(0, pos) + ".desc" };
@@ -203,7 +203,7 @@ namespace rp {
 				auto d{ CreateDescriptor(descimpid) };
 				Serialize(descimpid, "yaml", desc_name, d);
 				rp::descriptor_base desc{ GetDescriptorBase(desc_name) };
-				desc.m_source = str;
+				desc.m_source = rp::utility::get_relative_path(str, relativepath);
 				desc.m_name = str.substr(str.rfind('\\') + 1);
 				SetDescriptorBase(desc, desc_name);
 			}
