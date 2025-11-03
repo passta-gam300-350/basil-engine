@@ -5,6 +5,8 @@
 #include "Component/Transform.hpp"
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
+#include "Particles/ParticleComponent.h"
+
 #include "Render/Camera.h"
 #include "Particles/ParticleComponent.h"
 #include "Rendering/ParticleEmitter.h"
