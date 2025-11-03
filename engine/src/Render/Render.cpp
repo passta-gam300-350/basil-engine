@@ -547,18 +547,10 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 	}
 
 	// Not found - material was not loaded from file and not registered in-memory
-	// This means the editor created a material but didn't call RegisterEditorMaterial()
 	// Create default material as fallback
 	std::string guidStr = materialGuid.m_guid.to_hex();
 	spdlog::error("LoadMaterialResource: Material GUID {} NOT FOUND in registry after Get() call! (entity {})",
 	              guidStr.substr(0, 8), entityUID);
-
-	static std::unordered_set<std::string> warnedGuids;
-	if (warnedGuids.find(guidStr) == warnedGuids.end()) {
-		spdlog::warn("RenderSystem: Material GUID {} not found (no file or in-memory registration). Using default material. "
-			"If this is an editor-created material, call RenderSystem::RegisterEditorMaterial().", guidStr);
-		warnedGuids.insert(guidStr);
-	}
 
 	auto pbrShader = m_ShaderLibrary->GetPBRShader();
 	if (!pbrShader) {
