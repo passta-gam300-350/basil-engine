@@ -185,15 +185,14 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		m_entity_component_update_queue.pop();
 		ecs::entity entity{ ehdl };
 		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
-		if (auto* storage = w.impl.get_registry().storage(ReflectionRegistry::types()[type_id].info().index())) {
+		if (auto* storage = w.impl.get_registry().storage(type_id)) {
 			if (!storage->contains(enttntt)) {
-				continue;
-			}
-			if (is_delete) {
-				storage->erase(enttntt);
+				storage->push(enttntt);
 			}
 			else {
-				storage->push(enttntt);
+				if (is_delete) {
+					storage->erase(enttntt);
+				}
 			}
 		}
 	}
@@ -217,6 +216,8 @@ void EngineContainerService::reset() {
 
 void EngineContainerService::exit()
 {
+	if (!m_cont)
+		return;
 	m_cont->m_container_is_presentable.release();
 	Engine::SetState(Engine::Info::State::Exit);
 	{

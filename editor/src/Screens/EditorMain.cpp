@@ -517,8 +517,6 @@ void EditorMain::render()
 	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.337f, 0.612f, 0.839f, 1.0f));
 
-	Render_MenuBar();
-
 	if (showSceneExplorer)
 		Render_SceneExplorer();
 	if (showConsole)
@@ -531,6 +529,9 @@ void EditorMain::render()
 	Render_Game();
 	Render_CameraControls();
 	Render_AssetBrowser();
+
+	ImGui::PopStyleColor(3);
+	ImGui::PopStyleVar();
 
 	engineService.m_cont->m_container_is_presentable.release();
 	engineService.start();
@@ -582,7 +583,7 @@ void EditorMain::Render_Inspector()
 	ImGui::Begin("Inspector", nullptr);
 
 	// Show selected entity information
-	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
+	if (m_SelectedEntityID == static_cast<uint32_t>(-1)) {
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
 		ImGui::SetCursorPosY(ImGui::GetWindowHeight() * 0.5f - 20);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("No object selected").x) * 0.5f);
@@ -633,11 +634,11 @@ void EditorMain::Render_Inspector()
 
 void EditorMain::Render_Components()
 {
-	std::lock_guard lg{ engineService.m_cont->m_mtx };
+	std::unique_lock ul{ engineService.m_cont->m_mtx };
 	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
 	auto& type_map{ ReflectionRegistry::types() };
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
-
+	
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	ReflectionRegistry::TypeID behaviour_component{};
 	auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
@@ -673,6 +674,11 @@ void EditorMain::Render_Components()
 		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
 			Render_Component_Member(comp, is_dirty);
+			if (ImGui::Button("Delete Component")) {
+				ul.unlock();
+				engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+				ul.lock();
+			}
 			ImGui::TreePop();
 			if (is_dirty) {
 				engineService.m_cont->m_write_back_queue.push(type_id);
@@ -726,7 +732,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (rp::BasicIndexedGuid* v = value.try_cast<rp::BasicIndexedGuid>()) {
 				std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(v->m_typeindex);
 				std::string currentselectionname = m_AssetManager->ResolveAssetName(*v);
-				std::size_t type = v->m_typeindex;
+				std::size_t typehash = v->m_typeindex;
 				assetnames.emplace_back("");
 				auto it{ std::find_if(assetnames.begin(), assetnames.end(), [currentselectionname](std::string const& a) {return currentselectionname == a; }) };
 				if (it != assetnames.end()) {
@@ -745,7 +751,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				// Check if selected item is valid and not empty (instead of checking index)
 				if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 					*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-					v->m_typeindex = type;
+					v->m_typeindex = typehash;
 					is_dirty = true;
 				}
 			}
@@ -877,11 +883,12 @@ void EditorMain::Render_Add_Component_Menu()
 			continue;
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {
-			if (type_name == "Behaviour")
+			/*if (type_name == "Behaviour")
 			{
 				ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), m_SelectedEntityID };
 				entity.add<behaviour>();
-			}
+			}*/
+			engineService.add_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
 		}
 	}
 }
@@ -1489,89 +1496,6 @@ void EditorMain::Setup_Dockspace(unsigned id)
 
 void EditorMain::Render_SceneExplorer()
 {
-
-	ImGui::Begin("Hierarchy", &showSceneExplorer);
-
-	// Search bar (Unity-style)
-	/*
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
-	static char searchBuffer[256] = "";
-	ImGui::SetNextItemWidth(-1);
-	ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, sizeof(searchBuffer));
-	ImGui::PopStyleVar();
-	*/
-
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
-	// Scene tree
-	ecs::world world = Engine::GetWorld();
-	auto entities = world.filter_entities<PositionComponent>();
-
-	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
-
-	if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-	{
-		int entityIndex = 0;
-		for (auto& entity : entities)
-		{
-			uint32_t entityID = static_cast<uint32_t>(entity.get_uid());
-
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf |
-				ImGuiTreeNodeFlags_NoTreePushOnOpen |
-				ImGuiTreeNodeFlags_SpanAvailWidth;
-
-			if (entityID == m_SelectedEntityID)
-				flags |= ImGuiTreeNodeFlags_Selected;
-
-
-			ImGui::TreeNodeEx((void*)(intptr_t)entityID, flags, "%s", entity.name().c_str());
-
-			if (ImGui::IsItemClicked())
-			{
-				m_SelectedEntityID = entityID;
-			}
-
-			// Right-click context menu
-			if (ImGui::BeginPopupContextItem())
-			{
-				if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
-				if (ImGui::MenuItem("Delete")) { /* Delete entity */ }
-				ImGui::Separator();
-				if (ImGui::MenuItem("Rename")) { /* Rename entity */ }
-				ImGui::EndPopup();
-			}
-
-			entityIndex++;
-		}
-
-		ImGui::TreePop();
-	}
-
-	ImGui::PopStyleVar();
-
-	// Right-click in empty space to create new objects
-	if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-	{
-		if (ImGui::BeginMenu("Create"))
-		{
-			if (ImGui::MenuItem("Empty GameObject")) { /* Create empty */ }
-			ImGui::Separator();
-			if (ImGui::MenuItem("Cube")) { /* Create cube */ }
-			if (ImGui::MenuItem("Sphere")) { /* Create sphere */ }
-			if (ImGui::MenuItem("Plane")) { /* Create plane */ }
-			ImGui::Separator();
-			if (ImGui::MenuItem("Camera")) { /* Create camera */ }
-			if (ImGui::MenuItem("Light")) { /* Create light */ }
-			ImGui::EndMenu();
-		}
-		ImGui::EndPopup();
-	}
-
-	ImGui::End();
-
-	/*
 	ImGui::Begin("Hierarchy");
 
 	if (ImGui::CollapsingHeader("Create Entities")) {
@@ -1681,7 +1605,6 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::End();
-	*/
 }
 
 
