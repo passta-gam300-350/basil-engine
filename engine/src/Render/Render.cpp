@@ -568,7 +568,10 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
 }
 
-std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {
+
+
+// ========== Resource Type Registrations ==========
+REGISTER_RESOURCE_TYPE_ALIASE(std::vector<std::shared_ptr<Mesh>>, mesh, [](const char* data) -> std::vector<std::shared_ptr<Mesh>> {
 	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
 	std::vector<std::shared_ptr<Mesh>> meshes;
 	for (const auto& mesh : dat.meshes) {
@@ -582,63 +585,10 @@ std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {
 		}
 		meshes.emplace_back(std::make_shared<Mesh>(vert, mesh.indices, std::vector<Texture>{}));
 	}
-	return meshes; 
-}
+	return meshes;
+}, [](std::vector<std::shared_ptr<Mesh>>&) {})
 
-// ========== Resource Type Registrations ==========
-namespace {
-	struct MESHES_resource_registrar {
-		MESHES_resource_registrar() {
-			ResourceRegistry::Instance().RegisterType<std::vector<std::shared_ptr<Mesh>>>(
-				loadmesh, [](std::vector<std::shared_ptr<Mesh>>&) {}, "mesh");
-		}
-	}; static MESHES_resource_registrar g_MESHES_resource_registrar;
-}
-
-
-// Resource type registration for Mesh (inline lambda to avoid file-scope variables)
-REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,
-	[](const char* data)->std::shared_ptr<Mesh> {
-		// Deserialize MeshResourceData from binary
-		MeshResourceData meshData = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(
-			reinterpret_cast<const std::byte*>(data)
-		);
-
-		// MeshResourceData has a vector of meshes (LODs)
-		// For now, take the first LOD (index 0)
-		if (meshData.meshes.empty()) {
-			spdlog::error("MeshResourceData has no mesh data (empty meshes vector)");
-			return nullptr;
-		}
-
-		const auto& firstMesh = meshData.meshes[0];
-
-		// Extract vertices and indices from the first mesh
-		std::vector<Vertex> vertices;
-		vertices.reserve(firstMesh.vertices.size());
-
-		for (const auto& v : firstMesh.vertices) {
-			Vertex vertex;
-			vertex.Position = v.Position;
-			vertex.Normal = v.Normal;
-			vertex.TexCoords = v.TexCoords;
-			vertex.Tangent = v.Tangent;
-			vertex.Bitangent = v.Bitangent;
-			vertices.push_back(vertex);
-		}
-
-		// Create Mesh instance (assuming constructor takes vertices and indices)
-		// Note: Textures are not loaded here yet - that would require additional GUID lookups
-		std::vector<Texture> textures{}; // Empty for now
-		auto mesh = std::make_shared<Mesh>(vertices, firstMesh.indices, textures);
-
-		spdlog::info("Successfully loaded mesh from resource pipeline ({} vertices, {} indices)",
-					vertices.size(), firstMesh.indices.size());
-		return mesh;
-	},
-	[](std::shared_ptr<Mesh>&) {});
-
-REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
+REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 	[](const char* data)->std::shared_ptr<Material> {
 		// Deserialize MaterialResourceData from binary
 		MaterialResourceData matData = rp::serialization::serializer<"bin">::deserialize<MaterialResourceData>(
@@ -748,7 +698,7 @@ REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 	});
 
 // Register Texture resource type
-REGISTER_RESOURCE_TYPE_SHARED_PTR(Texture,
+REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Texture>, texture,
 	[](const char* data) -> std::shared_ptr<Texture> {
 		// Deserialize TextureResourceData from binary
 		TextureResourceData texData = rp::serialization::serializer<"bin">::deserialize<TextureResourceData>(
