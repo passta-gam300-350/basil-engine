@@ -9,7 +9,7 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
 #include "Pipeline/PresentPass.h"
-#include "Pipeline/ShadowMappingPass.h"
+//#include "Pipeline/ShadowMappingPass.h"
 #include "Rendering/ParticleRenderer.h"
 #include "Pipeline/DirectionalShadowMappingPass.h"
 #include "Pipeline/PointShadowMappingPass.h"
@@ -58,12 +58,7 @@ void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
 
-void SceneRenderer::SubmitParticles(const ParticleRenderData& particleData) {
-    if (m_ParticleRenderer)
-    {
-        m_ParticleRenderer->SubmitParticleSystem(particleData);
-    }
-}
+
 void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();

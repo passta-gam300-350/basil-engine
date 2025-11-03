@@ -140,7 +140,7 @@ enum class testemum : std::uint8_t {
 
 struct test {
 	int t1;
-	double t2{3.14f};
+	double t2{ 3.14f };
 	testemum enum_test;
 	std::string t3;
 	glm::vec3 vec3;
@@ -198,7 +198,7 @@ void EditorMain::render()
 		Setup_Dockspace(dockspace_id);
 	}
 
-	
+
 
 	//glClearColor(1, 1, 1, 1);
 
@@ -238,7 +238,7 @@ void EditorMain::render()
 	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.337f, 0.612f, 0.839f, 1.0f));
-	
+
 	Render_MenuBar();
 
 	if (showSceneExplorer)
@@ -254,7 +254,7 @@ void EditorMain::render()
 	Render_CameraControls();
 	Render_AssetBrowser();
 
-	
+
 
 	ImGui::Begin("TestReflection");
 	ImguiInspectTypeRenderer::present(testa, "testreflectmenu");
@@ -262,7 +262,7 @@ void EditorMain::render()
 
 	ImGui::PopStyleColor(3);
 	ImGui::PopStyleVar();
-	
+
 	engineService.m_cont->m_container_is_presentable.release();
 	engineService.start();
 }
@@ -324,45 +324,39 @@ void EditorMain::Render_Inspector()
 	}
 
 
-		ImGui::Text("Selected Entity");
+	ImGui::Text("Selected Entity");
+	ImGui::Separator();
+	ImGui::Text("Object ID: %u", m_SelectedEntityID);
+
+	auto& entities = engineService.m_cont->m_entities_snapshot;
+
+	if (auto it{ std::find_if(entities.begin(), entities.end(), [this](std::size_t ehdl) {return ecs::entity(ehdl).get_uid() == m_SelectedEntityID; }) }; it != entities.end()) {
+		// Show entity components
+		ImGui::Text("Entity UID: %llu", m_SelectedEntityID);
+
+		// renders all reflectible components
+		Render_Components();
+
 		ImGui::Separator();
-		ImGui::Text("Object ID: %u", m_SelectedEntityID);
 
-		auto& entities = engineService.m_cont->m_entities_snapshot;
-
-		if (auto it{ std::find_if(entities.begin(), entities.end(), [this](std::size_t ehdl) {return ecs::entity(ehdl).get_uid() == m_SelectedEntityID; }) }; it != entities.end()) {
-			// Show entity components
-			ImGui::Text("Entity UID: %llu", m_SelectedEntityID);
-
-			// renders all reflectible components
-			Render_Components();
-
-			ImGui::Separator();
-
-			// Action buttons
-			if (ImGui::Button("Clear Selection")) {
-				ClearEntitySelection();
-			}
-			if (ImGui::Button("Add Component")) {
-				ImGui::OpenPopup("Add Component Popup");
-			}
-			if (ImGui::BeginPopup("Add Component Popup")) {
-				Render_Add_Component_Menu();
-				ImGui::EndPopup();
-			}
+		// Action buttons
+		if (ImGui::Button("Clear Selection")) {
+			ClearEntitySelection();
 		}
-		else {
-			ImGui::Text("Selected entity not found in world!");
-			ImGui::Text("(Entity may have been deleted)");
-			if (ImGui::Button("Clear Selection")) {
-				ClearEntitySelection();
-			}
+		if (ImGui::Button("Add Component")) {
+			ImGui::OpenPopup("Add Component Popup");
+		}
+		if (ImGui::BeginPopup("Add Component Popup")) {
+			Render_Add_Component_Menu();
+			ImGui::EndPopup();
 		}
 	}
 	else {
-		ImGui::Text("No entity selected");
-		ImGui::Text("Click on an entity in the Scene viewport");
-		ImGui::Text("or Hierarchy to select it.");
+		ImGui::Text("Selected entity not found in world!");
+		ImGui::Text("(Entity may have been deleted)");
+		if (ImGui::Button("Clear Selection")) {
+			ClearEntitySelection();
+		}
 	}
 
 	ImGui::End();
@@ -478,7 +472,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					if (idx < 0 || idx >= vec.size()) return false;
 					*out_text = vec[idx].c_str();
 					return true;
-					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
+				}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
 				if (current_item != 0) {
 					*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 					v->m_typeindex = type;
@@ -516,7 +510,8 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::TreeNode(field_name.c_str())) {
 					if (map_float->empty()) {
 						ImGui::TextDisabled("(empty)");
-					} else {
+					}
+					else {
 						int idx = 0;
 						for (auto& [key, val] : *map_float) {
 							ImGui::PushID(idx++);
@@ -534,7 +529,8 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::TreeNode(field_name.c_str())) {
 					if (map_vec3->empty()) {
 						ImGui::TextDisabled("(empty)");
-					} else {
+					}
+					else {
 						int idx = 0;
 						for (auto& [key, val] : *map_vec3) {
 							ImGui::PushID(idx++);
@@ -553,7 +549,8 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::TreeNode(field_name.c_str())) {
 					if (map_vec4->empty()) {
 						ImGui::TextDisabled("(empty)");
-					} else {
+					}
+					else {
 						int idx = 0;
 						for (auto& [key, val] : *map_vec4) {
 							ImGui::PushID(idx++);
@@ -572,7 +569,8 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::TreeNode(field_name.c_str())) {
 					if (map_mat4->empty()) {
 						ImGui::TextDisabled("(empty)");
-					} else {
+					}
+					else {
 						for (auto& [key, val] : *map_mat4) {
 							ImGui::Text("%s: [mat4 - not editable]", key.c_str());
 						}
@@ -585,7 +583,8 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::TreeNode(field_name.c_str())) {
 					if (map_guid->empty()) {
 						ImGui::TextDisabled("(empty)");
-					} else {
+					}
+					else {
 						for (auto& [key, val] : *map_guid) {
 							ImGui::Text("%s: %s", key.c_str(), val.to_hex().c_str());
 						}
@@ -774,14 +773,14 @@ void EditorMain::Render_StartStop()
 		isPlaying = !isPlaying;
 		if (isPlaying) // Starts game
 		{
-			
+
 		}
 		else // Stops Game
 		{
 			//OnPlayStop();
 			isPaused = false; // Resets paused game as we are stopping
 		}
-			
+
 	}
 	ImGui::PopStyleColor();
 
@@ -836,7 +835,7 @@ void EditorMain::Render_StartStop()
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
-	
+
 }
 
 void EditorMain::Render_MenuBar()
@@ -929,7 +928,7 @@ void EditorMain::Render_MenuBar()
 		{
 			// Create Entity with transform
 		}
-		
+
 		ImGui::Separator();
 
 		if (ImGui::BeginMenu("3D Object"))
@@ -1219,7 +1218,7 @@ void EditorMain::Setup_Dockspace(unsigned id)
 
 void EditorMain::Render_SceneExplorer()
 {
-	
+
 	ImGui::Begin("Hierarchy", &showSceneExplorer);
 
 	// Search bar (Unity-style)
@@ -1300,7 +1299,7 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::End();
-	
+
 	/*
 	ImGui::Begin("Hierarchy");
 
@@ -2057,9 +2056,9 @@ void EditorMain::CreatePlaneEntity()
 		// Create new entity
 		auto entity = world.add_entity();
 
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 
 		// Add mesh renderer component
@@ -2149,95 +2148,95 @@ void EditorMain::CreatePhysicsDemoScene()
 		// Create new entity
 		auto entity = world.add_entity();
 
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, -2.0f, 0.0f) });
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, -2.0f, 0.0f) });
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer;
-	meshRenderer.isPrimitive = true;
-	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
-	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
-	meshRenderer.material.metallic = 0.1f;
-	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid.m_guid = rp::null_guid; // Use 0 for default material
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer;
+		meshRenderer.isPrimitive = true;
+		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
+		meshRenderer.hasAttachedMaterial = false;
+		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
+		meshRenderer.material.metallic = 0.1f;
+		meshRenderer.material.roughness = 0.8f;
+		meshRenderer.material.m_MaterialGuid.m_guid = rp::null_guid; // Use 0 for default material
 
-	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	// Add material overrides for customization (replaces embedded struct)
-	MaterialOverridesComponent materialOverrides;
-	materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
-	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
-	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
-	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+		// Add material overrides for customization (replaces embedded struct)
+		MaterialOverridesComponent materialOverrides;
+		materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+		materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
+		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 
-	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
-	transform.m_Scale = glm::vec3{ 50,1,50 };
-	auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
+		auto& transform = world.get_component_from_entity<TransformComponent>(entity);
+		transform.m_Scale = glm::vec3{ 50,1,50 };
+		auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
 
-	const auto& scale = transform.m_Scale;
-	const auto& rot = transform.m_Rotation;
-	const auto& pos = transform.m_Translation;
+		const auto& scale = transform.m_Scale;
+		const auto& rot = transform.m_Rotation;
+		const auto& pos = transform.m_Translation;
 
-	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
-	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
-	glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
-	glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
-	Trans->m_Mtx = glm::translate(glm::mat4(1.0f), pos) * R * glm::scale(glm::mat4(1.0f), scale);
-
-
-
-	// Creating Floor Physics
-	JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(50.f, 0.1f, 50.f));
-	floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
-	JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
-	JPH::ShapeRefC floor_shape = floor_shape_result.Get();
-	JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, Layers::NON_MOVING);
-	floorplan = PhysSys.GetBodyInterface().CreateBody(floor_settings);
-	PhysSys.GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
+		glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
+		glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
+		glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), (rot.z), glm::vec3(0, 0, 1));
+		glm::mat4 R = Rz * Ry * Rx; // Note: rotation order ZYX
+		Trans->m_Mtx = glm::translate(glm::mat4(1.0f), pos) * R * glm::scale(glm::mat4(1.0f), scale);
 
 
 
-	// Cube creation
-	auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
-	auto Cscale = glm::vec3(1.0f);
-	auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
-	auto entity2 = world.add_entity();
+		// Creating Floor Physics
+		JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(50.f, 0.1f, 50.f));
+		floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+		JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
+		JPH::ShapeRefC floor_shape = floor_shape_result.Get();
+		JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, Layers::NON_MOVING);
+		floorplan = PhysSys.GetBodyInterface().CreateBody(floor_settings);
+		PhysSys.GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
 
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity2, TransformComponent{ Cscale, glm::vec3{}, CPos });
-	world.add_component_to_entity<VisibilityComponent>(entity2, true);
-	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
-	// Use shared primitive mesh and default material
-	rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
-	rp::Guid materialGuid2{}; // Use 0 for default material
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer2;
-	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
-	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
-	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
+		// Cube creation
+		auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
+		auto Cscale = glm::vec3(1.0f);
+		auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
+		auto entity2 = world.add_entity();
 
-	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity2, TransformComponent{ Cscale, glm::vec3{}, CPos });
+		world.add_component_to_entity<VisibilityComponent>(entity2, true);
+		world.add_component_to_entity<RigidBodyComponent>(entity2);
 
-	// Add material overrides
-	MaterialOverridesComponent materialOverrides2;
-	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
-	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
-	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
-	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
-	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
-	// Creating Cube
+		// Use shared primitive mesh and default material
+		rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+		rp::Guid materialGuid2{}; // Use 0 for default material
 
-	JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
-	box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
-	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
-	JPH::ShapeRefC Box_shape = Box_shape_result.Get();
-	JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer2;
+		meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
+		meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
+		meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
+		meshRenderer2.hasAttachedMaterial = false;
+		meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
+
+		world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+		// Add material overrides
+		MaterialOverridesComponent materialOverrides2;
+		materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+		materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+		materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+		world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
+		auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
+		// Creating Cube
+
+		JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
+		box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
+		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
+		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
 		RigidBody->bodyID = sphere_id;
@@ -2287,44 +2286,44 @@ void EditorMain::CreatePhysicsCube()
 		ecs::world world = Engine::GetWorld();
 
 		// Cube creation
-	auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
-	auto Cscale = glm::vec3(1.0f);
-	auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
-	auto entity2 = world.add_entity();
+		auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
+		auto Cscale = glm::vec3(1.0f);
+		auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
+		auto entity2 = world.add_entity();
 
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity2, TransformComponent{ Cscale, glm::vec3{}, CPos });
-	world.add_component_to_entity<VisibilityComponent>(entity2, true);
-	world.add_component_to_entity<RigidBodyComponent>(entity2);
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity2, TransformComponent{ Cscale, glm::vec3{}, CPos });
+		world.add_component_to_entity<VisibilityComponent>(entity2, true);
+		world.add_component_to_entity<RigidBodyComponent>(entity2);
 
-	// Use shared primitive mesh and default material
-	rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
-	rp::Guid materialGuid2{}; // Use 0 for default material
+		// Use shared primitive mesh and default material
+		rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+		rp::Guid materialGuid2{}; // Use 0 for default material
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer2;
-	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
-	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
-	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer2;
+		meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
+		meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
+		meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
+		meshRenderer2.hasAttachedMaterial = false;
+		meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
 
-	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+		world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
 
-	// Add material overrides
-	MaterialOverridesComponent materialOverrides2;
-	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
-	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
-	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
-	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
-	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
-	// Creating Cube
+		// Add material overrides
+		MaterialOverridesComponent materialOverrides2;
+		materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+		materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+		materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+		world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
+		auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
+		// Creating Cube
 
-	JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
-	box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
-	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
-	JPH::ShapeRefC Box_shape = Box_shape_result.Get();
-	JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+		JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
+		box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
+		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
+		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
 		RigidBody->bodyID = sphere_id;
@@ -2341,31 +2340,31 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 		auto world = Engine::GetWorld();
 		auto entity = world.add_entity();
 
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ scale, glm::vec3{}, position });
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ scale, glm::vec3{}, position });
 
 		world.add_component_to_entity<VisibilityComponent>(entity, true);
 
-	// Use shared primitive mesh and default material
-	rp::Guid meshGuid{}; // Use 0 for primitive shared meshes
-	rp::Guid materialGuid{}; // Use 0 for default material
+		// Use shared primitive mesh and default material
+		rp::Guid meshGuid{}; // Use 0 for primitive shared meshes
+		rp::Guid materialGuid{}; // Use 0 for default material
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer;
-	meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
-	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer.m_MeshGuid.m_guid = meshGuid;
-	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.m_MaterialGuid.m_guid = materialGuid;
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer;
+		meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
+		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
+		meshRenderer.m_MeshGuid.m_guid = meshGuid;
+		meshRenderer.hasAttachedMaterial = false;
+		meshRenderer.m_MaterialGuid.m_guid = materialGuid;
 
-	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	// Add material overrides
-	MaterialOverridesComponent materialOverrides;
-	materialOverrides.vec3Overrides["u_AlbedoColor"] = color; // Use color directly (no multiplier to avoid clamping)
-	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
-	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
-	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+		// Add material overrides
+		MaterialOverridesComponent materialOverrides;
+		materialOverrides.vec3Overrides["u_AlbedoColor"] = color; // Use color directly (no multiplier to avoid clamping)
+		materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
 	});
 }
 
@@ -2407,14 +2406,14 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
 	engineService.PerformEntityPicking(mouseX, mouseY, viewportWidth, viewportHeight,
 		[this](bool hasHit, uint32_t objectID) {
-			// Callback executes on engine thread, but only calls EditorMain methods
-			if (hasHit) {
-				SelectEntity(objectID);
-			}
-			else {
-				ClearEntitySelection();
-			}
-		});
+		// Callback executes on engine thread, but only calls EditorMain methods
+		if (hasHit) {
+			SelectEntity(objectID);
+		}
+		else {
+			ClearEntitySelection();
+		}
+	});
 }
 
 void EditorMain::SelectEntity(uint32_t objectID)
