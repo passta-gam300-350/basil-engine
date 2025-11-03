@@ -24,11 +24,13 @@ public:
 		std::vector<entity_handle> m_entities_snapshot;
 		std::vector<std::string> m_names_snapshot;
 		std::queue<std::uint32_t> m_write_back_queue;
+		std::queue<entity_handle> m_entity_delete_queue;
+		int m_entity_create_count;
+		std::queue<std::tuple<entity_handle, std::uint32_t, bool>> m_entity_component_update_queue;
 		std::vector<std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>> m_component_list_snapshot;
 		entity_handle m_snapshot_entity_handle{ ~0ull };
 		std::binary_semaphore m_container_is_closed{ 0 };
 		std::binary_semaphore m_container_is_presentable{ 0 };
-		std::queue<std::function<void()>> m_main_thread_tasks;
 
 		// Command queue for EditorMain → Engine communication
 		std::queue<std::function<void()>> m_command_queue;
@@ -36,6 +38,7 @@ public:
 		// Component type IDs per entity (parallel array to m_entities_snapshot)
 		// Each vector contains the component type IDs that entity has
 		std::vector<std::vector<std::uint32_t>> m_entity_components_snapshot;
+
 
 		// Pending picking query data (processed after next frame render)
 		bool m_hasPickingQuery{ false };

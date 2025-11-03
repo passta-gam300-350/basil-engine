@@ -629,7 +629,7 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 				}
 
 			};
-			engineService.m_cont->m_main_thread_tasks.push(RemoveScripts);
+			engineService.m_cont->m_command_queue.push(RemoveScripts);
 			ImGui::PopID();
 			break;
 		}
@@ -669,7 +669,7 @@ void EditorMain::Add_Script_Menu()
 					ecs::world temp{ Engine::GetWorld() };
 					BehaviourSystem::Instance().AddScriptToEntityComponent(entity, temp, className.c_str());
 				};
-				engineService.m_cont->m_main_thread_tasks.push(add_script_to_behaviour);
+				engineService.m_cont->m_command_queue.push(add_script_to_behaviour);
 			}
 		}
 
