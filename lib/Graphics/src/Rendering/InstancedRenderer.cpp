@@ -282,6 +282,16 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     EndInstanceBatch();
 }
 
+void InstancedRenderer::ForceRebuildCache()
+{
+    // Clear all tracking state to force rebuild on next RenderToPass()
+    // This is called when components are updated in the editor (mesh/material changes)
+    m_LastRenderableCount = 0;
+    m_LastObjectIDs.clear();
+    m_LastTransformHashes.clear();
+    m_LastPropertyBlockHashes.clear();
+}
+
 void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData)
 {
 

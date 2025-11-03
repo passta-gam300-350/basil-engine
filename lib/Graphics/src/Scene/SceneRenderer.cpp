@@ -536,6 +536,14 @@ void SceneRenderer::ClearInstanceCache()
     }
 }
 
+void SceneRenderer::ForceRebuildInstanceCache()
+{
+    if (m_InstancedRenderer)
+    {
+        m_InstancedRenderer->ForceRebuildCache();
+    }
+}
+
 void SceneRenderer::SetShadowFilterSize(int filterSize)
 {
     assert(m_PBRLightingRenderer && "PBRLightingRenderer must be initialized");

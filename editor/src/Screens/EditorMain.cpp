@@ -688,17 +688,19 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text(field_name.c_str());
 				ImGui::SameLine(150);
 				ImGui::SetNextItemWidth(-1);
-				ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
 					auto& vec = *static_cast<std::vector<std::string>*>(data);
 					if (idx < 0 || idx >= vec.size()) return false;
 					*out_text = vec[idx].c_str();
 					return true;
-					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
-				if (current_item != 0) {
+					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+				// Check if selected item is valid and not empty (instead of checking index)
+				if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 					*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 					v->m_typeindex = type;
 					is_dirty = true;
 				}
+			}
 			}
 
 			// primitives

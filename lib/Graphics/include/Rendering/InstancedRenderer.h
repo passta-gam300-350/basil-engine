@@ -66,7 +66,10 @@ public:
 
     // Build dynamic instance data based on visible renderables
     void BuildDynamicInstanceData(const std::vector<RenderableData>& renderables);
-    
+
+    // Force rebuild of cached instance data (called when components are updated in editor)
+    void ForceRebuildCache();
+
     // Mesh and material setup
     void SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
     

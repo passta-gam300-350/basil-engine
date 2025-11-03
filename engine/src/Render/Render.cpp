@@ -368,11 +368,20 @@ void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity 
 	auto* meshComp = registry.try_get<MeshRendererComponent>(entity);
 	if (!meshComp) return;
 
+	// Automatically update hasAttachedMaterial based on material GUID validity
+	meshComp->hasAttachedMaterial = (meshComp->m_MaterialGuid.m_guid != rp::null_guid);
+
 	// Get entity UID
 	const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
 
 	// Sync to cached material
 	SyncMaterialFromComponent(entityUID, *meshComp);
+
+	// Force renderer to rebuild cached instance data
+	// This ensures mesh/material changes are reflected immediately in the viewport
+	if (m_SceneRenderer) {
+		m_SceneRenderer->ForceRebuildInstanceCache();
+	}
 }
 
 // ========== Material Instance API Implementation ==========
@@ -540,9 +549,8 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 	auto& registry = ResourceRegistry::Instance();
 	auto* matPtr = registry.Get<std::shared_ptr<Material>>(materialGuid.m_guid);
 
-	if (matPtr && *matPtr) {
-		spdlog::info("LoadMaterialResource: Successfully retrieved material '{}' (GUID: {}) from registry",
-		             (*matPtr)->GetName(), materialGuid.m_guid.to_hex().substr(0, 8));
+	if (matPtr)
+	{
 		return *matPtr;
 	}
 
