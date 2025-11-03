@@ -325,8 +325,11 @@ void MonoEntityManager::StartCompilation() {
 
 	std::filesystem::path asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
 
+
 	//TODO: Move it to cmake build
-	std::filesystem::path backendPath = R"(C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll)";
+	std::filesystem::path backendPath = R"(..\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll)";
+
+	std::string backendAbs = std::filesystem::absolute(backendPath).string();
 
 	if (preCompiled) {
 		std::cout << "Using pre-compiled assemblies." << std::endl;
@@ -340,7 +343,7 @@ void MonoEntityManager::StartCompilation() {
 
 	if (logs.empty()) {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str());
+		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
 
 		// Load all klasses from assemblies - Backend first
 		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
@@ -348,7 +351,7 @@ void MonoEntityManager::StartCompilation() {
 	}
 	else {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendPath.string().c_str());
+		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
 
 		// Load all klasses from assemblies - Backend first
 		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);

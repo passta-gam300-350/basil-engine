@@ -9,13 +9,13 @@ material:
   frag_name: main_pbr.frag
   material_name: TableMat
   albedo:
-    x: 1
-    y: 0.99288255
-    z: 0.99288255
+    x: 0.66192174
+    y: 0.551208854
+    z: 0
   metallic: 0
   roughness: 0.5
   float_properties: ~
   vec3_properties: ~
   vec4_properties: ~
   texture_properties:
-    diffuse: 969f0178c4a1b1f5b14d573818
+    diffuse: 969e2b7f3f8b2aced13b44d673
