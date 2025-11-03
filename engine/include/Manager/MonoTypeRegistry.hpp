@@ -1,9 +1,9 @@
 #ifndef MONO_TYPE_REGISTRY_HPP
 #define MONO_TYPE_REGISTRY_HPP
-#include "serialisation/guid.h"
+#include "rsc-core/rp.hpp"
 #include <unordered_map>
 class MonoTypeRegistry {
-	using ScriptID = Resource::Guid;
+	using ScriptID = rp::Guid;
 	std::unordered_map<uint32_t, ScriptID> m_TypeMap;
 
 public:

@@ -173,7 +173,7 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 	return modified;
 }
 
-void MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName, Resource::Guid scriptGuid)
+void MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName, rp::Guid scriptGuid)
 {
 	const auto* classNode = MonoReflectionRegistry::Instance().FindClassByManagedName(managedName);
 	if (!classNode)

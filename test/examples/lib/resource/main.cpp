@@ -1,8 +1,7 @@
-#include <compiler/compile.h>
-#include <texture/texture.h>
+
 
 int main() {
-	Resource::init();
+	/*rp::init();
 	std::hash<std::wstring> wstr_hash;
 	Resource::ResourceDescriptor rdesc;
 	rdesc.m_intermediate_files = L"assets/models/tinbox/tin_box.obj";
@@ -10,5 +9,6 @@ int main() {
 	rdesc.m_guid = Resource::Guid::generate();
 
 	Resource::compile_model(rdesc);
+	return 0;*/
 	return 0;
 }

@@ -28,14 +28,14 @@ MonoEntityManager& MonoEntityManager::GetInstance() {
 }
 
 
-Resource::Guid MonoEntityManager::AddAssembly(std::unique_ptr<ManagedAssembly> assembly) {
-	const Resource::Guid id = Resource::Guid::generate();
+rp::Guid MonoEntityManager::AddAssembly(std::unique_ptr<ManagedAssembly> assembly) {
+	const rp::Guid id = rp::Guid::generate();
 	m_AssemblyMap[id] = m_Assemblies.size();
 	m_Assemblies.push_back(std::move(assembly));
 	return id;
 }
 
-Resource::Guid MonoEntityManager::AddAssembly(const char* assemblyPath, bool isSystem = false) {
+rp::Guid MonoEntityManager::AddAssembly(const char* assemblyPath, bool isSystem = false) {
 	if (isSystem)
 		MonoManager::GetLoader()->Enable_BackEnd();
 	else MonoManager::GetLoader()->Enable_Game();
@@ -43,15 +43,15 @@ Resource::Guid MonoEntityManager::AddAssembly(const char* assemblyPath, bool isS
 	return AddAssembly(std::move(assembly));
 }
 
-Resource::Guid MonoEntityManager::AddKlass(std::shared_ptr<CSKlass> klass) {
+rp::Guid MonoEntityManager::AddKlass(std::shared_ptr<CSKlass> klass) {
 
-	const Resource::Guid id = Resource::Guid::generate();
+	const rp::Guid id = rp::Guid::generate();
 	m_EntityMap[id] = m_Klasses.size();
 	m_Klasses.push_back(std::move(klass));
 	return id;
 }
 
-Resource::Guid MonoEntityManager::AddKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
+rp::Guid MonoEntityManager::AddKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
 
 	if (false)
 		MonoManager::GetLoader()->Enable_BackEnd();
@@ -75,7 +75,7 @@ MonoEntityManager::ScriptID MonoEntityManager::GetEngineAssembly()
 
 
 
-Resource::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend) {
+rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend) {
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
 	if (klass) {
@@ -92,8 +92,8 @@ Resource::Guid MonoEntityManager::AddInstance(const char* klassName, const char*
 }
 
 
-Resource::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance) {
-	const Resource::Guid id = Resource::Guid::generate();
+rp::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance) {
+	const rp::Guid id = rp::Guid::generate();
 	m_EntityInstanceMap[id] = m_Instances.size();
 	m_Instances.push_back(std::move(instance));
 	return id;

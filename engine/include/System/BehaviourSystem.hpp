@@ -2,7 +2,7 @@
 #include <mono/metadata/object-forward.h>
 
 #include "ecs/system/system.h"
-#include "serialisation/guid.h"
+#include "rsc-core/rp.hpp"
 
 
 class BehaviourSystem : public ecs::SystemBase
@@ -22,7 +22,7 @@ public:
 
 	void AddClass(const char* name, const char* klassNamespace = "");
 
-	bool AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, Resource::Guid scriptID);
+	bool AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, rp::Guid scriptID);
 
 
 	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns="");

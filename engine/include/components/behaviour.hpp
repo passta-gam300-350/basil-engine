@@ -19,12 +19,15 @@ Technology is prohibited.
 
 #ifndef behaviour_hpp
 #define behaviour_hpp
-#include "serialisation/guid.h"
+
 #include <string>
+
+#include "rsc-core/rp.hpp"
+
 struct behaviour
 {
 	std::vector<std::string> classesName;
-	std::vector<Resource::Guid> scriptIDs;
+	std::vector<rp::Guid> scriptIDs;
 
 };
 

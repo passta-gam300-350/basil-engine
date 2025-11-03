@@ -43,7 +43,7 @@ Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
 #include "Bindings/MANAGED_CONSOLE.hpp"
-#include "serialisation/guid.h"
+#include "rsc-core/rp.hpp"
 
 #include "Physics/Physics_System.h"
 #include "Manager/ObjectManager.hpp"
@@ -589,7 +589,7 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 		std::string label = fullName.empty() ? std::string("<Unnamed Script>") : fullName;
 		label.append("##BehaviourScript");
 		label.append(std::to_string(i));
-		Resource::Guid scriptGuid = (i < component.scriptIDs.size()) ? component.scriptIDs[i] : Resource::Guid{};
+		rp::Guid scriptGuid = (i < component.scriptIDs.size()) ? component.scriptIDs[i] : rp::Guid{};
 		if (!scriptGuid)
 		{
 			continue;
@@ -606,7 +606,7 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 		// to the separator
 		ImVec2 padding = { 0.0f, 10.0f };
 		ImGui::Dummy(padding);
-		std::string const id = "REMOVE_SCRIPT_BTN_" + scriptGuid.to_hex_no_delimiter();
+		std::string const id = "REMOVE_SCRIPT_BTN_" + scriptGuid.to_hex();
 		ImGui::PushID(id.c_str());
 		if (ImGui::Button("Remove Script"))
 		{
@@ -785,7 +785,7 @@ void EditorMain::Render_MenuBar()
 						? classDescriptor->cpp_name
 						: std::string("<cpp unknown>");
 					std::string classGuidStr;
-					if (classDescriptor && classDescriptor->guid != Resource::null_guid)
+					if (classDescriptor && classDescriptor->guid != rp::null_guid)
 					{
 						classGuidStr = classDescriptor->guid.to_hex();
 					}
@@ -816,7 +816,7 @@ void EditorMain::Render_MenuBar()
 							? fieldDescriptor->cpp_name
 							: std::string("<cpp unknown>");
 						std::string fieldGuidStr;
-						if (fieldDescriptor && fieldDescriptor->guid != Resource::null_guid)
+						if (fieldDescriptor && fieldDescriptor->guid != rp::null_guid)
 						{
 							fieldGuidStr = fieldDescriptor->guid.to_hex();
 						}
@@ -841,7 +841,7 @@ void EditorMain::Render_MenuBar()
 							const std::string elementManaged = element->managed_name;
 							const std::string elementCpp = !element->cpp_name.empty() ? element->cpp_name : std::string("<cpp unknown>");
 							std::string elementGuidStr;
-							if (element->guid != Resource::null_guid)
+							if (element->guid != rp::null_guid)
 							{
 								elementGuidStr = element->guid.to_hex();
 							}

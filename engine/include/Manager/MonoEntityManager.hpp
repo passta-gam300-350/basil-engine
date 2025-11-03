@@ -2,10 +2,11 @@
 #define MonoEntityManager_HPP
 #include <functional>
 
-#include "serialisation/guid.h"
 #include "Manager/MonoTypeRegistry.hpp"
 #include <unordered_map>
 #include <memory>
+
+#include "rsc-core/rp.hpp"
 
 struct CSKlass;
 struct CSKlassInstance;
@@ -15,7 +16,7 @@ class MonoEntityManager {
 
 	using ClassVisitor = std::function<void(CSKlass&)>;
 
-	using ScriptID = Resource::Guid;
+	using ScriptID = rp::Guid;
 	ScriptID PRIMARY_ASSEMBLY_ID{ 0x0, 0x0 };
 	ScriptID BACKEND_ASSEMBLY_ID{ 0x0,0x0 };
 

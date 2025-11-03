@@ -1,11 +1,13 @@
 #include "Service/EngineService.hpp"
 #include "Editor.hpp"
+<<<<<<< HEAD
 #include "Manager/MonoEntityManager.hpp"
+=======
+#include <Render/Render.h>  // For RenderSystem and FrameData
+#include <algorithm>  // For std::find
+>>>>>>> resource_pipeline_v2_final_i_think
 
 #include <filesystem>
-
-#include "Render/Render.h"
-
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
 
@@ -166,33 +168,10 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 			}
 		}
 	}
-	int create_ct = m_entity_create_count;
-	m_entity_create_count = 0;
-	while (create_ct-- > 0) {
-		w.add_entity();
-	}
-	while (!m_entity_component_update_queue.empty()) {
-		auto [ehdl, type_id, is_delete] = m_entity_component_update_queue.front();
-		m_entity_component_update_queue.pop();
-		ecs::entity entity{ ehdl };
-		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
-		if (auto* storage = w.impl.get_registry().storage(ReflectionRegistry::types()[type_id].info().index())) {
-			if (!storage->contains(enttntt)) {
-				continue;
-			}
-			if (is_delete) {
-				storage->erase(enttntt);
-			}
-			else {
-				storage->push(enttntt);
-			}
-		}
-	}
-	while (!m_entity_delete_queue.empty()) {
-		auto ehdl = m_entity_delete_queue.front();
-		m_entity_delete_queue.pop();
-		ecs::entity entity{ ehdl };
-		entity.destroy();
+	while (!m_main_thread_tasks.empty()) {
+		auto& task = m_main_thread_tasks.front();
+		task();
+		m_main_thread_tasks.pop();
 	}
 	
 }
@@ -250,8 +229,8 @@ void EngineContainerService::pause() {
 	Engine::SetState(Engine::Info::State::Pause);
 }
 
-//void EngineContainerService::create_cube() {
-//}
+void EngineContainerService::create_cube() {
+}
 
 void EngineContainerService::end() {
 	release();

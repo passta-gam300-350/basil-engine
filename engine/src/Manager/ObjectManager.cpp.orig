@@ -24,6 +24,7 @@ ecs::entity ObjectManager::CreateGameObject(glm::vec3 pos, glm::vec3 scale, glm:
 	
 
 	// Transformation group
+<<<<<<< HEAD
 	gameObject.add<PositionComponent>(pos);
 	gameObject.add<ScaleComponent>(scale);
 	gameObject.add<RotationComponent>(rot);
@@ -31,10 +32,15 @@ ecs::entity ObjectManager::CreateGameObject(glm::vec3 pos, glm::vec3 scale, glm:
 	uint64_t handle = gameObject.get_uuid();
 	void* args[] = { &handle };
 	// add CS Managed component
-	rp::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", args, true);
+	Resource::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", args, true);
 
 	spdlog::info("Created Mono Instance with GUID: {}", id.to_hex());
 
+=======
+	gameObject.add<TransformComponent>();
+	gameObject.add<PositionComponent>();
+	gameObject.add<RelationshipComponent>(); // Scene graph support
+>>>>>>> resource_pipeline_v2_final_i_think
 
 
 

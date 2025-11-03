@@ -2,7 +2,9 @@
 #define EDITOR_MANAGER_MONO_IMGUI_RENDERER_HPP
 
 #include <string>
-#include <serialisation/guid.h>
+
+
+#include "Screens/EditorMain.hpp"
 
 struct FieldNode;
 struct MonoTypeDescriptor;
@@ -12,7 +14,7 @@ struct CSKlassInstance;
 class MonoImGuiRenderer
 {
 public:
-	static void RenderBehaviourFields(const std::string& managedName, Resource::Guid scriptGuid);
+	static void RenderBehaviourFields(const std::string& managedName, rp::Guid scriptGuid);
 
 private:
 	static bool RenderField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance);

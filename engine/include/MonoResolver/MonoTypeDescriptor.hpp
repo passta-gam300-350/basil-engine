@@ -1,7 +1,7 @@
 #ifndef MONOTYPE_DESCRIPTOR_HPP
 #define MONOTYPE_DESCRIPTOR_HPP
 #include <cstdint>
-#include "serialisation/guid.h"
+#include "rsc-core/rp.hpp"
 
 enum struct Kind : uint8_t
 {
@@ -97,7 +97,7 @@ struct MonoTypeDescriptor
     bool isUserType = false;
     bool isPublic = true;
 
-    Resource::Guid guid;
+    rp::Guid guid;
 
     const MonoTypeDescriptor* elementDescriptor = nullptr;
 };
