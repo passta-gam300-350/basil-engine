@@ -5,7 +5,7 @@
 
 FMOD::System* p_system;
 FMOD::ChannelGroup* master_group;
-std::vector<FMOD::ChannelGroup*> v_group;		// Need to pull data of created channel groups
+std::unordered_map<std::string, FMOD::ChannelGroup*> v_group;		// Need to pull data of created channel groups
 std::unordered_map<std::string, FMOD::Sound*> m_sound;
 std::vector<FMOD::Channel*> v_channel;
 bool paused{ false };
@@ -45,7 +45,7 @@ glm::vec3 AudioSystem::FMOD_to_Vec3(const FMOD_VECTOR& fv) noexcept {
 	return glm::vec3(fv.x, fv.y, fv.z);
 }
 
-void AudioSystem::Play_Audio(std::string const& path, float volume) {
+void AudioSystem::Play_Audio(const std::string& path, float volume, std::string group) {
     auto it = m_sound.find(path);
     if (it == m_sound.end()) {
 		spdlog::warn("Audio: Sound not loaded: {}", path);
@@ -57,8 +57,14 @@ void AudioSystem::Play_Audio(std::string const& path, float volume) {
 	FMOD_ErrorCheck(ch->setVolume(volume));
 	spdlog::info("Audio: Playing audio: {}", path);
     if (ch) {
-        if (!v_group.empty() && v_group[0])
-            FMOD_ErrorCheck(ch->setChannelGroup(v_group[0]));
+        // Check for existing channel group; do not create here
+        auto gIt = v_group.find(group);
+        if (gIt == v_group.end() || !gIt->second) {
+            spdlog::warn("Audio: Channel group not found: {}", group);
+            FMOD_ErrorCheck(ch->stop());
+            return;
+        }
+        FMOD_ErrorCheck(ch->setChannelGroup(gIt->second));
         v_channel.push_back(ch);
     }
 }
@@ -74,8 +80,8 @@ void AudioSystem::Stop_Audio() {
 
 void AudioSystem::Stop_All_Audio() {
 	spdlog::info("Audio: Stopping all audio");
-	for (int i{ 0 }; i < v_group.size(); ++i)
-		FMOD_ErrorCheck(v_group[i]->stop());
+	for (const auto& group : v_group)
+		FMOD_ErrorCheck(group.second->stop());
 }
 
 void AudioSystem::Load_Audio(std::string dir, bool stream, bool ambient, bool dimension, bool linear, bool playOnAwake, bool loop, float minDistance, float maxDistance) {
@@ -188,18 +194,14 @@ void AudioSystem::Init(void* extradriverdata) {
 
 	// Need to pull data of created channel groups
 	spdlog::info("Audio: Creating Channel Groups");
-	v_group.resize(1); // [TEMP]
-	for (int i{ 0 }; i < v_group.size(); ++i) {
-		FMOD_ErrorCheck(p_system->createChannelGroup(nullptr, &v_group[i]));
-		// result = Set saved volume here
-		// FMOD_ErrorCheck(result);
-	}
 
 	// [TEMP]
 
 	spdlog::info("Audio: Getting Master Channel Group");
 	FMOD_ErrorCheck(p_system->getMasterChannelGroup(&master_group));
 	FMOD_ErrorCheck(master_group->setVolume(0.5f)); // [TEMP] (Set saved master volume)
+	// Register MASTER in the channel group map for easy access
+	v_group["MASTER"] = master_group;
 
 	// createSound here when serialization is done
 

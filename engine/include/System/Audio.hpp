@@ -77,7 +77,7 @@ public:
 	static float dbToVolume(float dB) noexcept;
 	static float VolumeTodB(float volume) noexcept;
 
-	static void Play_Audio(std::string const& path, float volume = 1.0f);
+	static void Play_Audio(const std::string& path, float volume = 1.0f, std::string group = "MASTER");
 	static void Stop_Audio();
 	static void Stop_All_Audio();
 	static void Load_Audio(std::string dir, bool stream, bool ambient, bool dimension, bool linear, bool playOnAwake, bool loop, float minDistance = MINDISTANCE, float maxDistance = MAXDISTANCE);
