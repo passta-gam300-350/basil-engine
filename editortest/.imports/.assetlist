@@ -1,1 +1,21 @@
-asset list: ~
+"NewMaterial":
+  "m_guid": "1de352076618dab2ab194525674"
+  "m_typeindex": "175488002581160416"
+"tin_box.fbx":
+  "m_guid": "fb5e527878a21c97959a2bd09e"
+  "m_typeindex": "4838001395392124604"
+"tin_can_lambert1_BaseColor.png":
+  "m_guid": "104428a732d9a5b42f091ea047f"
+  "m_typeindex": "126269861530532084"
+"tin_can_lambert1_Height.png":
+  "m_guid": "104429078b5a966828a31f5198d"
+  "m_typeindex": "126269861530532084"
+"tin_can_lambert1_Metallic.png":
+  "m_guid": "10442957b03b8d6cdfbdff3a942"
+  "m_typeindex": "126269861530532084"
+"tin_can_lambert1_Normal.png":
+  "m_guid": "1044299729b94a5e887b830fd67"
+  "m_typeindex": "126269861530532084"
+"tin_can_lambert1_Roughness.png":
+  "m_guid": "104429d749fa7ba75210e432586"
+  "m_typeindex": "126269861530532084"

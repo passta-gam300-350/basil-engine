@@ -6,6 +6,30 @@
 #include <Utility/StringConversion.hpp>
 
 #include <importer/importer.hpp>
+#include <descriptors/material.hpp>
+#include <glm/glm.hpp>
+
+// YAML serialization support for BasicIndexedGuid
+namespace YAML {
+	template<>
+	struct convert<rp::BasicIndexedGuid> {
+		static Node encode(const rp::BasicIndexedGuid& rhs) {
+			Node node;
+			node["guid"] = rhs.m_guid.to_hex();
+			node["typeindex"] = rhs.m_typeindex;
+			return node;
+		}
+
+		static bool decode(const Node& node, rp::BasicIndexedGuid& rhs) {
+			if (!node.IsMap() || !node["guid"] || !node["typeindex"]) {
+				return false;
+			}
+			rhs.m_guid = rp::Guid::to_guid(node["guid"].as<std::string>());
+			rhs.m_typeindex = node["typeindex"].as<std::uint64_t>();
+			return true;
+		}
+	};
+}
 
 template<typename K, typename V>
 static std::map<V, K> reverseMap(const std::map<K, V>& m) {
@@ -136,6 +160,49 @@ void AssetManager::ImportAssetDirectory(std::string const& dir) {
 	}
 }
 
+void AssetManager::CreateMaterialDescriptor(std::string const& material_name) {
+	// 1. Create descriptor with defaults
+	MaterialDescriptor matDesc{};
+
+	// 2. Set base properties
+	matDesc.base.m_guid = rp::Guid::generate();
+	matDesc.base.m_name = material_name;
+	matDesc.base.m_importer = ".material";
+	matDesc.base.m_importer_type = rp::utility::type_hash<MaterialDescriptor>::value();
+	matDesc.base.m_source = ""; // No source file for manually created materials
+
+	// 3. Set material defaults (neutral gray, non-metallic)
+	matDesc.material.vert_name = "main_pbr.vert";
+	matDesc.material.frag_name = "main_pbr.frag";
+	matDesc.material.material_name = material_name;
+	matDesc.material.albedo = glm::vec3(0.8f, 0.8f, 0.8f);
+	matDesc.material.metallic = 0.0f;
+	matDesc.material.roughness = 0.5f;
+
+	// 4. Save descriptor to .desc file in current directory
+	std::string desc_path = normalizePath(m_CurrentPath + "/" + material_name + ".desc");
+
+	// Check if file already exists
+	int counter = 1;
+	std::string final_path = desc_path;
+	while (std::filesystem::exists(final_path)) {
+		final_path = normalizePath(m_CurrentPath + "/" + material_name + std::to_string(counter) + ".desc");
+		counter++;
+	}
+
+	// Serialize to YAML using the correct serializer
+	rp::serialization::yaml_serializer::serialize(matDesc, final_path);
+
+	// 5. Add to file list
+	{
+		std::lock_guard lg{ m_DescriptorListMtx };
+		m_FileList.emplace(m_CurrentPath, final_path);
+	}
+
+	// 6. Automatically import/compile the material
+	ImportAsset(final_path);
+}
+
 void AssetManager::LoadImportSettings(std::string const& is)
 {
 	if (!m_InspectedDescriptor) {
@@ -173,7 +240,7 @@ std::string AssetManager::GetImportSettingsPath()
 
 void AssetManager::ExportAssetList() {
 	std::string filename{ m_ImportedAssetPath + "/" + std::string(cx_AssetListFilename.begin(),cx_AssetListFilename.end()) };
-	rp::serialization::yaml_serializer::serialize(m_ImportedAssetPath, filename);
+	rp::serialization::yaml_serializer::serialize(m_AssetNameGuid, filename);
 }
 
 void AssetManager::ImportAssetList() {
@@ -184,7 +251,7 @@ void AssetManager::ImportAssetList() {
 	for (auto [name, typed] : m_AssetNameGuid) {
 		ResourceSystem::FileEntry fentry{};
 		fentry.m_Guid = typed.m_guid;
-		fentry.m_Path = m_ImportedAssetPath + "/" + typed.m_guid.to_hex() + "." + rp::ResourceTypeImporterRegistry::GetResourceExt(typed.m_typeindex);
+		fentry.m_Path = m_ImportedAssetPath + "/" + typed.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetResourceExt(typed.m_typeindex);
 		fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 		ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
 	}
@@ -219,6 +286,37 @@ void AssetManager::FileIndexingWorkerLoop() {
 					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string());
 				}
 				m_FileList.emplace(dir_path, desc_name);
+			}
+		}
+
+		// Second pass: Register standalone .desc files (materials without source files)
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_RootPath, std::filesystem::directory_options::follow_directory_symlink)) {
+			if (entry.is_directory()) continue;
+
+			std::string filepath = entry.path().string();
+			std::string ext = getFileExtension(filepath);
+
+			// Only process .desc files
+			if (ext == ".desc") {
+				// Check if this .desc has a corresponding source file
+				std::string base_name = filepath.substr(0, filepath.find_last_of("."));
+				bool has_source_file = false;
+
+				// Check common source file extensions
+				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb"};
+				for (auto const& src_ext : source_exts) {
+					if (std::filesystem::exists(base_name + src_ext)) {
+						has_source_file = true;
+						break;
+					}
+				}
+
+				// Only register if it has NO source file (standalone descriptor)
+				if (!has_source_file) {
+					std::string dir_path = getParentPath(filepath);
+					std::lock_guard lg{ m_DescriptorListMtx };
+					m_FileList.emplace(dir_path, filepath);
+				}
 			}
 		}
 	}

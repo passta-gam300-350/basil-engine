@@ -32,6 +32,8 @@ Technology is prohibited.
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 #include <chrono>
+#include <regex>
+#include <algorithm>
 
 #include "Screens/EditorMain.hpp"
 #include <filesystem>
@@ -51,11 +53,151 @@ Technology is prohibited.
 
 RegisterImguiDescriptorInspector(ModelDescriptor);
 RegisterImguiDescriptorInspector(TextureDescriptor);
-RegisterImguiDescriptorInspector(MaterialDescriptor);
 
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
+
+// Shader uniform parsing helpers
+namespace {
+	struct ShaderUniforms {
+		std::set<std::string> samplers;
+		std::set<std::string> floats;
+		std::set<std::string> vec3s;
+		std::set<std::string> vec4s;
+	};
+
+	ShaderUniforms ParseShaderUniforms(std::string const& shader_path) {
+		ShaderUniforms uniforms;
+
+		std::ifstream file(shader_path);
+		if (!file.is_open()) return uniforms;
+
+		std::string line;
+		std::regex sampler_regex(R"(uniform\s+sampler2D\s+(\w+)\s*;)");
+		std::regex float_regex(R"(uniform\s+float\s+(\w+)\s*;)");
+		std::regex vec3_regex(R"(uniform\s+vec3\s+(\w+)\s*;)");
+		std::regex vec4_regex(R"(uniform\s+vec4\s+(\w+)\s*;)");
+		std::smatch match;
+
+		while (std::getline(file, line)) {
+			if (std::regex_search(line, match, sampler_regex)) {
+				uniforms.samplers.insert(match[1].str());
+			}
+			if (std::regex_search(line, match, float_regex)) {
+				uniforms.floats.insert(match[1].str());
+			}
+			if (std::regex_search(line, match, vec3_regex)) {
+				uniforms.vec3s.insert(match[1].str());
+			}
+			if (std::regex_search(line, match, vec4_regex)) {
+				uniforms.vec4s.insert(match[1].str());
+			}
+		}
+
+		return uniforms;
+	}
+
+	void SyncMaterialProperties(MaterialDescriptor& desc, std::string const& shader_dir) {
+		ShaderUniforms all_uniforms;
+
+		// Parse fragment shaders
+		std::string frag_path = shader_dir + "/" + desc.material.frag_name;
+
+		ShaderUniforms frag_uniforms = ParseShaderUniforms(frag_path);
+
+		// Merge uniforms from both shaders
+		all_uniforms.samplers.insert(frag_uniforms.samplers.begin(), frag_uniforms.samplers.end());
+		all_uniforms.floats.insert(frag_uniforms.floats.begin(), frag_uniforms.floats.end());
+		all_uniforms.vec3s.insert(frag_uniforms.vec3s.begin(), frag_uniforms.vec3s.end());
+		all_uniforms.vec4s.insert(frag_uniforms.vec4s.begin(), frag_uniforms.vec4s.end());
+
+		// Exclude engine-provided uniforms (set by renderer at runtime)
+		static const std::set<std::string> excluded_uniforms = {
+			// Camera/View
+			"u_ViewPos",
+			"u_ViewMatrix",
+			"u_ProjectionMatrix",
+			"u_ViewProjection",
+			"u_CameraPos",
+
+			// Transform
+			"u_ModelMatrix",
+			"u_Model",
+			"u_Transform",
+			"u_NormalMatrix",
+
+			// Time
+			"u_Time",
+			"u_DeltaTime",
+
+			// Lighting (system-wide)
+			"u_LightCount",
+			"u_LightPositions",
+			"u_LightColors"
+		};
+
+		// Remove excluded uniforms from all property sets
+		for (auto const& name : excluded_uniforms) {
+			all_uniforms.samplers.erase(name);
+			all_uniforms.floats.erase(name);
+			all_uniforms.vec3s.erase(name);
+			all_uniforms.vec4s.erase(name);
+		}
+
+		// Sync texture_properties
+		{
+			std::unordered_map<std::string, rp::Guid> new_map;
+			for (auto const& name : all_uniforms.samplers) {
+				if (desc.material.texture_properties.count(name)) {
+					new_map[name] = desc.material.texture_properties[name]; // Keep existing
+				} else {
+					new_map[name] = rp::Guid{}; // Add new with empty GUID
+				}
+			}
+			desc.material.texture_properties = std::move(new_map);
+		}
+
+		// Sync float_properties
+		{
+			std::unordered_map<std::string, float> new_map;
+			for (auto const& name : all_uniforms.floats) {
+				if (desc.material.float_properties.count(name)) {
+					new_map[name] = desc.material.float_properties[name];
+				} else {
+					new_map[name] = 0.0f;
+				}
+			}
+			desc.material.float_properties = std::move(new_map);
+		}
+
+		// Sync vec3_properties
+		{
+			std::unordered_map<std::string, glm::vec3> new_map;
+			for (auto const& name : all_uniforms.vec3s) {
+				if (desc.material.vec3_properties.count(name)) {
+					new_map[name] = desc.material.vec3_properties[name];
+				} else {
+					new_map[name] = glm::vec3(0.0f);
+				}
+			}
+			desc.material.vec3_properties = std::move(new_map);
+		}
+
+		// Sync vec4_properties
+		{
+			std::unordered_map<std::string, glm::vec4> new_map;
+			for (auto const& name : all_uniforms.vec4s) {
+				if (desc.material.vec4_properties.count(name)) {
+					new_map[name] = desc.material.vec4_properties[name];
+				} else {
+					new_map[name] = glm::vec4(0.0f);
+				}
+			}
+			desc.material.vec4_properties = std::move(new_map);
+		}
+	}
+}
 
 EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 {
@@ -74,6 +216,172 @@ void EditorMain::init()
 	glfwMaximizeWindow(window);
 
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+
+	// Register custom material inspector with texture dropdowns (captures 'this')
+	{
+		constexpr auto mat_type_hash = rp::utility::type_hash<MaterialDescriptor>::value();
+		rp::ResourceTypeImporterRegistry::RegisterSerializer(mat_type_hash, "imgui",
+			[this](std::string const& str, std::byte* data) {
+				MaterialDescriptor& desc = *reinterpret_cast<MaterialDescriptor*>(data);
+				AssetManager* assets = this->GetAssetManager();
+
+				// Cache to track last synced shader names per material
+				struct ShaderCache {
+					std::string vert_name;
+					std::string frag_name;
+				};
+				static std::unordered_map<std::string, ShaderCache> shader_cache;
+
+				// Check if shader names changed
+				std::string material_id = desc.base.m_guid.to_hex();
+				bool needs_sync = false;
+
+				auto it = shader_cache.find(material_id);
+				if (it == shader_cache.end()) {
+					// First time seeing this material
+					needs_sync = true;
+				} else {
+					// Check if shader names changed
+					if (it->second.vert_name != desc.material.vert_name ||
+						it->second.frag_name != desc.material.frag_name) {
+						needs_sync = true;
+					}
+				}
+
+				// Only sync if needed
+				if (needs_sync) {
+					std::string shader_dir = Editor::GetInstance().GetConfig().project_workingDir + "/assets/shaders";
+					SyncMaterialProperties(desc, shader_dir);
+
+					// Update cache
+					shader_cache[material_id] = {desc.material.vert_name, desc.material.frag_name};
+				}
+
+				// Render descriptor_base
+				ImGui::SeparatorText("Base Properties");
+				ImGui::Text("GUID: %s", desc.base.m_guid.to_hex().c_str());
+				ImGui::Text("Name: %s", desc.base.m_name.c_str());
+				ImGui::Text("Importer: %s", desc.base.m_importer.c_str());
+
+				// Material properties
+				ImGui::SeparatorText("Material Properties");
+
+				char vert_buf[256];
+				strncpy(vert_buf, desc.material.vert_name.c_str(), sizeof(vert_buf));
+				if (ImGui::InputText("Vertex Shader", vert_buf, sizeof(vert_buf))) {
+					desc.material.vert_name = vert_buf;
+				}
+
+				char frag_buf[256];
+				strncpy(frag_buf, desc.material.frag_name.c_str(), sizeof(frag_buf));
+				if (ImGui::InputText("Fragment Shader", frag_buf, sizeof(frag_buf))) {
+					desc.material.frag_name = frag_buf;
+				}
+
+				ImGui::ColorEdit3("Albedo", &desc.material.albedo.x);
+				ImGui::SliderFloat("Metallic", &desc.material.metallic, 0.0f, 1.0f);
+				ImGui::SliderFloat("Roughness", &desc.material.roughness, 0.0f, 1.0f);
+
+				// Texture properties with dropdowns
+				ImGui::SeparatorText("Texture Properties");
+
+				// Helper to check if asset is a texture (by base name extension)
+				auto is_texture_asset = [](std::string const& assetname) -> bool {
+					std::string lower = assetname;
+					std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+					static const std::vector<std::string> texture_exts = {
+						".png", ".jpg", ".jpeg",
+						".tga", ".bmp", ".hdr", ".dds"
+					};
+
+					for (auto const& ext : texture_exts) {
+						if (lower.ends_with(ext)) return true;
+					}
+					return false;
+				};
+
+				// Render each texture property
+				std::vector<std::string> keys_to_remove;
+				for (auto& [key, guid] : desc.material.texture_properties) {
+					ImGui::PushID(key.c_str());
+
+					std::string current_name = "None";
+					if (guid != rp::Guid{}) {
+						rp::BasicIndexedGuid indexed{guid, 0};
+						current_name = assets->ResolveAssetName(indexed);
+						if (current_name.empty()) current_name = guid.to_hex().substr(0, 8) + "...";
+					}
+
+					if (ImGui::BeginCombo(key.c_str(), current_name.c_str())) {
+						if (ImGui::Selectable("None", guid == rp::Guid{})) {
+							guid = rp::Guid{};
+						}
+
+						// Iterate through all imported assets (matches Resources Browser behavior)
+						for (auto const& [assetname, indexed_guid] : assets->m_AssetNameGuid) {
+							// Only show texture assets
+							if (!is_texture_asset(assetname)) continue;
+
+							// Use the asset name directly (it's already the base name)
+							bool selected = (indexed_guid.m_guid == guid);
+							if (ImGui::Selectable(assetname.c_str(), selected)) {
+								guid = indexed_guid.m_guid;
+							}
+							if (selected) ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+
+					// Remove button
+					ImGui::SameLine();
+					if (ImGui::SmallButton("X")) {
+						keys_to_remove.push_back(key);
+					}
+
+					ImGui::PopID();
+				}
+
+				// Remove marked keys
+				for (auto const& key : keys_to_remove) {
+					desc.material.texture_properties.erase(key);
+				}
+
+				// Add new texture property
+				static char new_texture_key[256] = "";
+				ImGui::InputText("New Texture Property", new_texture_key, sizeof(new_texture_key));
+				ImGui::SameLine();
+				if (ImGui::Button("Add") && strlen(new_texture_key) > 0) {
+					desc.material.texture_properties[new_texture_key] = rp::Guid{};
+					new_texture_key[0] = '\0';
+				}
+
+				// Float properties
+				if (!desc.material.float_properties.empty()) {
+					ImGui::SeparatorText("Float Properties");
+					for (auto& [key, value] : desc.material.float_properties) {
+						ImGui::SliderFloat(key.c_str(), &value, 0.0f, 10.0f);
+					}
+				}
+
+				// Vec3 properties
+				if (!desc.material.vec3_properties.empty()) {
+					ImGui::SeparatorText("Vec3 Properties");
+					for (auto& [key, value] : desc.material.vec3_properties) {
+						ImGui::ColorEdit3(key.c_str(), &value.x);
+					}
+				}
+
+				// Vec4 properties
+				if (!desc.material.vec4_properties.empty()) {
+					ImGui::SeparatorText("Vec4 Properties");
+					for (auto& [key, value] : desc.material.vec4_properties) {
+						ImGui::ColorEdit4(key.c_str(), &value.x);
+					}
+				}
+			});
+	}
+
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
@@ -1012,6 +1320,65 @@ void EditorMain::Render_AssetBrowser()
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
+
+	// Context menu for empty space (right-click to create new assets)
+	if (ImGui::BeginPopupContextWindow("AssetBrowserContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+	{
+		if (ImGui::BeginMenu("Create"))
+		{
+			if (ImGui::MenuItem("Material"))
+			{
+				m_ShowCreateMaterialDialog = true;
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndPopup();
+	}
+
+	// Material creation dialog
+	if (m_ShowCreateMaterialDialog)
+	{
+		ImGui::OpenPopup("Create Material");
+		m_ShowCreateMaterialDialog = false;
+	}
+
+	// Center the modal
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	if (ImGui::BeginPopupModal("Create Material", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Enter material name:");
+		ImGui::Separator();
+
+		ImGui::InputText("##MaterialName", m_NewMaterialNameBuffer, sizeof(m_NewMaterialNameBuffer));
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Create", ImVec2(120, 0)))
+		{
+			// Validate name is not empty
+			if (strlen(m_NewMaterialNameBuffer) > 0)
+			{
+				m_AssetManager->CreateMaterialDescriptor(std::string(m_NewMaterialNameBuffer));
+				ImGui::CloseCurrentPopup();
+				// Reset buffer for next time
+				strcpy(m_NewMaterialNameBuffer, "NewMaterial");
+			}
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			// Reset buffer
+			strcpy(m_NewMaterialNameBuffer, "NewMaterial");
+		}
+
+		ImGui::EndPopup();
+	}
+
 	ImGui::Columns(1);
 
 	ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32.0f, 256.0f); // Slider for thumbnail size

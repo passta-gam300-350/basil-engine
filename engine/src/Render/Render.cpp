@@ -13,6 +13,9 @@ Technology is prohibited.
 */
 /******************************************************************************/
 
+// Define implementation for tinyddsloader BEFORE any includes (header-only library like stb_image.h)
+#define TINYDDSLOADER_IMPLEMENTATION
+
 #include <Core/Window.h>
 #include "Render/Render.h"
 #include "Render/ShaderLibrary.hpp"
@@ -25,8 +28,11 @@ Technology is prohibited.
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
+#include <Resources/Texture.h>
 
 #include "native/native.h"
+#include "native/texture.h"
+#include "resource/utility.h"
 #include "Render/Camera.h"
 
 // Resource pipeline serialization
@@ -206,6 +212,34 @@ void RenderSystem::Update(ecs::world& world) {
 			entityUID
 		);
 
+		// === ENHANCED DIAGNOSTIC LOGGING ===
+		// Log resource loading status for debugging entity 2 issue
+		/*spdlog::info("Entity {}: Resource check - mesh: {}, material: {}, isPrimitive: {}, hasAttachedMaterial: {}",
+			entityUID,
+			(meshResource ? "OK" : "NULL"),
+			(materialResource ? "OK" : "NULL"),
+			mesh.isPrimitive,
+			mesh.hasAttachedMaterial);
+
+		if (materialResource) {
+			spdlog::info("Entity {}: Material loaded: '{}' (GUID: {})",
+				entityUID, materialResource->GetName(), mesh.m_MaterialGuid.m_guid.to_hex().substr(0, 8));
+		} else {
+			spdlog::warn("Entity {}: Material FAILED to load (GUID: {}, hasAttachedMaterial: {})",
+				entityUID, mesh.m_MaterialGuid.m_guid.to_hex().substr(0, 8), mesh.hasAttachedMaterial);
+		}
+
+		if (meshResource) {
+			spdlog::info("Entity {}: Mesh loaded: {} vertices, isPrimitive: {}",
+				entityUID, meshResource->vertices.size(), mesh.isPrimitive);
+		} else {
+			spdlog::warn("Entity {}: Mesh FAILED to load (GUID: {}, isPrimitive: {}, primitiveType: {})",
+				entityUID,
+				mesh.m_MeshGuid.m_guid.to_hex().substr(0, 8),
+				mesh.isPrimitive,
+				static_cast<int>(mesh.m_PrimitiveType));
+		}*/
+
 		// Skip if resources failed to load
 		if (!meshResource || !materialResource) {
 			static std::unordered_set<uint64_t> warnedEntities;
@@ -321,11 +355,12 @@ bool RenderSystem::RegisterEditorMaterial(rp::Guid guid, std::shared_ptr<Materia
 void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& meshRenderer) {
 	auto& renderSystem = Engine::GetRenderSystem();
 
-	// NOTE: Material sync is now handled by MaterialOverridesSystem
-	// MeshRendererComponent no longer has embedded material properties
-	// Material customization is done via MaterialOverridesComponent → MaterialPropertyBlock
-
-	spdlog::debug("RenderSystem: SyncMaterialFromComponent called for entity {} (no-op, handled by MaterialOverridesSystem)", entityUID);
+	// When material GUID changes, destroy cached material instance
+	// This forces reload of the new material on next render
+	if (renderSystem.m_MaterialInstanceManager && renderSystem.m_MaterialInstanceManager->HasInstance(entityUID)) {
+		spdlog::debug("RenderSystem: Material GUID changed for entity {}, clearing cached instance", entityUID);
+		renderSystem.m_MaterialInstanceManager->DestroyInstance(entityUID);
+	}
 }
 
 void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity entity) {
@@ -469,15 +504,16 @@ std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent
 	//}
 	Handle meshHandle{};
 	auto* ptr = registry.Get<std::vector<std::shared_ptr<Mesh>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
-	return ptr->at(0);
+
+	if (ptr && !ptr->empty()) {
+		return ptr->at(0);
+	}
 
 	// Not found - mesh was not loaded from file and not registered in-memory
-	// This means the editor created a mesh but didn't call RegisterEditorMesh()
 	static std::unordered_set<std::string> warnedMeshGuids;
 	std::string guidStr = meshComp.m_MeshGuid.m_guid.to_hex();
 	if (warnedMeshGuids.find(guidStr) == warnedMeshGuids.end()) {
-		spdlog::warn("RenderSystem: Mesh GUID {} not found (no file or in-memory registration). "
-			"If this is an editor-created mesh, call RenderSystem::RegisterEditorMesh().", guidStr);
+		spdlog::warn("RenderSystem: Mesh GUID {} not found (no file or in-memory registration).", guidStr);
 		warnedMeshGuids.insert(guidStr);
 	}
 
@@ -500,24 +536,24 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 		return std::make_shared<Material>(pbrShader, "DefaultMaterial_Entity_" + std::to_string(entityUID));
 	}
 
-	// Check if already loaded (from file OR in-memory via RegisterInMemory)
+	// Check if already loaded OR load from disk via ResourceSystem::FileEntries
 	auto& registry = ResourceRegistry::Instance();
-	Handle matHandle = registry.Find<std::shared_ptr<Material>>(materialGuid.m_guid);
+	auto* matPtr = registry.Get<std::shared_ptr<Material>>(materialGuid.m_guid);
 
-	if (matHandle) {  // Handle has operator bool()
-		// Already loaded (either from file or RegisterInMemory)
-		auto* pool = registry.Pool<std::shared_ptr<Material>>();
-		if (pool) {
-			auto* matPtr = pool->Ptr(matHandle);
-			if (matPtr) return *matPtr;
-		}
+	if (matPtr && *matPtr) {
+		spdlog::info("LoadMaterialResource: Successfully retrieved material '{}' (GUID: {}) from registry",
+		             (*matPtr)->GetName(), materialGuid.m_guid.to_hex().substr(0, 8));
+		return *matPtr;
 	}
 
 	// Not found - material was not loaded from file and not registered in-memory
 	// This means the editor created a material but didn't call RegisterEditorMaterial()
 	// Create default material as fallback
-	static std::unordered_set<std::string> warnedGuids;
 	std::string guidStr = materialGuid.m_guid.to_hex();
+	spdlog::error("LoadMaterialResource: Material GUID {} NOT FOUND in registry after Get() call! (entity {})",
+	              guidStr.substr(0, 8), entityUID);
+
+	static std::unordered_set<std::string> warnedGuids;
 	if (warnedGuids.find(guidStr) == warnedGuids.end()) {
 		spdlog::warn("RenderSystem: Material GUID {} not found (no file or in-memory registration). Using default material. "
 			"If this is an editor-created material, call RenderSystem::RegisterEditorMaterial().", guidStr);
@@ -614,27 +650,45 @@ REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 		auto sceneRenderer = renderSystem.GetSceneRenderer();
 		auto resourceManager = sceneRenderer->GetResourceManager();
 
-		// Load shader by name (using vert_name and frag_name from MaterialResourceData)
-		std::string vertPath = "assets/shaders/" + matData.vert_name;
-		std::string fragPath = "assets/shaders/" + matData.frag_name;
+		// Load shader - use default PBR shader if material uses standard shaders
+		std::shared_ptr<Shader> shader;
 
-		// Ensure .vert and .frag extensions
-		if (vertPath.find(".vert") == std::string::npos) {
-			vertPath += ".vert";
-		}
-		if (fragPath.find(".frag") == std::string::npos) {
-			fragPath += ".frag";
-		}
+		// Check if material uses default PBR shaders (avoid duplicate loading)
+		// Handle both "main_pbr" and "main_pbr.vert"/"main_pbr.frag"
+		bool usesPBRShader = (matData.vert_name == "main_pbr" || matData.vert_name == "main_pbr.vert") &&
+		                     (matData.frag_name == "main_pbr" || matData.frag_name == "main_pbr.frag");
 
-		auto shader = resourceManager->LoadShader(matData.material_name, vertPath, fragPath);
-		if (!shader) {
-			spdlog::error("Failed to load shader for material '{}': {} / {}",
-						 matData.material_name, vertPath, fragPath);
-			// Try to use default PBR shader as fallback
+		if (usesPBRShader) {
+			// Use the pre-loaded PBR shader from ShaderLibrary (no duplicate loading)
 			shader = renderSystem.GetShaderLibrary()->GetPBRShader();
 			if (!shader) {
-				spdlog::error("No fallback shader available for material '{}'", matData.material_name);
+				spdlog::error("PBR shader not available for material '{}'", matData.material_name);
 				return nullptr;
+			}
+			spdlog::debug("Material '{}': Using default PBR shader (no duplicate loading)", matData.material_name);
+		} else {
+			// Custom shaders - load separately
+			std::string vertPath = "assets/shaders/" + matData.vert_name;
+			std::string fragPath = "assets/shaders/" + matData.frag_name;
+
+			// Ensure .vert and .frag extensions
+			if (vertPath.find(".vert") == std::string::npos) {
+				vertPath += ".vert";
+			}
+			if (fragPath.find(".frag") == std::string::npos) {
+				fragPath += ".frag";
+			}
+
+			shader = resourceManager->LoadShader(matData.material_name, vertPath, fragPath);
+			if (!shader) {
+				spdlog::error("Failed to load custom shader for material '{}': {} / {}",
+							 matData.material_name, vertPath, fragPath);
+				// Fall back to default PBR shader
+				shader = renderSystem.GetShaderLibrary()->GetPBRShader();
+				if (!shader) {
+					spdlog::error("No fallback shader available for material '{}'", matData.material_name);
+					return nullptr;
+				}
 			}
 		}
 
@@ -661,14 +715,31 @@ REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 			material->SetVec4(name, value);
 		}
 
-		// TODO: Load and apply textures from texture_properties (GUID map)
-		// This requires synchronous texture loading from GUIDs
-		if (!matData.texture_properties.empty()) {
-			spdlog::warn("Material '{}' has {} texture properties, but texture loading from GUIDs not yet implemented",
-						matData.material_name, matData.texture_properties.size());
+		// Load and apply textures from texture_properties (GUID map)
+		auto& registry = ResourceRegistry::Instance();
+		int textureUnit = 0;
+		for (const auto& [uniform_name, texture_guid] : matData.texture_properties) {
+			// Skip null GUIDs
+			if (texture_guid == rp::null_guid) {
+				continue;
+			}
+
+			// Load texture from ResourceRegistry (synchronous)
+			auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(texture_guid);
+			if (texturePtr && *texturePtr) {
+				material->SetTexture(uniform_name, *texturePtr, textureUnit);
+				spdlog::info("Material '{}': Loaded texture '{}' (GUID: {}, GPU ID: {})",
+					matData.material_name, uniform_name, texture_guid.to_hex().substr(0, 8), (*texturePtr)->id);
+				++textureUnit;
+			}
+			else {
+				spdlog::warn("Material '{}': Failed to load texture '{}' (GUID: {})",
+					matData.material_name, uniform_name, texture_guid.to_hex().substr(0, 8));
+			}
 		}
 
-		spdlog::info("Successfully loaded material '{}' from resource pipeline", matData.material_name);
+		spdlog::info("Successfully loaded material '{}' from resource pipeline ({} textures)",
+			matData.material_name, textureUnit);
 		return material;
 	},
 	[](std::shared_ptr<Material>&) {
@@ -676,8 +747,46 @@ REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 		// No additional cleanup needed
 	});
 
-//REGISTER_RESOURCE_TYPE(Texture, [](const char* data)->Texture {return Texture(); }, [](Texture&) {});
+// Register Texture resource type
+REGISTER_RESOURCE_TYPE_SHARED_PTR(Texture,
+	[](const char* data) -> std::shared_ptr<Texture> {
+		// Deserialize TextureResourceData from binary
+		TextureResourceData texData = rp::serialization::serializer<"bin">::deserialize<TextureResourceData>(
+			reinterpret_cast<const std::byte*>(data)
+		);
 
-// Note: ShaderAssetData and TextureAssetData registration removed
+		// Load DDS file from blob
+		tinyddsloader::DDSFile ddsFile;
+		auto result = ddsFile.Load(reinterpret_cast<const uint8_t*>(texData.m_TexData.Raw()), texData.m_TexData.Size());
+		if (result != tinyddsloader::Result::Success) {
+			spdlog::error("Failed to load DDS texture from binary data");
+			return nullptr;
+		}
+
+		// Create GPU texture from DDS
+		unsigned int textureID = TextureLoader::CreateGPUTextureCompressed(ddsFile);
+		if (textureID == 0) {
+			spdlog::error("Failed to create GPU texture from DDS data");
+			return nullptr;
+		}
+
+		// Create Texture object
+		auto texture = std::make_shared<Texture>();
+		texture->id = textureID;
+		texture->type = "texture_diffuse";  // Default type
+		texture->path = "";  // No file path for loaded resources
+		texture->target = GL_TEXTURE_2D;
+
+		spdlog::info("Successfully loaded texture from resource pipeline (GPU ID: {})", textureID);
+		return texture;
+	},
+	[](std::shared_ptr<Texture>& texture) {
+		// Cleanup GPU texture
+		if (texture && texture->id != 0) {
+			glDeleteTextures(1, &texture->id);
+			texture->id = 0;
+		}
+	});
+
+// Note: ShaderAssetData registration removed
 // Shaders are now loaded by name from MaterialResourceData
-// Textures will be loaded directly from TextureResourceData when needed

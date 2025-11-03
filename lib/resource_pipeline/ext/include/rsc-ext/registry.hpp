@@ -112,6 +112,9 @@ namespace rp {
 		static void RegisterImporterNativeSuffix(std::uint64_t typehash, std::string const& str) {
 			Instance().m_importer_native_suffix.emplace(typehash, str);
 		}
+		static void RegisterNativeSuffix(std::uint64_t native_type_hash, std::string const& suffix) {
+			Instance().m_native_suffix.emplace(native_type_hash, suffix);
+		}
 		static void Import(std::uint64_t typehash, std::string const& file_name, std::string const& out_name = {}) {
 			auto& imp{ Instance().m_importers };
 			auto res{ imp.find(typehash) };
@@ -388,6 +391,7 @@ namespace {																						\
 		}																																							\
 		rp::ResourceTypeImporterRegistry::RegisterImporterNativeType(type_hash, rp::utility::string_hash(NATIVETYPENAME));											\
 		rp::ResourceTypeImporterRegistry::RegisterImporterNativeSuffix(type_hash, NATIVETYPESUFFIX);																\
+		rp::ResourceTypeImporterRegistry::RegisterNativeSuffix(rp::utility::string_hash(NATIVETYPENAME), NATIVETYPESUFFIX);										\
 		rp::ResourceTypeImporterRegistry::RegisterLoader(type_hash, [](std::string const& str) -> rp::DescriptorWrapper{											\
 			DESC* dptr{ new DESC{rp::serialization::yaml_serializer::deserialize<DESC>(str)} };																		\
 			return rp::DescriptorWrapper{ rp::TypeUnsafeTypeErasedWrapper{dptr , [dptr]{delete dptr; } }, type_hash};												\

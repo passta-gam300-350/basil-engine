@@ -10,10 +10,14 @@ struct MaterialDescriptor {
 	MaterialResourceData material;
 };
 
-inline void CreateMaterial(MaterialDescriptor const& matDesc) {
+inline MaterialResourceData CreateMaterial(MaterialDescriptor const& matDesc) {
 	SerializeBinary(matDesc.material, matDesc.base.m_guid, ".material");
+	return matDesc.material;
 }
 
-//RegisterResourceTypeImporter(TextureDescriptor, TextureResourceData, "texture", ".texture", ImportTexture, ".png", ".jpeg", ".jpg")
+// Register material descriptor importer
+// .mtl extension is for Wavefront material files (imported from .obj models)
+// Manually created materials have no source file (descriptor IS the source)
+RegisterResourceTypeImporter(MaterialDescriptor, MaterialResourceData, "material", ".material", CreateMaterial, ".mtl")
 
 #endif
