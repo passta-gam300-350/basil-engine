@@ -2,27 +2,24 @@
 #define LIB_RESOURCE_CORE_NATIVE_MATERIAL_H
 
 #include <string>
+#include <unordered_map>
 #include <glm/glm.hpp>
-#include "serialisation/guid.h"
+#include <rsc-core/guid.hpp>
+#include "serialization/native_serializer.h"
 
-namespace Resource {
-	struct MaterialAssetData {
-		Guid shader_guid;
-		std::string m_Name;
+struct MaterialResourceData {
+	std::string vert_name;
+	std::string frag_name;
+	std::string material_name;
 
-		// PBR Material Properties (previously in PBRMaterialProperties)
-		glm::vec3 m_AlbedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
-		float m_MetallicValue = 0.7f;
-		float m_RoughnessValue = 0.3f;
+	glm::vec3 albedo = glm::vec3(0.8f, 0.7f, 0.6f);
+	float metallic = 0.7f;
+	float roughness = 0.3f;
 
-		static constexpr uint64_t MATERIAL_MAGIC_VALUE{ iso8859ToBinary("E.MAT") };
-
-		MaterialAssetData& operator>>(std::ostream& outp);
-		MaterialAssetData const& operator>>(std::ostream& outp) const;
-
-		//rets remaining buffer size
-		std::uint64_t DumpToMemory(char* buff, std::uint64_t buffer_size) const;
-	};
-}
+	std::unordered_map<std::string, float> float_properties;
+	std::unordered_map<std::string, glm::vec3> vec3_properties;
+	std::unordered_map<std::string, glm::vec4> vec4_properties;
+	std::unordered_map<std::string, rp::Guid> texture_properties;
+};
 
 #endif

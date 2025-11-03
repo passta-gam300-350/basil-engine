@@ -4,27 +4,31 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <rsc-ext/rp.hpp>
 #include <importer/importer.hpp>
+#include <chrono>
+
+using ResourceType = std::uint64_t;
 
 //future improvements
 // TODO: do not recompute the subdirectories, store it and update using filewatcher
-struct ResourceTypeGuid {
-	Resource::ResourceType m_Type;
-	Resource::Guid m_Guid;
-};
-
 struct AssetManager {
-	std::map<std::string, ResourceTypeGuid> m_AssetNameGuid; //potentially unsafe
-	std::map<Resource::Guid, std::string> m_AssetReverse; //reverse lookup
+	std::map<std::string, rp::BasicIndexedGuid> m_AssetNameGuid; //potentially unsafe
+	std::map<rp::BasicIndexedGuid, std::string> m_AssetReverse; //reverse lookup
 
-	std::unordered_multimap<std::string, Resource::ResourceDescriptor> m_Descriptors;
+	std::unordered_multimap<std::string, std::string> m_FileList;
 	std::string m_RootPath;
 	std::string m_CurrentPath;
 	std::string m_ImportedAssetPath;
 	std::thread m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 	std::mutex m_DescriptorListMtx;
 
+	std::unique_ptr<rp::DescriptorWrapper> m_InspectedDescriptor;
+	std::string m_InspectedDescriptorPath;
+
 	std::atomic<bool> m_ShouldClose;
+	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
+	std::atomic<bool> m_NeedsRescan;
 
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
@@ -33,22 +37,32 @@ struct AssetManager {
 	~AssetManager() {
 		m_ShouldClose = true;
 		m_IndexingWorker.join();
-		ExportAssetList();
+		//ExportAssetList();
 	}
 		
-	Resource::Guid ResolveAssetGuid(std::string const&);
-	std::string ResolveAssetName(Resource::Guid);
+	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);
+	std::string ResolveAssetName(rp::BasicIndexedGuid);
 
 	void FileIndexingWorkerLoop();
+	void RescanDirectory();
 
-	void ImportAsset(Resource::ResourceDescriptor&);
+	void ImportAsset(std::string const&);
 	void ImportAssetDirectory(std::string const&);
 
+	//import settings for 1 active descriptor
+	void LoadImportSettings(std::string const&);
+	void UnloadImportSetting(std::string const& = {});
+	void ClearImportSetting();
+	rp::DescriptorWrapper& GetImportSettings();
+	std::string GetImportSettingsPath();
+
 	auto GetFiles(std::string const& dir) {
-		return m_Descriptors.equal_range(dir);
+		return m_FileList.equal_range(dir);
 	}
 
-	std::vector<std::string> GetAssetTypeNames(Resource::ResourceType);
+	using ResourceType = std::uint64_t;
+
+	std::vector<std::string> GetAssetTypeNames(ResourceType);
 
 	void ExportAssetList();
 

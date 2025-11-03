@@ -3,8 +3,13 @@
 #include <glm/glm.hpp>
 
 #include "Component/Transform.hpp"
+#include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
 #include "Render/Camera.h"
+#include "Particles/ParticleComponent.h"
+#include "Rendering/ParticleEmitter.h"
+#include "Utility/Particle.h"
+
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -110,12 +115,6 @@ void ReflectionRegistry::SetupNativeTypes() {
 void ReflectionRegistry::SetupEngineTypes()
 {
 
-	RegisterReflectionComponent<MeshRendererComponent::Material>(
-		"Material",
-		MemberRegistrationV<&MeshRendererComponent::Material::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::Material::m_AlbedoColor, "m_AlbedoColor">
-	);
-
 	RegisterReflectionComponent<VisibilityComponent>(
 		"VisibilityComponent",
 		MemberRegistrationV<&VisibilityComponent::m_IsVisible, "m_IsVisible">
@@ -128,29 +127,41 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&TransformComponent::m_Translation, "m_Trans">
 	);
 
+	/*RegisterReflectionComponent<rp::BasicIndexedGuid>(
+		"IndexedGuid",
+		MemberRegistrationV<&rp::BasicIndexedGuid::m_guid, "Guid">,
+		MemberRegistrationV<&rp::BasicIndexedGuid::m_typeindex, "Type Index">
+	);*/
+
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
 		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
 		MemberRegistrationV<&MeshRendererComponent::hasAttachedMaterial, "hasAttachedMaterial">,
 		MemberRegistrationV<&MeshRendererComponent::isPrimitive, "isPrimitive">,
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
-		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">,
-		MemberRegistrationV<&MeshRendererComponent::material, "material">
-
+		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
 
-
+	//RegisterReflectionComponent<RigidBodyComponent>(
+	//			"RigidBodyComponent",
+	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
+	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
+	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
+	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+	//);
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",
-		MemberRegistrationV<&LightComponent::m_Type, "m_Type">,
-		MemberRegistrationV<&LightComponent::m_Direction, "m_Direction">,
-		MemberRegistrationV<&LightComponent::m_Color, "m_Color">,
-		MemberRegistrationV<&LightComponent::m_Intensity, "m_Intensity">,
-		MemberRegistrationV<&LightComponent::m_Range, "m_Range">,
-		MemberRegistrationV<&LightComponent::m_InnerCone, "m_InnerCone">,
-		MemberRegistrationV<&LightComponent::m_OuterCone, "m_OuterCone">,
-		MemberRegistrationV<&LightComponent::m_IsEnabled, "m_IsEnabled">
+		MemberRegistrationV<&LightComponent::m_Type, "Type">,
+		MemberRegistrationV<&LightComponent::m_Color, "Color">,
+		MemberRegistrationV<&LightComponent::m_IsEnabled, "Enabled">,
+		MemberRegistrationV<&LightComponent::m_Intensity, "Intensity">,
+		MemberRegistrationV<&LightComponent::m_Direction, "[Dir/Spot] Direction">,
+		MemberRegistrationV<&LightComponent::m_Range, "[Point/Spot] Range">,
+		MemberRegistrationV<&LightComponent::m_InnerCone, "[Spot] Inner Cone Angle">,
+		MemberRegistrationV<&LightComponent::m_OuterCone, "[Spot] Outer Cone Angle">
 	);
 
 	RegisterReflectionComponent<CameraComponent>(
@@ -167,4 +178,57 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&CameraComponent::m_Yaw, "m_Yaw">,
 		MemberRegistrationV<&CameraComponent::m_Pitch, "m_Pitch">
 	);
+
+	RegisterReflectionComponent<MaterialOverridesComponent>(
+		"MaterialOverridesComponent",
+		MemberRegistrationV<&MaterialOverridesComponent::floatOverrides, "floatOverrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::vec3Overrides, "vec3Overrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::vec4Overrides, "vec4Overrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">,
+		MemberRegistrationV<&MaterialOverridesComponent::textureOverrides, "textureOverrides">
+	);
+
+	// Register particle enums
+	RegisterReflectionComponent<EmissionType>("EmissionType");
+	RegisterReflectionComponent<BlendMode>("BlendMode");
+
+	// Register ParticleEmitterConfiguration (nested config struct)
+	RegisterReflectionComponent<ParticleEmitterConfiguration>(
+		"ParticleEmitterConfiguration",
+		// Emitter transform
+		MemberRegistrationV<&ParticleEmitterConfiguration::position, "Position">,
+		// Emission shape
+		MemberRegistrationV<&ParticleEmitterConfiguration::emissionType, "Emission Type">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::emitterSize, "Emitter Size (Box)">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::sphereRadius, "Sphere Radius">,
+		// Emission settings
+		MemberRegistrationV<&ParticleEmitterConfiguration::emissionRate, "Emission Rate">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::maxParticles, "Max Particles">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::looping, "Looping">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::duration, "Duration">,
+		// Particle lifetime
+		MemberRegistrationV<&ParticleEmitterConfiguration::minLifeTime, "Min Lifetime">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::maxLifeTime, "Max Lifetime">,
+		// Visual properties
+		MemberRegistrationV<&ParticleEmitterConfiguration::startColor, "Start Color">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::endColor, "End Color">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::startSize, "Start Size">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::endSize, "End Size">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::startRotation, "Start Rotation">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::rotationSpeed, "Rotation Speed">,
+		// Physics
+		MemberRegistrationV<&ParticleEmitterConfiguration::startVelocity, "Start Velocity">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::velocityRandomness, "Velocity Randomness">,
+		MemberRegistrationV<&ParticleEmitterConfiguration::acceleration, "Acceleration">
+	);
+
+	RegisterReflectionComponent<ParticleComponent>(
+		"ParticleComponent",
+		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
+		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
+		MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
+		MemberRegistrationV<&ParticleComponent::autoPlay, "AutoPlay">,
+		MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">,
+		MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
+		);
 }

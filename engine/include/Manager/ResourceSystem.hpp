@@ -4,7 +4,7 @@
 #include <memory>
 #include <jobsystem.hpp>
 #include <hashtable.hpp>
-#include <serialisation/guid.h>
+#include <rsc-core/guid.hpp>
 #include <cstdint>
 #include <cstddef>
 #include <unordered_map>
@@ -41,7 +41,7 @@ ResourceTypeId_t ResourceType_Id() noexcept {
 #pragma warning(disable:4324) //disables alignas padding warning
 template <typename T>
 struct ResourceSlot {
-    Resource::Guid m_Guid{ Resource::null_guid };
+    rp::Guid m_Guid{ rp::null_guid };
     std::uint32_t m_Generation{};
     bool m_Ready{};
     bool m_Alive{};
@@ -68,7 +68,7 @@ public:
     }
 
     //get async, check handle, functionally equivalent of std::future but unlimited gets
-    Handle GetHandle(Resource::Guid id);
+    Handle GetHandle(rp::Guid id);
 
     Pointer Ptr(Handle h) noexcept {
         if (h.m_Index >= m_Slots.size()) return nullptr;
@@ -84,26 +84,57 @@ public:
         return &s.value();
     }
 
-    Handle Find(Resource::Guid guid) const noexcept {
+    Handle Find(rp::Guid guid) const noexcept {
         auto it = m_GuidSlots.find(guid);
         if (it == m_GuidSlots.end()) return {};
         return MakeHandle(it->second);
     }
 
-    Resource::Guid GetGuid(Handle h) const noexcept {
-        if (h.m_Index >= m_Slots.size()) return Resource::null_guid;
+    rp::Guid GetGuid(Handle h) const noexcept {
+        if (h.m_Index >= m_Slots.size()) return rp::null_guid;
         auto& s = m_Slots[h.m_Index];
-        if (!s.m_Alive || s.m_Generation != h.m_Generation) return Resource::null_guid;
+        if (!s.m_Alive || s.m_Generation != h.m_Generation) return rp::null_guid;
         return s.m_Guid;
     }
 
-    bool Unload(Resource::Guid id) {
+    bool Unload(rp::Guid id) {
         auto it = m_GuidSlots.find(id);
         if (it == m_GuidSlots.end()) return false;
         const auto idx = it->second;
         DestroySlot(idx);
         m_GuidSlots.erase(it);
         FreeSlot(idx);
+        return true;
+    }
+
+    /**
+     * @brief Insert a pre-loaded resource directly into the pool (for in-memory editor resources)
+     * @param guid GUID to associate with the resource
+     * @param resource Already-constructed resource to insert
+     * @return true if inserted, false if GUID already exists
+     */
+    bool InsertPreloaded(rp::Guid guid, T resource) {
+        // Check if GUID already exists
+        auto it = m_GuidSlots.find(guid);
+        if (it != m_GuidSlots.end()) {
+            return false;  // Already exists
+        }
+
+        // Allocate slot and insert resource
+        std::uint32_t idx = AllocateSlot();
+        auto& slot = m_Slots[idx];
+        slot.m_Guid = guid;
+        slot.m_Alive = true;
+        slot.m_Ready = true;  // Immediately ready (no async loading)
+
+        // Move-construct or copy-construct into slot storage
+        if constexpr (std::is_move_constructible_v<T>) {
+            new (slot.storage) T(std::move(resource));
+        } else {
+            new (slot.storage) T(resource);
+        }
+
+        m_GuidSlots.emplace(guid, idx);
         return true;
     }
 
@@ -161,19 +192,19 @@ private:
     UnloaderFn m_Unloader;
     std::vector<ResourceSlot<T>> m_Slots;
     std::vector<std::uint32_t> m_FreeList;
-    std::unordered_map<Resource::Guid, std::uint32_t> m_GuidSlots;
+    std::unordered_map<rp::Guid, std::uint32_t> m_GuidSlots;
 };
 
 struct ResourceRegistry {
     //type-erased vtable mapping for resource type
     struct VTable {
-        std::function<Handle(void*, Resource::Guid)> m_Get;
+        std::function<Handle(void*, rp::Guid)> m_Get;
         std::function<void*()> m_GetPool;
-        std::function<Handle(void*, Resource::Guid)> m_Find;
-        std::function<Resource::Guid(void*, Handle)> m_GetGuid;
+        std::function<Handle(void*, rp::Guid)> m_Find;
+        std::function<rp::Guid(void*, Handle)> m_GetGuid;
         std::function<void* (void*, Handle)> m_Ptr;
         std::function<const void* (const void*, Handle)> m_ConstPtr;
-        std::function<bool (void*, Resource::Guid)> m_Unload;
+        std::function<bool (void*, rp::Guid)> m_Unload;
     };
 
     struct Entry {
@@ -206,17 +237,17 @@ struct ResourceRegistry {
 
         e.m_Vt = {
             //get
-            [](void* p, Resource::Guid g) -> Handle {
+            [](void* p, rp::Guid g) -> Handle {
                 return static_cast<PoolType<T>*>(p)->GetHandle(g);
             },
             //get_pool
             []() -> void* { return static_cast<void*>(&pool); },
             //find
-            [](void* p, Resource::Guid g) -> Handle {
+            [](void* p, rp::Guid g) -> Handle {
                 return static_cast<PoolType<T>*>(p)->Find(g);
             },
             //guid
-            [](void* p, Handle h) -> Resource::Guid {
+            [](void* p, Handle h) -> rp::Guid {
                 return static_cast<PoolType<T>*>(p)->GetGuid(h);
             },
             //ptr
@@ -228,7 +259,7 @@ struct ResourceRegistry {
                 return static_cast<const void*>(static_cast<const PoolType<T>*>(p)->Ptr(h));
             },
             //unload
-            [](void* p, Resource::Guid g) -> bool {
+            [](void* p, rp::Guid g) -> bool {
                 return static_cast<PoolType<T>*>(p)->Unload(g);
             }
         };
@@ -243,7 +274,7 @@ struct ResourceRegistry {
     }
 
     template <typename T>
-    T* Get(Resource::Guid guid, Handle* out_handle = nullptr) {
+    T* Get(rp::Guid guid, Handle* out_handle = nullptr) {
         auto* pool = Pool<T>();
         if (!pool) return nullptr;
         Handle h = pool->GetHandle(guid);
@@ -252,21 +283,76 @@ struct ResourceRegistry {
     }
 
     template <typename T>
-    Handle Find(Resource::Guid id) {
+    T* Get(rp::TypedGuid<T> guid) {
+        return Get<T>(guid.m_guid);
+    }
+
+    template <rp::utility::static_string ss>
+    typename rp::TypeNameGuid<ss>::type* Get(rp::TypeNameGuid<ss> guid) {
+        return Get<rp::TypeNameGuid<ss>::type>(guid.m_guid);
+    }
+
+    template <typename T>
+    Handle Find(rp::Guid id) {
         auto* pool = Pool<T>();
         return pool ? pool->Find(id) : Handle{};
     }
 
     template <typename T>
-    Resource::Guid GetGuid(Handle h) {
+    rp::Guid GetGuid(Handle h) {
         auto* pool = Pool<T>();
-        return pool ? pool->GetGuid(h) : Resource::null_guid;
+        return pool ? pool->GetGuid(h) : rp::null_guid;
     }
 
     template <typename T>
-    bool Unload(Resource::Guid guid) {
+    bool Unload(rp::Guid guid) {
         auto* pool = Pool<T>();
         return pool ? pool->Unload(guid) : false;
+    }
+
+    /**
+     * @brief Register an in-memory resource (for editor-created assets without files)
+     *
+     * This allows registering resources that don't have backing files, such as
+     * materials/meshes created by the editor at runtime. These resources can later
+     * transition to file-based when saved.
+     *
+     * @tparam T Resource type (e.g., std::shared_ptr<Material>)
+     * @param guid GUID to associate with the resource
+     * @param resource The resource instance to register
+     * @return true if registered successfully, false if GUID already exists
+     *
+     * @note The resource type must be registered via REGISTER_RESOURCE_TYPE before use
+     * @note Editor is responsible for unregistering resources when deleted
+     */
+    template <typename T>
+    bool RegisterInMemory(rp::Guid guid, T resource) {
+        auto* pool = Pool<T>();
+        if (!pool) {
+            spdlog::error("ResourceRegistry: Cannot register in-memory resource - type not registered");
+            return false;
+        }
+
+        bool success = pool->InsertPreloaded(guid, std::move(resource));
+        if (!success) {
+            spdlog::warn("ResourceRegistry: GUID {} already exists, skipping registration", guid.to_hex());
+        }
+        return success;
+    }
+
+    /**
+     * @brief Unregister an in-memory resource
+     *
+     * Removes a resource previously registered via RegisterInMemory(). This should
+     * be called when deleting unsaved editor assets.
+     *
+     * @tparam T Resource type
+     * @param guid GUID of the resource to unregister
+     * @return true if unregistered, false if not found
+     */
+    template <typename T>
+    bool UnregisterInMemory(rp::Guid guid) {
+        return Unload<T>(guid);  // Unload handles cleanup
     }
 
 private:
@@ -364,7 +450,7 @@ private:
 
 struct ResourceSystem {
     struct FileEntry {
-        Resource::Guid m_Guid;
+        rp::Guid m_Guid;
         std::string m_Path;
         std::uint64_t m_Offset;
         std::uint64_t m_Size;
@@ -393,7 +479,7 @@ struct ResourceSystem {
         return inst;
     }
 
-    const char* GetMappedFilePtr(Resource::Guid);
+    const char* GetMappedFilePtr(rp::Guid);
     template <typename Fn, typename ...Args>
     auto Dispatch(Fn&& fn, Args&&... args) {
         return m_JobSystem.submit({}, {}, JobSys::make_packaged_job(std::forward<Fn>(fn), std::forward<Args>(args)...));
@@ -403,7 +489,7 @@ struct ResourceSystem {
     static void LoadConfig(YAML::Node& cfg);
     static YAML::Node GetDefaultConfig();
 
-    std::unordered_map<Resource::Guid, FileEntry> m_FileEntries;
+    std::unordered_map<rp::Guid, FileEntry> m_FileEntries;
     std::unordered_map<std::string, MemoryMappedFile> m_MappedIO;
 
 private:
@@ -434,10 +520,20 @@ private:
         static T##_resource_registrar g_##T##_resource_registrar;    \
     }
 
+#define REGISTER_RESOURCE_TYPE_ALIASE(T, A, loader_fn, unloader_fn)            \
+    namespace {                                                      \
+        struct A##_resource_registrar {                              \
+            A##_resource_registrar() {                               \
+                ResourceRegistry::Instance().RegisterType<T>(       \
+                    loader_fn, unloader_fn, #A);                     \
+            }                                                        \
+        };                                                           \
+        static A##_resource_registrar g_##A##_resource_registrar;    \
+    }
 
 
 template <typename T, stl_allocator_t<T> A>
-Handle ResourcePool<T, A>::GetHandle(Resource::Guid guid) {
+Handle ResourcePool<T, A>::GetHandle(rp::Guid guid) {
     auto it = m_GuidSlots.find(guid);
     if (it != m_GuidSlots.end()) {
         return MakeHandle(it->second);
@@ -459,7 +555,7 @@ Handle ResourcePool<T, A>::GetHandle(Resource::Guid guid) {
             }
         }
         catch (...) {
-            spdlog::error("[Resource System] Error loading file for guid {}", guid.to_hex_no_delimiter());
+            spdlog::error("[Resource System] Error loading file for guid {}", guid.to_hex());
             DestroySlot(idx);
             FreeSlot(idx);
             return;

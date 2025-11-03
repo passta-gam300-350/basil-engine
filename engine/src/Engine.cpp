@@ -8,6 +8,7 @@
 #include "Ecs/ecs.h"
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
+#include "System/MaterialOverridesSystem.hpp"
 #include "Render/Camera.h"
 #include "System/Audio.hpp"
 
@@ -58,6 +59,16 @@ void Engine::Init(std::string const& cfg ) {
 	Instance().m_World = WorldRegistry::NewWorld();
 	if (cfg.empty()) {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
+
+		// Create and initialize RenderSystem
+		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+		Instance().m_RenderSystem->Init();
+		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+
+		// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
+		MaterialOverridesSystem::Instance().Init();
+
+		Scheduler::CompileJobSchedule();
 		//InputManager::Get_Instance()->Setup_Callbacks();
 		//ObjectManager::GetInstance().CreateGameObject();
 		return;
@@ -96,7 +107,16 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	RenderSystem::System().Init();
+	// Create and initialize RenderSystem
+	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+	Instance().m_RenderSystem->Init();
+
+	// Set up RenderSystem observers
+	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+
+	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
+	MaterialOverridesSystem::Instance().Init();
+
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
@@ -104,19 +124,20 @@ void Engine::Init(std::string const& cfg ) {
 
 void Engine::CoreUpdate() {
 	Engine& instance{ Instance() };
-	PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
+	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
 	TransformSystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
+	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
-	RenderSystem::System().Update(instance.m_World);
+	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	AudioSystem::System().Update(instance.m_World); // [TEMP]
-	PF_END_FRAME();
+	//PF_END_FRAME();
 }
 
 void Engine::Update() {
@@ -159,7 +180,7 @@ void Engine::UpdateDebug() {
 	if (frame_log_rate && frame_counter >= frame_log_rate) {
 		Profiler::instance().printLastFrameSummary();
 		Engine::Instance().GetInfo().m_FPS = Profiler::instance().getLastFps();
-
+		Engine::Instance().GetInfo().m_DeltaTime = 1 / Engine::Instance().GetInfo().m_FPS;
 	}
 
 	frame_number++;
@@ -213,10 +234,16 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	AudioSystem::System().Init(); // [TEMP]
-	RenderSystem::System().Init();
+	// Create and initialize RenderSystem
+	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+	Instance().m_RenderSystem->Init();
+
+	// Set up RenderSystem observers
+	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+
 	Scheduler::CompileJobSchedule();
 
+	AudioSystem::System().Init(); // [TEMP]
 	// [TEMP] Test loading and playing sound until level loading is implemented
 	AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/in_game_placeholderOld.ogg", true, false, true, false, false, true);
 	AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/ambient_wind_howling.ogg", true, true, true, false, false, true);
@@ -237,7 +264,10 @@ void Engine::Exit() {
 	SystemRegistry::Exit();
 	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
-	RenderSystem::System().Exit();
+	if (Instance().m_RenderSystem) {
+		Instance().m_RenderSystem->Exit();
+		Instance().m_RenderSystem.reset();
+	}
 	ResourceSystem::Release();
 	Scheduler::Release();
 	AudioSystem::System().Exit(); // [TEMP]
@@ -246,6 +276,10 @@ void Engine::Exit() {
 
 world Engine::GetWorld() {
 	return Instance().m_World;
+}
+
+double Engine::GetDeltaTime() {
+	return Instance().m_Info.m_DeltaTime;
 }
 
 void Engine::GenerateDefaultConfig() {
@@ -275,6 +309,13 @@ Window& Engine::GetWindowInstance() {
 	return *Instance().m_Window;
 }
 
+RenderSystem& Engine::GetRenderSystem() {
+	if (!Instance().m_RenderSystem) {
+		throw std::runtime_error("RenderSystem not created - call Engine::Init() first");
+	}
+	return *Instance().m_RenderSystem;
+}
+
 bool Engine::WindowShouldClose() {
 	return GetWindowInstance().ShouldClose();
 }
@@ -286,7 +327,9 @@ Logger::Sink* Engine::GetSink() {
 
 void Engine::BeginFrame()
 {
-	PF_BEGIN_FRAME(Instance().m_Info.m_TotalFrameCt);
+	Engine& instance = Instance();
+
+	PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 }
 
 void Engine::EndFrame()

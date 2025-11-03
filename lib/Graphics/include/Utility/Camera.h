@@ -106,6 +106,6 @@ private:
 	float m_OrthographicSize = 10.f;
 
 	// Settings (previously public)
-	float m_MovementSpeed = 2.5f;
+	float m_MovementSpeed = 10.0f;
 	float m_MouseSensitivity = 0.1f;
 };

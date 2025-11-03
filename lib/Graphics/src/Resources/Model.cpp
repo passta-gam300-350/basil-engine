@@ -49,13 +49,17 @@ void Model::loadModel(std::string const &path)
 
 void Model::processNode(aiNode *node, const aiScene *scene)
 {
+    // Get node name for selection grouping
+    std::string nodeName = node->mName.C_Str();
+
     // process each mesh located at the current node
     for(unsigned int i = 0; i < node->mNumMeshes; ++i)
     {
-        // the node object only contains indices to index the actual objects in the scene. 
+        // the node object only contains indices to index the actual objects in the scene.
         // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(processMesh(mesh, scene));
+        meshNodeNames.push_back(nodeName);  // Store node name for this mesh
     }
     // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
     for(unsigned int i = 0; i < node->mNumChildren; ++i)
@@ -129,93 +133,46 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 
-    // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
-    // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER.
-    // Same applies to other texture as the following list summarizes:
-    // diffuse: texture_diffuseN
-    // specular: texture_specularN
-    // normal: texture_normalN
+    // Load PBR textures using proper Assimp texture types
+    // This matches standard MTL keywords: map_Kd, norm, map_Pm, map_Pr, etc.
 
-    // 1. diffuse maps
+    // 1. Diffuse/Albedo maps (map_Kd in MTL)
     std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-    
-    // 2. Load all specular-type textures, but separate them by filename
-    std::vector<Texture> allSpecularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-    
-    // Separate metallic and roughness based on filename
-    for (auto& tex : allSpecularMaps) {
-        if (tex.path.find("Metallic") != std::string::npos ||
-            tex.path.find("metallic") != std::string::npos) {
-            tex.type = "texture_metallic";
-            // Update the type in textures_loaded as well
-            for (auto& loadedTex : textures_loaded) {
-                if (loadedTex.path == tex.path) {
-                    loadedTex.type = "texture_metallic";
-                    break;
-                }
-            }
-            textures.push_back(tex);
-        } else if (tex.path.find("Roughness") != std::string::npos ||
-                   tex.path.find("roughness") != std::string::npos) {
-            tex.type = "texture_roughness";
-            // Update the type in textures_loaded as well
-            for (auto& loadedTex : textures_loaded) {
-                if (loadedTex.path == tex.path) {
-                    loadedTex.type = "texture_roughness";
-                    break;
-                }
-            }
-            textures.push_back(tex);
-        } else {
-            textures.push_back(tex); // Keep as specular
-        }
-    }
-    
-    // 3. normal maps - Try different Assimp types for normal maps
-    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
-    
-    // 4. height maps - Load height textures separately 
-    std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_height");
-    
-    // Separate normal and height based on filename if both are in HEIGHT type
-    std::vector<Texture> separatedNormals;
-    std::vector<Texture> separatedHeights;
 
-    for (const auto& tex : heightMaps) {
-        if (tex.path.find("Normal") != std::string::npos ||
-            tex.path.find("normal") != std::string::npos) {
-            Texture normalTex = tex;
-            normalTex.type = "texture_normal";
-            // Update the type in textures_loaded as well
-            for (auto& loadedTex : textures_loaded) {
-                if (loadedTex.path == tex.path) {
-                    loadedTex.type = "texture_normal";
-                    break;
-                }
-            }
-            separatedNormals.push_back(normalTex);
-        } else {
-            // Default to height for both explicit Height/height filenames and unknown
-            separatedHeights.push_back(tex);
-        }
-    }
-    
-    // Combine normal maps from both sources
-    normalMaps.insert(normalMaps.end(), separatedNormals.begin(), separatedNormals.end());
-    
-    // Use separated heights, or try displacement type if none found
-    if (separatedHeights.empty()) {
-        separatedHeights = loadMaterialTextures(material, aiTextureType_DISPLACEMENT, "texture_height");
-    }
-    
+    // 2. Normal maps - Support both 'norm' and 'map_Bump' keywords
+    // 2a. Load from NORMALS type (norm keyword)
+    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-    textures.insert(textures.end(), separatedHeights.begin(), separatedHeights.end());
-    
-    // 5. roughness maps - Check shininess type (Assimp maps roughness textures here sometimes)
-    std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_SHININESS, "texture_roughness");
+
+    // 2b. Load from HEIGHT type (map_Bump/bump keyword - also used for bump/normal mapping)
+    std::vector<Texture> bumpMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+    textures.insert(textures.end(), bumpMaps.begin(), bumpMaps.end());
+
+    // 3. Metallic maps (map_Pm in MTL - PBR standard)
+    std::vector<Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_metallic");
+    textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
+
+    // 4. Roughness maps (map_Pr in MTL - PBR standard)
+    std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness");
     textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
-    
+
+    // 5. Ambient Occlusion maps (map_Ka or dedicated AO keyword)
+    std::vector<Texture> aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao");
+    textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+
+    // 6. Emissive maps (map_Ke in MTL)
+    std::vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive");
+    textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
+
+    // 7. Specular maps (map_Ks in MTL - legacy Phong workflow)
+    std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+    // 8. Displacement maps (disp in MTL - for actual geometric displacement)
+    std::vector<Texture> displacementMaps = loadMaterialTextures(material, aiTextureType_DISPLACEMENT, "texture_height");
+    textures.insert(textures.end(), displacementMaps.begin(), displacementMaps.end());
+
 
     // return a mesh object created from the extracted mesh data
     return Mesh(vertices, indices, textures);

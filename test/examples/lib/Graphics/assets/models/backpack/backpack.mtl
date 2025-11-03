@@ -1,5 +1,6 @@
 # Blender MTL File: 'None'
 # Material Count: 1
+# Note: This is a legacy Blinn-Phong model (not PBR)
 
 newmtl Scene_-_Root
 Ns 225.000000
@@ -11,5 +12,5 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd diffuse.jpg
-map_Bump normal.png
+norm normal.png
 map_Ks specular.jpg

@@ -1,9 +1,30 @@
-// THIS IS THE ACTUAL LEVEL EDITOR!!!,
+/******************************************************************************/
+/*!
+\file   EditorMain.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+		Eirwen (c.lau\@digipen.edu)
+		Hai Jie (haijie.w\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contain the implmentation for the EditorMain class, which is the
+main editor screen handling the viewport, entity management, and various editor panels.
+It integrates with the rendering system and ECS to provide a functional editor environment.
+It includes features like scene exploration, entity inspection, and camera controls. It allows
+for creating, selecting, and manipulating entities within the scene.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 
 #include <Render/Render.h>
 #include <Render/Camera.h>
 #include <Engine.hpp>
 #include <Component/Transform.hpp>
+#include <Component/MaterialOverridesComponent.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
@@ -24,7 +45,13 @@
 
 #include "Physics/Physics_System.h"
 #include <Messaging/Messaging_System.h>
+
+
 #define UNREF_PARAM(x) x;
+
+RegisterImguiDescriptorInspector(ModelDescriptor);
+RegisterImguiDescriptorInspector(TextureDescriptor);
+RegisterImguiDescriptorInspector(MaterialDescriptor);
 
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
@@ -82,11 +109,38 @@ void EditorMain::update()
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
 
+struct s2 {
+	std::string some_value;
+	bool is_true;
+	glm::vec4 v4;
+};
+
+struct p {
+	s2 struct2;
+};
+
+enum class testemum : std::uint8_t {
+	pollo,
+	water,
+	enum1
+};
+
+struct test {
+	int t1;
+	double t2{3.14f};
+	testemum enum_test;
+	std::string t3;
+	glm::vec3 vec3;
+	std::vector<p> vector_of_ints;
+	std::map<std::string, s2> map_of_str_bool;
+};
+
+test testa{};
+
 
 void EditorMain::render()
 {
 	if (!active) return;
-	Engine::BeginFrame();
 
 	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -143,9 +197,15 @@ void EditorMain::render()
 	Render_CameraControls();
 	Render_AssetBrowser();
 
+	ImGui::Begin("TestReflection");
+	ImguiInspectTypeRenderer::present(testa, "testreflectmenu");
+	ImGui::End();
+
 	engineService.m_cont->m_container_is_presentable.release();
 	engineService.start();
 }
+
+
 
 void EditorMain::cleanup()
 {
@@ -159,7 +219,7 @@ void EditorMain::cleanup()
 	//PhysSys.GetBodyInterface().DestroyBody(floorplan->GetID());
 
 	PhysSys.Exit();
-	m_AssetManager.reset(nullptr);
+	//m_AssetManager.reset(nullptr);
 	//Engine::Exit();
 	///Engine::
 	engineService.release();
@@ -241,6 +301,7 @@ void EditorMain::Render_Inspector()
 
 void EditorMain::Render_Components()
 {
+	std::lock_guard lg{ engineService.m_cont->m_mtx };
 	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
 	auto& type_map{ ReflectionRegistry::types() };
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
@@ -287,20 +348,50 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
-				if (meta_type.size_of() <= sizeof(int))
-				{
-					int enum_value = *static_cast<const int*>(val_ptr);
-					ImGui::InputInt(field_name.c_str(), &enum_value);
+
+				// Properly read enum value based on its underlying type size
+				int enum_value = 0;
+				if (meta_type.size_of() == sizeof(uint8_t)) {
+					enum_value = *static_cast<const uint8_t*>(val_ptr);
 				}
-				else
-				{
+				else if (meta_type.size_of() == sizeof(uint16_t)) {
+					enum_value = *static_cast<const uint16_t*>(val_ptr);
+				}
+				else if (meta_type.size_of() == sizeof(uint32_t)) {
+					enum_value = *static_cast<const uint32_t*>(val_ptr);
+				}
+				else {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
+
+				ImGui::InputInt(field_name.c_str(), &enum_value);
 			}
 
-			if (Resource::Guid* v = value.try_cast<Resource::Guid>())
-				ImGui::Text((field_name + v->to_hex_no_delimiter()).c_str());
-
+			if (rp::BasicIndexedGuid* v = value.try_cast<rp::BasicIndexedGuid>()) {
+				std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(v->m_typeindex);
+				std::string currentselectionname = m_AssetManager->ResolveAssetName(*v);
+				std::size_t type = v->m_typeindex;
+				assetnames.emplace_back("");
+				auto it{ std::find_if(assetnames.begin(), assetnames.end(), [currentselectionname](std::string const& a) {return currentselectionname == a; }) };
+				if (it != assetnames.end()) {
+					std::swap(*it, assetnames.front());
+				}
+				int current_item{};
+				ImGui::Text(field_name.c_str());
+				ImGui::SameLine(150);
+				ImGui::SetNextItemWidth(-1);
+				ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+					auto& vec = *static_cast<std::vector<std::string>*>(data);
+					if (idx < 0 || idx >= vec.size()) return false;
+					*out_text = vec[idx].c_str();
+					return true;
+					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
+				if (current_item != 0) {
+					*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+					v->m_typeindex = type;
+					is_dirty = true;
+				}
+			}
 
 			// primitives
 			else if (int* vi = value.try_cast<int>()) {
@@ -325,6 +416,88 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			else if (bool* vb = value.try_cast<bool>()) {
 				if (ImGui::Checkbox(field_name.c_str(), vb)) {
 					is_dirty = true;
+				}
+			}
+			// Handle unordered_map<std::string, float>
+			else if (auto* map_float = value.try_cast<std::unordered_map<std::string, float>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_float->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_float) {
+							ImGui::PushID(idx++);
+							if (ImGui::InputFloat(key.c_str(), &val)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::vec3>
+			else if (auto* map_vec3 = value.try_cast<std::unordered_map<std::string, glm::vec3>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_vec3->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_vec3) {
+							ImGui::PushID(idx++);
+							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
+							if (ImGui::ColorEdit3(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::vec4>
+			else if (auto* map_vec4 = value.try_cast<std::unordered_map<std::string, glm::vec4>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_vec4->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						int idx = 0;
+						for (auto& [key, val] : *map_vec4) {
+							ImGui::PushID(idx++);
+							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
+							if (ImGui::ColorEdit4(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, glm::mat4>
+			else if (auto* map_mat4 = value.try_cast<std::unordered_map<std::string, glm::mat4>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_mat4->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						for (auto& [key, val] : *map_mat4) {
+							ImGui::Text("%s: [mat4 - not editable]", key.c_str());
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			// Handle unordered_map<std::string, Resource::Guid>
+			else if (auto* map_guid = value.try_cast<std::unordered_map<std::string, rp::Guid>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_guid->empty()) {
+						ImGui::TextDisabled("(empty)");
+					} else {
+						for (auto& [key, val] : *map_guid) {
+							ImGui::Text("%s: %s", key.c_str(), val.to_hex().c_str());
+						}
+					}
+					ImGui::TreePop();
 				}
 			}
 		}
@@ -365,16 +538,16 @@ void EditorMain::Render_MenuBar()
 
 	if (ImGui::BeginMenu("Scene"))
 	{
-		ImGui::MenuItem("New Scene", "Ctrl+N");
+		if (ImGui::MenuItem("New Scene", "Ctrl+N")) {
+			NewScene();
+		}
 		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
 		{
 			std::string path{};
 			if (fileService.OpenFileDialog(Editor::GetInstance().GetConfig().project_workingDir.c_str(), path, FileService::FILE_TYPE_LIST{ {L"Scene Files", L"*.scene"} }))
 			{
 				LoadScene(path.c_str());
-				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{path}.filename().string()).c_str());
-
-				
+				glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | " + std::filesystem::path{path}.filename().string()).c_str());	
 			}
 		}
 		if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
@@ -525,29 +698,38 @@ void EditorMain::Render_SceneExplorer()
 
 	ImGui::Separator();
 
-	// List all entities in the world
-	ecs::world world = Engine::GetWorld();
-
-	// Get all entities with position component (basic entities)
-	auto entities = engineService.m_cont->m_entities_snapshot;
+	// FIXED: Use snapshot data instead of Engine::GetWorld()
+	const auto& entityHandles = engineService.GetEntitiesSnapshot();
+	const auto& entityNames = engineService.GetEntityNamesSnapshot();
 
 	ImGui::Text("Entities in scene:");
-	for (auto ehdl : entities) {
-		ecs::entity entity{ehdl};
-		ImGui::PushID(static_cast<int>(entity.get_uid()));
+	for (size_t i = 0; i < entityHandles.size(); ++i) {
+		auto ehdl = entityHandles[i];
+		ImGui::PushID(static_cast<int>(i));
 
 		// Check if this entity is currently selected
-		uint32_t entityUID = static_cast<uint32_t>(entity.get_uid());
+		uint32_t entityUID = ecs::entity(ehdl).get_uid();
 		bool isSelected = (m_SelectedEntityID == entityUID);
 
-		// Display entity info with selection highlighting
-		std::string entityName = entity.name();
+		// DEBUG: Log entity IDs for all entities
+		static bool loggedOnce = false;
+		if (!loggedOnce && i == 0) {
+			spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
+			for (size_t j = 0; j < entityHandles.size(); ++j) {
+				uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
+				spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
+			}
+			loggedOnce = true;
+		}
 
-		// Check what components this entity has
-		bool hasTransform = world.has_all_components_in_entity<TransformComponent>(entity);
-		bool hasMesh = world.has_all_components_in_entity<MeshRendererComponent>(entity);
-		bool hasLight = world.has_all_components_in_entity<LightComponent>(entity);
-		bool hasVisibility = world.has_all_components_in_entity<VisibilityComponent>(entity);
+		// Display entity info with selection highlighting
+		std::string entityName = entityNames[i];
+
+		// Check what components this entity has (using snapshot)
+		bool hasTransform = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<TransformComponent>());
+		bool hasMesh = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>());
+		bool hasLight = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>());
+		bool hasVisibility = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<VisibilityComponent>());
 
 		UNREF_PARAM(hasTransform);
 		
@@ -560,16 +742,24 @@ void EditorMain::Render_SceneExplorer()
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow text for selected
 		}
 
-		if (ImGui::TreeNode(entityName.c_str())) {
+		bool nodeOpen = ImGui::TreeNode(entityName.c_str());
+
+		// Check if TreeNode header was clicked (must be done immediately after TreeNode call)
+		if (ImGui::IsItemClicked()) {
+			spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
+			SelectEntity(entityUID);
+		}
+
+		if (nodeOpen) {
 			// Show component info
 			if (hasVisibility) {
-				auto vis = world.get_component_from_entity<VisibilityComponent>(entity);
-				ImGui::Text("Visible: %s", vis.m_IsVisible ? "Yes" : "No");
+				ImGui::Text("Has Visibility Component");
+				// Note: Detailed component data requires inspector (uses snapshot)
 			}
 
 			// Delete button
 			if (ImGui::Button("Delete Entity")) {
-				world.remove_entity(entity);
+				engineService.delete_entity(ehdl);
 			}
 
 			ImGui::TreePop();
@@ -578,11 +768,6 @@ void EditorMain::Render_SceneExplorer()
 		// Pop the selection highlight color if it was applied
 		if (isSelected) {
 			ImGui::PopStyleColor();
-		}
-
-		// Allow clicking entity in hierarchy to select it
-		if (ImGui::IsItemClicked()) {
-			SelectEntity(entityUID);
 		}
 
 		ImGui::PopID();
@@ -595,16 +780,31 @@ void EditorMain::Render_SceneExplorer()
 void EditorMain::Render_Profiler()
 {
 	ImGui::Begin("Profiler");
-	// Example profiling data
-	ImGui::Text("Frame Time: %.2fms", 16.67f);
-	ImGui::Text("FPS: %.2f", Engine::Instance().GetInfo().m_FPS);
+
+	auto info = engineService.GetEngineInfo();
+
+	// Update FPS/Delta display at intervals for readability
+	static double lastUpdateTime = 0.0;
+	static double displayFPS = 0.0;
+	static double displayDeltaTime = 0.0;
+	static float updateInterval = 0.25f; // Update every 0.25 seconds
+
+	double currentTime = glfwGetTime();
+	if (currentTime - lastUpdateTime >= updateInterval) {
+		displayFPS = info.m_FPS;
+		displayDeltaTime = info.m_DeltaTime;
+		lastUpdateTime = currentTime;
+	}
+
+	ImGui::Text("FPS: %.2f", displayFPS);
+	ImGui::Text("Delta Time: %.3f ms", displayDeltaTime * 1000.0);
+	ImGui::SliderFloat("Update Interval", &updateInterval, 0.1f, 2.0f, "%.2f s");
+	ImGui::Separator();
 
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
-	double frameMs = last.frameMs;
+	
 
-	ImGui::Text("Frame Time: %.2f ms", frameMs);
-	ImGui::Text("FPS: %.2f", (frameMs > 0.0) ? 1000.0 / frameMs : 0.0);
 
 	double totalMs = 0.0;
 	for (auto& kv : last.systemMs) {
@@ -770,8 +970,10 @@ void EditorMain::Render_AssetBrowser()
 
 
 	auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
+	static bool ShowImportSettingsMenu = false;
+
 	for (auto it = files.first; it != files.second; ++it) {
-		std::filesystem::path filepath{ it->second.m_RawFileInfo.m_RawSourcePath };
+		std::filesystem::path filepath{ it->second };
 		std::string filename = filepath.filename().string();
 
 		if (filename.empty()) continue;
@@ -780,40 +982,23 @@ void EditorMain::Render_AssetBrowser()
 		ImGui::Button(filename.c_str(), { thumbnailSize, thumbnailSize }); // Creates a button for the folders
 		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
 		{
-			/*
-			if (ImGui::MenuItem("Rename Asset")) // popup asking to rename asset
-			{
-				renameFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to rename
-				if (FileName.find_last_of('.') == std::string::npos)
-				{
-					renameFileExtention = "";
-				}
-				else
-				{
-					renameFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to rename
-				}
-				showPopup = true; // Start the rename pop up
-			}
-			if (ImGui::MenuItem("Delete Asset")) // popup asking to delete asset
-			{
-				deleteFileString = CurrentDirectory->directory_path.substr(CurrentDirectory->directory_path.find_first_of('/') + 1) + '\\' + FileName; // Save the filename you want to delete
-				if (FileName.find_last_of('.') == std::string::npos)
-				{
-					deleteFileExtention = "";
-				}
-				else
-				{
-					deleteFileExtention = FileName.substr(FileName.find_last_of('.')); // save the file extension you want to delete
-				}
-
-				deleteFile = true; // starts the delete popup
-			}*/
 			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
 			{
 				m_AssetManager->ImportAsset(it->second);
 			}
+			if (ImGui::MenuItem("Import Settings")) // popup asking to import asset
+			{
+				m_AssetManager->LoadImportSettings(it->second);
+				ShowImportSettingsMenu = true;
+			}
 			ImGui::EndPopup();
 		}
+
+		if (ShowImportSettingsMenu) {
+			ImGui::OpenPopup("DescriptorInspector");
+			ShowImportSettingsMenu = false;
+		}
+		Render_ImporterSettings();
 
 		if (ImGui::BeginDragDropSource()) // If we start dragging
 		{
@@ -847,21 +1032,41 @@ void EditorMain::Render_AssetBrowser()
 	ImGui::End();
 }
 
+void EditorMain::Render_ImporterSettings()
+{
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	// Begin the popup modal
+	if (ImGui::BeginPopupModal("DescriptorInspector", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Importer Settings");
+		ImGui::Separator();
+
+		auto& desc{ m_AssetManager->GetImportSettings() };
+		rp::ResourceTypeImporterRegistry::Serialize(desc.m_desc_importer_hash, "imgui", m_AssetManager->GetImportSettingsPath(), desc);
+
+		ImGui::Separator();
+		if (ImGui::Button("OK", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			m_AssetManager->UnloadImportSetting();
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			m_AssetManager->ClearImportSetting();
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
 void EditorMain::Render_Scene()
 {
-	// Update editor camera - will be done inside the Scene window with proper input handling
-	if (!m_IsPlayMode && m_EditorCamera) {
-		// Get delta time
-		static auto lastTime = std::chrono::steady_clock::now();
-		auto currentTime = std::chrono::steady_clock::now();
-		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-		lastTime = currentTime;
-
-		// Camera update will be moved inside the viewport handling to avoid input conflicts
-		// Store deltaTime for later use
-		static float s_deltaTime = deltaTime;
-		s_deltaTime = deltaTime;
-	}
+	// Get delta time for camera updates
+	float deltaTime = static_cast<float>(engineService.GetDeltaTime());
 
 	ImGui::Begin("Scene");
 
@@ -886,13 +1091,13 @@ void EditorMain::Render_Scene()
 	}
 
 	// Check if editor framebuffer is available before trying to access it
-	auto& frameData = RenderSystem::Instance().m_SceneRenderer->GetFrameData();
-	if (frameData.editorColorBuffer && frameData.editorColorBuffer->GetFBOHandle() != 0) {
+	auto& frameData = engineService.GetFrameData();
+	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
 
 		// Get the color attachment texture ID (not the FBO handle)
-		uint32_t textureID = frameData.editorColorBuffer->GetColorAttachmentRendererID(0);
+		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
 
 		// Render the scene viewport using the texture ID
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
@@ -932,12 +1137,6 @@ void EditorMain::Render_Scene()
 
 		// Handle camera input only when viewport is hovered and not clicking
 		if (!m_IsPlayMode && m_EditorCamera && viewportHovered && !viewportClicked) {
-			// Get stored delta time
-			static auto lastTime = std::chrono::steady_clock::now();
-			auto currentTime = std::chrono::steady_clock::now();
-			float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-			lastTime = currentTime;
-
 			// Temporarily disable ImGui input capture for camera control
 			ImGuiIO& io = ImGui::GetIO();
 			bool originalWantCaptureMouse = io.WantCaptureMouse;
@@ -968,12 +1167,17 @@ void EditorMain::Render_Scene()
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
 
-	// Debug info below the viewport
-	ecs::world world = Engine::GetWorld();
-	auto entityCount = engineService.m_cont->m_entities_snapshot.size();
-	auto meshCount = world.filter_entities<MeshRendererComponent>().size_hint();
-	auto lightCount = world.filter_entities<LightComponent>().size_hint();
-	auto cameraCount = world.filter_entities<CameraComponent>().size_hint();
+	// Debug info below the viewport (using snapshot)
+	const auto& entityHandles = engineService.GetEntitiesSnapshot();
+	auto entityCount = entityHandles.size();
+
+	// Count entities by component type
+	size_t meshCount = 0, lightCount = 0, cameraCount = 0;
+	for (auto ehdl : entityHandles) {
+		if (engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>())) meshCount++;
+		if (engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>())) lightCount++;
+		if (engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<CameraComponent>())) cameraCount++;
+	}
 
 	ImGui::Text("Total entities: %d", entityCount);
 	ImGui::Text("Mesh entities: %d", meshCount);
@@ -1005,9 +1209,9 @@ void EditorMain::Render_Scene()
 	}
 
 	// Show framebuffer status
-	ImGui::Text("Editor FBO: %s", frameData.editorColorBuffer ? "Valid" : "None");
-	if (frameData.editorColorBuffer) {
-		ImGui::Text("FBO Handle: %u", frameData.editorColorBuffer->GetFBOHandle());
+	ImGui::Text("Editor FBO: %s", frameData.editorResolvedBuffer ? "Valid" : "None");
+	if (frameData.editorResolvedBuffer) {
+		ImGui::Text("FBO Handle: %u", frameData.editorResolvedBuffer->GetFBOHandle());
 		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
 	}
 
@@ -1016,98 +1220,119 @@ void EditorMain::Render_Scene()
 
 void EditorMain::CreateDefaultEntity()
 {
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Execute on engine thread
+	engineService.ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
 
-	// Create new entity
-	auto entity = world.add_entity();
+		// Create new entity
+		auto entity = world.add_entity();
 
-	// Add basic components
-	world.add_component_to_entity<TransformComponent>(entity);
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
+		// Add basic components
+		world.add_component_to_entity<TransformComponent>(entity);
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
+	});
 }
 
 void EditorMain::CreatePlaneEntity()
 {
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Execute on engine thread
+	engineService.ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
 
-	// Create new entity
-	auto entity = world.add_entity();
+		// Create new entity
+		auto entity = world.add_entity();
 
-	// Add transform components
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
-	world.add_component_to_entity<VisibilityComponent>(entity, true);
+		// Add transform components
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 
-	// Add mesh renderer component
-	MeshRendererComponent meshRenderer;
-	meshRenderer.isPrimitive = true;
-	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
-	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
-	meshRenderer.material.metallic = 0.1f;
-	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+		// Add mesh renderer component
+		MeshRendererComponent meshRenderer;
+		meshRenderer.isPrimitive = true;
+		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::PLANE;
+		meshRenderer.hasAttachedMaterial = false;
+		meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
+		meshRenderer.material.metallic = 0.1f;
+		meshRenderer.material.roughness = 0.8f;
+		meshRenderer.material.m_MaterialGuid.m_guid = rp::null_guid; // Use 0 for default material
 
-	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+		// Add material overrides for customization (replaces embedded struct)
+		MaterialOverridesComponent materialOverrides;
+		materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+		materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+		materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
+		world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+	});
 }
 
 void EditorMain::CreateLightEntity()
 {
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Execute on engine thread
+	engineService.ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
 
-	// Create new entity
-	auto entity = world.add_entity();
+		// Create new entity
+		auto entity = world.add_entity();
 
-	// Add position
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
+		// Add position
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
 
-	// Add light component
-	LightComponent light;
-	light.m_Type = Light::Type::Directional;
-	light.m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);
-	light.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
-	light.m_Intensity = 1.0f;
-	light.m_Range = 10.0f;
-	light.m_InnerCone = 30.0f;
-	light.m_OuterCone = 45.0f;
-	light.m_IsEnabled = true;
+		// Add light component (default initializers handle most fields)
+		LightComponent light;
+		light.m_Type = Light::Type::Directional;
+		light.m_Direction = glm::vec3(0.0f, -1.0f, 0.0f);
+		light.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
+		light.m_IsEnabled = true;
+		light.m_Intensity = 1.f;
+		light.m_Range = 10.0f;
+		light.m_InnerCone = 30.0f;
+		light.m_OuterCone = 45.0f;
 
-	world.add_component_to_entity<LightComponent>(entity, light);
+		world.add_component_to_entity<LightComponent>(entity, light);
+	});
 }
 
 void EditorMain::CreateCameraEntity()
 {
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Execute on engine thread
+	engineService.ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
 
-	// Create new entity
-	auto entity = world.add_entity();
+		// Create new entity
+		auto entity = world.add_entity();
 
-	// Add position component
-	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 2.0f, 5.0f) });
+		// Add position component
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, 2.0f, 5.0f) });
 
-	// Add camera component
-	CameraComponent camera;
-	camera.m_Type = CameraComponent::CameraType::PERSPECTIVE;
-	camera.m_IsActive = true;
-	camera.m_Fov = 45.0f;
-	camera.m_AspectRatio = 16.0f / 9.0f;
-	camera.m_Near = 0.1f;
-	camera.m_Far = 100.0f;
-	camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
-	camera.m_Right = glm::vec3(1.0f, 0.0f, 0.0f);
-	camera.m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
-	camera.m_Yaw = -90.0f;  // Initially looking down -Z axis
-	camera.m_Pitch = 0.0f;
+		// Add camera component
+		CameraComponent camera;
+		camera.m_Type = CameraComponent::CameraType::PERSPECTIVE;
+		camera.m_IsActive = true;
+		camera.m_Fov = 45.0f;
+		camera.m_AspectRatio = 16.0f / 9.0f;
+		camera.m_Near = 0.1f;
+		camera.m_Far = 100.0f;
+		camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
+		camera.m_Right = glm::vec3(1.0f, 0.0f, 0.0f);
+		camera.m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
+		camera.m_Yaw = -90.0f;  // Initially looking down -Z axis
+		camera.m_Pitch = 0.0f;
 
-	world.add_component_to_entity<CameraComponent>(entity, camera);
+		world.add_component_to_entity<CameraComponent>(entity, camera);
+	});
 }
 
 void EditorMain::CreatePhysicsDemoScene()
 {
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Execute entire physics demo creation on engine thread
+	engineService.ExecuteOnEngineThread([this]() {
+		ecs::world world = Engine::GetWorld();
 
-	// Create new entity
-	auto entity = world.add_entity();
+		// Create new entity
+		auto entity = world.add_entity();
 
 	// Add transform components
 	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{ 1,1,1 }, glm::vec3{}, glm::vec3(0.0f, -2.0f, 0.0f) });
@@ -1121,13 +1346,24 @@ void EditorMain::CreatePhysicsDemoScene()
 	meshRenderer.material.m_AlbedoColor = glm::vec3(0.8f, 0.3f, 0.3f);
 	meshRenderer.material.metallic = 0.1f;
 	meshRenderer.material.roughness = 0.8f;
-	meshRenderer.material.m_MaterialGuid = Resource::Guid{}; // Use 0 for default material
+	meshRenderer.material.m_MaterialGuid.m_guid = rp::null_guid; // Use 0 for default material
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 
-	world.get_component_from_entity<TransformComponent>(entity).m_Scale = glm::vec3{ 50,1,50 };
+	// Add material overrides for customization (replaces embedded struct)
+	MaterialOverridesComponent materialOverrides;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.3f, 0.3f); // Reddish color
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric)
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.9f; // Very rough (matte ground)
+	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+
+	auto& transform = world.get_component_from_entity<TransformComponent>(entity);
+	transform.m_Scale = glm::vec3{ 50,1,50 };
 	auto Trans = &world.get_component_from_entity<TransformMtxComponent>(entity);
-	auto& [scale, rot, pos] = world.get_component_from_entity<TransformComponent>(entity);
+
+	const auto& scale = transform.m_Scale;
+	const auto& rot = transform.m_Rotation;
+	const auto& pos = transform.m_Translation;
 
 	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), (rot.x), glm::vec3(1, 0, 0));
 	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), (rot.y), glm::vec3(0, 1, 0));
@@ -1161,21 +1397,25 @@ void EditorMain::CreatePhysicsDemoScene()
 	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
 	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid2{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid2{}; // Use 0 for default material
+	rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+	rp::Guid materialGuid2{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer2;
 	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer2.m_MeshGuid = meshGuid2;
+	meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.material.m_MaterialGuid = materialGuid2;
-	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
-	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+	meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides2;
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
 	
@@ -1184,10 +1424,10 @@ void EditorMain::CreatePhysicsDemoScene()
 	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 	JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 	JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
-	sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
-	RigidBody->motionType = JPH::EMotionType::Dynamic;
-	RigidBody->bodyID = sphere_id;
-
+		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+		RigidBody->motionType = JPH::EMotionType::Dynamic;
+		RigidBody->bodyID = sphere_id;
+	}); // End of ExecuteOnEngineThread lambda
 }
 
 void EditorMain::CreateDemoScene()
@@ -1197,23 +1437,28 @@ void EditorMain::CreateDemoScene()
 	// Create 3x3 cube grid using local utilities
 	CreateCubeGrid(3, 3.0f);
 
-	// Create additional directional light for better lighting
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Create light entity on engine thread
+	engineService.ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
 
-	auto lightEntity = world.add_entity();
-	world.add_component_to_entity<TransformComponent>(lightEntity, TransformComponent{ glm::vec3{1.f}, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
+		auto lightEntity = world.add_entity();
+		world.add_component_to_entity<TransformComponent>(lightEntity, TransformComponent{ glm::vec3{1.f}, glm::vec3{}, glm::vec3(0.0f, 5.0f, 0.0f) });
 
-	LightComponent light;
-	light.m_Type = Light::Type::Directional;
-	light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
-	light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
-	light.m_Intensity = 1.0f;
-	light.m_IsEnabled = true;
+		LightComponent light;
+		light.m_Type = Light::Type::Directional;
+		light.m_Direction = glm::vec3(0.2f, -0.8f, 0.3f);
+		light.m_Color = glm::vec3(1.0f, 0.95f, 0.85f);
+		light.m_Intensity = 1.0f;
+		light.m_IsEnabled = true;
+		light.m_Range = 10.0f;
+		light.m_InnerCone = 30.0f;
+		light.m_OuterCone = 45.0f;
 
-	world.add_component_to_entity<LightComponent>(lightEntity, light);
+		world.add_component_to_entity<LightComponent>(lightEntity, light);
+	});
 
 	// Set stronger ambient light for better visibility
-	RenderSystem::Instance().m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f, 0.3f, 0.3f));
+	engineService.SetAmbientLight(glm::vec3(0.03f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 
@@ -1223,9 +1468,11 @@ void EditorMain::CreateDemoScene()
 
 void EditorMain::CreatePhysicsCube()
 {
-	ecs::world world = Engine::GetWorld();
+	// FIXED: Execute on engine thread
+	engineService.ExecuteOnEngineThread([this]() {
+		ecs::world world = Engine::GetWorld();
 
-	// Cube creation
+		// Cube creation
 	auto CPos = glm::vec3(1.0f, 22.0f, 0.0f);
 	auto Cscale = glm::vec3(1.0f);
 	auto Ccolor = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -1237,21 +1484,25 @@ void EditorMain::CreatePhysicsCube()
 	world.add_component_to_entity<RigidBodyComponent>(entity2);
 
 	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid2{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid2{}; // Use 0 for default material
+	rp::Guid meshGuid2{}; // Use 0 for primitive shared meshes
+	rp::Guid materialGuid2{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer2;
 	meshRenderer2.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer2.m_MeshGuid = meshGuid2;
+	meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
 	meshRenderer2.hasAttachedMaterial = false;
-	meshRenderer2.material.m_MaterialGuid = materialGuid2;
-	meshRenderer2.material.m_AlbedoColor = Ccolor * 1.2f; // Brighten the color slightly
-	meshRenderer2.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer2.material.roughness = 0.6f; // Medium roughness
+	meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides2;
+	materialOverrides2.vec3Overrides["u_AlbedoColor"] = Ccolor; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+	world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
 	auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 	// Creating Cube
 
@@ -1260,9 +1511,10 @@ void EditorMain::CreatePhysicsCube()
 	JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 	JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 	JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
-	sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
-	RigidBody->motionType = JPH::EMotionType::Dynamic;
-	RigidBody->bodyID = sphere_id;
+		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+		RigidBody->motionType = JPH::EMotionType::Dynamic;
+		RigidBody->bodyID = sphere_id;
+	}); // End of ExecuteOnEngineThread lambda
 }
 
 
@@ -1270,8 +1522,10 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 {
 	assert(scale.x > 0 && scale.y > 0 && scale.z > 0 && "Scale must be positive");
 
-	auto world = Engine::GetWorld();
-	auto entity = world.add_entity();
+	// FIXED: Execute on engine thread
+	engineService.ExecuteOnEngineThread([position, scale, color]() {
+		auto world = Engine::GetWorld();
+		auto entity = world.add_entity();
 
 	// Add transform components
 	world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ scale, glm::vec3{}, position });
@@ -1279,22 +1533,26 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 	world.add_component_to_entity<VisibilityComponent>(entity, true);
 
 	// Use shared primitive mesh and default material
-	Resource::Guid meshGuid{}; // Use 0 for primitive shared meshes
-	Resource::Guid materialGuid{}; // Use 0 for default material
+	rp::Guid meshGuid{}; // Use 0 for primitive shared meshes
+	rp::Guid materialGuid{}; // Use 0 for default material
 
 	// Add mesh renderer component
 	MeshRendererComponent meshRenderer;
 	meshRenderer.isPrimitive = true; // Mark as primitive for proper handling
 	meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
-	meshRenderer.m_MeshGuid = meshGuid;
+	meshRenderer.m_MeshGuid.m_guid = meshGuid;
 	meshRenderer.hasAttachedMaterial = false;
-	meshRenderer.material.m_MaterialGuid = materialGuid;
-	meshRenderer.material.m_AlbedoColor = color * 1.2f; // Brighten the color slightly
-	meshRenderer.material.metallic = 0.0f; // Non-metallic for better color visibility
-	meshRenderer.material.roughness = 0.6f; // Medium roughness
-
+	meshRenderer.m_MaterialGuid.m_guid = materialGuid;
 
 	world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
+
+	// Add material overrides
+	MaterialOverridesComponent materialOverrides;
+	materialOverrides.vec3Overrides["u_AlbedoColor"] = color; // Use color directly (no multiplier to avoid clamping)
+	materialOverrides.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
+	materialOverrides.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
+	world.add_component_to_entity<MaterialOverridesComponent>(entity, materialOverrides);
+	});
 }
 
 void EditorMain::CreateCubeGrid(int gridSize, float spacing)
@@ -1302,13 +1560,13 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 	assert(gridSize > 0 && gridSize <= 10 && "Grid size must be between 1-10");
 	assert(spacing > 0.0f && "Spacing must be positive");
 
-	// Same colors as GraphicsTestDriver
+	// Vibrant colors for easy visual distinction
 	std::vector<glm::vec3> colors = {
-		glm::vec3(0.8f, 0.2f, 0.2f),  // Red
-		glm::vec3(0.2f, 0.8f, 0.2f),  // Green
-		glm::vec3(0.2f, 0.2f, 0.8f),  // Blue
-		glm::vec3(1.0f, 0.8f, 0.2f),  // Gold
-		glm::vec3(1.0f, 1.0f, 1.0f),  // White
+		glm::vec3(0.9f, 0.1f, 0.1f),  // Red - vibrant red
+		glm::vec3(0.1f, 0.9f, 0.1f),  // Green - vibrant green
+		glm::vec3(0.1f, 0.4f, 0.9f),  // Blue - vibrant blue
+		glm::vec3(0.95f, 0.75f, 0.05f),  // Gold - bright gold
+		glm::vec3(0.9f, 0.9f, 0.9f),  // Light gray - easier to see than white
 	};
 
 	const float startOffset = -(gridSize - 1) * spacing * 0.5f;
@@ -1332,74 +1590,30 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 
 void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight)
 {
-	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
-	assert(sceneRenderer && "SceneRenderer must be available for entity picking");
-
-	// Assert input parameters are valid
-	assert(viewportWidth > 0.0f && viewportHeight > 0.0f && "Viewport dimensions must be positive");
-	assert(mouseX >= 0.0f && mouseY >= 0.0f && "Mouse coordinates must be non-negative");
-	assert(mouseX < viewportWidth && mouseY < viewportHeight && "Mouse coordinates must be within viewport");
-
-	spdlog::info("Editor: Performing entity picking at viewport position ({:.1f}, {:.1f}) in viewport ({:.1f}x{:.1f})",
-		mouseX, mouseY, viewportWidth, viewportHeight);
-
-	// Debug: Check how many entities exist and have renderable components
-	ecs::world world = Engine::GetWorld();
-	auto renderableCount = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>().size();
-
-	auto totalEntities = engineService.m_cont->m_entities_snapshot.size();
-
-	spdlog::info("Editor: World has {} total entities, {} with renderable components", totalEntities, renderableCount);
-
-	// Assert we have entities to pick from
-	assert(renderableCount > 0 && "No renderable entities found - nothing to pick");
-	assert(totalEntities > 0 && "No entities found in world - check entity creation");
-
-	// Enable picking pass temporarily
-	sceneRenderer->EnablePicking(true);
-
-	// Create picking query with viewport-relative coordinates
-	MousePickingQuery query;
-	query.screenX = static_cast<int>(mouseX);
-	query.screenY = static_cast<int>(mouseY);
-	query.viewportWidth = static_cast<int>(viewportWidth);
-	query.viewportHeight = static_cast<int>(viewportHeight);
-
-	// Assert picking system is properly configured
-	auto* pipeline = sceneRenderer->GetPipeline();
-	assert(pipeline && "SceneRenderer must have a valid pipeline");
-	auto pickingPass = pipeline->GetPass("PickingPass");
-	assert(pickingPass && "Pipeline must have a PickingPass for object picking");
-	assert(pipeline->IsPassEnabled("PickingPass") && "PickingPass must be enabled for picking to work");
-
-	// Perform picking query
-	PickingResult result = sceneRenderer->QueryObjectPicking(query);
-
-	// Assert picking query executed successfully
-	assert(result.depth >= 0.0f && result.depth <= 1.0f && "Depth value must be in valid range [0,1]");
-
-	// Disable picking pass after use
-	sceneRenderer->EnablePicking(false);
-
-	// Handle picking result
-	if (result.hasHit && result.objectID != 0) {
-		spdlog::info("Editor: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-			result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
-		SelectEntity(result.objectID);
-	}
-	else {
-		spdlog::info("Editor: No entity picked - clearing selection");
-		ClearEntitySelection();
-	}
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.PerformEntityPicking(mouseX, mouseY, viewportWidth, viewportHeight,
+		[this](bool hasHit, uint32_t objectID) {
+			// Callback executes on engine thread, but only calls EditorMain methods
+			if (hasHit) {
+				SelectEntity(objectID);
+			}
+			else {
+				ClearEntitySelection();
+			}
+		});
 }
 
 void EditorMain::SelectEntity(uint32_t objectID)
 {
 	m_SelectedEntityID = objectID;
 	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
-	engineService.inspect_entity(ecs::entity(uint32_t(Engine::GetWorld()), objectID).get_uuid());
-	// TODO: Add visual feedback for selected entity (highlight, outline, etc.)
-	// This could involve setting a uniform or render state for the selected object
+
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.SelectEntityByObjectID(objectID);
+
+	// Add visual feedback: outline the selected entity
+	engineService.ClearOutlinedObjects();  // Clear previous selection
+	engineService.AddOutlinedObject(objectID);  // Outline new selection
 }
 
 void EditorMain::ClearEntitySelection()
@@ -1407,25 +1621,16 @@ void EditorMain::ClearEntitySelection()
 	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
 		m_SelectedEntityID = static_cast<uint32_t>(-1);
+
+		// Clear visual feedback
+		engineService.ClearOutlinedObjects();
 	}
 }
 
 void EditorMain::SetDebugVisualization(bool showAABBs)
 {
-	auto* sceneRenderer = RenderSystem::Instance().m_SceneRenderer.get();
-	if (sceneRenderer == nullptr) {
-		return;
-	}
-
-	auto* pipeline = sceneRenderer->GetPipeline();
-	if (pipeline == nullptr) {
-		return;
-	}
-
-	auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(pipeline->GetPass("DebugPass"));
-	if (debugPass) {
-		debugPass->SetShowAABBs(showAABBs);
-	}
+	// FIXED: Pure encapsulation using EngineService
+	engineService.EnableAABBVisualization(showAABBs);
 }
 
 void EditorMain::HandleViewportPicking()
@@ -1436,30 +1641,23 @@ void EditorMain::HandleViewportPicking()
 
 void EditorMain::SaveScene(const char* path)
 {
-	if (path == nullptr) {
-		spdlog::error("Editor: Cannot save scene - path is null");
-		return;
-	}
-	ecs::world world = Engine::GetWorld();
-
-	world.SaveYAML(path);
-	spdlog::info("Editor: Scene saved to {}", path);
-
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.SaveScene(path);
 }
 
 
 void EditorMain::LoadScene(const char* path)
 {
-	if (path == nullptr) {
-		spdlog::error("Editor: Cannot load scene - path is null");
-		return;
-	}
 	ClearEntitySelection();
-	ecs::world world = Engine::GetWorld();
-	world.UnloadAll();
-	world.LoadYAML(path);
-	spdlog::info("Editor: Scene loaded from {}", path);
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.LoadScene(path);
 	// Clear selection after loading new scene
+}
 
-
+void EditorMain::NewScene()
+{
+	ClearEntitySelection();
+	// FIXED: Pure encapsulation - all Engine API access in EngineService
+	engineService.NewScene();
+	// Clear selection after loading new scene
 }

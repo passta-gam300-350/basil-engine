@@ -29,6 +29,7 @@ import_dependencies()
 #global compile options
 #add_compile_options(/W4 /MP)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+add_definitions(-DNOMINMAX) 
 
 # Enable exceptions for static analysis
 add_compile_options($<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:/EHsc>)

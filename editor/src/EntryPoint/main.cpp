@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   main.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the main entry point for the editor application.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 // Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
 
@@ -97,6 +113,10 @@ int main(int, char**)
 		return -1;
 	}
 	glfwSwapInterval(1); // Enable vsync
+
+	// Do NOT enable GL_FRAMEBUFFER_SRGB - it would make ImGui UI too bright
+	// ToneMapPass uses manual gamma correction to output RGB8 instead
+	// glEnable(GL_FRAMEBUFFER_SRGB);
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();

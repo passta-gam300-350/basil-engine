@@ -1,9 +1,15 @@
 #include "Service/EngineService.hpp"
 #include "Editor.hpp"
+#include <Render/Render.h>  // For RenderSystem and FrameData
+#include <algorithm>  // For std::find
 
 void EngineContainerService::EngineContainer::engine_service() {
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
+
+	// Enable HDR pipeline (disabled by default in SceneRenderer)
+	Engine::GetRenderSystem().m_SceneRenderer->ToggleHDRPipeline(true);
+
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine
@@ -12,6 +18,55 @@ void EngineContainerService::EngineContainer::engine_service() {
 			Engine::CoreUpdate();
 			Engine::EndFrame();
 			Engine::UpdateDebug();
+
+			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
+			// This prevents screen tearing when editor reads the framebuffer texture
+			//glFinish();
+
+			if (m_hasPickingQuery)
+			{
+				auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+				if (sceneRenderer)
+				{
+					// Create picking query
+					MousePickingQuery query;
+					query.screenX = static_cast<int>(m_pickingMouseX);
+					query.screenY = static_cast<int>(m_pickingMouseY);
+					query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
+					query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
+
+					// Query the picking buffer (picking pass already rendered)
+					PickingResult result = sceneRenderer->QueryObjectPicking(query);
+
+					// Disable picking pass for subsequent frames
+					sceneRenderer->EnablePicking(false);
+
+					// Handle result immediately (we're on engine thread)
+					if (result.hasHit && result.objectID != 0)
+					{
+						spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+							result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+
+						// Set outline immediately
+						sceneRenderer->ClearOutlinedObjects();
+						sceneRenderer->AddOutlinedObject(result.objectID);
+
+						// Notify editor via callback
+						if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+					}
+					else
+					{
+						spdlog::info("EngineService: No entity picked");
+						sceneRenderer->ClearOutlinedObjects();
+						if (m_pickingCallback) m_pickingCallback(false, 0);
+					}
+				}
+
+				// Clear picking query flag
+				m_hasPickingQuery = false;
+				m_pickingCallback = nullptr;
+			}
+
 			m_container_is_presentable.acquire();
 			engine_snapshot_writeback();
 		}
@@ -27,10 +82,20 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 	auto entities_rng{ w.get_all_entities() };
 	m_entities_snapshot.resize(entities_rng.size_hint());
 	m_names_snapshot.resize(entities_rng.size_hint());
+	m_entity_components_snapshot.resize(entities_rng.size_hint());
+
 	int i{};
 	for (auto e : entities_rng) {
 		m_entities_snapshot[i] = e.get_uuid();
-		m_names_snapshot[i++] = e.name();
+		m_names_snapshot[i] = e.name();
+
+		// Gather component type IDs for this entity
+		auto components = e.get_reflectible_components();
+		m_entity_components_snapshot[i].clear();
+		for (auto& [typeID, data] : components) {
+			m_entity_components_snapshot[i].push_back(typeID);
+		}
+		i++;
 	}
 	if (m_snapshot_entity_handle == ~0ull) {
 		return;
@@ -43,16 +108,39 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 {
 	std::lock_guard lg{ m_mtx };
+
+	// Execute queued commands FIRST (EditorMain → Engine communication)
+	while (!m_command_queue.empty()) {
+		auto command = std::move(m_command_queue.front());
+		m_command_queue.pop();
+
+		try {
+			command();  // Execute lambda on engine thread
+		} catch (const std::exception& e) {
+			spdlog::error("EngineService: Command execution failed: {}", e.what());
+		}
+	}
+
+	// Existing writeback operations
 	ecs::world w{ Engine::GetWorld() };
 	ecs::entity inspected_entity{ m_snapshot_entity_handle };
 	while (!m_write_back_queue.empty()) {
 		ReflectionRegistry::TypeID type_id = m_write_back_queue.front();
 		m_write_back_queue.pop();
 
-		if (auto* storage = w.impl.get_registry().storage(ReflectionRegistry::types()[type_id].info().hash())) {
+		auto meta_type = ReflectionRegistry::types()[type_id];
+		if (auto* storage = w.impl.get_registry().storage(meta_type.info().hash())) {
 			auto it = std::find_if(m_component_list_snapshot.begin(), m_component_list_snapshot.end(), [type_id](std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>& kvpair) { return kvpair.first == type_id; });
 			if (storage->contains(ecs::world::detail::entt_entity_cast(inspected_entity)) && it != m_component_list_snapshot.end()) {
-				std::memcpy(storage->value(ecs::world::detail::entt_entity_cast(inspected_entity)), it->second.get(), ReflectionRegistry::types()[type_id].size_of());
+				void* dest = storage->value(ecs::world::detail::entt_entity_cast(inspected_entity));
+				void* src = it->second.get();
+
+				// Use entt meta assignment for proper copy (handles non-trivial types like unordered_map)
+				entt::meta_any dest_any = meta_type.from_void(dest);
+				entt::meta_any src_any = meta_type.from_void(src);
+
+				// Assign using meta system (properly handles copy constructors)
+				dest_any.assign(src_any);
 			}
 		}
 	}
@@ -143,6 +231,42 @@ void EngineContainerService::end() {
 	release();
 }
 
+void EngineContainerService::create_entity() {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot create entity, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	++m_cont->m_entity_create_count;
+}
+
+void EngineContainerService::delete_entity(entity_handle ehdl) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot delete entity, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_entity_delete_queue.push(ehdl);
+}
+
+void EngineContainerService::add_component(entity_handle ehdl, std::uint32_t component_type_id) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot add component, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, component_type_id, false));
+}
+
+void EngineContainerService::delete_component(entity_handle ehdl, std::uint32_t component_type_id) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot delete component, engine container not initialized");
+		return;
+	}
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, component_type_id, true));
+}
+
 std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainerService::get_reflectible_component_id_name_list() {
 	static std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> s_id_type_name_list{ [] () {
 		std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> temp{};
@@ -157,4 +281,195 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 		return temp;
 	}()};
 	return s_id_type_name_list;
+}
+
+// ============================================================================
+// NEW IMPLEMENTATIONS: Command Queue & Query API
+// ============================================================================
+
+void EngineContainerService::ExecuteOnEngineThread(std::function<void()> command) {
+	if (!m_cont) {
+		spdlog::warn("EngineService: Cannot execute command, engine container not initialized");
+		return;
+	}
+
+	std::lock_guard lg{ m_cont->m_mtx };
+	m_cont->m_command_queue.push(std::move(command));
+}
+
+const std::vector<EngineContainerService::entity_handle>& EngineContainerService::GetEntitiesSnapshot() const {
+	static const std::vector<entity_handle> empty;
+	if (!m_cont) return empty;
+
+	return m_cont->m_entities_snapshot;
+}
+
+const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot() const {
+	static const std::vector<std::string> empty;
+	if (!m_cont) return empty;
+
+	return m_cont->m_names_snapshot;
+}
+
+bool EngineContainerService::EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const {
+	if (!m_cont) return false;
+
+	std::lock_guard lg{ m_cont->m_mtx };
+
+	// Find the entity in the snapshot
+	for (size_t i = 0; i < m_cont->m_entities_snapshot.size(); ++i) {
+		if (m_cont->m_entities_snapshot[i] == entityHandle) {
+			// Check if this component type ID is in the entity's component list
+			const auto& components = m_cont->m_entity_components_snapshot[i];
+			return std::find(components.begin(), components.end(), componentTypeID) != components.end();
+		}
+	}
+
+	return false; // Entity not found in snapshot
+}
+
+FrameData& EngineContainerService::GetFrameData() {
+	// Safe: FrameData access is synchronized by m_container_is_presentable semaphore
+	// Editor reads after engine releases semaphore
+	return Engine::GetRenderSystem().m_SceneRenderer->GetFrameData();
+}
+
+Engine::Info EngineContainerService::GetEngineInfo() {
+	return Engine::Instance().GetInfo();  // Returns copy, thread-safe
+}
+
+double EngineContainerService::GetDeltaTime() {
+	return Engine::GetDeltaTime();
+}
+
+// ============================================================================
+// HIGH-LEVEL API IMPLEMENTATIONS: Complex Operations
+// ============================================================================
+
+void EngineContainerService::SelectEntityByObjectID(uint32_t objectID) {
+	ExecuteOnEngineThread([objectID, this]() {
+		ecs::entity entity(uint32_t(Engine::GetWorld()), objectID);
+		inspect_entity(entity.get_uuid());
+	});
+}
+
+void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight,
+                                                    std::function<void(bool hasHit, uint32_t objectID)> resultCallback) {
+	ExecuteOnEngineThread([mouseX, mouseY, viewportWidth, viewportHeight, resultCallback, this]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (!sceneRenderer) {
+			spdlog::error("EngineService: SceneRenderer not available for entity picking");
+			if (resultCallback) resultCallback(false, 0);
+			return;
+		}
+
+		spdlog::info("EngineService: Performing entity picking at viewport position ({:.1f}, {:.1f}) in viewport ({:.1f}x{:.1f})",
+			mouseX, mouseY, viewportWidth, viewportHeight);
+
+		// Debug: Check how many entities exist and have renderable components
+		ecs::world world = Engine::GetWorld();
+		auto renderableCount = world.filter_entities<MeshRendererComponent, TransformComponent, VisibilityComponent>().size();
+		auto totalEntities = m_cont->m_entities_snapshot.size();
+
+		spdlog::info("EngineService: World has {} total entities, {} with renderable components", totalEntities, renderableCount);
+
+		if (renderableCount == 0) {
+			spdlog::warn("EngineService: No renderable entities found - nothing to pick");
+			if (resultCallback) resultCallback(false, 0);
+			return;
+		}
+
+		// The main engine loop will enable picking, render normally, then query after render
+		m_cont->m_hasPickingQuery = true;
+		m_cont->m_pickingMouseX = mouseX;
+		m_cont->m_pickingMouseY = mouseY;
+		m_cont->m_pickingViewportWidth = viewportWidth;
+		m_cont->m_pickingViewportHeight = viewportHeight;
+		m_cont->m_pickingCallback = resultCallback;
+
+		// Enable picking pass for next frame
+		sceneRenderer->EnablePicking(true);
+
+	});
+}
+
+void EngineContainerService::EnableAABBVisualization(bool enable) {
+	ExecuteOnEngineThread([enable]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->EnableAABBVisualization(enable);
+		}
+	});
+}
+
+void EngineContainerService::AddOutlinedObject(uint32_t objectID) {
+	ExecuteOnEngineThread([objectID]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->AddOutlinedObject(objectID);
+		}
+	});
+}
+
+void EngineContainerService::RemoveOutlinedObject(uint32_t objectID) {
+	ExecuteOnEngineThread([objectID]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->RemoveOutlinedObject(objectID);
+		}
+	});
+}
+
+void EngineContainerService::ClearOutlinedObjects() {
+	ExecuteOnEngineThread([]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->ClearOutlinedObjects();
+		}
+	});
+}
+
+void EngineContainerService::SetAmbientLight(const glm::vec3& color) {
+	ExecuteOnEngineThread([color]() {
+		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+		if (sceneRenderer) {
+			sceneRenderer->SetAmbientLight(color);
+			spdlog::info("EngineService: Ambient light set to ({:.2f}, {:.2f}, {:.2f})", color.x, color.y, color.z);
+		}
+	});
+}
+
+void EngineContainerService::SaveScene(const char* path) {
+	if (!path) {
+		spdlog::error("EngineService: Cannot save scene - path is null");
+		return;
+	}
+
+	ExecuteOnEngineThread([path = std::string(path)]() {
+		ecs::world world = Engine::GetWorld();
+		world.SaveYAML(path.c_str());
+		spdlog::info("EngineService: Scene saved to {}", path);
+	});
+}
+
+void EngineContainerService::LoadScene(const char* path) {
+	if (!path) {
+		spdlog::error("EngineService: Cannot load scene - path is null");
+		return;
+	}
+
+	ExecuteOnEngineThread([path = std::string(path)]() {
+		ecs::world world = Engine::GetWorld();
+		world.UnloadAll();
+		world.LoadYAML(path.c_str());
+		spdlog::info("EngineService: Scene loaded from {}", path);
+	});
+}
+
+void EngineContainerService::NewScene() {
+	ExecuteOnEngineThread([]() {
+		ecs::world world = Engine::GetWorld();
+		world.UnloadAll();
+		spdlog::info("EngineService: New Scene created");
+		});
 }
