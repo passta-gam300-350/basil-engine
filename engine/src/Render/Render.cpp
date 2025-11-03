@@ -368,11 +368,20 @@ void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity 
 	auto* meshComp = registry.try_get<MeshRendererComponent>(entity);
 	if (!meshComp) return;
 
+	// Automatically update hasAttachedMaterial based on material GUID validity
+	meshComp->hasAttachedMaterial = (meshComp->m_MaterialGuid.m_guid != rp::null_guid);
+
 	// Get entity UID
 	const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
 
 	// Sync to cached material
 	SyncMaterialFromComponent(entityUID, *meshComp);
+
+	// Force renderer to rebuild cached instance data
+	// This ensures mesh/material changes are reflected immediately in the viewport
+	if (m_SceneRenderer) {
+		m_SceneRenderer->ForceRebuildInstanceCache();
+	}
 }
 
 // ========== Material Instance API Implementation ==========
@@ -540,25 +549,16 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 	auto& registry = ResourceRegistry::Instance();
 	auto* matPtr = registry.Get<std::shared_ptr<Material>>(materialGuid.m_guid);
 
-	if (matPtr && *matPtr) {
-		spdlog::info("LoadMaterialResource: Successfully retrieved material '{}' (GUID: {}) from registry",
-		             (*matPtr)->GetName(), materialGuid.m_guid.to_hex().substr(0, 8));
+	if (matPtr)
+	{
 		return *matPtr;
 	}
 
 	// Not found - material was not loaded from file and not registered in-memory
-	// This means the editor created a material but didn't call RegisterEditorMaterial()
 	// Create default material as fallback
 	std::string guidStr = materialGuid.m_guid.to_hex();
 	spdlog::error("LoadMaterialResource: Material GUID {} NOT FOUND in registry after Get() call! (entity {})",
 	              guidStr.substr(0, 8), entityUID);
-
-	static std::unordered_set<std::string> warnedGuids;
-	if (warnedGuids.find(guidStr) == warnedGuids.end()) {
-		spdlog::warn("RenderSystem: Material GUID {} not found (no file or in-memory registration). Using default material. "
-			"If this is an editor-created material, call RenderSystem::RegisterEditorMaterial().", guidStr);
-		warnedGuids.insert(guidStr);
-	}
 
 	auto pbrShader = m_ShaderLibrary->GetPBRShader();
 	if (!pbrShader) {

@@ -112,6 +112,7 @@ public:
     void ToggleRenderPass(const std::string& passName);
     void SetShadowIntensity(float directional, float point, float spot);
     void ClearInstanceCache();
+    void ForceRebuildInstanceCache();  // Force rebuild of instanced renderer cache (for editor component updates)
 
     // Shadow quality configuration
     void SetShadowFilterSize(int filterSize);
