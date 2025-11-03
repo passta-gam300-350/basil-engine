@@ -37,7 +37,7 @@ struct AssetManager {
 	~AssetManager() {
 		m_ShouldClose = true;
 		m_IndexingWorker.join();
-		//ExportAssetList();
+		ExportAssetList();
 	}
 		
 	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);
@@ -48,6 +48,9 @@ struct AssetManager {
 
 	void ImportAsset(std::string const&);
 	void ImportAssetDirectory(std::string const&);
+
+	// Create new material descriptor with defaults
+	void CreateMaterialDescriptor(std::string const& material_name);
 
 	//import settings for 1 active descriptor
 	void LoadImportSettings(std::string const&);

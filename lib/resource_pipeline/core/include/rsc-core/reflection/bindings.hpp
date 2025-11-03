@@ -108,9 +108,9 @@ namespace rp {
 					}(bf_tmp) };
 					std::array<enum_binding_entry<Type>, elem_ct> enum_bindings{};
 					std::size_t idx{};
-					for (auto sv : bf_tmp) {
-						if (!sv.empty()) {
-							enum_bindings[idx] = enum_binding_entry<Type>{ sv, static_cast<Type>(idx++) };
+					for (std::size_t i = 0; i < bf_tmp.size(); ++i) {
+						if (!bf_tmp[i].empty()) {
+							enum_bindings[idx++] = enum_binding_entry<Type>{ bf_tmp[i], static_cast<Type>(i) };
 						}
 					}
 					return enum_bindings;

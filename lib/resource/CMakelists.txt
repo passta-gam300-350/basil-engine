@@ -19,17 +19,17 @@ file(GLOB_RECURSE RESOURCE_ADDITIONAL_EXT_FILES
 )
 
 set(RESOURCE_CORE_DEP_LIBS
-    PUBLIC glm
-    PUBLIC tinyddsloader
-    PUBLIC yaml-cpp::yaml-cpp
-    PUBLIC resource-pipeline-core
+    INTERFACE glm
+    INTERFACE tinyddsloader
+    INTERFACE yaml-cpp::yaml-cpp
+    INTERFACE resource-pipeline-core
 )
 
 set(RESOURCE_EXT_DEP_LIBS
-    PUBLIC assimp::assimp
-    PUBLIC meshoptimizer
-    PUBLIC DirectXTex
-    PUBLIC resource-pipeline-ext
+    INTERFACE assimp::assimp
+    INTERFACE meshoptimizer
+    INTERFACE DirectXTex
+    INTERFACE resource-pipeline-ext
     ${RESOURCE_CORE_DEP_LIBS}
 )
 
@@ -39,32 +39,32 @@ set(RESOURCE_EXT_FILES
 )
 
 
-add_library("${PROJECT_NAME}_core" STATIC ${RESOURCE_CORE_FILES})
+add_library("${PROJECT_NAME}_core" INTERFACE)
 
-add_library("${PROJECT_NAME}_ext" STATIC ${RESOURCE_EXT_FILES})
+add_library("${PROJECT_NAME}_ext" INTERFACE)
 
 target_include_directories("${PROJECT_NAME}_core"
-    PUBLIC "${RESOURCE_CORE_DIR}/include"
-    PUBLIC "${directxtex_SOURCE_DIR}/DirectXTex"
+    INTERFACE "${RESOURCE_CORE_DIR}/include"
+    INTERFACE "${directxtex_SOURCE_DIR}/DirectXTex"
 )
 
 target_include_directories("${PROJECT_NAME}_ext"
-    PUBLIC "${RESOURCE_EXT_DIR}/include"
-    PUBLIC "${RESOURCE_CORE_DIR}/include"
-    PUBLIC "${directxtex_SOURCE_DIR}/DirectXTex"
+    INTERFACE "${RESOURCE_EXT_DIR}/include"
+    INTERFACE "${RESOURCE_CORE_DIR}/include"
+    INTERFACE "${directxtex_SOURCE_DIR}/DirectXTex"
 )
 
 target_link_libraries("${PROJECT_NAME}_core" ${RESOURCE_CORE_DEP_LIBS})
 
 target_link_libraries("${PROJECT_NAME}_ext" ${RESOURCE_EXT_DEP_LIBS})
 
-target_compile_options("${PROJECT_NAME}_core" PUBLIC
+target_compile_options("${PROJECT_NAME}_core" INTERFACE
   $<$<CXX_COMPILER_ID:MSVC>:/W4>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
 )
 
 
-target_compile_options("${PROJECT_NAME}_ext" PUBLIC
+target_compile_options("${PROJECT_NAME}_ext" INTERFACE
   $<$<CXX_COMPILER_ID:MSVC>:/W4>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
 )

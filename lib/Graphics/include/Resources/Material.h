@@ -76,6 +76,10 @@ public:
     glm::mat4 GetMat4Property(const std::string& name, const glm::mat4& defaultValue = glm::mat4(1.0f)) const;
     std::shared_ptr<Texture> GetTexture(const std::string& name) const;
 
+    // Get all textures as a vector (for rendering pipeline)
+    // Converts uniform names (u_DiffuseMap) to texture types (texture_diffuse)
+    std::vector<Texture> GetAllTextures() const;
+
 private:
     // Helper method to get cached uniform location with validation
     GLint GetUniformLocation(const std::string& name) const;
