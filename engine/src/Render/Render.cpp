@@ -242,7 +242,7 @@ void RenderSystem::Update(ecs::world& world) {
 
 		// Skip if resources failed to load
 		if (!meshResource || !materialResource) {
-			static std::unordered_set<uint64_t> warnedEntities;
+				static std::unordered_set<uint64_t> warnedEntities;
 			if (warnedEntities.find(entityUID) == warnedEntities.end()) {
 				spdlog::warn("RenderSystem: Failed to load resources for entity {}", entityUID);
 				warnedEntities.insert(entityUID);

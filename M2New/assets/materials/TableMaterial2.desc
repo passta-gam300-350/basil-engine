@@ -1,0 +1,21 @@
+base:
+  m_guid: a5f0de7ba2bda8aecedcaa5a4b
+  m_importer: .material
+  m_source: ""
+  m_name: TableMaterial2
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: TableMaterial2
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.493000001
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    diffuse: 969f0178c4a1b1f5b14d573818

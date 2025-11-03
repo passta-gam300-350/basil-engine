@@ -1,7 +1,0 @@
-base:
-  m_guid: 57835170aa8ad727e7a8666157
-  m_importer: .texture
-  m_source: materials\table_new_TableDetails_BaseColor.png
-  m_name: table_new_TableDetails_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

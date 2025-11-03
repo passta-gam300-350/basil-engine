@@ -1,0 +1,7 @@
+base:
+  m_guid: 969e227bb384f4515d27cff518
+  m_importer: .texture
+  m_source: materials\Metal_ShelfStand_Metal_Roughness.png
+  m_name: Metal_ShelfStand_Metal_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
