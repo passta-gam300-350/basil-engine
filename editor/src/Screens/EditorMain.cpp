@@ -49,6 +49,10 @@ Technology is prohibited.
 
 #define UNREF_PARAM(x) x;
 
+RegisterImguiDescriptorInspector(ModelDescriptor);
+RegisterImguiDescriptorInspector(TextureDescriptor);
+RegisterImguiDescriptorInspector(MaterialDescriptor);
+
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
@@ -133,6 +137,7 @@ struct test {
 
 test testa{};
 
+
 void EditorMain::render()
 {
 	if (!active) return;
@@ -199,6 +204,8 @@ void EditorMain::render()
 	engineService.m_cont->m_container_is_presentable.release();
 	engineService.start();
 }
+
+
 
 void EditorMain::cleanup()
 {
@@ -963,6 +970,8 @@ void EditorMain::Render_AssetBrowser()
 
 
 	auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
+	static bool ShowImportSettingsMenu = false;
+
 	for (auto it = files.first; it != files.second; ++it) {
 		std::filesystem::path filepath{ it->second };
 		std::string filename = filepath.filename().string();
@@ -977,8 +986,19 @@ void EditorMain::Render_AssetBrowser()
 			{
 				m_AssetManager->ImportAsset(it->second);
 			}
+			if (ImGui::MenuItem("Import Settings")) // popup asking to import asset
+			{
+				m_AssetManager->LoadImportSettings(it->second);
+				ShowImportSettingsMenu = true;
+			}
 			ImGui::EndPopup();
 		}
+
+		if (ShowImportSettingsMenu) {
+			ImGui::OpenPopup("DescriptorInspector");
+			ShowImportSettingsMenu = false;
+		}
+		Render_ImporterSettings();
 
 		if (ImGui::BeginDragDropSource()) // If we start dragging
 		{
@@ -1010,6 +1030,37 @@ void EditorMain::Render_AssetBrowser()
 	}
 	ImGui::Columns(1);
 	ImGui::End();
+}
+
+void EditorMain::Render_ImporterSettings()
+{
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	// Begin the popup modal
+	if (ImGui::BeginPopupModal("DescriptorInspector", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Importer Settings");
+		ImGui::Separator();
+
+		auto& desc{ m_AssetManager->GetImportSettings() };
+		rp::ResourceTypeImporterRegistry::Serialize(desc.m_desc_importer_hash, "imgui", m_AssetManager->GetImportSettingsPath(), desc);
+
+		ImGui::Separator();
+		if (ImGui::Button("OK", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			m_AssetManager->UnloadImportSetting();
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			m_AssetManager->ClearImportSetting();
+		}
+
+		ImGui::EndPopup();
+	}
 }
 
 void EditorMain::Render_Scene()

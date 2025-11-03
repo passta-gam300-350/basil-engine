@@ -23,6 +23,9 @@ struct AssetManager {
 	std::thread m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 	std::mutex m_DescriptorListMtx;
 
+	std::unique_ptr<rp::DescriptorWrapper> m_InspectedDescriptor;
+	std::string m_InspectedDescriptorPath;
+
 	std::atomic<bool> m_ShouldClose;
 	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
 	std::atomic<bool> m_NeedsRescan;
@@ -45,6 +48,13 @@ struct AssetManager {
 
 	void ImportAsset(std::string const&);
 	void ImportAssetDirectory(std::string const&);
+
+	//import settings for 1 active descriptor
+	void LoadImportSettings(std::string const&);
+	void UnloadImportSetting(std::string const& = {});
+	void ClearImportSetting();
+	rp::DescriptorWrapper& GetImportSettings();
+	std::string GetImportSettingsPath();
 
 	auto GetFiles(std::string const& dir) {
 		return m_FileList.equal_range(dir);

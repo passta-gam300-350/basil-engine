@@ -156,6 +156,9 @@ namespace rp {
 		template <typename Type>
 		auto map_enum_value(std::string_view sv) {
 			auto list{ get_enum_list<Type>() };
+			if (list.empty()) {
+				return Type{};
+			}
 			auto it{ std::find_if(list.begin(), list.end(), [sv](const auto& entry) {
 				return entry.m_enum_name == sv;
 				}) };
