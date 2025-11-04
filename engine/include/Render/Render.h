@@ -35,8 +35,8 @@ class MaterialInstance;
 class MaterialPropertyBlock;
 
 
-RegisterResourceType(MeshResourceData, "mesh", MeshResourceData, [](MeshResourceData const& mr) {return mr; }, [](MeshResourceData&& mr) {})
-RegisterResourceType(MaterialResourceData, "material", MaterialResourceData, [](MaterialResourceData const& mat) {return mat; }, [](MaterialResourceData&& mres) {})
+RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
+RegisterResourceTypeForward(MaterialResourceData, "material", materialdefine)
 
 /**
  * @brief Component for rendering meshes on entities

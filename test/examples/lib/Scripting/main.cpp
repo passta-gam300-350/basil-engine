@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 	MonoManager::SetVerbose(true);
 	MonoManager::AddSearchDirectories("../scripts");
 	
-	MonoManager::GetCompiler()->AddReferences("engine",R"(C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\BasilEngine.dll)");
+	MonoManager::GetCompiler()->AddReferences("engine",R"(..\engine\managed\BasilEngine\bin\BasilEngine.dll)");
 	MonoManager::StartCompilation();
 
 	auto a  = MonoManager::GetCompiler()->GetLogs();

@@ -282,6 +282,16 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     EndInstanceBatch();
 }
 
+void InstancedRenderer::ForceRebuildCache()
+{
+    // Clear all tracking state to force rebuild on next RenderToPass()
+    // This is called when components are updated in the editor (mesh/material changes)
+    m_LastRenderableCount = 0;
+    m_LastObjectIDs.clear();
+    m_LastTransformHashes.clear();
+    m_LastPropertyBlockHashes.clear();
+}
+
 void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData)
 {
 
@@ -344,7 +354,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
     // 4. Apply lighting setup via command submission (Option A - REFACTORED)
     if (m_PBRLighting) {
-        // ✅ NEW: Submit lighting commands instead of direct OpenGL calls
+        // NEW: Submit lighting commands instead of direct OpenGL calls
         m_PBRLighting->SubmitLightingCommands(renderPass, shader, nullptr);
 
         // Submit unified shadow commands (includes all shadow types via SSBO)
@@ -355,6 +365,11 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
 
     // 6. Bind textures (if any)
+	std::vector<Texture> materialTextures = meshInstances.material->GetAllTextures();
+    if (materialTextures.size() > 0)
+    {
+        meshInstances.mesh->textures = materialTextures;
+    }
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
     renderPass.Submit(texturesCmd);
 

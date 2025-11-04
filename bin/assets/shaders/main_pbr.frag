@@ -280,13 +280,24 @@ float CalculateShadowFromSSBO(int shadowIndex, vec3 fragPos, vec3 normal, vec3 l
     return 0.0;
 }
 
-// Enhanced normal mapping helper for traditional textures
+// Enhanced normal mapping helper with BC5 format support
 vec3 getNormalFromMap() {
     if (!u_HasNormalMap) {
         return normalize(fs_in.Normal);
     }
 
-    vec3 tangentNormal = texture(u_NormalMap, fs_in.TexCoords).xyz * 2.0 - 1.0;
+    // Sample normal map (BC5 format stores only RG channels)
+    vec3 tangentNormal = texture(u_NormalMap, fs_in.TexCoords).xyz;
+
+    // Unpack RG from [0,1] to [-1,1]
+    tangentNormal.xy = tangentNormal.xy * 2.0 - 1.0;
+
+    // Reconstruct Z component for BC5/2-channel normal maps
+    // Since normals are unit vectors: x² + y² + z² = 1
+    // Therefore: z = sqrt(1 - x² - y²)
+    tangentNormal.z = sqrt(max(1.0 - dot(tangentNormal.xy, tangentNormal.xy), 0.0));
+
+    // Transform from tangent space to world space
     return normalize(fs_in.TBN * tangentNormal);
 }
 

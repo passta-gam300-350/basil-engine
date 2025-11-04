@@ -1,0 +1,7 @@
+base:
+  m_guid: 306032c764788fde35cb6fb3ef5
+  m_importer: .texture
+  m_source: D:\Projects\GAM300\editortest\assets\images\Chair_standardSurface8_Metallic.png
+  m_name: Chair_standardSurface8_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC4_R4

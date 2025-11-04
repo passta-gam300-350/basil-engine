@@ -1,0 +1,21 @@
+base:
+  m_guid: a1eec271348b86338e89ec9700
+  m_importer: .material
+  m_source: ""
+  m_name: TableMat
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: TableMat
+  albedo:
+    x: 0.66192174
+    y: 0.551208854
+    z: 0
+  metallic: 0
+  roughness: 0.5
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    diffuse: 969e2b7f3f8b2aced13b44d673

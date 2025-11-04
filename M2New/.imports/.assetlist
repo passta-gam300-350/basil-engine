@@ -1,0 +1,120 @@
+"Blue":
+  "m_guid": "bedceb7db5afda75e3ddcbe5c2"
+  "m_typeindex": "175488002581160416"
+"Green":
+  "m_guid": "bdc6c27a43a70ade78a7e6f633"
+  "m_typeindex": "175488002581160416"
+"Metal_ShelfStand.obj":
+  "m_guid": "843ad275c1bd5ff9624bba6242"
+  "m_typeindex": "4838001395392124604"
+"Metal_ShelfStand_Metal_BaseColor.png":
+  "m_guid": "969de6710e90f7c40afe1e35bc"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Emissive.png":
+  "m_guid": "969df87812847e41b91bc194e8"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Height.png":
+  "m_guid": "969e037d8c809bbf0ead32db81"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Metallic.png":
+  "m_guid": "969e0d7b9fb31af135eb9700d1"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Normal.png":
+  "m_guid": "969e17754c9fa14ffcc1a62383"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Roughness.png":
+  "m_guid": "969e227bb384f4515d27cff518"
+  "m_typeindex": "126269861530532084"
+"PlaneMaterial":
+  "m_guid": "9875497a1da360caa268753aca"
+  "m_typeindex": "175488002581160416"
+"Red":
+  "m_guid": "bbca497c728110a2a6336117c5"
+  "m_typeindex": "175488002581160416"
+"Shelf":
+  "m_guid": "b66e88768ca2df47a8f599da73"
+  "m_typeindex": "175488002581160416"
+"Table.obj":
+  "m_guid": "582a34726aa5690e1bab76cc66"
+  "m_typeindex": "4838001395392124604"
+"TableMat":
+  "m_guid": "a1eec271348b86338e89ec9700"
+  "m_typeindex": "175488002581160416"
+"TableMaterial2":
+  "m_guid": "a5f0de7ba2bda8aecedcaa5a4b"
+  "m_typeindex": "175488002581160416"
+"Wall":
+  "m_guid": "9d99827d73ba32399772ee6ed9"
+  "m_typeindex": "175488002581160416"
+"table_new_TableBottom_BaseColor.png":
+  "m_guid": "969e2b7f3f8b2aced13b44d673"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Emissive.png":
+  "m_guid": "969e3571bbbe5c28abbee0030c"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Height.png":
+  "m_guid": "969e4073188cde9e8d1f2ce148"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Metallic.png":
+  "m_guid": "969e4b7a7aa35e4a9c9285c962"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Normal.png":
+  "m_guid": "969e577ad2a00f314bf06120e7"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Roughness.png":
+  "m_guid": "969e627eb4800a36e54a9a2cad"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_BaseColor.png":
+  "m_guid": "969e6c74b292a88833ca39e502"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Emissive.png":
+  "m_guid": "969e7776e4ae6afdeaa26153b5"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Height.png":
+  "m_guid": "969e83742ab9d4764c63654033"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Metallic.png":
+  "m_guid": "969e907b70b021ecf68b2e815d"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Normal.png":
+  "m_guid": "969e9d70cfaf21cc465aebd32a"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Roughness.png":
+  "m_guid": "969ea97e5980a4fd58fb4fe08b"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_BaseColor.png":
+  "m_guid": "969f0178c4a1b1f5b14d573818"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Emissive.png":
+  "m_guid": "969f0c71279134d53fb60cddcc"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Height.png":
+  "m_guid": "969f1a7479b5cf358e48add5b5"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Metallic.png":
+  "m_guid": "969f287a12b8d8219b52586b5f"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Normal.png":
+  "m_guid": "969f35765bbd0904961db202d7"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Roughness.png":
+  "m_guid": "969f4575e185ea472dcca0c9eb"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_BaseColor.png":
+  "m_guid": "969eb67417912a6d39bd7b8639"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Emissive.png":
+  "m_guid": "969ec3746ab406e289f6bed210"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Height.png":
+  "m_guid": "969ed0709d92620efc6e878a92"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Metallic.png":
+  "m_guid": "969ede72318ccdb1c9b73aca27"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Normal.png":
+  "m_guid": "969ee97b4aaafa90e56c5f6f53"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Roughness.png":
+  "m_guid": "969ef57101bc39110f8661bfa6"
+  "m_typeindex": "126269861530532084"

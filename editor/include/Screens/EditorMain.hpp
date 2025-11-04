@@ -106,7 +106,8 @@ public:
 
 	void Render_Add_Component_Menu();
 
-	void Render_Rigidbody_Component(ecs::entity entity_handle);
+	// Accessor for custom material inspector
+	AssetManager* GetAssetManager() { return m_AssetManager.get(); }
 
 private:
 	// Entity management
@@ -144,6 +145,10 @@ private:
 
 	// Debug rendering controls
 	bool m_ShowAABBs = false;
+
+	// Material creation dialog state
+	bool m_ShowCreateMaterialDialog = false;
+	char m_NewMaterialNameBuffer[256] = "NewMaterial";
 
 	// Viewport picking implementation
 	void HandleViewportPicking();

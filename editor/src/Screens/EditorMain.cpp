@@ -32,6 +32,8 @@ Technology is prohibited.
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 #include <chrono>
+#include <regex>
+#include <algorithm>
 
 #include "Screens/EditorMain.hpp"
 #include <filesystem>
@@ -59,12 +61,151 @@ Technology is prohibited.
 
 RegisterImguiDescriptorInspector(ModelDescriptor);
 RegisterImguiDescriptorInspector(TextureDescriptor);
-RegisterImguiDescriptorInspector(MaterialDescriptor);
 
 PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
 
+// Shader uniform parsing helpers
+namespace {
+	struct ShaderUniforms {
+		std::set<std::string> samplers;
+		std::set<std::string> floats;
+		std::set<std::string> vec3s;
+		std::set<std::string> vec4s;
+	};
+
+	ShaderUniforms ParseShaderUniforms(std::string const& shader_path) {
+		ShaderUniforms uniforms;
+
+		std::ifstream file(shader_path);
+		if (!file.is_open()) return uniforms;
+
+		std::string line;
+		std::regex sampler_regex(R"(uniform\s+sampler2D\s+(\w+)\s*;)");
+		std::regex float_regex(R"(uniform\s+float\s+(\w+)\s*;)");
+		std::regex vec3_regex(R"(uniform\s+vec3\s+(\w+)\s*;)");
+		std::regex vec4_regex(R"(uniform\s+vec4\s+(\w+)\s*;)");
+		std::smatch match;
+
+		while (std::getline(file, line)) {
+			if (std::regex_search(line, match, sampler_regex)) {
+				uniforms.samplers.insert(match[1].str());
+			}
+			if (std::regex_search(line, match, float_regex)) {
+				uniforms.floats.insert(match[1].str());
+			}
+			if (std::regex_search(line, match, vec3_regex)) {
+				uniforms.vec3s.insert(match[1].str());
+			}
+			if (std::regex_search(line, match, vec4_regex)) {
+				uniforms.vec4s.insert(match[1].str());
+			}
+		}
+
+		return uniforms;
+	}
+
+	void SyncMaterialProperties(MaterialDescriptor& desc, std::string const& shader_dir) {
+		ShaderUniforms all_uniforms;
+
+		// Parse fragment shaders
+		std::string frag_path = shader_dir + "/" + desc.material.frag_name;
+
+		ShaderUniforms frag_uniforms = ParseShaderUniforms(frag_path);
+
+		// Merge uniforms from both shaders
+		all_uniforms.samplers.insert(frag_uniforms.samplers.begin(), frag_uniforms.samplers.end());
+		all_uniforms.floats.insert(frag_uniforms.floats.begin(), frag_uniforms.floats.end());
+		all_uniforms.vec3s.insert(frag_uniforms.vec3s.begin(), frag_uniforms.vec3s.end());
+		all_uniforms.vec4s.insert(frag_uniforms.vec4s.begin(), frag_uniforms.vec4s.end());
+
+		// Exclude engine-provided uniforms (set by renderer at runtime)
+		static const std::set<std::string> excluded_uniforms = {
+			// Camera/View
+			"u_ViewPos",
+			"u_ViewMatrix",
+			"u_ProjectionMatrix",
+			"u_ViewProjection",
+			"u_CameraPos",
+
+			// Transform
+			"u_ModelMatrix",
+			"u_Model",
+			"u_Transform",
+			"u_NormalMatrix",
+
+			// Time
+			"u_Time",
+			"u_DeltaTime",
+
+			// Lighting (system-wide)
+			"u_LightCount",
+			"u_LightPositions",
+			"u_LightColors"
+		};
+
+		// Remove excluded uniforms from all property sets
+		for (auto const& name : excluded_uniforms) {
+			all_uniforms.samplers.erase(name);
+			all_uniforms.floats.erase(name);
+			all_uniforms.vec3s.erase(name);
+			all_uniforms.vec4s.erase(name);
+		}
+
+		// Sync texture_properties
+		{
+			std::unordered_map<std::string, rp::Guid> new_map;
+			for (auto const& name : all_uniforms.samplers) {
+				if (desc.material.texture_properties.count(name)) {
+					new_map[name] = desc.material.texture_properties[name]; // Keep existing
+				} else {
+					new_map[name] = rp::Guid{}; // Add new with empty GUID
+				}
+			}
+			desc.material.texture_properties = std::move(new_map);
+		}
+
+		// Sync float_properties
+		{
+			std::unordered_map<std::string, float> new_map;
+			for (auto const& name : all_uniforms.floats) {
+				if (desc.material.float_properties.count(name)) {
+					new_map[name] = desc.material.float_properties[name];
+				} else {
+					new_map[name] = 0.0f;
+				}
+			}
+			desc.material.float_properties = std::move(new_map);
+		}
+
+		// Sync vec3_properties
+		{
+			std::unordered_map<std::string, glm::vec3> new_map;
+			for (auto const& name : all_uniforms.vec3s) {
+				if (desc.material.vec3_properties.count(name)) {
+					new_map[name] = desc.material.vec3_properties[name];
+				} else {
+					new_map[name] = glm::vec3(0.0f);
+				}
+			}
+			desc.material.vec3_properties = std::move(new_map);
+		}
+
+		// Sync vec4_properties
+		{
+			std::unordered_map<std::string, glm::vec4> new_map;
+			for (auto const& name : all_uniforms.vec4s) {
+				if (desc.material.vec4_properties.count(name)) {
+					new_map[name] = desc.material.vec4_properties[name];
+				} else {
+					new_map[name] = glm::vec4(0.0f);
+				}
+			}
+			desc.material.vec4_properties = std::move(new_map);
+		}
+	}
+}
 
 EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 {
@@ -83,6 +224,172 @@ void EditorMain::init()
 	glfwMaximizeWindow(window);
 
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+
+	// Register custom material inspector with texture dropdowns (captures 'this')
+	{
+		constexpr auto mat_type_hash = rp::utility::type_hash<MaterialDescriptor>::value();
+		rp::ResourceTypeImporterRegistry::RegisterSerializer(mat_type_hash, "imgui",
+			[this](std::string const& str, std::byte* data) {
+				MaterialDescriptor& desc = *reinterpret_cast<MaterialDescriptor*>(data);
+				AssetManager* assets = this->GetAssetManager();
+
+				// Cache to track last synced shader names per material
+				struct ShaderCache {
+					std::string vert_name;
+					std::string frag_name;
+				};
+				static std::unordered_map<std::string, ShaderCache> shader_cache;
+
+				// Check if shader names changed
+				std::string material_id = desc.base.m_guid.to_hex();
+				bool needs_sync = false;
+
+				auto it = shader_cache.find(material_id);
+				if (it == shader_cache.end()) {
+					// First time seeing this material
+					needs_sync = true;
+				} else {
+					// Check if shader names changed
+					if (it->second.vert_name != desc.material.vert_name ||
+						it->second.frag_name != desc.material.frag_name) {
+						needs_sync = true;
+					}
+				}
+
+				// Only sync if needed
+				if (needs_sync) {
+					std::string shader_dir = Editor::GetInstance().GetConfig().project_workingDir + "/assets/shaders";
+					SyncMaterialProperties(desc, shader_dir);
+
+					// Update cache
+					shader_cache[material_id] = {desc.material.vert_name, desc.material.frag_name};
+				}
+
+				// Render descriptor_base
+				ImGui::SeparatorText("Base Properties");
+				ImGui::Text("GUID: %s", desc.base.m_guid.to_hex().c_str());
+				ImGui::Text("Name: %s", desc.base.m_name.c_str());
+				ImGui::Text("Importer: %s", desc.base.m_importer.c_str());
+
+				// Material properties
+				ImGui::SeparatorText("Material Properties");
+
+				char vert_buf[256];
+				strncpy(vert_buf, desc.material.vert_name.c_str(), sizeof(vert_buf));
+				if (ImGui::InputText("Vertex Shader", vert_buf, sizeof(vert_buf))) {
+					desc.material.vert_name = vert_buf;
+				}
+
+				char frag_buf[256];
+				strncpy(frag_buf, desc.material.frag_name.c_str(), sizeof(frag_buf));
+				if (ImGui::InputText("Fragment Shader", frag_buf, sizeof(frag_buf))) {
+					desc.material.frag_name = frag_buf;
+				}
+
+				ImGui::ColorEdit3("Albedo", &desc.material.albedo.x);
+				ImGui::SliderFloat("Metallic", &desc.material.metallic, 0.0f, 1.0f);
+				ImGui::SliderFloat("Roughness", &desc.material.roughness, 0.0f, 1.0f);
+
+				// Texture properties with dropdowns
+				ImGui::SeparatorText("Texture Properties");
+
+				// Helper to check if asset is a texture (by base name extension)
+				auto is_texture_asset = [](std::string const& assetname) -> bool {
+					std::string lower = assetname;
+					std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+					static const std::vector<std::string> texture_exts = {
+						".png", ".jpg", ".jpeg",
+						".tga", ".bmp", ".hdr", ".dds"
+					};
+
+					for (auto const& ext : texture_exts) {
+						if (lower.ends_with(ext)) return true;
+					}
+					return false;
+				};
+
+				// Render each texture property
+				std::vector<std::string> keys_to_remove;
+				for (auto& [key, guid] : desc.material.texture_properties) {
+					ImGui::PushID(key.c_str());
+
+					std::string current_name = "None";
+					if (guid != rp::Guid{}) {
+						rp::BasicIndexedGuid indexed{guid, 0};
+						current_name = assets->ResolveAssetName(indexed);
+						if (current_name.empty()) current_name = guid.to_hex().substr(0, 8) + "...";
+					}
+
+					if (ImGui::BeginCombo(key.c_str(), current_name.c_str())) {
+						if (ImGui::Selectable("None", guid == rp::Guid{})) {
+							guid = rp::Guid{};
+						}
+
+						// Iterate through all imported assets (matches Resources Browser behavior)
+						for (auto const& [assetname, indexed_guid] : assets->m_AssetNameGuid) {
+							// Only show texture assets
+							if (!is_texture_asset(assetname)) continue;
+
+							// Use the asset name directly (it's already the base name)
+							bool selected = (indexed_guid.m_guid == guid);
+							if (ImGui::Selectable(assetname.c_str(), selected)) {
+								guid = indexed_guid.m_guid;
+							}
+							if (selected) ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+
+					// Remove button
+					ImGui::SameLine();
+					if (ImGui::SmallButton("X")) {
+						keys_to_remove.push_back(key);
+					}
+
+					ImGui::PopID();
+				}
+
+				// Remove marked keys
+				for (auto const& key : keys_to_remove) {
+					desc.material.texture_properties.erase(key);
+				}
+
+				// Add new texture property
+				static char new_texture_key[256] = "";
+				ImGui::InputText("New Texture Property", new_texture_key, sizeof(new_texture_key));
+				ImGui::SameLine();
+				if (ImGui::Button("Add") && strlen(new_texture_key) > 0) {
+					desc.material.texture_properties[new_texture_key] = rp::Guid{};
+					new_texture_key[0] = '\0';
+				}
+
+				// Float properties
+				if (!desc.material.float_properties.empty()) {
+					ImGui::SeparatorText("Float Properties");
+					for (auto& [key, value] : desc.material.float_properties) {
+						ImGui::SliderFloat(key.c_str(), &value, 0.0f, 10.0f);
+					}
+				}
+
+				// Vec3 properties
+				if (!desc.material.vec3_properties.empty()) {
+					ImGui::SeparatorText("Vec3 Properties");
+					for (auto& [key, value] : desc.material.vec3_properties) {
+						ImGui::ColorEdit3(key.c_str(), &value.x);
+					}
+				}
+
+				// Vec4 properties
+				if (!desc.material.vec4_properties.empty()) {
+					ImGui::SeparatorText("Vec4 Properties");
+					for (auto& [key, value] : desc.material.vec4_properties) {
+						ImGui::ColorEdit4(key.c_str(), &value.x);
+					}
+				}
+			});
+	}
+
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
@@ -121,35 +428,6 @@ void EditorMain::update()
 	if (!active) return;
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
-
-struct s2 {
-	std::string some_value;
-	bool is_true;
-	glm::vec4 v4;
-};
-
-struct p {
-	s2 struct2;
-};
-
-enum class testemum : std::uint8_t {
-	pollo,
-	water,
-	enum1
-};
-
-struct test {
-	int t1;
-	double t2{ 3.14f };
-	testemum enum_test;
-	std::string t3;
-	glm::vec3 vec3;
-	std::vector<p> vector_of_ints;
-	std::map<std::string, s2> map_of_str_bool;
-};
-
-test testa{};
-
 
 void EditorMain::render()
 {
@@ -239,8 +517,6 @@ void EditorMain::render()
 	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.337f, 0.612f, 0.839f, 1.0f));
 
-	//Render_MenuBar();
-
 	if (showSceneExplorer)
 		Render_SceneExplorer();
 	if (showConsole)
@@ -253,12 +529,6 @@ void EditorMain::render()
 	Render_Game();
 	Render_CameraControls();
 	Render_AssetBrowser();
-
-
-
-	ImGui::Begin("TestReflection");
-	ImguiInspectTypeRenderer::present(testa, "testreflectmenu");
-	ImGui::End();
 
 	ImGui::PopStyleColor(3);
 	ImGui::PopStyleVar();
@@ -313,7 +583,7 @@ void EditorMain::Render_Inspector()
 	ImGui::Begin("Inspector", nullptr);
 
 	// Show selected entity information
-	if (m_SelectedEntityID == 0) {
+	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
 		ImGui::SetCursorPosY(ImGui::GetWindowHeight() * 0.5f - 20);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("No object selected").x) * 0.5f);
@@ -329,10 +599,70 @@ void EditorMain::Render_Inspector()
 	ImGui::Text("Object ID: %u", m_SelectedEntityID);
 
 	auto& entities = engineService.m_cont->m_entities_snapshot;
+	auto& entityNames = engineService.m_cont->m_names_snapshot;
 
 	if (auto it{ std::find_if(entities.begin(), entities.end(), [this](std::size_t ehdl) {return ecs::entity(ehdl).get_uid() == m_SelectedEntityID; }) }; it != entities.end()) {
 		// Show entity components
 		ImGui::Text("Entity UID: %llu", m_SelectedEntityID);
+
+		auto i = it - entities.begin();
+
+		// Object name header (like Unity)
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 6));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+		auto const& currentName = entityNames[i];
+
+		char nameBuffer[256];
+		snprintf(nameBuffer, sizeof(nameBuffer), currentName.c_str(), currentName.size());
+
+		ImGui::PushItemWidth(-1); // Full width
+
+		// Input text with callback flags
+		ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue |
+			ImGuiInputTextFlags_AutoSelectAll;
+
+		if (ImGui::InputText("##EntityName", nameBuffer, 256, flags))
+		{
+			// User pressed Enter
+			std::string newName(nameBuffer);
+			engineService.ExecuteOnEngineThread([newName, this]() {
+				ecs::world world = Engine::GetWorld();
+				for (auto& entity : world.get_all_entities()) {
+					if (entity.get_uid() == m_SelectedEntityID) {
+						entity.name() = newName;
+						break;
+					}
+				}
+				spdlog::info("Renamed entity to: {}", newName);
+				});
+		}
+
+		// Also handle when field loses focus
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			std::string newName(nameBuffer);
+			if (newName != currentName)
+			{
+				engineService.ExecuteOnEngineThread([newName, this]() {
+					ecs::world world = Engine::GetWorld();
+					for (auto& entity : world.get_all_entities()) {
+						if (entity.get_uid() == m_SelectedEntityID) {
+							entity.name() = newName;
+							break;
+						}
+					}
+					spdlog::info("Renamed entity to: {}", newName);
+					});
+			}
+		}
+
+		ImGui::PopItemWidth();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
 
 		// renders all reflectible components
 		Render_Components();
@@ -364,11 +694,11 @@ void EditorMain::Render_Inspector()
 
 void EditorMain::Render_Components()
 {
-	std::lock_guard lg{ engineService.m_cont->m_mtx };
+	std::unique_lock ul{ engineService.m_cont->m_mtx };
 	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
 	auto& type_map{ ReflectionRegistry::types() };
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
-
+	
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	ReflectionRegistry::TypeID behaviour_component{};
 	auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
@@ -404,6 +734,11 @@ void EditorMain::Render_Components()
 		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
 			Render_Component_Member(comp, is_dirty);
+			if (ImGui::Button("Delete Component")) {
+				ul.unlock();
+				engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+				ul.lock();
+			}
 			ImGui::TreePop();
 			if (is_dirty) {
 				engineService.m_cont->m_write_back_queue.push(type_id);
@@ -457,7 +792,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (rp::BasicIndexedGuid* v = value.try_cast<rp::BasicIndexedGuid>()) {
 				std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(v->m_typeindex);
 				std::string currentselectionname = m_AssetManager->ResolveAssetName(*v);
-				std::size_t type = v->m_typeindex;
+				std::size_t typehash = v->m_typeindex;
 				assetnames.emplace_back("");
 				auto it{ std::find_if(assetnames.begin(), assetnames.end(), [currentselectionname](std::string const& a) {return currentselectionname == a; }) };
 				if (it != assetnames.end()) {
@@ -467,17 +802,19 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text(field_name.c_str());
 				ImGui::SameLine(150);
 				ImGui::SetNextItemWidth(-1);
-				ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
 					auto& vec = *static_cast<std::vector<std::string>*>(data);
 					if (idx < 0 || idx >= vec.size()) return false;
 					*out_text = vec[idx].c_str();
 					return true;
-				}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()));
-				if (current_item != 0) {
+					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+				// Check if selected item is valid and not empty (instead of checking index)
+				if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 					*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-					v->m_typeindex = type;
+					v->m_typeindex = typehash;
 					is_dirty = true;
 				}
+			}
 			}
 
 			// primitives
@@ -606,11 +943,12 @@ void EditorMain::Render_Add_Component_Menu()
 			continue;
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {
-			if (type_name == "Behaviour")
+			/*if (type_name == "Behaviour")
 			{
 				ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), m_SelectedEntityID };
 				entity.add<behaviour>();
-			}
+			}*/
+			engineService.add_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
 		}
 	}
 }
@@ -1849,7 +2187,12 @@ void EditorMain::Render_AssetBrowser()
 		{
 			if (ImGui::MenuItem("Import All")) // popup asking to import asset
 			{
-				m_AssetManager->ImportAssetDirectory(subd);
+				auto biguids{ m_AssetManager->ImportAssetDirectory(subd) };
+				engineService.ExecuteOnEngineThread([biguids] {
+					std::for_each(biguids.begin(), biguids.end(), [](rp::BasicIndexedGuid biguid) {
+						ResourceRegistry::Instance().Unload(biguid);
+						});
+					});
 			}
 			ImGui::EndPopup();
 		}
@@ -1875,7 +2218,10 @@ void EditorMain::Render_AssetBrowser()
 		{
 			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
 			{
-				m_AssetManager->ImportAsset(it->second);
+				rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(it->second) };
+				engineService.ExecuteOnEngineThread([biguid] {
+					ResourceRegistry::Instance().Unload(biguid);
+					});
 			}
 			if (ImGui::MenuItem("Import Settings")) // popup asking to import asset
 			{
@@ -1903,6 +2249,65 @@ void EditorMain::Render_AssetBrowser()
 		ImGui::NextColumn();
 		ImGui::PopID();
 	}
+
+	// Context menu for empty space (right-click to create new assets)
+	if (ImGui::BeginPopupContextWindow("AssetBrowserContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+	{
+		if (ImGui::BeginMenu("Create"))
+		{
+			if (ImGui::MenuItem("Material"))
+			{
+				m_ShowCreateMaterialDialog = true;
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndPopup();
+	}
+
+	// Material creation dialog
+	if (m_ShowCreateMaterialDialog)
+	{
+		ImGui::OpenPopup("Create Material");
+		m_ShowCreateMaterialDialog = false;
+	}
+
+	// Center the modal
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	if (ImGui::BeginPopupModal("Create Material", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Enter material name:");
+		ImGui::Separator();
+
+		ImGui::InputText("##MaterialName", m_NewMaterialNameBuffer, sizeof(m_NewMaterialNameBuffer));
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Create", ImVec2(120, 0)))
+		{
+			// Validate name is not empty
+			if (strlen(m_NewMaterialNameBuffer) > 0)
+			{
+				m_AssetManager->CreateMaterialDescriptor(std::string(m_NewMaterialNameBuffer));
+				ImGui::CloseCurrentPopup();
+				// Reset buffer for next time
+				strcpy(m_NewMaterialNameBuffer, "NewMaterial");
+			}
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			// Reset buffer
+			strcpy(m_NewMaterialNameBuffer, "NewMaterial");
+		}
+
+		ImGui::EndPopup();
+	}
+
 	ImGui::Columns(1);
 
 	ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32.0f, 256.0f); // Slider for thumbnail size
@@ -2508,9 +2913,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 void EditorMain::ClearEntitySelection()
 {
-	if (m_SelectedEntityID != 0) {
+	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
-		m_SelectedEntityID = 0;
+		m_SelectedEntityID = static_cast<uint32_t>(-1);
 
 		// Clear visual feedback
 		engineService.ClearOutlinedObjects();

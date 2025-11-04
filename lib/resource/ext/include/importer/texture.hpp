@@ -8,12 +8,18 @@
 inline TextureResourceData ImportTexture(TextureDescriptor const& texDesc) {
 	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	DirectX::ScratchImage image;
+	DirectX::ScratchImage flippedImage;
 	DirectX::ScratchImage cimage;
 	DirectX::TexMetadata info;
 
-	auto hres = LoadFromWICFile(string_to_wstring(texDesc.base.m_source).c_str(), DirectX::WIC_FLAGS::WIC_FLAGS_NONE, &info, image);
+	auto hres = LoadFromWICFile(string_to_wstring(rp::utility::resolve_path(texDesc.base.m_source)).c_str(), DirectX::WIC_FLAGS::WIC_FLAGS_NONE, &info, image);
 	assert(!FAILED(hres) && "load fail");
-	hres = Compress(image.GetImages(), image.GetImageCount(), info, static_cast<DXGI_FORMAT>(texDesc.compression), DirectX::TEX_COMPRESS_PARALLEL, DirectX::TEX_THRESHOLD_DEFAULT, cimage);
+
+	// Flip vertically to convert from DirectX (top-down) to OpenGL (bottom-up) orientation
+	hres = DirectX::FlipRotate(image.GetImages(), image.GetImageCount(), info, DirectX::TEX_FR_FLIP_VERTICAL, flippedImage);
+	assert(!FAILED(hres) && "flip fail");
+
+	hres = Compress(flippedImage.GetImages(), flippedImage.GetImageCount(), flippedImage.GetMetadata(), static_cast<DXGI_FORMAT>(texDesc.compression), DirectX::TEX_COMPRESS_PARALLEL, DirectX::TEX_THRESHOLD_DEFAULT, cimage);
 	assert(!FAILED(hres) && "compress fail");
 	DirectX::Blob dxblob;
 	hres = DirectX::SaveToDDSMemory(cimage.GetImages(), cimage.GetImageCount(), cimage.GetMetadata(), DirectX::DDS_FLAGS_NONE, dxblob);
