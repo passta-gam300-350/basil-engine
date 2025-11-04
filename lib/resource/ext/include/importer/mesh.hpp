@@ -167,7 +167,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(
-        desc.base.m_source,
+        rp::utility::resolve_path(desc.base.m_source),
         aiProcess_Triangulate |
         aiProcess_GenSmoothNormals |
         aiProcess_CalcTangentSpace |
@@ -228,7 +228,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
     // At this point, extractedMaterials contains all material descriptors
     // You can now call CreateMaterial(matDesc) for each to register them in your engine.
     for (auto const& matDesc : extractedMaterials) {
-        CreateMaterial(matDesc);
+        CreateMaterial(matDesc, rp::utility::output_path());
     }
 
     return result;

@@ -366,3 +366,50 @@ void Material::ApplyAllProperties()
                   m_Name, m_FloatProperties.size(), m_Vec3Properties.size(),
                   m_Vec4Properties.size(), m_Mat4Properties.size(), m_TextureProperties.size());
 }
+
+// ============================================================================
+// Get All Textures - Convert material textures to rendering format
+// ============================================================================
+
+std::vector<Texture> Material::GetAllTextures() const
+{
+    std::vector<Texture> textures;
+    textures.reserve(m_TextureProperties.size());
+
+    // Helper lambda to convert uniform name to texture type
+    auto getTextureType = [](const std::string& uniformName) -> std::string {
+        if (uniformName == "u_DiffuseMap")   return "texture_diffuse";
+        if (uniformName == "u_NormalMap")    return "texture_normal";
+        if (uniformName == "u_MetallicMap")  return "texture_metallic";
+        if (uniformName == "u_RoughnessMap") return "texture_roughness";
+        if (uniformName == "u_AOMap")        return "texture_ao";
+        if (uniformName == "u_EmissiveMap")  return "texture_emissive";
+        if (uniformName == "u_SpecularMap")  return "texture_specular";
+        if (uniformName == "u_HeightMap")    return "texture_height";
+
+        // Default to diffuse for unknown uniforms
+        return "texture_diffuse";
+    };
+
+    // Convert each texture from the material's storage format
+    for (const auto& [uniformName, texturePair] : m_TextureProperties)
+    {
+        const auto& [texturePtr, textureUnit] = texturePair;
+
+        // Skip null or invalid textures
+        if (!texturePtr || texturePtr->id == 0) {
+            continue;
+        }
+
+        // Create Texture struct (copy the data, not the shared_ptr)
+        Texture tex;
+        tex.id = texturePtr->id;
+        tex.type = getTextureType(uniformName);
+        tex.path = texturePtr->path;
+        tex.target = texturePtr->target;
+
+        textures.push_back(tex);
+    }
+
+    return textures;
+}

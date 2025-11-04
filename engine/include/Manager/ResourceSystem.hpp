@@ -207,6 +207,8 @@ struct ResourceRegistry {
         std::function<bool (void*, rp::Guid)> m_Unload;
     };
 
+    using TypeNameHash = std::uint64_t;
+
     struct Entry {
         void* m_Pool; //type erasure for ResourcePool<T>*
         VTable m_Vt;
@@ -265,12 +267,20 @@ struct ResourceRegistry {
         };
 
         m_Entries.emplace(id, e);
+        m_TypeNamePoolId.emplace(rp::utility::compute_string_hash(type_name), id);
     }
 
     template <typename T>
     PoolType<T>* Pool() {
         auto it = m_Entries.find(ResourceType_Id<T>());
         return it == m_Entries.end() ? nullptr : static_cast<PoolType<T>*>(it->second.m_Pool);
+    }
+
+    Entry* Pool(rp::BasicIndexedGuid biguid) {
+        auto typeit = m_TypeNamePoolId.find(biguid.m_typeindex);
+        assert(typeit != m_TypeNamePoolId.end() && "typehash not found. probably different from registered");
+        auto it = m_Entries.find(typeit->second);
+        return it == m_Entries.end() ? nullptr : &it->second;
     }
 
     template <typename T>
@@ -308,6 +318,11 @@ struct ResourceRegistry {
     bool Unload(rp::Guid guid) {
         auto* pool = Pool<T>();
         return pool ? pool->Unload(guid) : false;
+    }
+
+    bool Unload(rp::BasicIndexedGuid biguid) {
+        Entry* pool = Pool(biguid);
+        return pool ? pool->m_Vt.m_Unload(pool->m_Pool, biguid.m_guid) : false;
     }
 
     /**
@@ -357,6 +372,7 @@ struct ResourceRegistry {
 
 private:
     std::unordered_map<ResourceTypeId_t, Entry> m_Entries;
+    std::unordered_map<TypeNameHash, ResourceTypeId_t> m_TypeNamePoolId;
 };
 
 class MemoryMappedFile {

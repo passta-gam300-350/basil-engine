@@ -141,6 +141,15 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
+
+				// Trigger EnTT observers for components with update callbacks
+				// Currently only MeshRendererComponent uses on_update observers
+				if (meta_type.info().hash() == entt::type_hash<MeshRendererComponent>::value()) {
+					// Trigger on_update<MeshRendererComponent> observer
+					// This will call RenderSystem::OnMeshRendererUpdated()
+					entt::entity enttntt = ecs::world::detail::entt_entity_cast(inspected_entity);
+					w.impl.get_registry().patch<MeshRendererComponent>(enttntt);
+				}
 			}
 		}
 	}
