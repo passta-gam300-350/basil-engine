@@ -36,7 +36,15 @@ struct rp::reflection::ExternalTypeMetadata<glm::ivec4> {
 
 template <typename NativeType>
 void SerializeBinary(NativeType const& nativedata, rp::Guid guid, std::string const& ext, std::string const& path = {}) {
-	rp::serialization::binary_serializer::serialize(nativedata, rp::utility::resolve_path(path) + "\\" + guid.to_hex() + ext);
+	std::string out_path{ rp::utility::resolve_path(path) + "\\" + guid.to_hex() + ext };
+	rp::serialization::binary_serializer::serialize(nativedata, out_path);
+}
+
+template <typename NativeType>
+void SerializeBinaryCallback(NativeType const& nativedata, rp::BasicIndexedGuid guid, std::string const& ext, std::string const& path = {}) {
+	std::string out_path{ rp::utility::resolve_path(path) + "\\" + guid.m_guid.to_hex() + ext };
+	rp::serialization::binary_serializer::serialize(nativedata, out_path);
+
 }
 
 #endif

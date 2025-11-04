@@ -225,10 +225,14 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         }
     }
 
+    std::string parent{ rp::utility::resolve_path(desc.base.m_source) };
+    parent = parent.substr(0, parent.rfind("\\") + 1);
+
     // At this point, extractedMaterials contains all material descriptors
     // You can now call CreateMaterial(matDesc) for each to register them in your engine.
     for (auto const& matDesc : extractedMaterials) {
-        CreateMaterial(matDesc, rp::utility::output_path());
+        //CreateMaterial(matDesc, rp::utility::output_path(), parent + matDesc.material.material_name + ".desc");
+        rp::serialization::yaml_serializer::serialize(matDesc, parent + matDesc.material.material_name + ".desc");
     }
 
     return result;
