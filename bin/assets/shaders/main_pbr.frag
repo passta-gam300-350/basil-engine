@@ -513,10 +513,9 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
 
 void main() {
     // Sample traditional textures
-    vec3 albedo = fs_in.InstanceColor.rgb;
+    vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
     if (u_HasDiffuseMap) {
-        vec4 texSample = texture(u_DiffuseMap, fs_in.TexCoords);
-        albedo *= texSample.rgb;
+        albedo = texture(u_DiffuseMap, fs_in.TexCoords);
     }
 
     float metallic = fs_in.InstanceMetallic;
@@ -550,12 +549,12 @@ void main() {
     vec3 normal = getNormalFromMap();
 
     // Calculate multi-light PBR lighting (shadows are calculated per-light now)
-    vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao);
+    vec3 color = calculateMultiLightPBR(albedo.rgb, normal, metallic, roughness, ao);
 
     // Add emissive
     color += emissive;
 
-    // Output raw HDR color to HDR framebuffer (RGB16F)
+    // Output raw HDR color to HDR framebuffer with alpha for transparency
     // Tone mapping will be applied later in ToneMapRenderPass
-    FragColor = vec4(color, 1.0);
+    FragColor = vec4(color, albedo.a);
 }
