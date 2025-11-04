@@ -100,9 +100,6 @@ template <> struct rp::TypedGuid<TYPE> : public rp::BasicIndexedGuid{						\
 template <> struct rp::ResourceTypeLoader<rp::utility::string_hash(TYPENAME)>{				\
 	using type = TYPE;																		\
 	static constexpr auto type_hash{ rp::utility::string_hash(TYPENAME) };					\
-	inline static rp::ResourceTypeLoaderData<type> GetLoaderData() {						\
-		return rp::ResourceTypeLoaderData<type>(Load, Unload);								\
-	}																						\
 	static type Load(std::byte const* data);												\
 	static void Unload(type&& data);														\
 };																							\

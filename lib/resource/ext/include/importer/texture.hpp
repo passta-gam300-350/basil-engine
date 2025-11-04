@@ -12,7 +12,7 @@ inline TextureResourceData ImportTexture(TextureDescriptor const& texDesc) {
 	DirectX::ScratchImage cimage;
 	DirectX::TexMetadata info;
 
-	auto hres = LoadFromWICFile(string_to_wstring(texDesc.base.m_source).c_str(), DirectX::WIC_FLAGS::WIC_FLAGS_NONE, &info, image);
+	auto hres = LoadFromWICFile(string_to_wstring(rp::utility::resolve_path(texDesc.base.m_source)).c_str(), DirectX::WIC_FLAGS::WIC_FLAGS_NONE, &info, image);
 	assert(!FAILED(hres) && "load fail");
 
 	// Flip vertically to convert from DirectX (top-down) to OpenGL (bottom-up) orientation

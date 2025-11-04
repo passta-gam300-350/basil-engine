@@ -8,6 +8,8 @@
 #include <importer/importer.hpp>
 #include <descriptors/material.hpp>
 #include <glm/glm.hpp>
+#include "Screens/EditorMain.hpp"
+#include <ranges>
 
 // YAML serialization support for BasicIndexedGuid
 namespace YAML {
@@ -133,10 +135,13 @@ std::vector<std::string> AssetManager::GetAssetTypeNames(ResourceType ty) {
 	return asstype;
 }
 
-void AssetManager::ImportAsset(std::string const& rdesc) {
+rp::BasicIndexedGuid AssetManager::ImportAsset(std::string const& rdesc) {
 	auto importertype{ rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(rdesc) };
 	auto biguid{ rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc) };
 	auto file_path{ normalizePath(m_ImportedAssetPath + "/" + biguid.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetImporterSuffix(importertype)) };
+	if (ResourceSystem::Instance().m_MappedIO.find(file_path) != ResourceSystem::Instance().m_MappedIO.end()) {
+		ResourceSystem::Instance().m_MappedIO.erase(file_path); //unsafe
+	}
 	rp::ResourceTypeImporterRegistry::Import(importertype, rdesc, file_path);
 	rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc);
 	m_AssetNameGuid.emplace(rp::ResourceTypeImporterRegistry::GetDescriptorName(rdesc), biguid);
@@ -145,19 +150,23 @@ void AssetManager::ImportAsset(std::string const& rdesc) {
 	fentry.m_Path = file_path;
 	fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 	ResourceSystem::Instance().m_FileEntries.emplace(fentry.m_Guid, fentry);
+	return biguid;
 }
 
 //this might cause issues if there are too many directories cos of recursion
-void AssetManager::ImportAssetDirectory(std::string const& dir) {
+std::vector<rp::BasicIndexedGuid> AssetManager::ImportAssetDirectory(std::string const& dir) {
+	std::vector<rp::BasicIndexedGuid> guids;
 	for (const auto& entry : std::filesystem::directory_iterator(dir)) {
 		if (entry.is_directory()) {
-			ImportAssetDirectory(entry.path().string());
+			auto subguids{ ImportAssetDirectory(entry.path().string()) };
+			guids.insert(guids.end(), subguids.begin(), subguids.end());
 		}
 	}
 	auto files = GetFiles(dir);
 	for (auto it = files.first; it != files.second; ++it) {
-		ImportAsset(it->second);
+		guids.emplace_back(ImportAsset(it->second));
 	}
+	return guids;
 }
 
 void AssetManager::CreateMaterialDescriptor(std::string const& material_name) {
@@ -266,6 +275,11 @@ void AssetManager::FileIndexingWorkerLoop() {
 		return;
 	}
 
+	std::string str = std::filesystem::path(m_RootPath + "/../.imports").make_preferred().string();
+
+	rp::utility::working_path() = m_RootPath;
+	rp::utility::output_path() = str;
+
 	ImportAssetList();
 
 	try {
@@ -283,7 +297,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
 				if (!std::filesystem::exists(desc_name)) {
-					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string());
+					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string(), m_RootPath);
 				}
 				m_FileList.emplace(dir_path, desc_name);
 			}

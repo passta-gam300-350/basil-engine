@@ -590,7 +590,7 @@ namespace {
 	struct MESHES_resource_registrar {
 		MESHES_resource_registrar() {
 			ResourceRegistry::Instance().RegisterType<std::vector<std::shared_ptr<Mesh>>>(
-				loadmesh, [](std::vector<std::shared_ptr<Mesh>>&) {}, "MESHES");
+				loadmesh, [](std::vector<std::shared_ptr<Mesh>>&) {}, "mesh");
 		}
 	}; static MESHES_resource_registrar g_MESHES_resource_registrar;
 }

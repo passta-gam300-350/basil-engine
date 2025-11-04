@@ -208,5 +208,11 @@ public:
 	 * @param path File path to load from
 	 */
 	void LoadScene(const char* path);
+
+	/**
+	 * @brief creates a new scene (executes on engine thread)
+	 * @param path File path to load from
+	 */
+	void NewScene();
 };
 #endif // FileService_HPP
