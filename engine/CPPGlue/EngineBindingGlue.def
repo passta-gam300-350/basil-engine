@@ -1,3 +1,2 @@
 //LIBRARY "EngineGlueGen"
 // EXPORTS
-BasilEngine_Debug_Logger_GLUE_GEN::Bind();

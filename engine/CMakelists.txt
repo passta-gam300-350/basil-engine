@@ -82,7 +82,7 @@ PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W4 /MP>
+  $<$<CXX_COMPILER_ID:MSVC>:/W4 /MP /bigobj>
   $<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:/analyze>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
 )
