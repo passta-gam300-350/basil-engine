@@ -33,8 +33,8 @@ struct CSKlassInstance;
 struct ManagedAssembly;
 
 class MonoManager {
-	static ScriptCompiler* m_Compiler;
-	static MonoLoader* m_Loader;
+	static std::unique_ptr<ScriptCompiler> m_Compiler;
+	static std::unique_ptr<MonoLoader> m_Loader;
 	static std::vector<std::string> m_ScriptBins;
 
 	static bool m_Verbose;

@@ -143,6 +143,7 @@ void Engine::CoreUpdate() {
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	//PF_END_FRAME();
+	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
 }
 
 void Engine::Update() {
@@ -192,7 +193,7 @@ void Engine::UpdateDebug() {
 	frame_counter--;
 
 	//TODO: DEBUG REMOVE LATER
-	BehaviourSystem::Instance().Update(instance.m_World, 0.f);
+	//BehaviourSystem::Instance().Update(instance.m_World, 0.f);
 }
 
 void Engine::ReportLastError() {
@@ -212,6 +213,10 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	ReflectionRegistry::SetupNativeTypes();
 	ReflectionRegistry::SetupEngineTypes();
+
+	MonoEntityManager::GetInstance().SetPreCompiled(false);
+	MonoEntityManager::GetInstance().StartCompilation();
+
 	Instance().m_Info.m_FrameLogRate = 165;
 	
 	Instance().m_World = WorldRegistry::NewWorld();
@@ -250,10 +255,9 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
 
-	MonoEntityManager::GetInstance().SetPreCompiled(false);
-	MonoEntityManager::GetInstance().StartCompilation();
+	
 
-	BehaviourSystem::Instance().Init();
+	
 	BindingSystem::RegisterBindings();
 
 	Scheduler::CompileJobSchedule();

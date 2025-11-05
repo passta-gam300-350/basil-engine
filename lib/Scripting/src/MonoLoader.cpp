@@ -70,16 +70,22 @@ void MonoLoader::Enable_Compiler()
 
 void MonoLoader::Exit()
 {
-	if (backendDomain)
-	{
-		mono_domain_unload(backendDomain);
-		backendDomain = nullptr;
-	}
 
 	if (gameDomain)
 	{
 		mono_domain_unload(gameDomain);
 		gameDomain = nullptr;
+	}
+	if (compilerDomain)
+	{
+		mono_domain_unload(compilerDomain);
+		compilerDomain = nullptr;
+	}
+
+	if (backendDomain)
+	{
+		mono_jit_cleanup(backendDomain);
+		backendDomain = nullptr;
 	}
 }
 
@@ -116,10 +122,5 @@ MonoDomain* MonoLoader::GetActiveDomain()
 MonoLoader::~MonoLoader()
 {
 	Exit();
-	if (compilerDomain)
-	{
-		mono_domain_unload(compilerDomain);
-		compilerDomain = nullptr;
-	}
-	mono_jit_cleanup(backendDomain);
+
 }
