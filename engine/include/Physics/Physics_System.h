@@ -75,6 +75,14 @@ public:
     void FixedUpdate(ecs::world& world);
     void Exit();
     
+    static std::unique_ptr<PhysicsSystem>& InstancePtr(){
+        static std::unique_ptr<PhysicsSystem> sys{ std::make_unique<PhysicsSystem>() };
+        return sys;
+    }
+
+    static PhysicsSystem& Instance() {
+        return *InstancePtr();
+    }
 
     // Body creation/destruction
     JPH::BodyID CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider = nullptr);

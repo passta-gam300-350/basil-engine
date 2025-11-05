@@ -38,6 +38,9 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat) {
     aiString name;
     if (AI_SUCCESS == aimat->Get(AI_MATKEY_NAME, name)) {
         matDesc.material.material_name = name.C_Str();
+        if (auto sz = matDesc.material.material_name.find("pin:"); sz != std::string::npos) {
+            matDesc.material.material_name = matDesc.material.material_name.substr(sz+4);
+        }
     }
 
     // Albedo / diffuse
@@ -88,6 +91,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat) {
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();
     matDesc.base.m_importer = "material";
+    matDesc.base.m_importer_type = rp::utility::compute_string_hash("material");
 
     return matDesc;
 }

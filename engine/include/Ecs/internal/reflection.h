@@ -469,4 +469,13 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 		} });
 }
 
+#define RegisterReflectionTypeBegin(TYPE, TYPENAME) \
+namespace {											\
+	inline int TYPE##_reflection_register = []() {	\
+		RegisterReflectionComponent<TYPE>(TYPENAME,
+
+#define RegisterReflectionTypeEnd	\
+		); return 1;				\
+	}();							\
+}
 #endif

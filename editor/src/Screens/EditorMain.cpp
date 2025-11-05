@@ -62,7 +62,7 @@ Technology is prohibited.
 RegisterImguiDescriptorInspector(ModelDescriptor);
 RegisterImguiDescriptorInspector(TextureDescriptor);
 
-PhysicsSystem PhysSys;
+//PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
 
@@ -550,7 +550,11 @@ void EditorMain::cleanup()
 	//PhysSys.GetBodyInterface().RemoveBody(floorplan->GetID());
 	//PhysSys.GetBodyInterface().DestroyBody(floorplan->GetID());
 
-	PhysSys.Exit();
+	
+	engineService.ExecuteOnEngineThread([]() {
+		PhysicsSystem::Instance().Exit();
+		spdlog::info("Physics Exit");
+		});
 	//m_AssetManager.reset(nullptr);
 	//Engine::Exit();
 	///Engine::
@@ -2554,8 +2558,8 @@ void EditorMain::CreatePhysicsDemoScene()
 		JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
 		JPH::ShapeRefC floor_shape = floor_shape_result.Get();
 		JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, Layers::NON_MOVING);
-		floorplan = PhysSys.GetBodyInterface().CreateBody(floor_settings);
-		PhysSys.GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
+		floorplan = PhysicsSystem::Instance().GetBodyInterface().CreateBody(floor_settings);
+		PhysicsSystem::Instance().GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
 
 
 
@@ -2598,7 +2602,7 @@ void EditorMain::CreatePhysicsDemoScene()
 		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
-		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
 		RigidBody->bodyID = sphere_id;
 	}); // End of ExecuteOnEngineThread lambda
@@ -2685,7 +2689,7 @@ void EditorMain::CreatePhysicsCube()
 		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
-		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
 		RigidBody->bodyID = sphere_id;
 	}); // End of ExecuteOnEngineThread lambda
