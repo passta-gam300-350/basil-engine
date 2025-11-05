@@ -338,8 +338,6 @@ void MonoEntityManager::initialize() {
 	MonoTypeResolver::Instance();
 	MonoReflectionRegistry::Instance().Clear();
 
-
-
 }
 
 void MonoEntityManager::StartCompilation() {

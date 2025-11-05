@@ -1,4 +1,5 @@
 //LIBRARY "EngineGlueGen"
 // EXPORTS
+BasilEngine_Input_GLUE_GEN::Bind();
 BasilEngine_Debug_Logger_GLUE_GEN::Bind();
 BasilEngine_Components_Transform_GLUE_GEN::Bind();
