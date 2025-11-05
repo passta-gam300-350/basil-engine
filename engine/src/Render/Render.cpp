@@ -363,6 +363,9 @@ void RenderSystem::Exit() {
 	// Clear all property blocks
 	m_PropertyBlocks.clear();
 
+	// Clear cached default material
+	m_DefaultMaterial.reset();
+
 	// Destructor will handle cleanup automatically
 }
 
@@ -558,13 +561,18 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 {
 	// Check for null GUID
 	if (materialGuid.m_guid == rp::null_guid || !hasAttachedMaterial) {
-		// No material attached - create default
-		auto pbrShader = m_ShaderLibrary->GetPBRShader();
-		if (!pbrShader) {
-			spdlog::error("RenderSystem: PBR shader not available for default material");
-			return nullptr;
+		// No material attached - use cached default material
+		// This ensures stable memory address across frames for proper batching
+		if (!m_DefaultMaterial) {
+			auto pbrShader = m_ShaderLibrary->GetPBRShader();
+			if (!pbrShader) {
+				spdlog::error("RenderSystem: PBR shader not available for default material");
+				return nullptr;
+			}
+			m_DefaultMaterial = std::make_shared<Material>(pbrShader, "DefaultMaterial_Shared");
+			spdlog::info("RenderSystem: Created cached default material (shared across all entities with no attached material)");
 		}
-		return std::make_shared<Material>(pbrShader, "DefaultMaterial_Entity_" + std::to_string(entityUID));
+		return m_DefaultMaterial;
 	}
 
 	// Check if already loaded OR load from disk via ResourceSystem::FileEntries
@@ -716,6 +724,9 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 					matData.material_name, uniform_name, texture_guid.to_hex().substr(0, 8));
 			}
 		}
+
+		// Apply blend mode (0 = Opaque, 1 = Transparent)
+		material->SetBlendMode(static_cast<BlendingMode>(matData.blend_mode));
 
 		spdlog::info("Successfully loaded material '{}' from resource pipeline ({} textures)",
 			matData.material_name, textureUnit);

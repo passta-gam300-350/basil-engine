@@ -59,7 +59,7 @@ public:
     void Clear();
 
     // Rendering using pass-isolated command buffers
-    void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData);
+    void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque);
 
     // Shadow-specific rendering (depth-only, no lighting)
     void RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader);
@@ -107,10 +107,14 @@ private:
     std::vector<uint32_t> m_LastObjectIDs;
     std::vector<float> m_LastTransformHashes;  // Cache transform hashes for change detection
     std::vector<float> m_LastPropertyBlockHashes;  // Cache property block hashes for MaterialOverrides changes
+    std::vector<uintptr_t> m_LastMaterialPointers;  // Cache material pointers for material change detection
+    std::vector<uintptr_t> m_LastMeshPointers;  // Cache mesh pointers for mesh change detection
 
     void UpdateInstanceSSBO(const std::string& meshId);
-    void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData);
+    void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData, bool isOpaque);
     bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
     void UpdateTransformHashes(const std::vector<RenderableData>& renderables);
     void UpdatePropertyBlockHashes(const std::vector<RenderableData>& renderables);
+    void UpdateMaterialPointers(const std::vector<RenderableData>& renderables);
+    void UpdateMeshPointers(const std::vector<RenderableData>& renderables);
 };

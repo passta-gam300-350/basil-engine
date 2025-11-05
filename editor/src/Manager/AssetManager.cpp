@@ -187,6 +187,7 @@ void AssetManager::CreateMaterialDescriptor(std::string const& material_name) {
 	matDesc.material.albedo = glm::vec3(0.8f, 0.8f, 0.8f);
 	matDesc.material.metallic = 0.0f;
 	matDesc.material.roughness = 0.5f;
+	matDesc.material.blend_mode = 0; // Opaque by default
 
 	// 4. Save descriptor to .desc file in current directory
 	std::string desc_path = normalizePath(m_CurrentPath + "/" + material_name + ".desc");

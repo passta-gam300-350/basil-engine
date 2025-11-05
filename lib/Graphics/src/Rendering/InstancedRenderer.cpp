@@ -118,7 +118,7 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
     meshInstances.dirty = false;
 }
 
-void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
+void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque)
 {
     if (renderables.empty()) {
         // Clear cache if we transition from having objects to no objects
@@ -139,7 +139,7 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
     // Render the instance batches to the specified pass
     for (const auto& pair : m_MeshInstances) {
         if (!pair.second.instances.empty()) {
-            RenderInstancedMeshToPass(renderPass, pair.first, frameData);
+            RenderInstancedMeshToPass(renderPass, pair.first, frameData, isOpaque);
         }
     }
 }
@@ -226,9 +226,11 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             continue;
         }
 
-        // Generate mesh ID from mesh pointer for proper instancing
-        // Identical mesh pointers (shared meshes) will automatically be batched together
-        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
+        // Generate mesh ID from mesh+material pointers for proper instancing
+        // Entities with identical mesh AND material will be batched together
+        // This ensures different materials (especially blend modes) are in separate batches
+        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()))
+                           + "_" + std::to_string(reinterpret_cast<uintptr_t>(renderable.material.get()));
 
         // Add instance data with actual material properties
         InstanceData instanceData;
@@ -290,9 +292,11 @@ void InstancedRenderer::ForceRebuildCache()
     m_LastObjectIDs.clear();
     m_LastTransformHashes.clear();
     m_LastPropertyBlockHashes.clear();
+    m_LastMaterialPointers.clear();
+    m_LastMeshPointers.clear();
 }
 
-void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData)
+void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData, bool isOpaque)
 {
 
     auto meshIt = m_MeshInstances.find(meshId);
@@ -351,6 +355,13 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         frameData.cameraPosition
     };
     renderPass.Submit(uniformsCmd);
+
+    RenderCommands::SetUniformBoolData opaqueCmd{
+        shader, // shader
+        "u_IsOpaquePass",                       // uniform name
+        isOpaque
+    };
+	renderPass.Submit(opaqueCmd);
 
     // 4. Apply lighting setup via command submission (Option A - REFACTORED)
     if (m_PBRLighting) {
@@ -531,7 +542,55 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
         }
     }
 
-    // No changes detected - same count, same IDs, same transforms, same properties
+    // Check if material pointers changed (material assignment in Inspector)
+    // This catches cases where a material asset is assigned/changed on an entity
+    if (!m_LastMaterialPointers.empty() && m_LastMaterialPointers.size() == renderables.size())
+    {
+        for (size_t i = 0; i < renderables.size(); ++i)
+        {
+            // Get current material pointer as uintptr_t for comparison
+            uintptr_t currentMatPtr = reinterpret_cast<uintptr_t>(renderables[i].material.get());
+
+            if (currentMatPtr != m_LastMaterialPointers[i])
+            {
+                // Material pointer changed - rebuild instance data
+                UpdateMaterialPointers(renderables);
+                return true;
+            }
+        }
+    }
+    else
+    {
+        // First time or size mismatch - initialize material pointers
+        UpdateMaterialPointers(renderables);
+        return true;
+    }
+
+    // Check if mesh pointers changed (mesh assignment/change in Inspector)
+    // This catches cases where a mesh asset is assigned/changed on an entity
+    if (!m_LastMeshPointers.empty() && m_LastMeshPointers.size() == renderables.size())
+    {
+        for (size_t i = 0; i < renderables.size(); ++i)
+        {
+            // Get current mesh pointer as uintptr_t for comparison
+            uintptr_t currentMeshPtr = reinterpret_cast<uintptr_t>(renderables[i].mesh.get());
+
+            if (currentMeshPtr != m_LastMeshPointers[i])
+            {
+                // Mesh pointer changed - rebuild instance data
+                UpdateMeshPointers(renderables);
+                return true;
+            }
+        }
+    }
+    else
+    {
+        // First time or size mismatch - initialize mesh pointers
+        UpdateMeshPointers(renderables);
+        return true;
+    }
+
+    // No changes detected - same count, same IDs, same transforms, same properties, same materials, same meshes
     return false;
 }
 
@@ -580,6 +639,30 @@ void InstancedRenderer::UpdatePropertyBlockHashes(const std::vector<RenderableDa
             }
         }
         m_LastPropertyBlockHashes.push_back(hash);
+    }
+}
+
+void InstancedRenderer::UpdateMaterialPointers(const std::vector<RenderableData>& renderables)
+{
+    m_LastMaterialPointers.clear();
+    m_LastMaterialPointers.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Store material pointer as uintptr_t for change detection
+        uintptr_t matPtr = reinterpret_cast<uintptr_t>(r.material.get());
+        m_LastMaterialPointers.push_back(matPtr);
+    }
+}
+
+void InstancedRenderer::UpdateMeshPointers(const std::vector<RenderableData>& renderables)
+{
+    m_LastMeshPointers.clear();
+    m_LastMeshPointers.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Store mesh pointer as uintptr_t for change detection
+        uintptr_t meshPtr = reinterpret_cast<uintptr_t>(r.mesh.get());
+        m_LastMeshPointers.push_back(meshPtr);
     }
 }
 

@@ -561,9 +561,8 @@ void main() {
     // Opaque pass: Force alpha = 1.0 to prevent texture alpha from affecting visibility
     // Transparent pass: Preserve texture alpha for proper blending
     // Tone mapping will be applied later in ToneMapRenderPass
-    float outputAlpha = 1.0f;
-    if (!u_IsOpaquePass) {
-        outputAlpha = albedo.a;
-    }
+    if (u_IsOpaquePass)
+	{
+    float outputAlpha = (u_IsOpaquePass ? 1.0 : albedo.a);
     FragColor = vec4(color, outputAlpha);
 }

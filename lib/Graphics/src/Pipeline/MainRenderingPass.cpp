@@ -75,6 +75,9 @@ void MainRenderingPass::Execute(RenderContext& context)
     };
     Submit(depthTestCmd);
 
+    // Explicitly disable blending for opaque pass (prevent state leak from previous passes)
+    Submit(RenderCommands::SetBlendingData{ false });
+
     // Standard forward rendering with context data (no copies!)
     if (!context.renderables.empty())
     {
@@ -103,13 +106,13 @@ void MainRenderingPass::Execute(RenderContext& context)
         // 3. Frustum culling on submitted renderables (currently skipped)
         // auto visibleRenderables = m_FrustumCuller->CullRenderables(opaqueRenderables, context.frameData);
 
-        // 4. Forward instanced rendering with opaque renderables using pass-local buffer
-        context.instancedRenderer.RenderToPass(*this, opaqueRenderables, context.frameData);
+        // 5. Forward instanced rendering with opaque renderables using pass-local buffer
+        context.instancedRenderer.RenderToPass(*this, opaqueRenderables, context.frameData, true);
 
-        // 5. Particle rendering
+        // 6. Particle rendering
         context.particleRenderer.RenderToPass(*this, context.frameData);
 
-        // 6. Render transparent objects (after opaque, with alpha blending)
+        // 7. Render transparent objects (after opaque, with alpha blending)
         if (!transparentRenderables.empty())
         {
             // Enable alpha blending for transparent objects
@@ -127,7 +130,7 @@ void MainRenderingPass::Execute(RenderContext& context)
             });
 
             // Render all transparent objects together (no sorting needed - no overlap)
-            context.instancedRenderer.RenderToPass(*this, transparentRenderables, context.frameData);
+            context.instancedRenderer.RenderToPass(*this, transparentRenderables, context.frameData, false);
 
             // Restore depth writing
             Submit(RenderCommands::SetDepthTestData{
