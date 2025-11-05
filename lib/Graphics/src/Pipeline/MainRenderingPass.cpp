@@ -106,8 +106,9 @@ void MainRenderingPass::Execute(RenderContext& context)
         // 3. Frustum culling on submitted renderables (currently skipped)
         // auto visibleRenderables = m_FrustumCuller->CullRenderables(opaqueRenderables, context.frameData);
 
-        // 5. Forward instanced rendering with opaque renderables using pass-local buffer
-        context.instancedRenderer.RenderToPass(*this, opaqueRenderables, context.frameData, true);
+        // CRITICAL FIX: Build instance data ONCE with ALL renderables to avoid SSBO destruction between passes
+        // The transparent pass was destroying opaque SSBOs before GPU finished rendering them
+        context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData, true);
 
         // 6. Particle rendering
         context.particleRenderer.RenderToPass(*this, context.frameData);
@@ -129,8 +130,8 @@ void MainRenderingPass::Execute(RenderContext& context)
                 false           // DISABLE depth writing (critical for transparency)
             });
 
-            // Render all transparent objects together (no sorting needed - no overlap)
-            context.instancedRenderer.RenderToPass(*this, transparentRenderables, context.frameData, false);
+            // Render transparent pass - instance data already built, just render with isOpaque=false
+            context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData, false);
 
             // Restore depth writing
             Submit(RenderCommands::SetDepthTestData{

@@ -117,4 +117,5 @@ private:
     void UpdatePropertyBlockHashes(const std::vector<RenderableData>& renderables);
     void UpdateMaterialPointers(const std::vector<RenderableData>& renderables);
     void UpdateMeshPointers(const std::vector<RenderableData>& renderables);
+    void UpdateAllTrackingData(const std::vector<RenderableData>& renderables);
 };

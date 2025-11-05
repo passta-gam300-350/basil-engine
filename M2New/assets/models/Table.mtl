@@ -4,7 +4,7 @@
 # Material file for table model
 # Generated for GAM300 Graphics Engine
 
-newmtl TableDetails
+newmtl TableDetails1
 # Base color / diffuse map
 map_Kd table_new_TableDetails_BaseColor.png
 
@@ -29,7 +29,7 @@ disp table_new_TableDetails_Height.png
 kd 0.3581 0 0
 illum 1
 
-newmtl TableTop
+newmtl TableTop1
 
 # Base color / diffuse map
 map_Kd table_new_TableTop_BaseColor.png
@@ -81,7 +81,7 @@ disp table_new_TableBottom_Height.png
 kd 0.2916 0.2378 0
 illum 1
 
-newmtl tableGlass
+newmtl tableTop_glass
 
 # Base color / diffuse map
 map_Kd table_new_tableGlass_BaseColor.png

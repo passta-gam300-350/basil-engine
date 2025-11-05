@@ -37,11 +37,17 @@
 "Table.obj":
   "m_guid": "582a34726aa5690e1bab76cc66"
   "m_typeindex": "4838001395392124604"
-"TableMat":
-  "m_guid": "a1eec271348b86338e89ec9700"
+"TableBottom":
+  "m_guid": "106b2d370d58e1c269a42816464"
   "m_typeindex": "175488002581160416"
-"TableMaterial2":
-  "m_guid": "a5f0de7ba2bda8aecedcaa5a4b"
+"TableDetail":
+  "m_guid": "10840557541978535d83b50b998"
+  "m_typeindex": "175488002581160416"
+"TableGlass":
+  "m_guid": "103505c7695847a47301674c265"
+  "m_typeindex": "175488002581160416"
+"TableTop":
+  "m_guid": "1056fef7c549fd3c84e3c63ae56"
   "m_typeindex": "175488002581160416"
 "Wall":
   "m_guid": "9d99827d73ba32399772ee6ed9"
