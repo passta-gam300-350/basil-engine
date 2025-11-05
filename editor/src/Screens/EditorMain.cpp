@@ -346,7 +346,7 @@ void EditorMain::init()
 					if (ImGui::SmallButton("X")) {
 						keys_to_remove.push_back(key);
 					}
-
+					
 					ImGui::PopID();
 				}
 
@@ -587,7 +587,7 @@ void EditorMain::Render_Inspector()
 	ImGui::Begin("Inspector", nullptr);
 
 	// Show selected entity information
-	if (m_SelectedEntityID == static_cast<uint32_t>(-1)) {
+	if (m_SelectedEntityID == 0u) {
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
 		ImGui::SetCursorPosY(ImGui::GetWindowHeight() * 0.5f - 20);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("No object selected").x) * 0.5f);
@@ -1600,6 +1600,166 @@ void EditorMain::Setup_Dockspace(unsigned id)
 
 void EditorMain::Render_SceneExplorer()
 {
+
+	ImGui::Begin("Hierarchy", &showSceneExplorer);
+
+	// Search bar (Unity-style)
+	/*
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+	static char searchBuffer[256] = "";
+	ImGui::SetNextItemWidth(-1);
+	ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, sizeof(searchBuffer));
+	ImGui::PopStyleVar();
+	*/
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	// Scene tree
+	const auto& entityHandles = engineService.GetEntitiesSnapshot();
+	const auto& entityNames = engineService.GetEntityNamesSnapshot();
+
+
+
+
+	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
+
+	if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+	{
+		//int entityIndex = 0;
+		//for (auto& entity : entities)
+		//{
+		//	uint32_t entityID = static_cast<uint32_t>(entity.get_uid());
+
+		//	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf |
+		//		ImGuiTreeNodeFlags_NoTreePushOnOpen |
+		//		ImGuiTreeNodeFlags_SpanAvailWidth;
+
+		//	if (entityID == m_SelectedEntityID)
+		//		flags |= ImGuiTreeNodeFlags_Selected;
+
+
+		//	ImGui::TreeNodeEx((void*)(intptr_t)entityID, flags, "%s", entity.name().c_str());
+
+		//	if (ImGui::IsItemClicked())
+		//	{
+		//		m_SelectedEntityID = entityID;
+		//	}
+
+		//	// Right-click context menu
+		//	if (ImGui::BeginPopupContextItem())
+		//	{
+		//		if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
+		//		if (ImGui::MenuItem("Delete")) { /* Delete entity */ }
+		//		ImGui::Separator();
+		//		if (ImGui::MenuItem("Rename")) { /* Rename entity */ }
+		//		ImGui::EndPopup();
+		//	}
+
+		//	entityIndex++;
+		//}
+
+		for (size_t i = 0; i < entityHandles.size(); ++i) {
+			auto ehdl = entityHandles[i];
+			ImGui::PushID(static_cast<int>(i));
+
+			// Check if this entity is currently selected
+			uint32_t entityUID = ecs::entity(ehdl).get_uid();
+			bool isSelected = (m_SelectedEntityID == entityUID);
+
+			// DEBUG: Log entity IDs for all entities
+			static bool loggedOnce = false;
+			if (!loggedOnce && i == 0) {
+				spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
+				for (size_t j = 0; j < entityHandles.size(); ++j) {
+					uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
+					spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
+				}
+				loggedOnce = true;
+			}
+
+			// Display entity info with selection highlighting
+			std::string entityName = entityNames[i];
+
+			// Check what components this entity has (using snapshot)
+			bool hasTransform = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<TransformComponent>());
+			bool hasMesh = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>());
+			bool hasLight = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>());
+			bool hasVisibility = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<VisibilityComponent>());
+
+			UNREF_PARAM(hasTransform);
+
+			if (hasLight) entityName += " (Light)";
+			else if (hasMesh) entityName += " (Mesh)";
+			else entityName += " (Empty)";
+
+			// Highlight selected entity with different color
+			if (isSelected) {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // Yellow text for selected
+				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
+			}
+
+			//bool nodeOpen = ImGui::TreeNode(entityName.c_str());
+			bool selectable = isSelected;
+			if (ImGui::Selectable(entityName.c_str(), &selectable))
+			{
+				spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
+				SelectEntity(entityUID);
+			}
+			
+		
+
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
+				if (ImGui::MenuItem("Delete"))
+				{
+					engineService.delete_entity(ehdl);
+				}
+				ImGui::Separator();
+				if (ImGui::MenuItem("Rename")) { /* Rename entity */ }
+				ImGui::EndPopup();
+			}
+
+			// Pop the selection highlight color if it was applied
+			if (isSelected) {
+				ImGui::PopStyleColor(2);
+			}
+
+			ImGui::PopID();
+		}
+
+
+		ImGui::TreePop();
+	}
+
+	ImGui::PopStyleVar();
+
+	// Right-click in empty space to create new objects
+	if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+	{
+		if (ImGui::BeginMenu("Create"))
+		{
+			if (ImGui::MenuItem("Empty GameObject")) { /* Create empty */ }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Cube"))
+			{
+				CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+			}
+			if (ImGui::MenuItem("Sphere")) {  }
+			if (ImGui::MenuItem("Plane")) { CreatePlaneEntity(); }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Camera")) { CreateCameraEntity(); }
+			if (ImGui::MenuItem("Light")) { CreateLightEntity(); }
+			ImGui::EndMenu();
+		}
+		ImGui::EndPopup();
+	}
+
+	ImGui::End();
+
+	/*
 	ImGui::Begin("Hierarchy");
 
 	if (ImGui::CollapsingHeader("Create Entities")) {
@@ -1709,6 +1869,7 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::End();
+	*/
 }
 
 
@@ -2796,9 +2957,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 void EditorMain::ClearEntitySelection()
 {
-	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
+	if (m_SelectedEntityID != 0) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
-		m_SelectedEntityID = static_cast<uint32_t>(-1);
+		m_SelectedEntityID = 0;
 
 		// Clear visual feedback
 		engineService.ClearOutlinedObjects();
