@@ -207,8 +207,14 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 			}
-			
-			if (rp::BasicIndexedGuid const* v = value.try_cast<rp::BasicIndexedGuid const>()) {
+		
+			if (std::unordered_map<std::string, rp::BasicIndexedGuid> const* v = value.try_cast<std::unordered_map<std::string, rp::BasicIndexedGuid> const>()) {
+				for (auto& [name, guid] : *v) {
+					out[field_name][name]["guid"] = guid.m_guid.to_hex();
+					out[field_name][name]["type"] = guid.m_typeindex;
+				}
+			}
+			else if (rp::BasicIndexedGuid const* v = value.try_cast<rp::BasicIndexedGuid const>()) {
 				out[field_name]["guid"] = v->m_guid.to_hex();
 				out[field_name]["type"] = v->m_typeindex;
 			}
@@ -356,6 +362,19 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 			guid.m_guid = rp::Guid::to_guid(guid_str);
 			guid.m_typeindex = in[field_name]["type"].template as<std::uint64_t>();
 			data.set(obj, guid);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::unordered_map<std::string, rp::BasicIndexedGuid>>::value()) {
+			auto mapnode = in[field_name];
+			std::unordered_map<std::string, rp::BasicIndexedGuid> map_name_guid{};
+			for (auto const& pair : mapnode) {
+				rp::BasicIndexedGuid biguid{};
+				biguid.m_guid = rp::Guid::to_guid(pair.second["guid"].template as<std::string>());
+				biguid.m_typeindex = pair.second["type"].template as<std::uint64_t>();
+				map_name_guid[pair.first.template as<std::string>()] = biguid;
+			}
+			data.set(obj, map_name_guid);
 			continue;
 		}
 

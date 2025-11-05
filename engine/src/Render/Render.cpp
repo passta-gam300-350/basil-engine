@@ -320,14 +320,23 @@ void RenderSystem::Update(ecs::world& world) {
 		std::visit([&](auto&& var) {
 			using Type = std::remove_pointer_t<std::remove_cvref_t<decltype(var)>>;
 			if constexpr (std::is_same_v<Type, std::shared_ptr<Mesh>>) {
-				mesh.m_MaterialGuid.resize(1, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
-				shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.front()));
+				if (mesh.m_MaterialGuid.find("unnamed slot") == mesh.m_MaterialGuid.end() || mesh.m_MaterialGuid.size() != 1) {
+					mesh.m_MaterialGuid.clear();
+					mesh.m_MaterialGuid.emplace("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+				}
+				shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
 			}
 			else {
-				mesh.m_MaterialGuid.resize(var->size(), static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+				if (mesh.m_MaterialGuid.size() != var->size()) {
+					mesh.m_MaterialGuid.clear();
+					mesh.m_MaterialGuid.reserve(var->size());
+					for (auto& [name, ptr] : *var) {
+						mesh.m_MaterialGuid.emplace(name, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+					}
+				}
 				auto it = mesh.m_MaterialGuid.begin();
-				std::for_each(var->begin(), var->end(), [&](std::shared_ptr<Mesh> meshptr) {
-					shared_ptr_visitor(meshptr, materialLoader(*(it++)));
+				std::for_each(var->begin(), var->end(), [&](auto& kv) {
+					shared_ptr_visitor(kv.second, materialLoader((it++)->second));
 					});
 			}
 			}, meshResource);
@@ -394,7 +403,7 @@ void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity 
 	if (!meshComp) return;
 
 	// Automatically update hasAttachedMaterial based on material GUID validity
-	meshComp->hasAttachedMaterial = (meshComp->m_MaterialGuid.at(0).m_guid != rp::null_guid);
+	meshComp->hasAttachedMaterial = (meshComp->m_MaterialGuid.begin()->second.m_guid != rp::null_guid);
 
 	// Get entity UID
 	const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
@@ -505,7 +514,7 @@ void RenderSystem::SetupDebugVisualization() {
 
 // ========== Resource Loading Helpers ==========
 
-std::variant<std::shared_ptr<Mesh>, std::vector<std::shared_ptr<Mesh>>*> RenderSystem::LoadMeshResource(const MeshRendererComponent& meshComp) const {
+std::variant<std::shared_ptr<Mesh>, std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>*> RenderSystem::LoadMeshResource(const MeshRendererComponent& meshComp) const {
 	// Handle primitives via PrimitiveManager
 	if (meshComp.isPrimitive) {
 		switch (meshComp.m_PrimitiveType) {
@@ -537,7 +546,7 @@ std::variant<std::shared_ptr<Mesh>, std::vector<std::shared_ptr<Mesh>>*> RenderS
 	//	}
 	//}
 	Handle meshHandle{};
-	auto* ptr = registry.Get<std::vector<std::shared_ptr<Mesh>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
+	auto* ptr = registry.Get<std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
 
 	if (ptr && !ptr->empty()) {
 		return ptr;
@@ -598,12 +607,9 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
 }
 
-
-
-// ========== Resource Type Registrations ==========
-REGISTER_RESOURCE_TYPE_ALIASE(std::vector<std::shared_ptr<Mesh>>, mesh, [](const char* data) -> std::vector<std::shared_ptr<Mesh>> {
+std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(const char* data) {
 	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
-	std::vector<std::shared_ptr<Mesh>> meshes;
+	std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> meshes;
 	for (const auto& mesh : dat.meshes) {
 		std::vector<Vertex> vert{}; vert.resize(mesh.vertices.size());
 		for (size_t i = 0; i < mesh.vertices.size(); ++i) {
@@ -614,16 +620,33 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::vector<std::shared_ptr<Mesh>>, mesh, [](const
 			vert[i].Bitangent = mesh.vertices[i].Bitangent;
 		}
 		std::vector<unsigned int> indices{};
+		unsigned int vert_offset{};
 		for (const auto& matslot : mesh.materials) {
 			indices.resize(matslot.index_count);
+			//unsigned int min_vert{ std::numeric_limits<unsigned int>::max() };
+			//unsigned int max_vert{ std::numeric_limits<unsigned int>::min() };
 			for (unsigned int i{}; i < matslot.index_count; i++) {
+				//unsigned int vert_idx{ mesh.indices[i + matslot.index_begin] };
 				indices[i] = mesh.indices[i + matslot.index_begin];
+				//max_vert = std::max(max_vert, vert_idx);
+				//min_vert = std::min(min_vert, vert_idx);
 			}
-			meshes.emplace_back(std::make_shared<Mesh>(vert, indices, std::vector<Texture>{}));
+			//vert_offset = max_vert;
+			//std::vector<Vertex> mesh_vert{};
+			//mesh_vert.resize(max_vert - min_vert);
+			//mesh_vert.insert(mesh_vert.end(), vert.begin()+min_vert, vert.end()+max_vert);
+			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, std::make_shared<Mesh>(vert, indices, std::vector<Texture>{})));
 		}
 	}
 	return meshes;
-}, [](std::vector<std::shared_ptr<Mesh>>&) {})
+	}
+
+void UnloadMeshFromResource(std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>&) {}
+
+using Meshes = std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>;
+
+// ========== Resource Type Registrations ==========
+REGISTER_RESOURCE_TYPE_ALIASE(Meshes, mesh, LoadMeshFromResource, UnloadMeshFromResource)
 
 REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 	[](const char* data)->std::shared_ptr<Material> {

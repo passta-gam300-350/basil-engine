@@ -33,7 +33,7 @@ inline glm::vec3 ToVec3(const aiColor3D& c) {
 }
 
 // --- helper: extract material into MaterialDescriptor ---
-inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat) {
+inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& base_path) {
     MaterialDescriptor matDesc{};
     aiString name;
     if (AI_SUCCESS == aimat->Get(AI_MATKEY_NAME, name)) {
@@ -70,34 +70,47 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat) {
             return rp::null_guid;
         }
         } };
-    // Textures
-    aiString texPath;
-    if (AI_SUCCESS == aimat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath)) {
-        matDesc.material.texture_properties["albedo"] = getTextureGuid(texPath.C_Str());
-    }
-    if (AI_SUCCESS == aimat->GetTexture(aiTextureType_NORMALS, 0, &texPath)) {
-        matDesc.material.texture_properties["normal"] = getTextureGuid(texPath.C_Str());
-    }
-    if (AI_SUCCESS == aimat->GetTexture(aiTextureType_METALNESS, 0, &texPath)) {
-        matDesc.material.texture_properties["metallic"] = getTextureGuid(texPath.C_Str());
-    }
-    if (AI_SUCCESS == aimat->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &texPath)) {
-        matDesc.material.texture_properties["roughness"] = getTextureGuid(texPath.C_Str());
-    }
 
-    matDesc.material.vert_name = "pbr.vert";
-    matDesc.material.frag_name = "pbr.frag";
+    const auto updateMaterialTextureProperties{ [getTextureGuid](aiMaterial* mat, std::unordered_map<std::string, rp::Guid>& texprop, std::vector<aiTextureType> const& textypes, std::string const& textypename, std::string const& basepath) {
+        for (auto textype : textypes) {
+            unsigned int tex_ct{mat->GetTextureCount(textype)};
+            for (unsigned int i = 0; i < tex_ct; i++)
+            {
+                aiString str;
+                if (AI_SUCCESS == mat->GetTexture(textype, i, &str)) {
+                    std::string texpropname = textypename;
+                    texprop[texpropname] = getTextureGuid(basepath + '\\' + str.C_Str());
+                    return;
+                }
+            }
+        }
+        } };
+
+    // Textures
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_DIFFUSE, aiTextureType_BASE_COLOR }, "u_DiffuseMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_NORMALS, aiTextureType_HEIGHT }, "u_NormalMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_DISPLACEMENT }, "u_HeightMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_METALNESS }, "u_MetallicMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_DIFFUSE_ROUGHNESS }, "u_RoughnessMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_AMBIENT_OCCLUSION }, "u_AOMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_EMISSIVE }, "u_EmissiveMap", base_path);
+    updateMaterialTextureProperties(aimat, matDesc.material.texture_properties, { aiTextureType_SPECULAR }, "u_SpecularMap", base_path);
+
+
+    matDesc.material.vert_name = "main_pbr.vert";
+    matDesc.material.frag_name = "main_pbr.frag";
 
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();
     matDesc.base.m_importer = "material";
-    matDesc.base.m_importer_type = rp::utility::compute_string_hash("material");
+    matDesc.base.m_name = name.C_Str();
+    matDesc.base.m_importer_type = rp::utility::type_hash<MaterialDescriptor>::value();
 
     return matDesc;
 }
 
 // --- helper: process one aiMesh ---
-inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, glm::mat4 const& transform, bool extract_material, std::vector<MaterialDescriptor>& outMaterials)
+inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, glm::mat4 const& transform, bool extract_material, std::vector<MaterialDescriptor>& outMaterials, std::string const& base_path)
 {
     MeshResourceData::Mesh out;
 
@@ -155,8 +168,9 @@ inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, gl
         unsigned int matIndex = mesh->mMaterialIndex;
         if (matIndex < scene->mNumMaterials) {
             aiMaterial* aimat = scene->mMaterials[matIndex];
-            MaterialDescriptor matDesc = ExtractMaterial(aimat);
+            MaterialDescriptor matDesc = ExtractMaterial(aimat, base_path);
             slot.material_guid = matDesc.base.m_guid;
+            slot.material_slot_name = matDesc.base.m_name;
             outMaterials.push_back(std::move(matDesc));
         }
     }
@@ -184,6 +198,8 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
     glm::mat4 transform = BuildTransform(desc);
 
+    std::string parent_path{std::filesystem::path(rp::utility::resolve_path(desc.base.m_source)).parent_path().string()};
+
     // Collect all extracted materials
     std::vector<MaterialDescriptor> extractedMaterials;
 
@@ -194,7 +210,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
         for (unsigned int m = 0; m < scene->mNumMeshes; m++) {
             MeshResourceData::Mesh mesh = ProcessMesh(scene->mMeshes[m], scene, transform,
-                desc.extract_material, extractedMaterials);
+                desc.extract_material, extractedMaterials, parent_path);
 
             // append vertices
             mergedMesh.vertices.insert(mergedMesh.vertices.end(),
@@ -212,6 +228,8 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
             for (auto& slot : mesh.materials) {
                 MeshResourceData::MaterialSlot newSlot = slot;
                 newSlot.index_begin = index_size;
+                newSlot.material_guid = slot.material_guid;
+                newSlot.material_slot_name = slot.material_slot_name;
                 mergedMesh.materials.push_back(newSlot);
             }
             indexOffset += static_cast<unsigned int>(mesh.vertices.size());
@@ -224,7 +242,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         for (unsigned int m = 0; m < scene->mNumMeshes; m++) {
             MeshResourceData res;
             res.meshes.push_back(ProcessMesh(scene->mMeshes[m], scene, transform,
-                desc.extract_material, extractedMaterials));
+                desc.extract_material, extractedMaterials, parent_path));
             result.emplace_back(std::pair<rp::Guid, MeshResourceData>(rp::Guid::generate(), std::move(res)));
         }
     }

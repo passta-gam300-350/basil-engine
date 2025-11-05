@@ -27,6 +27,7 @@ public:
     //material slots
     struct MaterialSlot {
         rp::Guid material_guid{rp::null_guid};
+        std::string material_slot_name{"unnamed slot"};
         unsigned int index_begin; //submesh
         unsigned int index_count;
     };
