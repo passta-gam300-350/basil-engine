@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <vector>
 #include <functional>
 
+#include "ecs/internal/reflection.h"
 
 struct RigidBodyComponent {
     JPH::BodyID bodyID;  // Jolt's body identifier
@@ -49,7 +50,7 @@ struct ColliderComponent {
 };
 
 struct CharacterControllerComponent {
-    JPH::Ref<JPH::Character> character;
+    //JPH::Ref<JPH::Character> character;
     JPH::BodyID bodyID;
 
     // Character settings
@@ -72,3 +73,12 @@ struct CharacterControllerComponent {
     // Cached velocity
     JPH::Vec3 velocity = JPH::Vec3::sZero();
 };
+
+RegisterReflectionTypeBegin(RigidBodyComponent, "RigidBodyComponent")
+    MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
+    MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
+    MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+    MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
+    MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+    MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+RegisterReflectionTypeEnd

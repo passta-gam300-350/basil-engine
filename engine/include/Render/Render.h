@@ -55,7 +55,7 @@ struct MeshRendererComponent {
         PLANE
 	} m_PrimitiveType;
     rp::BasicIndexedGuid m_MeshGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"mesh">{}) };     ///< GUID of the mesh asset (or zero for primitives)
-    rp::BasicIndexedGuid m_MaterialGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}) }; ///< GUID of the material asset
+    std::unordered_map<std::string, rp::BasicIndexedGuid> m_MaterialGuid{ std::pair<std::string, rp::BasicIndexedGuid>("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}))}; ///< GUID of the material asset
 
     /// Per-entity material properties (used when hasAttachedMaterial is false)
     struct Material
@@ -386,7 +386,7 @@ private:
      * @param meshComp MeshRendererComponent containing mesh GUID
      * @return Loaded mesh or primitive fallback
      */
-    std::shared_ptr<Mesh> LoadMeshResource(const MeshRendererComponent& meshComp) const;
+    std::variant<std::shared_ptr<Mesh>, std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>*> LoadMeshResource(const MeshRendererComponent& meshComp) const;
 
     /**
      * @brief Load material resource from ResourceRegistry or create default

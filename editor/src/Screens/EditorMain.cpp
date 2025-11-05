@@ -62,7 +62,7 @@ Technology is prohibited.
 RegisterImguiDescriptorInspector(ModelDescriptor);
 RegisterImguiDescriptorInspector(TextureDescriptor);
 
-PhysicsSystem PhysSys;
+//PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
 
@@ -550,7 +550,11 @@ void EditorMain::cleanup()
 	//PhysSys.GetBodyInterface().RemoveBody(floorplan->GetID());
 	//PhysSys.GetBodyInterface().DestroyBody(floorplan->GetID());
 
-	PhysSys.Exit();
+	
+	engineService.ExecuteOnEngineThread([]() {
+		PhysicsSystem::Instance().Exit();
+		spdlog::info("Physics Exit");
+		});
 	//m_AssetManager.reset(nullptr);
 	//Engine::Exit();
 	///Engine::
@@ -924,6 +928,86 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					else {
 						for (auto& [key, val] : *map_guid) {
 							ImGui::Text("%s: %s", key.c_str(), val.to_hex().c_str());
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			else if (auto* vec_guid = value.try_cast<std::vector<rp::BasicIndexedGuid>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (vec_guid->empty()) {
+						ImGui::TextDisabled("(empty)");
+					}
+					else {
+						int idx{};
+						for (auto& guid : *vec_guid) {
+							ImGui::PushID(idx++);
+							std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(guid.m_typeindex);
+							std::string currentselectionname = m_AssetManager->ResolveAssetName(guid);
+							std::size_t typehash = guid.m_typeindex;
+							assetnames.emplace_back("");
+							auto it{ std::find_if(assetnames.begin(), assetnames.end(), [currentselectionname](std::string const& a) {return currentselectionname == a; }) };
+							if (it != assetnames.end()) {
+								std::swap(*it, assetnames.front());
+							}
+							int current_item{};
+							ImGui::Text(field_name.c_str());
+							ImGui::SameLine(150);
+							ImGui::SetNextItemWidth(-1);
+							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+								auto& vec = *static_cast<std::vector<std::string>*>(data);
+								if (idx < 0 || idx >= vec.size()) return false;
+								*out_text = vec[idx].c_str();
+								return true;
+								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+								// Check if selected item is valid and not empty (instead of checking index)
+								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
+									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+									guid.m_typeindex = typehash;
+									is_dirty = true;
+								}
+							}
+							ImGui::PopID();
+						}
+					}
+					ImGui::TreePop();
+				}
+				}
+			else if (auto* map_name_guid = value.try_cast<std::unordered_map<std::string, rp::BasicIndexedGuid>>()) {
+				if (ImGui::TreeNode(field_name.c_str())) {
+					if (map_name_guid->empty()) {
+						ImGui::TextDisabled("(empty)");
+					}
+					else {
+						int idx{};
+						for (auto& [name, guid] : *map_name_guid) {
+							ImGui::PushID(idx++);
+							std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(guid.m_typeindex);
+							std::string currentselectionname = m_AssetManager->ResolveAssetName(guid);
+							std::size_t typehash = guid.m_typeindex;
+							assetnames.emplace_back("");
+							auto it{ std::find_if(assetnames.begin(), assetnames.end(), [currentselectionname](std::string const& a) {return currentselectionname == a; }) };
+							if (it != assetnames.end()) {
+								std::swap(*it, assetnames.front());
+							}
+							int current_item{};
+							ImGui::Text(name.c_str());
+							ImGui::SameLine(150);
+							ImGui::SetNextItemWidth(-1);
+							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+								auto& vec = *static_cast<std::vector<std::string>*>(data);
+								if (idx < 0 || idx >= vec.size()) return false;
+								*out_text = vec[idx].c_str();
+								return true;
+								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+								// Check if selected item is valid and not empty (instead of checking index)
+								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
+									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+									guid.m_typeindex = typehash;
+									is_dirty = true;
+								}
+							}
+							ImGui::PopID();
 						}
 					}
 					ImGui::TreePop();
@@ -2675,8 +2759,8 @@ void EditorMain::CreatePhysicsDemoScene()
 		JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
 		JPH::ShapeRefC floor_shape = floor_shape_result.Get();
 		JPH::BodyCreationSettings floor_settings(floor_shape, JPH::Vec3(0.0f, -2.1f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, Layers::NON_MOVING);
-		floorplan = PhysSys.GetBodyInterface().CreateBody(floor_settings);
-		PhysSys.GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
+		floorplan = PhysicsSystem::Instance().GetBodyInterface().CreateBody(floor_settings);
+		PhysicsSystem::Instance().GetBodyInterface().AddBody(floorplan->GetID(), JPH::EActivation::DontActivate);
 
 
 
@@ -2701,7 +2785,7 @@ void EditorMain::CreatePhysicsDemoScene()
 		meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 		meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
 		meshRenderer2.hasAttachedMaterial = false;
-		meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
+		meshRenderer2.m_MaterialGuid[0].m_guid = materialGuid2;
 
 		world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
 
@@ -2719,7 +2803,7 @@ void EditorMain::CreatePhysicsDemoScene()
 		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
-		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
 		RigidBody->bodyID = sphere_id;
 	}); // End of ExecuteOnEngineThread lambda
@@ -2788,7 +2872,7 @@ void EditorMain::CreatePhysicsCube()
 		meshRenderer2.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 		meshRenderer2.m_MeshGuid.m_guid = meshGuid2;
 		meshRenderer2.hasAttachedMaterial = false;
-		meshRenderer2.m_MaterialGuid.m_guid = materialGuid2;
+		meshRenderer2.m_MaterialGuid["unnamed slot"].m_guid = materialGuid2;
 
 		world.add_component_to_entity<MeshRendererComponent>(entity2, meshRenderer2);
 
@@ -2806,7 +2890,7 @@ void EditorMain::CreatePhysicsCube()
 		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
-		sphere_id = PhysSys.GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
 		RigidBody->bodyID = sphere_id;
 	}); // End of ExecuteOnEngineThread lambda
@@ -2837,7 +2921,7 @@ void EditorMain::CreateCube(const glm::vec3& position, const glm::vec3& scale, c
 		meshRenderer.m_PrimitiveType = MeshRendererComponent::PrimitiveType::CUBE;
 		meshRenderer.m_MeshGuid.m_guid = meshGuid;
 		meshRenderer.hasAttachedMaterial = false;
-		meshRenderer.m_MaterialGuid.m_guid = materialGuid;
+		meshRenderer.m_MaterialGuid["unnamed slot"].m_guid = materialGuid;
 
 		world.add_component_to_entity<MeshRendererComponent>(entity, meshRenderer);
 

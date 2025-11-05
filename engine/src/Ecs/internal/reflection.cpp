@@ -8,8 +8,6 @@
 #include "Particles/ParticleComponent.h"
 
 #include "Render/Camera.h"
-#include "Particles/ParticleComponent.h"
-#include "Rendering/ParticleEmitter.h"
 #include "Utility/Particle.h"
 
 #include <components/behaviour.hpp>
@@ -156,17 +154,6 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
 
-
-	//RegisterReflectionComponent<RigidBodyComponent>(
-	//			"RigidBodyComponent",
-	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
-	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
-	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
-	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
-	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
-	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
-	//);
-
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",
 		MemberRegistrationV<&LightComponent::m_Type, "Type">,
@@ -207,45 +194,6 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<EmissionType>("EmissionType");
 	RegisterReflectionComponent<BlendMode>("BlendMode");
 
-	// Register ParticleEmitterConfiguration (nested config struct)
-	RegisterReflectionComponent<ParticleEmitterConfiguration>(
-		"ParticleEmitterConfiguration",
-		// Emitter transform
-		MemberRegistrationV<&ParticleEmitterConfiguration::position, "Position">,
-		// Emission shape
-		MemberRegistrationV<&ParticleEmitterConfiguration::emissionType, "Emission Type">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::emitterSize, "Emitter Size (Box)">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::sphereRadius, "Sphere Radius">,
-		// Emission settings
-		MemberRegistrationV<&ParticleEmitterConfiguration::emissionRate, "Emission Rate">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::maxParticles, "Max Particles">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::looping, "Looping">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::duration, "Duration">,
-		// Particle lifetime
-		MemberRegistrationV<&ParticleEmitterConfiguration::minLifeTime, "Min Lifetime">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::maxLifeTime, "Max Lifetime">,
-		// Visual properties
-		MemberRegistrationV<&ParticleEmitterConfiguration::startColor, "Start Color">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::endColor, "End Color">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::startSize, "Start Size">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::endSize, "End Size">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::startRotation, "Start Rotation">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::rotationSpeed, "Rotation Speed">,
-		// Physics
-		MemberRegistrationV<&ParticleEmitterConfiguration::startVelocity, "Start Velocity">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::velocityRandomness, "Velocity Randomness">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::acceleration, "Acceleration">
-	);
-
-	RegisterReflectionComponent<ParticleComponent>(
-		"ParticleComponent",
-		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
-		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
-		MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
-		MemberRegistrationV<&ParticleComponent::autoPlay, "AutoPlay">,
-		MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">,
-		MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
-		);
 
 	RegisterReflectionComponent<behaviour>(
 		"Behaviour",

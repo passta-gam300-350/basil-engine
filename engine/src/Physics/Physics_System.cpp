@@ -249,7 +249,7 @@ JPH::BodyID PhysicsSystem::CreateCharacterController(
 
 void PhysicsSystem::UpdateCharacterControllers(ecs::world& world, float deltaTime) {
     if (!m_bodyInterface) return;
-
+    /*
     auto characterEntities = world.filter_entities<
         CharacterControllerComponent,
         PositionComponent,
@@ -301,7 +301,7 @@ void PhysicsSystem::UpdateCharacterControllers(ecs::world& world, float deltaTim
 
         // Cache velocity for external queries
         charComp.velocity = character->GetLinearVelocity();
-    }
+    }*/
 }
 
 
@@ -336,9 +336,9 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
 
     for (auto const& entity : list_of_entities) 
     {
-        auto [RigidBody, Transform, Pos, Scale, Rot] {entity.get<RigidBodyComponent, TransformComponent , PositionComponent, ScaleComponent, RotationComponent>()};
+        auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
-        m_bodyInterface->SetPositionAndRotation(RigidBody.bodyID, PhysicsUtils::ToJolt(Pos.m_WorldPos), PhysicsUtils::EulerToJoltQuat(Rot.m_Rotation), JPH::EActivation::DontActivate);
+        m_bodyInterface->SetPositionAndRotation(RigidBody.bodyID, PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerToJoltQuat(Transform.m_Rotation), JPH::EActivation::DontActivate);
         //if (RigidBody.motionType == JPH::EMotionType::Kinematic && RigidBody.isActive)
     }
 }
@@ -347,19 +347,19 @@ void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
 
     // Update ECS transforms from dynamic bodies
-    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent, ScaleComponent, RotationComponent>();
+    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
 
     for (auto const& entity : list_of_entities) 
     {
-        auto [RigidBody, Transform, Pos, Scale, Rot] {entity.get<RigidBodyComponent, TransformComponent, PositionComponent, ScaleComponent, RotationComponent>()};
+        auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
         if (RigidBody.motionType == JPH::EMotionType::Dynamic && RigidBody.isActive) {
             JPH::Vec3 position;
             JPH::Quat rotation;
             m_bodyInterface->GetPositionAndRotation(RigidBody.bodyID, position, rotation);
 
-            Pos.m_WorldPos = PhysicsUtils::ToGLM(position);
-            Rot.m_Rotation = PhysicsUtils::JoltQuatToEuler(rotation);
+            Transform.m_Translation = PhysicsUtils::ToGLM(position);
+            Transform.m_Rotation = PhysicsUtils::JoltQuatToEuler(rotation);
 
             // Update cached velocity
             RigidBody.velocity = m_bodyInterface->GetLinearVelocity(RigidBody.bodyID);

@@ -27,6 +27,8 @@ extern "C" {
 #include "Manager/MonoEntityManager.hpp"
 #include <System/BindingSystem.hpp>
 
+#include <Physics/Physics_System.h>
+
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
 	constexpr std::uint32_t DEFAULT_RESOLUTION_HEIGHT{ 900ul };
@@ -129,6 +131,7 @@ void Engine::Init(std::string const& cfg ) {
 }
 
 void Engine::CoreUpdate() {
+	//thread_local auto physic_system{PhysicsSystem()};
 	Engine& instance{ Instance() };
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 	InputManager::Get_Instance()->Update();
@@ -136,8 +139,10 @@ void Engine::CoreUpdate() {
 	TransformSystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
+	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
+	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
@@ -259,6 +264,8 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	
 	BindingSystem::RegisterBindings();
+
+	PhysicsSystem::Instance().Init();
 
 	Scheduler::CompileJobSchedule();
 

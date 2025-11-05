@@ -14,7 +14,12 @@
 
 using TextureResource = tinyddsloader::DDSFile;
 
+enum class TextureType {
+
+};
+
 struct TextureResourceData {
+	
 	Blob m_TexData;
 };
 

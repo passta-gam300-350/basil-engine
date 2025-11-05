@@ -514,6 +514,10 @@ private:
     JobSystem m_JobSystem{4};
 };
 
+#ifndef ESCAPE_PARENTHESIS
+#define ESCAPE_PARENTHESIS(...) __VA_ARGS__
+#endif
+
 #define REGISTER_RESOURCE_TYPE_SHARED_PTR(T, loader_fn, unloader_fn)            \
     namespace {                                                      \
         struct T##_resource_registrar {                              \
@@ -540,7 +544,7 @@ private:
     namespace {                                                      \
         struct A##_resource_registrar {                              \
             A##_resource_registrar() {                               \
-                ResourceRegistry::Instance().RegisterType<T>(       \
+                ResourceRegistry::Instance().RegisterType<T>(        \
                     loader_fn, unloader_fn, #A);                     \
             }                                                        \
         };                                                           \
