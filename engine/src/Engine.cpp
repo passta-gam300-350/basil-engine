@@ -279,6 +279,7 @@ void Engine::Exit() {
 	ResourceSystem::Release();
 	Scheduler::Release();
 	InstancePtr().reset();
+	MonoEntityManager::GetInstance().ClearAll();
 }
 
 world Engine::GetWorld() {
