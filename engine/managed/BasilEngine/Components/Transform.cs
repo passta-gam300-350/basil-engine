@@ -8,26 +8,33 @@ using System.Runtime.CompilerServices;
 using Engine.Bindings;
 namespace BasilEngine.Components
 {
-    [Disabled]
+    [NativeHeader("Bindings/ManagedTransform.hpp")]
+    [NativeClass("ManagedTransform")]
     public class Transform : Component
     {
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public extern void SetPosition(in Vector3 position);
+        [NativeMethod("SetPosition")]
+        [StaticAccessor("ManagedTransform", StaticAccessorType.DoubleColon)]
+
+        public extern static void SetPosition(UInt64 handle, float x, float y, float z);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public extern void GetPosition(out Vector3 pos);
+        [NativeMethod("GetPosition")]
+        [StaticAccessor("ManagedTransform", StaticAccessorType.DoubleColon)]
+
+        public static  extern void GetPosition(UInt64 handle, out float x, out float y, out float z);
 
         public Vector3 position
         {
             get
             {
-                GetPosition(out Vector3 pos);
-                return pos;
+                GetPosition(NativeID, out float x, out float y, out float z);
+                return new Vector3(x, y, z);
             }
             set
             {
-                SetPosition(in value);
+                SetPosition(NativeID, value.x, value.y, value.z);
             }
         }
         public Vector3 rotation

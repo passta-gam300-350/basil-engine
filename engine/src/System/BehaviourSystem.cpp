@@ -134,7 +134,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		spdlog::warn("[BehaviourSystem] Class {}.{} is not derived from BasilEngine.Behaviour", klass_ns, klassname);
 		return;
 	}
-	rp::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns);
+	rp::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns, nullptr, false,entity.get_uuid());
 	if (AddScriptToEntityComponent(entity, world, scriptID))
 	{
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);

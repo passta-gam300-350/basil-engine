@@ -24,5 +24,10 @@ namespace BasilEngine.Mathematics
         public static Vector3 Up => new Vector3(0, 1, 0);
         public static Vector3 Right => new Vector3(1, 0, 0);
         public static Vector3 Forward => new Vector3(0, 0, 1);
+
+        public override string ToString()
+        {
+            return $"({x}, {y}, {z})";
+        }
     }
 }
