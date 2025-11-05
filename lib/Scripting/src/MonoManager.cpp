@@ -41,8 +41,8 @@ namespace
 }
 
 
-ScriptCompiler* MonoManager::m_Compiler = nullptr;
-MonoLoader* MonoManager::m_Loader = nullptr;
+std::unique_ptr<ScriptCompiler> MonoManager::m_Compiler = nullptr;
+std::unique_ptr<MonoLoader> MonoManager::m_Loader = nullptr;
 std::vector<std::string> MonoManager::m_ScriptBins{};
 bool MonoManager::m_Verbose = false;
 
@@ -56,12 +56,12 @@ void MonoManager::Initialize()
 	//mono_jit_parse_options(sizeof(options) / sizeof(char*), (char**)options);
 
 	//mono_debug_init(MONO_DEBUG_FORMAT_MONO);
-	m_Loader = new MonoLoader();
+	m_Loader = std::make_unique<MonoLoader>();
 	m_Loader->Initialize(assembly_dir, config_dir);
 
 
-	m_Compiler = new ScriptCompiler();
-	m_Compiler->Init(m_Loader, csc_path);
+	m_Compiler = std::make_unique<ScriptCompiler>();
+	m_Compiler->Init(m_Loader.get(), csc_path);
 	std::filesystem::path enginePath = R"(..\engine\managed\BasilEngine\bin\Release\net48\)";
 	std::string abs = std::filesystem::absolute(enginePath).string();
 
@@ -124,11 +124,11 @@ void MonoManager::StartCompilation()
 
 ScriptCompiler* MonoManager::GetCompiler()
 {
-	return m_Compiler;
+	return m_Compiler.get();
 }
 MonoLoader* MonoManager::GetLoader()
 {
-	return m_Loader;
+	return m_Loader.get();
 }
 
 
@@ -194,7 +194,14 @@ void MonoManager::Detach() {
 	MonoThread* thread = mono_thread_current();
 	mono_thread_detach(thread);
 }
-MonoManager::~MonoManager() = default;
+MonoManager::~MonoManager()
+{
+	m_Loader->Exit();
+	m_Compiler.reset();
+	m_Loader.reset();
+	
+
+}
 
 
 

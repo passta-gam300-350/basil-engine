@@ -346,7 +346,7 @@ void EditorMain::init()
 					if (ImGui::SmallButton("X")) {
 						keys_to_remove.push_back(key);
 					}
-
+					
 					ImGui::PopID();
 				}
 
@@ -583,7 +583,7 @@ void EditorMain::Render_Inspector()
 	ImGui::Begin("Inspector", nullptr);
 
 	// Show selected entity information
-	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
+	if (m_SelectedEntityID == 0u) {
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
 		ImGui::SetCursorPosY(ImGui::GetWindowHeight() * 0.5f - 20);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("No object selected").x) * 0.5f);
@@ -2913,9 +2913,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 void EditorMain::ClearEntitySelection()
 {
-	if (m_SelectedEntityID != static_cast<uint32_t>(-1)) {
+	if (m_SelectedEntityID != 0) {
 		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
-		m_SelectedEntityID = static_cast<uint32_t>(-1);
+		m_SelectedEntityID = 0;
 
 		// Clear visual feedback
 		engineService.ClearOutlinedObjects();

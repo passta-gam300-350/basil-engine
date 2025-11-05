@@ -5,6 +5,7 @@
 #include "rsc-core/rp.hpp"
 
 
+
 class BehaviourSystem : public ecs::SystemBase
 {
 
@@ -31,3 +32,5 @@ public:
 	void RegisterComponent(ecs::entity& entity);
 
 };
+
+RegisterSystemDerivedPreUpdate(BehaviourSystem, BehaviourSystem, (ecs::ReadSet<ecs::entity>), (ecs::EmptySet), 60);

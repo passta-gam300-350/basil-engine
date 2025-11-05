@@ -34,7 +34,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
-		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine
+		while (!Engine::ShouldClose() && ((Engine::GetState() != Engine::Info::State::Wait) || Engine::GetState() != Engine::Info::State::Pause)) { //wait completely suspends the engine
 			engine_snapshot_callback();
 			Engine::BeginFrame();
 			Engine::CoreUpdate();
