@@ -62,6 +62,8 @@ Technology is prohibited.
 RegisterImguiDescriptorInspector(ModelDescriptor);
 RegisterImguiDescriptorInspector(TextureDescriptor);
 
+#include <ImGuizmo.h>
+
 //PhysicsSystem PhysSys;
 JPH::Body* floorplan; // Delete this after m1
 JPH::BodyID sphere_id;
