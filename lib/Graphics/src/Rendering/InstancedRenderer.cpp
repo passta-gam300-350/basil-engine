@@ -9,6 +9,7 @@
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
 #include <cassert>
+#include <algorithm>
 
 InstancedRenderer::InstancedRenderer(PBRLightingRenderer* lighting)
     : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false), m_PBRLighting(lighting)
@@ -138,10 +139,52 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
         BuildDynamicInstanceData(renderables);
     }
 
-    // Render the instance batches to the specified pass
-    for (const auto& pair : m_MeshInstances) {
-        if (!pair.second.instances.empty()) {
-            RenderInstancedMeshToPass(renderPass, pair.first, frameData, isOpaque);
+    // For transparent objects, sort batches by distance (back-to-front)
+    // For opaque objects, render in any order (no sorting needed)
+    if (!isOpaque) {
+        // Build list of (meshId, furthest distance) pairs for transparent batches
+        std::vector<std::pair<std::string, float>> batchDistances;
+        batchDistances.reserve(m_MeshInstances.size());
+
+        for (const auto& [meshId, batch] : m_MeshInstances) {
+            if (batch.instances.empty()) {
+                continue;
+            }
+
+            // Calculate the furthest instance distance in this batch
+            // Using furthest distance ensures entire batch renders behind closer batches
+            float maxDistance = 0.0f;
+            for (const auto& instance : batch.instances) {
+                // Extract position from model matrix (column 3: [3][0], [3][1], [3][2])
+                glm::vec3 instancePos(
+                    instance.modelMatrix[3][0],
+                    instance.modelMatrix[3][1],
+                    instance.modelMatrix[3][2]
+                );
+                float distance = glm::length(frameData.cameraPosition - instancePos);
+                maxDistance = std::max(maxDistance, distance);
+            }
+
+            batchDistances.push_back({meshId, maxDistance});
+        }
+
+        // Sort batches by distance (furthest to nearest = back-to-front)
+        std::sort(batchDistances.begin(), batchDistances.end(),
+            [](const auto& a, const auto& b) {
+                return a.second > b.second;  // Descending order (furthest first)
+            });
+
+        // Render batches in sorted order
+        for (const auto& [meshId, distance] : batchDistances) {
+            RenderInstancedMeshToPass(renderPass, meshId, frameData, isOpaque);
+        }
+    }
+    else {
+        // Opaque objects: render in any order (no sorting needed)
+        for (const auto& pair : m_MeshInstances) {
+            if (!pair.second.instances.empty()) {
+                RenderInstancedMeshToPass(renderPass, pair.first, frameData, isOpaque);
+            }
         }
     }
 }

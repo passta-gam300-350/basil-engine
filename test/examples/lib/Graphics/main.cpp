@@ -616,7 +616,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     // 2. CREATE SCENE OBJECTS
     // Ground plane
     auto planeMesh = std::make_shared<Mesh>(
-        PrimitiveGenerator::CreatePlane(100.0f, 100.0f, 10, 10)
+        PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 10, 10)
     );
     RenderableData ground;
     ground.mesh = planeMesh;
