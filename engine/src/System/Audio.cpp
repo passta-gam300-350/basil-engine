@@ -528,10 +528,10 @@ AudioComponent::~AudioComponent() {
 }
 
 void AudioComponent::RefreshSoundInfo() {
-    spdlog::info("RefreshSoundInfo called: soundHandle={}, isInitialized={}", soundHandle, isInitialized);
+    //spdlog::info("RefreshSoundInfo called: soundHandle={}, isInitialized={}", soundHandle, isInitialized);
 
     if (soundHandle < 0 || isInitialized) {
-        spdlog::info("RefreshSoundInfo: Early return (soundHandle={}, isInitialized={})", soundHandle, isInitialized);
+        //spdlog::info("RefreshSoundInfo: Early return (soundHandle={}, isInitialized={})", soundHandle, isInitialized);
         return;
     }
 
@@ -548,11 +548,11 @@ void AudioComponent::RefreshSoundInfo() {
     }
 
     isInitialized = true;
-    spdlog::info("RefreshSoundInfo: Successfully initialized (soundHandle={}, duration={:.2f}s)", soundHandle, duration);
+    //spdlog::info("RefreshSoundInfo: Successfully initialized (soundHandle={}, duration={:.2f}s)", soundHandle, duration);
     AudioSystem::GetInstance().RegisterComponent(this);
 
     if (playOnAwake) {
-        spdlog::info("RefreshSoundInfo: Auto-playing sound (playOnAwake=true)");
+        //spdlog::info("RefreshSoundInfo: Auto-playing sound (playOnAwake=true)");
         Play();
     }
 }
@@ -579,7 +579,7 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
 
 bool AudioComponent::Play() {
     if (!isInitialized) {
-        spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
+        //spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
         return false;
     }
 
@@ -588,8 +588,8 @@ bool AudioComponent::Play() {
     FMOD::Sound* sound = audioSys.GetSound(soundHandle);
 
     if (!system || !sound) {
-        spdlog::warn("AudioComponent: Cannot play, system={}, sound={}",
-                     system != nullptr, sound != nullptr);
+        //spdlog::warn("AudioComponent: Cannot play, system={}, sound={}",
+        //             system != nullptr, sound != nullptr);
         return false;
     }
 
@@ -623,12 +623,11 @@ bool AudioComponent::Play() {
         isPaused = false;
         playbackPosition = 0.0f;
 
-        // Calculate distance from listener for diagnostics
-        const glm::vec3& listenerPos = audioSys.m_listenerPosition;
-        float distance = glm::length(position - listenerPos);
+        //const glm::vec3& listenerPos = audioSys.m_listenerPosition;
+        //float distance = glm::length(position - listenerPos);
 
-        spdlog::info("AudioComponent: Playing sound (handle={}, volume={:.2f}, 3D={}, pos=[{:.1f},{:.1f},{:.1f}], listenerDist={:.1f}m)",
-                     soundHandle, volume, is3D, position.x, position.y, position.z, distance);
+        //spdlog::info("AudioComponent: Playing sound (handle={}, volume={:.2f}, 3D={}, pos=[{:.1f},{:.1f},{:.1f}], listenerDist={:.1f}m)",
+        //             soundHandle, volume, is3D, position.x, position.y, position.z, distance);
 
         return true;
     }

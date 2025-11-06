@@ -827,28 +827,10 @@ void EditorMain::Render_Components()
 					if (ImGui::Button("Play", ImVec2(60, 0))) {
 						ul.unlock();
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
-							// Construct entity directly from handle (entity_handle is uint64_t)
 							ecs::entity entity{ entityHandle };
-
-							spdlog::info("=== Play Button Clicked ===");
-							spdlog::info("Entity handle: {}, Entity UID: {}", entityHandle, entity.get_uid());
-							spdlog::info("Checking if entity has AudioComponent...");
-
-							bool hasAudioComponent = entity.all<AudioComponent>();
-							spdlog::info("entity.all<AudioComponent>() = {}", hasAudioComponent);
-
-							if (hasAudioComponent) {
+							if (entity.all<AudioComponent>()) {
 								AudioComponent& audio = entity.get<AudioComponent>();
-								spdlog::info("AudioComponent FOUND on engine entity!");
-								spdlog::info("  soundHandle: {}", audio.soundHandle);
-								spdlog::info("  isInitialized: {}", audio.isInitialized);
-								spdlog::info("  isPlaying: {}", audio.isPlaying);
-								spdlog::info("  volume: {}", audio.volume);
-								spdlog::info("  Calling audio.Play()...");
 								audio.Play();
-							} else {
-								spdlog::warn("AudioComponent NOT FOUND on engine entity {}!", entity.get_uid());
-								spdlog::warn("Component exists in editor snapshot but not on engine entity!");
 							}
 						});
 						ul.lock();
