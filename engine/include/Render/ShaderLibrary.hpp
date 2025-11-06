@@ -101,6 +101,7 @@ public:
      */
     std::shared_ptr<Shader> GetEditorResolveShader() const { return m_EditorResolveShader; }
 
+    std::shared_ptr<Shader> GetParticleShader() const { return m_ParticleShader; }
     /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
@@ -173,7 +174,7 @@ private:
     std::shared_ptr<Shader> m_HDRComputeShader;      // Compute shader for luminance
     std::shared_ptr<Shader> m_ToneMappingShader;
     std::shared_ptr<Shader> m_EditorResolveShader;   // Editor resolve with gamma correction
-
+    std::shared_ptr<Shader> m_ParticleShader;
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
 
@@ -188,6 +189,7 @@ private:
     bool LoadHDRComputeShader();
     bool LoadToneMappingShader();
     bool LoadEditorResolveShader();
+    bool LoadParticleShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP

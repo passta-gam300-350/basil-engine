@@ -11,6 +11,9 @@
 #include "Utility/Particle.h"
 
 #include <components/behaviour.hpp>
+
+#include <Jolt/Jolt.h>
+
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -51,6 +54,13 @@ void ReflectionRegistry::SetupNativeTypes() {
 		MemberRegistrationV<&glm::vec3::y, "y">,
 		MemberRegistrationV<&glm::vec3::z, "z">
 	);	
+
+	RegisterReflectionComponent<JPH::Vec3>(
+		"JPHvec3",
+		InterfaceRegistrationV < &JPH::Vec3::SetX , &JPH::Vec3::GetX, "x" >,
+		InterfaceRegistrationV < &JPH::Vec3::SetY, &JPH::Vec3::GetY, "y" >,
+		InterfaceRegistrationV < &JPH::Vec3::SetZ, &JPH::Vec3::GetZ, "z" >
+	);
 
 	RegisterReflectionComponent<glm::vec4>(
 		"vec4",

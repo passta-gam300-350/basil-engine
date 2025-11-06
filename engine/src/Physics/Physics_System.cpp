@@ -113,31 +113,24 @@ class MyContactListener : public JPH::ContactListener {
 public:
     MyContactListener(PhysicsSystem* physicsSystem) : m_physicsSystem(physicsSystem) {}
 
-    virtual JPH::ValidateResult OnContactValidate(const JPH::Body& inBody1,
-        const JPH::Body& inBody2,
-        JPH::RVec3Arg inBaseOffset,
-        const JPH::CollideShapeResult& inCollisionResult) override {
-        // Accept all contacts
+    // Pre contact, no unity equivillent 
+    virtual JPH::ValidateResult OnContactValidate(const JPH::Body& inBody1, const JPH::Body& inBody2, JPH::RVec3Arg inBaseOffset, const JPH::CollideShapeResult& inCollisionResult) override {
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
     }
 
-    virtual void OnContactAdded(const JPH::Body& inBody1,
-        const JPH::Body& inBody2,
-        const JPH::ContactManifold& inManifold,
-        JPH::ContactSettings& ioSettings) override {
-        // Handle collision enter events
-        // You can dispatch events to your ECS here
+    // Unity OnContact
+    virtual void OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override {
+
     }
 
-    virtual void OnContactPersisted(const JPH::Body& inBody1,
-        const JPH::Body& inBody2,
-        const JPH::ContactManifold& inManifold,
-        JPH::ContactSettings& ioSettings) override {
-        // Handle collision stay events
+    // Unity OnStay
+    virtual void OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override {
+
     }
 
+    // Unity OnLeave
     virtual void OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair) override {
-        // Handle collision exit events
+
     }
 
 private:
@@ -204,115 +197,12 @@ void PhysicsSystem::Init() {
     m_physicsSystem->SetGravity(JPH::Vec3(0.0f, -9.81f, 0.0f));
 }
 
-JPH::BodyID PhysicsSystem::CreateCharacterController(
-    ecs::world& world,
-    ecs::entity entity,
-    const CharacterControllerComponent& charComp,
-    const PositionComponent& pos,
-    const RotationComponent& rot)
-{
-    if (!m_bodyInterface) return JPH::BodyID();
-
-    // Create capsule shape for character
-    JPH::Ref<JPH::Shape> capsuleShape = new JPH::CapsuleShape(
-        charComp.capsuleHeight * 0.5f,  // Half height
-        charComp.capsuleRadius
-    );
-
-    // Create character settings
-    JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
-    settings->mMaxSlopeAngle = JPH::DegreesToRadians(charComp.maxSlopeAngle);
-    settings->mMass = charComp.mass;
-    settings->mFriction = charComp.friction;
-    settings->mGravityFactor = charComp.gravityFactor;
-    settings->mShape = capsuleShape;
-    settings->mLayer = Layers::MOVING;
-
-    // Create the character
-    JPH::Character* character = new JPH::Character(
-        settings,
-        PhysicsUtils::ToJolt(pos.m_WorldPos),
-        PhysicsUtils::EulerToJoltQuat(rot.m_Rotation),
-        entity.get_uuid(),  // Store entity ID as user data
-        m_physicsSystem.get()
-    );
-
-    // Add character to physics system
-    character->AddToPhysicsSystem(JPH::EActivation::Activate);
-
-    JPH::BodyID bodyID = character->GetBodyID();
-
-
-
-    return bodyID;
-}
-
-void PhysicsSystem::UpdateCharacterControllers(ecs::world& world, float deltaTime) {
-    if (!m_bodyInterface) return;
-    /*
-    auto characterEntities = world.filter_entities<
-        CharacterControllerComponent,
-        PositionComponent,
-        RotationComponent
-    >();
-
-    for (auto const& entity : characterEntities) {
-        auto [charComp, pos, rot] = entity.get<
-            CharacterControllerComponent,
-            PositionComponent,
-            RotationComponent
-        >();
-
-        if (!charComp.character || charComp.bodyID.IsInvalid()) continue;
-
-        JPH::Character* character = charComp.character.GetPtr();
-
-        // Get current velocity
-        JPH::Vec3 velocity = character->GetLinearVelocity();
-
-        // Apply horizontal movement input
-        JPH::Vec3 horizontalVelocity{};// = charComp.moveSpeed; // PhysicsUtils::ToJolt(charComp.movementInput) * charComp.moveSpeed;
-
-        // Preserve vertical velocity (gravity)
-        horizontalVelocity.SetY(velocity.GetY());
-
-        // Check ground state
-        JPH::Character::EGroundState groundState = character->GetGroundState();
-        charComp.isOnGround = (groundState == JPH::Character::EGroundState::OnGround);
-
-        // Handle jumping
-        if (charComp.wantsToJump && charComp.isOnGround) {
-            horizontalVelocity.SetY(charComp.jumpSpeed);
-            charComp.wantsToJump = false;  // Reset jump flag
-        }
-
-        // Apply velocity to character
-        character->SetLinearVelocity(horizontalVelocity);
-
-        // Update character physics (important!)
-        character->PostSimulation(0.05f);  // Max separation distance
-
-        // Sync position back to ECS
-        JPH::Vec3 newPosition = character->GetPosition();
-        JPH::Quat newRotation = character->GetRotation();
-
-        pos.m_WorldPos = PhysicsUtils::ToGLM(newPosition);
-        rot.m_Rotation = PhysicsUtils::JoltQuatToEuler(newRotation);
-
-        // Cache velocity for external queries
-        charComp.velocity = character->GetLinearVelocity();
-    }*/
-}
-
 
 void PhysicsSystem::FixedUpdate(ecs::world& world) {
     PF_SYSTEM("PhysicsSystem");
-    if (!m_physicsSystem || !m_bodyInterface) return;
+    if (!m_physicsSystem || !m_bodyInterface || !isActive) return;
 
     const float deltaTime = 1.0f / 60.0f;
-
-    // 1. Update character controllers BEFORE physics step
-    UpdateCharacterControllers(world, deltaTime);
 
     // 2. Sync transforms from ECS to physics (for kinematic bodies)
     SyncTransformsToPhysics(world);
@@ -332,13 +222,13 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
 
     // Update kinematic bodies from ECS transforms
-    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent, ScaleComponent, RotationComponent>();
+    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
 
     for (auto const& entity : list_of_entities) 
     {
         auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
-        m_bodyInterface->SetPositionAndRotation(RigidBody.bodyID, PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerToJoltQuat(Transform.m_Rotation), JPH::EActivation::DontActivate);
+        m_bodyInterface->SetPositionAndRotation(JPH::BodyID(RigidBody.bodyID), PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerToJoltQuat(Transform.m_Rotation), JPH::EActivation::DontActivate);
         //if (RigidBody.motionType == JPH::EMotionType::Kinematic && RigidBody.isActive)
     }
 }
@@ -356,14 +246,14 @@ void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
         if (RigidBody.motionType == JPH::EMotionType::Dynamic && RigidBody.isActive) {
             JPH::Vec3 position;
             JPH::Quat rotation;
-            m_bodyInterface->GetPositionAndRotation(RigidBody.bodyID, position, rotation);
+            m_bodyInterface->GetPositionAndRotation(JPH::BodyID(RigidBody.bodyID), position, rotation);
 
             Transform.m_Translation = PhysicsUtils::ToGLM(position);
             Transform.m_Rotation = PhysicsUtils::JoltQuatToEuler(rotation);
 
             // Update cached velocity
-            RigidBody.velocity = m_bodyInterface->GetLinearVelocity(RigidBody.bodyID);
-            RigidBody.angularVelocity = m_bodyInterface->GetAngularVelocity(RigidBody.bodyID);
+            RigidBody.velocity = m_bodyInterface->GetLinearVelocity(JPH::BodyID(RigidBody.bodyID));
+            RigidBody.angularVelocity = m_bodyInterface->GetAngularVelocity(JPH::BodyID(RigidBody.bodyID));
         }
     }
 }
@@ -373,36 +263,6 @@ void PhysicsSystem::ProcessCollisionEvents(ecs::world&) {
     // This depends on how you want to handle events in your ECS
     // You might dispatch events, set flags on components, etc.
 }
-
-//void PhysicsSystem::OnEntityCreated(Entity entity) {
-//    auto* transform = m_ecsWorld->GetComponent<TransformComponent>(entity);
-//    auto* rigidBody = m_ecsWorld->GetComponent<RigidBodyComponent>(entity);
-//    auto* collider = m_ecsWorld->GetComponent<ColliderComponent>(entity);
-//
-//    if (!transform) return;
-//
-//    // Case 1: RigidBody + Collider (standard physics object)
-//    if (rigidBody && collider) {
-//        rigidBody->bodyID = CreateRigidBody(entity, *rigidBody, *transform, collider);
-//        rigidBody->hasCollision = true;
-//    }
-//    // Case 2: RigidBody only (kinematic tracker, force applicator)
-//    else if (rigidBody) {
-//        rigidBody->bodyID = CreateRigidBody(entity, *rigidBody, *transform, nullptr);
-//        rigidBody->hasCollision = false;
-//    }
-//    // Case 3: Collider only (static collision, no dynamics)
-//    // else if (collider) {
-//    //     CreateStaticCollider(entity, *collider, *transform);
-//    // }
-//}
-
-//void PhysicsSystem::OnEntityDestroyed(ecs::entity entity) {
-//    auto it = m_entityToBody.find(entity);
-//    if (it != m_entityToBody.end()) {
-//        DestroyRigidBody(it->second);
-//    }
-//}
 
 // Creates the body of a specific shape and returns the new bodyID
 JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider)

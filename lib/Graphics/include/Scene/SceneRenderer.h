@@ -81,7 +81,7 @@ public:
     void SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
     void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;
-
+    void SetParticleShader(const std::shared_ptr<Shader>& shader) const;
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
     void EnablePicking(bool enable) const;

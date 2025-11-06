@@ -88,20 +88,21 @@ public:
     JPH::BodyID CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider = nullptr);
     void DestroyRigidBody(JPH::BodyID bodyID);
 
-    // Character controller methods
-    JPH::BodyID CreateCharacterController(ecs::world& world, ecs::entity entity, const CharacterControllerComponent& charComp, const PositionComponent& pos, const RotationComponent& rot);
-    void UpdateCharacterControllers(ecs::world& world, float deltaTime);
-
     // Accessors
     JPH::PhysicsSystem* GetJoltPhysicsSystem() noexcept { return m_physicsSystem.get(); } // Returns a pointer to the Jolt Engine
     JPH::BodyInterface& GetBodyInterface() noexcept { return *m_bodyInterface; } // Returns a reference to the Body Interface
 
-    //void SetGravity(const JPH::Vec3& gravity);
-    void SyncTransformsToPhysics(ecs::world& world);
+    
+    void SyncTransformsToPhysics(ecs::world& world);        // 1. Syncs transform data from ecs to internal jolt data
+                                                            // 2. Calls the update for jolt's internal engine, collision call back are also called by jolt when it detect collision
+    void SyncTransformsFromPhysics(ecs::world& world);      // 3. Syncs the new internal jolt data to transform
+    void ProcessCollisionEvents(ecs::world& world);         // 4. Process the queue of collision events to prevent conflict like deleting an entity if it is the result of a collision callback
+
+
+    bool isActive = true;
 private:
     
-    void SyncTransformsFromPhysics(ecs::world& world);
-    void ProcessCollisionEvents(ecs::world& world);
+
 
 
     // Jolt core objects

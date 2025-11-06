@@ -1,0 +1,29 @@
+base:
+  m_guid: 106b2d370d58e1c269a42816464
+  m_importer: .material
+  m_source: ""
+  m_name: TableBottom
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: TableBottom
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 969e627eb4800a36e54a9a2cad
+    u_DiffuseMap: 969e2b7f3f8b2aced13b44d673
+    u_EmissiveMap: 969e3571bbbe5c28abbee0030c
+    u_NormalMap: 969e577ad2a00f314bf06120e7
+    u_HeightMap: 969e577ad2a00f314bf06120e7
+    u_SpecularMap: 00
+    u_MetallicMap: 969e4b7a7aa35e4a9c9285c962

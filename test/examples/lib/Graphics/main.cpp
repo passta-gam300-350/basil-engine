@@ -460,16 +460,16 @@ bool GraphicsTestDriver::LoadTestResources()
         }
 
         // Load models
-        auto tinBoxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/tinbox/tin_box.obj");
+        auto tableModel = m_ResourceManager->LoadModel("table",
+            "assets/models/table/Table.obj");
 
-        if (!tinBoxModel) {
-            spdlog::error("Failed to load chair model!");
+        if (!tableModel) {
+            spdlog::error("Failed to load table model!");
             return false;
         }
 
         // Load Crytek Sponza model
-        auto sponzaModel = m_ResourceManager->LoadModel("sponza",
+        /*auto sponzaModel = m_ResourceManager->LoadModel("sponza",
             "assets/models/crytek_sponza/sponza.obj");
 
         if (!sponzaModel) {
@@ -477,7 +477,7 @@ bool GraphicsTestDriver::LoadTestResources()
             return false;
         } else {
             spdlog::info("Sponza model loaded successfully with {} meshes", sponzaModel->meshes.size());
-        }
+        }*/
 
         // Create test materials
         CreateTestMaterials();
@@ -626,7 +626,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
     ground.objectID = 1;
     m_SceneObjects.push_back(ground);
 
-    // Tinbox grid
+    // Table grid
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
     const int gridSize = 3;
@@ -637,10 +637,10 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
+            CreateModelInstance("table", materials[materialIndex], position, glm::vec3(0.01f));
         }
     }
-    spdlog::info("Tinbox grid created: {} objects", m_SceneObjects.size());
+    spdlog::info("Table grid created: {} objects", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
     // Directional light
@@ -701,7 +701,7 @@ void GraphicsTestDriver::SetupEditorDemo()
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
     const int gridSize = 3;
-    const float spacing = 3.0f;
+    const float spacing = 150.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f;
 
     // Create cube mesh primitive
@@ -880,10 +880,36 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
             if (shader) {
                 renderable.material = std::make_shared<Material>(shader, "TexturedMaterial_" + std::to_string(meshIndex));
-                // Use white/neutral colors so textures show through properly
-                renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
-                renderable.material->SetMetallicValue(0.0f);
-                renderable.material->SetRoughnessValue(0.5f);
+
+                // Detect glass materials by checking node name or texture paths
+                const std::string& nodeName = model->meshNodeNames[meshIndex];
+                bool isGlass = (nodeName.find("glass") != std::string::npos ||
+                                nodeName.find("Glass") != std::string::npos);
+
+                // Also check texture names for "glass" keyword
+                if (!isGlass) {
+                    for (const auto& texture : mesh->textures) {
+                        if (texture.path.find("glass") != std::string::npos ||
+                            texture.path.find("Glass") != std::string::npos) {
+                            isGlass = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isGlass) {
+                    // Glass material - transparent with slight blue tint
+                    renderable.material->SetAlbedoColor(glm::vec3(0.9f, 0.95f, 1.0f));
+                    renderable.material->SetMetallicValue(0.0f);
+                    renderable.material->SetRoughnessValue(0.05f);  // Very smooth
+                    renderable.material->SetBlendMode(BlendingMode::Transparent);
+                    spdlog::info("Detected glass material for mesh '{}' - enabling transparency", nodeName);
+                } else {
+                    // Regular textured material
+                    renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
+                    renderable.material->SetMetallicValue(0.0f);
+                    renderable.material->SetRoughnessValue(0.5f);
+                }
             }
         } else {
             // No textures - use our custom colored material

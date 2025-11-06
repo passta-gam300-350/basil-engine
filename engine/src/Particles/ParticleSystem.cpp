@@ -9,7 +9,7 @@
 
 void ParticleSystem::Init()
 {
-
+	
 }
 
 void ParticleSystem::Update(ecs::world& world, float dt)
@@ -19,41 +19,41 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 		return;
 	}
 	auto& registry = world.impl.get_registry();
-	auto view = registry.view<ParticleComponent, PositionComponent>();
-	auto view2 = world.filter_entities<ParticleComponent, PositionComponent>();
-	for (auto& eachEntity : view2)
+	//auto view = registry.view<ParticleComponent, TransformComponent>();
+	auto view = world.filter_entities<ParticleComponent, TransformComponent>();
+
+	for (auto& eachEntity : view)
 	{
 		ParticleComponent& particleComponent = eachEntity.get<ParticleComponent>();
-		// implement later
-	}
-	view.each([&](auto entity, ParticleComponent& particleComp, PositionComponent& positionComp)
+		TransformComponent& transformComponent = eachEntity.get<TransformComponent>();
+		if (particleComponent.emitter == nullptr)
 		{
-			if (particleComp.emitter == nullptr)
+			particleComponent.emitter = std::make_unique<ParticleEmitter>(particleComponent.config);
+			if (particleComponent.autoPlay == true)
 			{
-				particleComp.emitter = std::make_unique<ParticleEmitter>(particleComp.config);
-				if (particleComp.autoPlay == true)
-				{
-					particleComp.emitter->Play();
-				}
+				particleComponent.emitter->Play();
 			}
-			particleComp.emitter->GetConfig().position = positionComp.m_WorldPos;
-			particleComp.emitter->Update(dt);
-			ParticleRenderData renderData;
-			renderData.particles = particleComp.emitter->GetParticles();
+		}
+		particleComponent.emitter->GetConfig().position = transformComponent.m_Translation;
+		particleComponent.emitter->Update(dt);
+		ParticleRenderData renderData;
+		renderData.particles = particleComponent.emitter->GetParticles();
 
-			// Resolve texture GUID to actual texture resource
-			if (particleComp.texture != rp::null_guid) {
-				auto* texturePtr = ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(particleComp.texture);
-				if (texturePtr) {
-					renderData.texture = *texturePtr;
-				}
+		if (particleComponent.texture != rp::null_guid)
+		{
+			auto* texturePtr = ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(particleComponent.texture);
+			if (texturePtr)
+			{
+				renderData.texture = *texturePtr;
 			}
+		}
 
-			renderData.blendMode = particleComp.blendSettings;
-			renderData.depthWrite = particleComp.depthWrite;
-			renderData.renderLayer = particleComp.renderLayer;
-			m_SceneRenderer->SubmitParticles(renderData);
-		});
+		renderData.blendMode = particleComponent.blendSettings;
+		renderData.depthWrite = particleComponent.depthWrite;
+		renderData.renderLayer = particleComponent.renderLayer;
+
+		m_SceneRenderer->SubmitParticles(renderData);
+	}
 }
 
 void ParticleSystem::FixedUpdate(ecs::world& world)

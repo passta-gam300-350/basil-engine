@@ -25,6 +25,8 @@ Technology is prohibited.
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 
+#include "Messaging/Messaging_System.h"
+
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
@@ -93,6 +95,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetToneMappingShader()) {
 		m_SceneRenderer->SetToneMappingShader(m_ShaderLibrary->GetToneMappingShader());
 	}
+	if (m_ShaderLibrary->GetParticleShader()) {
+		m_SceneRenderer->SetParticleShader(m_ShaderLibrary->GetParticleShader());
+	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
 	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());
@@ -158,9 +163,6 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 void RenderSystem::Update(ecs::world& world) {
 	PF_SYSTEM("GraphicSystem");
 
-	//begin frame
-	m_SceneRenderer->ClearFrame();
-
 	auto world_camera = CameraSystem::GetActiveCamera();
 	auto& frameData = m_SceneRenderer->GetFrameData();
 
@@ -174,6 +176,7 @@ void RenderSystem::Update(ecs::world& world) {
 	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
 		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
 		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+		messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE, std::make_unique<Camera_Calculation_Update>(frameData.viewMatrix,m_Camera->GetProjectionMatrix()));
 	}
 
 	frameData.viewMatrix = view;
@@ -208,41 +211,6 @@ void RenderSystem::Update(ecs::world& world) {
 		auto materialLoader = [this, hasAttachedMat = mesh.hasAttachedMaterial, entityUID](rp::BasicIndexedGuid biguid) {
 			return LoadMaterialResource(static_cast<rp::TypeNameGuid<"material">&>(biguid), hasAttachedMat, entityUID);
 			};
-
-		// Load material resource (from ResourceRegistry or create default)
-		/*std::shared_ptr<Material> materialResource = LoadMaterialResource(
-			static_cast<rp::TypeNameGuid<"material">&>(mesh.m_MaterialGuid),
-			mesh.hasAttachedMaterial,
-			entityUID
-		);*/
-
-		// === ENHANCED DIAGNOSTIC LOGGING ===
-		// Log resource loading status for debugging entity 2 issue
-		/*spdlog::info("Entity {}: Resource check - mesh: {}, material: {}, isPrimitive: {}, hasAttachedMaterial: {}",
-			entityUID,
-			(meshResource ? "OK" : "NULL"),
-			(materialResource ? "OK" : "NULL"),
-			mesh.isPrimitive,
-			mesh.hasAttachedMaterial);
-
-		if (materialResource) {
-			spdlog::info("Entity {}: Material loaded: '{}' (GUID: {})",
-				entityUID, materialResource->GetName(), mesh.m_MaterialGuid.m_guid.to_hex().substr(0, 8));
-		} else {
-			spdlog::warn("Entity {}: Material FAILED to load (GUID: {}, hasAttachedMaterial: {})",
-				entityUID, mesh.m_MaterialGuid.m_guid.to_hex().substr(0, 8), mesh.hasAttachedMaterial);
-		}
-
-		if (meshResource) {
-			spdlog::info("Entity {}: Mesh loaded: {} vertices, isPrimitive: {}",
-				entityUID, meshResource->vertices.size(), mesh.isPrimitive);
-		} else {
-			spdlog::warn("Entity {}: Mesh FAILED to load (GUID: {}, isPrimitive: {}, primitiveType: {})",
-				entityUID,
-				mesh.m_MeshGuid.m_guid.to_hex().substr(0, 8),
-				mesh.isPrimitive,
-				static_cast<int>(mesh.m_PrimitiveType));
-		}*/
 
 		bool isMeshValid{ false };
 		std::visit([&isMeshValid](auto& ptr) {isMeshValid = static_cast<bool>(ptr); }, meshResource);
@@ -327,17 +295,40 @@ void RenderSystem::Update(ecs::world& world) {
 				shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
 			}
 			else {
-				if (mesh.m_MaterialGuid.size() != var->size()) {
-					mesh.m_MaterialGuid.clear();
-					mesh.m_MaterialGuid.reserve(var->size());
-					for (auto& [name, ptr] : *var) {
-						mesh.m_MaterialGuid.emplace(name, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+				// Multi-slot mesh: match materials by slot name to preserve user assignments
+				// Only add missing slots, never clear existing assignments
+				for (auto& [slotName, meshPtr] : *var) {
+					// Check if this slot exists in the component's material map
+					auto matIt = mesh.m_MaterialGuid.find(slotName);
+
+					if (matIt == mesh.m_MaterialGuid.end()) {
+						// Slot doesn't exist - add it with null GUID (will use default material)
+						mesh.m_MaterialGuid.emplace(slotName, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+						matIt = mesh.m_MaterialGuid.find(slotName);
+					}
+
+					// Submit renderable with material from this slot
+					shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
+				}
+
+				// Clean up slots that don't exist in mesh anymore (optional)
+				// This prevents accumulation of unused slots when mesh changes
+				std::vector<std::string> slotsToRemove;
+				for (const auto& [componentSlotName, guid] : mesh.m_MaterialGuid) {
+					bool slotExistsInMesh = false;
+					for (const auto& [meshSlotName, ptr] : *var) {
+						if (meshSlotName == componentSlotName) {
+							slotExistsInMesh = true;
+							break;
+						}
+					}
+					if (!slotExistsInMesh) {
+						slotsToRemove.push_back(componentSlotName);
 					}
 				}
-				auto it = mesh.m_MaterialGuid.begin();
-				std::for_each(var->begin(), var->end(), [&](auto& kv) {
-					shared_ptr_visitor(kv.second, materialLoader((it++)->second));
-					});
+				for (const auto& slotName : slotsToRemove) {
+					mesh.m_MaterialGuid.erase(slotName);
+				}
 			}
 			}, meshResource);
 	}
@@ -359,6 +350,9 @@ void RenderSystem::Update(ecs::world& world) {
 
 	//render frame
 	m_SceneRenderer->Render();
+
+	//clear frame data AFTER rendering (so particles submitted before render are included)
+	m_SceneRenderer->ClearFrame();
 }
 void RenderSystem::FixedUpdate(ecs::world& w) {
 	Update(w);
@@ -371,6 +365,9 @@ void RenderSystem::Exit() {
 
 	// Clear all property blocks
 	m_PropertyBlocks.clear();
+
+	// Clear cached default material
+	m_DefaultMaterial.reset();
 
 	// Destructor will handle cleanup automatically
 }
@@ -514,6 +511,11 @@ void RenderSystem::SetupDebugVisualization() {
 std::variant<std::shared_ptr<Mesh>, std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>*> RenderSystem::LoadMeshResource(const MeshRendererComponent& meshComp) const {
 	// Handle primitives via PrimitiveManager
 	if (meshComp.isPrimitive) {
+		static int primLoadLogCount = 0;
+		if (primLoadLogCount < 20) {
+			spdlog::warn("LoadMeshResource: isPrimitive=true, returning primitive mesh (primitiveType: {})", static_cast<int>(meshComp.m_PrimitiveType));
+			primLoadLogCount++;
+		}
 		switch (meshComp.m_PrimitiveType) {
 		case MeshRendererComponent::PrimitiveType::CUBE:
 			return m_PrimitiveManager->GetSharedCubeMesh();
@@ -567,13 +569,23 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 {
 	// Check for null GUID
 	if (materialGuid.m_guid == rp::null_guid || !hasAttachedMaterial) {
-		// No material attached - create default
-		auto pbrShader = m_ShaderLibrary->GetPBRShader();
-		if (!pbrShader) {
-			spdlog::error("RenderSystem: PBR shader not available for default material");
-			return nullptr;
+		// No material attached - use cached default material
+		// This ensures stable memory address across frames for proper batching
+		if (!m_DefaultMaterial) {
+			auto pbrShader = m_ShaderLibrary->GetPBRShader();
+			if (!pbrShader) {
+				spdlog::error("RenderSystem: PBR shader not available for default material");
+				return nullptr;
+			}
+			m_DefaultMaterial = std::make_shared<Material>(pbrShader, "DefaultMaterial_Shared");
+			spdlog::info("RenderSystem: Created cached default material (shared across all entities with no attached material)");
 		}
-		return std::make_shared<Material>(pbrShader, "DefaultMaterial_Entity_" + std::to_string(entityUID));
+		static int defaultMatLogCount = 0;
+		if (defaultMatLogCount < 20) {
+			spdlog::info("Entity {}: Using default material (null GUID or hasAttachedMaterial=false)", entityUID);
+			defaultMatLogCount++;
+		}
+		return m_DefaultMaterial;
 	}
 
 	// Check if already loaded OR load from disk via ResourceSystem::FileEntries
@@ -739,6 +751,9 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 					matData.material_name, uniform_name, texture_guid.to_hex().substr(0, 8));
 			}
 		}
+
+		// Apply blend mode (0 = Opaque, 1 = Transparent)
+		material->SetBlendMode(static_cast<BlendingMode>(matData.blend_mode));
 
 		spdlog::info("Successfully loaded material '{}' from resource pipeline ({} textures)",
 			matData.material_name, textureUnit);

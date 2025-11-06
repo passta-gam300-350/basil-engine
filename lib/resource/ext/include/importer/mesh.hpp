@@ -1,7 +1,9 @@
 #ifndef RESOURCE_IMPORTOR_MESH
 #define RESOURCE_IMPORTOR_MESH
 
+#ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
+#endif
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

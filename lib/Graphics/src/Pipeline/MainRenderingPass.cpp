@@ -75,20 +75,84 @@ void MainRenderingPass::Execute(RenderContext& context)
     };
     Submit(depthTestCmd);
 
+    // Explicitly disable blending for opaque pass (prevent state leak from previous passes)
+    Submit(RenderCommands::SetBlendingData{ false });
+
     // Standard forward rendering with context data (no copies!)
     if (!context.renderables.empty())
     {
         // 1. Update scene-wide lighting with submitted lights
         context.pbrLighting.UpdateLighting(context.lights, context.ambientLight, context.frameData);
 
-        // 2. Frustum culling on submitted renderables (currently skipped)
-        // auto visibleRenderables = m_FrustumCuller->CullRenderables(context.renderables, context.frameData);
+        // 2. Separate opaque and transparent objects
+        std::vector<RenderableData> opaqueRenderables;
+        std::vector<RenderableData> transparentRenderables;
 
-        // 3. Forward instanced rendering with visible renderables using pass-local buffer
-        context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData);
+        for (const auto& renderable : context.renderables)
+        {
+            if (renderable.visible && renderable.mesh && renderable.material)
+            {
+                if (renderable.material->GetBlendMode() == BlendingMode::Transparent)
+                {
+                    transparentRenderables.push_back(renderable);
+                }
+                else
+                {
+                    opaqueRenderables.push_back(renderable);
+                }
+            }
+        }
 
-        // 4. Particle rendering
+        // 3. Frustum culling on submitted renderables (currently skipped)
+        // auto visibleRenderables = m_FrustumCuller->CullRenderables(opaqueRenderables, context.frameData);
+
+        // CRITICAL FIX: Build instance data ONCE with ALL renderables to avoid SSBO destruction between passes
+        // The transparent pass was destroying opaque SSBOs before GPU finished rendering them
+        context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData, true);
+
+        // 6. Particle rendering
         context.particleRenderer.RenderToPass(*this, context.frameData);
+
+        // Restore state after particles (they may have changed blending/depth)
+        Submit(RenderCommands::SetBlendingData{ false });  // Disable blending
+        Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });  // Restore depth writing
+        /*
+        Always restore state after modifying it
+        Returns OpenGL to a "safe default" for the next rendering operation
+        Prevents one system's rendering settings from breaking another system
+        */
+        // 7. Render transparent objects (after opaque, with alpha blending)
+        if (!transparentRenderables.empty())
+        {
+            // Enable alpha blending for transparent objects
+            Submit(RenderCommands::SetBlendingData{
+                true,                        // enable blending
+                GL_SRC_ALPHA,                // source factor
+                GL_ONE_MINUS_SRC_ALPHA       // destination factor
+            });
+
+            // Disable depth writing but keep depth testing
+            Submit(RenderCommands::SetDepthTestData{
+                true,           // enable depth testing
+                GL_LESS,        // depth function
+                false           // DISABLE depth writing (critical for transparency)
+            });
+
+            // Render transparent pass - instance data already built, just render with isOpaque=false
+            context.instancedRenderer.RenderToPass(*this, context.renderables, context.frameData, false);
+
+            // Restore depth writing
+            Submit(RenderCommands::SetDepthTestData{
+                true,           // enable depth testing
+                GL_LESS,        // depth function
+                true            // enable depth writing
+            });
+
+            // Disable blending
+            Submit(RenderCommands::SetBlendingData{
+                false  // disable blending
+            });
+        }
     }
 
     // Execute all commands submitted to this pass's command buffer

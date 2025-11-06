@@ -40,6 +40,12 @@
 # debug information files
 *.dwo
 
+
+# Others
+*.claude
+*.codex
+
+
 # vs files
 *.sln
 *.vcxproj
