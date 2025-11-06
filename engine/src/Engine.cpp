@@ -35,6 +35,8 @@ namespace {
 	constexpr std::string_view DEFAULT_SINK_NAME{ "Engine" };
 	constexpr std::string_view DEFAULT_OUTPUT_FILE{ "" };
 	constexpr std::string_view DEFAULT_CONFIG_NAME{ "Default.yaml"};
+	
+	static std::unique_ptr<AudioComponent> ambient; // [TEMP]
 }
 
 Engine& Engine::Instance() {
@@ -248,18 +250,16 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
 		if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
 			std::string filename = entry.path().stem().string();
-			AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false);
+			AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
 		}
 		else
 			spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
 	}
-	AudioSystem::GetInstance().SetListenerPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	AudioSystem::GetInstance().SetListenerOrientation(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	AudioComponent ambient;
-	if (ambient.Init("Singapore Koi Ambience_Loop.ogg", true, true)) {
-		spdlog::info("Audio Component: Creating component");
-		ambient.SetVolume(1.0f);
-		ambient.Play();
+	// Persist the ambient audio component so it doesn't get destroyed after init
+	ambient = std::make_unique<AudioComponent>();
+	if (ambient->Init("Singapore Koi Ambience_Loop.ogg", true, true, true)) {
+		ambient->Play();
+		ambient->SetVolume(6.0f);
 	}
 	// [ENDTEMP]
 

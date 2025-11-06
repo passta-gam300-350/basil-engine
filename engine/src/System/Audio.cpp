@@ -280,6 +280,7 @@ AudioSystem& AudioSystem::GetInstance() {
 
 AudioSystem::AudioSystem()
     : m_system(nullptr)
+    , m_result(FMOD_OK)
     , m_initialized(false)
     , m_nextSoundHandle(1)
     , m_listenerPosition(0.0f, 0.0f, 0.0f)
@@ -318,7 +319,7 @@ void AudioSystem::Update(ecs::world& world) {
         return;
 
     if (m_listenerMoved) {
-        float deltaTime = 1.0f / 60.0f;
+        constexpr float deltaTime = 1.0f / 60.0f;
         m_listenerVelocity.x = (m_listenerPosition.x - m_listenerLastPosition.x) / deltaTime;
         m_listenerVelocity.y = (m_listenerPosition.y - m_listenerLastPosition.y) / deltaTime;
         m_listenerVelocity.z = (m_listenerPosition.z - m_listenerLastPosition.z) / deltaTime;
@@ -326,10 +327,10 @@ void AudioSystem::Update(ecs::world& world) {
         m_listenerMoved = false;
     }
 
-    FMOD_VECTOR pos = ToFMOD(m_listenerPosition);
-    FMOD_VECTOR vel = ToFMOD(m_listenerVelocity);
-    FMOD_VECTOR forward = ToFMOD(m_listenerForward);
-    FMOD_VECTOR up = ToFMOD(m_listenerUp);
+    const FMOD_VECTOR pos = ToFMOD(m_listenerPosition);
+    const FMOD_VECTOR vel = ToFMOD(m_listenerVelocity);
+    const FMOD_VECTOR forward = ToFMOD(m_listenerForward);
+    const FMOD_VECTOR up = ToFMOD(m_listenerUp);
 
     FMOD_ErrorCheck(m_system->set3DListenerAttributes(0, &pos, &vel, &forward, &up));
 
@@ -364,7 +365,7 @@ void AudioSystem::Exit() {
     m_initialized = false;
 }
 
-void AudioSystem::SetListenerPosition(const glm::vec3& position, const glm::vec3& velocity) {
+void AudioSystem::SetListenerPosition(const glm::vec3& position, const glm::vec3& velocity) noexcept {
     m_listenerPosition = position;
     if (velocity.x != 0.0f || velocity.y != 0.0f || velocity.z != 0.0f)
         m_listenerVelocity = velocity;
@@ -372,12 +373,19 @@ void AudioSystem::SetListenerPosition(const glm::vec3& position, const glm::vec3
         m_listenerMoved = true;
 }
 
-void AudioSystem::SetListenerOrientation(const glm::vec3& forward, const glm::vec3& up) {
+void AudioSystem::SetListenerOrientation(const glm::vec3& forward, const glm::vec3& up) noexcept {
     m_listenerForward = forward;
     m_listenerUp = up;
 }
 
-int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream) {
+int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, bool isLooping) {
+    auto it = m_pathToHandle.find(dir);
+    if (it != m_pathToHandle.end()) {
+        m_refCounts[it->second]++;
+        spdlog::warn("Audio: Duplicate load detected for '{}', reusing handle {}", dir, it->second);
+        return it->second;
+    }
+    
     if (!m_initialized || !m_system) {
         spdlog::warn("Audio: System not initialized.");
         return -1;
@@ -390,27 +398,34 @@ int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream) {
     FMOD_MODE mode = FMOD_DEFAULT;
 	mode |= is3D ? FMOD_3D : FMOD_2D;
 	mode |= isStream ? FMOD_CREATESTREAM : FMOD_CREATESAMPLE;
+	mode |= isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
 
-    if (m_system->createSound(dir.c_str(), mode, 0, &sound) != FMOD_OK) {
-        spdlog::warn("Audio: Failed to load sound at {}, {}", dir, FMOD_ErrorString(result));
+    m_result = m_system->createSound(dir.c_str(), mode, 0, &sound);
+    if (sound == nullptr && m_result != FMOD_OK) {
+        spdlog::warn("Audio: Failed to load sound at {}, {}", dir, FMOD_ErrorString(m_result));
         return -1;
     }
 
-    if (is3D && sound->set3DMinMaxDistance(MINDISTANCE * DISTANCEFACTOR, MAXDISTANCE * DISTANCEFACTOR) != FMOD_OK)
-        spdlog::warn("Audio: Failed to set 3D distance for sound {}", FMOD_ErrorString(result));
+    m_result = sound->set3DMinMaxDistance(MINDISTANCE * DISTANCEFACTOR, MAXDISTANCE * DISTANCEFACTOR);
+    if (is3D && m_result != FMOD_OK)
+        spdlog::warn("Audio: Failed to set 3D distance for sound {}", FMOD_ErrorString(m_result));
 
-    int handle = m_nextSoundHandle++;
+    const int handle = m_nextSoundHandle++;
     m_loadedSounds[handle] = sound;
+    m_pathToHandle[dir] = handle;
+    m_refCounts[handle] = 1;
 
     return handle;
 }
 
 void AudioSystem::UnloadSound(int soundHandle) {
-    auto it = m_loadedSounds.find(soundHandle);
-    if (it != m_loadedSounds.end()) {
-        if (it->second)
-            it->second->release();
-        m_loadedSounds.erase(it);
+    auto it = m_refCounts.find(soundHandle);
+    if (it != m_refCounts.end() && --it->second <= 0) {
+        if (auto s = m_loadedSounds[soundHandle]) s->release();
+        m_loadedSounds.erase(soundHandle);
+        for (auto pit = m_pathToHandle.begin(); pit != m_pathToHandle.end(); ++pit)
+            if (pit->second == soundHandle) { m_pathToHandle.erase(pit); break; }
+        m_refCounts.erase(soundHandle);
     }
 }
 
@@ -470,8 +485,9 @@ bool AudioComponent::Init(int handle) {
     return true;
 }
 
-bool AudioComponent::Init(const std::string& filePath, bool is3D, bool isStream) {
-    int handle = AudioSystem::GetInstance().LoadSound(AUDIO_PATH + filePath, is3D, isStream);
+bool AudioComponent::Init(const std::string& filePath, bool is3D, bool isStream, bool isLooping) {
+    int handle = AudioSystem::GetInstance().LoadSound(AUDIO_PATH + filePath, is3D, isStream, isLooping);
+    spdlog::info("AudioComponent: Initializing sound from {}", AUDIO_PATH + filePath);
     if (handle == -1){
         spdlog::warn("AudioComponent: Invalid sound handle {}", handle);
         return false;
@@ -482,16 +498,16 @@ bool AudioComponent::Init(const std::string& filePath, bool is3D, bool isStream)
 
 void AudioComponent::UpdatePosition(const glm::vec3& newPosition) {
     if (channel) {
-        FMOD_VECTOR pos = ToFMOD(newPosition);
-        FMOD_VECTOR vel = ToFMOD(velocity);
+        const FMOD_VECTOR pos = ToFMOD(newPosition);
+        const FMOD_VECTOR vel = ToFMOD(velocity);
         FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
     }
 }
 
 void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
     if (channel) {
-        FMOD_VECTOR pos = ToFMOD(position);
-        FMOD_VECTOR vel = ToFMOD(newVelocity);
+        const FMOD_VECTOR pos = ToFMOD(position);
+        const FMOD_VECTOR vel = ToFMOD(newVelocity);
         FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
     }
 }
@@ -511,14 +527,9 @@ bool AudioComponent::Play() {
         channel = nullptr;
     }
 
-    FMOD_MODE mode;
-    sound->getMode(&mode);
-    mode = isLooping ? (mode | FMOD_LOOP_NORMAL) : (mode & ~FMOD_LOOP_NORMAL);
-    sound->setMode(mode);
-
     FMOD_ErrorCheck(system->playSound(sound, 0, true, &channel));
-    FMOD_VECTOR pos = ToFMOD(position);
-    FMOD_VECTOR vel = ToFMOD(velocity);
+    const FMOD_VECTOR pos = ToFMOD(position);
+    const FMOD_VECTOR vel = ToFMOD(velocity);
     FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
     FMOD_ErrorCheck(channel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
     FMOD_ErrorCheck(channel->setVolume(volume));
@@ -570,13 +581,18 @@ bool AudioComponent::Stop() {
 }
 
 void AudioComponent::SetVolume(float vol) {
-    if (channel)
-        FMOD_ErrorCheck(channel->setVolume(vol));
+    if (channel) {
+        volume = vol;
+        FMOD_ErrorCheck(channel->setVolume(dbToVolume(vol)));
+    }
 }
 
 void AudioComponent::SetDistanceRange(float minDist, float maxDist) {
-    if (channel)
+    if (channel) {
+        minDistance = minDist;
+		maxDistance = maxDist;
         FMOD_ErrorCheck(channel->set3DMinMaxDistance(minDist * DISTANCEFACTOR, maxDist * DISTANCEFACTOR));
+    }
 }
 
 bool AudioComponent::IsPlaying() const {
@@ -595,8 +611,8 @@ void AudioComponent::InternalUpdate() {
     if (!channel)
         return;
 
-    FMOD_VECTOR pos = ToFMOD(position);
-    FMOD_VECTOR vel = ToFMOD(velocity);
+    const FMOD_VECTOR pos = ToFMOD(position);
+    const FMOD_VECTOR vel = ToFMOD(velocity);
     FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
 
     bool playing = false;

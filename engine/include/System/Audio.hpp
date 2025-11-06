@@ -107,9 +107,11 @@ inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, v.z 
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
 	if (result != FMOD_OK) {
         spdlog::warn("Audio: {}", FMOD_ErrorString(result));
-		assert(false && "FMOD Error encountered");
+		//assert(false && "FMOD Error encountered");
 	}
 }
+inline float dbToVolume(float dB) noexcept { return powf(10.0f, 0.05f * dB); };
+inline float VolumeTodB(float volume) noexcept { return 20.0f * log10f(volume); };
 
 class AudioSystem : public ecs::SystemBase
 {
@@ -120,11 +122,11 @@ public:
     void Update(ecs::world& world);
     void Exit();
 
-    void SetListenerPosition(const glm::vec3& position, const glm::vec3& velocity = glm::vec3());
-    void SetListenerOrientation(const glm::vec3& forward, const glm::vec3& up);
+    void SetListenerPosition(const glm::vec3& position = glm::vec3(), const glm::vec3& velocity = glm::vec3()) noexcept;
+    void SetListenerOrientation(const glm::vec3& forward = glm::vec3(), const glm::vec3& up = glm::vec3()) noexcept;
 
     // Asset management
-    int LoadSound(const std::string& filePath, bool is3D = true, bool isStream = false);
+    int LoadSound(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
     void UnloadSound(int soundHandle);
 
     // Low-level access
@@ -148,11 +150,13 @@ private:
 
     // Member variables - all state encapsulated in class
     FMOD::System* m_system;
-    FMOD_RESULT result;
+    FMOD_RESULT m_result;
     bool m_initialized;
     int m_nextSoundHandle;
     std::unordered_map<int, FMOD::Sound*> m_loadedSounds;
     std::vector<AudioComponent*> m_components;
+	std::unordered_map<std::string, int> m_pathToHandle;
+	std::unordered_map<int, int> m_refCounts;
 
     // Listener state
     glm::vec3 m_listenerPosition;
@@ -170,15 +174,14 @@ struct AudioComponent
     FMOD::Sound* sound = nullptr;
     FMOD::Channel* channel = nullptr;
 
-    glm::vec3 position;
-    glm::vec3 velocity;
+    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
     float minDistance = MINDISTANCE;
     float maxDistance = MAXDISTANCE;
 
     float volume = 1.0f;
     bool isPlaying = false;
     bool isPaused = false;
-    bool isLooping = false;
     bool playOnAwake = false;
 
     bool isInitialized = false;
@@ -190,7 +193,7 @@ struct AudioComponent
     ~AudioComponent();
 
     bool Init(int handle);
-    bool Init(const std::string& filePath, bool is3D = true, bool isStream = false);
+    bool Init(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
 
     void UpdatePosition(const glm::vec3& newPosition);
     void UpdateVelocity(const glm::vec3& newVelocity);
