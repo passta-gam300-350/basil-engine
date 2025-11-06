@@ -818,7 +818,7 @@ void EditorMain::Render_Components()
 			Render_Component_Member(comp, is_dirty);
 
 			// Special UI section for AudioComponent playback controls
-			/*if (audio_component && type_id == audio_component) {
+			if (audio_component && type_id == audio_component) {
 				if (AudioComponent* audioComp = reinterpret_cast<AudioComponent*>(uptr.get())) {
 					ImGui::Separator();
 					ImGui::Text("Playback Controls");
@@ -827,12 +827,28 @@ void EditorMain::Render_Components()
 					if (ImGui::Button("Play", ImVec2(60, 0))) {
 						ul.unlock();
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
-							ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
-							spdlog::info("Getting ready to play audio on entity {}", entity.get_uid());
-							if (entity.all<AudioComponent>()) {
+							// Construct entity directly from handle (entity_handle is uint64_t)
+							ecs::entity entity{ entityHandle };
+
+							spdlog::info("=== Play Button Clicked ===");
+							spdlog::info("Entity handle: {}, Entity UID: {}", entityHandle, entity.get_uid());
+							spdlog::info("Checking if entity has AudioComponent...");
+
+							bool hasAudioComponent = entity.all<AudioComponent>();
+							spdlog::info("entity.all<AudioComponent>() = {}", hasAudioComponent);
+
+							if (hasAudioComponent) {
 								AudioComponent& audio = entity.get<AudioComponent>();
-								spdlog::info("Playing audio on entity {}", entity.get_uid());
+								spdlog::info("AudioComponent FOUND on engine entity!");
+								spdlog::info("  soundHandle: {}", audio.soundHandle);
+								spdlog::info("  isInitialized: {}", audio.isInitialized);
+								spdlog::info("  isPlaying: {}", audio.isPlaying);
+								spdlog::info("  volume: {}", audio.volume);
+								spdlog::info("  Calling audio.Play()...");
 								audio.Play();
+							} else {
+								spdlog::warn("AudioComponent NOT FOUND on engine entity {}!", entity.get_uid());
+								spdlog::warn("Component exists in editor snapshot but not on engine entity!");
 							}
 						});
 						ul.lock();
@@ -841,7 +857,7 @@ void EditorMain::Render_Components()
 					if (ImGui::Button("Pause", ImVec2(60, 0))) {
 						ul.unlock();
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
-							ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
+							ecs::entity entity{ entityHandle };
 							if (entity.all<AudioComponent>()) {
 								AudioComponent& audio = entity.get<AudioComponent>();
 								if (audio.isPlaying && !audio.isPaused) {
@@ -857,7 +873,7 @@ void EditorMain::Render_Components()
 					if (ImGui::Button("Stop", ImVec2(60, 0))) {
 						ul.unlock();
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
-							ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
+							ecs::entity entity{ entityHandle };
 							if (entity.all<AudioComponent>()) {
 								AudioComponent& audio = entity.get<AudioComponent>();
 								audio.Stop();
@@ -879,7 +895,7 @@ void EditorMain::Render_Components()
 			ImGui::TreePop();
 			if (is_dirty) {
 				engineService.m_cont->m_write_back_queue.push(type_id);
-			}*/
+			}
 		}
 	}
 }

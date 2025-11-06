@@ -452,6 +452,16 @@ int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, boo
 }
 
 void AudioSystem::UnloadSound(int soundHandle) {
+    // Safety check: Don't attempt to unload during shutdown or if not initialized
+    if (!m_initialized || !m_system) {
+        return;
+    }
+
+    // Validate soundHandle
+    if (soundHandle < 0) {
+        return;
+    }
+
     auto it = m_refCounts.find(soundHandle);
     if (it != m_refCounts.end() && --it->second <= 0) {
         if (auto s = m_loadedSounds[soundHandle]) s->release();
@@ -509,8 +519,12 @@ FMOD::Channel* AudioSystem::GetChannel(AudioComponent* component) const {
 // ============================================================================
 
 AudioComponent::~AudioComponent() {
-    Stop();
-    AudioSystem::GetInstance().UnregisterComponent(this);
+    // Safety check: Only cleanup if AudioSystem is still initialized
+    AudioSystem& audioSys = AudioSystem::GetInstance();
+    if (audioSys.IsInitialized()) {
+        Stop();
+        audioSys.UnregisterComponent(this);
+    }
 }
 
 void AudioComponent::RefreshSoundInfo() {
