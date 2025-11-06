@@ -1,7 +1,4 @@
 #include "System/Audio.hpp"
-#include "spdlog/spdlog.h"
-#include <chrono>
-#include <cmath>
 //
 //FMOD::System* p_system;
 //FMOD::ChannelGroup* master_group;
@@ -474,9 +471,11 @@ bool AudioComponent::Init(int handle) {
 }
 
 bool AudioComponent::Init(const std::string& filePath, bool is3D, bool isStream) {
-    int handle = AudioSystem::GetInstance().LoadSound(filePath, is3D, isStream);
-    if (handle == -1)
+    int handle = AudioSystem::GetInstance().LoadSound(AUDIO_PATH + filePath, is3D, isStream);
+    if (handle == -1){
+        spdlog::warn("AudioComponent: Invalid sound handle {}", handle);
         return false;
+    }
 
     return Init(handle);
 }
@@ -517,45 +516,13 @@ bool AudioComponent::Play() {
     mode = isLooping ? (mode | FMOD_LOOP_NORMAL) : (mode & ~FMOD_LOOP_NORMAL);
     sound->setMode(mode);
 
-    // Play sound (start paused to set attributes)
-    FMOD_RESULT result = system->playSound(sound, 0, true, &channel);
-    FMOD_ErrorCheck(channel->stop());
-    if (result != FMOD_OK)
-    {
-        std::cerr << "FMOD Error: Failed to play sound - " << FMOD_ErrorString(result) << std::endl;
-        return false;
-    }
-
-    // Set 3D attributes
+    FMOD_ErrorCheck(system->playSound(sound, 0, true, &channel));
     FMOD_VECTOR pos = ToFMOD(position);
     FMOD_VECTOR vel = ToFMOD(velocity);
-    result = channel->set3DAttributes(&pos, &vel);
-    if (result != FMOD_OK)
-    {
-        std::cerr << "FMOD Warning: Failed to set 3D attributes - " << FMOD_ErrorString(result) << std::endl;
-    }
-
-    // Set distance range
-    result = channel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR);
-    if (result != FMOD_OK)
-    {
-        std::cerr << "FMOD Warning: Failed to set distance range - " << FMOD_ErrorString(result) << std::endl;
-    }
-
-    // Set volume
-    result = channel->setVolume(volume);
-    if (result != FMOD_OK)
-    {
-        std::cerr << "FMOD Warning: Failed to set volume - " << FMOD_ErrorString(result) << std::endl;
-    }
-
-    // Unpause to start playback
-    result = channel->setPaused(false);
-    if (result != FMOD_OK)
-    {
-        std::cerr << "FMOD Error: Failed to unpause sound - " << FMOD_ErrorString(result) << std::endl;
-        return false;
-    }
+    FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
+    FMOD_ErrorCheck(channel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
+    FMOD_ErrorCheck(channel->setVolume(volume));
+    FMOD_ErrorCheck(channel->setPaused(false));
 
     isPlaying = true;
     isPaused = false;
@@ -563,16 +530,11 @@ bool AudioComponent::Play() {
     return true;
 }
 
-bool AudioComponent::Pause()
-{
+bool AudioComponent::Pause() {
     if (!channel)
-    {
         return false;
-    }
 
-    FMOD_RESULT result = channel->setPaused(true);
-    if (result == FMOD_OK)
-    {
+    if (channel->setPaused(true) == FMOD_OK) {
         isPaused = true;
         return true;
     }
@@ -580,16 +542,11 @@ bool AudioComponent::Pause()
     return false;
 }
 
-bool AudioComponent::Resume()
-{
+bool AudioComponent::Resume() {
     if (!channel)
-    {
         return false;
-    }
 
-    FMOD_RESULT result = channel->setPaused(false);
-    if (result == FMOD_OK)
-    {
+    if (channel->setPaused(false) == FMOD_OK) {
         isPaused = false;
         isPlaying = true;
         return true;
@@ -598,16 +555,11 @@ bool AudioComponent::Resume()
     return false;
 }
 
-bool AudioComponent::Stop()
-{
+bool AudioComponent::Stop() {
     if (!channel)
-    {
         return false;
-    }
 
-    FMOD_RESULT result = channel->stop();
-    if (result == FMOD_OK)
-    {
+    if (channel->stop() == FMOD_OK) {
         channel = nullptr;
         isPlaying = false;
         isPaused = false;
@@ -617,32 +569,19 @@ bool AudioComponent::Stop()
     return false;
 }
 
-void AudioComponent::SetVolume(float vol)
-{
-    volume = (std::max)(0.0f, (std::min)(1.0f, vol));
+void AudioComponent::SetVolume(float vol) {
     if (channel)
-    {
-        channel->setVolume(volume);
-    }
+        FMOD_ErrorCheck(channel->setVolume(vol));
 }
 
-void AudioComponent::SetDistanceRange(float minDist, float maxDist)
-{
-    minDistance = minDist;
-    maxDistance = maxDist;
-
+void AudioComponent::SetDistanceRange(float minDist, float maxDist) {
     if (channel)
-    {
-        channel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR);
-    }
+        FMOD_ErrorCheck(channel->set3DMinMaxDistance(minDist * DISTANCEFACTOR, maxDist * DISTANCEFACTOR));
 }
 
-bool AudioComponent::IsPlaying() const
-{
+bool AudioComponent::IsPlaying() const {
     if (!channel)
-    {
         return false;
-    }
 
     bool paused = false;
     bool playing = false;
@@ -652,25 +591,19 @@ bool AudioComponent::IsPlaying() const
     return playing && !paused;
 }
 
-void AudioComponent::InternalUpdate()
-{
+void AudioComponent::InternalUpdate() {
     if (!channel)
-    {
         return;
-    }
 
-    // Update 3D position and velocity
-    FMOD_VECTOR pos = position.ToFMOD();
-    FMOD_VECTOR vel = velocity.ToFMOD();
-    channel->set3DAttributes(&pos, &vel);
+    FMOD_VECTOR pos = ToFMOD(position);
+    FMOD_VECTOR vel = ToFMOD(velocity);
+    FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
 
-    // Update playback state
     bool playing = false;
-    channel->isPlaying(&playing);
+    FMOD_ErrorCheck(channel->isPlaying(&playing));
     isPlaying = playing;
 
-    if (!playing)
-    {
+    if (!playing) {
         channel = nullptr;
         isPlaying = false;
         isPaused = false;

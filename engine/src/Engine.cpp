@@ -136,7 +136,7 @@ void Engine::CoreUpdate() {
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
-	AudioSystem::System().Update(instance.m_World); // [TEMP]
+	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
 }
 
@@ -243,16 +243,26 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	Scheduler::CompileJobSchedule();
 
-	AudioSystem::System().Init(); // [TEMP]
-	// [TEMP] Test loading and playing sound until level loading is implemented
-	AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/in_game_placeholderOld.ogg", true, false, true, false, false, true);
-	AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/ambient_wind_howling.ogg", true, true, true, false, false, true);
-	AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/in_game_placeholderOld.ogg", 6.0f);
-	AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/ambient_wind_howling.ogg", 1.0f);
-	//AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/drumloop.wav", false, false, true, false, true, true);
-	//AudioSystem::System().Load_Audio("../test/examples/lib/resource/assets/audio/heal.ogg", false, false, true, false, false, true);
-	//AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/drumloop.wav");
-	//AudioSystem::System().Play_Audio("../test/examples/lib/resource/assets/audio/heal.ogg");
+	// [TEMP]
+	AudioSystem::GetInstance().Init();
+	for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
+		if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
+			std::string filename = entry.path().stem().string();
+			AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false);
+		}
+		else
+			spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
+	}
+	AudioSystem::GetInstance().SetListenerPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	AudioSystem::GetInstance().SetListenerOrientation(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	AudioComponent ambient;
+	if (ambient.Init("Singapore Koi Ambience_Loop.ogg", true, true)) {
+		spdlog::info("Audio Component: Creating component");
+		ambient.SetVolume(1.0f);
+		ambient.Play();
+	}
+	// [ENDTEMP]
+
 
 	auto e = Engine::GetWorld().add_entity();
 	e.destroy();
@@ -270,7 +280,7 @@ void Engine::Exit() {
 	}
 	ResourceSystem::Release();
 	Scheduler::Release();
-	AudioSystem::System().Exit(); // [TEMP]
+	AudioSystem::GetInstance().Exit(); // [TEMP]
 	InstancePtr().reset();
 }
 

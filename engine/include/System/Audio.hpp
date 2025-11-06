@@ -9,8 +9,9 @@
 #include "../../vendor/fmod/api/core/inc/fmod_errors.h"
 #include "Ecs/ecs.h"
 #include "glm/glm.hpp"
+#include "spdlog/spdlog.h"
 
-#define PATH "../test/examples/lib/resource/assets/audio/"
+#define AUDIO_PATH "../test/examples/lib/resource/assets/audio/"
 #define AUDIO_EXTENSION ".ogg"
 #define DOPPLERSCALE 1.0f
 #define DISTANCEFACTOR 1.0f
@@ -189,11 +190,9 @@ struct AudioComponent
     ~AudioComponent();
 
     bool Init(int handle);
-
     bool Init(const std::string& filePath, bool is3D = true, bool isStream = false);
 
     void UpdatePosition(const glm::vec3& newPosition);
-
     void UpdateVelocity(const glm::vec3& newVelocity);
 
     bool Play();
@@ -202,7 +201,6 @@ struct AudioComponent
     bool Stop();
 
     void SetVolume(float vol);
-
     void SetDistanceRange(float minDist, float maxDist);
 
     bool IsPlaying() const;
