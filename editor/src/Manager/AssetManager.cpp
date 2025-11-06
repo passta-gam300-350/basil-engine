@@ -121,19 +121,6 @@ std::string AssetManager::ResolveAssetName(rp::BasicIndexedGuid guid) {
 	return it != m_AssetReverse.end() ? m_AssetReverse[guid] : std::string{};
 }
 
-std::string AssetManager::FindDescriptorPath(std::string const& assetName) {
-	// Search through all descriptor files to find one with matching name
-	std::lock_guard lg{ m_DescriptorListMtx };
-	for (auto const& [dir, descPath] : m_FileList) {
-		// Check if this descriptor matches the asset name
-		std::string descName = rp::ResourceTypeImporterRegistry::GetDescriptorName(descPath);
-		if (descName == assetName) {
-			return descPath;
-		}
-	}
-	return std::string{};  // Not found
-}
-
 std::string AssetManager::getFileExtension(std::string const& file) {
 	std::filesystem::path path(file);
 	return path.extension().string();

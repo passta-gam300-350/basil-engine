@@ -5,6 +5,8 @@
 #include <filesystem>
 
 #include "Render/Render.h"
+#include "System/Audio.hpp"
+#include "Manager/ResourceSystem.hpp"
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -163,6 +165,41 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
+
+				// Special handling for AudioComponent: Load sound from GUID if needed
+				if (meta_type.info().hash() == entt::type_hash<AudioComponent>::value()) {
+					AudioComponent* audioComp = static_cast<AudioComponent*>(dest);
+					spdlog::info("AudioComponent writeback: soundHandle={}, GUID={}, isInitialized={}",
+					             audioComp->soundHandle, audioComp->audioAssetGuid.m_guid.to_hex(), audioComp->isInitialized);
+
+					// Check if GUID is valid and sound not yet loaded
+					if (audioComp->audioAssetGuid.m_guid != rp::null_guid && audioComp->soundHandle == -1) {
+						spdlog::info("AudioComponent: Attempting to load sound from GUID...");
+						// Load sound handle from ResourceRegistry using GUID
+						// The loader will deserialize AudioResourceData and call AudioSystem::LoadSound
+						ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audioComp->audioAssetGuid);
+						if (entry) {
+							Handle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
+							int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
+							if (soundHandlePtr && *soundHandlePtr >= 0) {
+								audioComp->soundHandle = *soundHandlePtr;
+								audioComp->RefreshSoundInfo();
+								spdlog::info("AudioComponent: Loaded sound handle {} from GUID, isInitialized={}",
+								             audioComp->soundHandle, audioComp->isInitialized);
+							} else {
+								spdlog::warn("AudioComponent: Failed to load sound from GUID (invalid handle)");
+							}
+						} else {
+							spdlog::warn("AudioComponent: Failed to get resource pool for audio GUID");
+						}
+					} else {
+						if (audioComp->audioAssetGuid.m_guid == rp::null_guid) {
+							spdlog::info("AudioComponent: Skipping load - GUID is null");
+						} else if (audioComp->soundHandle != -1) {
+							spdlog::info("AudioComponent: Skipping load - soundHandle already set to {}", audioComp->soundHandle);
+						}
+					}
+				}
 
 				// Trigger EnTT observers for components with update callbacks
 				// Currently only MeshRendererComponent uses on_update observers

@@ -2,6 +2,9 @@
 #include "Component/Transform.hpp"
 #include <rsc-core/serialization/serializer.hpp>
 #include "Manager/ResourceSystem.hpp"
+#include "Render/Camera.h"
+#include <filesystem>
+#include <algorithm>
 //
 //FMOD::System* p_system;
 //FMOD::ChannelGroup* master_group;
@@ -321,6 +324,11 @@ void AudioSystem::Update(ecs::world& world) {
     if (!m_initialized || !m_system)
         return;
 
+    // Update listener from active camera
+    const CameraSystem::Camera& camera = CameraSystem::GetActiveCamera();
+    SetListenerPosition(camera.m_Pos);
+    SetListenerOrientation(camera.m_Front, camera.m_Up);
+
     // Update listener velocity and position
     if (m_listenerMoved) {
         constexpr float deltaTime = 1.0f / 60.0f;
@@ -506,11 +514,16 @@ AudioComponent::~AudioComponent() {
 }
 
 void AudioComponent::RefreshSoundInfo() {
-    if (soundHandle < 0 || isInitialized) return;
+    spdlog::info("RefreshSoundInfo called: soundHandle={}, isInitialized={}", soundHandle, isInitialized);
+
+    if (soundHandle < 0 || isInitialized) {
+        spdlog::info("RefreshSoundInfo: Early return (soundHandle={}, isInitialized={})", soundHandle, isInitialized);
+        return;
+    }
 
     FMOD::Sound* sound = AudioSystem::GetInstance().GetSound(soundHandle);
     if (!sound) {
-        spdlog::warn("AudioComponent: Invalid sound handle {}", soundHandle);
+        spdlog::warn("AudioComponent: Invalid sound handle {} - sound pointer is null", soundHandle);
         return;
     }
 
@@ -521,10 +534,13 @@ void AudioComponent::RefreshSoundInfo() {
     }
 
     isInitialized = true;
+    spdlog::info("RefreshSoundInfo: Successfully initialized (soundHandle={}, duration={:.2f}s)", soundHandle, duration);
     AudioSystem::GetInstance().RegisterComponent(this);
 
-    if (playOnAwake)
+    if (playOnAwake) {
+        spdlog::info("RefreshSoundInfo: Auto-playing sound (playOnAwake=true)");
         Play();
+    }
 }
 
 void AudioComponent::UpdatePosition(const glm::vec3& newPosition) {
@@ -549,7 +565,7 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
 
 bool AudioComponent::Play() {
     if (!isInitialized) {
-        spdlog::warn("AudioComponent: Cannot play, component not initialized");
+        spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
         return false;
     }
 
@@ -557,8 +573,11 @@ bool AudioComponent::Play() {
     FMOD::System* system = audioSys.GetSystem();
     FMOD::Sound* sound = audioSys.GetSound(soundHandle);
 
-    if (!system || !sound)
+    if (!system || !sound) {
+        spdlog::warn("AudioComponent: Cannot play, system={}, sound={}",
+                     system != nullptr, sound != nullptr);
         return false;
+    }
 
     // Stop existing playback if any
     FMOD::Channel* existingChannel = audioSys.GetChannel(this);
@@ -568,7 +587,12 @@ bool AudioComponent::Play() {
 
     // Start new playback
     FMOD::Channel* newChannel = nullptr;
-    FMOD_ErrorCheck(system->playSound(sound, 0, true, &newChannel));
+    FMOD_RESULT result = system->playSound(sound, 0, true, &newChannel);
+
+    if (result != FMOD_OK) {
+        spdlog::error("AudioComponent: Failed to create channel: {}", FMOD_ErrorString(result));
+        return false;
+    }
 
     if (newChannel) {
         const FMOD_VECTOR pos = ToFMOD(position);
@@ -585,9 +609,17 @@ bool AudioComponent::Play() {
         isPaused = false;
         playbackPosition = 0.0f;
 
+        // Calculate distance from listener for diagnostics
+        const glm::vec3& listenerPos = audioSys.m_listenerPosition;
+        float distance = glm::length(position - listenerPos);
+
+        spdlog::info("AudioComponent: Playing sound (handle={}, volume={:.2f}, 3D={}, pos=[{:.1f},{:.1f},{:.1f}], listenerDist={:.1f}m)",
+                     soundHandle, volume, is3D, position.x, position.y, position.z, distance);
+
         return true;
     }
 
+    spdlog::error("AudioComponent: Failed to create channel (newChannel is null)");
     return false;
 }
 
@@ -711,16 +743,29 @@ REGISTER_RESOURCE_TYPE_ALIASE(int, audio,
             reinterpret_cast<const std::byte*>(data)
         );
 
+        // Construct proper file path (prepend "assets/" if not absolute)
+        std::string fullPath = audioData.sourcePath;
+
+        // Normalize path separators to forward slashes
+        std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
+
+        if (!std::filesystem::path(fullPath).is_absolute()) {
+            // If path starts with "audio/", prepend "assets/"
+            if (fullPath.find("audio/") == 0 || fullPath.find("audio\\") == 0) {
+                fullPath = "assets/" + fullPath;
+            }
+        }
+
         // Load the actual FMOD sound via AudioSystem
         AudioSystem& audioSys = AudioSystem::GetInstance();
-        int handle = audioSys.LoadSound(audioData.sourcePath, audioData.is3D,
+        int handle = audioSys.LoadSound(fullPath, audioData.is3D,
                                         audioData.isStreaming, audioData.isLooping);
 
         if (handle >= 0) {
             spdlog::info("Loaded audio resource: {} (handle: {}, 3D: {}, streaming: {}, loop: {})",
-                audioData.sourcePath, handle, audioData.is3D, audioData.isStreaming, audioData.isLooping);
+                fullPath, handle, audioData.is3D, audioData.isStreaming, audioData.isLooping);
         } else {
-            spdlog::error("Failed to load audio resource: {}", audioData.sourcePath);
+            spdlog::error("Failed to load audio resource: {} (original: {})", fullPath, audioData.sourcePath);
         }
 
         return handle;

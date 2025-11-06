@@ -183,7 +183,7 @@ private:
 struct AudioComponent
 {
     // Asset reference (GUID-based system only)
-    rp::BasicIndexedGuid audioAssetGuid{ rp::null_guid, 0 };
+    rp::BasicIndexedGuid audioAssetGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"audio">{}) };
 
     // Internal handle (managed by AudioSystem)
     int soundHandle = -1;
@@ -216,8 +216,8 @@ struct AudioComponent
         : soundHandle(soundHandle), position(pos) {}
     ~AudioComponent();
 
-    // Initialize component from loaded sound handle (refreshes metadata)
-    void RefreshSoundInfo();
+    bool Init(int handle);
+    bool Init(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
 
     void UpdatePosition(const glm::vec3& newPosition);
     void UpdateVelocity(const glm::vec3& newVelocity);
@@ -229,6 +229,7 @@ struct AudioComponent
 
     void SetVolume(float vol);
     void SetDistanceRange(float minDist, float maxDist);
+    void RefreshSoundInfo();
 
     bool IsPlaying() const;
 
