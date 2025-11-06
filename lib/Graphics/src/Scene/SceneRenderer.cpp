@@ -694,6 +694,17 @@ void SceneRenderer::SetOutlineShader(const std::shared_ptr<Shader>& shader) cons
     }
 }
 
+void SceneRenderer::SetParticleShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Particle shader cannot be null");
+    assert(shader->ID != 0 && "Particle shader must be compiled and linked");
+
+    if (m_ParticleRenderer) 
+    {
+        m_ParticleRenderer->SetParticleShader(shader);
+    }
+}
+
 void SceneRenderer::AddOutlinedObject(uint32_t objectID) const
 {
     assert(m_Pipeline && "Pipeline must be initialized before adding outlined object");

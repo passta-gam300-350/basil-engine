@@ -95,6 +95,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetToneMappingShader()) {
 		m_SceneRenderer->SetToneMappingShader(m_ShaderLibrary->GetToneMappingShader());
 	}
+	if (m_ShaderLibrary->GetParticleShader()) {
+		m_SceneRenderer->SetParticleShader(m_ShaderLibrary->GetParticleShader());
+	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
 	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());
@@ -159,9 +162,6 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 
 void RenderSystem::Update(ecs::world& world) {
 	PF_SYSTEM("GraphicSystem");
-
-	//begin frame
-	m_SceneRenderer->ClearFrame();
 
 	auto world_camera = CameraSystem::GetActiveCamera();
 	auto& frameData = m_SceneRenderer->GetFrameData();
@@ -350,6 +350,9 @@ void RenderSystem::Update(ecs::world& world) {
 
 	//render frame
 	m_SceneRenderer->Render();
+
+	//clear frame data AFTER rendering (so particles submitted before render are included)
+	m_SceneRenderer->ClearFrame();
 }
 void RenderSystem::FixedUpdate(ecs::world& w) {
 	Update(w);

@@ -113,6 +113,14 @@ void MainRenderingPass::Execute(RenderContext& context)
         // 6. Particle rendering
         context.particleRenderer.RenderToPass(*this, context.frameData);
 
+        // Restore state after particles (they may have changed blending/depth)
+        Submit(RenderCommands::SetBlendingData{ false });  // Disable blending
+        Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });  // Restore depth writing
+        /*
+        Always restore state after modifying it
+        Returns OpenGL to a "safe default" for the next rendering operation
+        Prevents one system's rendering settings from breaking another system
+        */
         // 7. Render transparent objects (after opaque, with alpha blending)
         if (!transparentRenderables.empty())
         {
