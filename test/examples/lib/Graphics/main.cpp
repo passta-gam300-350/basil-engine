@@ -163,10 +163,10 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
-    SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
+    //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
     
     
 
@@ -234,7 +234,13 @@ void GraphicsTestDriver::Run()
             float sunY = -sinf(angle);         // Vertical movement (below horizon to zenith)
             float sunZ = -0.2f;                // Slight north-south bias
 
-            m_SceneLights[0].direction = glm::normalize(glm::vec3(sunX, sunY, sunZ));
+            glm::vec3 lightDirection = glm::normalize(glm::vec3(sunX, sunY, sunZ));
+            m_SceneLights[0].direction = lightDirection;
+
+            // Update visual position for light cube (opposite of light direction, scaled by distance)
+            // This makes the cube appear where the sun is in the sky
+            float sunDistance = 100.0f;  // Distance from scene center
+            m_SceneLights[0].position = -lightDirection * sunDistance;
         }
 
         // Submit lights and objects each frame
@@ -477,7 +483,7 @@ bool GraphicsTestDriver::LoadTestResources()
         }
 
         // Load Crytek Sponza model
-        /*auto sponzaModel = m_ResourceManager->LoadModel("sponza",
+        auto sponzaModel = m_ResourceManager->LoadModel("sponza",
             "assets/models/crytek_sponza/sponza.obj");
 
         if (!sponzaModel) {
@@ -485,7 +491,7 @@ bool GraphicsTestDriver::LoadTestResources()
             return false;
         } else {
             spdlog::info("Sponza model loaded successfully with {} meshes", sponzaModel->meshes.size());
-        }*/
+        }
 
         // Create test materials
         CreateTestMaterials();
@@ -1099,10 +1105,12 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
 
 SubmittedLightData GraphicsTestDriver::CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color,
-                                                              float diffuseIntensity, float ambientIntensity)
+                                                              float diffuseIntensity, float ambientIntensity,
+                                                              const glm::vec3& visualPosition)
 {
     SubmittedLightData light;
     light.type = Light::Type::Directional;
+    light.position = visualPosition;  // Visual position for light cube rendering (doesn't affect lighting)
     light.direction = glm::normalize(direction);
     light.color = color;
     light.diffuseIntensity = diffuseIntensity;    // Ogldev-style diffuse intensity
