@@ -4,10 +4,12 @@
 #include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
+#include "Pipeline/HUDRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/FrustumCuller.h"
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
+#include "Rendering/HUDRenderer.h"
 #include "Pipeline/PresentPass.h"
 //#include "Pipeline/ShadowMappingPass.h"
 #include "Rendering/ParticleRenderer.h"
@@ -54,6 +56,13 @@ void SceneRenderer::SubmitParticles(const ParticleRenderData& particleData) {
         m_ParticleRenderer->SubmitParticleSystem(particleData);
     }
 }
+
+void SceneRenderer::SubmitHUDElement(const HUDElementData& hudElement) {
+    if (m_HUDRenderer) {
+        m_HUDRenderer->SubmitElement(hudElement);
+    }
+}
+
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
@@ -66,6 +75,9 @@ void SceneRenderer::ClearFrame()
 	GetFrameData().debugAABBs.clear();
     if (m_ParticleRenderer) {
         m_ParticleRenderer->ClearFrame();
+    }
+    if (m_HUDRenderer) {
+        m_HUDRenderer->BeginFrame();
     }
 
 	// Clear SSBO-based shadow data (will be repopulated by enabled shadow passes)
@@ -137,19 +149,21 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(toneMapPass);
     //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
 
-    
-    
+    // 10. Add HUD rendering pass (renders on top of final tone-mapped image)
+    auto hudPass = std::make_shared<HUDRenderPass>();
+    mainPipeline->AddPass(hudPass);
+    mainPipeline->EnablePass("HUDPass", false);  // Disabled by default, enable when needed
 
-    // 10. Add picking pass (executes when needed, disabled by default)
+    // 12. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 13. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 12. Add present pass (executes last)
+    // 14. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -170,6 +184,9 @@ void SceneRenderer::InitializeRenderingCoordinators()
 
     m_ParticleRenderer = std::make_unique<ParticleRenderer>();
     assert(m_ParticleRenderer && "Failed to create ParticleRenderers");
+
+    m_HUDRenderer = std::make_unique<HUDRenderer>();
+    assert(m_HUDRenderer && "Failed to create HUDRenderer");
 }
 
 void SceneRenderer::Render()
@@ -194,6 +211,11 @@ void SceneRenderer::Render()
         m_FrameData.viewportHeight = static_cast<uint32_t>(height);
     }
 
+    // Finalize HUD elements before rendering
+    if (m_HUDRenderer) {
+        m_HUDRenderer->EndFrame();
+    }
+
     // Create context with references to our data - NO COPYING!
     RenderContext context(
         m_SubmittedRenderables,  // const ref to renderables
@@ -204,7 +226,8 @@ void SceneRenderer::Render()
         *m_PBRLightingRenderer,  // ref to PBR lighting
         *m_ResourceManager,      // ref to resource manager
         *m_TextureSlotManager,   // ref to texture slot manager
-        *m_ParticleRenderer      // ref to particle renderer
+        *m_ParticleRenderer,     // ref to particle renderer
+        *m_HUDRenderer           // ref to HUD renderer
     );
 
     // Execute the single pipeline
@@ -347,7 +370,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -690,6 +713,28 @@ void SceneRenderer::SetOutlineShader(const std::shared_ptr<Shader>& shader) cons
         if (outlinePass)
         {
             outlinePass->SetOutlineShader(shader);
+        }
+    }
+}
+
+void SceneRenderer::SetHUDShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "HUD shader cannot be null");
+    assert(shader->ID != 0 && "HUD shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting HUD shader");
+
+    if (m_Pipeline)
+    {
+        auto hudPass = std::dynamic_pointer_cast<HUDRenderPass>(m_Pipeline->GetPass("HUDPass"));
+        if (hudPass)
+        {
+            hudPass->SetHUDShader(shader);
+            // Also set shader in renderer
+            if (m_HUDRenderer)
+            {
+                m_HUDRenderer->SetHUDShader(shader);
+            }
+            spdlog::info("SceneRenderer: HUD shader configured");
         }
     }
 }

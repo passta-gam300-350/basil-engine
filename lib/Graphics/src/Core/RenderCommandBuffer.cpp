@@ -413,6 +413,24 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawArraysData &c
     glBindVertexArray(0);
 }
 
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DrawArraysInstancedData& cmd)
+{
+    assert(cmd.vao != 0 && "DrawArraysInstancedData command must have a valid VAO handle");
+    assert(cmd.vertexCount > 0 && "DrawArraysInstancedData command must have a positive vertex count");
+    assert(cmd.instanceCount > 0 && "DrawArraysInstancedData command must have a positive instance count");
+    assert(cmd.mode == GL_TRIANGLES || cmd.mode == GL_LINES || cmd.mode == GL_POINTS ||
+           cmd.mode == GL_LINE_STRIP || cmd.mode == GL_TRIANGLE_STRIP && "DrawArraysInstancedData mode must be a valid OpenGL primitive type");
+
+    // Bind VAO
+    glBindVertexArray(cmd.vao);
+
+    // Draw instanced arrays (non-indexed rendering with instancing)
+    glDrawArraysInstanced(cmd.mode, cmd.first, cmd.vertexCount, cmd.instanceCount);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::DispatchComputeData &cmd)
 {
     assert(cmd.computeShader && "DispatchComputeData command must have a valid compute shader");
