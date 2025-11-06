@@ -41,6 +41,8 @@ Technology is prohibited.
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
 #include <Resources/PrimitiveGenerator.h>
+#include <fstream>     
+#include <filesystem> 
 #include <Resources/Material.h>
 #include <Utility/AABB.h>
 #include <spdlog/spdlog.h>
@@ -107,6 +109,10 @@ RenderSystem::RenderSystem() {
 
 	// Initialize component initializer (simplified, no longer needs subsystem references)
 	m_ComponentInitializer = std::make_unique<ComponentInitializer>();
+
+	m_BvhConfig.maxDepth = std::numeric_limits<unsigned>::max();
+	m_BvhConfig.minObjects = 1;
+	m_BvhConfig.minVolume = 0.1f;
 }
 
 RenderSystem::~RenderSystem() {
@@ -157,7 +163,6 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 
 void RenderSystem::Update(ecs::world& world) {
 	PF_SYSTEM("GraphicSystem");
-
 	//begin frame
 	m_SceneRenderer->ClearFrame();
 
@@ -566,6 +571,146 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 		return nullptr;
 	}
 	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
+}
+
+Aabb RenderSystem::ComputeWorldAABB(ecs::entity entity) const
+{
+	/*if (entity.has<MeshRendererComponent>() == false || entity.has<TransformMtxComponent>() == false)
+	{
+		spdlog::warn("ComputeWorldAABB: Entity {} missing components", entity.get_uid());
+		return Aabb(glm::vec3(0.0f), glm::vec3(0.0f));
+	}*/
+	auto& meshComp = entity.get<MeshRendererComponent>();
+	auto& transformMatrixComponent = entity.get<TransformMtxComponent>();
+	std::shared_ptr<Mesh> meshResource = LoadMeshResource(meshComp);
+	if (!meshResource)
+	{
+		spdlog::warn("ComputeWorldAABB: Entity {} has no valid mesh", entity.get_uid());
+		return Aabb{glm::vec3(0.0f), glm::vec3(0.0f)};
+	}
+	AABB graphicAabb = meshResource->GetAABB();
+
+	//// Debug: Check if mesh AABB is valid
+	//static int debugCount = 0;
+	//if (debugCount < 3) {
+	//	spdlog::info("ComputeWorldAABB: Entity {} - Mesh AABB min({:.2f}, {:.2f}, {:.2f}) max({:.2f}, {:.2f}, {:.2f})",
+	//		entity.get_uid(),
+	//		graphicAabb.min.x, graphicAabb.min.y, graphicAabb.min.z,
+	//		graphicAabb.max.x, graphicAabb.max.y, graphicAabb.max.z);
+	//	debugCount++;
+	//}
+
+	Aabb shapesLocalAabb(graphicAabb.min, graphicAabb.max);
+
+	// Debug: Check transform matrix
+	/*static int debugMatrix = 0;
+	if (debugMatrix < 1) {
+		spdlog::info("ComputeWorldAABB: Transform Matrix for Entity {}:\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]",
+			entity.get_uid(),
+			transformMatrixComponent.m_Mtx[0][0], transformMatrixComponent.m_Mtx[0][1], transformMatrixComponent.m_Mtx[0][2], transformMatrixComponent.m_Mtx[0][3],
+			transformMatrixComponent.m_Mtx[1][0], transformMatrixComponent.m_Mtx[1][1], transformMatrixComponent.m_Mtx[1][2], transformMatrixComponent.m_Mtx[1][3],
+			transformMatrixComponent.m_Mtx[2][0], transformMatrixComponent.m_Mtx[2][1], transformMatrixComponent.m_Mtx[2][2], transformMatrixComponent.m_Mtx[2][3],
+			transformMatrixComponent.m_Mtx[3][0], transformMatrixComponent.m_Mtx[3][1], transformMatrixComponent.m_Mtx[3][2], transformMatrixComponent.m_Mtx[3][3]);
+		debugMatrix++;
+	}*/
+
+	Aabb worldAABB = TransformAABB(shapesLocalAabb, transformMatrixComponent.m_Mtx);
+
+	//// Debug: Check transformed AABB
+	//static int debugCount2 = 0;
+	//if (debugCount2 < 3) {
+	//	spdlog::info("ComputeWorldAABB: Entity {} - World AABB min({:.2f}, {:.2f}, {:.2f}) max({:.2f}, {:.2f}, {:.2f})",
+	//		entity.get_uid(),
+	//		worldAABB.min.x, worldAABB.min.y, worldAABB.min.z,
+	//		worldAABB.max.x, worldAABB.max.y, worldAABB.max.z);
+	//	debugCount2++;
+	//}
+
+	return worldAABB;
+}
+
+void RenderSystem::BuildBVH(ecs::world& world)
+{
+	spdlog::info("========== BuildBVH() START ==========");
+
+	m_bvh.Clear();
+	m_BvhRenderables.clear();
+
+	//// Debug: Check what entities exist and what components they have
+	//auto allEntities = world.get_all_entities();
+	//int totalCount = 0;
+	//for (auto e : allEntities) { totalCount++; }
+	//spdlog::info("BuildBVH: Total entities in world: {}", totalCount);
+
+	//// Check for MeshRendererComponent only
+	//auto withMesh = world.filter_entities<MeshRendererComponent>();
+	//int meshCount = 0;
+	//for (auto e : withMesh) { meshCount++; }
+	//spdlog::info("BuildBVH: Entities with MeshRendererComponent: {}", meshCount);
+
+	//// Check for TransformMtxComponent only
+	//auto withTransformMtx = world.filter_entities<TransformMtxComponent>();
+	//int transformMtxCount = 0;
+	//for (auto e : withTransformMtx) { transformMtxCount++; }
+	//spdlog::info("BuildBVH: Entities with TransformMtxComponent: {}", transformMtxCount);
+
+	// Check for both
+	auto allSceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent>();
+	int entityCount = 0;
+	for (auto eachObject : allSceneObjects)
+	{
+		uint64_t entityID = eachObject.get_uid();
+		auto renderable = std::make_unique<BvhRenderable>();
+		renderable->id = static_cast<unsigned>(entityID);
+		renderable->bv = ComputeWorldAABB(eachObject);
+		if (renderable->bv.min == renderable->bv.max)
+		{
+			continue;
+		}
+		m_BvhRenderables[entityID] = std::move(renderable);
+		entityCount++;
+	}
+	if (!m_BvhRenderables.empty()) 
+	{
+		std::vector<BvhRenderable*> allRenderables;
+		allRenderables.reserve(m_BvhRenderables.size());
+		for (auto& [uid, renderable] : m_BvhRenderables) 
+		{
+			allRenderables.push_back(renderable.get());
+		}
+
+		m_bvh.BuildTopDown(allRenderables.begin(), allRenderables.end(), m_BvhConfig);
+		/*spdlog::info("RenderSystem: Built BVH spatial index with {} entities", entityCount);
+		std::ostringstream oss;
+		m_bvh.DumpInfo(oss);
+		spdlog::info("BVH Info:\n{}", oss.str());*/
+
+		// Generate DOT graph file for visualization
+		std::ofstream dotFile("bvh_tree.dot");
+		if (dotFile.is_open())
+		{
+			m_bvh.DumpGraph(dotFile);
+			dotFile.close();
+			// get absolute path of the saved file
+			std::filesystem::path absolutePath = std::filesystem::absolute("bvh_tree.dot");
+			spdlog::info("BVH: Graph saved to: {}", absolutePath.string());
+			spdlog::info("BVH: To visualize, run: dot -Tpng \"{}\" -o bvh_tree.png", absolutePath.string());
+		}
+		else 
+		{
+			spdlog::error("BVH: Failed to create bvh_tree.dot");
+		}
+	}
+	else
+	{
+		spdlog::warn("RenderSystem: No entities to build BVH");
+	}
+
+	spdlog::info("========== BuildBVH() END ==========");
 }
 
 std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {

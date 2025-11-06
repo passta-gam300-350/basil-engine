@@ -23,8 +23,10 @@
 #include <rsc-core/rp.hpp>
 #include "Manager/ResourceSystem.hpp"
 #include <native/native.h>
-
 #include "Ecs/ecs.h"
+#include "BVH/bvh.h"
+#include "BVH/bvh_renderable.h"
+#include "BVH/bvh_helper.h"
 
 // Forward declarations
 class ShaderLibrary;
@@ -351,11 +353,23 @@ public:
      */
     void DestroyPropertyBlock(uint64_t entityUID);
 
+    /**
+     * @brief Build spatial index for all renderable entities
+     * Clears existing BVH and rebuilds from scratch.
+     * Should be called automatically during InitializeExistingEntities().
+     * @param world The ECS world containing entities
+     */
+    void BuildBVH(ecs::world& world);
+
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
     std::unique_ptr<Camera> m_Camera;                ///< Fallback camera (used if no CameraComponent exists)
 
+    // ========== BVH =====================
+    std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhRenderables;
+    Bvh<BvhRenderable*> m_bvh;
+    BvhBuildConfig m_BvhConfig;
 private:
     // ========== Internal Methods ==========
 
@@ -400,6 +414,14 @@ private:
         bool hasAttachedMaterial,
         uint64_t entityUID) const;
 
+    /**
+     * @brief Compute world-space AABB for an entity
+     * @param entity Entity with MeshRendererComponent and TransformMtxComponent
+     * @return World-space AABB
+     */
+    Aabb ComputeWorldAABB(ecs::entity entity) const;
+
+    
     // ========== Render Subsystems ==========
 
     std::unique_ptr<ShaderLibrary> m_ShaderLibrary;             ///< Shader loading and caching

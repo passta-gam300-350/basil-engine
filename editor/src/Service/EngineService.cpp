@@ -1,4 +1,5 @@
 #include "Service/EngineService.hpp"
+#include "System/TransformSystem.hpp"
 #include "Editor.hpp"
 #include <Render/Render.h>  // For RenderSystem and FrameData
 #include <algorithm>  // For std::find
@@ -472,6 +473,8 @@ void EngineContainerService::LoadScene(const char* path) {
 		world.UnloadAll();
 		world.LoadYAML(path.c_str());
 		spdlog::info("EngineService: Scene loaded from {}", path);
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
 	});
 }
 
@@ -480,5 +483,8 @@ void EngineContainerService::NewScene() {
 		ecs::world world = Engine::GetWorld();
 		world.UnloadAll();
 		spdlog::info("EngineService: New Scene created");
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
 		});
+
 }
