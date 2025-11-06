@@ -176,7 +176,8 @@ void RenderSystem::Update(ecs::world& world) {
 		world_camera.m_Pos + world_camera.m_Front,  // Look at position + front vector
 		world_camera.m_Up
 	);
-	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
+	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) 
+	{
 		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
 		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
 	}
@@ -184,26 +185,35 @@ void RenderSystem::Update(ecs::world& world) {
 	frameData.viewMatrix = view;
 	frameData.cameraPosition = world_camera.m_Pos;
 
-	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
+	// ========== Frustum Culling: Get visible entities ==========
+	std::vector<unsigned> visibleEntityIDs = GetVisibleEntities(world, world_camera);
+
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 
 	// Debug: Log entity counts
-	int objectCount = 0;
+	int objectCount = visibleEntityIDs.size();
 	int lightCount = 0;
-	for (auto obj : sceneObjects) { objectCount++; }
-	for (auto light : sceneLights) { lightCount++; }
+	for (auto light : sceneLights)
+	{ 
+		lightCount++;
+	}
 
 	static int lastObjectCount = -1;
 	static int lastLightCount = -1;
-	if (objectCount != lastObjectCount || lightCount != lastLightCount) {
-		spdlog::info("RenderSystem: Processing {} renderable objects, {} lights", objectCount, lightCount);
+	if (objectCount != lastObjectCount || lightCount != lastLightCount) 
+	{
+		spdlog::info("RenderSystem: Processing {} visible objects (after culling), {} lights", objectCount, lightCount);
 		lastObjectCount = objectCount;
 		lastLightCount = lightCount;
 	}
 
-	for (auto obj : sceneObjects) {
-		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>()};
-		const uint64_t entityUID = obj.get_uid();
+	// ========== Process only visible entities ==========
+	for (unsigned entityUID : visibleEntityIDs) {
+		// Get entity from world by UID
+		ecs::entity obj = world.impl.entity_cast(static_cast<entt::entity>(entityUID));
+		
+		// Get components as references using .get()
+		auto [mesh, transform, visible] = obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
@@ -631,6 +641,38 @@ Aabb RenderSystem::ComputeWorldAABB(ecs::entity entity) const
 	//}
 
 	return worldAABB;
+}
+
+std::vector<unsigned> RenderSystem::GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera)
+{
+	std::vector<unsigned> visibleEntityID;
+	if (m_frustumCullingEnabled == true && m_BvhRenderables.empty() == false)
+	{
+		Frustum viewCameraFrustum = CameraToFrustum(camera);
+		visibleEntityID = m_bvh.Query(viewCameraFrustum);
+		static int frameCount = 0;
+		if (frameCount++ % 60 == 0) 
+		{	// Log once per second at 60fps
+			spdlog::info("Frustum culling: {}/{} entities visible", visibleEntityID.size(), m_BvhRenderables.size());
+		}
+	}
+	else 
+	{
+		// Fallback: Return all renderable entities
+		auto allObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent>();
+		for (auto obj : allObjects) 
+		{
+			visibleEntityID.push_back(static_cast<unsigned>(obj.get_uid()));
+		}
+
+		static bool loggedFallback = false;
+		if (loggedFallback == false) 
+		{
+			spdlog::warn("Frustum culling disabled or BVH empty - rendering all entities");
+			loggedFallback = true;
+		}
+	}
+	return visibleEntityID;
 }
 
 void RenderSystem::BuildBVH(ecs::world& world)

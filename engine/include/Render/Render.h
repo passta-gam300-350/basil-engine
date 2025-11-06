@@ -370,6 +370,7 @@ public:
     std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhRenderables;
     Bvh<BvhRenderable*> m_bvh;
     BvhBuildConfig m_BvhConfig;
+    bool m_frustumCullingEnabled = true; 
 private:
     // ========== Internal Methods ==========
 
@@ -421,7 +422,16 @@ private:
      */
     Aabb ComputeWorldAABB(ecs::entity entity) const;
 
-    
+    /**
+     * @brief Perform frustum culling to get visible entity IDs
+     * Uses the BVH spatial index to query which entities are within the camera frustum.
+     * Falls back to returning all entities if culling is disabled or BVH is empty.
+     * @param world The ECS world containing entities
+     * @param camera The camera to build frustum from (editor or entity camera)
+     * @return Vector of entity UIDs that are potentially visible
+     */
+    std::vector<unsigned> GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera);
+
     // ========== Render Subsystems ==========
 
     std::unique_ptr<ShaderLibrary> m_ShaderLibrary;             ///< Shader loading and caching
