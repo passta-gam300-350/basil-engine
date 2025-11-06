@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <vector>
 #include <functional>
 
+#include "ecs/internal/reflection.h"
 
 struct RigidBodyComponent {
     JPH::BodyID bodyID;  // Jolt's body identifier
@@ -47,3 +48,37 @@ struct ColliderComponent {
     // Collision filtering
     uint32_t collisionMask;
 };
+
+struct CharacterControllerComponent {
+    //JPH::Ref<JPH::Character> character;
+    JPH::BodyID bodyID;
+
+    // Character settings
+    float maxSlopeAngle = 45.0f;  // degrees
+    float mass = 70.0f;           // kg
+    float friction = 0.5f;
+    float gravityFactor = 1.0f;
+
+    // Movement parameters
+    float moveSpeed = 5.0f;       // m/s
+    float jumpSpeed = 7.0f;       // m/s
+    float capsuleHeight = 1.8f;   // meters
+    float capsuleRadius = 0.3f;   // meters
+
+    // State
+    bool isOnGround = false;
+    //glm::vec3 movementInput = glm::vec3(0.0f);
+    bool wantsToJump = false;
+
+    // Cached velocity
+    JPH::Vec3 velocity = JPH::Vec3::sZero();
+};
+
+RegisterReflectionTypeBegin(RigidBodyComponent, "RigidBodyComponent")
+    MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
+    MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
+    MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+    MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
+    MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+    MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+RegisterReflectionTypeEnd

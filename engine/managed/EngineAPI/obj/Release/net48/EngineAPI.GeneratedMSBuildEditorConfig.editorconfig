@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = EngineAPI
+build_property.ProjectDir = C:\Users\Steven\source\repos\academic\gam300\graphics_entt_rc_branch\gam300\engine\managed\EngineAPI\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 

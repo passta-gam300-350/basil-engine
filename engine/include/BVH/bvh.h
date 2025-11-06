@@ -13,8 +13,8 @@
  *  Copyright (C) 2025 DigiPen Institute of Technology.
  */
 
-#ifndef __BVH_HPP__
-#define __BVH_HPP__
+#ifndef __BVH_H__
+#define __BVH_H__
 
 #include "shapes.h"
 

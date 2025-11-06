@@ -11,11 +11,11 @@ function(suppress_dep_warnings)
         get_target_property(_type ${tgt} TYPE)
 
         if(_type STREQUAL "INTERFACE_LIBRARY")
-            # INTERFACE targets don't compile, so only INTERFACE options are allowed
-            # target_compile_options(${tgt} INTERFACE
-            #    $<$<CXX_COMPILER_ID:MSVC>:/W0>
-            #    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
-            # )
+        # INTERFACE targets don't compile, so only INTERFACE options are allowed
+        # target_compile_options(${tgt} INTERFACE
+        # $<$<CXX_COMPILER_ID:MSVC>:/W0>
+        # $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+        # )
         elseif(_type STREQUAL "UTILITY" OR _type STREQUAL "UNKNOWN_LIBRARY")
             # UTILITY targets (custom commands) don't compile at all
             message(STATUS "suppress_warnings: '${tgt}' is not a compilable target (type=${_type}), skipping")
@@ -23,13 +23,12 @@ function(suppress_dep_warnings)
             # Normal compilable targets (STATIC/SHARED/OBJECT/EXECUTABLE)
             # commented out. this causes the d9025 warnings when overriding the dependencies's cmake
             # target_compile_options(${tgt} PRIVATE
-            #    $<$<CXX_COMPILER_ID:MSVC>:/W0>
-            #    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+            # $<$<CXX_COMPILER_ID:MSVC>:/W0>
+            # $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
             # )
         endif()
     endforeach()
 endfunction()
-
 
 macro(import_catch)
     FetchContent_Declare(
@@ -44,6 +43,7 @@ macro(import_catch)
     foreach(target Catch2 Catch2WithMain)
         if(TARGET ${target})
             get_target_property(inc_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
+
             if(inc_dirs)
                 set_target_properties(${target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
             endif()
@@ -64,6 +64,7 @@ macro(import_gtest)
     foreach(target gtest gtest_main gmock gmock_main)
         if(TARGET ${target})
             get_target_property(inc_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
+
             if(inc_dirs)
                 set_target_properties(${target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
             endif()
@@ -103,14 +104,15 @@ macro(import_glfw)
     )
 
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
-    set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
     FetchContent_MakeAvailable(glfw)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs glfw INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(glfw PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -118,15 +120,16 @@ endmacro()
 
 macro(import_mesh_optimiser)
     FetchContent_Declare(
-      mesh_optimiser
-      GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
-      GIT_TAG v0.25
+        mesh_optimiser
+        GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
+        GIT_TAG v0.25
     )
 
     FetchContent_MakeAvailable(mesh_optimiser)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs meshoptimizer INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(meshoptimizer PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -143,6 +146,7 @@ macro(import_glm)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs glm INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(glm PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -159,6 +163,7 @@ macro(import_assimp)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs assimp INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(assimp PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -175,6 +180,7 @@ macro(import_entt)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs EnTT INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(EnTT PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -196,7 +202,7 @@ macro(import_tinyddsloader)
         GIT_REPOSITORY https://github.com/benikabocha/tinyddsloader.git
         GIT_TAG 49654013d03aaf38e527f0ae0e179d1a811e67b7
     )
-    
+
     set(GLFW_INCLUDE_DIR "${glfw_SOURCE_DIR}/include" CACHE PATH "" FORCE)
     set(GLFW_LIBRARIES glfw CACHE STRING "" FORCE)
 
@@ -218,6 +224,7 @@ macro(import_yaml_cpp)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs yaml-cpp INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(yaml-cpp PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -239,6 +246,7 @@ macro(import_jolt)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs Jolt INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(Jolt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
@@ -297,7 +305,6 @@ macro(import_imgui)
         ${BACKENDS_HEADER}
     )
 
-
     target_include_directories(imgui_backends SYSTEM PUBLIC ${imgui_SOURCE_DIR}/backends)
     target_include_directories(imgui SYSTEM PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_link_libraries(imgui_backends PRIVATE glfw glad imgui)
@@ -316,9 +323,9 @@ endmacro()
 
 macro(import_directxtex)
     FetchContent_Declare(
-      directxtex
-      GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
-      GIT_TAG jul2025
+        directxtex
+        GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
+        GIT_TAG jul2025
     )
 
     FetchContent_MakeAvailable(directxtex)
@@ -330,9 +337,9 @@ endmacro()
 
 macro(import_freetype)
     FetchContent_Declare(
-      freetype
-      GIT_REPOSITORY https://github.com/freetype/freetype.git
-      GIT_TAG VER-2-14-1
+        freetype
+        GIT_REPOSITORY https://github.com/freetype/freetype.git
+        GIT_TAG VER-2-14-1
     )
 
     FetchContent_MakeAvailable(freetype)
@@ -369,7 +376,7 @@ macro(import_fmod)
         IMPORTED_LOCATION_GAMERELEASE ${FMOD_CORE_API_LIB_DIR}/fmod.dll
         IMPORTED_IMPLIB_GAMERELEASE ${FMOD_CORE_LIBRARY_RELEASE}
         INTERFACE_INCLUDE_DIRECTORIES ${FMOD_CORE_API_INC_DIR}
-        )
+    )
 
     add_library(fmodstudio SHARED IMPORTED)
     set_target_properties(fmodstudio PROPERTIES
@@ -384,7 +391,7 @@ macro(import_fmod)
         IMPORTED_LOCATION_GAMERELEASE ${FMOD_CORE_API_LIB_DIR}/fmodstudio.dll
         IMPORTED_IMPLIB_GAMERELEASE ${FMOD_STUDIO_LIBRARY_RELEASE}
         INTERFACE_INCLUDE_DIRECTORIES ${FMOD_STUDIO_API_INC_DIR}
-        )
+    )
 
     # Support custom configuration: Debug_Static_Analysis
     set_target_properties(fmod PROPERTIES
@@ -396,7 +403,6 @@ macro(import_fmod)
         IMPORTED_LOCATION_DEBUG_STATIC_ANALYSIS ${FMOD_STUDIO_API_LIB_DIR}/fmodstudioL.dll
         IMPORTED_IMPLIB_DEBUG_STATIC_ANALYSIS ${FMOD_STUDIO_LIBRARY_DEBUG}
     )
-
 endmacro()
 
 # Import Mono
@@ -474,13 +480,14 @@ macro(import_xml)
 
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs pugixml-static INTERFACE_INCLUDE_DIRECTORIES)
+
     if(inc_dirs)
         set_target_properties(pugixml-static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
     endif()
 endmacro()
 
 function(hide_dependencies)
-# hide external targets to folders
+    # hide external targets to folders
     set_target_properties(
         glad
         glfw
@@ -546,9 +553,10 @@ endfunction()
 
 # Macro to import all dependencies
 macro(import_dependencies)
-    if (NOT EXISTS "${CMAKE_SOURCE_DIR}/out/_dep")
+    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/out/_dep")
         make_directory("${CMAKE_SOURCE_DIR}/out/_dep")
     endif()
+
     set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/out/_dep")
     import_glad()
     import_glfw()
@@ -564,8 +572,8 @@ macro(import_dependencies)
     import_spdlog()
     import_catch()
     import_yaml_cpp()
-    #import_zlib()
 
+    # import_zlib()
     import_freetype()
     import_fmod()
     import_mono()

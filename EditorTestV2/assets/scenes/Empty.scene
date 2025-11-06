@@ -1,0 +1,10 @@
+entities:
+  - entity name: ~
+    TransformComponent:
+      m_Scale: ~
+      m_Rotate: ~
+      m_Trans: ~
+    LightComponent:
+      m_Type: 0
+      m_Direction: ~
+      m_Color: ~

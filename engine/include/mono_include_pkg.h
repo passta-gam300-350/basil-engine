@@ -36,9 +36,6 @@ Technology is prohibited.
 #include <mono/metadata/mono-gc.h>
 
 // Array, List, String etc
-#include <mono/metadata/array.h>
-#include <mono/metadata/list.h>
-#include <mono/metadata/string.h>
 
 // Reflection
 #include <mono/metadata/reflection.h>

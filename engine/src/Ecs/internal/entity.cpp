@@ -12,7 +12,7 @@ namespace ecs {
 				storage.push(new_entity, storage.value(base_entity));
 			}
 		}
-		reg.storage(1);
+		(void)(reg.storage(1));
 		return entity(get_world_handle(), static_cast<std::uint32_t>(new_entity));
 	}
 

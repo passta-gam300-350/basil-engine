@@ -1,0 +1,7 @@
+base:
+  m_guid: 969e037d8c809bbf0ead32db81
+  m_importer: .texture
+  m_source: materials\Metal_ShelfStand_Metal_Height.png
+  m_name: Metal_ShelfStand_Metal_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

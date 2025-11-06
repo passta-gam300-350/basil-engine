@@ -19,9 +19,10 @@ Technology is prohibited.
 #define MONOLOADER_HPP
 
 #include <string>
+#include <memory>
 #include <mono/metadata/image.h>
 #include <mono/utils/mono-forward.h>
-
+struct ManagedAssembly;
 class MonoLoader {
 
 
@@ -35,8 +36,8 @@ public:
 	MonoLoader() = default;
 
 	void Initialize(std::string const& assembly_dir, std::string const& config_dir);
-	MonoAssembly* LoadAssembly(std::string const& assemblyPath);
-	MonoImage* LoadImage(MonoAssembly* assembly);
+	std::unique_ptr<ManagedAssembly> LoadAssembly(std::string const& assemblyPath, MonoDomain* domain);
+	MonoImage* LoadImage(ManagedAssembly const& assembly);
 
 	MonoDomain* GetBackendDomain();
 	MonoDomain* GetGameDomain();
@@ -52,6 +53,8 @@ public:
 	void Enable_Game();
 	void Enable_Compiler();
 	void Exit();
+
+	~MonoLoader();
 
 };
 

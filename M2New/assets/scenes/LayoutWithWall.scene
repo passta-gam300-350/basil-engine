@@ -1,0 +1,141 @@
+entities:
+  - entity name:
+      name: Wall4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 1
+        z: 6
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -4
+        y: 1
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 9d99827d73ba32399772ee6ed9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: Wall3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 1
+        z: 6
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 4
+        y: 1
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 9d99827d73ba32399772ee6ed9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: Wall1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 8
+        y: 1
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1
+        z: -3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 9d99827d73ba32399772ee6ed9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: Ground
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 19
+        y: 19
+        z: 10
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x02"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 9875497a1da360caa268753aca
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: Wall2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 8
+        y: 1
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1
+        z: 3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 9d99827d73ba32399772ee6ed9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
