@@ -8,7 +8,7 @@ using BasilEngine.Debug;
 
 public class SimpleCubeMovement : Behavior
 {
-    public int multiplier = 1;
+    public int multiplier;
     private int frame = 165;
 
 
@@ -18,6 +18,7 @@ public class SimpleCubeMovement : Behavior
     }
     public void Update()
     {
+        
        
         if (Input.GetKey(KeyCode.W))
         {

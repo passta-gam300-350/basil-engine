@@ -486,3 +486,7 @@ $RECYCLE.BIN/
 # MSBuild / dotnet outputs
 bin/
 obj/
+
+!lib/
+!lib/**/
+!lib/*
