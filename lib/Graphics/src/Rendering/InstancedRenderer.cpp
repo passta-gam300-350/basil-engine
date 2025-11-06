@@ -9,6 +9,7 @@
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
 #include <cassert>
+#include <algorithm>
 
 InstancedRenderer::InstancedRenderer(PBRLightingRenderer* lighting)
     : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false), m_PBRLighting(lighting)
@@ -118,7 +119,7 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
     meshInstances.dirty = false;
 }
 
-void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData)
+void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque)
 {
     if (renderables.empty()) {
         // Clear cache if we transition from having objects to no objects
@@ -131,15 +132,59 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
 
     // Only rebuild instance data when renderables actually change
     // This avoids redundant work for static scenes while handling dynamic changes
-    if (HasRenderablesChanged(renderables))
+    bool changed = HasRenderablesChanged(renderables);
+
+    if (changed)
     {
         BuildDynamicInstanceData(renderables);
     }
 
-    // Render the instance batches to the specified pass
-    for (const auto& pair : m_MeshInstances) {
-        if (!pair.second.instances.empty()) {
-            RenderInstancedMeshToPass(renderPass, pair.first, frameData);
+    // For transparent objects, sort batches by distance (back-to-front)
+    // For opaque objects, render in any order (no sorting needed)
+    if (!isOpaque) {
+        // Build list of (meshId, furthest distance) pairs for transparent batches
+        std::vector<std::pair<std::string, float>> batchDistances;
+        batchDistances.reserve(m_MeshInstances.size());
+
+        for (const auto& [meshId, batch] : m_MeshInstances) {
+            if (batch.instances.empty()) {
+                continue;
+            }
+
+            // Calculate the furthest instance distance in this batch
+            // Using furthest distance ensures entire batch renders behind closer batches
+            float maxDistance = 0.0f;
+            for (const auto& instance : batch.instances) {
+                // Extract position from model matrix (column 3: [3][0], [3][1], [3][2])
+                glm::vec3 instancePos(
+                    instance.modelMatrix[3][0],
+                    instance.modelMatrix[3][1],
+                    instance.modelMatrix[3][2]
+                );
+                float distance = glm::length(frameData.cameraPosition - instancePos);
+                maxDistance = std::max(maxDistance, distance);
+            }
+
+            batchDistances.push_back({meshId, maxDistance});
+        }
+
+        // Sort batches by distance (furthest to nearest = back-to-front)
+        std::sort(batchDistances.begin(), batchDistances.end(),
+            [](const auto& a, const auto& b) {
+                return a.second > b.second;  // Descending order (furthest first)
+            });
+
+        // Render batches in sorted order
+        for (const auto& [meshId, distance] : batchDistances) {
+            RenderInstancedMeshToPass(renderPass, meshId, frameData, isOpaque);
+        }
+    }
+    else {
+        // Opaque objects: render in any order (no sorting needed)
+        for (const auto& pair : m_MeshInstances) {
+            if (!pair.second.instances.empty()) {
+                RenderInstancedMeshToPass(renderPass, pair.first, frameData, isOpaque);
+            }
         }
     }
 }
@@ -226,9 +271,11 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             continue;
         }
 
-        // Generate mesh ID from mesh pointer for proper instancing
-        // Identical mesh pointers (shared meshes) will automatically be batched together
-        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()));
+        // Generate mesh ID from mesh+material pointers for proper instancing
+        // Entities with identical mesh AND material will be batched together
+        // This ensures different materials (especially blend modes) are in separate batches
+        std::string meshId = std::to_string(reinterpret_cast<uintptr_t>(renderable.mesh.get()))
+                           + "_" + std::to_string(reinterpret_cast<uintptr_t>(renderable.material.get()));
 
         // Add instance data with actual material properties
         InstanceData instanceData;
@@ -290,9 +337,11 @@ void InstancedRenderer::ForceRebuildCache()
     m_LastObjectIDs.clear();
     m_LastTransformHashes.clear();
     m_LastPropertyBlockHashes.clear();
+    m_LastMaterialPointers.clear();
+    m_LastMeshPointers.clear();
 }
 
-void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData)
+void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData, bool isOpaque)
 {
 
     auto meshIt = m_MeshInstances.find(meshId);
@@ -320,6 +369,14 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
 
     if (!meshInstances.material) {
         spdlog::error("Missing material for '{}'", meshId);
+        return;
+    }
+
+    // CRITICAL FIX: Filter by blend mode to prevent rendering objects in wrong pass
+    // When building with ALL renderables, we need to skip batches that don't match the current pass
+    bool materialIsOpaque = (meshInstances.material->GetBlendMode() == BlendingMode::Opaque);
+    if (isOpaque != materialIsOpaque) {
+        // Skip this batch - it belongs to the other pass
         return;
     }
 
@@ -351,6 +408,13 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         frameData.cameraPosition
     };
     renderPass.Submit(uniformsCmd);
+
+    RenderCommands::SetUniformBoolData opaqueCmd{
+        shader, // shader
+        "u_IsOpaquePass",                       // uniform name
+        isOpaque
+    };
+	renderPass.Submit(opaqueCmd);
 
     // 4. Apply lighting setup via command submission (Option A - REFACTORED)
     if (m_PBRLighting) {
@@ -423,115 +487,126 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
     if (renderables.size() != m_LastRenderableCount)
     {
         m_LastRenderableCount = renderables.size();
-
-        // Update tracked object IDs
-        m_LastObjectIDs.clear();
-        m_LastObjectIDs.reserve(renderables.size());
-        for (const auto &r : renderables)
-        {
-            m_LastObjectIDs.push_back(r.objectID);
-        }
-
+        UpdateAllTrackingData(renderables);
         return true;
     }
 
     // Same count - check if the object IDs match (detect entity replacement)
     // This catches cases like: delete entity A, add entity B (same count, different entities)
+    if (m_LastObjectIDs.size() != renderables.size())
+    {
+        UpdateAllTrackingData(renderables);
+        return true;
+    }
+
     for (size_t i = 0; i < renderables.size(); ++i)
     {
-        if (i >= m_LastObjectIDs.size() || renderables[i].objectID != m_LastObjectIDs[i])
+        if (renderables[i].objectID != m_LastObjectIDs[i])
         {
-            // IDs don't match - renderables have changed
-            m_LastObjectIDs.clear();
-            m_LastObjectIDs.reserve(renderables.size());
-            for (const auto &r : renderables)
-            {
-                m_LastObjectIDs.push_back(r.objectID);
-            }
+            UpdateAllTrackingData(renderables);
+            return true;
+        }
+    }
+
+    // Check cheap things first (pointer comparisons) before expensive things (hashing)
+
+    // Check if mesh pointers changed (mesh assignment/change in Inspector)
+    if (m_LastMeshPointers.size() != renderables.size())
+    {
+        UpdateAllTrackingData(renderables);
+        return true;
+    }
+
+    for (size_t i = 0; i < renderables.size(); ++i)
+    {
+        uintptr_t currentMeshPtr = reinterpret_cast<uintptr_t>(renderables[i].mesh.get());
+        if (currentMeshPtr != m_LastMeshPointers[i])
+        {
+            UpdateAllTrackingData(renderables);
+            return true;
+        }
+    }
+
+    // Check if material pointers changed (material assignment in Inspector)
+    if (m_LastMaterialPointers.size() != renderables.size())
+    {
+        UpdateAllTrackingData(renderables);
+        return true;
+    }
+
+    for (size_t i = 0; i < renderables.size(); ++i)
+    {
+        uintptr_t currentMatPtr = reinterpret_cast<uintptr_t>(renderables[i].material.get());
+        if (currentMatPtr != m_LastMaterialPointers[i])
+        {
+            UpdateAllTrackingData(renderables);
             return true;
         }
     }
 
     // Check if transforms changed (important for editor mode where entities move/scale/rotate)
-    // Compare transform matrix hash for quick change detection
-    if (!m_LastTransformHashes.empty() && m_LastTransformHashes.size() == renderables.size())
+    if (m_LastTransformHashes.size() != renderables.size())
     {
-        for (size_t i = 0; i < renderables.size(); ++i)
-        {
-            // Hash transform matrix (sum diagonal + translation)
-            // GLM uses column-major: t[col][row]
-            // Translation is in column 3: t[3][0], t[3][1], t[3][2]
-            const glm::mat4& t = renderables[i].transform;
-            float currentHash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
-                               t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
-            if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
-            {
-                // Transform changed - need to rebuild
-                UpdateTransformHashes(renderables);
-                return true;
-            }
-        }
-    }
-    else
-    {
-        // First time or size mismatch - initialize transform hashes
-        UpdateTransformHashes(renderables);
+        UpdateAllTrackingData(renderables);
         return true;
     }
 
-    // Check if property blocks changed (material override edits in Inspector)
-    // This catches cases where MaterialOverridesComponent is edited
-    if (!m_LastPropertyBlockHashes.empty() && m_LastPropertyBlockHashes.size() == renderables.size())
+    for (size_t i = 0; i < renderables.size(); ++i)
     {
-        for (size_t i = 0; i < renderables.size(); ++i)
+        // Hash transform matrix (sum diagonal + translation)
+        const glm::mat4& t = renderables[i].transform;
+        float currentHash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
+                           t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+        if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
         {
-            const auto& renderable = renderables[i];
-
-            // Compute hash of property block data
-            float currentPropHash = 0.0f;
-            if (renderable.propertyBlock)
-            {
-                // Hash albedo color if it exists
-                glm::vec3 albedoColor(0.0f);
-                if (renderable.propertyBlock->TryGetVec3("u_AlbedoColor", albedoColor))
-                {
-                    currentPropHash += albedoColor.r + albedoColor.g + albedoColor.b;
-                }
-
-                // Hash metallic/roughness if they exist
-                float metallic = 0.0f, roughness = 0.0f;
-                if (renderable.propertyBlock->TryGetFloat("u_MetallicValue", metallic))
-                {
-                    currentPropHash += metallic * 10.0f;
-                }
-                if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", roughness))
-                {
-                    currentPropHash += roughness * 10.0f;
-                }
-            }
-
-            // Compare with cached hash
-            if (std::abs(currentPropHash - m_LastPropertyBlockHashes[i]) > 0.0001f)
-            {
-                // Property block changed - rebuild instance data
-                UpdateTransformHashes(renderables);
-                UpdatePropertyBlockHashes(renderables);
-                return true;
-            }
-        }
-    }
-    else
-    {
-        // First time or size mismatch - initialize property block hashes
-        UpdatePropertyBlockHashes(renderables);
-        if (!m_LastPropertyBlockHashes.empty())
-        {
-            // Has property blocks - need to build instance data
+            UpdateAllTrackingData(renderables);
             return true;
         }
     }
 
-    // No changes detected - same count, same IDs, same transforms, same properties
+    // Check property blocks last (most expensive due to map lookups)
+    if (m_LastPropertyBlockHashes.size() != renderables.size())
+    {
+        UpdateAllTrackingData(renderables);
+        return true;
+    }
+
+    for (size_t i = 0; i < renderables.size(); ++i)
+    {
+        const auto& renderable = renderables[i];
+
+        // Compute hash of property block data
+        float currentPropHash = 0.0f;
+        if (renderable.propertyBlock)
+        {
+            // Hash albedo color if it exists
+            glm::vec3 albedoColor(0.0f);
+            if (renderable.propertyBlock->TryGetVec3("u_AlbedoColor", albedoColor))
+            {
+                currentPropHash += albedoColor.r + albedoColor.g + albedoColor.b;
+            }
+
+            // Hash metallic/roughness if they exist
+            float metallic = 0.0f, roughness = 0.0f;
+            if (renderable.propertyBlock->TryGetFloat("u_MetallicValue", metallic))
+            {
+                currentPropHash += metallic * 10.0f;
+            }
+            if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", roughness))
+            {
+                currentPropHash += roughness * 10.0f;
+            }
+        }
+
+        // Compare with cached hash
+        if (std::abs(currentPropHash - m_LastPropertyBlockHashes[i]) > 0.0001f)
+        {
+            UpdateAllTrackingData(renderables);
+            return true;
+        }
+    }
+
+    // No changes detected - same count, same IDs, same transforms, same properties, same materials, same meshes
     return false;
 }
 
@@ -569,6 +644,97 @@ void InstancedRenderer::UpdatePropertyBlockHashes(const std::vector<RenderableDa
             }
 
             // Hash metallic/roughness
+            float metallic = 0.0f, roughness = 0.0f;
+            if (r.propertyBlock->TryGetFloat("u_MetallicValue", metallic))
+            {
+                hash += metallic * 10.0f;
+            }
+            if (r.propertyBlock->TryGetFloat("u_RoughnessValue", roughness))
+            {
+                hash += roughness * 10.0f;
+            }
+        }
+        m_LastPropertyBlockHashes.push_back(hash);
+    }
+}
+
+void InstancedRenderer::UpdateMaterialPointers(const std::vector<RenderableData>& renderables)
+{
+    m_LastMaterialPointers.clear();
+    m_LastMaterialPointers.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Store material pointer as uintptr_t for change detection
+        uintptr_t matPtr = reinterpret_cast<uintptr_t>(r.material.get());
+        m_LastMaterialPointers.push_back(matPtr);
+    }
+}
+
+void InstancedRenderer::UpdateMeshPointers(const std::vector<RenderableData>& renderables)
+{
+    m_LastMeshPointers.clear();
+    m_LastMeshPointers.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        // Store mesh pointer as uintptr_t for change detection
+        uintptr_t meshPtr = reinterpret_cast<uintptr_t>(r.mesh.get());
+        m_LastMeshPointers.push_back(meshPtr);
+    }
+}
+
+void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>& renderables)
+{
+    // Update object IDs
+    m_LastObjectIDs.clear();
+    m_LastObjectIDs.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        m_LastObjectIDs.push_back(r.objectID);
+    }
+
+    // Update mesh pointers
+    m_LastMeshPointers.clear();
+    m_LastMeshPointers.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        uintptr_t meshPtr = reinterpret_cast<uintptr_t>(r.mesh.get());
+        m_LastMeshPointers.push_back(meshPtr);
+    }
+
+    // Update material pointers
+    m_LastMaterialPointers.clear();
+    m_LastMaterialPointers.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        uintptr_t matPtr = reinterpret_cast<uintptr_t>(r.material.get());
+        m_LastMaterialPointers.push_back(matPtr);
+    }
+
+    // Update transform hashes
+    m_LastTransformHashes.clear();
+    m_LastTransformHashes.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        const glm::mat4& t = r.transform;
+        float hash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +
+                    t[3][0] + t[3][1] + t[3][2];
+        m_LastTransformHashes.push_back(hash);
+    }
+
+    // Update property block hashes
+    m_LastPropertyBlockHashes.clear();
+    m_LastPropertyBlockHashes.reserve(renderables.size());
+    for (const auto& r : renderables)
+    {
+        float hash = 0.0f;
+        if (r.propertyBlock)
+        {
+            glm::vec3 albedoColor(0.0f);
+            if (r.propertyBlock->TryGetVec3("u_AlbedoColor", albedoColor))
+            {
+                hash += albedoColor.r + albedoColor.g + albedoColor.b;
+            }
+
             float metallic = 0.0f, roughness = 0.0f;
             if (r.propertyBlock->TryGetFloat("u_MetallicValue", metallic))
             {

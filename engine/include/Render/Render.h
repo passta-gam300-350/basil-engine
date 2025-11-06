@@ -412,6 +412,13 @@ private:
     /// Per-entity property blocks for lightweight material customization
     /// Key: Entity UID, Value: Property block
     std::unordered_map<uint64_t, std::shared_ptr<MaterialPropertyBlock>> m_PropertyBlocks;
+
+    // ========== Default Material Cache ==========
+
+    /// Cached default material for entities without attached materials
+    /// Shared across all entities with hasAttachedMaterial=false
+    /// Ensures stable memory address to prevent cache thrashing
+    mutable std::shared_ptr<Material> m_DefaultMaterial;
 };
 
 #endif

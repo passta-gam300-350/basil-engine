@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
 #include "System/MaterialOverridesSystem.hpp"
+#include "Particles/ParticleSystem.h"
 #include "Render/Camera.h"
 
 #ifdef _WIN32
@@ -128,6 +129,7 @@ void Engine::Init(std::string const& cfg ) {
 	BindingSystem::RegisterBindings();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
+	
 }
 
 void Engine::CoreUpdate() {
@@ -143,6 +145,7 @@ void Engine::CoreUpdate() {
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
+	ParticleSystem::GetInstance().Update(instance.m_World, instance.GetDeltaTime());
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
@@ -260,7 +263,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
 
-	
+	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
 
 	
 	BindingSystem::RegisterBindings();

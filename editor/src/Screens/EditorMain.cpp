@@ -292,6 +292,22 @@ void EditorMain::init()
 				ImGui::SliderFloat("Metallic", &desc.material.metallic, 0.0f, 1.0f);
 				ImGui::SliderFloat("Roughness", &desc.material.roughness, 0.0f, 1.0f);
 
+				// Blend mode selector
+				const char* blend_modes[] = { "Opaque", "Transparent" };
+				const char* current_blend_mode = (desc.material.blend_mode == 0) ? "Opaque" : "Transparent";
+				if (ImGui::BeginCombo("Blend Mode", current_blend_mode)) {
+					for (int i = 0; i < 2; i++) {
+						bool is_selected = (desc.material.blend_mode == i);
+						if (ImGui::Selectable(blend_modes[i], is_selected)) {
+							desc.material.blend_mode = i;
+						}
+						if (is_selected) {
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+
 				// Texture properties with dropdowns
 				ImGui::SeparatorText("Texture Properties");
 

@@ -15,6 +15,7 @@ struct MaterialResourceData {
 	glm::vec3 albedo = glm::vec3(0.8f, 0.7f, 0.6f);
 	float metallic = 0.7f;
 	float roughness = 0.3f;
+	int blend_mode = 0; // 0 = Opaque, 1 = Transparent
 
 	std::unordered_map<std::string, float> float_properties;
 	std::unordered_map<std::string, glm::vec3> vec3_properties;
