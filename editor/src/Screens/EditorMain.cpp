@@ -47,6 +47,10 @@ Technology is prohibited.
 #include "Bindings/MANAGED_CONSOLE.hpp"
 #include "rsc-core/rp.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
+#include "Render/Render.h"
+#include "Messaging/Messaging_System.h"
+
 #include "Physics/Physics_System.h"
 #include "Manager/ObjectManager.hpp"
 #include <components/behaviour.hpp>
@@ -226,6 +230,7 @@ void EditorMain::init()
 	glfwMaximizeWindow(window);
 
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+	
 
 	// Register custom material inspector with texture dropdowns (captures 'this')
 	{
@@ -428,7 +433,14 @@ void EditorMain::init()
 	while (Engine::GetState() == Engine::Info::State::Init);
 	engineService.block();
 	glfwMakeContextCurrent(Editor::GetInstance().GetWindowPtr());
-
+	engineService.ExecuteOnEngineThread([&]() {
+		messagingSystem.Subscribe(CAMERA_CALCULATION_UPDATE, [&](std::unique_ptr<Message> GuizmoMessage) {
+			GuizmoViewMec4 = static_cast<Camera_Calculation_Update*>(GuizmoMessage.get())->viewMat4;
+			GuizmoprojectionMat4 = static_cast<Camera_Calculation_Update*>(GuizmoMessage.get())->projectionMat4;
+			}, nullptr);
+		PhysicsSystem::Instance().isActive = false;
+		spdlog::info("Physics Active");
+		});
 	CreateDemoScene();
 
 	SetupUnityStyle();
@@ -855,6 +867,16 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					is_dirty = true;
 				}
 			}
+			else if (uint32_t* vd = value.try_cast<uint32_t>()) {
+				uint32_t minValue = 0;
+				uint32_t maxValue = 2147483647; // UINT32_MAX
+
+				// With custom format
+				if (ImGui::SliderScalar("My Slider", ImGuiDataType_U32, vd, &minValue, &maxValue, "%u")) {
+					is_dirty = true;
+				}
+
+			}
 			/*else if (std::string* vs = value.try_cast<std::string>())
 				if (ImGui::InputText(field_name.c_str(), vs)) {
 					is_dirty = true;
@@ -1213,11 +1235,24 @@ void EditorMain::Render_StartStop()
 		isPlaying = !isPlaying;
 		if (isPlaying) // Starts game
 		{
-
+			
+			SaveScene("tmp.yaml");
+			engineService.ExecuteOnEngineThread([&]() {
+				//PlayWorldSnapshot.copy(Engine::GetWorld());
+				Engine::GetWorld().SaveYAML("tmp.yaml");
+				PhysicsSystem::Instance().isActive = true;
+				spdlog::info("Physics Active");
+				});
+			CameraSystem::SetActiveCamera(CameraSystem::CameraType::MAIN_CAMERA_ENTITY);
 		}
 		else // Stops Game
 		{
-			//OnPlayStop();
+			LoadScene("tmp.yaml");
+			engineService.ExecuteOnEngineThread([]() {
+				PhysicsSystem::Instance().isActive = false;
+				spdlog::info("Physics Disable");
+				});
+			CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
 			isPaused = false; // Resets paused game as we are stopping
 		}
 
@@ -1345,8 +1380,7 @@ void EditorMain::Render_MenuBar()
 		ImGui::EndMenu();
 	}
 
-	if (ImGui::BeginMenu("View"))
-	{
+	if (ImGui::BeginMenu("View")) {
 		ImGui::MenuItem("Inspector", nullptr, &showInspector);
 		ImGui::MenuItem("Scene Explorer", nullptr, &showSceneExplorer);
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
@@ -1354,56 +1388,45 @@ void EditorMain::Render_MenuBar()
 
 		ImGui::Separator();
 
-		if (ImGui::MenuItem("Show Bounding Boxes", nullptr, &m_ShowAABBs))
-		{
+		if (ImGui::MenuItem("Show Bounding Boxes", nullptr, &m_ShowAABBs)) {
 			SetDebugVisualization(m_ShowAABBs);
 		}
 
 		ImGui::EndMenu();
 	}
 
-	if (ImGui::BeginMenu("GameObject"))
-	{
-		if (ImGui::MenuItem("Create Empty"))
-		{
-			// Create Entity with transform
+	if (ImGui::BeginMenu("GameObject")) {
+		if (ImGui::MenuItem("Create Empty")) {
+			engineService.create_entity();
 		}
 
 		ImGui::Separator();
 
-		if (ImGui::BeginMenu("3D Object"))
-		{
-			if (ImGui::MenuItem("Cube"))
-			{
+		if (ImGui::BeginMenu("3D Object")) {
+			if (ImGui::MenuItem("Cube")) {
+				CreateCube();
+			}
+			if (ImGui::MenuItem("Physics Cube")) {
+				CreatePhysicsCube();
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Lights")) {
+			if (ImGui::MenuItem("Directional Light")) {
+				CreateLightEntity();
+			}
+			if (ImGui::MenuItem("Point Light")) {
+
+			}
+			if (ImGui::MenuItem("Spot Light")) {
 
 			}
 
 			ImGui::EndMenu();
 		}
-
-		if (ImGui::BeginMenu("Lights"))
-		{
-			if (ImGui::MenuItem("Point Light"))
-			{
-
-			}
-
-			if (ImGui::MenuItem("Spot Light"))
-			{
-
-			}
-
-			if (ImGui::MenuItem("Directional Light"))
-			{
-
-			}
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::MenuItem("Create Camera"))
-		{
-			// Create Entity with transform
+		if (ImGui::MenuItem("Create Camera")) {
+			CreateCameraEntity();
 		}
 
 		ImGui::EndMenu();
@@ -2466,8 +2489,8 @@ void EditorMain::Render_Scene()
 	// Get delta time for camera updates
 	float deltaTime = static_cast<float>(engineService.GetDeltaTime());
 
-	ImGui::Begin("Scene");
-
+	ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+	 
 	// Get viewport size for aspect ratio
 	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 	if (viewportSize.x > 0 && viewportSize.y > 0) {
@@ -2540,7 +2563,7 @@ void EditorMain::Render_Scene()
 			bool originalWantCaptureMouse = io.WantCaptureMouse;
 			bool originalWantCaptureKeyboard = io.WantCaptureKeyboard;
 
-			// Disable ImGui input capture only when doing camera control
+			//// Disable ImGui input capture only when doing camera control
 			io.WantCaptureMouse = false;
 			io.WantCaptureKeyboard = false;
 
@@ -2564,7 +2587,9 @@ void EditorMain::Render_Scene()
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
-
+	
+	Gizmos(); // Handle Gizmo Behaviour 
+	/*
 	// Debug info below the viewport (using snapshot)
 	const auto& entityHandles = engineService.GetEntitiesSnapshot();
 	auto entityCount = entityHandles.size();
@@ -2611,8 +2636,8 @@ void EditorMain::Render_Scene()
 	if (frameData.editorResolvedBuffer) {
 		ImGui::Text("FBO Handle: %u", frameData.editorResolvedBuffer->GetFBOHandle());
 		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
-	}
-
+	}*/
+	 
 	ImGui::End();
 }
 
@@ -2823,7 +2848,7 @@ void EditorMain::CreatePhysicsDemoScene()
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
-		RigidBody->bodyID = sphere_id;
+		RigidBody->bodyID = sphere_id.GetIndexAndSequenceNumber();
 	}); // End of ExecuteOnEngineThread lambda
 }
 
@@ -2910,7 +2935,7 @@ void EditorMain::CreatePhysicsCube()
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
 		RigidBody->motionType = JPH::EMotionType::Dynamic;
-		RigidBody->bodyID = sphere_id;
+		RigidBody->bodyID = sphere_id.GetIndexAndSequenceNumber();
 	}); // End of ExecuteOnEngineThread lambda
 }
 
@@ -3057,4 +3082,102 @@ void EditorMain::NewScene()
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
 	engineService.NewScene();
 	// Clear selection after loading new scene
+}
+
+void EditorMain::Gizmos() // UndoToAdd
+{
+	ImGui::Begin("Gizmo Debug");
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::Text("Selected Entity: %llu", m_SelectedEntityID);
+	ImGui::Text("Mode: %d", (int)mode);
+	ImGui::Text("Transform Valid: %s", GuizmoEntityTransform ? "YES" : "NO");
+	ImGui::Text("TransformMtx Valid: %s", GuizmoEntityTransformMTX ? "YES" : "NO");
+	ImGui::Text("Window Hovered: %s", ImGui::IsWindowHovered() ? "YES" : "NO");
+	ImGui::Text("Gizmo Over: %s", ImGuizmo::IsOver() ? "YES" : "NO");
+	ImGui::Text("Gizmo Using: %s", ImGuizmo::IsUsing() ? "YES" : "NO");
+	ImGui::Text("Gizmo Capture Mouse: %s", io.WantCaptureMouse ? "YES" : "NO");
+	
+
+	ImGui::End();
+
+	// This is for toggling the gizmo
+	if (ImGui::IsKeyPressed(ImGuiKey_0, false))
+	{
+		mode = (ImGuizmo::OPERATION)0;
+	}
+
+	if (ImGui::IsKeyPressed(ImGuiKey_1, false))
+	{
+		mode = ImGuizmo::OPERATION::TRANSLATE;
+	}
+
+	if (ImGui::IsKeyPressed(ImGuiKey_2, false))
+	{
+		mode = ImGuizmo::OPERATION::ROTATE;
+	}
+
+	if (ImGui::IsKeyPressed(ImGuiKey_3, false))
+	{
+		mode = ImGuizmo::OPERATION::SCALE;
+	}
+
+	// Only display gizmos if there is an entity selected and the gizmo is set to one of the 3 active modes
+	if ((m_SelectedEntityID != 0) && (mode != (ImGuizmo::OPERATION)0))
+	{
+
+		// Setting viewport details
+		ImGuizmo::SetOrthographic(true);
+		ImGuizmo::SetDrawlist();
+		float windowWidth = (float)ImGui::GetWindowWidth();
+		float windowHeight = (float)ImGui::GetWindowHeight();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+		auto current_camera = CameraSystem::GetActiveCamera();
+
+		// Grabbing the transform we want to edit
+		const auto& entityHandles = engineService.GetEntitiesSnapshot();
+		const auto& entityNames = engineService.get_reflectible_component_id_name_list();
+
+		engineService.ExecuteOnEngineThread([&]() {
+			auto world = Engine::GetWorld();
+			if (m_SelectedEntityID) {
+				auto selected = world.impl.entity_cast(entt::entity(m_SelectedEntityID));
+				GuizmoEntityTransform = &world.get_component_from_entity<TransformComponent>(selected);
+				GuizmoEntityTransformMTX = &world.get_component_from_entity<TransformMtxComponent>(selected);
+			}
+			});
+
+
+		if (GuizmoEntityTransform != nullptr && GuizmoEntityTransformMTX != nullptr)
+		{
+			// Create and display Gizmos
+			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx));
+
+			
+			
+			if (ImGuizmo::IsUsing()) // While we are using the gizmos
+			{
+				// Break down the edited matrix so we can save the values
+				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+				std::cout << GuizmoEntityTransform->m_Translation.x;
+				GuizmoEntityTransformMTX;
+				//isEditing = true; // Indicate that we are editing stuff
+				//EditingID = selectedEnitityID; // Set the Id
+				//if (HasBeenEditied == false) // Only Situation that can cause a problem is if you manage to edit two entities back to back
+				//{
+				//	AddToUndoStack(EditingID);
+				//}
+			}
+		}
+
+
+
+	}
+	else
+	{
+		GuizmoEntityTransform = nullptr;
+		GuizmoEntityTransformMTX = nullptr;
+	}
+
+
 }

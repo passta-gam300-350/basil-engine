@@ -149,7 +149,7 @@ void Engine::CoreUpdate() {
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
-	//messagingSystem.Update();
+	messagingSystem.Update();
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
 }

@@ -25,6 +25,8 @@ Technology is prohibited.
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 
+#include "Messaging/Messaging_System.h"
+
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
@@ -174,6 +176,7 @@ void RenderSystem::Update(ecs::world& world) {
 	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
 		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
 		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+		messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE, std::make_unique<Camera_Calculation_Update>(frameData.viewMatrix,m_Camera->GetProjectionMatrix()));
 	}
 
 	frameData.viewMatrix = view;
