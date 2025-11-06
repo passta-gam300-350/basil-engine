@@ -1,0 +1,7 @@
+base:
+  m_guid: 969ede72318ccdb1c9b73aca27
+  m_importer: .texture
+  m_source: materials\table_new_tableGlass_Metallic.png
+  m_name: table_new_tableGlass_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

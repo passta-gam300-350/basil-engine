@@ -19,12 +19,16 @@ Technology is prohibited.
 
 #ifndef behaviour_hpp
 #define behaviour_hpp
-#include "uuid/uuid.hpp"
 
+#include <string>
+
+#include "rsc-core/rp.hpp"
 
 struct behaviour
 {
-	UUID<128> scriptID;
+	std::vector<std::string> classesName;
+	std::vector<rp::Guid> scriptIDs;
+
 };
 
 #endif

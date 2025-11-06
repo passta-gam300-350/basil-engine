@@ -1,9 +1,31 @@
 #include "Service/EngineService.hpp"
 #include "Editor.hpp"
-#include <Render/Render.h>  // For RenderSystem and FrameData
-#include <algorithm>  // For std::find
+#include "Manager/MonoEntityManager.hpp"
+
+#include <filesystem>
+
+#include "Render/Render.h"
 
 void EngineContainerService::EngineContainer::engine_service() {
+	MonoEntityManager::GetInstance().initialize();
+
+	std::string working_dir = Editor::GetInstance().GetConfig().project_workingDir;
+	std::string asset_dir = working_dir + "assets";
+
+	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "assets"/ "scripts";
+	if (std::filesystem::exists(scripts_dir)) {
+		MonoEntityManager::GetInstance().AddSearchDirectory(scripts_dir.string().c_str());
+	}
+
+	std::filesystem::path managed_dir = std::filesystem::path{ working_dir } / "managed";
+	if (std::filesystem::exists(managed_dir)) {
+		MonoEntityManager::GetInstance().SetOutputDirectory(managed_dir.string().c_str());
+	}
+
+	//Mono Configuration here
+	
+
+
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
 
@@ -12,7 +34,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
-		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait) { //wait completely suspends the engine
+		while (!Engine::ShouldClose() && ((Engine::GetState() != Engine::Info::State::Wait) || Engine::GetState() != Engine::Info::State::Pause)) { //wait completely suspends the engine
 			engine_snapshot_callback();
 			Engine::BeginFrame();
 			Engine::CoreUpdate();
@@ -163,15 +185,14 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		m_entity_component_update_queue.pop();
 		ecs::entity entity{ ehdl };
 		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
-		if (auto* storage = w.impl.get_registry().storage(ReflectionRegistry::types()[type_id].info().index())) {
+		if (auto* storage = w.impl.get_registry().storage(type_id)) {
 			if (!storage->contains(enttntt)) {
-				continue;
-			}
-			if (is_delete) {
-				storage->erase(enttntt);
+				storage->push(enttntt);
 			}
 			else {
-				storage->push(enttntt);
+				if (is_delete) {
+					storage->erase(enttntt);
+				}
 			}
 		}
 	}
@@ -181,6 +202,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		ecs::entity entity{ ehdl };
 		entity.destroy();
 	}
+	
 }
 
 void EngineContainerService::reset() {
@@ -194,6 +216,8 @@ void EngineContainerService::reset() {
 
 void EngineContainerService::exit()
 {
+	if (!m_cont)
+		return;
 	m_cont->m_container_is_presentable.release();
 	Engine::SetState(Engine::Info::State::Exit);
 	{
@@ -235,6 +259,9 @@ void EngineContainerService::init() {
 void EngineContainerService::pause() {
 	Engine::SetState(Engine::Info::State::Pause);
 }
+
+//void EngineContainerService::create_cube() {
+//}
 
 void EngineContainerService::end() {
 	release();

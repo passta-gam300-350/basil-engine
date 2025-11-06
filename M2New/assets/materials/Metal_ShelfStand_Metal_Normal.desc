@@ -1,0 +1,7 @@
+base:
+  m_guid: 969e17754c9fa14ffcc1a62383
+  m_importer: .texture
+  m_source: materials\Metal_ShelfStand_Metal_Normal.png
+  m_name: Metal_ShelfStand_Metal_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

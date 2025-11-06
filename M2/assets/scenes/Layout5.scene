@@ -1,0 +1,387 @@
+entities:
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: -5.5
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 843ad275c1bd5ff9624bba6242
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 86b231751b842bc033daa328ba
+        type: 175488002581160416
+  - entity name:
+      name: Table7
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 2.29999995
+        y: 0
+        z: -0.5
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: Table6
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3.5
+        y: 0
+        z: 1
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: Table5
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 1
+        y: 0
+        z: 1
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: Table4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3.5
+        y: 0
+        z: 2
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: Table3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 1
+        y: 0
+        z: 2
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: Table2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3.5
+        y: 0
+        z: 3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: Table1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00600000005
+        z: 0.00600000005
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 1
+        y: 0
+        z: 3
+    MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 582a34726aa5690e1bab76cc66
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 76dc527c19a677afc8f07cecc2
+        type: 175488002581160416
+  - entity name:
+      name: unnamed
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 5
+        z: 0
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 0.949999988
+        z: 0.850000024
+      Enabled: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0.200000003
+        y: -0.800000012
+        z: 0.300000012
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 10
+        y: 10
+        z: 18
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MeshRendererComponent:
+      m_PrimitiveType: "\x02"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 7dd0957743a428edfa309ff168
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 2
+        z: 10
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 6
+        y: 1
+        z: -1
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 7faf527a8db0df2ae3b9b6f1a9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 2
+        z: 10
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -1
+        y: 1
+        z: -1
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 7faf527a8db0df2ae3b9b6f1a9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 7
+        y: 2
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 2.5
+        y: 1
+        z: 3.79999995
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 7faf527a8db0df2ae3b9b6f1a9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~
+  - entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 7
+        y: 2
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 2.5
+        y: 1
+        z: -6
+    MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        guid: 7faf527a8db0df2ae3b9b6f1a9
+        type: 175488002581160416
+    MaterialOverridesComponent: ~

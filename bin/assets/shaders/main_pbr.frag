@@ -93,6 +93,9 @@ uniform float u_RoughnessValue = 0.5;
 // Ambient lighting
 uniform vec3 u_AmbientLight = vec3(0.03);
 
+// Blend mode control (true = opaque pass, false = transparent pass)
+uniform bool u_IsOpaquePass = true;
+
 // PBR constants
 const float PI = 3.14159265359;
 
@@ -513,10 +516,9 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
 
 void main() {
     // Sample traditional textures
-    vec3 albedo = fs_in.InstanceColor.rgb;
+    vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
     if (u_HasDiffuseMap) {
-        vec4 texSample = texture(u_DiffuseMap, fs_in.TexCoords);
-        albedo *= texSample.rgb;
+        albedo = texture(u_DiffuseMap, fs_in.TexCoords);
     }
 
     float metallic = fs_in.InstanceMetallic;
@@ -550,12 +552,18 @@ void main() {
     vec3 normal = getNormalFromMap();
 
     // Calculate multi-light PBR lighting (shadows are calculated per-light now)
-    vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao);
+    vec3 color = calculateMultiLightPBR(albedo.rgb, normal, metallic, roughness, ao);
 
     // Add emissive
     color += emissive;
 
-    // Output raw HDR color to HDR framebuffer (RGB16F)
+    // Output raw HDR color to HDR framebuffer with appropriate alpha
+    // Opaque pass: Force alpha = 1.0 to prevent texture alpha from affecting visibility
+    // Transparent pass: Preserve texture alpha for proper blending
     // Tone mapping will be applied later in ToneMapRenderPass
-    FragColor = vec4(color, 1.0);
+    float outputAlpha = 1.0f;
+    if (!u_IsOpaquePass) {
+        outputAlpha = albedo.a;
+    }
+    FragColor = vec4(color, outputAlpha);
 }

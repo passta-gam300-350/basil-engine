@@ -39,6 +39,7 @@ public:
 		// Each vector contains the component type IDs that entity has
 		std::vector<std::vector<std::uint32_t>> m_entity_components_snapshot;
 
+
 		// Pending picking query data (processed after next frame render)
 		bool m_hasPickingQuery{ false };
 		float m_pickingMouseX{ 0.0f };
@@ -68,12 +69,15 @@ public:
 	void run();
 	void init();
 	void pause();
+	void create_cube();
+
 	void end();
 	void inspect_entity(entity_handle ehdl) { if (m_cont) m_cont->m_snapshot_entity_handle = ehdl; else spdlog::info("engine container is empty."); }
 	void create_entity();
 	void delete_entity(entity_handle);
 	void add_component(entity_handle, std::uint32_t);
 	void delete_component(entity_handle, std::uint32_t);
+	
 
 	//safe to return reference, registration is done during startup with its data determined during compile time and reflection registry is not expected to change, unless reset is called.
 	std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& get_reflectible_component_id_name_list();

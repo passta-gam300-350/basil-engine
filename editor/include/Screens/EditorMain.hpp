@@ -29,6 +29,7 @@ Technology is prohibited.
 #include "Manager/AssetManager.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <components/behaviour.hpp>
 
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
@@ -44,7 +45,8 @@ public:
 	bool showSceneExplorer = true;
 	bool showProfiler = false;
 	bool showConsole = true;
-
+	bool isPlaying = false; // To check if the gameplay is enabled, not to beconfused with paused as you can be paused but resume the gameplay
+	bool isPaused = false; // To check if game play is paused, should only be false when the gameplay is enabled
 
 
 
@@ -69,7 +71,15 @@ public:
 
 	void Setup_Dockspace(unsigned id);
 
+	// For starting and stopping the engine
+	void Render_StartStop();
+
+	// For setting the menu bar
 	void Render_MenuBar();
+
+	// For setting up the style
+	void SetupUnityStyle();
+
 
 	void Render_AboutUI();
 
@@ -91,6 +101,8 @@ public:
 
 	void Render_Components();
 	void Render_Component_Member(auto&, bool& is_dirty);
+    void Render_Behaviour_Component(behaviour& component);
+	void Add_Script_Menu();
 
 	void Render_Add_Component_Menu();
 

@@ -18,7 +18,7 @@ Technology is prohibited.
 #ifndef OBJECTMANAGER_HPP
 #define OBJECTMANAGER_HPP
 #include "ecs/internal/entity.h"
-
+#include <glm/vec3.hpp>
 class ObjectManager
 {
 
@@ -27,7 +27,7 @@ public:
 	void init();
 	void shutdown();
 
-	ecs::entity CreateGameObject();
+	ecs::entity CreateGameObject(glm::vec3 pos = {}, glm::vec3 scale = {1,1,1}, glm::vec3 rot = {});
 	void DestroyGameObject(ecs::entity obj);
 
 

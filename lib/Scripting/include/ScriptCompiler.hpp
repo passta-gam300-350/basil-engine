@@ -26,12 +26,11 @@ Technology is prohibited.
 
 #include "MonoLoader.hpp"
 
-
 class ScriptCompiler {
 
 	MonoLoader* loader;
 
-	MonoAssembly* compilerAssembly;
+	std::unique_ptr<ManagedAssembly> compilerAssembly;
 	MonoImage* compilerImage;
 
 	MonoClass* compilerKlass;
@@ -58,6 +57,15 @@ class ScriptCompiler {
 
 	};
 
+	struct CompileSettings {
+		std::string output_name = "GameAssembly";
+		std::string output_directory = "bin";
+		bool isDLL = true;
+		bool debug = true;
+		bool optimize = false;
+		bool verbose = false;
+	} compile_settings;
+
 
 	CommandInfo command_info{ "csc", false };
 
@@ -69,6 +77,22 @@ class ScriptCompiler {
 	std::string compiler_path;
 
 public:
+
+	struct DiagnosticLog {
+		std::string filename;
+		std::string position;
+		std::string severity;
+		std::string diagnosticID;
+		std::string message;
+
+		friend std::ostream& operator<<(std::ostream& os, const ScriptCompiler::DiagnosticLog& log);
+
+		
+	};
+	
+	
+	std::vector<DiagnosticLog> diagnostics;
+
 	void Init(MonoLoader* loader, std::string const& compiler_dir);
 	void CompileAsync();
 	void CompileAllScripts();
@@ -116,8 +140,28 @@ public:
 
 
 
+	void SetCompileOutputName(std::string const& name);
+	std::string const& GetCompileOutputName() const;
+	void SetCompileOutputDirectory(std::string const& dir);
+	std::string const& GetCompileOutputDirectory() const;
+	void SetCompileAsDLL(bool isDLL);
+	bool IsCompileAsDLL() const;
+	void SetOptimizeCompile(bool optimize);
+	bool IsOptimizeCompile() const;
+	bool IsVerboseCompile() const;
+	void SetVerboseCompile(bool verbose);
+
+
+	~ScriptCompiler();
+
+
+
+
 
 
 
 };
+
+
+
 #endif // SCRIPTCOMPILER_HPP

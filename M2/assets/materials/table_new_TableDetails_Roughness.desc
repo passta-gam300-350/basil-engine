@@ -1,0 +1,7 @@
+base:
+  m_guid: 3c0b5f27dbe92a2216532eb0a8e
+  m_importer: .texture
+  m_source: materials\table_new_TableDetails_Roughness.png
+  m_name: table_new_TableDetails_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

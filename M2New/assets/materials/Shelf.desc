@@ -1,0 +1,26 @@
+base:
+  m_guid: b66e88768ca2df47a8f599da73
+  m_importer: .material
+  m_source: ""
+  m_name: Shelf
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: Shelf
+  albedo:
+    x: 0.505338073
+    y: 0.489152849
+    z: 0.489152849
+  metallic: 0
+  roughness: 0.5
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    diffuse: 969de6710e90f7c40afe1e35bc
+    roughness: 969e227bb384f4515d27cff518
+    height: 969e037d8c809bbf0ead32db81
+    normal: 969e17754c9fa14ffcc1a62383
+    emissive: 969df87812847e41b91bc194e8
+    Metallic: 969e0d7b9fb31af135eb9700d1

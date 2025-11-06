@@ -26,6 +26,13 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 
+// Blend modes for transparency rendering
+enum class BlendingMode
+{
+    Opaque = 0,      // Fully opaque, no blending
+    Transparent = 1  // Alpha blending enabled
+};
+
 // Unified Material class with PBR properties
 class Material
 {
@@ -51,11 +58,13 @@ public:
     const glm::vec3& GetAlbedoColor() const { return m_AlbedoColor; }
     float GetMetallicValue() const { return m_MetallicValue; }
     float GetRoughnessValue() const { return m_RoughnessValue; }
+    BlendingMode GetBlendMode() const { return m_BlendMode; }
 
     void SetAlbedoColor(const glm::vec3& color) { m_AlbedoColor = color; }
     void SetAlbedoColorSRGB(const glm::vec3& srgbColor);
     void SetMetallicValue(float metallic) { m_MetallicValue = metallic; }
     void SetRoughnessValue(float roughness) { m_RoughnessValue = roughness; }
+    void SetBlendMode(BlendingMode mode) { m_BlendMode = mode; }
 
     // Apply all PBR properties to the shader at once
     void ApplyPBRProperties();
@@ -94,6 +103,7 @@ private:
     glm::vec3 m_AlbedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
     float m_MetallicValue = 0.7f;
     float m_RoughnessValue = 0.3f;
+    BlendingMode m_BlendMode = BlendingMode::Opaque;
 
     // Performance optimization: Cache uniform locations to avoid repeated glGetUniformLocation calls
     // Using mutable to allow caching in const methods

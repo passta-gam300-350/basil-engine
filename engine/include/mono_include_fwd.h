@@ -22,4 +22,11 @@ Technology is prohibited.
 // Forward declarations for Mono types
 #include <mono/metadata/object-forward.h>
 #include <mono/utils/mono-forward.h>
+
+typedef struct _MonoString MonoString;
+typedef struct _MonoObject MonoObject;
+typedef struct _MonoClass MonoClass;
+typedef struct _MonoDomain MonoDomain;
+typedef struct _MonoArray MonoArray;
+
 #endif // MONO_INCLUDE_FWD_H

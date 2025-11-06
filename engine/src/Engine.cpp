@@ -6,6 +6,7 @@
 #include "Input/InputManager.h"
 #include "Messaging/Messaging_System.h"
 #include "Ecs/ecs.h"
+#include "System/BehaviourSystem.hpp"
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
 #include "System/MaterialOverridesSystem.hpp"
@@ -24,6 +25,10 @@ extern "C" {
 }
 #endif
 #include "Manager/ObjectManager.hpp"
+#include "Manager/MonoEntityManager.hpp"
+#include <System/BindingSystem.hpp>
+
+#include <Physics/Physics_System.h>
 
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -120,11 +125,16 @@ void Engine::Init(std::string const& cfg ) {
 	MaterialOverridesSystem::Instance().Init();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
+	MonoEntityManager::GetInstance().SetPreCompiled(true);
+	MonoEntityManager::GetInstance().initialize();
+	MonoEntityManager::GetInstance().StartCompilation();
+	BindingSystem::RegisterBindings();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
 }
 
 void Engine::CoreUpdate() {
+	//thread_local auto physic_system{PhysicsSystem()};
 	Engine& instance{ Instance() };
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 	InputManager::Get_Instance()->Update();
@@ -132,20 +142,23 @@ void Engine::CoreUpdate() {
 	TransformSystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
+	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
+	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
+	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
 }
 
 void Engine::Update() {
 	try {
 		Engine& instance{ Instance() };
-		std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
+		//std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
 				if (Engine::GetWindowInstance().PollEvents(); Engine::GetWindowInstance().ShouldClose()) {
@@ -187,6 +200,9 @@ void Engine::UpdateDebug() {
 
 	frame_number++;
 	frame_counter--;
+
+	//TODO: DEBUG REMOVE LATER
+	//BehaviourSystem::Instance().Update(instance.m_World, 0.f);
 }
 
 void Engine::ReportLastError() {
@@ -197,6 +213,7 @@ void Engine::ReportLastError() {
 void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 	Engine::SetState(Info::State::Init);
 	Instance().m_Window = std::make_unique<Window>(wptr);
+
 	InitWithoutWindow(cfg);
 }
 
@@ -205,6 +222,10 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	ReflectionRegistry::SetupNativeTypes();
 	ReflectionRegistry::SetupEngineTypes();
+
+	MonoEntityManager::GetInstance().SetPreCompiled(false);
+	MonoEntityManager::GetInstance().StartCompilation();
+
 	Instance().m_Info.m_FrameLogRate = 165;
 	
 	Instance().m_World = WorldRegistry::NewWorld();
@@ -242,6 +263,13 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+
+	
+
+	
+	BindingSystem::RegisterBindings();
+
+	PhysicsSystem::Instance().Init();
 
 	Scheduler::CompileJobSchedule();
 

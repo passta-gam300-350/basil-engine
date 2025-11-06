@@ -203,46 +203,18 @@ void RenderSystem::Update(ecs::world& world) {
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
 		// Load mesh resource (from ResourceRegistry or PrimitiveManager)
-		std::shared_ptr<Mesh> meshResource = LoadMeshResource(mesh);
+		auto meshResource = LoadMeshResource(mesh);
 
-		// Load material resource (from ResourceRegistry or create default)
-		std::shared_ptr<Material> materialResource = LoadMaterialResource(
-			static_cast<rp::TypeNameGuid<"material">&>(mesh.m_MaterialGuid),
-			mesh.hasAttachedMaterial,
-			entityUID
-		);
+		auto materialLoader = [this, hasAttachedMat = mesh.hasAttachedMaterial, entityUID](rp::BasicIndexedGuid biguid) {
+			return LoadMaterialResource(static_cast<rp::TypeNameGuid<"material">&>(biguid), hasAttachedMat, entityUID);
+			};
 
-		// === ENHANCED DIAGNOSTIC LOGGING ===
-		// Log resource loading status for debugging entity 2 issue
-		/*spdlog::info("Entity {}: Resource check - mesh: {}, material: {}, isPrimitive: {}, hasAttachedMaterial: {}",
-			entityUID,
-			(meshResource ? "OK" : "NULL"),
-			(materialResource ? "OK" : "NULL"),
-			mesh.isPrimitive,
-			mesh.hasAttachedMaterial);
-
-		if (materialResource) {
-			spdlog::info("Entity {}: Material loaded: '{}' (GUID: {})",
-				entityUID, materialResource->GetName(), mesh.m_MaterialGuid.m_guid.to_hex().substr(0, 8));
-		} else {
-			spdlog::warn("Entity {}: Material FAILED to load (GUID: {}, hasAttachedMaterial: {})",
-				entityUID, mesh.m_MaterialGuid.m_guid.to_hex().substr(0, 8), mesh.hasAttachedMaterial);
-		}
-
-		if (meshResource) {
-			spdlog::info("Entity {}: Mesh loaded: {} vertices, isPrimitive: {}",
-				entityUID, meshResource->vertices.size(), mesh.isPrimitive);
-		} else {
-			spdlog::warn("Entity {}: Mesh FAILED to load (GUID: {}, isPrimitive: {}, primitiveType: {})",
-				entityUID,
-				mesh.m_MeshGuid.m_guid.to_hex().substr(0, 8),
-				mesh.isPrimitive,
-				static_cast<int>(mesh.m_PrimitiveType));
-		}*/
+		bool isMeshValid{ false };
+		std::visit([&isMeshValid](auto& ptr) {isMeshValid = static_cast<bool>(ptr); }, meshResource);
 
 		// Skip if resources failed to load
-		if (!meshResource || !materialResource) {
-			static std::unordered_set<uint64_t> warnedEntities;
+		if (!isMeshValid) {
+				static std::unordered_set<uint64_t> warnedEntities;
 			if (warnedEntities.find(entityUID) == warnedEntities.end()) {
 				spdlog::warn("RenderSystem: Failed to load resources for entity {}", entityUID);
 				warnedEntities.insert(entityUID);
@@ -254,61 +226,108 @@ void RenderSystem::Update(ecs::world& world) {
 		// - Component properties: Used for editor/serialization (synced to base material)
 		// - Material instances: Runtime copy-on-write for per-entity customization
 
-		// Render the entity
-		{
-			// Material customization is now handled by MaterialPropertyBlocks
-			// MaterialOverridesSystem creates property blocks from MaterialOverridesComponent
-			// Property blocks are applied by SceneRenderer after base material
+		const auto shared_ptr_visitor = [&](std::shared_ptr<Mesh>& meshResourcePtr, std::shared_ptr<Material> const& materialResourcePtr)
+			// Render the entity
+			{
+				// Material customization is now handled by MaterialPropertyBlocks
+				// MaterialOverridesSystem creates property blocks from MaterialOverridesComponent
+				// Property blocks are applied by SceneRenderer after base material
 
-			RenderableData renderData;
-			renderData.mesh = meshResource;
-			renderData.material = materialResource;
-			renderData.transform = transform.m_Mtx;
-			renderData.visible = visible.m_IsVisible;
-			renderData.renderLayer = 1;
+				RenderableData renderData;
+				renderData.mesh = meshResourcePtr;
+				renderData.material = materialResourcePtr;
+				renderData.transform = transform.m_Mtx;
+				renderData.visible = visible.m_IsVisible;
+				renderData.renderLayer = 1;
 
-			// Use existing entityUID (uint64_t) and cast to uint32_t for objectID
-			renderData.objectID = static_cast<uint32_t>(entityUID);
+				// Use existing entityUID (uint64_t) and cast to uint32_t for objectID
+				renderData.objectID = static_cast<uint32_t>(entityUID);
 
-			// Attach property block if it exists and has properties
-			auto propBlockIt = m_PropertyBlocks.find(entityUID);
-			if (propBlockIt != m_PropertyBlocks.end() && !propBlockIt->second->IsEmpty()) {
-				renderData.propertyBlock = propBlockIt->second;
+				// Attach property block if it exists and has properties
+				auto propBlockIt = m_PropertyBlocks.find(entityUID);
+				if (propBlockIt != m_PropertyBlocks.end() && !propBlockIt->second->IsEmpty()) {
+					renderData.propertyBlock = propBlockIt->second;
 
-				// Debug: Log property block attachment
-				static int propBlockDebugCount = 0;
-				if (propBlockDebugCount < 5) {
-					spdlog::info("RenderSystem: Attaching property block for entity {} (properties: {})",
-						entityUID, propBlockIt->second->GetPropertyCount());
-					propBlockDebugCount++;
+					// Debug: Log property block attachment
+					static int propBlockDebugCount = 0;
+					if (propBlockDebugCount < 5) {
+						spdlog::info("RenderSystem: Attaching property block for entity {} (properties: {})",
+							entityUID, propBlockIt->second->GetPropertyCount());
+						propBlockDebugCount++;
+					}
+				}
+
+				// Debug: Log entity UID assignment for first few entities
+				static int debugCount = 0;
+				if (debugCount < 5) {
+					spdlog::info("RenderSystem: Entity UID assignment - Entity: {}, UID: {}, static_cast result: {}",
+						debugCount, entityUID, static_cast<uint32_t>(entityUID));
+					debugCount++;
+				}
+
+				// Assert entity ID validity for debugging picking
+				assert(renderData.objectID != 0 && "Entity UID should not be zero for picking to work");
+				assert(renderData.objectID < 16777215 && "Entity UID exceeds 24-bit limit for picking system"); // 24-bit max for RGB encoding
+
+				// Assert mesh validity for rendering
+				assert(meshResourcePtr->GetVertexArray() && "Mesh must have valid VAO for rendering");
+				assert(meshResourcePtr->GetVertexArray()->GetVAOHandle() != 0 && "Mesh VAO must be bound to valid OpenGL handle");
+				assert(!meshResourcePtr->vertices.empty() && "Mesh must have vertices for rendering");
+
+				m_SceneRenderer->SubmitRenderable(renderData);
+
+				// Submit AABB for debug visualization (using pre-calculated mesh AABB)
+				if (visible.m_IsVisible && meshResourcePtr->GetAABB().IsValid()) {
+					DebugAABB debugAABB(meshResourcePtr->GetAABB(), transform.m_Mtx, glm::vec3(1.0f, 0.0f, 0.0f));
+					frameData.debugAABBs.push_back(debugAABB);
+				}
+			};
+		std::visit([&](auto&& var) {
+			using Type = std::remove_pointer_t<std::remove_cvref_t<decltype(var)>>;
+			if constexpr (std::is_same_v<Type, std::shared_ptr<Mesh>>) {
+				if (mesh.m_MaterialGuid.find("unnamed slot") == mesh.m_MaterialGuid.end() || mesh.m_MaterialGuid.size() != 1) {
+					mesh.m_MaterialGuid.clear();
+					mesh.m_MaterialGuid.emplace("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+				}
+				shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
+			}
+			else {
+				// Multi-slot mesh: match materials by slot name to preserve user assignments
+				// Only add missing slots, never clear existing assignments
+				for (auto& [slotName, meshPtr] : *var) {
+					// Check if this slot exists in the component's material map
+					auto matIt = mesh.m_MaterialGuid.find(slotName);
+
+					if (matIt == mesh.m_MaterialGuid.end()) {
+						// Slot doesn't exist - add it with null GUID (will use default material)
+						mesh.m_MaterialGuid.emplace(slotName, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
+						matIt = mesh.m_MaterialGuid.find(slotName);
+					}
+
+					// Submit renderable with material from this slot
+					shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
+				}
+
+				// Clean up slots that don't exist in mesh anymore (optional)
+				// This prevents accumulation of unused slots when mesh changes
+				std::vector<std::string> slotsToRemove;
+				for (const auto& [componentSlotName, guid] : mesh.m_MaterialGuid) {
+					bool slotExistsInMesh = false;
+					for (const auto& [meshSlotName, ptr] : *var) {
+						if (meshSlotName == componentSlotName) {
+							slotExistsInMesh = true;
+							break;
+						}
+					}
+					if (!slotExistsInMesh) {
+						slotsToRemove.push_back(componentSlotName);
+					}
+				}
+				for (const auto& slotName : slotsToRemove) {
+					mesh.m_MaterialGuid.erase(slotName);
 				}
 			}
-
-			// Debug: Log entity UID assignment for first few entities
-			static int debugCount = 0;
-			if (debugCount < 5) {
-				spdlog::info("RenderSystem: Entity UID assignment - Entity: {}, UID: {}, static_cast result: {}",
-					debugCount, entityUID, static_cast<uint32_t>(entityUID));
-				debugCount++;
-			}
-
-			// Assert entity ID validity for debugging picking
-			assert(renderData.objectID != 0 && "Entity UID should not be zero for picking to work");
-			assert(renderData.objectID < 16777215 && "Entity UID exceeds 24-bit limit for picking system"); // 24-bit max for RGB encoding
-
-			// Assert mesh validity for rendering
-			assert(meshResource->GetVertexArray() && "Mesh must have valid VAO for rendering");
-			assert(meshResource->GetVertexArray()->GetVAOHandle() != 0 && "Mesh VAO must be bound to valid OpenGL handle");
-			assert(!meshResource->vertices.empty() && "Mesh must have vertices for rendering");
-
-			m_SceneRenderer->SubmitRenderable(renderData);
-
-			// Submit AABB for debug visualization (using pre-calculated mesh AABB)
-			if (visible.m_IsVisible && meshResource->GetAABB().IsValid()) {
-				DebugAABB debugAABB(meshResource->GetAABB(), transform.m_Mtx, glm::vec3(1.0f, 0.0f, 0.0f));
-				frameData.debugAABBs.push_back(debugAABB);
-			}
-		}
+			}, meshResource);
 	}
 
 	for (auto light : sceneLights) {
@@ -341,6 +360,9 @@ void RenderSystem::Exit() {
 	// Clear all property blocks
 	m_PropertyBlocks.clear();
 
+	// Clear cached default material
+	m_DefaultMaterial.reset();
+
 	// Destructor will handle cleanup automatically
 }
 
@@ -368,11 +390,20 @@ void RenderSystem::OnMeshRendererUpdated(entt::registry& registry, entt::entity 
 	auto* meshComp = registry.try_get<MeshRendererComponent>(entity);
 	if (!meshComp) return;
 
+	// Automatically update hasAttachedMaterial based on material GUID validity
+	meshComp->hasAttachedMaterial = (meshComp->m_MaterialGuid.begin()->second.m_guid != rp::null_guid);
+
 	// Get entity UID
 	const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
 
 	// Sync to cached material
 	SyncMaterialFromComponent(entityUID, *meshComp);
+
+	// Force renderer to rebuild cached instance data
+	// This ensures mesh/material changes are reflected immediately in the viewport
+	if (m_SceneRenderer) {
+		m_SceneRenderer->ForceRebuildInstanceCache();
+	}
 }
 
 // ========== Material Instance API Implementation ==========
@@ -471,9 +502,14 @@ void RenderSystem::SetupDebugVisualization() {
 
 // ========== Resource Loading Helpers ==========
 
-std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent& meshComp) const {
+std::variant<std::shared_ptr<Mesh>, std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>*> RenderSystem::LoadMeshResource(const MeshRendererComponent& meshComp) const {
 	// Handle primitives via PrimitiveManager
 	if (meshComp.isPrimitive) {
+		static int primLoadLogCount = 0;
+		if (primLoadLogCount < 20) {
+			spdlog::warn("LoadMeshResource: isPrimitive=true, returning primitive mesh (primitiveType: {})", static_cast<int>(meshComp.m_PrimitiveType));
+			primLoadLogCount++;
+		}
 		switch (meshComp.m_PrimitiveType) {
 		case MeshRendererComponent::PrimitiveType::CUBE:
 			return m_PrimitiveManager->GetSharedCubeMesh();
@@ -503,10 +539,10 @@ std::shared_ptr<Mesh> RenderSystem::LoadMeshResource(const MeshRendererComponent
 	//	}
 	//}
 	Handle meshHandle{};
-	auto* ptr = registry.Get<std::vector<std::shared_ptr<Mesh>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
+	auto* ptr = registry.Get<std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
 
 	if (ptr && !ptr->empty()) {
-		return ptr->at(0);
+		return ptr;
 	}
 
 	// Not found - mesh was not loaded from file and not registered in-memory
@@ -527,38 +563,39 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 {
 	// Check for null GUID
 	if (materialGuid.m_guid == rp::null_guid || !hasAttachedMaterial) {
-		// No material attached - create default
-		auto pbrShader = m_ShaderLibrary->GetPBRShader();
-		if (!pbrShader) {
-			spdlog::error("RenderSystem: PBR shader not available for default material");
-			return nullptr;
+		// No material attached - use cached default material
+		// This ensures stable memory address across frames for proper batching
+		if (!m_DefaultMaterial) {
+			auto pbrShader = m_ShaderLibrary->GetPBRShader();
+			if (!pbrShader) {
+				spdlog::error("RenderSystem: PBR shader not available for default material");
+				return nullptr;
+			}
+			m_DefaultMaterial = std::make_shared<Material>(pbrShader, "DefaultMaterial_Shared");
+			spdlog::info("RenderSystem: Created cached default material (shared across all entities with no attached material)");
 		}
-		return std::make_shared<Material>(pbrShader, "DefaultMaterial_Entity_" + std::to_string(entityUID));
+		static int defaultMatLogCount = 0;
+		if (defaultMatLogCount < 20) {
+			spdlog::info("Entity {}: Using default material (null GUID or hasAttachedMaterial=false)", entityUID);
+			defaultMatLogCount++;
+		}
+		return m_DefaultMaterial;
 	}
 
 	// Check if already loaded OR load from disk via ResourceSystem::FileEntries
 	auto& registry = ResourceRegistry::Instance();
 	auto* matPtr = registry.Get<std::shared_ptr<Material>>(materialGuid.m_guid);
 
-	if (matPtr && *matPtr) {
-		spdlog::info("LoadMaterialResource: Successfully retrieved material '{}' (GUID: {}) from registry",
-		             (*matPtr)->GetName(), materialGuid.m_guid.to_hex().substr(0, 8));
+	if (matPtr)
+	{
 		return *matPtr;
 	}
 
 	// Not found - material was not loaded from file and not registered in-memory
-	// This means the editor created a material but didn't call RegisterEditorMaterial()
 	// Create default material as fallback
 	std::string guidStr = materialGuid.m_guid.to_hex();
 	spdlog::error("LoadMaterialResource: Material GUID {} NOT FOUND in registry after Get() call! (entity {})",
 	              guidStr.substr(0, 8), entityUID);
-
-	static std::unordered_set<std::string> warnedGuids;
-	if (warnedGuids.find(guidStr) == warnedGuids.end()) {
-		spdlog::warn("RenderSystem: Material GUID {} not found (no file or in-memory registration). Using default material. "
-			"If this is an editor-created material, call RenderSystem::RegisterEditorMaterial().", guidStr);
-		warnedGuids.insert(guidStr);
-	}
 
 	auto pbrShader = m_ShaderLibrary->GetPBRShader();
 	if (!pbrShader) {
@@ -568,9 +605,9 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
 }
 
-std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {
+std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(const char* data) {
 	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
-	std::vector<std::shared_ptr<Mesh>> meshes;
+	std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> meshes;
 	for (const auto& mesh : dat.meshes) {
 		std::vector<Vertex> vert{}; vert.resize(mesh.vertices.size());
 		for (size_t i = 0; i < mesh.vertices.size(); ++i) {
@@ -580,65 +617,36 @@ std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {
 			vert[i].Tangent = mesh.vertices[i].Tangent;
 			vert[i].Bitangent = mesh.vertices[i].Bitangent;
 		}
-		meshes.emplace_back(std::make_shared<Mesh>(vert, mesh.indices, std::vector<Texture>{}));
+		std::vector<unsigned int> indices{};
+		unsigned int vert_offset{};
+		for (const auto& matslot : mesh.materials) {
+			indices.resize(matslot.index_count);
+			//unsigned int min_vert{ std::numeric_limits<unsigned int>::max() };
+			//unsigned int max_vert{ std::numeric_limits<unsigned int>::min() };
+			for (unsigned int i{}; i < matslot.index_count; i++) {
+				//unsigned int vert_idx{ mesh.indices[i + matslot.index_begin] };
+				indices[i] = mesh.indices[i + matslot.index_begin];
+				//max_vert = std::max(max_vert, vert_idx);
+				//min_vert = std::min(min_vert, vert_idx);
+			}
+			//vert_offset = max_vert;
+			//std::vector<Vertex> mesh_vert{};
+			//mesh_vert.resize(max_vert - min_vert);
+			//mesh_vert.insert(mesh_vert.end(), vert.begin()+min_vert, vert.end()+max_vert);
+			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, std::make_shared<Mesh>(vert, indices, std::vector<Texture>{})));
+		}
 	}
-	return meshes; 
-}
+	return meshes;
+	}
+
+void UnloadMeshFromResource(std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>&) {}
+
+using Meshes = std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>;
 
 // ========== Resource Type Registrations ==========
-namespace {
-	struct MESHES_resource_registrar {
-		MESHES_resource_registrar() {
-			ResourceRegistry::Instance().RegisterType<std::vector<std::shared_ptr<Mesh>>>(
-				loadmesh, [](std::vector<std::shared_ptr<Mesh>>&) {}, "mesh");
-		}
-	}; static MESHES_resource_registrar g_MESHES_resource_registrar;
-}
+REGISTER_RESOURCE_TYPE_ALIASE(Meshes, mesh, LoadMeshFromResource, UnloadMeshFromResource)
 
-
-// Resource type registration for Mesh (inline lambda to avoid file-scope variables)
-REGISTER_RESOURCE_TYPE_SHARED_PTR(Mesh,
-	[](const char* data)->std::shared_ptr<Mesh> {
-		// Deserialize MeshResourceData from binary
-		MeshResourceData meshData = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(
-			reinterpret_cast<const std::byte*>(data)
-		);
-
-		// MeshResourceData has a vector of meshes (LODs)
-		// For now, take the first LOD (index 0)
-		if (meshData.meshes.empty()) {
-			spdlog::error("MeshResourceData has no mesh data (empty meshes vector)");
-			return nullptr;
-		}
-
-		const auto& firstMesh = meshData.meshes[0];
-
-		// Extract vertices and indices from the first mesh
-		std::vector<Vertex> vertices;
-		vertices.reserve(firstMesh.vertices.size());
-
-		for (const auto& v : firstMesh.vertices) {
-			Vertex vertex;
-			vertex.Position = v.Position;
-			vertex.Normal = v.Normal;
-			vertex.TexCoords = v.TexCoords;
-			vertex.Tangent = v.Tangent;
-			vertex.Bitangent = v.Bitangent;
-			vertices.push_back(vertex);
-		}
-
-		// Create Mesh instance (assuming constructor takes vertices and indices)
-		// Note: Textures are not loaded here yet - that would require additional GUID lookups
-		std::vector<Texture> textures{}; // Empty for now
-		auto mesh = std::make_shared<Mesh>(vertices, firstMesh.indices, textures);
-
-		spdlog::info("Successfully loaded mesh from resource pipeline ({} vertices, {} indices)",
-					vertices.size(), firstMesh.indices.size());
-		return mesh;
-	},
-	[](std::shared_ptr<Mesh>&) {});
-
-REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
+REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 	[](const char* data)->std::shared_ptr<Material> {
 		// Deserialize MaterialResourceData from binary
 		MaterialResourceData matData = rp::serialization::serializer<"bin">::deserialize<MaterialResourceData>(
@@ -738,6 +746,9 @@ REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 			}
 		}
 
+		// Apply blend mode (0 = Opaque, 1 = Transparent)
+		material->SetBlendMode(static_cast<BlendingMode>(matData.blend_mode));
+
 		spdlog::info("Successfully loaded material '{}' from resource pipeline ({} textures)",
 			matData.material_name, textureUnit);
 		return material;
@@ -748,7 +759,7 @@ REGISTER_RESOURCE_TYPE_SHARED_PTR(Material,
 	});
 
 // Register Texture resource type
-REGISTER_RESOURCE_TYPE_SHARED_PTR(Texture,
+REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Texture>, texture,
 	[](const char* data) -> std::shared_ptr<Texture> {
 		// Deserialize TextureResourceData from binary
 		TextureResourceData texData = rp::serialization::serializer<"bin">::deserialize<TextureResourceData>(

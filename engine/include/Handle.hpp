@@ -10,8 +10,8 @@ struct Handle
 	UUID<128> id;
 	uint32_t handle_name;
 	Handle() = default;
-	Handle(std::string const& name);
-	Handle(std::string const& name, UUID<128> const& uuid);
+	Handle(std::string name);
+	Handle(std::string name, UUID<128> const& uuid);
 };
 
 #endif // !HANDLE_HPP

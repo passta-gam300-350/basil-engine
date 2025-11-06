@@ -29,6 +29,8 @@ Technology is prohibited.
 #include <mono/metadata/mono-debug.h>
 
 #include "ScriptCompiler.hpp"
+#include "ABI/ABI.h"
+#include <mono/metadata/threads.h>
 
 namespace
 {
@@ -39,9 +41,9 @@ namespace
 }
 
 
-ScriptCompiler* MonoManager::m_Compiler = nullptr;
-MonoLoader* MonoManager::m_Loader = nullptr;
-std::vector<std::string> MonoManager::m_ScriptBins  {};
+std::unique_ptr<ScriptCompiler> MonoManager::m_Compiler = nullptr;
+std::unique_ptr<MonoLoader> MonoManager::m_Loader = nullptr;
+std::vector<std::string> MonoManager::m_ScriptBins{};
 bool MonoManager::m_Verbose = false;
 
 
@@ -54,30 +56,35 @@ void MonoManager::Initialize()
 	//mono_jit_parse_options(sizeof(options) / sizeof(char*), (char**)options);
 
 	//mono_debug_init(MONO_DEBUG_FORMAT_MONO);
-	m_Loader = new MonoLoader();
+	m_Loader = std::make_unique<MonoLoader>();
 	m_Loader->Initialize(assembly_dir, config_dir);
 
 
-	m_Compiler = new ScriptCompiler();
-	m_Compiler->Init(m_Loader, csc_path);
+	m_Compiler = std::make_unique<ScriptCompiler>();
+	m_Compiler->Init(m_Loader.get(), csc_path);
+	std::filesystem::path enginePath = R"(..\engine\managed\BasilEngine\bin\Release\net48\)";
+	std::string abs = std::filesystem::absolute(enginePath).string();
+
+	m_Compiler->AddReferences("engine", abs + "BasilEngine.dll");
 
 	m_Compiler->SetDebugCompile(true);
 	m_Compiler->SetMaxThread(4);
 	m_Compiler->SetMaxScriptThread(uint64_t(-1));
+	m_Compiler->SetVerboseCompile(true);
 
-	
+
 }
 
 void MonoManager::AddSearchDirectories(std::string const& path)
 {
 	std::filesystem::path file_path = path;
-	std::cout <<std::filesystem::absolute(file_path).string() << std::endl;
+	std::cout << std::filesystem::absolute(file_path).string() << std::endl;
 	if (std::filesystem::is_directory(file_path)) {
 		if (m_Verbose) {
 			std::cout << "Adding script bin directory: " << std::filesystem::absolute(file_path).string() << std::endl;
 
 		}
-		m_Compiler->AddSearchDirectories("DEFAULT",std::filesystem::absolute(file_path).string());
+		m_Compiler->AddSearchDirectories("DEFAULT", std::filesystem::absolute(file_path).string());
 	}
 
 }
@@ -117,11 +124,83 @@ void MonoManager::StartCompilation()
 
 ScriptCompiler* MonoManager::GetCompiler()
 {
-	return m_Compiler;
+	return m_Compiler.get();
 }
 MonoLoader* MonoManager::GetLoader()
 {
-	return m_Loader;
+	return m_Loader.get();
+}
+
+
+std::shared_ptr<CSKlass> MonoManager::GetKlass(ManagedAssembly* assembly, const char* klassName, const char* klassNamespace)
+{
+	return std::make_shared<CSKlass>(assembly->Image(), klassNamespace, klassName);
+}
+
+std::unique_ptr<CSKlassInstance> MonoManager::CreateInstance(MonoDomain* domain, CSKlass const& klass, void* args[])
+{
+	return std::make_unique<CSKlassInstance>(klass.CreateInstance(domain, args));
+}
+
+std::vector<std::shared_ptr<CSKlass>> MonoManager::LoadKlassesFromAssembly(ManagedAssembly* assembly)
+{
+	std::vector<std::shared_ptr<CSKlass>> klasses;
+
+	MonoImage* image = assembly->Image();
+	if (!image)
+	{
+		return klasses;
+	}
+	const MonoTableInfo* typeDefTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+	if (!typeDefTable)
+	{
+		return klasses;
+	}
+	int rows = mono_table_info_get_rows(typeDefTable);
+
+	for (int i = 0; i < rows; ++i)
+	{
+		uint32_t cols[MONO_TYPEDEF_SIZE];
+		mono_metadata_decode_row(typeDefTable, i, cols, MONO_TYPEDEF_SIZE);
+		uint32_t nameIdx = cols[MONO_TYPEDEF_NAME];
+		uint32_t namespaceIdx = cols[MONO_TYPEDEF_NAMESPACE];
+		const char* className = mono_metadata_string_heap(image, nameIdx);
+
+		if (std::string{ className } == "<Module>")
+			continue;
+
+		const char* namespaceName = mono_metadata_string_heap(image, namespaceIdx);
+		auto klass = std::make_shared<CSKlass>(image, namespaceName, className);
+		
+		klasses.push_back(klass);
+
+	}
+
+
+	return klasses;
+}
+
+
+void MonoManager::Attach() {
+
+	MonoDomain* rootDomain = mono_get_root_domain();
+	if (mono_domain_get() == rootDomain)
+		return;
+	mono_thread_attach(rootDomain);
+	mono_domain_set(rootDomain, false);
+}
+
+void MonoManager::Detach() {
+	MonoThread* thread = mono_thread_current();
+	mono_thread_detach(thread);
+}
+MonoManager::~MonoManager()
+{
+	m_Loader->Exit();
+	m_Compiler.reset();
+	m_Loader.reset();
+	
+
 }
 
 
