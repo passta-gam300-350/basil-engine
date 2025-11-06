@@ -11,6 +11,7 @@
 #include "Utility/Particle.h"
 
 #include <components/behaviour.hpp>
+#include "System/Audio.hpp"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -198,5 +199,19 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<behaviour>(
 		"Behaviour",
 		MemberRegistrationV<&behaviour::classesName, "classesName">
+	);
+
+	RegisterReflectionComponent<AudioComponent>(
+		"AudioComponent",
+		MemberRegistrationV<&AudioComponent::audioAssetGuid, "audioAssetGuid">,
+		MemberRegistrationV<&AudioComponent::volume, "volume">,
+		MemberRegistrationV<&AudioComponent::isLooping, "isLooping">,
+		MemberRegistrationV<&AudioComponent::is3D, "is3D">,
+		MemberRegistrationV<&AudioComponent::isStreaming, "isStreaming">,
+		MemberRegistrationV<&AudioComponent::playOnAwake, "playOnAwake">,
+		MemberRegistrationV<&AudioComponent::minDistance, "minDistance">,
+		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
+		MemberRegistrationV<&AudioComponent::position, "position">,
+		MemberRegistrationV<&AudioComponent::velocity, "velocity">
 	);
 }

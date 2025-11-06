@@ -10,8 +10,15 @@
 #include "Ecs/ecs.h"
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
+#include <rsc-core/guid.hpp>
+#include <rsc-core/registry.hpp>
+#include <native/audio.h>
 
-#define AUDIO_PATH "../test/examples/lib/resource/assets/audio/"
+// Forward declare audio resource type for ResourceRegistry
+// Runtime type is int (sound handle), native type is AudioResourceData (metadata)
+RegisterResourceTypeForward(int, "audio", audiodefine)
+
+#define AUDIO_PATH "assets/audio/"
 #define AUDIO_EXTENSION ".ogg"
 #define DOPPLERSCALE 1.0f
 #define DISTANCEFACTOR 1.0f
@@ -115,6 +122,7 @@ inline float VolumeTodB(float volume) noexcept { return 20.0f * log10f(volume); 
 
 class AudioSystem : public ecs::SystemBase
 {
+    friend struct AudioComponent; // Allow AudioComponent to access internal channel map
 public:
     static AudioSystem& GetInstance();
 
@@ -132,6 +140,7 @@ public:
     // Low-level access
     FMOD::System* GetSystem() const;
     FMOD::Sound* GetSound(int soundHandle) const;
+    FMOD::Channel* GetChannel(AudioComponent* component) const;
 
     // Component registration
     void RegisterComponent(AudioComponent* component);
@@ -158,6 +167,9 @@ private:
 	std::unordered_map<std::string, int> m_pathToHandle;
 	std::unordered_map<int, int> m_refCounts;
 
+    // Channel management (moved from AudioComponent)
+    std::unordered_map<AudioComponent*, FMOD::Channel*> m_componentChannels;
+
     // Listener state
     glm::vec3 m_listenerPosition;
     glm::vec3 m_listenerVelocity;
@@ -167,24 +179,36 @@ private:
     bool m_listenerMoved;
 };
 
-// 3D Audio Component - attach to game entities
+// 3D Audio Component - attach to game entities (pure data, no FMOD pointers)
 struct AudioComponent
 {
-    int soundHandle = -1;
-    FMOD::Sound* sound = nullptr;
-    FMOD::Channel* channel = nullptr;
+    // Asset reference (GUID-based system only)
+    rp::BasicIndexedGuid audioAssetGuid{ rp::null_guid, 0 };
 
+    // Internal handle (managed by AudioSystem)
+    int soundHandle = -1;
+
+    // 3D positioning
     glm::vec3 position{ 0.0f, 0.0f, 0.0f };
     glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
     float minDistance = MINDISTANCE;
     float maxDistance = MAXDISTANCE;
 
+    // Audio properties
     float volume = 1.0f;
-    bool isPlaying = false;
-    bool isPaused = false;
+    bool isLooping = false;
+    bool is3D = true;
+    bool isStreaming = false;
     bool playOnAwake = false;
 
+    // Playback state (updated by AudioSystem)
+    bool isPlaying = false;
+    bool isPaused = false;
     bool isInitialized = false;
+
+    // Playback info (updated each frame)
+    float playbackPosition = 0.0f; // in seconds
+    float duration = 0.0f; // in seconds
 
     // Constructor
     AudioComponent() = default;
@@ -192,8 +216,8 @@ struct AudioComponent
         : soundHandle(soundHandle), position(pos) {}
     ~AudioComponent();
 
-    bool Init(int handle);
-    bool Init(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
+    // Initialize component from loaded sound handle (refreshes metadata)
+    void RefreshSoundInfo();
 
     void UpdatePosition(const glm::vec3& newPosition);
     void UpdateVelocity(const glm::vec3& newVelocity);

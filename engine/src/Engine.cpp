@@ -275,20 +275,20 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	// [TEMP]
 	AudioSystem::GetInstance().Init();
-	for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
-		if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
-			std::string filename = entry.path().stem().string();
-			AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
-		}
-		else
-			spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
-	}
+	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
+	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
+	//		std::string filename = entry.path().stem().string();
+	//		AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
+	//	}
+	//	else
+	//		spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
+	//}*/
 	// Persist the ambient audio component so it doesn't get destroyed after init
-	ambient = std::make_unique<AudioComponent>();
+	/*ambient = std::make_unique<AudioComponent>();
 	if (ambient->Init("Singapore Koi Ambience_Loop.ogg", true, true, true)) {
 		ambient->Play();
 		ambient->SetVolume(6.0f);
-	}
+	}*/
 	// [ENDTEMP]
 
 

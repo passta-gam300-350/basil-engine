@@ -42,6 +42,7 @@ struct AssetManager {
 		
 	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);
 	std::string ResolveAssetName(rp::BasicIndexedGuid);
+	std::string FindDescriptorPath(std::string const& assetName);
 
 	void FileIndexingWorkerLoop();
 	void RescanDirectory();

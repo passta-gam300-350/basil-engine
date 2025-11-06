@@ -25,6 +25,7 @@ Technology is prohibited.
 #include <Engine.hpp>
 #include <Component/Transform.hpp>
 #include <Component/MaterialOverridesComponent.hpp>
+#include <System/Audio.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
@@ -46,6 +47,8 @@ Technology is prohibited.
 #include "Profiler/profiler.hpp"
 #include "Bindings/MANAGED_CONSOLE.hpp"
 #include "rsc-core/rp.hpp"
+#include <descriptors/audio.hpp>
+#include <serialization/serializer.h>
 
 #include "Physics/Physics_System.h"
 #include "Manager/ObjectManager.hpp"
@@ -224,6 +227,57 @@ void EditorMain::init()
 	glfwMaximizeWindow(window);
 
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+
+	// Register custom audio inspector with import settings
+	{
+		constexpr auto audio_type_hash = rp::utility::type_hash<AudioDescriptor>::value();
+		rp::ResourceTypeImporterRegistry::RegisterSerializer(audio_type_hash, "imgui",
+			[this](std::string const& str, std::byte* data) {
+				AudioDescriptor& desc = *reinterpret_cast<AudioDescriptor*>(data);
+
+				// Render descriptor_base
+				ImGui::SeparatorText("Base Properties");
+				ImGui::Text("GUID: %s", desc.base.m_guid.to_hex().c_str());
+				ImGui::Text("Name: %s", desc.base.m_name.c_str());
+				ImGui::Text("Source: %s", desc.base.m_source.c_str());
+
+				// Audio properties
+				ImGui::SeparatorText("Audio Import Settings");
+
+				ImGui::Checkbox("3D Sound", &desc.audio.is3D);
+				ImGui::SameLine();
+				ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("Enable spatial 3D audio positioning");
+				}
+
+				ImGui::Checkbox("Streaming", &desc.audio.isStreaming);
+				ImGui::SameLine();
+				ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("Stream from disk (recommended for music/long files)");
+				}
+
+				ImGui::Checkbox("Loop", &desc.audio.isLooping);
+				ImGui::SameLine();
+				ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("Loop playback continuously");
+				}
+
+				// Metadata (read-only)
+				ImGui::SeparatorText("Audio Metadata");
+				if (desc.audio.duration > 0.0f) {
+					ImGui::Text("Duration: %.2f seconds", desc.audio.duration);
+				}
+				if (desc.audio.sampleRate > 0) {
+					ImGui::Text("Sample Rate: %d Hz", desc.audio.sampleRate);
+				}
+				if (desc.audio.channels > 0) {
+					ImGui::Text("Channels: %d", desc.audio.channels);
+				}
+			});
+	}
 
 	// Register custom material inspector with texture dropdowns (captures 'this')
 	{
@@ -727,6 +781,13 @@ void EditorMain::Render_Components()
 		behaviour_component = behaviourIt->second;
 	}
 
+	ReflectionRegistry::TypeID audio_component{};
+	auto audioIt = internal_type_map.find(entt::type_index<AudioComponent>::value());
+	if (audioIt != internal_type_map.end())
+	{
+		audio_component = audioIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component) {
 			continue;
@@ -739,6 +800,27 @@ void EditorMain::Render_Components()
 				{
 					Render_Behaviour_Component(*behaviour_component_ptr);
 					ImGui::TreePop();
+				}
+			}
+			continue;
+		}
+
+		if (audio_component && type_id == audio_component)
+		{
+			if (AudioComponent* audio_ptr = reinterpret_cast<AudioComponent*>(uptr.get()))
+			{
+				if (ImGui::TreeNode("AudioComponent"))
+				{
+					bool is_dirty = Render_AudioComponent(*audio_ptr);
+					if (ImGui::Button("Delete Component")) {
+						ul.unlock();
+						engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+						ul.lock();
+					}
+					ImGui::TreePop();
+					if (is_dirty) {
+						engineService.m_cont->m_write_back_queue.push(type_id);
+					}
 				}
 			}
 			continue;
@@ -1170,6 +1252,159 @@ void EditorMain::Add_Script_Menu()
 
 		ImGui::EndPopup();
 	}
+}
+
+bool EditorMain::Render_AudioComponent(AudioComponent& component)
+{
+	bool is_dirty = false;
+
+	// Audio Asset Selection
+	ImGui::SeparatorText("Audio Asset");
+	std::vector<std::string> audioAssets = m_AssetManager->GetAssetTypeNames(component.audioAssetGuid.m_typeindex);
+	std::string currentAssetName = m_AssetManager->ResolveAssetName(component.audioAssetGuid);
+	audioAssets.emplace_back("(None)");
+
+	auto it = std::find(audioAssets.begin(), audioAssets.end(), currentAssetName);
+	if (it != audioAssets.end()) {
+		std::swap(*it, audioAssets.front());
+	}
+
+	int current_item = 0;
+	ImGui::Text("Audio Clip");
+	ImGui::SameLine(150);
+	ImGui::SetNextItemWidth(-1);
+	if (ImGui::Combo("##audioAsset", &current_item, [](void* data, int idx, const char** out_text) {
+		auto& vec = *static_cast<std::vector<std::string>*>(data);
+		if (idx < 0 || idx >= vec.size()) return false;
+		*out_text = vec[idx].c_str();
+		return true;
+	}, &audioAssets, static_cast<int>(audioAssets.size()))) {
+		if (current_item >= 0 && current_item < audioAssets.size() && audioAssets[current_item] != "(None)") {
+			component.audioAssetGuid = m_AssetManager->ResolveAssetGuid(audioAssets[current_item]);
+
+			// Load the audio into AudioSystem when GUID is selected
+			engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle,
+			                                      selectedAsset = audioAssets[current_item],
+			                                      assetManager = m_AssetManager.get()]() {
+				ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
+				AudioComponent& audio = entity.get<AudioComponent>();
+
+				// Find descriptor path by asset name
+				std::string descPath = assetManager->FindDescriptorPath(selectedAsset);
+
+				if (!descPath.empty()) {
+					// Load descriptor to get audio settings
+					AudioDescriptor audioDesc = rp::serialization::yaml_serializer::deserialize<AudioDescriptor>(descPath);
+
+					// Store settings from descriptor
+					audio.is3D = audioDesc.audio.is3D;
+					audio.isStreaming = audioDesc.audio.isStreaming;
+					audio.isLooping = audioDesc.audio.isLooping;
+
+					// Load sound via AudioSystem and get handle
+					audio.soundHandle = AudioSystem::GetInstance().LoadSound(
+						audioDesc.base.m_source,
+						audioDesc.audio.is3D,
+						audioDesc.audio.isStreaming,
+						audioDesc.audio.isLooping
+					);
+
+					// Refresh component metadata (duration, registration, etc.)
+					audio.RefreshSoundInfo();
+
+					spdlog::info("Loaded audio: {} (handle={}, 3D={}, Stream={}, Loop={})",
+					             audioDesc.base.m_source, audio.soundHandle,
+					             audioDesc.audio.is3D, audioDesc.audio.isStreaming, audioDesc.audio.isLooping);
+				}
+			});
+
+			is_dirty = true;
+		}
+	}
+
+	// Playback Controls (Edit-time preview)
+	ImGui::SeparatorText("Playback Controls");
+	ImGui::BeginDisabled(!component.isInitialized);
+
+	if (ImGui::Button("Play", ImVec2(60, 0))) {
+		engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+			ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
+			AudioComponent& audio = entity.get<AudioComponent>();
+			audio.Play();
+		});
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Pause", ImVec2(60, 0))) {
+		engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+			ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
+			AudioComponent& audio = entity.get<AudioComponent>();
+			if (audio.isPlaying && !audio.isPaused) {
+				audio.Pause();
+			} else if (audio.isPaused) {
+				audio.Resume();
+			}
+		});
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Stop", ImVec2(60, 0))) {
+		engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+			ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), static_cast<std::uint32_t>(entityHandle) };
+			AudioComponent& audio = entity.get<AudioComponent>();
+			audio.Stop();
+		});
+	}
+	ImGui::EndDisabled();
+
+	// Status Display
+	ImGui::Text("Status: %s", component.isPlaying ? (component.isPaused ? "Paused" : "Playing") : "Stopped");
+	if (component.duration > 0.0f) {
+		ImGui::Text("Time: %.2f / %.2f s", component.playbackPosition, component.duration);
+		float progress = component.playbackPosition / component.duration;
+		ImGui::ProgressBar(progress, ImVec2(-1, 0));
+	}
+
+	// Basic Properties
+	ImGui::SeparatorText("Properties");
+	if (ImGui::SliderFloat("Volume", &component.volume, 0.0f, 1.0f)) {
+		is_dirty = true;
+	}
+	if (ImGui::Checkbox("Play On Awake", &component.playOnAwake)) {
+		is_dirty = true;
+	}
+
+	// 3D Audio Properties
+	if (ImGui::CollapsingHeader("3D Audio", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::Checkbox("3D Sound", &component.is3D)) {
+			is_dirty = true;
+		}
+
+		ImGui::BeginDisabled(!component.is3D);
+		if (ImGui::DragFloat("Min Distance", &component.minDistance, 0.1f, 0.1f, component.maxDistance)) {
+			is_dirty = true;
+		}
+		if (ImGui::DragFloat("Max Distance", &component.maxDistance, 1.0f, component.minDistance, 10000.0f)) {
+			is_dirty = true;
+		}
+
+		// Position (read-only, synced from Transform)
+		ImGui::Text("Position (auto-synced)");
+		ImGui::BeginDisabled();
+		ImGui::DragFloat3("##position", &component.position.x);
+		ImGui::EndDisabled();
+		ImGui::EndDisabled();
+	}
+
+	// Advanced Properties
+	if (ImGui::CollapsingHeader("Advanced")) {
+		if (ImGui::Checkbox("Loop", &component.isLooping)) {
+			is_dirty = true;
+		}
+		if (ImGui::Checkbox("Stream", &component.isStreaming)) {
+			is_dirty = true;
+		}
+	}
+
+	return is_dirty;
 }
 
 

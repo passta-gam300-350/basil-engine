@@ -4,5 +4,6 @@
 #include "descriptors/mesh.hpp"
 #include "descriptors/material.hpp"
 #include "descriptors/texture.hpp"
+#include "descriptors/audio.hpp"
 
 #endif

@@ -1,4 +1,7 @@
 #include "System/Audio.hpp"
+#include "Component/Transform.hpp"
+#include <rsc-core/serialization/serializer.hpp>
+#include "Manager/ResourceSystem.hpp"
 //
 //FMOD::System* p_system;
 //FMOD::ChannelGroup* master_group;
@@ -318,6 +321,7 @@ void AudioSystem::Update(ecs::world& world) {
     if (!m_initialized || !m_system)
         return;
 
+    // Update listener velocity and position
     if (m_listenerMoved) {
         constexpr float deltaTime = 1.0f / 60.0f;
         m_listenerVelocity.x = (m_listenerPosition.x - m_listenerLastPosition.x) / deltaTime;
@@ -334,6 +338,19 @@ void AudioSystem::Update(ecs::world& world) {
 
     FMOD_ErrorCheck(m_system->set3DListenerAttributes(0, &pos, &vel, &forward, &up));
 
+    // Auto-sync AudioComponent positions with TransformComponent
+    auto audioEntities = world.filter_entities<AudioComponent, TransformComponent>();
+    for (auto entity : audioEntities) {
+        auto [audio, transform] = entity.get<AudioComponent, TransformComponent>();
+
+        // Update AudioComponent position from Transform
+        glm::vec3 worldPos = transform.m_Translation;
+        if (audio.position != worldPos) {
+            audio.UpdatePosition(worldPos);
+        }
+    }
+
+    // Update all audio components
     for (auto* component : m_components)
         if (component)
             component->InternalUpdate();
@@ -344,6 +361,14 @@ void AudioSystem::Update(ecs::world& world) {
 void AudioSystem::Exit() {
     spdlog::info("Audio: Exiting");
     if (!m_initialized)  return;
+
+    spdlog::info("Audio: Stopping all channels");
+    for (auto& pair : m_componentChannels) {
+        if (pair.second) {
+            pair.second->stop();
+        }
+    }
+    m_componentChannels.clear();
 
     spdlog::info("Audio: Unregistering audio components");
     m_components.clear();
@@ -356,7 +381,7 @@ void AudioSystem::Exit() {
 
     spdlog::info("Audio: Releasing system");
     if (m_system) {
-        
+
         FMOD_ErrorCheck(m_system->close());
         FMOD_ErrorCheck(m_system->release());
         m_system = nullptr;
@@ -448,6 +473,16 @@ void AudioSystem::RegisterComponent(AudioComponent* component) {
 
 void AudioSystem::UnregisterComponent(AudioComponent* component) {
     if (component) {
+        // Clean up channel if active
+        auto channelIt = m_componentChannels.find(component);
+        if (channelIt != m_componentChannels.end()) {
+            if (channelIt->second) {
+                channelIt->second->stop();
+            }
+            m_componentChannels.erase(channelIt);
+        }
+
+        // Remove from component list
         auto it = std::find(m_components.begin(), m_components.end(), component);
         if (it != m_components.end())
             m_components.erase(it);
@@ -455,6 +490,11 @@ void AudioSystem::UnregisterComponent(AudioComponent* component) {
 }
 
 bool AudioSystem::IsInitialized() const { return m_initialized; }
+
+FMOD::Channel* AudioSystem::GetChannel(AudioComponent* component) const {
+    auto it = m_componentChannels.find(component);
+    return (it != m_componentChannels.end()) ? it->second : nullptr;
+}
 
 // ============================================================================
 // AudioComponent Implementation
@@ -465,15 +505,19 @@ AudioComponent::~AudioComponent() {
     AudioSystem::GetInstance().UnregisterComponent(this);
 }
 
-bool AudioComponent::Init(int handle) {
-    if (isInitialized) return true;
+void AudioComponent::RefreshSoundInfo() {
+    if (soundHandle < 0 || isInitialized) return;
 
-    soundHandle = handle;
-
-    sound = AudioSystem::GetInstance().GetSound(handle);
+    FMOD::Sound* sound = AudioSystem::GetInstance().GetSound(soundHandle);
     if (!sound) {
-        spdlog::warn("AudioComponent: Invalid sound handle {}", handle);
-        return false;
+        spdlog::warn("AudioComponent: Invalid sound handle {}", soundHandle);
+        return;
+    }
+
+    // Get duration info
+    unsigned int lengthMs = 0;
+    if (sound->getLength(&lengthMs, FMOD_TIMEUNIT_MS) == FMOD_OK) {
+        duration = lengthMs / 1000.0f;
     }
 
     isInitialized = true;
@@ -481,22 +525,11 @@ bool AudioComponent::Init(int handle) {
 
     if (playOnAwake)
         Play();
-
-    return true;
-}
-
-bool AudioComponent::Init(const std::string& filePath, bool is3D, bool isStream, bool isLooping) {
-    int handle = AudioSystem::GetInstance().LoadSound(AUDIO_PATH + filePath, is3D, isStream, isLooping);
-    spdlog::info("AudioComponent: Initializing sound from {}", AUDIO_PATH + filePath);
-    if (handle == -1){
-        spdlog::warn("AudioComponent: Invalid sound handle {}", handle);
-        return false;
-    }
-
-    return Init(handle);
 }
 
 void AudioComponent::UpdatePosition(const glm::vec3& newPosition) {
+    position = newPosition;
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
         const FMOD_VECTOR pos = ToFMOD(newPosition);
         const FMOD_VECTOR vel = ToFMOD(velocity);
@@ -505,6 +538,8 @@ void AudioComponent::UpdatePosition(const glm::vec3& newPosition) {
 }
 
 void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
+    velocity = newVelocity;
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
         const FMOD_VECTOR pos = ToFMOD(position);
         const FMOD_VECTOR vel = ToFMOD(newVelocity);
@@ -513,35 +548,51 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
 }
 
 bool AudioComponent::Play() {
-    if (!isInitialized || !sound) {
+    if (!isInitialized) {
         spdlog::warn("AudioComponent: Cannot play, component not initialized");
         return false;
     }
 
-    FMOD::System* system = AudioSystem::GetInstance().GetSystem();
-    if (!system)
+    AudioSystem& audioSys = AudioSystem::GetInstance();
+    FMOD::System* system = audioSys.GetSystem();
+    FMOD::Sound* sound = audioSys.GetSound(soundHandle);
+
+    if (!system || !sound)
         return false;
 
-    if (channel) {
-        FMOD_ErrorCheck(channel->stop());
-        channel = nullptr;
+    // Stop existing playback if any
+    FMOD::Channel* existingChannel = audioSys.GetChannel(this);
+    if (existingChannel) {
+        FMOD_ErrorCheck(existingChannel->stop());
     }
 
-    FMOD_ErrorCheck(system->playSound(sound, 0, true, &channel));
-    const FMOD_VECTOR pos = ToFMOD(position);
-    const FMOD_VECTOR vel = ToFMOD(velocity);
-    FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
-    FMOD_ErrorCheck(channel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
-    FMOD_ErrorCheck(channel->setVolume(volume));
-    FMOD_ErrorCheck(channel->setPaused(false));
+    // Start new playback
+    FMOD::Channel* newChannel = nullptr;
+    FMOD_ErrorCheck(system->playSound(sound, 0, true, &newChannel));
 
-    isPlaying = true;
-    isPaused = false;
+    if (newChannel) {
+        const FMOD_VECTOR pos = ToFMOD(position);
+        const FMOD_VECTOR vel = ToFMOD(velocity);
+        FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
+        FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
+        FMOD_ErrorCheck(newChannel->setVolume(volume));
+        FMOD_ErrorCheck(newChannel->setPaused(false));
 
-    return true;
+        // Store channel in AudioSystem
+        audioSys.m_componentChannels[this] = newChannel;
+
+        isPlaying = true;
+        isPaused = false;
+        playbackPosition = 0.0f;
+
+        return true;
+    }
+
+    return false;
 }
 
 bool AudioComponent::Pause() {
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (!channel)
         return false;
 
@@ -554,6 +605,7 @@ bool AudioComponent::Pause() {
 }
 
 bool AudioComponent::Resume() {
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (!channel)
         return false;
 
@@ -567,13 +619,16 @@ bool AudioComponent::Resume() {
 }
 
 bool AudioComponent::Stop() {
+    AudioSystem& audioSys = AudioSystem::GetInstance();
+    FMOD::Channel* channel = audioSys.GetChannel(this);
     if (!channel)
         return false;
 
     if (channel->stop() == FMOD_OK) {
-        channel = nullptr;
+        audioSys.m_componentChannels.erase(this);
         isPlaying = false;
         isPaused = false;
+        playbackPosition = 0.0f;
         return true;
     }
 
@@ -581,21 +636,24 @@ bool AudioComponent::Stop() {
 }
 
 void AudioComponent::SetVolume(float vol) {
+    volume = vol;
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
-        volume = vol;
-        FMOD_ErrorCheck(channel->setVolume(dbToVolume(vol)));
+        FMOD_ErrorCheck(channel->setVolume(vol));
     }
 }
 
 void AudioComponent::SetDistanceRange(float minDist, float maxDist) {
+    minDistance = minDist;
+    maxDistance = maxDist;
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
-        minDistance = minDist;
-		maxDistance = maxDist;
         FMOD_ErrorCheck(channel->set3DMinMaxDistance(minDist * DISTANCEFACTOR, maxDist * DISTANCEFACTOR));
     }
 }
 
 bool AudioComponent::IsPlaying() const {
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(const_cast<AudioComponent*>(this));
     if (!channel)
         return false;
 
@@ -608,20 +666,69 @@ bool AudioComponent::IsPlaying() const {
 }
 
 void AudioComponent::InternalUpdate() {
+    AudioSystem& audioSys = AudioSystem::GetInstance();
+    FMOD::Channel* channel = audioSys.GetChannel(this);
     if (!channel)
         return;
 
+    // Update 3D attributes
     const FMOD_VECTOR pos = ToFMOD(position);
     const FMOD_VECTOR vel = ToFMOD(velocity);
     FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
 
+    // Check playing state
     bool playing = false;
     FMOD_ErrorCheck(channel->isPlaying(&playing));
     isPlaying = playing;
 
+    // Update playback position
+    if (playing) {
+        unsigned int positionMs = 0;
+        if (channel->getPosition(&positionMs, FMOD_TIMEUNIT_MS) == FMOD_OK) {
+            playbackPosition = positionMs / 1000.0f;
+        }
+    }
+
+    // Clean up finished channel
     if (!playing) {
-        channel = nullptr;
+        audioSys.m_componentChannels.erase(this);
         isPlaying = false;
         isPaused = false;
+        playbackPosition = 0.0f;
     }
 }
+
+// ============================================================================
+// Resource Registry Integration
+// ============================================================================
+
+// Register audio resource type with the ResourceRegistry
+// This allows audio assets (.audio files) to be loaded into the engine
+REGISTER_RESOURCE_TYPE_ALIASE(int, audio,
+    [](const char* data) -> int {
+        // Deserialize AudioResourceData from binary
+        AudioResourceData audioData = rp::serialization::serializer<"bin">::deserialize<AudioResourceData>(
+            reinterpret_cast<const std::byte*>(data)
+        );
+
+        // Load the actual FMOD sound via AudioSystem
+        AudioSystem& audioSys = AudioSystem::GetInstance();
+        int handle = audioSys.LoadSound(audioData.sourcePath, audioData.is3D,
+                                        audioData.isStreaming, audioData.isLooping);
+
+        if (handle >= 0) {
+            spdlog::info("Loaded audio resource: {} (handle: {}, 3D: {}, streaming: {}, loop: {})",
+                audioData.sourcePath, handle, audioData.is3D, audioData.isStreaming, audioData.isLooping);
+        } else {
+            spdlog::error("Failed to load audio resource: {}", audioData.sourcePath);
+        }
+
+        return handle;
+    },
+    [](int& handle) {
+        // Cleanup: unload the FMOD sound
+        if (handle >= 0) {
+            AudioSystem& audioSys = AudioSystem::GetInstance();
+            audioSys.UnloadSound(handle);
+        }
+    })
