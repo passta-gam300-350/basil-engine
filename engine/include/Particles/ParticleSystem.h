@@ -19,6 +19,11 @@ public:
 	void FixedUpdate(ecs::world& world) override;
 	void Exit() override;
 	void setRenderer(SceneRenderer* renderer);
+	static ParticleSystem& GetInstance()
+	{
+		static ParticleSystem instance;
+		return instance;
+	}
 private:
 	SceneRenderer* m_SceneRenderer = nullptr;
 };

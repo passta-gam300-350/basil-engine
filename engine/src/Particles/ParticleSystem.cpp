@@ -9,7 +9,7 @@
 
 void ParticleSystem::Init()
 {
-
+	
 }
 
 void ParticleSystem::Update(ecs::world& world, float dt)
@@ -19,9 +19,9 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 		return;
 	}
 	auto& registry = world.impl.get_registry();
-	auto view = registry.view<ParticleComponent, TransformComponent>();
-	auto view2 = world.filter_entities<ParticleComponent, TransformComponent>();
-	for (auto& eachEntity : view2)
+	//auto view = registry.view<ParticleComponent, TransformComponent>();
+	auto view = world.filter_entities<ParticleComponent, TransformComponent>();
+	for (auto& eachEntity : view)
 	{
 		ParticleComponent& particleComponent = eachEntity.get<ParticleComponent>();
 		TransformComponent& transformComponent = eachEntity.get<TransformComponent>();
