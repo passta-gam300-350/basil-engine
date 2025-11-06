@@ -25,6 +25,12 @@
  *                        // - Camera at (0, 5, 10) looking at origin
  *                        // - Use this to compare with editor output
  *
+ *   SetupTransparencyDemo();  // Transparency test - LEARNOPENGL STYLE
+ *                             // - Multiple transparent windows at different depths
+ *                             // - Tests batch-level sorting for transparency
+ *                             // - Opaque cubes for reference
+ *                             // - Move camera to test sorting from different angles
+ *
  * Each demo function sets up:
  *   - Scene objects
  *   - Lighting
@@ -48,6 +54,7 @@
 #include <Resources/Mesh.h>
 #include <Resources/Model.h>
 #include <Resources/PrimitiveGenerator.h>
+#include <Resources/Texture.h>
 #include <Utility/Light.h>
 #include <Utility/AABB.h>
 #include <Pipeline/DebugRenderPass.h>
@@ -157,8 +164,9 @@ bool GraphicsTestDriver::Initialize()
     // Uncomment ONE demo to run:
 
     //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
-    SetupTinboxDemo();     // Tinbox grid - outline/PBR test
+    //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
     
     
 
@@ -806,6 +814,146 @@ void GraphicsTestDriver::SetupEditorDemo()
     spdlog::info("Editor demo setup complete: {} cubes, {} lights",
                  m_SceneObjects.size(), m_SceneLights.size());
     spdlog::info("NOTE: This demo matches the editor's default scene (CreateDemoScene)");
+}
+
+// ===== DEMO 4: TRANSPARENCY TEST - LIKE LEARNOPENGL =====
+void GraphicsTestDriver::SetupTransparencyDemo()
+{
+    m_ActiveDemo = DemoType::Tinbox;  // Reuse Tinbox enum
+    spdlog::info("=== SETTING UP TRANSPARENCY DEMO (Like LearnOpenGL) ===");
+
+    // 1. CREATE CAMERA
+    // Camera looks down -Z axis (into screen) in OpenGL right-handed coordinates
+    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
+    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    m_Camera->SetPosition(glm::vec3(0.0f, 0.0f, 20.0f));  // Further back to see the 1000 window grid
+    m_Camera->SetRotation(glm::vec3(0.0f, -90.0f, 0.0f));  // Yaw=-90° = looking down -Z axis
+    spdlog::info("Camera at (0,0,20) looking at 1000-window grid");
+
+    // 2. CREATE OPAQUE REFERENCE CUBES (for depth reference in the grid)
+    auto cubeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateCube(2.0f));
+
+    // Back cube - Red (far behind the grid)
+    RenderableData backCube;
+    backCube.mesh = cubeMesh;
+    backCube.material = m_ResourceManager->GetMaterial("RedMaterial");
+    backCube.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -30.0f));
+    backCube.visible = true;
+    backCube.objectID = 2;
+    backCube.modelInstanceID = 2;
+    m_SceneObjects.push_back(backCube);
+
+    // Front cube - Blue (in front of the grid, closer to camera)
+    RenderableData frontCube;
+    frontCube.mesh = cubeMesh;
+    frontCube.material = m_ResourceManager->GetMaterial("BlueMaterial");
+    frontCube.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 10.0f));
+    frontCube.visible = true;
+    frontCube.objectID = 3;
+    frontCube.modelInstanceID = 3;
+    m_SceneObjects.push_back(frontCube);
+
+    // 4. LOAD WINDOW TEXTURE
+    unsigned int windowTexture = TextureLoader::TextureFromFile(
+        "window.png",
+        "assets/models/window",
+        false
+    );
+
+    if (windowTexture == 0) {
+        spdlog::error("Failed to load window.png texture!");
+        return;
+    }
+    spdlog::info("Window texture loaded successfully (ID: {})", windowTexture);
+
+    // 5. CREATE TRANSPARENT WINDOW MATERIAL
+    auto shader = m_ResourceManager->GetShader("main_pbr");
+    if (!shader) {
+        spdlog::error("Failed to get main_pbr shader!");
+        return;
+    }
+
+    auto transparentMaterial = std::make_shared<Material>(shader, "TransparentWindowMaterial");
+    transparentMaterial->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));  // White (texture color)
+    transparentMaterial->SetMetallicValue(0.0f);
+    transparentMaterial->SetRoughnessValue(0.5f);
+    transparentMaterial->SetBlendMode(BlendingMode::Transparent);
+    m_ResourceManager->AddMaterial("TransparentWindowMaterial", transparentMaterial);
+    spdlog::info("Transparent window material created");
+
+    // 6. CREATE WINDOW QUAD MESHES WITH TEXTURE
+    auto windowMesh = std::make_shared<Mesh>(
+        PrimitiveGenerator::CreatePlane(1.0f, 1.0f, 1, 1)
+    );
+
+    // Add texture to mesh
+    Texture windowTex;
+    windowTex.id = windowTexture;
+    windowTex.type = "texture_diffuse";
+    windowTex.path = "assets/models/window/window.png";
+    windowMesh->textures.push_back(windowTex);
+
+    // 7. CREATE 1000 TRANSPARENT WINDOWS - Performance stress test
+    // Planes are created in XZ plane (horizontal) with normal pointing +Y
+    // We need to rotate them 90° around X axis to face the camera (-Z direction)
+    // Windows distributed in a grid pattern across X, Y, and Z to test batch sorting
+    std::vector<glm::vec3> windowPositions;
+    windowPositions.reserve(1000);
+
+    // Generate 1000 windows in a 10x10x10 grid
+    const int gridSize = 10;
+    const float spacing = 2.0f;  // 2 units between windows
+    const float startOffset = -(gridSize - 1) * spacing * 0.5f;
+
+    for (int x = 0; x < gridSize; ++x) {
+        for (int y = 0; y < gridSize; ++y) {
+            for (int z = 0; z < gridSize; ++z) {
+                windowPositions.push_back(glm::vec3(
+                    startOffset + x * spacing,
+                    startOffset + y * spacing,
+                    startOffset + z * spacing - 10.0f  // Shift back to be in front of camera
+                ));
+            }
+        }
+    }
+
+    // Rotation to make plane face camera: 90° around X-axis
+    // This rotates from XZ plane (horizontal) to XY plane (vertical, facing -Z)
+    glm::mat4 faceCamera = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    uint32_t windowObjectID = 100;
+    for (const auto& pos : windowPositions) {
+        RenderableData window;
+        window.mesh = windowMesh;
+        window.material = transparentMaterial;
+
+        // Transform = Translate * Rotate (rotate first, then translate)
+        window.transform = glm::translate(glm::mat4(1.0f), pos) * faceCamera;
+
+        window.visible = true;
+        window.objectID = windowObjectID++;
+        window.modelInstanceID = windowObjectID;  // Each window is its own instance
+        m_SceneObjects.push_back(window);
+    }
+    spdlog::info("Created {} transparent windows in 10x10x10 grid (performance test)", windowPositions.size());
+
+    // 8. CREATE LIGHTING
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(-0.3f, -0.8f, -0.2f),
+        glm::vec3(1.0f, 0.95f, 0.9f),
+        2.5f,
+        0.0f
+    ));
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.3f));  // Higher ambient for visibility
+    spdlog::info("Directional light created");
+
+    // 9. DISABLE SKYBOX
+    m_SceneRenderer->EnableSkybox(false);
+
+    spdlog::info("Transparency demo setup complete: {} objects, {} lights",
+                 m_SceneObjects.size(), m_SceneLights.size());
+    spdlog::info("NOTE: This demo tests batch-level sorting for transparent objects");
+    spdlog::info("NOTE: Windows should blend correctly when viewed from different angles");
 }
 
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,

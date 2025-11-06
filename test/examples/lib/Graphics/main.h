@@ -78,6 +78,7 @@ private:
     void SetupSponzaDemo();      // Sponza cathedral - lighting test with HDR
     void SetupTinboxDemo();      // Tinbox grid - outline and PBR testing
     void SetupEditorDemo();      // 3x3 cube grid - matches editor's default scene
+    void SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
 
     // Resource loading
     bool LoadTestResources();
