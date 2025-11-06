@@ -1,0 +1,6 @@
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.csproj.AssemblyReference.cache
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.GeneratedMSBuildEditorConfig.editorconfig
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.AssemblyInfoInputs.cache
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.AssemblyInfo.cs
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.csproj.CoreCompileInputs.cache
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.sourcelink.json
