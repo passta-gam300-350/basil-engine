@@ -274,7 +274,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	BindingSystem::RegisterBindings();
 
 	PhysicsSystem::Instance().Init();
-
+	PhysicsSystem::Instance().SetupObservers();
 	Scheduler::CompileJobSchedule();
 
 	// [TEMP]

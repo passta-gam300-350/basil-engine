@@ -1353,11 +1353,12 @@ void EditorMain::Render_StartStop()
 			
 			SaveScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([&]() {
-				//PlayWorldSnapshot.copy(Engine::GetWorld());
-				Engine::GetWorld().SaveYAML("tmp.yaml");
 				PhysicsSystem::Instance().isActive = true;
+				PhysicsSystem::Instance().DisableObservers();
 				spdlog::info("Physics Active");
+				
 				});
+			
 			CameraSystem::SetActiveCamera(CameraSystem::CameraType::MAIN_CAMERA_ENTITY);
 		}
 		else // Stops Game
@@ -1365,8 +1366,11 @@ void EditorMain::Render_StartStop()
 			LoadScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([]() {
 				PhysicsSystem::Instance().isActive = false;
+				PhysicsSystem::Instance().EnableObservers();
+				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
 				spdlog::info("Physics Disable");
 				});
+			
 			CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
 			isPaused = false; // Resets paused game as we are stopping
 		}
@@ -2976,8 +2980,8 @@ void EditorMain::CreatePhysicsDemoScene()
 		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
-		RigidBody->motionType = JPH::EMotionType::Dynamic;
-		RigidBody->bodyID = sphere_id.GetIndexAndSequenceNumber();
+		RigidBody->motionType = RigidBodyComponent::MotionType::Dynamic;
+		//RigidBody->bodyID = sphere_id.GetIndexAndSequenceNumber();
 	}); // End of ExecuteOnEngineThread lambda
 }
 
@@ -3057,14 +3061,16 @@ void EditorMain::CreatePhysicsCube()
 		auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 		// Creating Cube
 
+		BoxCollider BColl;
+		//world.add_component_to_entity<BoxCollider>(entity2, BColl);
 		JPH::BoxShapeSettings box_shape_settings(JPH::Vec3(0.5f, 0.5f, 0.5f));
 		box_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
 		JPH::ShapeSettings::ShapeResult Box_shape_result = box_shape_settings.Create();
 		JPH::ShapeRefC Box_shape = Box_shape_result.Get();
 		JPH::BodyCreationSettings sphere_settings(Box_shape, PhysicsUtils::ToJolt(CPos), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		sphere_id = PhysicsSystem::Instance().GetBodyInterface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
-		RigidBody->motionType = JPH::EMotionType::Dynamic;
-		RigidBody->bodyID = sphere_id.GetIndexAndSequenceNumber();
+		RigidBody->motionType = RigidBodyComponent::MotionType::Dynamic;
+		//RigidBody->bodyID = sphere_id.GetIndexAndSequenceNumber();
 	}); // End of ExecuteOnEngineThread lambda
 }
 

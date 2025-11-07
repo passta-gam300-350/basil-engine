@@ -24,18 +24,32 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 //#include <Jolt/Math/Quat.h>
 
 struct RigidBodyComponent {
-    uint32_t bodyID;  // Jolt's body identifier
-    JPH::EMotionType motionType;  // Static, Dynamic, or Kinematic
+    // Motion type (serializable enum instead of JPH::EMotionType)
+    enum class MotionType : uint8_t {
+        Static,      // Doesn't move (walls, floors)
+        Dynamic,     // Fully simulated by physics
+        Kinematic    // Controlled by animation/code
+    };
+    
+    // Convert to Jolt motion type
+    JPH::EMotionType ToJoltMotionType() const {
+        switch (motionType) {
+        case MotionType::Static: return JPH::EMotionType::Static;
+        case MotionType::Kinematic: return JPH::EMotionType::Kinematic;
+        case MotionType::Dynamic: return JPH::EMotionType::Dynamic;
+        default: return JPH::EMotionType::Dynamic;
+        }
+    }
 
-    // Cache commonly accessed data to avoid Jolt queries
-    JPH::Vec3 velocity;
-    JPH::Vec3 angularVelocity;
-    float mass;
+    MotionType ToPhysicsMotionType(JPH::EMotionType mType) {
+        switch (mType) {
+        case JPH::EMotionType::Static: return MotionType::Static;
+        case JPH::EMotionType::Kinematic: return MotionType::Kinematic;
+        case JPH::EMotionType::Dynamic: return MotionType::Dynamic;
+        default: return MotionType::Dynamic;
+        }
+    }
 
-    bool isActive = true;
-};
-
-struct Rigidbody {
     // Collision detection mode
     enum class CollisionDetectionMode {
         Discrete,              // Fast, can miss collisions
@@ -56,7 +70,8 @@ struct Rigidbody {
     //----------------------------//
     // Variables
     //----------------------------//
-    JPH::BodyID bodyID;            // Variables for keeping track of which Jolt Body Id is associated with this rigidbody
+    ecs::entity m_entity;            // Set when body is created, used for checking which BodyId is associated with this entity in the physics system internal map
+    MotionType motionType = MotionType::Dynamic;
 
     // Motion properties
     float mass = 1.0f;              // Kilograms
@@ -79,7 +94,7 @@ struct Rigidbody {
     bool freezeRotationZ = false;
 
     // Cached physics state
-    glm::vec3 velocity = glm::vec3(0.0f);
+    glm::vec3 linearVelocity = glm::vec3(0.0f);
     glm::vec3 angularVelocity = glm::vec3(0.0f);
 
     // Internal flags
@@ -89,19 +104,33 @@ struct Rigidbody {
     // Center of mass
     glm::vec3 centerOfMass = glm::vec3(0.0f);
 
+    // Helper to determine if this should be static
+    bool IsStatic() const {
+        return motionType == MotionType::Static;
+    }
+
     // Physics methods (to be called by scripts)
     void AddForce(const glm::vec3& force); // For Translation Force: Continuous effects (wind, magnets, thrust)
     void AddImpulse(const glm::vec3& force); // Impulse: Instant events (explosions, jumps, hits)
     void AddTorque(const glm::vec3& torque); // For Rotation, Force: Continuous effects (Gradually spin up a fan), 
     void AddAngularImpulse(const glm::vec3& Impulse); // Impulse: Instant events(Instantly spin a roulette wheel)
+    void SetAngularVelocity(const glm::vec3& angVel); // Changes angular velocity to new value
     void AddLinearVelocity(const glm::vec3& velocity); // Adds velocity to current velocity
     void SetLinearVelocity(const glm::vec3& newvel); // Changes velocity to new value
-    void SetAngularVelocity(const glm::vec3& angVel); // Changes angular velocity to new value
+    
+    void SetLinearAndAngularVelocity(glm::vec3& inLinearVelocity, glm::vec3& inAngularVelocity);
+    void GetLinearAndAngularVelocity(glm::vec3& outLinearVelocity, glm::vec3& outAngularVelocity);
+    void AddLinearAndAngularVelocity(glm::vec3& inLinearVelocity, glm::vec3& inAngularVelocity);                                                  // 
+    void SetPositionRotationAndVelocity(glm::vec3& inPosition, glm::quat& inRotation, glm::vec3& inLinearVelocity, glm::vec3& inAngularVelocity); // Sets Position, Rotation and Velocity
+    
     void MoveKinematic(const glm::vec3& targetPos, const glm::vec3& targetRotations, const float duration); // Moves the body to given position with a rotation given a duration
 
     // Acessor
-    glm::vec3 GetVelocity() const noexcept { return velocity; }
-    glm::vec3 GetAngularVelocity() const noexcept { return angularVelocity; }
+    const glm::vec3& GetLinearVelocity() const noexcept { return linearVelocity; }
+    glm::vec3& GetLinearVelocity() noexcept { return linearVelocity; };
+
+    const glm::vec3& GetAngularVelocity() const noexcept { return angularVelocity; }
+    glm::vec3& GetAngularVelocity() noexcept { return angularVelocity; };
 };
 
 // ============================================================================
@@ -136,7 +165,7 @@ struct ContactPoint {
 // COLLISION CALLBACK COMPONENT
 // ============================================================================
 
-struct CollisionCallbacks {
+struct CollisionBase {
     // Collision callbacks (for solid colliders)
     std::function<void(const CollisionInfo&)> onCollisionEnter;
     std::function<void(const CollisionInfo&)> onCollisionStay;
@@ -146,9 +175,37 @@ struct CollisionCallbacks {
     std::function<void(const TriggerInfo&)> onTriggerEnter;
     std::function<void(const TriggerInfo&)> onTriggerStay;
     std::function<void(ecs::entity)> onTriggerExit;
+
+    // Common properties
+    glm::vec3 center = glm::vec3(0.0f);      // Local offset
+    bool isTrigger = false;
+
+    // Physics material
+    float friction = 0.5f;
+    float restitution = 0.0f;                // Bounciness
+    float density = 1.0f;                    // For auto mass calculation
+
+    // Runtime state
+    bool isDirty = true;                     // Needs recreation
+
+    bool& GetIsTrigger() { return isTrigger; }
+    void SetIsTrigger(bool newTrigger) { isTrigger = newTrigger; }
+
+    glm::vec3& GetCenter() { return center; }
+    void SetCenter(glm::vec3 newCenter) { center = newCenter; }
+    void SetCenter(float x, float y, float z) { center = glm::vec3(x, y, z); }
 };
 
-struct CapsuleCollider : public CollisionCallbacks
+// Specific collider types
+struct BoxCollider : public CollisionBase {
+    glm::vec3 size = glm::vec3(1.0f);       // Full size (not half-extents)
+};
+
+struct SphereCollider : public CollisionBase {
+    float radius = 0.5f;
+};
+
+struct CapsuleCollider : public CollisionBase
 {
 public:
     enum Direction
@@ -158,44 +215,25 @@ public:
         Z_AXIS
     };
 
-    /*!*************************************************************************
-    Initializes the Collider component when created
-    ****************************************************************************/
-    CapsuleCollider();
-    /*!*************************************************************************
-    Initializes the Collider component when created, given another Collider
-    component to move (for ECS)
-    ****************************************************************************/
-    CapsuleCollider(CapsuleCollider&& toMove) noexcept;
-    /*!*************************************************************************
-    Destructor for the Collider component class
-    ****************************************************************************/
-    ~CapsuleCollider() = default;
+
     /*!*************************************************************************
     Getter and setter functions for the variables in the Collider component class
     ****************************************************************************/
-    bool& GetIsTrigger() { return mIsTrigger; }
-    void SetIsTrigger(bool isTrigger) { mIsTrigger = isTrigger; }
 
-    JPH::Vec3& GetCenter() { return mCenter; }
-    void SetCenter(JPH::Vec3 center) { mCenter = center; }
-    void SetCenter(float x, float y, float z) { mCenter = JPH::Vec3(x, y, z); }
+    float& GetRadius() noexcept { return mRadius; }
+    void SetRadius(float radius) noexcept { mRadius = radius; }
 
-    float& GetRadius() { return mRadius; }
-    void SetRadius(float radius) { mRadius = radius; }
+    float& GetHeight() noexcept { return mHeight; }
+    void SetHeight(float height) noexcept { mHeight = height; }
 
-    float& GetHeight() { return mHeight; }
-    void SetHeight(float height) { mHeight = height; }
+    Direction& GetDirection() noexcept { return mDirection; }
+    void SetDirection(Direction direction) noexcept { mDirection = direction; }
 
-    Direction& GetDirection() { return mDirection; }
-    void SetDirection(Direction direction) { mDirection = direction; }
-
-private:
-    bool mIsTrigger;
-    JPH::Vec3 mCenter;
     float mRadius;
     float mHeight;
     Direction mDirection;
+private:
+
 };
 
 
@@ -215,10 +253,44 @@ struct ColliderComponent {
 
 
 RegisterReflectionTypeBegin(RigidBodyComponent, "RigidBodyComponent")
-    MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
     MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
-    MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
+    MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
+    MemberRegistrationV<&RigidBodyComponent::drag, "drag">,
+    MemberRegistrationV<&RigidBodyComponent::angularDrag, "angularDrag">,
+    MemberRegistrationV<&RigidBodyComponent::friction, "friction">,
+    MemberRegistrationV<&RigidBodyComponent::linearDamping, "linearDamping">,
+    MemberRegistrationV<&RigidBodyComponent::gravityFactor, "gravityFactor">,
+    MemberRegistrationV<&RigidBodyComponent::useGravity, "useGravity">,
+    MemberRegistrationV<&RigidBodyComponent::isKinematic, "isKinematic">,
+    MemberRegistrationV<&RigidBodyComponent::freezePositionX, "freezePositionX">,
+    MemberRegistrationV<&RigidBodyComponent::freezePositionY, "freezePositionY">,
+    MemberRegistrationV<&RigidBodyComponent::freezePositionZ, "freezePositionZ">,
+    MemberRegistrationV<&RigidBodyComponent::freezeRotationX, "freezeRotationX">,
+    MemberRegistrationV<&RigidBodyComponent::freezeRotationY, "freezeRotationY">,
+    MemberRegistrationV<&RigidBodyComponent::freezeRotationZ, "freezeRotationZ">,
+    MemberRegistrationV<&RigidBodyComponent::centerOfMass, "centerOfMass">,
+    MemberRegistrationV<&RigidBodyComponent::linearVelocity, "linearVelocity">,
     MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
     MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
     MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+RegisterReflectionTypeEnd
+
+RegisterReflectionTypeBegin(CapsuleCollider, "CapsuleCollider")
+    MemberRegistrationV<&CapsuleCollider::center, "CenterOffset">,
+    MemberRegistrationV<&CapsuleCollider::mRadius, "Radius">,
+    MemberRegistrationV<&CapsuleCollider::mHeight, "Height">,
+    MemberRegistrationV<&CapsuleCollider::isTrigger, "isTrigger">,
+    MemberRegistrationV<&CapsuleCollider::mDirection, "Direction">,
+    MemberRegistrationV<&CapsuleCollider::friction, "friction">,
+    MemberRegistrationV<&CapsuleCollider::restitution, "restitution">,
+    MemberRegistrationV<&CapsuleCollider::density, "density">
+RegisterReflectionTypeEnd
+
+RegisterReflectionTypeBegin(BoxCollider, "BoxCollider")
+    MemberRegistrationV<&BoxCollider::size, "size">,
+    MemberRegistrationV<&BoxCollider::center, "CenterOffset">,
+    MemberRegistrationV<&BoxCollider::isTrigger, "isTrigger">,
+    MemberRegistrationV<&BoxCollider::friction, "friction">,
+    MemberRegistrationV<&BoxCollider::restitution, "restitution">,
+    MemberRegistrationV<&BoxCollider::density, "density">
 RegisterReflectionTypeEnd
