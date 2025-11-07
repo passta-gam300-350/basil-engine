@@ -13,6 +13,8 @@
 #include "Particles/ParticleSystem.h"
 #include "Render/Camera.h"
 
+#include "Scene/Scene.hpp"
+
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
 extern "C" {
@@ -121,6 +123,8 @@ void Engine::Init(std::string const& cfg ) {
 
 	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 	MaterialOverridesSystem::Instance().Init();
+	
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	MonoEntityManager::GetInstance().SetPreCompiled(true);
@@ -265,7 +269,8 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
 
-	
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
+
 	BindingSystem::RegisterBindings();
 
 	PhysicsSystem::Instance().Init();
@@ -331,6 +336,14 @@ RenderSystem& Engine::GetRenderSystem() {
 		throw std::runtime_error("RenderSystem not created - call Engine::Init() first");
 	}
 	return *Instance().m_RenderSystem;
+}
+
+SceneRegistry& Engine::GetSceneRegistry()
+{
+	if (!Instance().m_SceneRegistry) {
+		throw std::runtime_error("SceneRegistry not created - call Engine::Init() first");
+	}
+	return *Instance().m_SceneRegistry;
 }
 
 bool Engine::WindowShouldClose() {
