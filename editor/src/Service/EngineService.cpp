@@ -5,6 +5,8 @@
 #include <filesystem>
 
 #include "Render/Render.h"
+#include "System/Audio.hpp"
+#include "Manager/ResourceSystem.hpp"
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -164,6 +166,63 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
 
+				// Special handling for AudioComponent: Load sound from GUID if needed
+				if (meta_type.info().hash() == entt::type_hash<AudioComponent>::value()) {
+					AudioComponent* audioComp = static_cast<AudioComponent*>(dest);
+					//spdlog::info("AudioComponent writeback: soundHandle={}, GUID={}, isInitialized={}",
+					//             audioComp->soundHandle, audioComp->audioAssetGuid.m_guid.to_hex(), audioComp->isInitialized);
+
+					// Check if GUID is valid
+					if (audioComp->audioAssetGuid.m_guid != rp::null_guid) {
+						// Query ResourceRegistry to find what soundHandle SHOULD be loaded for this GUID
+						ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audioComp->audioAssetGuid);
+						if (entry) {
+							Handle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
+							int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
+
+							if (soundHandlePtr && *soundHandlePtr >= 0) {
+								int expectedSoundHandle = *soundHandlePtr;
+
+								// Detect GUID change: current soundHandle doesn't match what the GUID should load
+								if (audioComp->soundHandle != expectedSoundHandle) {
+									//spdlog::info("AudioComponent: GUID changed detected (current handle: {}, expected: {})",
+									//             audioComp->soundHandle, expectedSoundHandle);
+
+									// Unload old sound if one was loaded
+									if (audioComp->soundHandle >= 0 && AudioSystem::GetInstance().IsInitialized()) {
+										//spdlog::info("AudioComponent: Unloading old sound (handle: {})", audioComp->soundHandle);
+										AudioSystem::GetInstance().UnloadSound(audioComp->soundHandle);
+									}
+
+									// Load new sound
+									//spdlog::info("AudioComponent: Loading new sound from GUID (handle: {})", expectedSoundHandle);
+									audioComp->soundHandle = expectedSoundHandle;
+									audioComp->isInitialized = false;  // Reset initialization state
+									audioComp->RefreshSoundInfo();
+									//spdlog::info("AudioComponent: Loaded sound handle {} from GUID, isInitialized={}",
+									//             audioComp->soundHandle, audioComp->isInitialized);
+								} else {
+									//spdlog::info("AudioComponent: Sound already correctly loaded (handle: {})", audioComp->soundHandle);
+								}
+							} else {
+								//spdlog::warn("AudioComponent: Failed to load sound from GUID (invalid handle)");
+							}
+						} else {
+							//spdlog::warn("AudioComponent: Failed to get resource pool for audio GUID");
+						}
+					} else {
+						//spdlog::info("AudioComponent: Skipping load - GUID is null");
+
+						// If GUID is null but we have a loaded sound, unload it
+						if (audioComp->soundHandle >= 0 && AudioSystem::GetInstance().IsInitialized()) {
+							//spdlog::info("AudioComponent: GUID is null, unloading current sound (handle: {})", audioComp->soundHandle);
+							AudioSystem::GetInstance().UnloadSound(audioComp->soundHandle);
+							audioComp->soundHandle = -1;
+							audioComp->isInitialized = false;
+						}
+					}
+				}
+
 				// Trigger EnTT observers for components with update callbacks
 				// Currently only MeshRendererComponent uses on_update observers
 				if (meta_type.info().hash() == entt::type_hash<MeshRendererComponent>::value()) {
@@ -180,21 +239,50 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 	while (create_ct-- > 0) {
 		w.add_entity();
 	}
+	// Process component addition/deletion queue
+	//if (!m_entity_component_update_queue.empty()) {
+	//	spdlog::info("EngineService: Processing component update queue, size={}",
+	//	             m_entity_component_update_queue.size());
+	//}
+
 	while (!m_entity_component_update_queue.empty()) {
 		auto [ehdl, type_id, is_delete] = m_entity_component_update_queue.front();
 		m_entity_component_update_queue.pop();
+
+		// Get component type name for logging
+		//entt::meta_type meta = entt::resolve(static_cast<entt::id_type>(type_id));
+		//std::string componentName = meta ? std::string(meta.info().name()) : "Unknown";
+
+		//spdlog::info("EngineService: Processing component update - entity={}, type={}, type_id={}, is_delete={}",
+		//             ehdl, componentName, type_id, is_delete);
+
 		ecs::entity entity{ ehdl };
 		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
+
 		if (auto* storage = w.impl.get_registry().storage(type_id)) {
+			//bool alreadyExists = storage->contains(enttntt);
+			//spdlog::info("EngineService: Storage found for {}, component already exists={}",
+			//             componentName, alreadyExists);
+
 			if (!storage->contains(enttntt)) {
 				storage->push(enttntt);
+				//spdlog::info("EngineService: Added {} to entity {}", componentName, ehdl);
 			}
 			else {
 				if (is_delete) {
 					storage->erase(enttntt);
+					//spdlog::info("EngineService: Deleted {} from entity {}", componentName, ehdl);
 				}
+				//else {
+				//	spdlog::info("EngineService: Component {} already exists on entity {}, skipping add",
+				//	             componentName, ehdl);
+				//}
 			}
 		}
+		//else {
+		//	spdlog::warn("EngineService: No storage found for type {} (type_id={})",
+		//	             componentName, type_id);
+		//}
 	}
 	while (!m_entity_delete_queue.empty()) {
 		auto ehdl = m_entity_delete_queue.front();
@@ -291,7 +379,17 @@ void EngineContainerService::add_component(entity_handle ehdl, std::uint32_t com
 		return;
 	}
 	std::lock_guard lg{ m_cont->m_mtx };
+
+	// Get component type name for logging
+	//entt::meta_type meta = entt::resolve(static_cast<entt::id_type>(component_type_id));
+	//std::string componentName = meta ? std::string(meta.info().name()) : "Unknown";
+
+	//spdlog::info("EngineService: Queueing component addition - entity={}, type={}, type_id={}",
+	//             ehdl, componentName, component_type_id);
+
 	m_cont->m_entity_component_update_queue.push(std::make_tuple(ehdl, component_type_id, false));
+	//spdlog::info("EngineService: Component queued successfully, queue size={}",
+	//             m_cont->m_entity_component_update_queue.size());
 }
 
 void EngineContainerService::delete_component(entity_handle ehdl, std::uint32_t component_type_id) {

@@ -25,6 +25,7 @@ Technology is prohibited.
 #include <Engine.hpp>
 #include <Component/Transform.hpp>
 #include <Component/MaterialOverridesComponent.hpp>
+#include <System/Audio.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
 #include <Input/InputManager.h>
@@ -46,6 +47,8 @@ Technology is prohibited.
 #include "Profiler/profiler.hpp"
 #include "Bindings/MANAGED_CONSOLE.hpp"
 #include "rsc-core/rp.hpp"
+#include <descriptors/audio.hpp>
+#include <serialization/serializer.h>
 
 #include <glm/gtc/type_ptr.hpp>
 #include "Render/Render.h"
@@ -231,6 +234,57 @@ void EditorMain::init()
 
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	
+
+	// Register custom audio inspector with import settings
+	{
+		constexpr auto audio_type_hash = rp::utility::type_hash<AudioDescriptor>::value();
+		rp::ResourceTypeImporterRegistry::RegisterSerializer(audio_type_hash, "imgui",
+			[this](std::string const& str, std::byte* data) {
+				AudioDescriptor& desc = *reinterpret_cast<AudioDescriptor*>(data);
+
+				// Render descriptor_base
+				ImGui::SeparatorText("Base Properties");
+				ImGui::Text("GUID: %s", desc.base.m_guid.to_hex().c_str());
+				ImGui::Text("Name: %s", desc.base.m_name.c_str());
+				ImGui::Text("Source: %s", desc.base.m_source.c_str());
+
+				// Audio properties
+				ImGui::SeparatorText("Audio Import Settings");
+
+				ImGui::Checkbox("3D Sound", &desc.audio.is3D);
+				ImGui::SameLine();
+				ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("Enable spatial 3D audio positioning");
+				}
+
+				ImGui::Checkbox("Streaming", &desc.audio.isStreaming);
+				ImGui::SameLine();
+				ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("Stream from disk (recommended for music/long files)");
+				}
+
+				ImGui::Checkbox("Loop", &desc.audio.isLooping);
+				ImGui::SameLine();
+				ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("Loop playback continuously");
+				}
+
+				// Metadata (read-only)
+				ImGui::SeparatorText("Audio Metadata");
+				if (desc.audio.duration > 0.0f) {
+					ImGui::Text("Duration: %.2f seconds", desc.audio.duration);
+				}
+				if (desc.audio.sampleRate > 0) {
+					ImGui::Text("Sample Rate: %d Hz", desc.audio.sampleRate);
+				}
+				if (desc.audio.channels > 0) {
+					ImGui::Text("Channels: %d", desc.audio.channels);
+				}
+			});
+	}
 
 	// Register custom material inspector with texture dropdowns (captures 'this')
 	{
@@ -741,6 +795,13 @@ void EditorMain::Render_Components()
 		behaviour_component = behaviourIt->second;
 	}
 
+	ReflectionRegistry::TypeID audio_component{};
+	auto audioIt = internal_type_map.find(entt::type_index<AudioComponent>::value());
+	if (audioIt != internal_type_map.end())
+	{
+		audio_component = audioIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component) {
 			continue;
@@ -757,6 +818,7 @@ void EditorMain::Render_Components()
 			}
 			continue;
 		}
+
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
 		const char* componentLabel = "Component";
@@ -768,6 +830,59 @@ void EditorMain::Render_Components()
 		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
 			Render_Component_Member(comp, is_dirty);
+
+			// Special UI section for AudioComponent playback controls
+			if (audio_component && type_id == audio_component) {
+				if (AudioComponent* audioComp = reinterpret_cast<AudioComponent*>(uptr.get())) {
+					ImGui::Separator();
+					ImGui::Text("Playback Controls");
+					ImGui::BeginDisabled(!audioComp->isInitialized);
+
+					if (ImGui::Button("Play", ImVec2(60, 0))) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<AudioComponent>()) {
+								AudioComponent& audio = entity.get<AudioComponent>();
+								audio.Play();
+							}
+						});
+						ul.lock();
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Pause", ImVec2(60, 0))) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<AudioComponent>()) {
+								AudioComponent& audio = entity.get<AudioComponent>();
+								if (audio.isPlaying && !audio.isPaused) {
+									audio.Pause();
+								} else if (audio.isPaused) {
+									audio.Resume();
+								}
+							}
+						});
+						ul.lock();
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Stop", ImVec2(60, 0))) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<AudioComponent>()) {
+								AudioComponent& audio = entity.get<AudioComponent>();
+								audio.Stop();
+							}
+						});
+						ul.lock();
+					}
+
+					ImGui::EndDisabled();
+					ImGui::Text("Status: %s", audioComp->isPlaying ? (audioComp->isPaused ? "Paused" : "Playing") : "Stopped");
+				}
+			}
+
 			if (ImGui::Button("Delete Component")) {
 				ul.unlock();
 				engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
@@ -2524,9 +2639,19 @@ void EditorMain::Render_Scene()
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
 			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
-		// Handle viewport picking - check if viewport was clicked
-		bool viewportClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+		// CRITICAL: Query click state IMMEDIATELY after Image (while it's the "last item")
+		// IsItemClicked() doesn't "consume" clicks - it just queries if this item was clicked
+		bool imageClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 		bool viewportHovered = ImGui::IsItemHovered();
+
+		// Now render the gizmo with proper viewport coordinates
+		Gizmos(viewportPos, viewportSize);
+
+		// Check if ImGuizmo wants input priority
+		bool gizmoWantsInput = ImGuizmo::IsUsing() || ImGuizmo::IsOver();
+
+		// Only perform viewport picking if image was clicked AND gizmo doesn't want input
+		bool viewportClicked = imageClicked && !gizmoWantsInput;
 
 		if (viewportClicked) {
 			spdlog::info("Editor: Viewport clicked detected by ImGui");
@@ -2587,8 +2712,8 @@ void EditorMain::Render_Scene()
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
-	
-	Gizmos(); // Handle Gizmo Behaviour 
+
+	// NOTE: Gizmos() moved earlier to give it input priority over viewport picking
 	/*
 	// Debug info below the viewport (using snapshot)
 	const auto& entityHandles = engineService.GetEntitiesSnapshot();
@@ -3084,7 +3209,7 @@ void EditorMain::NewScene()
 	// Clear selection after loading new scene
 }
 
-void EditorMain::Gizmos() // UndoToAdd
+void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 {
 	ImGui::Begin("Gizmo Debug");
 	ImGuiIO& io = ImGui::GetIO();
@@ -3096,27 +3221,29 @@ void EditorMain::Gizmos() // UndoToAdd
 	ImGui::Text("Gizmo Over: %s", ImGuizmo::IsOver() ? "YES" : "NO");
 	ImGui::Text("Gizmo Using: %s", ImGuizmo::IsUsing() ? "YES" : "NO");
 	ImGui::Text("Gizmo Capture Mouse: %s", io.WantCaptureMouse ? "YES" : "NO");
-	
+	ImGui::Text("Viewport Pos: (%.0f, %.0f)", viewportPos.x, viewportPos.y);
+	ImGui::Text("Viewport Size: (%.0f, %.0f)", viewportSize.x, viewportSize.y);
+
 
 	ImGui::End();
 
 	// This is for toggling the gizmo
-	if (ImGui::IsKeyPressed(ImGuiKey_0, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
 	{
 		mode = (ImGuizmo::OPERATION)0;
 	}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_1, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_W, false))
 	{
 		mode = ImGuizmo::OPERATION::TRANSLATE;
 	}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_2, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_E, false))
 	{
 		mode = ImGuizmo::OPERATION::ROTATE;
 	}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_3, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_R, false))
 	{
 		mode = ImGuizmo::OPERATION::SCALE;
 	}
@@ -3125,12 +3252,10 @@ void EditorMain::Gizmos() // UndoToAdd
 	if ((m_SelectedEntityID != 0) && (mode != (ImGuizmo::OPERATION)0))
 	{
 
-		// Setting viewport details
+		// CRITICAL FIX: Use viewport content area position, not window title bar position
 		ImGuizmo::SetOrthographic(true);
 		ImGuizmo::SetDrawlist();
-		float windowWidth = (float)ImGui::GetWindowWidth();
-		float windowHeight = (float)ImGui::GetWindowHeight();
-		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+		ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
 		auto current_camera = CameraSystem::GetActiveCamera();
 

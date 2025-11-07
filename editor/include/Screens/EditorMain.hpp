@@ -36,6 +36,8 @@ Technology is prohibited.
 #include "Service/EngineService.hpp"
 #include <rsc-ext/rp.hpp>
 
+struct AudioComponent; // Forward declaration
+
 class EditorMain : public Screen
 {
 	FileService fileService;
@@ -89,7 +91,7 @@ public:
 
 	void Render_AboutUI();
 
-	void Gizmos();
+	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
 
 	void Render_SceneExplorer();
 

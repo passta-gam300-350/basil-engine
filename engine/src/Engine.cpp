@@ -12,6 +12,7 @@
 #include "System/MaterialOverridesSystem.hpp"
 #include "Particles/ParticleSystem.h"
 #include "Render/Camera.h"
+#include "System/Audio.hpp"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -40,6 +41,8 @@ namespace {
 	constexpr std::string_view DEFAULT_SINK_NAME{ "Engine" };
 	constexpr std::string_view DEFAULT_OUTPUT_FILE{ "" };
 	constexpr std::string_view DEFAULT_CONFIG_NAME{ "Default.yaml"};
+	
+	static std::unique_ptr<AudioComponent> ambient; // [TEMP]
 }
 
 Engine& Engine::Instance() {
@@ -150,6 +153,8 @@ void Engine::CoreUpdate() {
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	messagingSystem.Update();
+	//messagingSystem.Update();
+	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
 }
@@ -272,6 +277,25 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	Scheduler::CompileJobSchedule();
 
+	// [TEMP]
+	AudioSystem::GetInstance().Init();
+	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
+	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
+	//		std::string filename = entry.path().stem().string();
+	//		AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
+	//	}
+	//	else
+	//		spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
+	//}*/
+	// Persist the ambient audio component so it doesn't get destroyed after init
+	/*ambient = std::make_unique<AudioComponent>();
+	if (ambient->Init("Singapore Koi Ambience_Loop.ogg", true, true, true)) {
+		ambient->Play();
+		ambient->SetVolume(6.0f);
+	}*/
+	// [ENDTEMP]
+
+
 	auto e = Engine::GetWorld().add_entity();
 	e.destroy();
 
@@ -288,6 +312,7 @@ void Engine::Exit() {
 	}
 	ResourceSystem::Release();
 	Scheduler::Release();
+	AudioSystem::GetInstance().Exit(); // [TEMP]
 	InstancePtr().reset();
 	MonoEntityManager::GetInstance().ClearAll();
 }

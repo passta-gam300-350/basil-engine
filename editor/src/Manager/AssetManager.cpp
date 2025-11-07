@@ -7,6 +7,7 @@
 
 #include <importer/importer.hpp>
 #include <descriptors/material.hpp>
+#include <descriptors/audio.hpp>
 #include <glm/glm.hpp>
 #include "Screens/EditorMain.hpp"
 #include <ranges>
@@ -293,7 +294,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				std::string dir_path = getParentPath(desc_name);
 				std::string ext_name = getFileExtension(desc_name);
 				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
-				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl") {
+				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio") {
 					continue;
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
@@ -318,7 +319,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				bool has_source_file = false;
 
 				// Check common source file extensions
-				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb"};
+				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac"};
 				for (auto const& src_ext : source_exts) {
 					if (std::filesystem::exists(base_name + src_ext)) {
 						has_source_file = true;
