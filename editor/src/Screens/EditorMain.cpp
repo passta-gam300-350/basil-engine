@@ -3228,22 +3228,22 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 	ImGui::End();
 
 	// This is for toggling the gizmo
-	if (ImGui::IsKeyPressed(ImGuiKey_0, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
 	{
 		mode = (ImGuizmo::OPERATION)0;
 	}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_1, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_W, false))
 	{
 		mode = ImGuizmo::OPERATION::TRANSLATE;
 	}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_2, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_E, false))
 	{
 		mode = ImGuizmo::OPERATION::ROTATE;
 	}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_3, false))
+	if (ImGui::IsKeyPressed(ImGuiKey_R, false))
 	{
 		mode = ImGuizmo::OPERATION::SCALE;
 	}
