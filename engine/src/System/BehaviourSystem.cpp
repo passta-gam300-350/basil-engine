@@ -160,3 +160,31 @@ void BehaviourSystem::RegisterComponent(ecs::entity& entity) {
 	}
 }
 
+void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other, enum CollisionCallback callback)
+{
+	behaviour& component = entity.get<behaviour>();
+
+	void* args[1];
+	args[0] = &other;
+	for (auto ScriptID : component.scriptIDs)
+	{
+		CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(ScriptID);
+		if (inst)
+		{
+			switch (callback)
+			{
+			case CollisionCallback::OnCollisionEnter:
+				inst->Invoke("OnCollisionEnter", args, nullptr, 1);
+				break;
+			case CollisionCallback::OnCollisionStay:
+				inst->Invoke("OnCollisionStay", args, nullptr, 1);
+				break;
+			case CollisionCallback::OnCollisionExit:
+				inst->Invoke("OnCollisionExit", args, nullptr, 1);
+				break;
+			}
+		}
+	}
+}
+
+

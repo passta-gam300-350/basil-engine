@@ -8,36 +8,59 @@ using Engine.Bindings;
 
 namespace BasilEngine.Components
 {
-    [Disabled]
+    [NativeHeader("Bindings/ManagedCamera.hpp")]
+    [NativeClass("ManagedCamera")]
 
     public class Camera : Component
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetCameraType")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern void Internal_SetType(UInt64 handle, int type);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public extern int Internal_GetType(UInt64 handle);
+        [NativeMethod("GetCameraType")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
+        public static extern int Internal_GetType(UInt64 handle);
+
+        //[MethodImpl(MethodImplOptions.InternalCall)]
+        //public static extern void Internal_SetActive(UInt64 handle, bool active);
+        //[MethodImpl(MethodImplOptions.InternalCall)]
+        //public static extern bool Internal_GetActive(UInt64 handle);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void Internal_SetActive(UInt64 handle, bool active);
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern bool Internal_GetActive(UInt64 handle);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("setFoV")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern void Internal_SetFOV(UInt64 handle, float fov);
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("getFoV")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern float Internal_GetFOV(UInt64 handle);
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("setAspectRatio")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern void Internal_SetAspectRatio(UInt64 handle, float ratio);
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("getAspectRatio")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
+
         public static extern float Internal_GetAspectRatio(UInt64 handle);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("setNear")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern void Internal_SetNearPlane(UInt64 handle, float near);
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("setFar")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern void Internal_SetFarPlane(UInt64 handle, float far);
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("getNear")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
+
         public static extern float Internal_GetNearPlane(UInt64 handle);
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("getFar")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern float Internal_GetFarPlane(UInt64 handle);
 
         public enum CameraType
@@ -48,8 +71,7 @@ namespace BasilEngine.Components
 
         public bool active
         {
-            get => Internal_GetActive(NativeID);
-            set => Internal_SetActive(NativeID, value);
+            get => false;
         }
 
         public CameraType type

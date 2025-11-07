@@ -13,14 +13,20 @@ namespace BasilEngine.Components
     [NativeHeader("Engine/Component.h")]
     [NativeHeader("Engine/GameObject.h")]
 
-
+    
     public class Component : NativeObject
     {
-
+        private UInt32 typeID; // Identifies a component type in the native side.
 
         private Transform _transform = null;
 
         private GameObject _gameObject = null;
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        // TODO: Implement Internal Checks
+        public extern static UInt32 Internal_RegisterComponent(string typename);
+        
+
 
         public GameObject gameObject
         {
@@ -55,5 +61,15 @@ namespace BasilEngine.Components
             get; set;
         } = true;
 
+        public T GetComponent<T>() where T : Component, new()
+        {
+            T component = new T
+            {
+                NativeID = NativeID // Attach to the existing component
+            };
+            return component;
+        }
+
+        
     }
 }
