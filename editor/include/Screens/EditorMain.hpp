@@ -104,7 +104,6 @@ public:
 	void Render_Components();
 	void Render_Component_Member(auto&, bool& is_dirty);
     void Render_Behaviour_Component(behaviour& component);
-	bool Render_AudioComponent(AudioComponent& component);
 	void Add_Script_Menu();
 
 	void Render_Add_Component_Menu();

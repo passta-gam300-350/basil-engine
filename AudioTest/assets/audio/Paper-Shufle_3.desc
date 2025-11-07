@@ -1,11 +1,11 @@
 base:
-  m_guid: 5e4351077eaba169cbcb7baf87b
+  m_guid: a6fe48e7776be8e61aa6e61d83e
   m_importer: .audio
   m_source: audio\Paper-Shufle_3.ogg
   m_name: Paper-Shufle_3.ogg
   m_importer_type: 3386065993928156319
 audio:
-  vert_name: ""
+  sourcePath: ""
   is3D: true
   isStreaming: false
   isLooping: false

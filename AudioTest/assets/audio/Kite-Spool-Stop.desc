@@ -1,11 +1,11 @@
 base:
-  m_guid: 5e4347b7a94bdb97cc937be6392
+  m_guid: a6fe3fe75b9920bb62d0648d146
   m_importer: .audio
   m_source: audio\Kite-Spool-Stop.ogg
   m_name: Kite-Spool-Stop.ogg
   m_importer_type: 3386065993928156319
 audio:
-  vert_name: ""
+  sourcePath: ""
   is3D: true
   isStreaming: false
   isLooping: false

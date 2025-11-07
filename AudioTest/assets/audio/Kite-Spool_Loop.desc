@@ -1,11 +1,11 @@
 base:
-  m_guid: 5e4348577ad9dff955c90ec9d1d
+  m_guid: a6fe40772fd87644cec0d95f22a
   m_importer: .audio
   m_source: audio\Kite-Spool_Loop.ogg
   m_name: Kite-Spool_Loop.ogg
   m_importer_type: 3386065993928156319
 audio:
-  vert_name: ""
+  sourcePath: ""
   is3D: true
   isStreaming: false
   isLooping: false

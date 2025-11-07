@@ -1,11 +1,11 @@
 base:
-  m_guid: 5e433af71f9ade1e0e6ef09bb33
+  m_guid: a6fe3237b7b96e50e32cf95b8d8
   m_importer: .audio
   m_source: audio\05.Fog-Desert_Loop.ogg
   m_name: 05.Fog-Desert_Loop.ogg
   m_importer_type: 3386065993928156319
 audio:
-  vert_name: ""
+  sourcePath: ""
   is3D: true
   isStreaming: false
   isLooping: false

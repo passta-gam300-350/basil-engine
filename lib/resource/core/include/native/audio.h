@@ -15,4 +15,18 @@ struct AudioResourceData {
     int channels = 0;
 };
 
+// Explicit reflection metadata for AudioResourceData to ensure correct field names
+template <>
+struct rp::reflection::ExternalTypeMetadata<AudioResourceData> {
+    using ExternalTypeBinder = rp::reflection::ExternalTypeBinderMetadata<AudioResourceData,
+        &AudioResourceData::sourcePath,
+        &AudioResourceData::is3D,
+        &AudioResourceData::isStreaming,
+        &AudioResourceData::isLooping,
+        &AudioResourceData::duration,
+        &AudioResourceData::sampleRate,
+        &AudioResourceData::channels
+    >;
+};
+
 #endif

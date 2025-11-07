@@ -1,11 +1,11 @@
 base:
-  m_guid: 5e4355e7f3c99cf4bf77c21c309
+  m_guid: a6fe4c77ac1ba779bc831510a8c
   m_importer: .audio
   m_source: audio\Singapore Morning Distant Trafic Outdoor Ambience_Loop.ogg
   m_name: Singapore Morning Distant Trafic Outdoor Ambience_Loop.ogg
   m_importer_type: 3386065993928156319
 audio:
-  vert_name: ""
+  sourcePath: ""
   is3D: true
   isStreaming: false
   isLooping: false

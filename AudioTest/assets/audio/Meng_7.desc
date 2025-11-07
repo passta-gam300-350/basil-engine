@@ -1,11 +1,11 @@
 base:
-  m_guid: 5e434c774968f45e8f2c7ec4222
+  m_guid: a6fe44d74f896fd68d35c62fea4
   m_importer: .audio
   m_source: audio\Meng_7.ogg
   m_name: Meng_7.ogg
   m_importer_type: 3386065993928156319
 audio:
-  vert_name: ""
+  sourcePath: ""
   is3D: true
   isStreaming: false
   isLooping: false
