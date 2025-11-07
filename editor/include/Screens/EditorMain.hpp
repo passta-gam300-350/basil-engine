@@ -36,6 +36,8 @@ Technology is prohibited.
 #include "Service/EngineService.hpp"
 #include <rsc-ext/rp.hpp>
 
+struct AudioComponent; // Forward declaration
+
 class EditorMain : public Screen
 {
 	FileService fileService;

@@ -4,5 +4,6 @@
 #include "native/mesh.h"
 #include "native/material.h"
 #include "native/texture.h"
+#include "native/audio.h"
 
 #endif
