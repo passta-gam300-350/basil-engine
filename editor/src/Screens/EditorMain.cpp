@@ -1911,6 +1911,10 @@ void EditorMain::Render_SceneExplorer()
 				if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
 				if (ImGui::MenuItem("Delete"))
 				{
+					// Clear selection if deleting the currently selected entity
+					if (isSelected) {
+						ClearEntitySelection();
+					}
 					engineService.delete_entity(ehdl);
 				}
 				ImGui::Separator();
