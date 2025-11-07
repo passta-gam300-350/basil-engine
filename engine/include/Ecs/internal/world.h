@@ -71,6 +71,7 @@ namespace ecs {
 			return other.impl != impl;
 		}
 
+		//depreciated
 		world copy(world);
 		world inplace_union_world(world);
 		world inplace_intersect_world(world);

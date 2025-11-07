@@ -47,6 +47,10 @@ bool ShaderLibrary::Initialize() {
         spdlog::warn("ShaderLibrary: Editor resolve shader not loaded - editor viewport gamma correction will be disabled");
     }
 
+    if (!LoadParticleShader())
+    {
+        spdlog::warn("ShaderLibrary: Particle Shader not loaded - Particle will be disabled");
+    }
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
     } else {
@@ -280,5 +284,16 @@ bool ShaderLibrary::LoadEditorResolveShader() {
     }
 
     spdlog::info("ShaderLibrary: Editor resolve shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadParticleShader()
+{
+    m_ParticleShader = Load("particle", "assets/shaders/particle.vert", "assets/shaders/particle.frag");
+    if (!m_ParticleShader)
+    {
+        return false;
+    }
+    spdlog::info("ShaderLibrary: Particle shader loaded successfully");
     return true;
 }

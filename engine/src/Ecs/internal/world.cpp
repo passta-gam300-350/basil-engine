@@ -217,4 +217,17 @@ namespace ecs {
 		impl.get_registry().clear();
 	}
 
+	world world::copy(world from)
+	{
+		auto& reg = from.impl.get_registry();
+		//entt::entity base_entity = world::detail::entt_entity_cast(*this);
+		//entt::entity new_entity = reg.create();
+		
+		auto& wreg = impl.get_registry();
+
+		//(void)(reg.storage(1));
+		//return entity(get_world_handle(), static_cast<std::uint32_t>(new_entity));
+
+		return *this;
+	}
 }

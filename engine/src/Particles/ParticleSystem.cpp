@@ -21,6 +21,7 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 	auto& registry = world.impl.get_registry();
 	//auto view = registry.view<ParticleComponent, TransformComponent>();
 	auto view = world.filter_entities<ParticleComponent, TransformComponent>();
+
 	for (auto& eachEntity : view)
 	{
 		ParticleComponent& particleComponent = eachEntity.get<ParticleComponent>();
@@ -50,6 +51,7 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 		renderData.blendMode = particleComponent.blendSettings;
 		renderData.depthWrite = particleComponent.depthWrite;
 		renderData.renderLayer = particleComponent.renderLayer;
+
 		m_SceneRenderer->SubmitParticles(renderData);
 	}
 }

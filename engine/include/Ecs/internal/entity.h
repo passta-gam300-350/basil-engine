@@ -115,4 +115,12 @@ namespace ecs {
 	};
 }
 
+template <>
+class std::hash<ecs::entity> {
+public:
+	std::size_t operator() (ecs::entity const& key) const noexcept {
+		return std::hash<std::uint64_t>{}(key.get_uuid());
+	}
+};
+
 #endif

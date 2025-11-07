@@ -80,6 +80,12 @@ public:
             if (!camera_comp.m_IsActive) {
                 continue;
             }
+            //update camera comp
+            auto quat = glm::quat(glm::radians(transform_comp.m_Rotation));
+            camera_comp.m_Right = quat * glm::vec3(1.f, 0.f, 0.f);
+            camera_comp.m_Up = quat * glm::vec3(0.f, 1.f, 0.f);
+            camera_comp.m_Front = quat * glm::vec3(0.f, 0.f, 1.f);
+            //update Graphics camera
             static_cast<CameraComponent&>(main_cam) = camera_comp;
             main_cam.m_Pos = transform_comp.m_Translation;
             break;

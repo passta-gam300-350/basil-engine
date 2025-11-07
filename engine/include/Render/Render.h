@@ -25,6 +25,7 @@
 #include <native/native.h>
 
 #include "Ecs/ecs.h"
+#include "Messaging/Message.h"
 
 // Forward declarations
 class ShaderLibrary;
@@ -86,6 +87,25 @@ struct LightComponent {
     float m_InnerCone;            ///< Inner cone angle for spotlights (degrees)
     float m_OuterCone;            ///< Outer cone angle for spotlights (degrees)
     bool m_IsEnabled;             ///< Light enabled state
+};
+
+
+
+struct Camera_Calculation_Update : Message {
+    glm::mat4 viewMat4;
+    glm::mat4 projectionMat4;
+
+public:
+    /**
+    * @brief Clone function for duplicating input message.
+    *
+    * This function provides a way to clone unique_ptrs.
+    */
+    std::unique_ptr<Message> clone() const override
+    {
+        return std::make_unique<Camera_Calculation_Update>(*this);
+    }
+    Camera_Calculation_Update(glm::mat4 view, glm::mat4 proj) : viewMat4(view), projectionMat4(proj) {};
 };
 
 struct RenderSystem : public ecs::SystemBase {

@@ -25,6 +25,8 @@ Technology is prohibited.
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 
+#include "Messaging/Messaging_System.h"
+
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
@@ -93,6 +95,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetToneMappingShader()) {
 		m_SceneRenderer->SetToneMappingShader(m_ShaderLibrary->GetToneMappingShader());
 	}
+	if (m_ShaderLibrary->GetParticleShader()) {
+		m_SceneRenderer->SetParticleShader(m_ShaderLibrary->GetParticleShader());
+	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
 	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());
@@ -158,9 +163,6 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 void RenderSystem::Update(ecs::world& world) {
 	PF_SYSTEM("GraphicSystem");
 
-	//begin frame
-	m_SceneRenderer->ClearFrame();
-
 	auto world_camera = CameraSystem::GetActiveCamera();
 	auto& frameData = m_SceneRenderer->GetFrameData();
 
@@ -174,6 +176,7 @@ void RenderSystem::Update(ecs::world& world) {
 	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
 		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
 		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+		messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE, std::make_unique<Camera_Calculation_Update>(frameData.viewMatrix,m_Camera->GetProjectionMatrix()));
 	}
 
 	frameData.viewMatrix = view;
@@ -347,6 +350,9 @@ void RenderSystem::Update(ecs::world& world) {
 
 	//render frame
 	m_SceneRenderer->Render();
+
+	//clear frame data AFTER rendering (so particles submitted before render are included)
+	m_SceneRenderer->ClearFrame();
 }
 void RenderSystem::FixedUpdate(ecs::world& w) {
 	Update(w);

@@ -230,6 +230,8 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 				out[field_name] = *vf;
 			else if (double const* vd = value.try_cast<double const>())
 				out[field_name] = *vd;
+			else if (uint32_t const* uint32 = value.try_cast<uint32_t const>())
+				out[field_name] = *uint32;
 			else if (std::string const* vs = value.try_cast<std::string const>())
 				out[field_name] = *vs;
 			else if (bool const* vb = value.try_cast<bool const>())
@@ -393,6 +395,9 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 		}
 		else if (mid == entt::type_hash<bool>::value()) {
 			data.set(obj, in[field_name].template as<bool>());
+		}
+		else if (mid == entt::type_hash<uint32_t>::value()) {
+			data.set(obj, in[field_name].template as<uint32_t>());
 		}
 	}
 }
