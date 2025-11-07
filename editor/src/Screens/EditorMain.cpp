@@ -2639,9 +2639,19 @@ void EditorMain::Render_Scene()
 		ImGui::Image((ImTextureID)(uintptr_t)textureID,
 			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
-		// Handle viewport picking - check if viewport was clicked
-		bool viewportClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+		// CRITICAL: Query click state IMMEDIATELY after Image (while it's the "last item")
+		// IsItemClicked() doesn't "consume" clicks - it just queries if this item was clicked
+		bool imageClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 		bool viewportHovered = ImGui::IsItemHovered();
+
+		// Now render the gizmo with proper viewport coordinates
+		Gizmos(viewportPos, viewportSize);
+
+		// Check if ImGuizmo wants input priority
+		bool gizmoWantsInput = ImGuizmo::IsUsing() || ImGuizmo::IsOver();
+
+		// Only perform viewport picking if image was clicked AND gizmo doesn't want input
+		bool viewportClicked = imageClicked && !gizmoWantsInput;
 
 		if (viewportClicked) {
 			spdlog::info("Editor: Viewport clicked detected by ImGui");
@@ -2702,8 +2712,8 @@ void EditorMain::Render_Scene()
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
-	
-	Gizmos(); // Handle Gizmo Behaviour 
+
+	// NOTE: Gizmos() moved earlier to give it input priority over viewport picking
 	/*
 	// Debug info below the viewport (using snapshot)
 	const auto& entityHandles = engineService.GetEntitiesSnapshot();
@@ -3199,7 +3209,7 @@ void EditorMain::NewScene()
 	// Clear selection after loading new scene
 }
 
-void EditorMain::Gizmos() // UndoToAdd
+void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 {
 	ImGui::Begin("Gizmo Debug");
 	ImGuiIO& io = ImGui::GetIO();
@@ -3211,7 +3221,9 @@ void EditorMain::Gizmos() // UndoToAdd
 	ImGui::Text("Gizmo Over: %s", ImGuizmo::IsOver() ? "YES" : "NO");
 	ImGui::Text("Gizmo Using: %s", ImGuizmo::IsUsing() ? "YES" : "NO");
 	ImGui::Text("Gizmo Capture Mouse: %s", io.WantCaptureMouse ? "YES" : "NO");
-	
+	ImGui::Text("Viewport Pos: (%.0f, %.0f)", viewportPos.x, viewportPos.y);
+	ImGui::Text("Viewport Size: (%.0f, %.0f)", viewportSize.x, viewportSize.y);
+
 
 	ImGui::End();
 
@@ -3240,12 +3252,10 @@ void EditorMain::Gizmos() // UndoToAdd
 	if ((m_SelectedEntityID != 0) && (mode != (ImGuizmo::OPERATION)0))
 	{
 
-		// Setting viewport details
+		// CRITICAL FIX: Use viewport content area position, not window title bar position
 		ImGuizmo::SetOrthographic(true);
 		ImGuizmo::SetDrawlist();
-		float windowWidth = (float)ImGui::GetWindowWidth();
-		float windowHeight = (float)ImGui::GetWindowHeight();
-		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+		ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
 		auto current_camera = CameraSystem::GetActiveCamera();
 

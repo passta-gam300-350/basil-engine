@@ -91,7 +91,7 @@ public:
 
 	void Render_AboutUI();
 
-	void Gizmos();
+	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
 
 	void Render_SceneExplorer();
 
