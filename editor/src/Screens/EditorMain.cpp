@@ -230,9 +230,9 @@ void EditorMain::init()
 	// Set window title
 	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+	const GLFWvidmode* v_mode = glfwGetVideoMode(primaryMonitor);
 	UNREF_PARAM(primaryMonitor);
-	UNREF_PARAM(mode);
+	UNREF_PARAM(v_mode);
 	// Set maximized
 	glfwMaximizeWindow(window);
 
@@ -989,12 +989,12 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					is_dirty = true;
 				}
 			}
-			else if (uint32_t* vd = value.try_cast<uint32_t>()) {
+			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
 
 				// With custom format
-				if (ImGui::SliderScalar("My Slider", ImGuiDataType_U32, vd, &minValue, &maxValue, "%u")) {
+				if (ImGui::SliderScalar("My Slider", ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
 					is_dirty = true;
 				}
 
@@ -1826,8 +1826,8 @@ void EditorMain::Render_SceneExplorer()
 	ImGui::Spacing();
 
 	// Scene tree
-	const auto& entityHandles = engineService.GetEntitiesSnapshot();
-	const auto& entityNames = engineService.GetEntityNamesSnapshot();
+	/*const auto& entityHandles = engineService.GetEntitiesSnapshot();
+	const auto& entityNames = engineService.GetEntityNamesSnapshot();*/
 	//ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
 	
 	//const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& sceneGraphs = engineService.GetSceneGraphSnapshot();
@@ -3399,8 +3399,8 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 		auto current_camera = CameraSystem::GetActiveCamera();
 
 		// Grabbing the transform we want to edit
-		const auto& entityHandles = engineService.GetEntitiesSnapshot();
-		const auto& entityNames = engineService.get_reflectible_component_id_name_list();
+		/*const auto& entityHandles = engineService.GetEntitiesSnapshot();
+		const auto& entityNames = engineService.get_reflectible_component_id_name_list();*/
 
 		engineService.ExecuteOnEngineThread([&]() {
 			auto world = Engine::GetWorld();
