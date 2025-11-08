@@ -10,6 +10,8 @@ namespace {
 	static constexpr const char CurrentSceneVersion[] = "v0.0.1";
 }
 
+using SceneEntityID = std::uint32_t;
+
 struct SceneIDComponent {
 	std::uint32_t m_scene_id;
 };
@@ -27,9 +29,11 @@ struct Scene
 {
 	Scene() = default;
 	inline void Clear() {
-		for (auto& [ssid, ss] : m_scene_entities) {
+		auto tmp = m_scene_entities;
+		for (auto& [ssid, ss] : tmp) {
 			ss.destroy();
 		}
+		m_scene_entities.clear();
 	}
 	void Unload() {
 		Clear();
@@ -129,9 +133,7 @@ private:
 public:
 	SceneRegistry() = default;
 	~SceneRegistry() {
-		for (auto& [sid, scn] : m_loaded_scenes) {
-			//scn.Clear();
-		}
+		//Clear();
 	}
 
 	inline bool IsLoaded(rp::Guid scn_guid) {
@@ -147,12 +149,19 @@ public:
 		return m_loaded_scenes;
 	}
 	void onCreateAssignToDefault(ecs::entity e);
+	void onCreateAssignSceneIDToDefault(ecs::entity e);
 	void onDestroySceneComponent(ecs::entity e);
 	//nullopt if not found
 	inline std::optional<ecs::entity> GetReferencedEntity(SceneEntityReference const& ref) {
 		auto scnres = GetScene(ref.m_scene_guid.m_guid);
 		auto entityres = scnres ? scnres.value().get().GetSceneEntity(ref.m_scene_id) : std::nullopt;
 		return entityres;
+	}
+	void Clear() {
+		for (auto& [sid, scn] : m_loaded_scenes) {
+			scn.Clear();
+		}
+		m_loaded_scenes.clear();
 	}
 };
 

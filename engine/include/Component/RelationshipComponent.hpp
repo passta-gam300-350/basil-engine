@@ -1,14 +1,17 @@
 #ifndef RELATONSHIPCOMPONENT_HPP
 #define RELATONSHIPCOMPONENT_HPP
+
+#define NO_DEF_UUID
 #include "Component.hpp"
 #include "ecs/ecs.h"
 #include <vector>
+#include "Scene/Scene.hpp"
 
 class RelationshipComponent : public Component
 {
 public:
-	ecs::entity parentHandle;
-	std::vector<ecs::entity> childrenHandles;
+	SceneEntityID parentHandle;
+	std::vector<SceneEntityID> childrenHandles;
 
 	RelationshipComponent() = default;
 	RelationshipComponent(ecs::entity parent) : parentHandle{ parent } {}
@@ -16,12 +19,12 @@ public:
 	ComponentType getType() const override;
 
 	// Parent management
-	ecs::entity getParent() const;
+	ecs::entity getParent(rp::Guid = rp::null_guid) const;
 	void setParent(ecs::entity newParent);
 	bool hasParent() const;
 
 	// Children management
-	const std::vector<ecs::entity>& getChildren() const;
+	std::vector<ecs::entity> getChildren(rp::Guid = rp::null_guid) const;
 	void addChild(ecs::entity child);
 	void removeChild(ecs::entity child);
 	void clearChildren();
@@ -31,10 +34,10 @@ public:
 
 };
 
-//RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")
-//	MemberRegistrationV<&RelationshipComponent::parentHandle, "parent">,
-//	MemberRegistrationV<&RelationshipComponent::childrenHandles, "parent">
-//RegisterReflectionTypeEnd
+RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")
+	MemberRegistrationV<&RelationshipComponent::parentHandle, "parent">,
+	MemberRegistrationV<&RelationshipComponent::childrenHandles, "child">
+RegisterReflectionTypeEnd
 //
 //RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")
 //	MemberRegistrationV<&RelationshipComponent::parentHandle, "parent">,

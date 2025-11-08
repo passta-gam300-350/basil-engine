@@ -146,7 +146,7 @@ void Engine::CoreUpdate() {
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
-	TransformSystem().FixedUpdate(instance.m_World);
+	//TransformSystem().FixedUpdate(instance.m_World);
 	HierarchySystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance

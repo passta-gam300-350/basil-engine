@@ -66,6 +66,8 @@ Technology is prohibited.
 #include "Manager/MonoImGuiRenderer.hpp"
 #include <Scene/Scene.hpp>
 
+//#include <Component/RelationshipComponent.hpp>
+
 #define UNREF_PARAM(x) x;
 
 RegisterImguiDescriptorInspector(ModelDescriptor);
@@ -228,9 +230,9 @@ void EditorMain::init()
 	// Set window title
 	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+	const GLFWvidmode* v_mode = glfwGetVideoMode(primaryMonitor);
 	UNREF_PARAM(primaryMonitor);
-	UNREF_PARAM(mode);
+	UNREF_PARAM(v_mode);
 	// Set maximized
 	glfwMaximizeWindow(window);
 
@@ -792,6 +794,7 @@ void EditorMain::Render_Components()
 	
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	static const ReflectionRegistry::TypeID skip_sceneid_component{ internal_type_map[entt::type_index<SceneIDComponent>::value()] };
+	static const ReflectionRegistry::TypeID skip_relationship_component{ std::find_if(ReflectionRegistry::types().begin(), ReflectionRegistry::types().end(), [](auto const& kv) {return kv.second.id() == ToTypeName("Relationship"); })->first};
 	ReflectionRegistry::TypeID behaviour_component{};
 	auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
 	if (behaviourIt != internal_type_map.end())
@@ -807,7 +810,7 @@ void EditorMain::Render_Components()
 	}
 
 	for (auto const& [type_id, uptr] : component_list) {
-		if (type_id == skip_name_component || type_id == skip_sceneid_component) {
+		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
 		}
 		if (behaviour_component && type_id == behaviour_component)
@@ -986,12 +989,12 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					is_dirty = true;
 				}
 			}
-			else if (uint32_t* vd = value.try_cast<uint32_t>()) {
+			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
 
 				// With custom format
-				if (ImGui::SliderScalar("My Slider", ImGuiDataType_U32, vd, &minValue, &maxValue, "%u")) {
+				if (ImGui::SliderScalar("My Slider", ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
 					is_dirty = true;
 				}
 
@@ -1181,8 +1184,10 @@ void EditorMain::Render_Add_Component_Menu()
 {
 	auto& reflectible_component_list = engineService.get_reflectible_component_id_name_list();
 	static const ReflectionRegistry::TypeID skip_name_component{ ReflectionRegistry::InternalID()[entt::type_index<ecs::entity::entity_name_t>::value()] };
+	static const ReflectionRegistry::TypeID skip_sceneid_component{ ReflectionRegistry::InternalID()[entt::type_index<SceneIDComponent>::value()] };
+	static const ReflectionRegistry::TypeID skip_relationship_component{ std::find_if(ReflectionRegistry::types().begin(), ReflectionRegistry::types().end(), [](auto const& kv) {return kv.second.id() == ToTypeName("Relationship"); })->first };
 	for (auto const& [type_id, type_name] : reflectible_component_list) {
-		if (type_id == skip_name_component) {
+		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {
@@ -1821,8 +1826,8 @@ void EditorMain::Render_SceneExplorer()
 	ImGui::Spacing();
 
 	// Scene tree
-	const auto& entityHandles = engineService.GetEntitiesSnapshot();
-	const auto& entityNames = engineService.GetEntityNamesSnapshot();
+	/*const auto& entityHandles = engineService.GetEntitiesSnapshot();
+	const auto& entityNames = engineService.GetEntityNamesSnapshot();*/
 	//ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
 	
 	//const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& sceneGraphs = engineService.GetSceneGraphSnapshot();
@@ -1873,8 +1878,8 @@ void EditorMain::Render_SceneExplorer()
 
 			if (ImGui::BeginPopupContextItem())
 			{
-				if (node.m_parent && ImGui::MenuItem("Duplicate")) {  }
-				if (node.m_parent && ImGui::MenuItem("Delete"))
+				if (node.m_entity_handle && ImGui::MenuItem("Duplicate")) {  }
+				if (node.m_entity_handle && ImGui::MenuItem("Delete"))
 				{
 					// Clear selection if deleting the currently selected entity
 					if (isSelected) {
@@ -1884,7 +1889,7 @@ void EditorMain::Render_SceneExplorer()
 				}
 				if (ImGui::MenuItem(node.is_active ? "Disable" : "Enable"))
 				{
-					if(!node.m_parent) {
+					if(!node.m_entity_handle) {
 						engineService.ExecuteOnEngineThread([node, scnguid]() {
 							auto scnres{ Engine::GetSceneRegistry().GetScene(scnguid) };
 							if (!scnres)
@@ -1908,7 +1913,7 @@ void EditorMain::Render_SceneExplorer()
 							});
 					}
 				}
-				if (node.m_parent && ImGui::MenuItem("Add Child"))
+				if (node.m_entity_handle && ImGui::MenuItem("Add Child"))
 				{
 					engineService.create_child_entity(node.m_entity_handle);
 				}
@@ -3394,8 +3399,8 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 		auto current_camera = CameraSystem::GetActiveCamera();
 
 		// Grabbing the transform we want to edit
-		const auto& entityHandles = engineService.GetEntitiesSnapshot();
-		const auto& entityNames = engineService.get_reflectible_component_id_name_list();
+		/*const auto& entityHandles = engineService.GetEntitiesSnapshot();
+		const auto& entityNames = engineService.get_reflectible_component_id_name_list();*/
 
 		engineService.ExecuteOnEngineThread([&]() {
 			auto world = Engine::GetWorld();
@@ -3410,9 +3415,9 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 		if (GuizmoEntityTransform != nullptr && GuizmoEntityTransformMTX != nullptr)
 		{
 			glm::mat4 deltas{};
-			glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
+			//glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
 			// Create and display Gizmos
-			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(transmtx), glm::value_ptr(deltas));
+			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(deltas));
 
 			
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
@@ -3420,7 +3425,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 				// Break down the edited matrix so we can save the values
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransform->getLocalMatrix() * deltas), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
 				std::cout << GuizmoEntityTransform->m_Translation.x;
-				GuizmoEntityTransformMTX->m_Mtx = transmtx;
+				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff
 				//EditingID = selectedEnitityID; // Set the Id
 				//if (HasBeenEditied == false) // Only Situation that can cause a problem is if you manage to edit two entities back to back

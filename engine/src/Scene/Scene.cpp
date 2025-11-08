@@ -82,10 +82,23 @@ void SceneRegistry::onCreateAssignToDefault(ecs::entity e) {
 	auto& scncomp = e.add<SceneComponent>();
 	auto& scnidcomp = e.add<SceneIDComponent>();
 	auto& scn = m_loaded_scenes[rp::null_guid];
-	scn.SceneName() = "DefaultScene";
+	scn.SceneName() = "Scene";
 
 	scncomp.m_scene_guid.m_guid = rp::null_guid;
 	scnidcomp.m_scene_id = scn.GetNextSlot();
+
+	scn.Dirty() = true;
+
+	scn.GetSceneEntitites().emplace(scnidcomp.m_scene_id, e);
+}
+
+void SceneRegistry::onCreateAssignSceneIDToDefault(ecs::entity e)
+{
+	auto& scncomp = e.add<SceneComponent>();
+	auto& scnidcomp = e.get<SceneIDComponent>();
+	auto& scn = m_loaded_scenes[rp::null_guid];
+	scn.SceneName() = "Scene";
+	scncomp.m_scene_guid.m_guid = rp::null_guid;
 
 	scn.Dirty() = true;
 

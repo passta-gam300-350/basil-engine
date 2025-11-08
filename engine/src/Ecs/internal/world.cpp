@@ -171,7 +171,9 @@ namespace ecs {
 	{
 		if (is_valid(enty)) {
 			if (SceneGraph::HasParent(enty)) {
-				SceneGraph::RemoveChild(SceneGraph::GetParent(enty), enty);
+				if (auto parent{ SceneGraph::GetParent(enty) }; parent) {
+					SceneGraph::RemoveChild(parent, enty);
+				}
 			}
 			auto children = SceneGraph::GetChildren(enty);
 			for (auto child : children) {
@@ -205,7 +207,16 @@ namespace ecs {
 		YAML::Node root{YAML::LoadFile(path)};
 		YAML::Node entities{ root["entities"] };
 		for (const auto& entity_node : entities) {
-			DeserializeEntity(impl.get_registry(), entity_node);
+			entt::entity e;
+			DeserializeEntity(impl.get_registry(), entity_node, &e);
+			ecs::entity entity{ impl.entity_cast(e) };
+			if (entity.all<SceneIDComponent>()) {
+				Engine::GetSceneRegistry().onCreateAssignSceneIDToDefault(entity);
+			}
+			else{
+				Engine::GetSceneRegistry().onCreateAssignToDefault(entity);
+			}
+			entity.add<entity::active_t>();
 		}
 		auto transforms{ filter_entities<TransformComponent>() };
 		std::for_each(transforms.begin(), transforms.end(), [](ecs::entity e) {
@@ -229,6 +240,7 @@ namespace ecs {
 		
 	}
 	void world::UnloadAll() {
+		Engine::GetSceneRegistry().Clear();
 		impl.get_registry().clear();
 	}
 
