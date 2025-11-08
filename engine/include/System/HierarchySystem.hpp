@@ -35,6 +35,7 @@ class HierarchySystem : public ecs::SystemBase
 public:
 	void Init() override;
 	void Update(ecs::world& world, float dt) override;
+	void FixedUpdate(ecs::world& world) override;
 	void Exit() override;
 
 private:

@@ -64,6 +64,8 @@ Technology is prohibited.
 #include <Messaging/Messaging_System.h>
 #include "MonoResolver/MonoTypeDescriptor.hpp"
 #include "Manager/MonoImGuiRenderer.hpp"
+#include <Scene/Scene.hpp>
+
 #define UNREF_PARAM(x) x;
 
 RegisterImguiDescriptorInspector(ModelDescriptor);
@@ -692,6 +694,7 @@ void EditorMain::Render_Inspector()
 	if (auto it{ std::find_if(entities.begin(), entities.end(), [this](std::size_t ehdl) {return ecs::entity(ehdl).get_uid() == m_SelectedEntityID; }) }; it != entities.end()) {
 		// Show entity components
 		ImGui::Text("Entity UID: %llu", m_SelectedEntityID);
+		ImGui::Text("Entity Scene ID: %llu", m_SelectedNodeID);
 
 		auto i = it - entities.begin();
 
@@ -788,6 +791,7 @@ void EditorMain::Render_Components()
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
 	
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
+	static const ReflectionRegistry::TypeID skip_sceneid_component{ internal_type_map[entt::type_index<SceneIDComponent>::value()] };
 	ReflectionRegistry::TypeID behaviour_component{};
 	auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
 	if (behaviourIt != internal_type_map.end())
@@ -803,7 +807,7 @@ void EditorMain::Render_Components()
 	}
 
 	for (auto const& [type_id, uptr] : component_list) {
-		if (type_id == skip_name_component) {
+		if (type_id == skip_name_component || type_id == skip_sceneid_component) {
 			continue;
 		}
 		if (behaviour_component && type_id == behaviour_component)
@@ -1819,12 +1823,132 @@ void EditorMain::Render_SceneExplorer()
 	// Scene tree
 	const auto& entityHandles = engineService.GetEntitiesSnapshot();
 	const auto& entityNames = engineService.GetEntityNamesSnapshot();
+	//ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
+	
+	//const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& sceneGraphs = engineService.GetSceneGraphSnapshot();
 
-
-
+	auto scnGraphs = engineService.m_cont->m_loaded_scenes_scenegraph_snapshot;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
 
+	auto RenderSceneGraphNode{ [this] (const SceneGraphNode& node, rp::Guid scnguid){
+		auto RenderNode{ [this, scnguid](const SceneGraphNode& node, auto&& fn) -> void {
+			// Check if this entity is currently selected
+			uint32_t entityUID = ecs::entity(node.m_entity_handle).get_uid();
+			bool isSelected = (m_SelectedEntityID == entityUID);
+			if (isSelected) {
+				m_SelectedNodeID = node.m_entity_sid;
+			}
+			bool isDisabled{};
+			static const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
+
+			// Highlight selected entity with different color
+			if (isSelected && node.m_parent) {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.761f, 0.542f, 0.223f, 1.0f)); // Yellow text for selected
+				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
+			}
+			else if (!node.is_active) {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.461f, 0.442f, 0.423f, 0.42f)); // Yellow text for selected
+				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.15f, 0.123f, 0.10f));
+				isDisabled = true;
+			}
+
+		if (ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", node.m_entity_name.c_str())) {
+			// Display entity info with selection highlighting
+			std::string entityName = node.m_entity_name;
+
+			//bool nodeOpen = ImGui::TreeNode(entityName.c_str());
+			if (ImGui::IsItemClicked())
+			{
+				spdlog::info("DEBUG: Entity clicked - entityUID = {}, entityName = {}", entityUID, entityName);
+				SelectEntity(entityUID);
+				m_SelectedNodeID = node.m_entity_sid;
+			}
+
+			if (isDisabled) {
+				ImGui::PopStyleColor(2);
+				isDisabled = false;
+			}
+
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (node.m_parent && ImGui::MenuItem("Duplicate")) {  }
+				if (node.m_parent && ImGui::MenuItem("Delete"))
+				{
+					// Clear selection if deleting the currently selected entity
+					if (isSelected) {
+						ClearEntitySelection();
+					}
+					engineService.delete_entity(node.m_entity_handle);
+				}
+				if (ImGui::MenuItem(node.is_active ? "Disable" : "Enable"))
+				{
+					if(!node.m_parent) {
+						engineService.ExecuteOnEngineThread([node, scnguid]() {
+							auto scnres{ Engine::GetSceneRegistry().GetScene(scnguid) };
+							if (!scnres)
+								return;
+							if (node.is_active) {
+								scnres.value().get().DisableScene();
+							}
+							else {
+								scnres.value().get().EnableScene();
+							}
+							});
+					}
+					else {
+						engineService.ExecuteOnEngineThread([node]() {auto e = ecs::entity(node.m_entity_handle);
+						if (e.is_active()) {
+							e.disable();
+						}
+						else {
+							e.enable();
+						}
+							});
+					}
+				}
+				if (node.m_parent && ImGui::MenuItem("Add Child"))
+				{
+					engineService.create_child_entity(node.m_entity_handle);
+				}
+				ImGui::Separator();
+				if (ImGui::MenuItem("Rename")) { }
+				ImGui::EndPopup();
+			}
+					
+			
+			//Draw children
+			int imidx{};
+			for (auto& child : node.m_children) {
+				ImGui::PushID(imidx++);
+				fn(child, fn);
+				ImGui::PopID();
+			}
+			ImGui::TreePop();
+		}
+		// Pop the selection highlight color if it was applied
+		if (isSelected && node.m_parent) {
+			ImGui::PopStyleColor(3);
+		}
+		else if (isDisabled) {
+			ImGui::PopStyleColor(2);
+			isDisabled = false;
+		}
+
+		} };
+		RenderNode(node, RenderNode);
+		} };
+
+	if (scnGraphs.size()) {
+		for (auto& [guid, kv] : scnGraphs) {
+			auto& [scene, stale] = kv;
+			RenderSceneGraphNode(scene, guid);
+		}
+	}
+	
+
+	/*
 	if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 	{
 		//int entityIndex = 0;
@@ -1850,10 +1974,10 @@ void EditorMain::Render_SceneExplorer()
 		//	// Right-click context menu
 		//	if (ImGui::BeginPopupContextItem())
 		//	{
-		//		if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
-		//		if (ImGui::MenuItem("Delete")) { /* Delete entity */ }
+		//		if (ImGui::MenuItem("Duplicate")) { }
+		//		if (ImGui::MenuItem("Delete")) { }
 		//		ImGui::Separator();
-		//		if (ImGui::MenuItem("Rename")) { /* Rename entity */ }
+		//		if (ImGui::MenuItem("Rename")) { }
 		//		ImGui::EndPopup();
 		//	}
 
@@ -1912,7 +2036,7 @@ void EditorMain::Render_SceneExplorer()
 
 			if (ImGui::BeginPopupContextItem())
 			{
-				if (ImGui::MenuItem("Duplicate")) { /* Duplicate entity */ }
+				if (ImGui::MenuItem("Duplicate")) {  }
 				if (ImGui::MenuItem("Delete"))
 				{
 					// Clear selection if deleting the currently selected entity
@@ -1922,7 +2046,7 @@ void EditorMain::Render_SceneExplorer()
 					engineService.delete_entity(ehdl);
 				}
 				ImGui::Separator();
-				if (ImGui::MenuItem("Rename")) { /* Rename entity */ }
+				if (ImGui::MenuItem("Rename")) {  }
 				ImGui::EndPopup();
 			}
 
@@ -1937,7 +2061,7 @@ void EditorMain::Render_SceneExplorer()
 
 		ImGui::TreePop();
 	}
-
+	*/
 	ImGui::PopStyleVar();
 
 	// Right-click in empty space to create new objects
@@ -1945,7 +2069,7 @@ void EditorMain::Render_SceneExplorer()
 	{
 		if (ImGui::BeginMenu("Create"))
 		{
-			if (ImGui::MenuItem("Empty GameObject")) { /* Create empty */ }
+			if (ImGui::MenuItem("Empty GameObject")) { }
 			ImGui::Separator();
 			if (ImGui::MenuItem("Cube"))
 			{
@@ -3277,25 +3401,26 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 			auto world = Engine::GetWorld();
 			if (m_SelectedEntityID) {
 				auto selected = world.impl.entity_cast(entt::entity(m_SelectedEntityID));
-				GuizmoEntityTransform = &world.get_component_from_entity<TransformComponent>(selected);
-				GuizmoEntityTransformMTX = &world.get_component_from_entity<TransformMtxComponent>(selected);
+				GuizmoEntityTransform = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformComponent>(selected) : nullptr;
+				GuizmoEntityTransformMTX = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformMtxComponent>(selected) : nullptr;
 			}
 			});
 
 
 		if (GuizmoEntityTransform != nullptr && GuizmoEntityTransformMTX != nullptr)
 		{
+			glm::mat4 deltas{};
+			glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
 			// Create and display Gizmos
-			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx));
+			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(transmtx), glm::value_ptr(deltas));
 
-			
 			
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
 			{
 				// Break down the edited matrix so we can save the values
-				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransform->getLocalMatrix() * deltas), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
 				std::cout << GuizmoEntityTransform->m_Translation.x;
-				GuizmoEntityTransformMTX;
+				GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff
 				//EditingID = selectedEnitityID; // Set the Id
 				//if (HasBeenEditied == false) // Only Situation that can cause a problem is if you manage to edit two entities back to back

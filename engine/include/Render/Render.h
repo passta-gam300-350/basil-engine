@@ -106,6 +106,8 @@ public:
         return std::make_unique<Camera_Calculation_Update>(*this);
     }
     Camera_Calculation_Update(glm::mat4 view, glm::mat4 proj) : viewMat4(view), projectionMat4(proj) {};
+
+    ~Camera_Calculation_Update() = default;
 };
 
 struct RenderSystem : public ecs::SystemBase {

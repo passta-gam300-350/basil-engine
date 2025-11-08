@@ -149,14 +149,14 @@ namespace ecs {
 
 			template <typename Tuple, std::size_t...Is>
 			auto repack_tuple(Tuple&& tp, std::index_sequence<Is...>) {
-				return std::forward_as_tuple(std::get<Is + 1>(std::forward<Tuple>(tp))...);
+				return std::forward_as_tuple(std::get<Is + 2>(std::forward<Tuple>(tp))...);
 			}
 
 			auto operator*() {
 				auto value{ dereference_iter() };
 				static_assert(is_tuple_like_v<decltype(value)>);
 				constexpr std::size_t t_size{ std::tuple_size<decltype(value)>::value };
-				return repack_tuple(value, std::make_index_sequence<t_size - 1>{});
+				return repack_tuple(value, std::make_index_sequence<t_size - 2>{});
 			}
 			iterator operator++() {
 				it++;

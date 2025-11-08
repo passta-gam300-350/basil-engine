@@ -1,14 +1,15 @@
 #ifndef RELATONSHIPCOMPONENT_HPP
 #define RELATONSHIPCOMPONENT_HPP
 #include "Component.hpp"
+#include "ecs/ecs.h"
 #include <vector>
 
 class RelationshipComponent : public Component
 {
+public:
 	ecs::entity parentHandle;
 	std::vector<ecs::entity> childrenHandles;
 
-public:
 	RelationshipComponent() = default;
 	RelationshipComponent(ecs::entity parent) : parentHandle{ parent } {}
 	~RelationshipComponent() override = default;
@@ -29,6 +30,16 @@ public:
 	bool inEditor() override;
 
 };
+
+//RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")
+//	MemberRegistrationV<&RelationshipComponent::parentHandle, "parent">,
+//	MemberRegistrationV<&RelationshipComponent::childrenHandles, "parent">
+//RegisterReflectionTypeEnd
+//
+//RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")
+//	MemberRegistrationV<&RelationshipComponent::parentHandle, "parent">,
+//	MemberRegistrationV<&RelationshipComponent::childrenHandles, "parent">
+//RegisterReflectionTypeEnd
 
 
 #endif //RELATONSHIPCOMPONENT_HPP

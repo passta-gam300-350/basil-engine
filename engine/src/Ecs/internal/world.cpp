@@ -4,6 +4,9 @@
 #include "ecs/system/scheduler.h"
 
 #include <entt/entity/snapshot.hpp>
+#include "Scene/Scene.hpp"
+#include "Engine.hpp"
+#include "Scene/SceneGraph.hpp"
 
 #include <yaml-cpp/yaml.h>
 
@@ -69,7 +72,7 @@ namespace ecs {
 	}
 
 	bool world::is_valid(entity e) {
-		return impl.get_registry().valid(detail::entt_entity_cast(e.get_uid()));
+		return impl.get_registry().valid(detail::entt_entity_cast(e));
 	}
 
 	WorldRegistry& WorldRegistry::Instance() {
@@ -159,12 +162,24 @@ namespace ecs {
 		entt::registry& reg{ impl.get_registry() };
 		entt::entity new_entity{ reg.create() };
 		reg.emplace<entity::entity_name_t>(new_entity, default_name);
+		reg.emplace<entity::active_t>(new_entity);
+		Engine::GetSceneRegistry().onCreateAssignToDefault(entity{ impl.handle, static_cast<std::uint32_t>(new_entity) }); //use proper observers next time
 		return entity{ impl.handle, static_cast<std::uint32_t>(new_entity) };
 	}
 
 	void world::remove_entity(entity enty)
 	{
-		impl.get_registry().destroy(detail::entt_entity_cast(enty));
+		if (is_valid(enty)) {
+			if (SceneGraph::HasParent(enty)) {
+				SceneGraph::RemoveChild(SceneGraph::GetParent(enty), enty);
+			}
+			auto children = SceneGraph::GetChildren(enty);
+			for (auto child : children) {
+				remove_entity(child);
+			}
+			Engine::GetSceneRegistry().onDestroySceneComponent(enty); //use proper observers next time
+			impl.get_registry().destroy(detail::entt_entity_cast(enty));
+		}
 	}
 
 	void world::update()

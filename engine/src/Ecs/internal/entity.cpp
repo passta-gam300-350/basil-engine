@@ -37,7 +37,7 @@ namespace ecs {
 	}
 
 	void entity::destroy() {
-		world(get_world_handle()).impl.get_registry().destroy(world::detail::entt_entity_cast(*this));
+		world(get_world_handle()).remove_entity(*this);
 		invalidate();
 	}
 

@@ -13,6 +13,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Render/Camera.h"
 #include "System/Audio.hpp"
+#include "System/HierarchySystem.hpp"
 
 #include "Scene/Scene.hpp"
 
@@ -146,6 +147,7 @@ void Engine::CoreUpdate() {
 	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
 	TransformSystem().FixedUpdate(instance.m_World);
+	HierarchySystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//physic_system.FixedUpdate(instance.m_World);
@@ -156,11 +158,11 @@ void Engine::CoreUpdate() {
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
-	messagingSystem.Update();
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
+	messagingSystem.Update();
 }
 
 void Engine::Update() {
@@ -309,7 +311,6 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 void Engine::Exit() {
 	SystemRegistry::Exit();
-	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
 	if (Instance().m_RenderSystem) {
 		Instance().m_RenderSystem->Exit();
@@ -319,6 +320,7 @@ void Engine::Exit() {
 	Scheduler::Release();
 	AudioSystem::GetInstance().Exit(); // [TEMP]
 	InstancePtr().reset();
+	WorldRegistry::Clear();
 }
 
 world Engine::GetWorld() {
