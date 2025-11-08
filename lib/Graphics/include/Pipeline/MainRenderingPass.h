@@ -53,6 +53,15 @@ public:
     void EnableSkybox(bool enabled) { m_SkyboxEnabled = enabled; }
     bool IsSkyboxEnabled() const { return m_SkyboxEnabled; }
 
+    // Light cube visualization configuration (accessed by SceneRenderer)
+    void SetPrimitiveShader(const std::shared_ptr<Shader>& shader) { m_PrimitiveShader = shader; }
+    void SetLightCubeMesh(const std::shared_ptr<Mesh>& mesh) { m_LightCube = mesh; }
+    void SetShowLightCubes(bool show) { m_ShowLightCubes = show; }
+    bool GetShowLightCubes() const { return m_ShowLightCubes; }
+    void SetBaseLightCubeSize(float size) { m_BaseLightCubeSize = size; }
+    void SetIntensityScaleFactor(float factor) { m_IntensityScaleFactor = factor; }
+    void SetCubeSizeRange(float minSize, float maxSize) { m_MinCubeSize = minSize; m_MaxCubeSize = maxSize; }
+
     // HDR texture access (for tone mapping pipeline)
     uint32_t GetHDRTexture() const {
         return GetFramebuffer() ? GetFramebuffer()->GetColorAttachmentRendererID(0) : 0;
@@ -66,11 +75,23 @@ private:
     // Render skybox if enabled
     void RenderSkybox(RenderContext& context);
 
+    // Render light cubes for visualization
+    void RenderLightCubes(RenderContext& context);
+
     // Skybox resources
     unsigned int m_SkyboxCubemapID = 0;
     std::shared_ptr<Shader> m_SkyboxShader;
     std::shared_ptr<Mesh> m_SkyboxMesh;
     bool m_SkyboxEnabled = false;
+
+    // Light cube visualization resources
+    std::shared_ptr<Shader> m_PrimitiveShader;
+    std::shared_ptr<Mesh> m_LightCube;
+    bool m_ShowLightCubes = true;
+    float m_BaseLightCubeSize = 0.3f;
+    float m_IntensityScaleFactor = 0.2f;
+    float m_MinCubeSize = 0.1f;
+    float m_MaxCubeSize = 2.0f;
 
     // Background clear color (default: light gray)
     glm::vec4 m_ClearColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
