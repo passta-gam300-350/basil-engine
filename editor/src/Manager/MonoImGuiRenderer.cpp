@@ -164,8 +164,58 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 		ImGui::Text("%s: %s", label, value.c_str());
 		break;
 	}
+	case ManagedKind::System_List:
+		{
+		ImGui::TextDisabled("%s (List type not yet supported)", label);
+		break;
+	}
+
+
 	default:
-		ImGui::TextDisabled("%s (type %s not supported)", label, fieldNode.descriptor->managed_name.c_str());
+		if (fieldNode.descriptor->managedKind == ManagedKind::Custom)
+		{
+			auto managed_name = fieldNode.descriptor->managed_name;
+			if (managed_name == "BasilEngine.Mathematics.Vector3")
+			{
+
+			
+				struct { float x, y, z; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				float vals[3] = { value.x, value.y, value.z };
+				if (ImGui::InputFloat3(label, vals))
+				{
+					value.x = vals[0];
+					value.y = vals[1];
+					value.z = vals[2];
+					mono_field_set_value(scriptObject, fieldInfo->field, &value);
+					modified = true;
+				}
+
+				break;
+			} else if (managed_name == "BasilEngine.Mathematics.Vector2")
+			{
+
+
+				struct { float x, y; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				float vals[2] = { value.x, value.y };
+				if (ImGui::InputFloat2(label, vals))
+				{
+					value.x = vals[0];
+					value.y = vals[1];
+
+					mono_field_set_value(scriptObject, fieldInfo->field, &value);
+					modified = true;
+				}
+
+				break;
+			}
+		}
+		else {
+			ImGui::TextDisabled("%s (type %s not supported)", label, fieldNode.descriptor->managed_name.c_str());
+		}
 		break;
 	}
 

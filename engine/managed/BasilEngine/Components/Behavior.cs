@@ -10,7 +10,6 @@ namespace BasilEngine.Components
     [Disabled]
     public class Behavior : Component
     {
-        public bool IsEnabled { get; set; } = true;
 
     }
 }

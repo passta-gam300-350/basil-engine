@@ -1,0 +1,15 @@
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\bin\Debug\net48\GameAssembly.dll
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\bin\Debug\net48\GameAssembly.pdb
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\bin\Debug\net48\BasilEngine.dll
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\bin\Debug\net48\Engine.Bindings.dll
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\bin\Debug\net48\BasilEngine.pdb
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\bin\Debug\net48\Engine.Bindings.pdb
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.csproj.AssemblyReference.cache
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfoInputs.cache
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.csproj.CoreCompileInputs.cache
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.sourcelink.json
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAsse.29018E22.Up2Date
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.dll
+C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2New\assets\scripts\obj\Debug\net48\GameAssembly.pdb

@@ -10,6 +10,7 @@ public:
 	void Register(std::string typeName, ScriptID id);
 	void Unregister(std::string typeName);
 	ScriptID GetMonoEntityID(std::string name) const;
+	void Exit();
 };
 
 

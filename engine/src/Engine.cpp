@@ -320,6 +320,7 @@ void Engine::Exit() {
 	Scheduler::Release();
 	AudioSystem::GetInstance().Exit(); // [TEMP]
 	InstancePtr().reset();
+	MonoEntityManager::GetInstance().ClearAll();
 	WorldRegistry::Clear();
 }
 

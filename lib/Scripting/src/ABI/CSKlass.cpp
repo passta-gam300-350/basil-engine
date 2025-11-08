@@ -337,6 +337,11 @@ void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance, [[maybe
 
 void CSKlassInstance::Reset() noexcept
 {
+	if (m_instanceHandle)
+	{
+		mono_gchandle_free(m_instanceHandle);
+		m_instanceHandle = 0;
+	}
 	m_klass = nullptr;
 	m_instance = nullptr;
 }
@@ -378,4 +383,14 @@ MonoObject* CSKlassInstance::Invoke(const char* methodName, void** args, MonoObj
 	}
 
 	return mono_runtime_invoke(method, m_instance, args, exception);
+}
+
+
+
+CSKlassInstance::~CSKlassInstance()
+{
+	if (m_instanceHandle)
+	{
+		//mono_gchandle_free(m_instanceHandle);
+	}
 }

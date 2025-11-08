@@ -134,7 +134,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		spdlog::warn("[BehaviourSystem] Class {}.{} is not derived from BasilEngine.Behaviour", klass_ns, klassname);
 		return;
 	}
-	rp::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns);
+	rp::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns, nullptr, false,entity.get_uuid());
 	if (AddScriptToEntityComponent(entity, world, scriptID))
 	{
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
@@ -159,4 +159,32 @@ void BehaviourSystem::RegisterComponent(ecs::entity& entity) {
 		}
 	}
 }
+
+void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other, enum CollisionCallback callback)
+{
+	behaviour& component = entity.get<behaviour>();
+
+	void* args[1];
+	args[0] = &other;
+	for (auto ScriptID : component.scriptIDs)
+	{
+		CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(ScriptID);
+		if (inst)
+		{
+			switch (callback)
+			{
+			case CollisionCallback::OnCollisionEnter:
+				inst->Invoke("OnCollisionEnter", args, nullptr, 1);
+				break;
+			case CollisionCallback::OnCollisionStay:
+				inst->Invoke("OnCollisionStay", args, nullptr, 1);
+				break;
+			case CollisionCallback::OnCollisionExit:
+				inst->Invoke("OnCollisionExit", args, nullptr, 1);
+				break;
+			}
+		}
+	}
+}
+
 

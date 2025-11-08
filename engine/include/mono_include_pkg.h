@@ -40,4 +40,7 @@ Technology is prohibited.
 // Reflection
 #include <mono/metadata/reflection.h>
 
+// Marshal
+#include "MonoResolver/MonoMarshal.hpp"
+
 #endif	

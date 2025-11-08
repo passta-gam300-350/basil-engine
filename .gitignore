@@ -43,6 +43,8 @@
 
 # Others
 *.claude
+*.codex
+
 
 # vs files
 *.sln
@@ -78,3 +80,7 @@ dep/vendor/mono/
 !tools/*
 !tools/bin/
 !tools/bin/*
+!tools/bin/**/*
+
+!engine/managed/BasilEngine/*
+!engine/managed/BasilEngine/

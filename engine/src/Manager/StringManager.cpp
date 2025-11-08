@@ -3,7 +3,7 @@
 
 
 
-StringManager* StringManager::_instance{};
+
 
 
 uint32_t StringManager::HashString(std::string const& name)
@@ -20,11 +20,8 @@ uint32_t StringManager::HashString(std::string const& name)
 
 StringManager& StringManager::GetInstance()
 {
-	if (!_instance)
-	{
-		return *(_instance = new StringManager{});
-	}
-	return *_instance;
+	static StringManager instance{};
+	return instance;
 }
 
 
