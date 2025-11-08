@@ -1878,8 +1878,8 @@ void EditorMain::Render_SceneExplorer()
 
 			if (ImGui::BeginPopupContextItem())
 			{
-				if (node.m_parent && ImGui::MenuItem("Duplicate")) {  }
-				if (node.m_parent && ImGui::MenuItem("Delete"))
+				if (node.m_entity_handle && ImGui::MenuItem("Duplicate")) {  }
+				if (node.m_entity_handle && ImGui::MenuItem("Delete"))
 				{
 					// Clear selection if deleting the currently selected entity
 					if (isSelected) {
@@ -1889,7 +1889,7 @@ void EditorMain::Render_SceneExplorer()
 				}
 				if (ImGui::MenuItem(node.is_active ? "Disable" : "Enable"))
 				{
-					if(!node.m_parent) {
+					if(!node.m_entity_handle) {
 						engineService.ExecuteOnEngineThread([node, scnguid]() {
 							auto scnres{ Engine::GetSceneRegistry().GetScene(scnguid) };
 							if (!scnres)
@@ -1913,7 +1913,7 @@ void EditorMain::Render_SceneExplorer()
 							});
 					}
 				}
-				if (node.m_parent && ImGui::MenuItem("Add Child"))
+				if (node.m_entity_handle && ImGui::MenuItem("Add Child"))
 				{
 					engineService.create_child_entity(node.m_entity_handle);
 				}
