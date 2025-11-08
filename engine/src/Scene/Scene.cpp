@@ -13,6 +13,8 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 	}
 	Scene scn;
 	scn.m_name = nd["scene"]["name"].as<std::string>();
+	scn.m_slot_ct = nd["scene"]["slots"].as<std::uint32_t>();
+	scn.m_guid = rp::Guid::to_guid(nd["scene"]["guid"].as<std::string>());
 	YAML::Node const& deps{ nd["scene"]["dependencies"] };
 	for (auto const& guid : deps) {
 		rp::Guid scn_guid = rp::Guid::to_guid(guid.as<std::string>());
@@ -27,8 +29,10 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 	for (auto const& ent : entities) {
 		DeserializeEntity(reg, ent, &ententity);
 		ecs::entity enty = Engine::GetWorld().impl.entity_cast(ententity);
+		enty.add<SceneComponent>().m_scene_guid.m_guid = scn.m_guid;
 		scn.m_scene_entities.emplace(enty.get_scene_uid(), enty);
 	}
+	scn.m_is_dirty = true;
 	return std::make_optional(scn);
 }
 
@@ -50,6 +54,53 @@ void SceneRegistry::UnloadScene(rp::Guid scn_guid)
 	if (scnres) {
 		scnres.value().get().Clear();
 		m_loaded_scenes.erase(scn_guid);
+	}
+}
+ecs::entity Scene::CreateEntity() {
+	ecs::entity e = Engine::GetWorld().add_entity();
+	m_is_dirty = true;
+	return AddEntityToScene(e);
+}
+
+ecs::entity Scene::AddEntityToScene(ecs::entity e) {
+	auto& scncomp = e.get<SceneComponent>();
+	auto& scnidcomp = e.get<SceneIDComponent>();
+	auto scnres = Engine::GetSceneRegistry().GetScene(scncomp.m_scene_guid.m_guid);
+	if (scnres)
+		scnres.value().get().m_scene_entities.erase(scnidcomp.m_scene_id);
+
+	scncomp.m_scene_guid.m_guid = m_guid;
+	scnidcomp.m_scene_id = GetNextSlot();
+
+	m_is_dirty = true;
+
+	m_scene_entities.emplace(scnidcomp.m_scene_id, e);
+	return e;
+}
+
+void SceneRegistry::onCreateAssignToDefault(ecs::entity e) {
+	auto& scncomp = e.add<SceneComponent>();
+	auto& scnidcomp = e.add<SceneIDComponent>();
+	auto& scn = m_loaded_scenes[rp::null_guid];
+	scn.SceneName() = "DefaultScene";
+
+	scncomp.m_scene_guid.m_guid = rp::null_guid;
+	scnidcomp.m_scene_id = scn.GetNextSlot();
+
+	scn.Dirty() = true;
+
+	scn.GetSceneEntitites().emplace(scnidcomp.m_scene_id, e);
+}
+
+void SceneRegistry::onDestroySceneComponent(ecs::entity e)
+{
+	auto& scncomp = e.get<SceneComponent>();
+	auto& scnidcomp = e.get<SceneIDComponent>();
+	auto scnres = Engine::GetSceneRegistry().GetScene(scncomp.m_scene_guid.m_guid);
+	if (scnres)
+	{
+		scnres.value().get().GetSceneEntitites().erase(scnidcomp.m_scene_id);
+		scnres.value().get().Dirty() = true;
 	}
 }
 
