@@ -57,7 +57,6 @@ public:
 	TransformComponent* GuizmoEntityTransform;
 	TransformMtxComponent* GuizmoEntityTransformMTX;
 
-
 	EditorMain(GLFWwindow* window);
 	void init() override;
 	void update() override;
@@ -151,6 +150,7 @@ private:
 	// Entity selection management
 	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
 	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
+	uint32_t m_SelectedNodeID = 0;
 
 	// Debug rendering controls
 	bool m_ShowAABBs = false;

@@ -1,6 +1,5 @@
 #include "Bindings/ManagedPhysics.hpp"
-
-#include "ecs/internal/entity.h"
+#include "ecs/ecs.h"
 #include "Physics/Physics_Components.h"
 
 
@@ -228,48 +227,47 @@ void ManagedPhysics::AddImpulseInternal(uint64_t handle, float x, float y, float
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void ManagedPhysics::SetFreezeX(uint64_t handle, bool freeze)
 {
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	phy.freezePositionX = freeze;
 	
 }
 bool ManagedPhysics::GetFreezeX(uint64_t handle)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	return phy.freezePositionX;
 }
 
 bool ManagedPhysics::GetFreezeY(uint64_t handle)
 {
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	return phy.freezePositionY;
 	
 }
 
 void ManagedPhysics::SetFreezeY(uint64_t handle, bool freeze)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	phy.freezePositionY = freeze;
 }
 
 void ManagedPhysics::SetFreezeZ(uint64_t handle, bool freeze)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	phy.freezePositionZ = freeze;
 }
 
 bool ManagedPhysics::GetFreezeZ(uint64_t handle)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	return phy.freezePositionZ;
 }
 
 
@@ -280,27 +278,39 @@ bool ManagedPhysics::GetFreezeZ(uint64_t handle)
 
 void ManagedPhysics::SetFreezeRotationX(uint64_t handle, bool freeze)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	phy.freezeRotationX = freeze;
 }
 bool ManagedPhysics::GetFreezeRotationX(uint64_t handle)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	return phy.freezeRotationX;
 }
 void ManagedPhysics::SetFreezeRotationY(uint64_t handle, bool freeze)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	phy.freezeRotationY = freeze;
 }
 bool ManagedPhysics::GetFreezeRotationY(uint64_t handle)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	return phy.freezeRotationY;
 }
 void ManagedPhysics::SetFreezeRotationZ(uint64_t handle, bool freeze)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	phy.freezeRotationZ = freeze;
 }
 bool ManagedPhysics::GetFreezeRotationZ(uint64_t handle)
 {
-	
+	ecs::entity entity{ handle };
+	RigidBodyComponent& phy = entity.get<RigidBodyComponent>();
+	return phy.freezeRotationZ;
 }
 
 

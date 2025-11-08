@@ -13,6 +13,9 @@
 #include "Particles/ParticleSystem.h"
 #include "Render/Camera.h"
 #include "System/Audio.hpp"
+#include "System/HierarchySystem.hpp"
+
+#include "Scene/Scene.hpp"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -124,6 +127,8 @@ void Engine::Init(std::string const& cfg ) {
 
 	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 	MaterialOverridesSystem::Instance().Init();
+	
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	MonoEntityManager::GetInstance().SetPreCompiled(true);
@@ -142,6 +147,7 @@ void Engine::CoreUpdate() {
 	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
 	TransformSystem().FixedUpdate(instance.m_World);
+	HierarchySystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//physic_system.FixedUpdate(instance.m_World);
@@ -152,11 +158,11 @@ void Engine::CoreUpdate() {
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
-	messagingSystem.Update();
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
+	messagingSystem.Update();
 }
 
 void Engine::Update() {
@@ -270,7 +276,8 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
 
-	
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
+
 	BindingSystem::RegisterBindings();
 
 	PhysicsSystem::Instance().Init();
@@ -304,7 +311,6 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 void Engine::Exit() {
 	SystemRegistry::Exit();
-	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
 	if (Instance().m_RenderSystem) {
 		Instance().m_RenderSystem->Exit();
@@ -315,6 +321,7 @@ void Engine::Exit() {
 	AudioSystem::GetInstance().Exit(); // [TEMP]
 	InstancePtr().reset();
 	MonoEntityManager::GetInstance().ClearAll();
+	WorldRegistry::Clear();
 }
 
 world Engine::GetWorld() {
@@ -357,6 +364,14 @@ RenderSystem& Engine::GetRenderSystem() {
 		throw std::runtime_error("RenderSystem not created - call Engine::Init() first");
 	}
 	return *Instance().m_RenderSystem;
+}
+
+SceneRegistry& Engine::GetSceneRegistry()
+{
+	if (!Instance().m_SceneRegistry) {
+		throw std::runtime_error("SceneRegistry not created - call Engine::Init() first");
+	}
+	return *Instance().m_SceneRegistry;
 }
 
 bool Engine::WindowShouldClose() {

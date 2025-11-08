@@ -1,6 +1,7 @@
 #include "ecs/internal/entity.h"
 #include "ecs/internal/world.h"
 #include "ecs/internal/reflection.h"
+#include "Scene/Scene.hpp"
 
 namespace ecs {
 	entity entity::duplicate() {
@@ -36,7 +37,7 @@ namespace ecs {
 	}
 
 	void entity::destroy() {
-		world(get_world_handle()).impl.get_registry().destroy(world::detail::entt_entity_cast(*this));
+		world(get_world_handle()).remove_entity(*this);
 		invalidate();
 	}
 
@@ -49,5 +50,25 @@ namespace ecs {
 	}
 	std::string const& entity::name() const {
 		return get<entity_name_t>().m_name;
+	}
+
+	rp::Guid entity::get_scene_handle() const {
+		return get<SceneComponent>().m_scene_guid.m_guid;
+	}
+
+	//stable id in scene
+	std::uint32_t entity::get_scene_uid() const {
+		return get<SceneIDComponent>().m_scene_id;
+	}
+
+	void entity::enable() {
+		add<active_t>();
+	}
+	void entity::disable() {
+		remove<active_t>();
+	}
+
+	bool entity::is_active() const {
+		return all<active_t>();
 	}
 }

@@ -405,8 +405,10 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 
 //templated deserialiser, Node must overload[](std::string const&)
 template<typename Node>
-void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
+void DeserializeEntity(entt::registry& reg, const Node& entity_node, entt::entity* enttptr = nullptr) {
 	auto e = reg.create();
+	if (enttptr)
+		*enttptr = e;
 	//const auto& components = entity_node["Entity"];
 	const auto& components = entity_node;
 

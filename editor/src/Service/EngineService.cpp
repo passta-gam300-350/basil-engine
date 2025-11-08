@@ -7,6 +7,7 @@
 #include "Render/Render.h"
 #include "System/Audio.hpp"
 #include "Manager/ResourceSystem.hpp"
+#include <Scene/Scene.hpp>
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -121,9 +122,32 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 		}
 		i++;
 	}
+	for (auto& [guid, scn] : Engine::GetSceneRegistry().GetAllScenes()) {
+		m_loaded_scenes_scenegraph_snapshot[guid].second = true;
+		if (!scn.IsStale()) {
+			m_loaded_scenes_scenegraph_snapshot[guid].first = BuildSceneGraph(scn.GetSceneEntitites());
+			m_loaded_scenes_scenegraph_snapshot[guid].first.m_entity_name = scn.SceneName();
+		}
+	}
+	rp::Guid deletion_arr[16]{}; //no point create queue, scene deletions are rare
+	i = 0;
+	for (auto& [guid, kv] : m_loaded_scenes_scenegraph_snapshot) {
+		if (i == 16) {
+			break; //continue next loop
+		}
+		if (!kv.second) {
+			deletion_arr[i++] = guid;
+		}
+	}
+
+	while (i--) {
+		m_loaded_scenes_scenegraph_snapshot.erase(deletion_arr[i]);
+	}
+
 	if (m_snapshot_entity_handle == ~0ull) {
 		return;
 	}
+
 	ecs::entity inspected_entity{ m_snapshot_entity_handle };
 	m_component_list_snapshot = inspected_entity.get_reflectible_components();
 }
@@ -259,13 +283,19 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		ecs::entity entity{ ehdl };
 		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
 
+
 		if (auto* storage = w.impl.get_registry().storage(type_id)) {
 			//bool alreadyExists = storage->contains(enttntt);
 			//spdlog::info("EngineService: Storage found for {}, component already exists={}",
 			//             componentName, alreadyExists);
 
 			if (!storage->contains(enttntt)) {
-				storage->push(enttntt);
+				if (type_id == entt::type_hash<TransformComponent>::value()) {
+					inspected_entity.add<TransformComponent>(); //use specialization to handle transform mtx component
+				}
+				else {
+					storage->push(enttntt);
+				}
 				//spdlog::info("EngineService: Added {} to entity {}", componentName, ehdl);
 			}
 			else {
@@ -364,6 +394,18 @@ void EngineContainerService::create_entity() {
 	++m_cont->m_entity_create_count;
 }
 
+void EngineContainerService::create_child_entity(entity_handle parent)
+{
+	ecs::entity parentent = ecs::entity(parent);
+	ExecuteOnEngineThread([parentent]() {
+		ecs::entity child = ecs::world(parentent.get_world_handle()).add_entity();
+		if (auto scene_res = Engine::GetSceneRegistry().GetScene(parentent.get_scene_handle()); scene_res) {
+			scene_res.value().get().AddEntityToScene(child);
+		}
+		SceneGraph::AddChild(parentent, child);
+		});
+}
+
 void EngineContainerService::delete_entity(entity_handle ehdl) {
 	if (!m_cont) {
 		spdlog::warn("EngineService: Cannot delete entity, engine container not initialized");
@@ -443,6 +485,11 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 	if (!m_cont) return empty;
 
 	return m_cont->m_names_snapshot;
+}
+
+const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
+{
+	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>{};
 }
 
 bool EngineContainerService::EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const {

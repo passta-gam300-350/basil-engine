@@ -10,12 +10,12 @@ namespace ecs {
 	template <typename... requires_t, typename... excludes_t>
 	inline ecs_iterative_container decltype(auto) world::filter_entities(excludes_t... ex) const
 	{
-		return entity_range(impl.handle, impl.get_registry().view<requires_t...>(ex...));
+		return entity_range(impl.handle, impl.get_registry().view<entity::active_t, requires_t...>(ex...));
 	}
 	template <typename... requires_t, typename... excludes_t>
 	inline ecs_iterative_container decltype(auto) ecs::world::query_components(excludes_t ... ex) const
 	{
-		return component_range(impl.get_registry().view<requires_t...>(ex...), include_t<requires_t...>{});
+		return component_range(impl.get_registry().view<entity::active_t, requires_t...>(ex...), include_t<requires_t...>{});
 	}
 }
 

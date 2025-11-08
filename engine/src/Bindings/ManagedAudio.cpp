@@ -31,7 +31,6 @@ float ManagedAudio::GetVolume(uint64_t handle)
 {
 	ecs::entity entity{ handle };
 	auto& audio = entity.get<AudioComponent>();
-
 	return audio.volume;
 }
 

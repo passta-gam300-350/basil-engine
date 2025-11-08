@@ -155,6 +155,31 @@ void MainRenderingPass::Execute(RenderContext& context)
         }
     }
 
+    // Render light cubes for visualization (if enabled)
+    if (m_ShowLightCubes && !context.lights.empty()) {
+        // Enable alpha blending for light cube overlay rendering
+        Submit(RenderCommands::SetBlendingData{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA });
+
+        // Disable depth writing but keep depth testing for proper overlay rendering
+        Submit(RenderCommands::SetDepthTestData{
+            true,           // enable depth testing (to respect scene depth)
+            GL_LEQUAL,      // depth function (allow equal depth for overlays)
+            false           // disable depth writing (preserve main pass depth)
+        });
+
+        RenderLightCubes(context);
+
+        // Restore depth writing
+        Submit(RenderCommands::SetDepthTestData{
+            true,           // enable depth testing
+            GL_LESS,        // depth function
+            true            // enable depth writing
+        });
+
+        // Disable blending
+        Submit(RenderCommands::SetBlendingData{ false });
+    }
+
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
 
@@ -236,4 +261,66 @@ void MainRenderingPass::RenderSkybox(RenderContext& context)
         "u_Skybox"
     };
     Submit(unbindCmd);
+}
+
+void MainRenderingPass::RenderLightCubes(RenderContext& context)
+{
+    if (!m_LightCube) {
+        spdlog::warn("MainRenderingPass: No light cube mesh available for rendering.");
+        return;
+    }
+
+    // Use injected primitive shader
+    if (!m_PrimitiveShader) {
+        spdlog::error("MainRenderingPass: No primitive shader available for light cube rendering.");
+        return;
+    }
+
+    // Bind the shader
+    RenderCommands::BindShaderData bindShaderCmd{ m_PrimitiveShader };
+    Submit(bindShaderCmd);
+
+    // Get the cube's VAO handle
+    auto cubeVAO = m_LightCube->GetVertexArray();
+    if (!cubeVAO) return;
+
+    // Render each light as a cube (all light types: Directional, Point, Spot)
+    for (const auto& light : context.lights) {
+        // Calculate cube size based on light intensity
+        float intensityBasedSize = m_BaseLightCubeSize + (light.diffuseIntensity * m_IntensityScaleFactor);
+        intensityBasedSize = glm::clamp(intensityBasedSize, m_MinCubeSize, m_MaxCubeSize);
+
+        // Calculate transform matrix for light position with intensity-based scaling
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, light.position);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(intensityBasedSize));
+
+        // Set uniforms using the available SetUniformsData command
+        RenderCommands::SetUniformsData uniformsCmd{
+            m_PrimitiveShader,
+            modelMatrix,
+            context.frameData.viewMatrix,
+            context.frameData.projectionMatrix,
+            context.frameData.cameraPosition
+        };
+        Submit(uniformsCmd);
+
+        // Set the light color using the command buffer
+        // Boost color for HDR visibility (light cubes should be bright emissive objects)
+        glm::vec3 cubeColor = light.color * 10.0f;  // Make very bright for HDR
+        RenderCommands::SetUniformVec3Data colorCmd{
+            m_PrimitiveShader,
+            "u_Color",
+            cubeColor
+        };
+        Submit(colorCmd);
+
+        // Draw the cube using the available DrawElementsData command
+        RenderCommands::DrawElementsData drawCmd{
+            cubeVAO->GetVAOHandle(),
+            static_cast<uint32_t>(m_LightCube->GetIndexCount()),
+            GL_TRIANGLES  // Light cubes are solid triangular meshes
+        };
+        Submit(drawCmd);
+    }
 }
