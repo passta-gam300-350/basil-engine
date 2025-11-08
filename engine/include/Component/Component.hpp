@@ -3,7 +3,10 @@
 #include <ecs/ecs.h>
 
 #include "Handle.hpp"
+
+#ifndef NO_DEF_UUID
 #include "uuid/uuid.hpp"
+#endif
 
 class Component {
 protected:

@@ -66,6 +66,8 @@ Technology is prohibited.
 #include "Manager/MonoImGuiRenderer.hpp"
 #include <Scene/Scene.hpp>
 
+//#include <Component/RelationshipComponent.hpp>
+
 #define UNREF_PARAM(x) x;
 
 RegisterImguiDescriptorInspector(ModelDescriptor);
@@ -792,6 +794,7 @@ void EditorMain::Render_Components()
 	
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	static const ReflectionRegistry::TypeID skip_sceneid_component{ internal_type_map[entt::type_index<SceneIDComponent>::value()] };
+	static const ReflectionRegistry::TypeID skip_relationship_component{ std::find_if(ReflectionRegistry::types().begin(), ReflectionRegistry::types().end(), [](auto const& kv) {return kv.second.id() == ToTypeName("Relationship"); })->first};
 	ReflectionRegistry::TypeID behaviour_component{};
 	auto behaviourIt = internal_type_map.find(entt::type_index<behaviour>::value());
 	if (behaviourIt != internal_type_map.end())
@@ -807,7 +810,7 @@ void EditorMain::Render_Components()
 	}
 
 	for (auto const& [type_id, uptr] : component_list) {
-		if (type_id == skip_name_component || type_id == skip_sceneid_component) {
+		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
 		}
 		if (behaviour_component && type_id == behaviour_component)
@@ -1181,8 +1184,10 @@ void EditorMain::Render_Add_Component_Menu()
 {
 	auto& reflectible_component_list = engineService.get_reflectible_component_id_name_list();
 	static const ReflectionRegistry::TypeID skip_name_component{ ReflectionRegistry::InternalID()[entt::type_index<ecs::entity::entity_name_t>::value()] };
+	static const ReflectionRegistry::TypeID skip_sceneid_component{ ReflectionRegistry::InternalID()[entt::type_index<SceneIDComponent>::value()] };
+	static const ReflectionRegistry::TypeID skip_relationship_component{ std::find_if(ReflectionRegistry::types().begin(), ReflectionRegistry::types().end(), [](auto const& kv) {return kv.second.id() == ToTypeName("Relationship"); })->first };
 	for (auto const& [type_id, type_name] : reflectible_component_list) {
-		if (type_id == skip_name_component) {
+		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
 		}
 		if (ImGui::MenuItem(type_name.c_str())) {

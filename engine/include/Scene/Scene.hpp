@@ -10,6 +10,8 @@ namespace {
 	static constexpr const char CurrentSceneVersion[] = "v0.0.1";
 }
 
+using SceneEntityID = std::uint32_t;
+
 struct SceneIDComponent {
 	std::uint32_t m_scene_id;
 };
@@ -147,6 +149,7 @@ public:
 		return m_loaded_scenes;
 	}
 	void onCreateAssignToDefault(ecs::entity e);
+	void onCreateAssignSceneIDToDefault(ecs::entity e);
 	void onDestroySceneComponent(ecs::entity e);
 	//nullopt if not found
 	inline std::optional<ecs::entity> GetReferencedEntity(SceneEntityReference const& ref) {
