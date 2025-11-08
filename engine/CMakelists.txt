@@ -92,6 +92,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_GLOBAL_CodeAnalysisRuleSet $<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:NativeRecommendedRules.ruleset>
 )
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dep/vendor/fmod/api/core/lib/x64/fmod.dll" ${CMAKE_SOURCE_DIR}/bin
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dep/vendor/fmod/api/core/lib/x64/fmodL.dll" ${CMAKE_SOURCE_DIR}/bin
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dep/vendor/mono/bin/mono-2.0-sgen.dll" ${CMAKE_SOURCE_DIR}/bin
+)
+
+
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 postimport_dll(${PROJECT_NAME})
