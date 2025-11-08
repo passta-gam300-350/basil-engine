@@ -19,8 +19,16 @@ public class SimpleCameraTest : Behavior
     public void Update()
     {
         camera = GetComponent<Camera>();
-        camera.fov = fov;
 
+        if (camera == null)
+        {
+            Logger.Warn("Camera is NULL!");
+
+        }
+        else
+        {
+                        Logger.Log("Camera is ready to use.");
+        }
 
         // Set fov
     }

@@ -13,6 +13,7 @@ namespace BasilEngine.Components
 
     public class Camera : Component
     {
+   
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("SetCameraType")]
         [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]

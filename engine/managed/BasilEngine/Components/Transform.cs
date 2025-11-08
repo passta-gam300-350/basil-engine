@@ -8,11 +8,14 @@ using System.Runtime.CompilerServices;
 using Engine.Bindings;
 namespace BasilEngine.Components
 {
+
+    
+
     [NativeHeader("Bindings/ManagedTransform.hpp")]
     [NativeClass("ManagedTransform")]
     public class Transform : Component
     {
-
+       
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("SetPosition")]
         [StaticAccessor("ManagedTransform", StaticAccessorType.DoubleColon)]
