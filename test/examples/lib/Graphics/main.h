@@ -78,6 +78,7 @@ private:
     void SetupSponzaDemo();      // Sponza cathedral - lighting test with HDR
     void SetupTinboxDemo();      // Tinbox grid - outline and PBR testing
     void SetupEditorDemo();      // 3x3 cube grid - matches editor's default scene
+    void SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
 
     // Resource loading
     bool LoadTestResources();
@@ -88,7 +89,8 @@ private:
                            const glm::vec3& position, const glm::vec3& scale = glm::vec3(1.0f),
                            bool perNodeSelection = false);
     SubmittedLightData CreateDirectionalLight(const glm::vec3& direction, const glm::vec3& color,
-                                              float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f);
+                                              float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f,
+                                              const glm::vec3& visualPosition = glm::vec3(0.0f, 15.0f, 0.0f));
     SubmittedLightData CreatePointLight(const glm::vec3& position, const glm::vec3& color,
                                         float diffuseIntensity = 1.0f, float ambientIntensity = 0.0f, float range = 10.0f);
     SubmittedLightData CreateSpotLight(const glm::vec3& position, const glm::vec3& direction,
