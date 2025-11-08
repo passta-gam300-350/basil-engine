@@ -157,6 +157,10 @@ namespace ecs {
 	template<typename component_t, typename ...c_args>
 	inline component_t& world::add_component_to_entity(entity enty, c_args&&... cargs)
 	{
+		assert(enty && "invalid entity");
+		if (enty.all<component_t>()) {
+			return enty.get<component_t>();
+		}
 		if constexpr (std::is_same_v<component_t, TransformComponent>) {
 			impl.get_registry().emplace<TransformMtxComponent>(detail::entt_entity_cast(enty));
 		}

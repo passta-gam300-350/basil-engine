@@ -3410,9 +3410,9 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 		if (GuizmoEntityTransform != nullptr && GuizmoEntityTransformMTX != nullptr)
 		{
 			glm::mat4 deltas{};
-			glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
+			//glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
 			// Create and display Gizmos
-			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(transmtx), glm::value_ptr(deltas));
+			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(deltas));
 
 			
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
@@ -3420,7 +3420,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 				// Break down the edited matrix so we can save the values
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransform->getLocalMatrix() * deltas), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
 				std::cout << GuizmoEntityTransform->m_Translation.x;
-				GuizmoEntityTransformMTX->m_Mtx = transmtx;
+				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff
 				//EditingID = selectedEnitityID; // Set the Id
 				//if (HasBeenEditied == false) // Only Situation that can cause a problem is if you manage to edit two entities back to back

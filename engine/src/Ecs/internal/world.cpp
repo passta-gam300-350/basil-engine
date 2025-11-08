@@ -205,7 +205,10 @@ namespace ecs {
 		YAML::Node root{YAML::LoadFile(path)};
 		YAML::Node entities{ root["entities"] };
 		for (const auto& entity_node : entities) {
-			DeserializeEntity(impl.get_registry(), entity_node);
+			entt::entity e;
+			DeserializeEntity(impl.get_registry(), entity_node, &e);
+			Engine::GetSceneRegistry().onCreateAssignToDefault(impl.entity_cast(e));
+			impl.entity_cast(e).add<entity::active_t>();
 		}
 		auto transforms{ filter_entities<TransformComponent>() };
 		std::for_each(transforms.begin(), transforms.end(), [](ecs::entity e) {
@@ -229,6 +232,7 @@ namespace ecs {
 		
 	}
 	void world::UnloadAll() {
+		Engine::GetSceneRegistry().Clear();
 		impl.get_registry().clear();
 	}
 

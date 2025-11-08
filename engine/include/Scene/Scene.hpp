@@ -27,9 +27,11 @@ struct Scene
 {
 	Scene() = default;
 	inline void Clear() {
-		for (auto& [ssid, ss] : m_scene_entities) {
+		auto tmp = m_scene_entities;
+		for (auto& [ssid, ss] : tmp) {
 			ss.destroy();
 		}
+		m_scene_entities.clear();
 	}
 	void Unload() {
 		Clear();
@@ -129,9 +131,7 @@ private:
 public:
 	SceneRegistry() = default;
 	~SceneRegistry() {
-		for (auto& [sid, scn] : m_loaded_scenes) {
-			//scn.Clear();
-		}
+		//Clear();
 	}
 
 	inline bool IsLoaded(rp::Guid scn_guid) {
@@ -153,6 +153,12 @@ public:
 		auto scnres = GetScene(ref.m_scene_guid.m_guid);
 		auto entityres = scnres ? scnres.value().get().GetSceneEntity(ref.m_scene_id) : std::nullopt;
 		return entityres;
+	}
+	void Clear() {
+		for (auto& [sid, scn] : m_loaded_scenes) {
+			scn.Clear();
+		}
+		m_loaded_scenes.clear();
 	}
 };
 
