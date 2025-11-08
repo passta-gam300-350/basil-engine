@@ -36,7 +36,7 @@ public:
 
 RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")
 	MemberRegistrationV<&RelationshipComponent::parentHandle, "parent">,
-	MemberRegistrationV<&RelationshipComponent::childrenHandles, "parent">
+	MemberRegistrationV<&RelationshipComponent::childrenHandles, "child">
 RegisterReflectionTypeEnd
 //
 //RegisterReflectionTypeBegin(RelationshipComponent, "Relationship")

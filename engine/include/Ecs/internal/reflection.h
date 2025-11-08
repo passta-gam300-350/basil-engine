@@ -214,15 +214,15 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 					out[field_name][name]["type"] = guid.m_typeindex;
 				}
 			}
-			else if (rp::BasicIndexedGuid const* v = value.try_cast<rp::BasicIndexedGuid const>()) {
-				out[field_name]["guid"] = v->m_guid.to_hex();
-				out[field_name]["type"] = v->m_typeindex;
+			else if (rp::BasicIndexedGuid const* vbig = value.try_cast<rp::BasicIndexedGuid const>()) {
+				out[field_name]["guid"] = vbig->m_guid.to_hex();
+				out[field_name]["type"] = vbig->m_typeindex;
 			}
-			else if (rp::Guid const* v = value.try_cast<rp::Guid const>())
-				out[field_name] = v->to_hex();
+			else if (rp::Guid const* vg = value.try_cast<rp::Guid const>())
+				out[field_name] = vg->to_hex();
 
-			else if (std::vector<std::uint32_t> const* v = value.try_cast<std::vector<std::uint32_t> const>()) {
-				for (auto& vuint : *v) {
+			else if (std::vector<std::uint32_t> const* vui = value.try_cast<std::vector<std::uint32_t> const>()) {
+				for (auto& vuint : *vui) {
 					out[field_name].push_back(vuint);
 				}
 			}
