@@ -88,7 +88,7 @@ public:
      * @param world ECS world
      * @param dt Delta time (unused)
      */
-    void Update(ecs::world& world, float dt) override;
+    void Update(ecs::world& world, [[maybe_unused]] float dt) override;
 
     /**
      * @brief Cleanup system resources

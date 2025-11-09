@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   MonoImGuiRenderer.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the implementation for the MonoImGuiRenderer class, which
+provides an interface for rendering ImGui elements for managed types in the editor.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Manager/MonoImGuiRenderer.hpp"
 
 #include "imgui.h"

@@ -1,7 +1,0 @@
-base:
-  m_guid: 969de6710e90f7c40afe1e35bc
-  m_importer: .texture
-  m_source: materials\Metal_ShelfStand_Metal_BaseColor.png
-  m_name: Metal_ShelfStand_Metal_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

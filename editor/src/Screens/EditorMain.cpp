@@ -66,6 +66,8 @@ Technology is prohibited.
 #include "Manager/MonoImGuiRenderer.hpp"
 #include <Scene/Scene.hpp>
 
+#include "Particles/ParticleComponent.h"
+
 //#include <Component/RelationshipComponent.hpp>
 
 #define UNREF_PARAM(x) x;
@@ -1384,7 +1386,9 @@ void EditorMain::Render_StartStop()
 			engineService.ExecuteOnEngineThread([&]() {
 				PhysicsSystem::Instance().isActive = true;
 				PhysicsSystem::Instance().DisableObservers();
+				BehaviourSystem::Instance().isActive = true;
 				spdlog::info("Physics Active");
+
 				
 				});
 			
@@ -1397,6 +1401,7 @@ void EditorMain::Render_StartStop()
 				PhysicsSystem::Instance().isActive = false;
 				PhysicsSystem::Instance().EnableObservers();
 				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
+				BehaviourSystem::Instance().isActive = false;
 				spdlog::info("Physics Disable");
 				});
 			
@@ -1850,9 +1855,17 @@ void EditorMain::Render_SceneExplorer()
 	const auto& entityNames = engineService.GetEntityNamesSnapshot();*/
 	//ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
 	
-	//const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& sceneGraphs = engineService.GetSceneGraphSnapshot();
+	if (!engineService.m_cont) {
+		ImGui::TextUnformatted("Scene data unavailable");
+		ImGui::End();
+		return;
+	}
 
-	auto scnGraphs = engineService.m_cont->m_loaded_scenes_scenegraph_snapshot;
+	std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> scnGraphs;
+	{
+		std::lock_guard guard{ engineService.m_cont->m_mtx };
+		scnGraphs = engineService.m_cont->m_loaded_scenes_scenegraph_snapshot;
+	}
 
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
 
@@ -1911,7 +1924,42 @@ void EditorMain::Render_SceneExplorer()
 
 			if (ImGui::BeginPopupContextItem())
 			{
-				if (node.m_entity_handle && ImGui::MenuItem("Duplicate")) {  }
+				if (node.m_entity_handle && ImGui::MenuItem("Duplicate"))
+				{
+					auto dupfn = [this, node]()
+					{
+						ecs::entity current{ node.m_entity_handle };
+						auto  world = Engine::GetWorld();
+						auto newEntity = world.add_entity();
+
+						newEntity.add<VisibilityComponent>(current.get<VisibilityComponent>());
+						newEntity.add<TransformComponent>(current.get<TransformComponent>());
+						if (current.any<MeshRendererComponent>()) {
+							newEntity.add<MeshRendererComponent>(current.get<MeshRendererComponent>());
+						}
+						if (current.any<MaterialOverridesComponent>()) {
+							newEntity.add<MaterialOverridesComponent>(current.get<MaterialOverridesComponent>());
+						}
+						if (current.any<LightComponent>()) {
+							newEntity.add<LightComponent>(current.get<LightComponent>());
+						}
+
+						if (current.any<CameraComponent>()) {
+							newEntity.add<CameraComponent>(current.get<CameraComponent>());
+						}
+
+						if (current.any<ParticleComponent>())
+							{
+							newEntity.add<ParticleComponent>(current.get<ParticleComponent>());
+						}	
+
+						newEntity.name() = current.name() + "_Copy";
+
+						
+					};
+
+					engineService.ExecuteOnEngineThread(dupfn);
+				}
 				if (node.m_entity_handle && ImGui::MenuItem("Delete"))
 				{
 					// Clear selection if deleting the currently selected entity
@@ -2105,7 +2153,10 @@ void EditorMain::Render_SceneExplorer()
 	{
 		if (ImGui::BeginMenu("Create"))
 		{
-			if (ImGui::MenuItem("Empty GameObject")) { }
+			if (ImGui::MenuItem("Empty GameObject"))
+			{
+				CreateDefaultEntity();
+			}
 			ImGui::Separator();
 			if (ImGui::MenuItem("Cube"))
 			{

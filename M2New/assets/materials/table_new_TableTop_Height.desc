@@ -1,7 +1,0 @@
-base:
-  m_guid: 969f1a7479b5cf358e48add5b5
-  m_importer: .texture
-  m_source: materials\table_new_TableTop_Height.png
-  m_name: table_new_TableTop_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

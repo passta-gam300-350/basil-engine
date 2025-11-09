@@ -1,7 +1,0 @@
-base:
-  m_guid: 10442957b03b8d6cdfbdff3a942
-  m_importer: .texture
-  m_source: D:\Projects\GAM300\editortest\assets\images\tin_can_lambert1_Metallic.png
-  m_name: tin_can_lambert1_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC4_R4

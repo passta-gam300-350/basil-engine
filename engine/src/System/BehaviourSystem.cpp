@@ -58,6 +58,7 @@ void BehaviourSystem::Init()
 }
 void BehaviourSystem::Update(ecs::world& world, float)
 {
+	if (!isActive) return;
 	for (auto entity : world.filter_entities<behaviour>()) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		for (auto scriptID : component.scriptIDs) {
@@ -70,6 +71,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 }
 void BehaviourSystem::FixedUpdate(ecs::world& world)
 {
+	if (!isActive) return;
 	for (auto entity : world.filter_entities<behaviour>()) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		for (auto scriptID : component.scriptIDs) {

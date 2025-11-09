@@ -1,7 +1,0 @@
-base:
-  m_guid: 1044299729b94a5e887b830fd67
-  m_importer: .texture
-  m_source: D:\Projects\GAM300\editortest\assets\images\tin_can_lambert1_Normal.png
-  m_name: tin_can_lambert1_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC5_RG8

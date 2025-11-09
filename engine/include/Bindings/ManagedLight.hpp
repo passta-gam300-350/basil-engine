@@ -1,0 +1,62 @@
+/******************************************************************************/
+/*!
+\file   ManagedLight.hpp
+\author Team PASSTA
+		Hai Jie (haijie.w\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the declaration for the ManagedLight class, which
+provides an interface for managing light properties in a managed (C#) environment.
+
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+#ifndef MANAGEDLIGHT_HPP
+#define	MANAGEDLIGHT_HPP
+#include <cstdint>
+
+class ManagedLight
+{
+public:
+	// Type
+	static void SetLightType(uint64_t handle, int type);
+	static int  GetLightType(uint64_t handle);
+
+	// Enabled
+	static bool GetEnabled(uint64_t handle);
+	static void SetEnabled(uint64_t handle, bool v);
+
+	// Color
+	static float GetColorR(uint64_t handle);
+	static float GetColorG(uint64_t handle);
+	static float GetColorB(uint64_t handle);
+	static void SetColor(uint64_t handle, float r, float g, float b);
+	static void SetColorR(uint64_t handle, float r);
+	static void SetColorG(uint64_t handle, float g);
+	static void SetColorB(uint64_t handle, float b);
+
+	// Intensity
+	static float GetIntensity(uint64_t handle);
+	static void SetIntensity(uint64_t handle, float v);
+
+	// Direction
+	static float GetDirectionX(uint64_t handle);
+	static float GetDirectionY(uint64_t handle);
+	static float GetDirectionZ(uint64_t handle);
+	static void SetDirection(uint64_t handle, float x, float y, float z);
+
+	// Range
+	static float GetRange(uint64_t handle);
+	static void SetRange(uint64_t handle, float v);
+
+	// Spot cones (degrees)
+	static float GetInnerConeDeg(uint64_t handle);
+	static float GetOuterConeDeg(uint64_t handle);
+	static void SetCones(uint64_t handle, float innerDeg, float outerDeg);
+};
+
+#endif // MANAGEDLIGHT_HPP

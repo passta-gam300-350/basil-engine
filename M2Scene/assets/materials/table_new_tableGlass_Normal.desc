@@ -1,0 +1,7 @@
+base:
+  m_guid: 469fe027061a8dea9b0952e2fd1
+  m_importer: .texture
+  m_source: materials\table_new_tableGlass_Normal.png
+  m_name: table_new_tableGlass_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,14 @@
+base:
+  m_guid: 469fba076c08d54c04a14a07fad
+  m_importer: .audio
+  m_source: audio\Footsteps-Barefoot-Concrete-Marble_1.ogg
+  m_name: Footsteps-Barefoot-Concrete-Marble_1.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

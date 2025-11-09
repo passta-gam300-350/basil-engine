@@ -1,7 +1,0 @@
-base:
-  m_guid: 306032f7c9ba898aa528b57160d
-  m_importer: .texture
-  m_source: D:\Projects\GAM300\editortest\assets\images\Chair_standardSurface8_Normal.png
-  m_name: Chair_standardSurface8_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC5_RG8
