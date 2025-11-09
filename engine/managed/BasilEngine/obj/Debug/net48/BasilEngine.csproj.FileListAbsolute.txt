@@ -17,3 +17,10 @@ M:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.sourcelink.json
 M:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEng.9239FF00.Up2Date
 M:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.dll
 M:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.pdb
+D:\gam300\engine\managed\BasilEngine\bin\Debug\net48\BasilEngine.dll
+D:\gam300\engine\managed\BasilEngine\bin\Debug\net48\BasilEngine.pdb
+D:\gam300\engine\managed\BasilEngine\bin\Debug\net48\Engine.Bindings.dll
+D:\gam300\engine\managed\BasilEngine\bin\Debug\net48\Engine.Bindings.pdb
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEng.9239FF00.Up2Date
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.dll
+D:\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.pdb

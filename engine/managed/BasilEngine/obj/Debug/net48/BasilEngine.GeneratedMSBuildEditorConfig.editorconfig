@@ -1,6 +1,6 @@
 is_global = true
 build_property.RootNamespace = BasilEngine
-build_property.ProjectDir = M:\gam300\engine\managed\BasilEngine\
+build_property.ProjectDir = D:\gam300\engine\managed\BasilEngine\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "M:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj": {}
+    "D:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj": {}
   },
   "projects": {
-    "M:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj": {
+    "D:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "M:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
+        "projectUniqueName": "D:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
         "projectName": "BasilEngine",
-        "projectPath": "M:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
+        "projectPath": "D:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
         "packagesPath": "C:\\Users\\halis\\.nuget\\packages\\",
-        "outputPath": "M:\\gam300\\engine\\managed\\BasilEngine\\obj\\",
+        "outputPath": "D:\\gam300\\engine\\managed\\BasilEngine\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -42,14 +42,14 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
+          "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net48": {
           "targetAlias": "net48",
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304\\RuntimeIdentifierGraph.json"
         }
       }
     }

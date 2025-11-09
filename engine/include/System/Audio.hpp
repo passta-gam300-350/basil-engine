@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   Audio.hpp
+\author Team PASSTA
+        Halis Ilyasa Bin Amat Sarijan (halisilyasa.b@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Declares AudioSystem and audio component to play sound in engine.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #ifndef ENGINE_AUDIO_H
 #define ENGINE_AUDIO_H
 #pragma once
@@ -26,89 +42,10 @@ RegisterResourceTypeForward(int, "audio", audiodefine)
 #define MINDISTANCE 1.0f
 #define MAXDISTANCE 1000.0f
 
-//typedef enum
-//{
-//	LOOP,
-//	NO_LOOP
-//}Sound_Mode;
-//
-//typedef enum
-//{
-//	LOW_PASS,
-//	HIGH_PASS,
-//	ECHO,
-//	DISTORTION,
-//	SIZE_OF_FILTERS
-//}Filter;
-//
-//struct SoundHandle { uint32_t id{0};};
-//
-//struct AudioComponent
-//{
-//	enum class Sound_Mode : std::uint8_t
-//	{
-//		LOOP,
-//		NO_LOOP
-//	}m_Mode;
-//	enum class Filter : std::uint8_t
-//	{
-//		LOW_PASS,
-//		HIGH_PASS,
-//		ECHO,
-//		DISTORTION,
-//		SIZE_OF_FILTERS
-//	}m_Filter;
-//	std::string m_SoundPath;
-//	bool m_IsActive;
-//	bool m_3D;
-//	bool m_Linear;
-//	bool m_PlayOnAwake;
-//	bool m_Loop;
-//	float m_Volume;
-//	float m_MinDistance;
-//	float m_MaxDistance;
-//	std::string m_ChannelGroup;
-//	std::vector<Filter> m_Filters;
-//};
-//
-//struct AudioSystem : public ecs::SystemBase
-//{
-//public:
-//	static FMOD_MODE Mode_Selector(Sound_Mode mode) noexcept;
-//	static FMOD_DSP_TYPE Filter_Selector(Filter filter) noexcept;
-//
-//	static void FMOD_ErrorCheck(FMOD_RESULT result);
-//	static FMOD_VECTOR Vec3_To_FMOD(const glm::vec3& v) noexcept;
-//	static glm::vec3 FMOD_to_Vec3(const FMOD_VECTOR& v) noexcept;
-//	static float dbToVolume(float dB) noexcept;
-//	static float VolumeTodB(float volume) noexcept;
-//
-//	static void Play_Audio(const std::string& path, float volume = 1.0f, std::string group = "MASTER");
-//	static void Stop_Audio();
-//	static void Stop_All_Audio();
-//	static void Load_Audio(std::string dir, bool stream, bool ambient, bool dimension, bool linear, bool playOnAwake, bool loop, float minDistance = MINDISTANCE, float maxDistance = MAXDISTANCE);
-//	static void Unload_Audio();
-//	static void Unload_All_Audio();
-//
-//	// Convenience functions for 3D audio with glm::vec3
-//	static void Set3DListenerAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
-//	static void Set3DSoundAttributes(FMOD::Channel* channel, const glm::vec3& position, const glm::vec3& velocity);
-//	static void RegisterChannel3DPosition(FMOD::Channel* channel, const glm::vec3& position, const glm::vec3& velocity = glm::vec3(0.0f));
-//	static void UpdateAllChannel3DAttributes();
-//private:
-//	//static std::unique_ptr<InstanceData& InstancePtr();
-//public:
-//	static AudioSystem System() noexcept;
-//	//~AudioSystem() = default;
-//
-//	void Init(void* extradriverdata = nullptr);
-//	void Update(ecs::world&);
-//	void Exit();
-//};
-
 // Forward declaration
 struct AudioComponent;
 
+// Helper functions
 inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, v.z }; }
 inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, v.z }; }
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
@@ -126,14 +63,16 @@ class AudioSystem : public ecs::SystemBase
 public:
     static AudioSystem& GetInstance();
 
+    // System states
     bool Init(void* extraDriverData = nullptr);
     void Update(ecs::world& world);
     void Exit();
 
+    // Set position and orientation for audio listeners (i.e. camera)
     void SetListenerPosition(const glm::vec3& position = glm::vec3(), const glm::vec3& velocity = glm::vec3()) noexcept;
     void SetListenerOrientation(const glm::vec3& forward = glm::vec3(), const glm::vec3& up = glm::vec3()) noexcept;
 
-    // Asset management
+    // Asset management of sound files
     int LoadSound(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
     void UnloadSound(int soundHandle);
 
@@ -216,23 +155,29 @@ struct AudioComponent
         : soundHandle(soundHandle), position(pos) {}
     ~AudioComponent();
 
+    // Sound initializers for component
     bool Init(int handle);
     bool Init(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
 
+    // Updates position and velocity of audio emitter
     void UpdatePosition(const glm::vec3& newPosition);
     void UpdateVelocity(const glm::vec3& newVelocity);
 
+    // Playback controls
     bool Play();
     bool Pause();
     bool Resume();
     bool Stop();
 
+    // Sets audio parameters
     void SetVolume(float vol);
     void SetDistanceRange(float minDist, float maxDist);
     void RefreshSoundInfo();
 
+    // Checks if sound is playing
     bool IsPlaying() const;
 
+    // Carries sound updates into AudioSystem::Update()
     void InternalUpdate();
 };
 #endif
