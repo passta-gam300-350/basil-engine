@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   entity.h
+\author Team PASSTA
+		Chew Bangxin Steven (banxginsteven.chew@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/09
+\brief    Declares the entity class
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef LIB_ECS_ENTITY_H
 #define LIB_ECS_ENTITY_H
 

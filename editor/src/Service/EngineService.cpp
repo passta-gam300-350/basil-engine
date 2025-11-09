@@ -253,6 +253,9 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 					// Trigger on_update<MeshRendererComponent> observer
 					// This will call RenderSystem::OnMeshRendererUpdated()
 					entt::entity enttntt = ecs::world::detail::entt_entity_cast(inspected_entity);
+					MeshRendererComponent* dest_mesh = static_cast<MeshRendererComponent*>(dest);
+					MeshRendererComponent* src_mesh = static_cast<MeshRendererComponent*>(src);
+					dest_mesh->m_PrimitiveType = src_mesh->m_PrimitiveType;
 					w.impl.get_registry().patch<MeshRendererComponent>(enttntt);
 				}
 			}

@@ -911,6 +911,11 @@ void EditorMain::Render_Components()
 	}
 }
 
+template <typename T>
+void assign_enum_helper(void* dest, const void* src) {
+	*reinterpret_cast<T*>(dest) = *reinterpret_cast<const T*>(src);
+};
+
 void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 {
 	auto type = comp.type();
@@ -934,23 +939,30 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
+				void(*assignment_by_type)(void*, const void*) {nullptr};
 
 				// Properly read enum value based on its underlying type size
 				int enum_value = 0;
 				if (meta_type.size_of() == sizeof(uint8_t)) {
 					enum_value = *static_cast<const uint8_t*>(val_ptr);
+					assignment_by_type = assign_enum_helper<uint8_t>;
 				}
 				else if (meta_type.size_of() == sizeof(uint16_t)) {
 					enum_value = *static_cast<const uint16_t*>(val_ptr);
+					assignment_by_type = assign_enum_helper<uint16_t>;
 				}
 				else if (meta_type.size_of() == sizeof(uint32_t)) {
 					enum_value = *static_cast<const uint32_t*>(val_ptr);
+					assignment_by_type = assign_enum_helper<uint32_t>;
 				}
 				else {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 
-				ImGui::InputInt(field_name.c_str(), &enum_value);
+				if (ImGui::InputInt(field_name.c_str(), &enum_value) && assignment_by_type) {
+					is_dirty = true;
+					assignment_by_type(const_cast<void*>(val_ptr), &enum_value);
+				}
 			}
 
 			if (rp::BasicIndexedGuid* v = value.try_cast<rp::BasicIndexedGuid>()) {
