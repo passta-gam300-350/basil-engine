@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   Audio.hpp
+\author Team PASSTA
+        Halis Ilyasa Bin Amat Sarijan (halisilyasa.b@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Declares AudioSystem and audio component to play sound in engine.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #ifndef ENGINE_AUDIO_H
 #define ENGINE_AUDIO_H
 #pragma once
@@ -29,6 +45,7 @@ RegisterResourceTypeForward(int, "audio", audiodefine)
 // Forward declaration
 struct AudioComponent;
 
+// Helper functions
 inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, v.z }; }
 inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, v.z }; }
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
@@ -46,14 +63,16 @@ class AudioSystem : public ecs::SystemBase
 public:
     static AudioSystem& GetInstance();
 
+    // System states
     bool Init(void* extraDriverData = nullptr);
     void Update(ecs::world& world);
     void Exit();
 
+    // Set position and orientation for audio listeners (i.e. camera)
     void SetListenerPosition(const glm::vec3& position = glm::vec3(), const glm::vec3& velocity = glm::vec3()) noexcept;
     void SetListenerOrientation(const glm::vec3& forward = glm::vec3(), const glm::vec3& up = glm::vec3()) noexcept;
 
-    // Asset management
+    // Asset management of sound files
     int LoadSound(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
     void UnloadSound(int soundHandle);
 
@@ -136,23 +155,29 @@ struct AudioComponent
         : soundHandle(soundHandle), position(pos) {}
     ~AudioComponent();
 
+    // Sound initializers for component
     bool Init(int handle);
     bool Init(const std::string& filePath, bool is3D = true, bool isStream = false, bool isLooping = false);
 
+    // Updates position and velocity of audio emitter
     void UpdatePosition(const glm::vec3& newPosition);
     void UpdateVelocity(const glm::vec3& newVelocity);
 
+    // Playback controls
     bool Play();
     bool Pause();
     bool Resume();
     bool Stop();
 
+    // Sets audio parameters
     void SetVolume(float vol);
     void SetDistanceRange(float minDist, float maxDist);
     void RefreshSoundInfo();
 
+    // Checks if sound is playing
     bool IsPlaying() const;
 
+    // Carries sound updates into AudioSystem::Update()
     void InternalUpdate();
 };
 #endif
