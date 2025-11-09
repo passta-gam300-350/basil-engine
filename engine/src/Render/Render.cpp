@@ -77,6 +77,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetPointShadowShader()) {
 		m_SceneRenderer->SetPointShadowShader(m_ShaderLibrary->GetPointShadowShader());
 	}
+	if (m_ShaderLibrary->GetShadowShader()) {
+		m_SceneRenderer->SetSpotShadowShader(m_ShaderLibrary->GetShadowShader());
+	}
 	if (m_ShaderLibrary->GetPickingShader()) {
 		m_SceneRenderer->SetPickingShader(m_ShaderLibrary->GetPickingShader());
 	}
@@ -340,6 +343,7 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.color = lightComponent.m_Color;
 		lightData.direction = lightComponent.m_Direction;
 		lightData.enabled = lightComponent.m_IsEnabled;
+		lightData.castShadows = lightComponent.m_CastShadows;
 		lightData.innerCone = lightComponent.m_InnerCone;
 		lightData.outerCone = lightComponent.m_OuterCone;
 		lightData.diffuseIntensity = lightComponent.m_Intensity;

@@ -170,6 +170,7 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&LightComponent::m_Type, "Type">,
 		MemberRegistrationV<&LightComponent::m_Color, "Color">,
 		MemberRegistrationV<&LightComponent::m_IsEnabled, "Enabled">,
+		MemberRegistrationV<&LightComponent::m_CastShadows, "Cast Shadows">,
 		MemberRegistrationV<&LightComponent::m_Intensity, "Intensity">,
 		MemberRegistrationV<&LightComponent::m_Direction, "[Dir/Spot] Direction">,
 		MemberRegistrationV<&LightComponent::m_Range, "[Point/Spot] Range">,

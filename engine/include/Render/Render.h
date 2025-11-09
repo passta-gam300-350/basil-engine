@@ -87,6 +87,7 @@ struct LightComponent {
     float m_InnerCone;            ///< Inner cone angle for spotlights (degrees)
     float m_OuterCone;            ///< Outer cone angle for spotlights (degrees)
     bool m_IsEnabled;             ///< Light enabled state
+    bool m_CastShadows = true;    ///< Enable/disable shadow casting for this light
 };
 
 
