@@ -1,7 +1,0 @@
-base:
-  m_guid: 104429d749fa7ba75210e432586
-  m_importer: .texture
-  m_source: D:\Projects\GAM300\editortest\assets\images\tin_can_lambert1_Roughness.png
-  m_name: tin_can_lambert1_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC4_R4

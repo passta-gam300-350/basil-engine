@@ -1,7 +1,0 @@
-base:
-  m_guid: 104428a732d9a5b42f091ea047f
-  m_importer: .texture
-  m_source: D:\Projects\GAM300\editortest\assets\images\tin_can_lambert1_BaseColor.png
-  m_name: tin_can_lambert1_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC1_RGB4
