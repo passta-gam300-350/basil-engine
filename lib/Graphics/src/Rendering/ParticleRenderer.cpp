@@ -1,3 +1,25 @@
+/******************************************************************************/
+/*!
+\file   ParticleRenderer.cpp
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  Implementation of GPU-side particle renderer with instanced billboards
+
+This file implements the ParticleRenderer which handles:
+- Billboard quad generation in XY plane for camera-facing rendering
+- SSBO upload of particle instance data (position, size, color, rotation)
+- Instanced draw calls for efficient GPU rendering
+- Blend mode configuration (alpha, additive, multiply)
+- Integration with render pipeline through command submission
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Rendering/ParticleRenderer.h"
 #include "Pipeline/RenderPass.h"
 #include "Utility/FrameData.h"

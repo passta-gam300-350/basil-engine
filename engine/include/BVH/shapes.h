@@ -1,17 +1,23 @@
+/******************************************************************************/
+/*!
+\file   shapes.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/01
+\brief  Geometric primitive definitions for BVH spatial calculations
+
+Defines geometric structures used by the BVH for spatial indexing and collision detection:
+AABB (Axis-Aligned Bounding Box), Plane, Frustum, Ray, Triangle, and related operations.
+Includes intersection tests, containment checks, and surface area calculations.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #pragma once
-/**
- * @file
- *  shapes.hpp
- * @author
- *  Jia Zen Cheong, jiazen.c@digipen.edu
- * @date
- *  2025/05/24
- * @brief
- *  This is the header file that implemented the declaration of various geometry struct,
-    and their functions and constructor needed
- * @copyright
- *  Copyright (C) 2025 DigiPen Institute of Technology.
- */
 #ifndef __SHAPES_H__
 #define __SHAPES_H__
 
