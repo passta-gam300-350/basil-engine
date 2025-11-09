@@ -326,7 +326,6 @@ void FrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 		return;
 	}
 
-	auto &spec = m_ColorAttachmentSpecs[attachmentIndex];
 	glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
 		GL_RGBA, GL_INT, &value);
 }

@@ -150,6 +150,9 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightViewMatrix(const glm::vec3
 
 glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm::vec3& lightDirection, const FrameData& frameData, float sceneRadius)
 {
+	(void)lightDirection;
+	(void)frameData;
+
     // Use scene radius to calculate optimal ortho size
     // Add 20% padding to ensure all objects are covered
     float orthoSize = sceneRadius * 1.2f;
