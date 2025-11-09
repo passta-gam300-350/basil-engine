@@ -204,13 +204,13 @@ void PhysicsSystem::Init() {
 
 void PhysicsSystem::FixedUpdate(ecs::world& world) {
     PF_SYSTEM("PhysicsSystem");
-    if (!m_physicsSystem || !m_bodyInterface || !isActive) return;
+    if (!m_physicsSystem || !m_bodyInterface) return;
 
     const float deltaTime = 1.0f / 60.0f;
     // 0. Sync dirty components BEFORE physics update
-    //SyncDirtyRigidBodies(world);
-    //SyncDirtyColliders(world);
-
+    SyncDirtyRigidBodies(world);
+    SyncDirtyColliders(world);
+    if (!isActive) return;
     // 1. Sync transforms from ECS to physics (for kinematic bodies)
     SyncTransformsToPhysics(world);
 
@@ -939,12 +939,12 @@ void PhysicsSystem::UpdateBodyProperties(JPH::BodyID bodyID, const RigidBodyComp
     }
 
     // Update activation state
-    if (rb.isActive) {
-        m_bodyInterface->ActivateBody(bodyID);
-    }
-    else {
-        m_bodyInterface->DeactivateBody(bodyID);
-    }
+    //if (rb.isActive) {
+    //    m_bodyInterface->ActivateBody(bodyID);
+    //}
+    //else {
+    //    m_bodyInterface->DeactivateBody(bodyID);
+    //}
 }
 
 void PhysicsSystem::SyncDirtyColliders(ecs::world& world) {

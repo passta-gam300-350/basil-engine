@@ -833,6 +833,7 @@ void EditorMain::Render_Components()
 			continue;
 		}
 
+
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
 		const char* componentLabel = "Component";
@@ -844,6 +845,38 @@ void EditorMain::Render_Components()
 		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
 			Render_Component_Member(comp, is_dirty);
+
+			if (rb_component && type_id == rb_component)
+			{
+				if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
+				{
+					if (is_dirty)
+					{
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([&]() {
+							auto world = Engine::GetWorld();
+							for (auto& entity : world.get_all_entities()) {
+								if (entity.get_uid() == m_SelectedEntityID) {
+									world.get_component_from_entity<RigidBodyComponent>(entity).isDirty = true;
+									break;
+								}
+							}
+							spdlog::warn("Rb is dirty");
+							});
+						ul.lock();
+						
+
+					}
+
+					//if (ImGui::TreeNode("RigidBodyComponent"))
+					//{
+					//	Render_RigidBody_Component(*rb_component);
+					//	ImGui::TreePop();
+					//}
+				}
+				//continue;
+			}
+
 
 			// Special UI section for AudioComponent playback controls
 			if (audio_component && type_id == audio_component) {
@@ -1337,6 +1370,61 @@ void EditorMain::Add_Script_Menu()
 		}
 
 		ImGui::EndPopup();
+	}
+}
+
+void EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
+	bool changed = false;
+
+	// Mass
+	if (ImGui::DragFloat("Mass", &rb.mass, 0.1f, 0.001f, 10000.0f)) {
+		changed = true;
+	}
+
+	// Friction
+	if (ImGui::DragFloat("Friction", &rb.friction, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+
+	// Gravity
+	if (ImGui::Checkbox("Use Gravity", &rb.useGravity)) {
+		changed = true;
+	}
+
+	if (ImGui::DragFloat("Gravity Factor", &rb.gravityFactor, 0.1f)) {
+		changed = true;
+	}
+
+	// Linear Damping
+	if (ImGui::DragFloat("Linear Damping", &rb.linearDamping, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+
+	// Angular Damping
+	if (ImGui::DragFloat("Angular Damping", &rb.angularDrag, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+
+	// Motion Type
+	const char* motionTypes[] = { "Static", "Dynamic", "Kinematic" };
+	int currentMotionType = static_cast<int>(rb.motionType);
+	if (ImGui::Combo("Motion Type", &currentMotionType, motionTypes, 3)) {
+		rb.motionType = static_cast<RigidBodyComponent::MotionType>(currentMotionType);
+		changed = true;
+	}
+
+	// Constraints
+	if (ImGui::Checkbox("Freeze Position X", &rb.freezePositionX)) changed = true;
+	if (ImGui::Checkbox("Freeze Position Y", &rb.freezePositionY)) changed = true;
+	if (ImGui::Checkbox("Freeze Position Z", &rb.freezePositionZ)) changed = true;
+	if (ImGui::Checkbox("Freeze Rotation X", &rb.freezeRotationX)) changed = true;
+	if (ImGui::Checkbox("Freeze Rotation Y", &rb.freezeRotationY)) changed = true;
+	if (ImGui::Checkbox("Freeze Rotation Z", &rb.freezeRotationZ)) changed = true;
+
+	// Mark dirty if any change occurred
+	if (changed) {
+		rb.isDirty = true;
+		spdlog::debug("EditorMain: Marked RigidBody as dirty for entity {}", m_SelectedEntityID);
 	}
 }
 
