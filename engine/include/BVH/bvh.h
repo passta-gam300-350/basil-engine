@@ -1,17 +1,29 @@
-/**
- * @file
- *  bvh.h
- * @author
- *  Jia Zen Cheong, , jiazen.c@digipen.edu
- * @date
- *  2025/06/10
- * @brief
- *  This file implemented the declaration of struct
- *  and function needed to create a BVH using topdown
- *  and insertion (incremental) approach
- * @copyright
- *  Copyright (C) 2025 DigiPen Institute of Technology.
- */
+/******************************************************************************/
+/*!
+\file   bvh.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/01
+\brief  Bounding Volume Hierarchy (BVH) for spatial acceleration and culling
+
+This file implements a BVH data structure for efficient spatial queries and frustum culling.
+Supports both top-down (SAH-based) and incremental (insertion-based) construction methods.
+Used for accelerating ray-object intersection tests and view frustum culling in rendering.
+
+Key features:
+- Top-down SAH (Surface Area Heuristic) construction
+- Incremental insertion with tree balancing
+- Frustum culling queries
+- Ray-AABB intersection tests
+- Debug visualization and statistics
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 
 #ifndef __BVH_H__
 #define __BVH_H__

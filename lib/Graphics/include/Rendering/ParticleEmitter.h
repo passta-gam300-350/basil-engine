@@ -1,3 +1,23 @@
+/******************************************************************************/
+/*!
+\file   ParticleEmitter.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  CPU-side particle emitter with physics simulation and emission control
+
+This class manages particle spawning, lifetime, physics updates, and emission patterns.
+Supports multiple emission shapes (point, box, sphere), color/size animation over lifetime,
+velocity with randomness, and acceleration (e.g., gravity). Handles particle recycling for
+efficient memory usage.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #pragma once
 
 #include "../Utility/Particle.h"

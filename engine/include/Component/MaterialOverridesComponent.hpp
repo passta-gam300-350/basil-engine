@@ -33,7 +33,8 @@ Technology is prohibited.
  * Usage:
  * - Override float properties: floatOverrides["u_MetallicValue"] = 0.8f
  * - Override vec3 properties: vec3Overrides["u_AlbedoColor"] = glm::vec3(1,0,0)
- * - Override textures: textureOverrides["u_AlbedoMap"] = someTextureGuid
+ * - Override vec4 properties: vec4Overrides["u_CustomColor"] = glm::vec4(1,0,0,1)
+ * - Override mat4 properties: mat4Overrides["u_CustomTransform"] = glm::mat4(1.0f)
  *
  * Property names must match shader uniform names (e.g., "u_MetallicValue" not "metallic").
  *
@@ -43,6 +44,8 @@ Technology is prohibited.
  * - MaterialPropertyBlock: Runtime representation (created by MaterialOverridesSystem)
  *
  * @note Uses MaterialPropertyBlock (not MaterialInstance) to preserve GPU instancing.
+ *       Texture overrides are NOT supported because they break instancing.
+ *       For texture customization, use MaterialInstance instead (see MaterialInstanceManager).
  */
 struct MaterialOverridesComponent {
     /// Float property overrides (e.g., u_MetallicValue, u_RoughnessValue)
@@ -57,10 +60,6 @@ struct MaterialOverridesComponent {
     /// Mat4 property overrides (e.g., u_CustomTransform)
     std::unordered_map<std::string, glm::mat4> mat4Overrides;
 
-    /// Texture property overrides (stores asset GUIDs, not loaded textures)
-    /// Maps uniform name (e.g., "u_AlbedoMap") to texture asset GUID
-    std::unordered_map<std::string, rp::Guid> textureOverrides;
-
     /**
      * @brief Check if this component has any overrides
      * @return True if at least one property is overridden
@@ -69,8 +68,7 @@ struct MaterialOverridesComponent {
         return !floatOverrides.empty() ||
                !vec3Overrides.empty() ||
                !vec4Overrides.empty() ||
-               !mat4Overrides.empty() ||
-               !textureOverrides.empty();
+               !mat4Overrides.empty();
     }
 
     /**
@@ -81,7 +79,6 @@ struct MaterialOverridesComponent {
         vec3Overrides.clear();
         vec4Overrides.clear();
         mat4Overrides.clear();
-        textureOverrides.clear();
     }
 };
 

@@ -93,6 +93,9 @@ uniform float u_RoughnessValue = 0.5;
 // Ambient lighting
 uniform vec3 u_AmbientLight = vec3(0.03);
 
+// Blend mode control (true = opaque pass, false = transparent pass)
+uniform bool u_IsOpaquePass = true;
+
 // PBR constants
 const float PI = 3.14159265359;
 
@@ -280,13 +283,24 @@ float CalculateShadowFromSSBO(int shadowIndex, vec3 fragPos, vec3 normal, vec3 l
     return 0.0;
 }
 
-// Enhanced normal mapping helper for traditional textures
+// Enhanced normal mapping helper with BC5 format support
 vec3 getNormalFromMap() {
     if (!u_HasNormalMap) {
         return normalize(fs_in.Normal);
     }
 
-    vec3 tangentNormal = texture(u_NormalMap, fs_in.TexCoords).xyz * 2.0 - 1.0;
+    // Sample normal map (BC5 format stores only RG channels)
+    vec3 tangentNormal = texture(u_NormalMap, fs_in.TexCoords).xyz;
+
+    // Unpack RG from [0,1] to [-1,1]
+    tangentNormal.xy = tangentNormal.xy * 2.0 - 1.0;
+
+    // Reconstruct Z component for BC5/2-channel normal maps
+    // Since normals are unit vectors: x² + y² + z² = 1
+    // Therefore: z = sqrt(1 - x² - y²)
+    tangentNormal.z = sqrt(max(1.0 - dot(tangentNormal.xy, tangentNormal.xy), 0.0));
+
+    // Transform from tangent space to world space
     return normalize(fs_in.TBN * tangentNormal);
 }
 
@@ -502,21 +516,20 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
 
 void main() {
     // Sample traditional textures
-    vec3 albedo = fs_in.InstanceColor.rgb;
-	vec4 albedoSample = texture(u_DiffuseMap, fs_in.TexCoords);
+    vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
     if (u_HasDiffuseMap) {
-        albedo = albedoSample.rgb;
+        albedo *= texture(u_DiffuseMap, fs_in.TexCoords);
     }
 
     float metallic = fs_in.InstanceMetallic;
     if (u_HasMetallicMap) {
-        metallic = texture(u_MetallicMap, fs_in.TexCoords).r;
+        metallic *= texture(u_MetallicMap, fs_in.TexCoords).r;
     }
 
     float roughness = fs_in.InstanceRoughness;
     if (u_HasRoughnessMap) {
         // Modern PBR: Use roughness texture directly
-        roughness = texture(u_RoughnessMap, fs_in.TexCoords).r;
+        roughness *= texture(u_RoughnessMap, fs_in.TexCoords).r;
     }
     else if (u_HasSpecularMap) {
         // Legacy Blinn-Phong: Convert specular to roughness (backwards compatibility)
@@ -539,12 +552,18 @@ void main() {
     vec3 normal = getNormalFromMap();
 
     // Calculate multi-light PBR lighting (shadows are calculated per-light now)
-    vec3 color = calculateMultiLightPBR(albedo, normal, metallic, roughness, ao);
+    vec3 color = calculateMultiLightPBR(albedo.rgb, normal, metallic, roughness, ao);
 
     // Add emissive
     color += emissive;
 
-    // Output raw HDR color to HDR framebuffer (RGB16F)
+    // Output raw HDR color to HDR framebuffer with appropriate alpha
+    // Opaque pass: Force alpha = 1.0 to prevent texture alpha from affecting visibility
+    // Transparent pass: Preserve texture alpha for proper blending
     // Tone mapping will be applied later in ToneMapRenderPass
-    FragColor = vec4(color, albedoSample.a);
+    float outputAlpha = 1.0f;
+    if (!u_IsOpaquePass) {
+        outputAlpha = albedo.a;
+    }
+    FragColor = vec4(color, outputAlpha);
 }

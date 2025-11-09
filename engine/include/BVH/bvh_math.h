@@ -1,3 +1,21 @@
+/******************************************************************************/
+/*!
+\file   bvh_math.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/01
+\brief  Math library configuration and type definitions for BVH
+
+Configures GLM math library settings for BVH calculations and provides common
+math types and operations used throughout the BVH system.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef MATH_H
 #define MATH_H
 

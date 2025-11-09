@@ -1,3 +1,22 @@
+/******************************************************************************/
+/*!
+\file   ParticleComponent.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  ECS component for particle system integration with configurable emitters
+
+This component attaches a particle emitter to an entity, allowing particles
+to be spawned and rendered in the game world. Supports emission shapes,
+color gradients, size animation, physics simulation, and various blend modes.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #pragma once
 
 #include "Rendering/ParticleRenderer.h"

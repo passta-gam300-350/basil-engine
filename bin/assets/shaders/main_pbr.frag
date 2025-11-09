@@ -518,18 +518,18 @@ void main() {
     // Sample traditional textures
     vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
     if (u_HasDiffuseMap) {
-        albedo = texture(u_DiffuseMap, fs_in.TexCoords);
+        albedo *= texture(u_DiffuseMap, fs_in.TexCoords);
     }
 
     float metallic = fs_in.InstanceMetallic;
     if (u_HasMetallicMap) {
-        metallic = texture(u_MetallicMap, fs_in.TexCoords).r;
+        metallic *= texture(u_MetallicMap, fs_in.TexCoords).r;
     }
 
     float roughness = fs_in.InstanceRoughness;
     if (u_HasRoughnessMap) {
         // Modern PBR: Use roughness texture directly
-        roughness = texture(u_RoughnessMap, fs_in.TexCoords).r;
+        roughness *= texture(u_RoughnessMap, fs_in.TexCoords).r;
     }
     else if (u_HasSpecularMap) {
         // Legacy Blinn-Phong: Convert specular to roughness (backwards compatibility)

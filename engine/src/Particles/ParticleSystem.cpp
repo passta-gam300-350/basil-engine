@@ -1,3 +1,22 @@
+/******************************************************************************/
+/*!
+\file   ParticleSystem.cpp
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  Implementation of ECS particle system update and submission logic
+
+This file implements the ParticleSystem which manages ParticleComponent entities.
+Each frame, it updates particle emitters, synchronizes them with entity transforms,
+and submits particle data to the SceneRenderer for GPU rendering.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleComponent.h"
 #include "components/transform.h"

@@ -1,3 +1,24 @@
+/******************************************************************************/
+/*!
+\file   Particle.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  Data structures for particle simulation and rendering
+
+Defines the core particle data structures used throughout the particle system:
+- Particle: CPU-side particle with physics properties (position, velocity, lifetime)
+- ParticleInstanceData: GPU-side SSBO layout for instanced rendering (48 bytes)
+- ParticleRenderData: Submission format for particle systems to the renderer
+- BlendMode: Blend mode enumeration (alpha, additive, multiply, opaque)
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #pragma once
 
 #include <glm/glm.hpp>

@@ -222,7 +222,7 @@ TEST_F(MaterialInstanceManagerTest, Construction) {
 TEST_F(MaterialInstanceManagerTest, GetSharedMaterial) {
     uint64_t objectID = 123;
 
-    auto sharedMat = manager->GetSharedMaterial(objectID, baseMaterial);
+    auto sharedMat = manager->GetSharedMaterial(baseMaterial);
 
     EXPECT_EQ(sharedMat, baseMaterial);
     EXPECT_FALSE(manager->HasInstance(objectID)); // Should not create instance
@@ -559,7 +559,7 @@ TEST_F(MaterialInstanceManagerTest, UnityStyleWorkflow) {
     uint64_t entity3 = 2003;
 
     // Entity 1: Use shared material (no customization)
-    auto sharedMat1 = manager->GetSharedMaterial(entity1, baseMaterial);
+    auto sharedMat1 = manager->GetSharedMaterial(baseMaterial);
     EXPECT_EQ(sharedMat1, baseMaterial);
     EXPECT_FALSE(manager->HasInstance(entity1));
 

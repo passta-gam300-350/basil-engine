@@ -6,8 +6,9 @@
 /*!
 \file   bvh_renderable.h
 \author Team PASSTA
+        Cheong Jia Zen (jiazen.c@digipen.edu)
 \par    Course : GAM300
-\date   2025/11/04
+\date   2025/11/01
 \brief  Wrapper struct that bridges ECS entities with BVH spatial index
 
 This file defines the BvhRenderable struct which acts as an adapter between
