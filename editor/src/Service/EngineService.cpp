@@ -489,7 +489,8 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 
 const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
 {
-	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>{};
+	static const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> empty{};
+	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : empty;
 }
 
 bool EngineContainerService::EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const {
@@ -648,9 +649,13 @@ void EngineContainerService::LoadScene(const char* path) {
 }
 
 void EngineContainerService::NewScene() {
-	ExecuteOnEngineThread([]() {
+	ExecuteOnEngineThread([this]() {
 		ecs::world world = Engine::GetWorld();
 		world.UnloadAll();
+		m_cont->m_loaded_scenes_scenegraph_snapshot.clear();
+		SceneGraphNode root{};
+		root.m_entity_name = "Scene";
+		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid] = std::pair<SceneGraphNode, bool>(root, true);
 		spdlog::info("EngineService: New Scene created");
 		});
 }

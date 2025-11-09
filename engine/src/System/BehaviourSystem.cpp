@@ -84,8 +84,8 @@ void BehaviourSystem::Exit()
 {
 }
 
-bool BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, rp::Guid scriptID) {
-	behaviour& component = world.get_component_from_entity<behaviour>(entity);
+bool BehaviourSystem::AddScriptToEntityComponent(ecs::entity& /*entity*/, ecs::world& /*world*/, rp::Guid scriptID) {
+	//behaviour& component = world.get_component_from_entity<behaviour>(entity);
 
 
 

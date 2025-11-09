@@ -35,7 +35,7 @@ void ParticleRenderer::RenderToPass(RenderPass& pass, FrameData const& frameData
 		if (eachSystem.particles.empty() == false)
 		{
 			RenderSystem(eachSystem, frameData, pass);
-			m_TotalParticleCount += eachSystem.particles.size();
+			m_TotalParticleCount += static_cast<uint32_t>(eachSystem.particles.size());
 		}
 	}
 }
@@ -50,7 +50,7 @@ void ParticleRenderer::SetMaxParticles(uint32_t maxParticles)
 {
 	m_MaxParticles = maxParticles;
 	size_t bufferSize = m_MaxParticles * sizeof(ParticleInstanceData);
-	m_InstanceSSBO->Resize(bufferSize);
+	m_InstanceSSBO->Resize(static_cast<uint32_t>(bufferSize));
 }
 
 uint32_t ParticleRenderer::GetParticleCount() const
@@ -67,7 +67,7 @@ void ParticleRenderer::InitializeResources()
 {
 	CreateBillboardQuad();
 	size_t bufferSize = m_MaxParticles * sizeof(ParticleInstanceData);
-	m_InstanceSSBO = std::make_unique<ShaderStorageBuffer>(nullptr, bufferSize, GL_DYNAMIC_DRAW);
+	m_InstanceSSBO = std::make_unique<ShaderStorageBuffer>(nullptr, uint32_t(bufferSize), GL_DYNAMIC_DRAW);
 	m_InstanceSSBO->BindBase(PARTICLE_SSBO_BINDING);
 	// NOTE: Shader must be set via SetParticleShader() before rendering!
 }
@@ -175,7 +175,7 @@ void ParticleRenderer::UpdateSSBO(std::vector<Particle> const& particles)
 	}
 	if (instanceParticleData.empty() == false)
 	{
-		m_InstanceSSBO->SetData(instanceParticleData.data(), instanceParticleData.size() * sizeof(ParticleInstanceData));
+		m_InstanceSSBO->SetData(instanceParticleData.data(), static_cast<uint32_t>(instanceParticleData.size() * sizeof(ParticleInstanceData)));
 	}
 }
 

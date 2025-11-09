@@ -154,14 +154,14 @@ void Engine::CoreUpdate() {
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
-	ParticleSystem::GetInstance().Update(instance.m_World, instance.GetDeltaTime());
+	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetDeltaTime()));
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
-	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
+	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetDeltaTime()));
 	messagingSystem.Update();
 }
 

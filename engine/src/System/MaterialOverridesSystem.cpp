@@ -16,17 +16,11 @@ Technology is prohibited.
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
 #include "Engine.hpp"
-#include "Manager/ResourceSystem.hpp"
 #include <Resources/MaterialPropertyBlock.h>
-#include <Resources/Texture.h>
 #include <spdlog/spdlog.h>
 
 void MaterialOverridesSystem::Init() {
     spdlog::info("MaterialOverridesSystem: Initializing");
-
-    // MaterialInstanceManager is accessed via Engine::GetRenderSystem()
-    // ResourceSystem is a singleton
-    m_ResourceSystem = &ResourceSystem::Instance();
 
     m_EntitiesWithInstances.clear();
 
@@ -41,11 +35,6 @@ void MaterialOverridesSystem::Init() {
 }
 
 void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
-    // Lazy initialization (since system is created each frame)
-    if (!m_ResourceSystem) {
-        m_ResourceSystem = &ResourceSystem::Instance();
-    }
-
     auto& renderSystem = Engine::GetRenderSystem();
 
     // Query all entities with both MeshRendererComponent and MaterialOverridesComponent
@@ -104,7 +93,6 @@ void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
 void MaterialOverridesSystem::Exit() {
     spdlog::info("MaterialOverridesSystem: Shutting down");
     m_EntitiesWithInstances.clear();
-    m_ResourceSystem = nullptr;
 }
 
 void MaterialOverridesSystem::ApplyOverridesToPropertyBlock(
@@ -132,33 +120,4 @@ void MaterialOverridesSystem::ApplyOverridesToPropertyBlock(
     for (const auto& [name, value] : overrides.mat4Overrides) {
         propBlock->SetMat4(name, value);
     }
-
-    // Apply texture overrides
-    for (const auto& [name, textureGuid] : overrides.textureOverrides) {
-        auto texture = LoadTexture(textureGuid);
-        if (texture) {
-            propBlock->SetTexture(name, texture);
-        } else {
-            spdlog::warn("MaterialOverridesSystem: Failed to load texture for property '{}'", name);
-        }
-    }
-}
-
-std::shared_ptr<Texture> MaterialOverridesSystem::LoadTexture(const rp::Guid& textureGuid) {
-    if (!m_ResourceSystem) {
-        spdlog::error("MaterialOverridesSystem: ResourceSystem not available");
-        return nullptr;
-    }
-
-    // Try to get texture from ResourceRegistry
-    auto* texturePtr = ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(textureGuid);
-    if (texturePtr) {
-        return *texturePtr;
-    }
-
-    // TODO: If texture not loaded, trigger async load via ResourceSystem
-    // For now, just return nullptr and log warning
-    spdlog::warn("MaterialOverridesSystem: Texture {} not found in ResourceRegistry",
-                 textureGuid.to_hex());
-    return nullptr;
 }

@@ -209,7 +209,7 @@ macro(import_tinyddsloader)
     FetchContent_MakeAvailable(tinyddsloader)
     add_library(tinyddsloader INTERFACE)
     target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
-    target_include_directories(tinyddsloader INTERFACE $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
+    target_include_directories(tinyddsloader INTERFACE SYSTEM $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
     set_target_properties(tinyddsloader PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
 

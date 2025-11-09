@@ -18,7 +18,7 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 	{
 		return;
 	}
-	auto& registry = world.impl.get_registry();
+	//auto& registry = world.impl.get_registry();
 	//auto view = registry.view<ParticleComponent, TransformComponent>();
 	auto view = world.filter_entities<ParticleComponent, TransformComponent>();
 
@@ -58,7 +58,7 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 
 void ParticleSystem::FixedUpdate(ecs::world& world)
 {
-
+	Update(world, 1 / 60.f);
 }
 
 void ParticleSystem::Exit()

@@ -8,7 +8,7 @@ void HierarchySystem::Init()
 	// Nothing to initialize
 }
 
-void HierarchySystem::Update(ecs::world& world, float dt)
+void HierarchySystem::Update(ecs::world& world, float /*dt*/)
 {
 	// Update all root entities first (entities without parents or with invalid parents)
 	UpdateRootEntities(world);
@@ -49,11 +49,12 @@ void HierarchySystem::UpdateRootEntities(ecs::world& world)
 			auto& mtx = ent.get<TransformMtxComponent>();
 
 			// Root entities: world matrix = local matrix (from m_Translation, m_Rotation, m_Scale)
-			if (transform.isDirty)
+			/*if (transform.isDirty)
 			{
 				mtx.m_Mtx = transform.getLocalMatrix();
 				transform.isDirty = false;
-			}
+			}*/
+			mtx.m_Mtx = transform.getLocalMatrix();
 
 			// Recursively update children
 			if (hasRelationship)

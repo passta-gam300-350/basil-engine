@@ -811,6 +811,13 @@ void EditorMain::Render_Components()
 		audio_component = audioIt->second;
 	}
 
+	ReflectionRegistry::TypeID rb_component{};
+	auto rbIt = internal_type_map.find(entt::type_index<RigidBodyComponent>::value());
+	if (rbIt != internal_type_map.end())
+	{
+		rb_component = rbIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
@@ -891,6 +898,7 @@ void EditorMain::Render_Components()
 					ImGui::Text("Status: %s", audioComp->isPlaying ? (audioComp->isPaused ? "Paused" : "Playing") : "Stopped");
 				}
 			}
+
 
 			if (ImGui::Button("Delete Component")) {
 				ul.unlock();
@@ -1855,17 +1863,32 @@ void EditorMain::Render_SceneExplorer()
 				m_SelectedNodeID = node.m_entity_sid;
 			}
 			bool isDisabled{};
+			int stylect{};
+
+			static const auto style_color_selected{ []() -> int {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.761f, 0.542f, 0.223f, 1.0f)); // Yellow text for selected
+				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1.0f, 0.9f, 0.0f, 1.0f)); 
+				return 3;
+				} };
+			static const auto style_color_inactive{ []() -> int {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.461f, 0.442f, 0.423f, 0.42f)); // Yellow text for selected
+				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.15f, 0.123f, 0.10f));
+				return 2;
+				} };
+
+			int(*current_style)() {nullptr};
+
 			static const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
 
 			// Highlight selected entity with different color
-			if (isSelected && node.m_parent) {
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.761f, 0.542f, 0.223f, 1.0f)); // Yellow text for selected
-				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
-				ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
+			if (isSelected && node.m_entity_handle) { //root node handle is null
+				current_style = style_color_selected;
+				stylect = current_style();
 			}
 			else if (!node.is_active) {
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.461f, 0.442f, 0.423f, 0.42f)); // Yellow text for selected
-				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.15f, 0.123f, 0.10f));
+				current_style = style_color_inactive;
+				stylect = current_style();
 				isDisabled = true;
 			}
 
@@ -1881,10 +1904,8 @@ void EditorMain::Render_SceneExplorer()
 				m_SelectedNodeID = node.m_entity_sid;
 			}
 
-			if (isDisabled) {
-				ImGui::PopStyleColor(2);
-				isDisabled = false;
-			}
+			ImGui::PopStyleColor(stylect);
+			stylect = 0;
 
 			if (ImGui::BeginPopupContextItem())
 			{
@@ -1966,7 +1987,10 @@ void EditorMain::Render_SceneExplorer()
 				if (ImGui::MenuItem("Rename")) { }
 				ImGui::EndPopup();
 			}
-					
+			
+			if (current_style) {
+				stylect = current_style();
+			}
 			
 			//Draw children
 			int imidx{};
@@ -1978,13 +2002,8 @@ void EditorMain::Render_SceneExplorer()
 			ImGui::TreePop();
 		}
 		// Pop the selection highlight color if it was applied
-		if (isSelected && node.m_parent) {
-			ImGui::PopStyleColor(3);
-		}
-		else if (isDisabled) {
-			ImGui::PopStyleColor(2);
-			isDisabled = false;
-		}
+		ImGui::PopStyleColor(stylect);
+		stylect = 0;
 
 		} };
 		RenderNode(node, RenderNode);
@@ -3329,7 +3348,9 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 		[this](bool hasHit, uint32_t objectID) {
 		// Callback executes on engine thread, but only calls EditorMain methods
 		if (hasHit) {
-			SelectEntity(objectID);
+			objectID &= rp::lo_bitmask32_v<20>;
+			auto& reg{ Engine::GetWorld().impl.get_registry() };
+			SelectEntity(static_cast<std::uint32_t>(entt::entt_traits<entt::entity>::construct(objectID, reg.current(static_cast<entt::entity>(objectID)))));
 		}
 		else {
 			ClearEntitySelection();
@@ -3410,7 +3431,21 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 	ImGui::Text("Gizmo Capture Mouse: %s", io.WantCaptureMouse ? "YES" : "NO");
 	ImGui::Text("Viewport Pos: (%.0f, %.0f)", viewportPos.x, viewportPos.y);
 	ImGui::Text("Viewport Size: (%.0f, %.0f)", viewportSize.x, viewportSize.y);
-
+	if (ImGui::Button("Test Scripts"))
+	{
+		engineService.ExecuteOnEngineThread([&]() {
+			spdlog::info("enter test");
+			ecs::world world = Engine::GetWorld();
+			for (auto& entity : world.get_all_entities()) {
+				if (entity.get_uid() == m_SelectedEntityID) {
+					world.get_component_from_entity<BoxCollider>(entity).onTriggerEnter = [](const TriggerInfo&) {spdlog::critical("Hit");};
+					spdlog::info("Found");
+					break;
+				}
+			}
+			spdlog::info("Add Trigger");
+			});
+	}
 
 	ImGui::End();
 
@@ -3456,6 +3491,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 				auto selected = world.impl.entity_cast(entt::entity(m_SelectedEntityID));
 				GuizmoEntityTransform = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformComponent>(selected) : nullptr;
 				GuizmoEntityTransformMTX = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformMtxComponent>(selected) : nullptr;
+				GuizmoEntityParentTransformMTX = SceneGraph::HasParent(selected) ? SceneGraph::GetParent(selected).all<TransformMtxComponent>() ? &SceneGraph::GetParent(selected).get<TransformMtxComponent>() : nullptr : nullptr;
 			}
 			});
 
@@ -3465,13 +3501,13 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 			glm::mat4 deltas{};
 			//glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
 			// Create and display Gizmos
-			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(deltas));
+			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx));
 
 			
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
 			{
 				// Break down the edited matrix so we can save the values
-				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityParentTransformMTX ? glm::inverse(GuizmoEntityParentTransformMTX->m_Mtx) * GuizmoEntityTransformMTX->m_Mtx : GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
 				std::cout << GuizmoEntityTransform->m_Translation.x;
 				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff

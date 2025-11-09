@@ -90,6 +90,7 @@ struct InputMessage : Message
 		{
 			return std::make_unique<InputMessage>(*this);
 		}
+		~InputMessage() = default;
 };
 
 // /**

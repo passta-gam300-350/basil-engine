@@ -28,8 +28,6 @@ Technology is prohibited.
 
 // Forward declarations
 class MaterialPropertyBlock;
-struct Texture;
-class ResourceSystem;
 
 /**
  * @brief System that synchronizes MaterialOverridesComponent with MaterialPropertyBlock
@@ -37,14 +35,12 @@ class ResourceSystem;
  * Responsibilities:
  * 1. Lazy creation: Create MaterialPropertyBlock only when MaterialOverridesComponent has data
  * 2. Sync properties: Apply component overrides to MaterialPropertyBlock
- * 3. Load textures: Resolve texture GUIDs to loaded textures
- * 4. Cleanup: Clear MaterialPropertyBlock when overrides are cleared or component removed
+ * 3. Cleanup: Clear MaterialPropertyBlock when overrides are cleared or component removed
  *
  * @requirements
  * - Entity MUST have MeshRendererComponent (for base material GUID)
  * - Entity MUST have MaterialOverridesComponent (for override data)
  * - RenderSystem MUST provide MaterialPropertyBlock management
- * - ResourceSystem MUST be available for texture loading
  *
  * @note MaterialPropertyBlock is used instead of MaterialInstance to preserve GPU instancing.
  *       Property blocks are lightweight and applied per-draw call by SceneRenderer.
@@ -55,13 +51,11 @@ class ResourceSystem;
  * auto& overrides = entity.add<MaterialOverridesComponent>();
  * overrides.floatOverrides["u_MetallicValue"] = 0.8f;
  * overrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(1.0f, 0.0f, 0.0f);
- * overrides.textureOverrides["u_AlbedoMap"] = someTextureGuid;
  *
  * // MaterialOverridesSystem will:
  * // 1. Create MaterialPropertyBlock (lazy)
- * // 2. Load texture from GUID
- * // 3. Apply all overrides to MaterialPropertyBlock
- * // 4. SceneRenderer will apply property block after base material during rendering
+ * // 2. Apply all overrides to MaterialPropertyBlock
+ * // 3. SceneRenderer will apply property block after base material during rendering
  * @endcode
  */
 class MaterialOverridesSystem : public ecs::SystemBase
@@ -105,7 +99,7 @@ private:
     /**
      * @brief Apply MaterialOverridesComponent properties to MaterialPropertyBlock
      *
-     * Syncs all override maps (floats, vec3s, vec4s, mat4s, textures) to the property block.
+     * Syncs all override maps (floats, vec3s, vec4s, mat4s) to the property block.
      *
      * @param propBlock Target MaterialPropertyBlock
      * @param overrides Source override data
@@ -115,23 +109,12 @@ private:
         const struct MaterialOverridesComponent& overrides);
 
     /**
-     * @brief Load texture from GUID using ResourceSystem
-     *
-     * @param textureGuid Asset GUID
-     * @return Loaded texture (or nullptr if load fails)
-     */
-    std::shared_ptr<Texture> LoadTexture(const rp::Guid& textureGuid);
-
-    /**
      * @brief Track entities that have MaterialPropertyBlocks created
      *
      * This avoids per-frame property block queries.
      * Key = entity UID
      */
     std::unordered_set<uint64_t> m_EntitiesWithInstances;
-
-    /// Pointer to ResourceSystem (for texture loading)
-    ResourceSystem* m_ResourceSystem = nullptr;
 };
 
 #endif // MATERIALOVERRIDESSYSTEM_HPP

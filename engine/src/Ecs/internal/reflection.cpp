@@ -197,8 +197,7 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MaterialOverridesComponent::floatOverrides, "floatOverrides">,
 		MemberRegistrationV<&MaterialOverridesComponent::vec3Overrides, "vec3Overrides">,
 		MemberRegistrationV<&MaterialOverridesComponent::vec4Overrides, "vec4Overrides">,
-		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">,
-		MemberRegistrationV<&MaterialOverridesComponent::textureOverrides, "textureOverrides">
+		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">
 	);
 
 	// Register particle enums
