@@ -1,4 +1,4 @@
-#pragma once
+#pragma once 
 /*!************************************************************************
 \file:      Physics_Components.h
 \author:    Sam Tsang
@@ -72,17 +72,17 @@ struct RigidBodyComponent {
     //----------------------------//
     ecs::entity m_entity;            // Set when body is created, used for checking which BodyId is associated with this entity in the physics system internal map
     MotionType motionType = MotionType::Dynamic;
-
+     
     // Motion properties
     float mass = 1.0f;              // Kilograms
     float drag = 0.0f;              // Linear drag (Air Resistance), 1.0000.0 = No air resistance (like in space) 0.5 = Moderate resistance(like moving through water) 5.0 = High resistance(like moving through honey)
     float angularDrag = 0.05f;      // Angular drag. Prevents objects from spinning forever.
     float friction = 0.0f;          
     float linearDamping = 0.0f;
-    float gravityFactor = -9.81f;
-    bool useGravity = true;         // Is gravity applied to the entity, true: Object falls down(default - 9.81 m / s^2), false : Object floats(useful for flying enemies, UI elements in 3D space)
+    float gravityFactor = -9.81f; 
+    bool useGravity = true;         // Is gravity applied to the entity, true: Object falls down(default - 9.81 m/s^2), false : Object floats(useful for flying enemies, UI elements in 3D space)
     bool isKinematic = false;       // Is this object controlled by animation/code or physics? false (Dynamic): Physics controls position (player can push it), true (Kinematic) : Your code controls position(moving platforms, doors)
-
+     
     // Constraints for Position
     bool freezePositionX = false;
     bool freezePositionY = false;
@@ -100,7 +100,7 @@ struct RigidBodyComponent {
     // Internal flags
     bool isActive = true;   // Controls whether this body participates in simulation
     bool isDirty = false;   // Needs sync to physics
-
+     
     // Center of mass
     glm::vec3 centerOfMass = glm::vec3(0.0f);
 
@@ -132,7 +132,7 @@ struct RigidBodyComponent {
     const glm::vec3& GetAngularVelocity() const noexcept { return angularVelocity; }
     glm::vec3& GetAngularVelocity() noexcept { return angularVelocity; };
 };
-
+ 
 // ============================================================================
 // COLLISION DATA STRUCTURES
 // ============================================================================

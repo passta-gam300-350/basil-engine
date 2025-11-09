@@ -35,7 +35,7 @@ void ParticleRenderer::RenderToPass(RenderPass& pass, FrameData const& frameData
 		if (eachSystem.particles.empty() == false)
 		{
 			RenderSystem(eachSystem, frameData, pass);
-			m_TotalParticleCount += uint32_t(eachSystem.particles.size());
+			m_TotalParticleCount += static_cast<uint32_t>(eachSystem.particles.size());
 		}
 	}
 }
@@ -50,7 +50,7 @@ void ParticleRenderer::SetMaxParticles(uint32_t maxParticles)
 {
 	m_MaxParticles = maxParticles;
 	size_t bufferSize = m_MaxParticles * sizeof(ParticleInstanceData);
-	m_InstanceSSBO->Resize(uint32_t(bufferSize));
+	m_InstanceSSBO->Resize(static_cast<uint32_t>(bufferSize));
 }
 
 uint32_t ParticleRenderer::GetParticleCount() const
@@ -175,7 +175,7 @@ void ParticleRenderer::UpdateSSBO(std::vector<Particle> const& particles)
 	}
 	if (instanceParticleData.empty() == false)
 	{
-		m_InstanceSSBO->SetData(instanceParticleData.data(), uint32_t(instanceParticleData.size()) * sizeof(ParticleInstanceData));
+		m_InstanceSSBO->SetData(instanceParticleData.data(), static_cast<uint32_t>(instanceParticleData.size() * sizeof(ParticleInstanceData)));
 	}
 }
 

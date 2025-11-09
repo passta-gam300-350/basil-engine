@@ -100,7 +100,7 @@ void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
 
     // Upload full InstanceData (not just matrices)
     const auto& instances = meshInstances.instances;
-    uint32_t instanceDataSize = uint32_t(instances.size() * sizeof(InstanceData));
+    uint32_t instanceDataSize = static_cast<uint32_t>(instances.size() * sizeof(InstanceData));
     assert(instanceDataSize > 0 && "Instance data size must be positive");
 
     // Create or get existing SSBO for full instance data

@@ -87,8 +87,9 @@ public:
         return *InstancePtr();
     }
 
-    // Body creation/destruction
-    JPH::BodyID CreateRigidBody(ecs::world& world, const RigidBodyComponent& rb, const TransformComponent& trans, const ColliderComponent& collider);
+    // Helper: Create body for entity if it has both Rigidbody + Collider
+    void TryCreateBodyForEntity(ecs::entity entity);
+    //JPH::BodyID CreateRigidBody(ecs::world& world, const RigidBodyComponent& rb, const TransformComponent& trans, const ColliderComponent& collider);
     void DestroyRigidBody(JPH::BodyID bodyID);
 
     // Accessors
@@ -119,7 +120,11 @@ public:
 
 private:
 
-
+    // Funcitons for updating the jolt body's through the editor
+    void SyncDirtyRigidBodies(ecs::world& world);
+    void SyncDirtyColliders(ecs::world& world);
+    void UpdateBodyProperties(JPH::BodyID bodyID, const RigidBodyComponent& rb);    // Update individual body properties
+    void RecreateBodyWithNewShape(ecs::entity entity, ecs::world& world);           // Recreate body with new shape
 
     // Observer callbacks
     void OnRigidbodyAdded(entt::registry& registry, entt::entity entity);
@@ -127,8 +132,7 @@ private:
     void OnColliderAdded(entt::registry& registry, entt::entity entity);
     void OnColliderDestroyed(entt::registry& registry, entt::entity entity);
 
-    // Helper: Create body for entity if it has both Rigidbody + Collider
-    void TryCreateBodyForEntity(ecs::entity entity);
+
 
     // New: Get entity from BodyID (reverse lookup)
     ecs::entity GetEntityFromBodyID(JPH::BodyID bodyID) const;

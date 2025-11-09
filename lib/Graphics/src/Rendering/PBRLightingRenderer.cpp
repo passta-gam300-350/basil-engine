@@ -48,6 +48,8 @@ void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
 void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
                                          const glm::vec3& ambientLight, const FrameData& /*frameData*/)
 {
+	(void)frameData; // Unused parameter
+
     // PERFORMANCE: Reset lighting and shadow cache at start of each frame
     m_LastLightingShader.reset();
     m_LastShadowShader.reset();

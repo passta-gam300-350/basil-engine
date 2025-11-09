@@ -48,8 +48,7 @@ public:
      * @param baseMaterial The base material asset
      * @return The shared material (can be nullptr)
      */
-    std::shared_ptr<Material> GetSharedMaterial(ObjectID objectID,
-                                                 std::shared_ptr<Material> baseMaterial) const;
+    std::shared_ptr<Material> GetSharedMaterial(std::shared_ptr<Material> baseMaterial) const;
 
     /**
      * @brief Get or create a material instance for an object

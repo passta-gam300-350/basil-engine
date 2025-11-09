@@ -809,6 +809,13 @@ void EditorMain::Render_Components()
 		audio_component = audioIt->second;
 	}
 
+	ReflectionRegistry::TypeID rb_component{};
+	auto rbIt = internal_type_map.find(entt::type_index<RigidBodyComponent>::value());
+	if (rbIt != internal_type_map.end())
+	{
+		rb_component = rbIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
@@ -889,6 +896,7 @@ void EditorMain::Render_Components()
 					ImGui::Text("Status: %s", audioComp->isPlaying ? (audioComp->isPaused ? "Paused" : "Playing") : "Stopped");
 				}
 			}
+
 
 			if (ImGui::Button("Delete Component")) {
 				ul.unlock();
@@ -3375,7 +3383,21 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 	ImGui::Text("Gizmo Capture Mouse: %s", io.WantCaptureMouse ? "YES" : "NO");
 	ImGui::Text("Viewport Pos: (%.0f, %.0f)", viewportPos.x, viewportPos.y);
 	ImGui::Text("Viewport Size: (%.0f, %.0f)", viewportSize.x, viewportSize.y);
-
+	if (ImGui::Button("Test Scripts"))
+	{
+		engineService.ExecuteOnEngineThread([&]() {
+			spdlog::info("enter test");
+			ecs::world world = Engine::GetWorld();
+			for (auto& entity : world.get_all_entities()) {
+				if (entity.get_uid() == m_SelectedEntityID) {
+					world.get_component_from_entity<BoxCollider>(entity).onTriggerEnter = [](const TriggerInfo&) {spdlog::critical("Hit");};
+					spdlog::info("Found");
+					break;
+				}
+			}
+			spdlog::info("Add Trigger");
+			});
+	}
 
 	ImGui::End();
 
