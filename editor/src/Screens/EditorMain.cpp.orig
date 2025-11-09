@@ -1374,9 +1374,7 @@ void EditorMain::Render_StartStop()
 			engineService.ExecuteOnEngineThread([&]() {
 				PhysicsSystem::Instance().isActive = true;
 				PhysicsSystem::Instance().DisableObservers();
-				BehaviourSystem::Instance().isActive = true;
 				spdlog::info("Physics Active");
-
 				
 				});
 			
@@ -1389,7 +1387,6 @@ void EditorMain::Render_StartStop()
 				PhysicsSystem::Instance().isActive = false;
 				PhysicsSystem::Instance().EnableObservers();
 				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
-				BehaviourSystem::Instance().isActive = false;
 				spdlog::info("Physics Disable");
 				});
 			
@@ -3510,7 +3507,11 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
 			{
 				// Break down the edited matrix so we can save the values
+<<<<<<< HEAD
+				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+=======
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityParentTransformMTX ? glm::inverse(GuizmoEntityParentTransformMTX->m_Mtx) * GuizmoEntityTransformMTX->m_Mtx : GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+>>>>>>> origin/m2
 				std::cout << GuizmoEntityTransform->m_Translation.x;
 				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff

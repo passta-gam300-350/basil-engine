@@ -1,2 +1,0 @@
-C:/Users/yeo_j/Documents/Digipen Repo/Year 3/Project/Project/Batch Scripts/CMakeFiles/CMakeScratch/TryCompile-pimkuu/CMakeFiles/cmTC_a989f.dir
-C:/Users/yeo_j/Documents/Digipen Repo/Year 3/Project/Project/Batch Scripts/CMakeFiles/CMakeScratch/TryCompile-pimkuu/CMakeFiles/ALL_BUILD.dir

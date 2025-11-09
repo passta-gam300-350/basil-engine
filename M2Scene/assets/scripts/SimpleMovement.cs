@@ -6,9 +6,9 @@ using BasilEngine.Debug;
 
 
 
-public class SimpleCubeMovement : Behavior
+public class SimpleMovement : Behavior
 {
-    public int multiplier;
+    public int multiplier = 2;
     private int frame = 165;
 
 
@@ -22,11 +22,11 @@ public class SimpleCubeMovement : Behavior
        
         if (Input.GetKey(KeyCode.W))
         {
-            transform.position = transform.position + new Vector3(0, 0, (1.0f / frame) * multiplier);
+            transform.position = transform.position + new Vector3(0, 0, -(1.0f / frame) * multiplier);
         }
         else if (Input.GetKey(KeyCode.S))
         {
-           transform.position = transform.position + new Vector3(0, 0, (-1f / frame) * multiplier);
+           transform.position = transform.position + new Vector3(0, 0, (1f / frame) * multiplier);
         }
         else if (Input.GetKey(KeyCode.A))
         {
