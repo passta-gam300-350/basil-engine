@@ -36,6 +36,14 @@ public class SimpleMovement : Behavior
         {
             transform.position = transform.position + new Vector3((1f / frame) * multiplier, 0, 0);
         }
+        else if (Input.GetKey(KeyCode.Q))
+        {
+            transform.position = transform.position + new Vector3(0, (1f / frame) * multiplier, 0);
+        }
+        else if (Input.GetKey(KeyCode.E))
+        {
+            transform.position = transform.position + new Vector3(0, -(1f / frame) * multiplier, 0);
+        }
     }
 
     public void FixedUpdate()
