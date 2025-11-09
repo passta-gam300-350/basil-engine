@@ -117,7 +117,7 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 }
 
 
-rp::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance, uint64_t ID) {
+rp::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance, uint64_t /*ID*/) {
 	const rp::Guid id = rp::Guid::generate();
 	m_EntityInstanceMap[id] = m_Instances.size();
 	m_Instances.push_back(std::move(instance));

@@ -40,7 +40,7 @@ void MaterialOverridesSystem::Init() {
     spdlog::info("MaterialOverridesSystem: Initialization complete");
 }
 
-void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
+void MaterialOverridesSystem::Update(ecs::world& world, float /*dt*/) {
     // Lazy initialization (since system is created each frame)
     if (!m_ResourceSystem) {
         m_ResourceSystem = &ResourceSystem::Instance();

@@ -375,11 +375,19 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 		if (mid == entt::type_hash<std::unordered_map<std::string, rp::BasicIndexedGuid>>::value()) {
 			auto mapnode = in[field_name];
 			std::unordered_map<std::string, rp::BasicIndexedGuid> map_name_guid{};
-			for (auto const& pair : mapnode) {
+			if (mapnode.IsMap() && mapnode.begin()->first.template as<std::string>() != "guid") {
+				for (auto const& pair : mapnode) {
+					rp::BasicIndexedGuid biguid{};
+					biguid.m_guid = rp::Guid::to_guid(pair.second["guid"].template as<std::string>());
+					biguid.m_typeindex = pair.second["type"].template as<std::uint64_t>();
+					map_name_guid[pair.first.template as<std::string>()] = biguid;
+				}
+			}
+			else {
 				rp::BasicIndexedGuid biguid{};
-				biguid.m_guid = rp::Guid::to_guid(pair.second["guid"].template as<std::string>());
-				biguid.m_typeindex = pair.second["type"].template as<std::uint64_t>();
-				map_name_guid[pair.first.template as<std::string>()] = biguid;
+				biguid.m_guid = rp::Guid::to_guid(mapnode["guid"].template as<std::string>());
+				biguid.m_typeindex = mapnode["type"].template as<std::uint64_t>();
+				map_name_guid["unnamed slot"] = biguid;
 			}
 			data.set(obj, map_name_guid);
 			continue;

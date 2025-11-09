@@ -4,7 +4,9 @@
 #define GLM_FORCE_INLINE
 #define GLM_FORCE_NO_CTOR_INIT
 #define GLM_FORCE_EXPLICIT_CTOR
+#ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
+#endif
 #define GLM_FORCE_XYZW_ONLY // Incompatible with colors in HSV
 
 #include <glm/glm.hpp>

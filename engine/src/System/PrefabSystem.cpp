@@ -25,7 +25,7 @@ void PrefabSystem::Init()
     s_PrefabCache.clear();
 }
 
-void PrefabSystem::Update(ecs::world& world, float/* deltaTime*/)
+void PrefabSystem::Update(ecs::world& /*world*/, float/* deltaTime*/)
 {
     // Prefab system is primarily event-driven
     // No per-frame updates needed currently
@@ -406,7 +406,7 @@ PrefabData PrefabSystem::LoadPrefabFromFile(const std::string& prefabPath)
             data.root = DeserializeEntityHierarchyHelper(root["root"]);
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception& /*e*/)
     {
         // Log error
         data.name = ""; // Mark as invalid
@@ -445,7 +445,7 @@ bool PrefabSystem::SavePrefabToFile(const PrefabData& data, const std::string& p
 
         return true;
     }
-    catch (const std::exception& e)
+    catch (const std::exception& /*e*/)
     {
         return false;
     }
@@ -488,7 +488,7 @@ ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const UUID<128>& 
     return rootEntity;
 }
 
-ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& world, const UUID<128>& prefabId, ecs::entity rootEntityId, const glm::vec3& position)
+ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& /*world*/, const UUID<128>& /*prefabId*/, ecs::entity rootEntityId, const glm::vec3& /*position*/)
 {
     // Similar to InstantiatePrefab but uses provided entity ID
     return rootEntityId;
@@ -539,7 +539,7 @@ bool PrefabSystem::SyncInstance(ecs::world& world, ecs::entity instance)
 // Override Management
 // ========================
 
-void PrefabSystem::MarkPropertyOverridden(ecs::world& world, ecs::entity instance,
+void PrefabSystem::MarkPropertyOverridden(ecs::world& /*world*/, ecs::entity instance,
                                           std::uint32_t componentTypeHash,
                                           const std::string& componentTypeName,
                                           const std::string& propertyPath,
@@ -651,7 +651,7 @@ std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const 
     return instances;
 }
 
-bool PrefabSystem::IsInstanceOf(ecs::world& world, ecs::entity entity, const UUID<128>& prefabId)
+bool PrefabSystem::IsInstanceOf(ecs::world& /*world*/, ecs::entity entity, const UUID<128>& prefabId)
 {
     if (!entity.all<PrefabComponent>())
         return false;
@@ -660,7 +660,7 @@ bool PrefabSystem::IsInstanceOf(ecs::world& world, ecs::entity entity, const UUI
     return prefabComp.m_PrefabGuid == prefabId;
 }
 
-bool PrefabSystem::IsPrefabInstance(ecs::world& world, ecs::entity entity)
+bool PrefabSystem::IsPrefabInstance(ecs::world& /*world*/, ecs::entity entity)
 {
     return entity.all<PrefabComponent>();
 }

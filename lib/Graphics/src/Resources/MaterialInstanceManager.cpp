@@ -17,7 +17,7 @@ Technology is prohibited.
 #include <spdlog/spdlog.h>
 
 std::shared_ptr<Material> MaterialInstanceManager::GetSharedMaterial(
-    ObjectID objectID,
+    ObjectID /*objectID*/,
     std::shared_ptr<Material> baseMaterial) const
 {
     // Simply return the base material (no instancing)

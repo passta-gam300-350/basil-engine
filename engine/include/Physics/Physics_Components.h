@@ -80,7 +80,7 @@ struct RigidBodyComponent {
     float friction = 0.0f;          
     float linearDamping = 0.0f;
     float gravityFactor = -9.81f;
-    bool useGravity = true;         // Is gravity applied to the entity, true: Object falls down(default - 9.81 m / s²), false : Object floats(useful for flying enemies, UI elements in 3D space)
+    bool useGravity = true;         // Is gravity applied to the entity, true: Object falls down(default - 9.81 m / s^2), false : Object floats(useful for flying enemies, UI elements in 3D space)
     bool isKinematic = false;       // Is this object controlled by animation/code or physics? false (Dynamic): Physics controls position (player can push it), true (Kinematic) : Your code controls position(moving platforms, doors)
 
     // Constraints for Position

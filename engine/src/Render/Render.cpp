@@ -380,7 +380,7 @@ bool RenderSystem::RegisterEditorMaterial(rp::Guid guid, std::shared_ptr<Materia
 	return ResourceRegistry::Instance().RegisterInMemory(guid, material);
 }
 
-void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& meshRenderer) {
+void RenderSystem::SyncMaterialFromComponent(uint64_t entityUID, const MeshRendererComponent& /*meshRenderer*/) {
 	auto& renderSystem = Engine::GetRenderSystem();
 
 	// When material GUID changes, destroy cached material instance
@@ -624,21 +624,11 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			vert[i].Bitangent = mesh.vertices[i].Bitangent;
 		}
 		std::vector<unsigned int> indices{};
-		unsigned int vert_offset{};
 		for (const auto& matslot : mesh.materials) {
 			indices.resize(matslot.index_count);
-			//unsigned int min_vert{ std::numeric_limits<unsigned int>::max() };
-			//unsigned int max_vert{ std::numeric_limits<unsigned int>::min() };
 			for (unsigned int i{}; i < matslot.index_count; i++) {
-				//unsigned int vert_idx{ mesh.indices[i + matslot.index_begin] };
 				indices[i] = mesh.indices[i + matslot.index_begin];
-				//max_vert = std::max(max_vert, vert_idx);
-				//min_vert = std::min(min_vert, vert_idx);
 			}
-			//vert_offset = max_vert;
-			//std::vector<Vertex> mesh_vert{};
-			//mesh_vert.resize(max_vert - min_vert);
-			//mesh_vert.insert(mesh_vert.end(), vert.begin()+min_vert, vert.end()+max_vert);
 			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, std::make_shared<Mesh>(vert, indices, std::vector<Texture>{})));
 		}
 	}

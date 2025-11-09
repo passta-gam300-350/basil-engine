@@ -489,7 +489,8 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 
 const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
 {
-	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>{};
+	static const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> empty{};
+	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : empty;
 }
 
 bool EngineContainerService::EntityHasComponent(entity_handle entityHandle, std::uint32_t componentTypeID) const {

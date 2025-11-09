@@ -29,7 +29,7 @@ Technology is prohibited.
 // Forward declarations
 class MaterialPropertyBlock;
 struct Texture;
-class ResourceSystem;
+struct ResourceSystem;
 
 /**
  * @brief System that synchronizes MaterialOverridesComponent with MaterialPropertyBlock

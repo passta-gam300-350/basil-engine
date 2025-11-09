@@ -15,7 +15,7 @@ void ComponentInitializer::SetupObservers(ecs::world& world) {
     spdlog::info("ComponentInitializer: Component observer registered (destroy only)");
 }
 
-void ComponentInitializer::OnMeshRendererDestroyed(entt::registry& registry, entt::entity entity) {
+void ComponentInitializer::OnMeshRendererDestroyed(entt::registry& /*registry*/, entt::entity entity) {
     // Convert entt::entity to entity ID
     const uint64_t entityUID = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
 

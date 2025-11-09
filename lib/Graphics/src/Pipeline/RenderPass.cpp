@@ -135,7 +135,7 @@ void RenderPass::CheckAndResizeIfNeeded(const RenderContext& context)
 	}
 }
 
-void RenderPass::OnResize(uint32_t newWidth, uint32_t newHeight)
+void RenderPass::OnResize(uint32_t /*newWidth*/, uint32_t /*newHeight*/)
 {
 	// Default implementation does nothing
 	// Subclasses can override this for custom resize logic

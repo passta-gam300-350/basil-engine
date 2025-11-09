@@ -8,7 +8,7 @@ void HierarchySystem::Init()
 	// Nothing to initialize
 }
 
-void HierarchySystem::Update(ecs::world& world, float dt)
+void HierarchySystem::Update(ecs::world& world, float /*dt*/)
 {
 	// Update all root entities first (entities without parents or with invalid parents)
 	UpdateRootEntities(world);
