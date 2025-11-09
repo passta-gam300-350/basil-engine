@@ -221,6 +221,37 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 			else if (rp::Guid const* vg = value.try_cast<rp::Guid const>())
 				out[field_name] = vg->to_hex();
 
+			// MaterialOverridesComponent map serialization
+			else if (std::unordered_map<std::string, float> const* mapFloat = value.try_cast<std::unordered_map<std::string, float> const>()) {
+				for (auto& [key, val] : *mapFloat) {
+					out[field_name][key] = val;
+				}
+			}
+			else if (std::unordered_map<std::string, glm::vec3> const* mapVec3 = value.try_cast<std::unordered_map<std::string, glm::vec3> const>()) {
+				for (auto& [key, val] : *mapVec3) {
+					Node nested;
+					auto vec3_any = entt::meta_any{val};
+					SerializeType(vec3_any, nested);
+					out[field_name][key] = nested;
+				}
+			}
+			else if (std::unordered_map<std::string, glm::vec4> const* mapVec4 = value.try_cast<std::unordered_map<std::string, glm::vec4> const>()) {
+				for (auto& [key, val] : *mapVec4) {
+					Node nested;
+					auto vec4_any = entt::meta_any{val};
+					SerializeType(vec4_any, nested);
+					out[field_name][key] = nested;
+				}
+			}
+			else if (std::unordered_map<std::string, glm::mat4> const* mapMat4 = value.try_cast<std::unordered_map<std::string, glm::mat4> const>()) {
+				for (auto& [key, val] : *mapMat4) {
+					Node nested;
+					auto mat4_any = entt::meta_any{val};
+					SerializeType(mat4_any, nested);
+					out[field_name][key] = nested;
+				}
+			}
+
 			else if (std::vector<std::uint32_t> const* vui = value.try_cast<std::vector<std::uint32_t> const>()) {
 				for (auto& vuint : *vui) {
 					out[field_name].push_back(vuint);
@@ -400,6 +431,59 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 				vec_uint.emplace_back(value.template as<std::uint32_t>());
 			}
 			data.set(obj, vec_uint);
+			continue;
+		}
+
+		// MaterialOverridesComponent map deserialization
+		if (mid == entt::type_hash<std::unordered_map<std::string, float>>::value()) {
+			auto mapnode = in[field_name];
+			std::unordered_map<std::string, float> map_data{};
+			for (auto const& pair : mapnode) {
+				map_data[pair.first.template as<std::string>()] = pair.second.template as<float>();
+			}
+			data.set(obj, map_data);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::unordered_map<std::string, glm::vec3>>::value()) {
+			auto mapnode = in[field_name];
+			std::unordered_map<std::string, glm::vec3> map_data{};
+			auto vec3_meta_type = entt::resolve<glm::vec3>();
+			for (auto const& pair : mapnode) {
+				entt::meta_any vec3_any = vec3_meta_type.construct();
+				DeserializeType(pair.second, vec3_any);
+				glm::vec3 vec3_value = vec3_any.cast<glm::vec3>();
+				map_data[pair.first.template as<std::string>()] = vec3_value;
+			}
+			data.set(obj, map_data);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::unordered_map<std::string, glm::vec4>>::value()) {
+			auto mapnode = in[field_name];
+			std::unordered_map<std::string, glm::vec4> map_data{};
+			auto vec4_meta_type = entt::resolve<glm::vec4>();
+			for (auto const& pair : mapnode) {
+				entt::meta_any vec4_any = vec4_meta_type.construct();
+				DeserializeType(pair.second, vec4_any);
+				glm::vec4 vec4_value = vec4_any.cast<glm::vec4>();
+				map_data[pair.first.template as<std::string>()] = vec4_value;
+			}
+			data.set(obj, map_data);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::unordered_map<std::string, glm::mat4>>::value()) {
+			auto mapnode = in[field_name];
+			std::unordered_map<std::string, glm::mat4> map_data{};
+			auto mat4_meta_type = entt::resolve<glm::mat4>();
+			for (auto const& pair : mapnode) {
+				entt::meta_any mat4_any = mat4_meta_type.construct();
+				DeserializeType(pair.second, mat4_any);
+				glm::mat4 mat4_value = mat4_any.cast<glm::mat4>();
+				map_data[pair.first.template as<std::string>()] = mat4_value;
+			}
+			data.set(obj, map_data);
 			continue;
 		}
 
