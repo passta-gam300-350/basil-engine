@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   ManagedPhysics.hpp
+\author Team PASSTA
+		Jia Hao Yeo (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the declaration for the ManagedPhysics class, which
+is responsible for managing and getting various physics-related functionalities in
+the managed environment.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef MANAGEDPHYSICS_HPP
 #define MANAGEDPHYSICS_HPP
 #include <cstdint>

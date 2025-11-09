@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   MonoTypeDescriptor.hpp
+\author Team PASSTA
+        Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the declaration for the MonoTypeDescriptor class, which
+is responsible for describing the types used in the Mono runtime.
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
+
 #ifndef MONOTYPE_DESCRIPTOR_HPP
 #define MONOTYPE_DESCRIPTOR_HPP
 #include <cstdint>

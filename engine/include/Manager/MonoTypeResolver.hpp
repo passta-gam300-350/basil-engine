@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   MonoTypeResolver.hpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the declaration for the MonoTypeResolver class, which
+is responsible for resolving Mono type information based on type names and mono
+type descriptors.
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef MONO_TYPE_RESOLVER_HPP
 #define MONO_TYPE_RESOLVER_HPP
 #include <cstdint>

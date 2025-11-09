@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   MonoTypeRegistry.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the implementation for the MonoTypeRegistry class, which
+is responsible for registering and retrieving Mono type information
+based on type names and script IDs.
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Manager/MonoTypeRegistry.hpp"
 #include "Manager/StringManager.hpp"
 

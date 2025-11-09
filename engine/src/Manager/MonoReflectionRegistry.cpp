@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   MonoReflectionRegistry.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the implementation for the MonoReflectionRegistry class, which
+provides an interface for managing reflection data for managed types in the engine.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Manager/MonoReflectionRegistry.hpp"
 #include "Manager/MonoTypeResolver.hpp"
 #include "MonoResolver/MonoTypeDescriptor.hpp"

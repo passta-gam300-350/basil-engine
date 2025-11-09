@@ -1,3 +1,22 @@
+
+/******************************************************************************/
+/*!
+\file   ManagedInput.hpp
+\author Team PASSTA
+		Jia Hao Yeo (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the declaration for the ManagedInput class, which
+is responsible for managing and getting various input-related functionalities in the
+managed environment.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #ifndef MANAGED_INPUT_HPP
 #define MANAGED_INPUT_HPP
 class ManagedInput

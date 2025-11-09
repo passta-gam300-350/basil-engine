@@ -1,3 +1,21 @@
+/******************************************************************************/
+/*!
+\file   MonoReflectionBackend.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the implmentation for the MonoReflectionBackend class, which
+provides an interface for reflecting over managed types and their members in the Mono runtime.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #include "Reflection/MonoReflectionBackend.hpp"
 #include <mono/metadata/metadata.h>
 #include "ABI/ABI.h"
