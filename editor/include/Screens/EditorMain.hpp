@@ -56,6 +56,7 @@ public:
 	glm::mat4 GuizmoprojectionMat4;
 	TransformComponent* GuizmoEntityTransform;
 	TransformMtxComponent* GuizmoEntityTransformMTX;
+	TransformMtxComponent* GuizmoEntityParentTransformMTX;
 
 	EditorMain(GLFWwindow* window);
 	void init() override;

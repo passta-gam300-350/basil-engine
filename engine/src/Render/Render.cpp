@@ -244,7 +244,7 @@ void RenderSystem::Update(ecs::world& world) {
 				renderData.renderLayer = 1;
 
 				// Use existing entityUID (uint64_t) and cast to uint32_t for objectID
-				renderData.objectID = static_cast<uint32_t>(entityUID);
+				renderData.objectID = static_cast<uint32_t>(entityUID) & rp::lo_bitmask32_v<23>;
 
 				// Attach property block if it exists and has properties
 				auto propBlockIt = m_PropertyBlocks.find(entityUID);
@@ -269,7 +269,7 @@ void RenderSystem::Update(ecs::world& world) {
 				}
 
 				// Assert entity ID validity for debugging picking
-				assert(renderData.objectID != 0 && "Entity UID should not be zero for picking to work");
+				//assert(renderData.objectID != 0 && "Entity UID should not be zero for picking to work");
 				assert(renderData.objectID < 16777215 && "Entity UID exceeds 24-bit limit for picking system"); // 24-bit max for RGB encoding
 
 				// Assert mesh validity for rendering

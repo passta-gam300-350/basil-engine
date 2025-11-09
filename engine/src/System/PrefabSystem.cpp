@@ -25,7 +25,7 @@ void PrefabSystem::Init()
     s_PrefabCache.clear();
 }
 
-void PrefabSystem::Update(ecs::world& world, float deltaTime)
+void PrefabSystem::Update(ecs::world& world, float/* deltaTime*/)
 {
     // Prefab system is primarily event-driven
     // No per-frame updates needed currently

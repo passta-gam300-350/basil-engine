@@ -648,9 +648,13 @@ void EngineContainerService::LoadScene(const char* path) {
 }
 
 void EngineContainerService::NewScene() {
-	ExecuteOnEngineThread([]() {
+	ExecuteOnEngineThread([this]() {
 		ecs::world world = Engine::GetWorld();
 		world.UnloadAll();
+		m_cont->m_loaded_scenes_scenegraph_snapshot.clear();
+		SceneGraphNode root{};
+		root.m_entity_name = "Scene";
+		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid] = std::pair<SceneGraphNode, bool>(root, true);
 		spdlog::info("EngineService: New Scene created");
 		});
 }
