@@ -1,16 +1,22 @@
-/**
- * @file
- *  shapes.cpp
- * @author
- *  Jia Zen Cheong, 670004724, jiazen.c@digipen.edu
- * @date
- *  2025/05/24
- * @brief
- *  This file implemented the definitions of functions and
- *  constructor needed for different type of geometry
- * @copyright
- *  Copyright (C) 2025 DigiPen Institute of Technology.
- */
+/******************************************************************************/
+/*!
+\file   shapes.cpp
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/01
+\brief  Implementation of geometric primitive operations for BVH
+
+Implements constructors and methods for geometric shapes used in BVH spatial calculations:
+AABB construction, expansion, intersection tests, containment checks, plane distance calculations,
+frustum-AABB tests, and surface area computations.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 
 #include "BVH/shapes.h"
 #include "BVH/bvh_math.h"

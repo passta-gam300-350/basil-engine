@@ -1,3 +1,23 @@
+/******************************************************************************/
+/*!
+\file   ParticleRenderer.h
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  GPU-side particle renderer using instanced rendering and billboarding
+
+This class handles GPU rendering of particle systems using instanced draw calls.
+Particles are rendered as camera-facing billboards in world space. Uses SSBO
+for efficient instance data upload and supports various blend modes (alpha, additive,
+multiply). Integrates with the render pipeline through RenderPass submission.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #pragma once
 #include "../Buffer/ShaderStorageBuffer.h"
 #include "../Utility/Particle.h"

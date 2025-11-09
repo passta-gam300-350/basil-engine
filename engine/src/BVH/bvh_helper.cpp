@@ -1,3 +1,21 @@
+/******************************************************************************/
+/*!
+\file   bvh_helper.cpp
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/01
+\brief  Implementation of BVH helper utilities for rendering integration
+
+Implements utility functions for converting camera data to frustums, transforming AABBs
+by transformation matrices, and building transform matrices for BVH culling operations.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "BVH/bvh_helper.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <cfloat>

@@ -1,17 +1,22 @@
-﻿/**
- * @file
- *  bvh.inl
- * @author
- *  Jia Zen Cheong, jiazen.c@digipen.edu
- * @date
- *  2025/06/10
- * @brief
- *  This file implemented the defintiion of struct
- *  and function needed to create a BVH using topdown
- *  and insertion (incremental) approach
- * @copyright
- *  Copyright (C) 2025 DigiPen Institute of Technology.
- */
+/******************************************************************************/
+/*!
+\file   bvh.inl
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/01
+\brief  Template implementation for BVH construction and query algorithms
+
+This file contains the template implementations for BVH construction, insertion,
+balancing, and spatial queries. Includes SAH-based splitting, incremental insertion,
+frustum culling, and tree traversal algorithms.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef BVH_INL
 #define BVH_INL
 

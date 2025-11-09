@@ -1,3 +1,25 @@
+/******************************************************************************/
+/*!
+\file   ParticleEmitter.cpp
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/07
+\brief  Implementation of CPU-side particle emitter with physics and spawning
+
+This file implements the ParticleEmitter which handles:
+- Particle spawning with configurable emission rate and shapes
+- Physics simulation (velocity, acceleration, gravity)
+- Lifetime management and particle recycling
+- Color/size interpolation over particle lifetime
+- Random generation for position, velocity, and lifetime
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Rendering\ParticleEmitter.h"
 
 ParticleEmitter::ParticleEmitter() : m_EmissionAccumulator(0.0f), m_ElapsedTime(0.0f), m_IsPlaying(true), m_RandomEngine(std::random_device{}()), m_Distribution(0.0f, 1.0f)
