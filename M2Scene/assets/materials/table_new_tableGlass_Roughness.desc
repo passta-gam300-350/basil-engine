@@ -1,0 +1,7 @@
+base:
+  m_guid: 469fe0c74cdb76b563d7d456823
+  m_importer: .texture
+  m_source: materials\table_new_tableGlass_Roughness.png
+  m_name: table_new_tableGlass_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

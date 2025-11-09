@@ -1,8 +1,6 @@
 #ifndef MANAGEDLIGHT_HPP
 #define	MANAGEDLIGHT_HPP
 #include <cstdint>
-#include "Light.h"
-#include "Render.h"
 
 class ManagedLight
 {

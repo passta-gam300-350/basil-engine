@@ -1,6 +1,7 @@
 #include "Bindings/ManagedParticle.hpp"
 
-#include "ecs/internal/entity.h"
+#include "ecs/ecs.h"
+#include "Particles/ParticleComponent.h"
 #include "Rendering/ParticleEmitter.h"
 
 static inline void apply_config_to_runtime(ParticleComponent& pc)

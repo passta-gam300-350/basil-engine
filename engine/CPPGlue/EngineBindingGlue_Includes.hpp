@@ -5,5 +5,7 @@
 #include "BasilEngine_Components_Audio_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Camera_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Component_GLUE_GEN.hpp"
+#include "BasilEngine_Components_Light_GLUE_GEN.hpp"
+#include "BasilEngine_Components_Particle_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Rigidbody_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Transform_GLUE_GEN.hpp"

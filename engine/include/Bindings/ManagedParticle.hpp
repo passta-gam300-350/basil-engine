@@ -1,7 +1,7 @@
 #ifndef MANAGEDPARTICLE_HPP
 #define	MANAGEDPARTICLE_HPP
 #include <cstdint>
-#include "ParticleComponent.h"
+
 
 class ManagedParticle
 {

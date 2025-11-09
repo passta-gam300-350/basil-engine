@@ -5,7 +5,7 @@ using Engine.Bindings;
 
 namespace BasilEngine.Components
 {
-    [NativeHeader("Bindings/ManagedLight.h")]
+    [NativeHeader("Bindings/ManagedLight.hpp")]
     public class Light : Component
     {
         public enum LightType { Directional = 0, Point = 1, Spot = 2 }

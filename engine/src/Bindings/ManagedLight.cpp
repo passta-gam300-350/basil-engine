@@ -3,6 +3,8 @@
 #include "ecs/internal/entity.h"
 #include <glm/vec3.hpp>
 
+#include "Render/Render.h"
+
 static inline LightComponent& get_light(uint64_t h)
 {
 	ecs::entity e{ h };

@@ -1,5 +1,5 @@
 base:
-  m_guid: 969f287a12b8d8219b52586b5f
+  m_guid: 4795d4f70b28397fc78182544bb
   m_importer: .texture
   m_source: materials\table_new_TableTop_Metallic.png
   m_name: table_new_TableTop_Metallic.png
