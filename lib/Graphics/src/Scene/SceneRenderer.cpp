@@ -268,11 +268,18 @@ void SceneRenderer::SetSpotShadowShader(const std::shared_ptr<Shader>& shader) c
 
 void SceneRenderer::SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const
 {
-    assert(shader && "Debug primitive shader cannot be null");
-    assert(shader->ID != 0 && "Debug primitive shader must be compiled and linked");
-    assert(m_Pipeline && "Pipeline must be initialized before setting debug shader");
+    assert(shader && "Primitive shader cannot be null");
+    assert(shader->ID != 0 && "Primitive shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting primitive shader");
 
     if (m_Pipeline) {
+        // Set primitive shader on MainRenderingPass (for light cubes)
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass) {
+            mainPass->SetPrimitiveShader(shader);
+        }
+
+        // Set primitive shader on DebugRenderPass (for light rays and AABBs)
         auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
         if (debugPass) {
             debugPass->SetPrimitiveShader(shader);
@@ -282,15 +289,16 @@ void SceneRenderer::SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shade
 
 void SceneRenderer::SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const
 {
-    assert(mesh && "Debug light cube mesh cannot be null");
-    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
-    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
-    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
+    assert(mesh && "Light cube mesh cannot be null");
+    assert(mesh->GetVertexArray() && "Light cube mesh must have a valid vertex array");
+    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Light cube mesh VAO handle must be valid");
+    assert(m_Pipeline && "Pipeline must be initialized before setting light cube mesh");
 
     if (m_Pipeline) {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass) {
-            debugPass->SetLightCubeMesh(mesh);
+        // Set light cube mesh on MainRenderingPass (light cubes are now rendered in main pass)
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass) {
+            mainPass->SetLightCubeMesh(mesh);
         }
     }
 }
@@ -691,6 +699,17 @@ void SceneRenderer::SetOutlineShader(const std::shared_ptr<Shader>& shader) cons
         {
             outlinePass->SetOutlineShader(shader);
         }
+    }
+}
+
+void SceneRenderer::SetParticleShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Particle shader cannot be null");
+    assert(shader->ID != 0 && "Particle shader must be compiled and linked");
+
+    if (m_ParticleRenderer) 
+    {
+        m_ParticleRenderer->SetParticleShader(shader);
     }
 }
 

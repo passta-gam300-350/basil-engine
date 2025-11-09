@@ -119,7 +119,7 @@ std::vector<ecs::entity> SceneGraph::GetChildren(ecs::entity entity)
 		return {};
 
 	auto& relationship = entity.get<RelationshipComponent>();
-	return std::vector<ecs::entity>(relationship.getChildren().begin(), relationship.getChildren().end());
+	return relationship.getChildren();
 }
 
 ecs::entity SceneGraph::GetParent(ecs::entity entity)

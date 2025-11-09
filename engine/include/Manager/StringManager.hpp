@@ -23,7 +23,7 @@ Technology is prohibited.
 class StringManager
 {
 public:
-	static StringManager* _instance;
+	
 	using StringID = uint32_t;
 	using offset_t = uint32_t;
 private:

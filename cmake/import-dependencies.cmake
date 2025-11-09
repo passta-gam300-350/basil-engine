@@ -310,6 +310,41 @@ macro(import_imgui)
     target_link_libraries(imgui_backends PRIVATE glfw glad imgui)
 endmacro()
 
+macro(import_imguizmo)
+    FetchContent_Declare(
+      imguizmo
+      GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
+      GIT_TAG master
+    )
+
+    FetchContent_MakeAvailable(imguizmo)
+    set(IMGUIZMO_SOURCE
+        ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
+        ${imguizmo_SOURCE_DIR}/GraphEditor.cpp
+        ${imguizmo_SOURCE_DIR}/ImCurveEdit.cpp
+        ${imguizmo_SOURCE_DIR}/ImGradient.cpp
+        ${imguizmo_SOURCE_DIR}/ImSequencer.cpp
+    )
+
+    set(IMGUIZMO_HEADER
+        ${imguizmo_SOURCE_DIR}/ImGuizmo.h
+        ${imguizmo_SOURCE_DIR}/GraphEditor.h
+        ${imguizmo_SOURCE_DIR}/ImCurveEdit.h
+        ${imguizmo_SOURCE_DIR}/ImGradient.h
+        ${imguizmo_SOURCE_DIR}/ImSequencer.h
+        ${imguizmo_SOURCE_DIR}/ImZoomSlider.h
+    )
+
+    set(IMGUIZMO_FILES ${IMGUIZMO_SOURCE} ${IMGUIZMO_HEADER})
+ 
+    add_library(imguizmo STATIC
+        ${IMGUIZMO_FILES}
+    )
+
+    target_include_directories(imguizmo PUBLIC ${imguizmo_SOURCE_DIR})
+    target_link_libraries(imguizmo PUBLIC imgui)
+endmacro()
+
 macro(import_stb)
     set(STB_DIR ${CMAKE_SOURCE_DIR}/dep/vendor/stb)
     set(STB_SRC_FILES
@@ -572,6 +607,7 @@ macro(import_dependencies)
     import_spdlog()
     import_catch()
     import_yaml_cpp()
+    import_imguizmo()
 
     # import_zlib()
     import_freetype()

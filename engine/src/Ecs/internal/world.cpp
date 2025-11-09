@@ -4,6 +4,9 @@
 #include "ecs/system/scheduler.h"
 
 #include <entt/entity/snapshot.hpp>
+#include "Scene/Scene.hpp"
+#include "Engine.hpp"
+#include "Scene/SceneGraph.hpp"
 
 #include <yaml-cpp/yaml.h>
 
@@ -69,7 +72,7 @@ namespace ecs {
 	}
 
 	bool world::is_valid(entity e) {
-		return impl.get_registry().valid(detail::entt_entity_cast(e.get_uid()));
+		return impl.get_registry().valid(detail::entt_entity_cast(e));
 	}
 
 	WorldRegistry& WorldRegistry::Instance() {
@@ -159,12 +162,26 @@ namespace ecs {
 		entt::registry& reg{ impl.get_registry() };
 		entt::entity new_entity{ reg.create() };
 		reg.emplace<entity::entity_name_t>(new_entity, default_name);
+		reg.emplace<entity::active_t>(new_entity);
+		Engine::GetSceneRegistry().onCreateAssignToDefault(entity{ impl.handle, static_cast<std::uint32_t>(new_entity) }); //use proper observers next time
 		return entity{ impl.handle, static_cast<std::uint32_t>(new_entity) };
 	}
 
 	void world::remove_entity(entity enty)
 	{
-		impl.get_registry().destroy(detail::entt_entity_cast(enty));
+		if (is_valid(enty)) {
+			if (SceneGraph::HasParent(enty)) {
+				if (auto parent{ SceneGraph::GetParent(enty) }; parent) {
+					SceneGraph::RemoveChild(parent, enty);
+				}
+			}
+			auto children = SceneGraph::GetChildren(enty);
+			for (auto child : children) {
+				remove_entity(child);
+			}
+			Engine::GetSceneRegistry().onDestroySceneComponent(enty); //use proper observers next time
+			impl.get_registry().destroy(detail::entt_entity_cast(enty));
+		}
 	}
 
 	void world::update()
@@ -190,7 +207,16 @@ namespace ecs {
 		YAML::Node root{YAML::LoadFile(path)};
 		YAML::Node entities{ root["entities"] };
 		for (const auto& entity_node : entities) {
-			DeserializeEntity(impl.get_registry(), entity_node);
+			entt::entity e;
+			DeserializeEntity(impl.get_registry(), entity_node, &e);
+			ecs::entity entity{ impl.entity_cast(e) };
+			if (entity.all<SceneIDComponent>()) {
+				Engine::GetSceneRegistry().onCreateAssignSceneIDToDefault(entity);
+			}
+			else{
+				Engine::GetSceneRegistry().onCreateAssignToDefault(entity);
+			}
+			entity.add<entity::active_t>();
 		}
 		auto transforms{ filter_entities<TransformComponent>() };
 		std::for_each(transforms.begin(), transforms.end(), [](ecs::entity e) {
@@ -214,7 +240,21 @@ namespace ecs {
 		
 	}
 	void world::UnloadAll() {
+		Engine::GetSceneRegistry().Clear();
 		impl.get_registry().clear();
 	}
 
+	world world::copy(world from)
+	{
+		auto& reg = from.impl.get_registry();
+		//entt::entity base_entity = world::detail::entt_entity_cast(*this);
+		//entt::entity new_entity = reg.create();
+		
+		auto& wreg = impl.get_registry();
+
+		//(void)(reg.storage(1));
+		//return entity(get_world_handle(), static_cast<std::uint32_t>(new_entity));
+
+		return *this;
+	}
 }

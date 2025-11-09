@@ -484,5 +484,17 @@ $RECYCLE.BIN/
 *.swp
 
 # MSBuild / dotnet outputs
-bin/
 obj/
+
+!lib/
+!lib/**/
+!lib/*
+
+# Temporary files created by Visual Studio
+#unignore bin folder
+
+!bin/
+!bin/Release/
+!bin/Release/**/
+!bin/Release/**/*
+

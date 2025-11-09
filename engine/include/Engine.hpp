@@ -8,6 +8,7 @@
 
 class Window;
 struct RenderSystem;
+struct SceneRegistry;
 namespace Logger {
 	class Sink;
 }
@@ -20,6 +21,7 @@ class Engine
 	ecs::world m_World;
 	std::unique_ptr<Logger::Sink> m_Sink;
 	std::string m_WorkingDirectory;
+	std::unique_ptr<SceneRegistry> m_SceneRegistry;
 
 public:
 	struct Info {
@@ -63,13 +65,13 @@ public:
 
 	static Window& GetWindowInstance();
 	static RenderSystem& GetRenderSystem();
+	static SceneRegistry& GetSceneRegistry();
 	static spdlog::stopwatch GetAppElapsedTime();
 	static Logger::Sink* GetSink();
 	static bool WindowShouldClose();
 
 	static void GenerateDefaultConfig();
 	//static void CreateDefaultResources();
-
 
 	static void ReportLastError();
 	static ecs::world GetWorld();
@@ -82,10 +84,6 @@ public:
 	static void SetState(Info::State state) { Instance().m_Info.m_State = state; }
 
 	static bool ShouldClose() { return Instance().m_Info.m_State == Info::State::Error || Instance().m_Info.m_State == Info::State::Exit; }
-
-	//engine state management
-	void Coma();	//do not use recklessly, this will put the program into deadlock 
-	void Terminate();
 };
 
 

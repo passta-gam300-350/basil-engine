@@ -70,6 +70,9 @@ namespace JPH {
 
 struct PhysicsSystem : public ecs::SystemBase {
 public:
+    bool isActive = true;
+
+public:
     // SystemBase interface implementation
     void Init();
     void FixedUpdate(ecs::world& world);
@@ -85,39 +88,87 @@ public:
     }
 
     // Body creation/destruction
-    JPH::BodyID CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider = nullptr);
+    JPH::BodyID CreateRigidBody(ecs::world& world, const RigidBodyComponent& rb, const TransformComponent& trans, const ColliderComponent& collider);
     void DestroyRigidBody(JPH::BodyID bodyID);
-
-    // Character controller methods
-    JPH::BodyID CreateCharacterController(ecs::world& world, ecs::entity entity, const CharacterControllerComponent& charComp, const PositionComponent& pos, const RotationComponent& rot);
-    void UpdateCharacterControllers(ecs::world& world, float deltaTime);
 
     // Accessors
     JPH::PhysicsSystem* GetJoltPhysicsSystem() noexcept { return m_physicsSystem.get(); } // Returns a pointer to the Jolt Engine
     JPH::BodyInterface& GetBodyInterface() noexcept { return *m_bodyInterface; } // Returns a reference to the Body Interface
 
-    //void SetGravity(const JPH::Vec3& gravity);
-    void SyncTransformsToPhysics(ecs::world& world);
-private:
     
-    void SyncTransformsFromPhysics(ecs::world& world);
-    void ProcessCollisionEvents(ecs::world& world);
+    void SyncTransformsToPhysics(ecs::world& world);        // 1. Syncs transform data from ecs to internal jolt data
+                                                            // 2. Calls the update for jolt's internal engine, collision call back are also called by jolt when it detect collision
+    void SyncTransformsFromPhysics(ecs::world& world);      // 3. Syncs the new internal jolt data to transform
+    void ProcessCollisionEvents(ecs::world& world);         // 4. Process the queue of collision events to prevent conflict like deleting an entity if it is the result of a collision callback
 
+    // New: Get BodyID for an entity (returns invalid if not found)
+    JPH::BodyID GetBodyID(ecs::entity entity) const;
+
+    // New: Setup observers for automatic body creation/destruction
+    void SetupObservers();
+    void DisableObservers();  // Disconnect all observers
+    void EnableObservers();   // Reconnect all observers
+
+    // Batch creation for scene loading
+    void CreateAllBodiesForLoadedScene();
+
+    // Collision/Trigger handlers (called by ContactListener)
+    void HandleCollisionEnter(const JPH::Body& body1, const JPH::Body& body2, const JPH::ContactManifold& manifold);
+    void HandleCollisionStay(const JPH::Body& body1, const JPH::Body& body2, const JPH::ContactManifold& manifold);
+    void HandleCollisionExit(const JPH::SubShapeIDPair& subShapePair);
+
+private:
+
+
+
+    // Observer callbacks
+    void OnRigidbodyAdded(entt::registry& registry, entt::entity entity);
+    void OnRigidbodyDestroyed(entt::registry& registry, entt::entity entity);
+    void OnColliderAdded(entt::registry& registry, entt::entity entity);
+    void OnColliderDestroyed(entt::registry& registry, entt::entity entity);
+
+    // Helper: Create body for entity if it has both Rigidbody + Collider
+    void TryCreateBodyForEntity(ecs::entity entity);
+
+    // New: Get entity from BodyID (reverse lookup)
+    ecs::entity GetEntityFromBodyID(JPH::BodyID bodyID) const;
+
+    // Helper: Check if entity has trigger collider
+    bool IsEntityTrigger(ecs::entity entity);
+
+    // Helper: Build collision info from manifold
+    CollisionInfo BuildCollisionInfo(
+        ecs::entity otherEntity,
+        const JPH::Body& otherBody,
+        const JPH::ContactManifold& manifold,
+        bool flipNormal
+    );
+
+    // Helper: Build trigger info
+    TriggerInfo BuildTriggerInfo(ecs::entity otherEntity, JPH::BodyID otherBodyID);
+
+    // Template helper: Invoke callbacks on any collider type
+    template<typename EventType>
+    void InvokeColliderCallback(ecs::entity entity, const EventType& eventData, const char* callbackType);
+
+    JPH::RefConst<JPH::Shape> CreateShapeFromCollider(ecs::entity entity);
+
+
+    bool m_observersEnabled = false; // Track Observer state
 
     // Jolt core objects
     std::unique_ptr<JPH::TempAllocatorImpl> m_tempAllocator; // Used for Jolt Update
     std::unique_ptr<JPH::JobSystemThreadPool> m_jobSystem; // Used for Jolt Update
-
-    JPH::BodyInterface* m_bodyInterface; // Non-owning pointer, Used for accessing Jolt's body's paramemters
-
+    JPH::BodyInterface* m_bodyInterface = nullptr; // Non-owning pointer, Used for accessing Jolt's body's paramemters
     std::unique_ptr<JPH::PhysicsSystem> m_physicsSystem; // Used for keeping Jolt's engine
-    
 
     // Contact listener
     std::unique_ptr<JPH::ContactListener> m_contactListener;
 
     // Mapping between entities and bodies
     std::vector<JPH::BodyID> m_JoltBodyIDs;
+    std::unordered_map<ecs::entity, JPH::BodyID> m_entityToBodyID;    // EntityId to BodyID map
+    std::unordered_map<uint32_t, ecs::entity> m_bodyIDToEntity;    // BodyID index to Entity UID
 };
 
 // Utils for conveerting vectors, mat4 and angles from glm to jolt and vice versa

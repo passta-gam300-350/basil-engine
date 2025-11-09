@@ -10,15 +10,15 @@ namespace BasilEngine.Mathematics
 {
     [Disabled]
     /// <summary>
-    /// A Vector2D struct that provides 2D vector operations.
+    /// A Vector2 struct that provides 2D vector operations.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Vector2D
+    public struct Vector2
     {
         public float x;
         public float y;
 
-        //Vector2D()
+        //Vector2()
         //{
         //    x = 0;
         //    y = 0;
@@ -29,9 +29,9 @@ namespace BasilEngine.Mathematics
         /// <param name="a">The lhs vector</param>
         /// <param name="b">The rhs vector</param>
         /// <returns>The distane between the two vector.</returns>
-        public static float Distance(Vector2D a, Vector2D b)
+        public static float Distance(Vector2 a, Vector2 b)
         {
-            return new Vector2D(b.x - a.x, b.y - a.y).magnitude;
+            return new Vector2(b.x - a.x, b.y - a.y).magnitude;
         }
 
         /// <summary>
@@ -61,43 +61,43 @@ namespace BasilEngine.Mathematics
         /// </summary>
         /// <param name="x">The x value</param>
         /// <param name="y">The y value</param>
-        public Vector2D(float x, float y)
+        public Vector2(float x, float y)
         {
             this.x = x;
             this.y = y;
         }
 
-        public static Vector2D operator +(Vector2D a, Vector2D b)
+        public static Vector2 operator +(Vector2 a, Vector2 b)
         {
-            return new Vector2D(a.x + b.x, a.y + b.y);
+            return new Vector2(a.x + b.x, a.y + b.y);
         }
 
-        public static Vector2D operator -(Vector2D a, Vector2D b)
+        public static Vector2 operator -(Vector2 a, Vector2 b)
         {
-            return new Vector2D(a.x - b.x, a.y - b.y);
+            return new Vector2(a.x - b.x, a.y - b.y);
         }
 
-        public static Vector2D operator *(Vector2D a, float b)
+        public static Vector2 operator *(Vector2 a, float b)
         {
-            return new Vector2D(a.x * b, a.y * b);
+            return new Vector2(a.x * b, a.y * b);
         }
 
-        public static Vector2D operator *(float a, Vector2D b)
+        public static Vector2 operator *(float a, Vector2 b)
         {
-            return new Vector2D(a * b.x, a * b.y);
+            return new Vector2(a * b.x, a * b.y);
         }
 
 
-        public static Vector2D operator /(Vector2D a, float b)
+        public static Vector2 operator /(Vector2 a, float b)
         {
-            return new Vector2D(a.x / b, a.y / b);
+            return new Vector2(a.x / b, a.y / b);
         }
 
-        public static float operator *(Vector2D a, Vector2D b)
+        public static float operator *(Vector2 a, Vector2 b)
         {
             return Dot(a, b);
         }
-        public static float Dot(Vector2D a, Vector2D b)
+        public static float Dot(Vector2 a, Vector2 b)
         {
             return a.x * b.x + a.y * b.y;
         }
@@ -107,7 +107,7 @@ namespace BasilEngine.Mathematics
         /// <param name="a">LHS vector</param>
         /// <param name="b">RHS vector</param>
         /// <returns>A float value for 2d vector</returns>
-        public static float Cross(Vector2D a, Vector2D b)
+        public static float Cross(Vector2 a, Vector2 b)
         {
             return a.x * b.y - a.y * b.x;
         }
@@ -131,7 +131,7 @@ namespace BasilEngine.Mathematics
         /// Normalize the vector.
         /// </summary>
         /// <returns>Get the normalized vector</returns>
-        public Vector2D Normalize()
+        public Vector2 Normalize()
         {
             return this / Magnitude();
         }
@@ -139,13 +139,13 @@ namespace BasilEngine.Mathematics
 
 
 
-        public static Vector2D Lerp(Vector2D a, Vector2D b, float t)
+        public static Vector2 Lerp(Vector2 a, Vector2 b, float t)
         {
             return a + (b - a) * t;
         }
 
 
-        public static Vector2D SmoothDamp(Vector2D current, Vector2D target, ref Vector2D currentVelocity, float smoothTime, float maxSpeed, float deltaTime)
+        public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime, float maxSpeed, float deltaTime)
         {
             float num = 0f;
             float num2 = 0f;
@@ -157,7 +157,7 @@ namespace BasilEngine.Mathematics
             float num7 = current.x - target.x;
             float num8 = current.y - target.y;
             // float num9 = current.z - target.z;
-            Vector2D vector = target;
+            Vector2 vector = target;
             float num10 = maxSpeed * smoothTime;
             float num11 = num10 * num10;
             float num12 = num7 * num7 + num8 * num8;
@@ -195,7 +195,7 @@ namespace BasilEngine.Mathematics
                 currentVelocity.y = (num2 - vector.y) / deltaTime;
             }
 
-            return new Vector2D(num, num2);
+            return new Vector2(num, num2);
         }
 
     }

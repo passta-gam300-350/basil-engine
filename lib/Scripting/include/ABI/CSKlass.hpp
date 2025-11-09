@@ -77,6 +77,8 @@ struct CSKlassInstance
 
 	MonoObject* Invoke(const char* methodName, void** args = nullptr, MonoObject** exception = nullptr, int paramCount = -1) const;
 
+	~CSKlassInstance();
+
 	
 private:
 

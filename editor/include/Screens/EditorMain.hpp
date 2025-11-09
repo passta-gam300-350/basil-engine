@@ -23,6 +23,7 @@ Technology is prohibited.
 #define EDITORMAIN_HPP
 
 #include "imgui.h"
+#include "ImGuizmo.h"
 #include "Screens/Screen.hpp"
 #include "Camera/EditorCamera.hpp"
 #include "ecs/fwd.h"
@@ -30,10 +31,12 @@ Technology is prohibited.
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <components/behaviour.hpp>
-
+#include "Render/Camera.h"
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
 #include <rsc-ext/rp.hpp>
+
+struct AudioComponent; // Forward declaration
 
 class EditorMain : public Screen
 {
@@ -47,9 +50,12 @@ public:
 	bool showConsole = true;
 	bool isPlaying = false; // To check if the gameplay is enabled, not to beconfused with paused as you can be paused but resume the gameplay
 	bool isPaused = false; // To check if game play is paused, should only be false when the gameplay is enabled
-
-
-
+	
+	ImGuizmo::OPERATION mode = (ImGuizmo::OPERATION)0; //Variables for Gizmos
+	glm::mat4 GuizmoViewMec4;
+	glm::mat4 GuizmoprojectionMat4;
+	TransformComponent* GuizmoEntityTransform;
+	TransformMtxComponent* GuizmoEntityTransformMTX;
 
 	EditorMain(GLFWwindow* window);
 	void init() override;
@@ -80,9 +86,11 @@ public:
 	// For setting up the style
 	void SetupUnityStyle();
 
+	void CreateObjectHelper();
 
 	void Render_AboutUI();
 
+	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
 
 	void Render_SceneExplorer();
 
@@ -142,6 +150,7 @@ private:
 	// Entity selection management
 	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
 	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
+	uint32_t m_SelectedNodeID = 0;
 
 	// Debug rendering controls
 	bool m_ShowAABBs = false;

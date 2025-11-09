@@ -14,6 +14,11 @@ void HierarchySystem::Update(ecs::world& world, float dt)
 	UpdateRootEntities(world);
 }
 
+void HierarchySystem::FixedUpdate(ecs::world& world)
+{
+	Update(world, 1 / 60.f);
+}
+
 void HierarchySystem::Exit()
 {
 	// Nothing to clean up

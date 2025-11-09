@@ -9,8 +9,100 @@
 #include <spdlog/spdlog.h>
 #include "Service.hpp"
 
+#include <cont/queue.hpp>
+#include <Scene/SceneGraph.hpp>
+
 // Forward declarations to reduce coupling
 struct FrameData;
+
+struct SceneGraphNode{
+	SceneGraphNode* m_parent;
+	std::vector<SceneGraphNode> m_children;
+
+	std::uint64_t m_entity_handle;
+	std::uint32_t m_entity_sid;
+	std::string m_entity_name;
+	bool is_active;
+};
+
+inline SceneGraphNode BuildSceneGraph(std::vector<ecs::entity> const& vec_e) {
+	std::unordered_map<ecs::entity, bool> visited{};
+	std::unordered_map<ecs::entity, SceneGraphNode> orphan{}; //waiting to get picked up by parents
+	SceneGraphNode root{};
+
+	auto buildscenegraphnode{ [&visited, &orphan](ecs::entity sentity) {
+		auto visit_entity{ [&visited, &orphan](ecs::entity se, auto&& fn) -> SceneGraphNode {
+			visited[se] = true;
+			if (orphan.find(se) != orphan.end()) {
+				return orphan[se];
+			}
+			SceneGraphNode& sgph{ orphan.emplace(se, SceneGraphNode{}).first->second }; //make sure that scene does not contain circular dependencies
+			auto children = SceneGraph::GetChildren(se);
+			for (auto child : children) {
+				sgph.m_children.emplace_back(fn(child, fn));
+			}
+			sgph.m_entity_name = se.name();
+			sgph.m_entity_handle = se.get_uuid();
+			sgph.m_entity_sid = se.get_scene_uid();
+			sgph.is_active = se.is_active();
+			return sgph;
+			}};
+		return visit_entity(sentity, visit_entity);
+		}};
+
+	for (auto const& e : vec_e) {
+		if (visited[e])
+			continue;
+		auto sgraph = buildscenegraphnode(e);
+		if (!SceneGraph::HasParent(e)) {
+			root.m_children.emplace_back(sgraph);
+		}
+	}
+
+	return root;
+}
+
+inline SceneGraphNode BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::entity> const& map_guid_e) {
+	std::unordered_map<ecs::entity, bool> visited{};
+	std::unordered_map<ecs::entity, SceneGraphNode> orphan{}; //waiting to get picked up by parents
+	SceneGraphNode root{};
+	bool is_scene_active{};
+
+	auto buildscenegraphnode{ [&visited, &orphan, &is_scene_active](ecs::entity sentity) {
+		auto visit_entity{ [&visited, &orphan, &is_scene_active](ecs::entity se, auto&& fn) -> SceneGraphNode {
+			visited[se] = true;
+			if (orphan.find(se) != orphan.end()) {
+				return orphan[se];
+			}
+			SceneGraphNode& sgph{ orphan.emplace(se, SceneGraphNode{}).first->second }; //make sure that scene does not contain circular dependencies
+			auto children = SceneGraph::GetChildren(se);
+			for (auto child : children) {
+				sgph.m_children.emplace_back(fn(child, fn));
+			}
+			sgph.m_entity_name = se.name();
+			sgph.m_entity_handle = se.get_uuid();
+			sgph.m_entity_sid = se.get_scene_uid();
+			sgph.is_active = se.is_active();
+			is_scene_active |= sgph.is_active;
+			return sgph;
+			}};
+		return visit_entity(sentity, visit_entity);
+		} };
+
+	for (auto const& [sid, e] : map_guid_e) {
+		if (visited[e])
+			continue;
+		auto sgraph = buildscenegraphnode(e);
+		if (!SceneGraph::HasParent(e)) {
+			sgraph.m_parent = &root; //dangling pointer
+			root.m_children.emplace_back(sgraph);
+		}
+	}
+
+	root.is_active = is_scene_active;
+
+	return root;
+}
 
 struct EngineContainerService : public Service
 {
@@ -48,6 +140,8 @@ public:
 		float m_pickingViewportHeight{ 0.0f };
 		std::function<void(bool, uint32_t)> m_pickingCallback;
 
+		std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> m_loaded_scenes_scenegraph_snapshot;
+
 	private:
 		void engine_service();
 		void engine_snapshot_callback();
@@ -74,6 +168,7 @@ public:
 	void end();
 	void inspect_entity(entity_handle ehdl) { if (m_cont) m_cont->m_snapshot_entity_handle = ehdl; else spdlog::info("engine container is empty."); }
 	void create_entity();
+	void create_child_entity(entity_handle parent);
 	void delete_entity(entity_handle);
 	void add_component(entity_handle, std::uint32_t);
 	void delete_component(entity_handle, std::uint32_t);
@@ -120,6 +215,12 @@ public:
 	 * Thread-safe: Returns const reference to main thread snapshot
 	 */
 	const std::vector<std::string>& GetEntityNamesSnapshot() const;
+
+	/**
+	 * @brief Get snapshot of all entity names (updated each frame)
+	 * Thread-safe: Returns const reference to main thread snapshot
+	 */
+	const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& GetSceneGraphSnapshot() const;
 
 	/**
 	 * @brief Check if an entity has a specific component (from snapshot)

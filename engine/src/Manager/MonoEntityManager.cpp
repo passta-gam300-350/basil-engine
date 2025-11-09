@@ -75,24 +75,49 @@ MonoEntityManager::ScriptID MonoEntityManager::GetEngineAssembly()
 
 
 
-rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend) {
+rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend, uint64_t ID) {
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
 	if (klass) {
 		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
-		return AddInstance(std::move(instance));
+		
 
+	} else
+	{
+		AddNamedKlass(klassName, klassNamespace, isBackend);
 	}
-	// Create klass if not exists
-
-	AddNamedKlass(klassName, klassNamespace, isBackend);
 	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
 	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
+
+	if (klass->IsDerivedFrom("BasilEngine.Components.Behavior"))
+	{
+		CSKlass* NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
+		if (!NativeClass)
+		{
+			AddNamedKlass("NativeObject", "BasilEngine");
+			NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
+
+		}
+
+		auto nativeField = NativeClass->ResolveField("NativeID");
+		if (nativeField)
+		{
+			uint64_t nativeID = ID;
+			mono_field_set_value(instance->Object(), nativeField->field, &nativeID);
+			//test
+			nativeID = 0;
+			mono_field_get_value(instance->Object(), nativeField->field, &nativeID);
+			std::cout << "NativeID set to: " << nativeID << std::endl;
+
+		}
+
+	}
+
 	return AddInstance(std::move(instance));
 }
 
 
-rp::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance) {
+rp::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance, uint64_t ID) {
 	const rp::Guid id = rp::Guid::generate();
 	m_EntityInstanceMap[id] = m_Instances.size();
 	m_Instances.push_back(std::move(instance));
@@ -283,6 +308,9 @@ void MonoEntityManager::AddKlassFromAssembly(const ScriptID assemblyID) {
 void MonoEntityManager::ClearAll() {
 	m_Assemblies.clear();
 	m_Klasses.clear();
+	for (auto& instance : m_Instances) {
+		instance->Reset();
+	}
 	m_Instances.clear();
 	m_AssemblyMap.clear();
 	m_EntityInstanceMap.clear();
@@ -309,8 +337,6 @@ void MonoEntityManager::initialize() {
 	MonoManager::Initialize();
 	MonoTypeResolver::Instance();
 	MonoReflectionRegistry::Instance().Clear();
-
-
 
 }
 

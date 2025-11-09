@@ -11,7 +11,7 @@ namespace BasilEngine
     [Disabled]
     public class NativeObject
     {
-        public UInt64 NativeID { get; protected set; } = 0;
+        public UInt64 NativeID = 0;
     }
 
 }

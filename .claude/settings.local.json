@@ -5,7 +5,8 @@
       "Bash(cmake:*)",
       "Bash(make:*)",
       "Bash(find:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

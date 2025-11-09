@@ -81,7 +81,7 @@ void MonoManager::AddSearchDirectories(std::string const& path)
 	std::cout << std::filesystem::absolute(file_path).string() << std::endl;
 	if (std::filesystem::is_directory(file_path)) {
 		if (m_Verbose) {
-			std::cout << "Adding script bin directory: " << std::filesystem::absolute(file_path).string() << std::endl;
+			std::cout << "Adding script bin directory: x" << std::filesystem::absolute(file_path).string() << std::endl;
 
 		}
 		m_Compiler->AddSearchDirectories("DEFAULT", std::filesystem::absolute(file_path).string());

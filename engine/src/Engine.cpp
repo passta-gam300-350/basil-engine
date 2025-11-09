@@ -10,8 +10,12 @@
 #include <stdexcept>
 #include "System/TransformSystem.hpp"
 #include "System/MaterialOverridesSystem.hpp"
+#include "Particles/ParticleSystem.h"
 #include "Render/Camera.h"
 #include "System/Audio.hpp"
+#include "System/HierarchySystem.hpp"
+
+#include "Scene/Scene.hpp"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -123,6 +127,8 @@ void Engine::Init(std::string const& cfg ) {
 
 	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 	MaterialOverridesSystem::Instance().Init();
+	
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	MonoEntityManager::GetInstance().SetPreCompiled(true);
@@ -131,6 +137,7 @@ void Engine::Init(std::string const& cfg ) {
 	BindingSystem::RegisterBindings();
 	Scheduler::CompileJobSchedule();
 	Engine::Instance().m_Info.m_State = Info::State::Running;
+	
 }
 
 void Engine::CoreUpdate() {
@@ -139,13 +146,15 @@ void Engine::CoreUpdate() {
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
 	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
-	TransformSystem().FixedUpdate(instance.m_World);
+	//TransformSystem().FixedUpdate(instance.m_World);
+	HierarchySystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
+	ParticleSystem::GetInstance().Update(instance.m_World, instance.GetDeltaTime());
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
@@ -153,6 +162,7 @@ void Engine::CoreUpdate() {
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, instance.GetDeltaTime());
+	messagingSystem.Update();
 }
 
 void Engine::Update() {
@@ -264,31 +274,32 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
 
-	
+	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
 
-	
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
+
 	BindingSystem::RegisterBindings();
 
 	PhysicsSystem::Instance().Init();
-
+	PhysicsSystem::Instance().SetupObservers();
 	Scheduler::CompileJobSchedule();
 
 	// [TEMP]
 	AudioSystem::GetInstance().Init();
-	for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
-		if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
-			std::string filename = entry.path().stem().string();
-			AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
-		}
-		else
-			spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
-	}
+	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
+	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
+	//		std::string filename = entry.path().stem().string();
+	//		AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
+	//	}
+	//	else
+	//		spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
+	//}*/
 	// Persist the ambient audio component so it doesn't get destroyed after init
-	ambient = std::make_unique<AudioComponent>();
+	/*ambient = std::make_unique<AudioComponent>();
 	if (ambient->Init("Singapore Koi Ambience_Loop.ogg", true, true, true)) {
 		ambient->Play();
 		ambient->SetVolume(6.0f);
-	}
+	}*/
 	// [ENDTEMP]
 
 
@@ -300,7 +311,6 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 void Engine::Exit() {
 	SystemRegistry::Exit();
-	WorldRegistry::Clear();
 	InputManager::Get_Instance()->Destroy_Instance();
 	if (Instance().m_RenderSystem) {
 		Instance().m_RenderSystem->Exit();
@@ -310,6 +320,8 @@ void Engine::Exit() {
 	Scheduler::Release();
 	AudioSystem::GetInstance().Exit(); // [TEMP]
 	InstancePtr().reset();
+	MonoEntityManager::GetInstance().ClearAll();
+	WorldRegistry::Clear();
 }
 
 world Engine::GetWorld() {
@@ -352,6 +364,14 @@ RenderSystem& Engine::GetRenderSystem() {
 		throw std::runtime_error("RenderSystem not created - call Engine::Init() first");
 	}
 	return *Instance().m_RenderSystem;
+}
+
+SceneRegistry& Engine::GetSceneRegistry()
+{
+	if (!Instance().m_SceneRegistry) {
+		throw std::runtime_error("SceneRegistry not created - call Engine::Init() first");
+	}
+	return *Instance().m_SceneRegistry;
 }
 
 bool Engine::WindowShouldClose() {

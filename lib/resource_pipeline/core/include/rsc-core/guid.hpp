@@ -126,6 +126,9 @@ namespace rp {
             }
         };
 
+        template <utility::static_string ss>
+        struct StaticIndexedGuid;
+
         static constexpr Guid null_guid{ 0x0ull, 0x0ull };
         static constexpr BasicIndexedGuid null_indexed_guid{ null_guid, 0x0ull };
 

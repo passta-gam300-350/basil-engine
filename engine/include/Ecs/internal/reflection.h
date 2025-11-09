@@ -138,10 +138,10 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 	auto a = ReflectionRegistry::Registry();
 
 	for (auto [id, data] : type.data()) {
-		std::string field_name{ field_table[id] };
+		std::string field_name{ field_table[id] }; 
 
 		auto value = data.get(obj);
-		auto meta_type = value.type();
+		auto meta_type = value.type(); 
 		if (meta_type.data().begin() != meta_type.data().end()) {
 			Node nested;
 			SerializeType(value, nested);
@@ -214,13 +214,18 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 					out[field_name][name]["type"] = guid.m_typeindex;
 				}
 			}
-			else if (rp::BasicIndexedGuid const* v = value.try_cast<rp::BasicIndexedGuid const>()) {
-				out[field_name]["guid"] = v->m_guid.to_hex();
-				out[field_name]["type"] = v->m_typeindex;
+			else if (rp::BasicIndexedGuid const* vbig = value.try_cast<rp::BasicIndexedGuid const>()) {
+				out[field_name]["guid"] = vbig->m_guid.to_hex();
+				out[field_name]["type"] = vbig->m_typeindex;
 			}
-			else if (rp::Guid const* v = value.try_cast<rp::Guid const>())
-				out[field_name] = v->to_hex();
+			else if (rp::Guid const* vg = value.try_cast<rp::Guid const>())
+				out[field_name] = vg->to_hex();
 
+			else if (std::vector<std::uint32_t> const* vui = value.try_cast<std::vector<std::uint32_t> const>()) {
+				for (auto& vuint : *vui) {
+					out[field_name].push_back(vuint);
+				}
+			}
 			
 
 			// primitives
@@ -230,6 +235,8 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 				out[field_name] = *vf;
 			else if (double const* vd = value.try_cast<double const>())
 				out[field_name] = *vd;
+			else if (uint32_t const* uint32 = value.try_cast<uint32_t const>())
+				out[field_name] = *uint32;
 			else if (std::string const* vs = value.try_cast<std::string const>())
 				out[field_name] = *vs;
 			else if (bool const* vb = value.try_cast<bool const>())
@@ -378,6 +385,16 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 			continue;
 		}
 
+		if (mid == entt::type_hash<std::vector<std::uint32_t>>::value()) {
+			auto vecnode = in[field_name];
+			std::vector<std::uint32_t> vec_uint{};
+			for (auto const& value : vecnode) {
+				vec_uint.emplace_back(value.template as<std::uint32_t>());
+			}
+			data.set(obj, vec_uint);
+			continue;
+		}
+
 		// Handle primitive types by type_hash ID
 		if (mid == entt::type_hash<int>::value()) {
 			data.set(obj, in[field_name].template as<int>());
@@ -394,14 +411,19 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 		else if (mid == entt::type_hash<bool>::value()) {
 			data.set(obj, in[field_name].template as<bool>());
 		}
+		else if (mid == entt::type_hash<uint32_t>::value()) {
+			data.set(obj, in[field_name].template as<uint32_t>());
+		}
 	}
 }
 
 
 //templated deserialiser, Node must overload[](std::string const&)
 template<typename Node>
-void DeserializeEntity(entt::registry& reg, const Node& entity_node) {
+void DeserializeEntity(entt::registry& reg, const Node& entity_node, entt::entity* enttptr = nullptr) {
 	auto e = reg.create();
+	if (enttptr)
+		*enttptr = e;
 	//const auto& components = entity_node["Entity"];
 	const auto& components = entity_node;
 

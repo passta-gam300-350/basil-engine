@@ -62,8 +62,8 @@ public:
 	void AddNamedKlass(std::shared_ptr<CSKlass> klass);
 
 	ScriptID InstanceFrom(CSKlass const& klass);
-	ScriptID AddInstance(std::unique_ptr<CSKlassInstance> instance);
-	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "", void* args[]=nullptr, bool isBackend = false);
+	ScriptID AddInstance(std::unique_ptr<CSKlassInstance> instance, [[maybe_unused]] uint64_t id={});
+	ScriptID AddInstance(const char* klassName, const char* klassNamespace = "", void* args[]=nullptr, bool isBackend = false, [[maybe_unused]] uint64_t id = {});
 
 
 	ScriptID GetPrimaryAssembly();

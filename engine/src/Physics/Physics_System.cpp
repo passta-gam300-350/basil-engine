@@ -113,31 +113,24 @@ class MyContactListener : public JPH::ContactListener {
 public:
     MyContactListener(PhysicsSystem* physicsSystem) : m_physicsSystem(physicsSystem) {}
 
-    virtual JPH::ValidateResult OnContactValidate(const JPH::Body& inBody1,
-        const JPH::Body& inBody2,
-        JPH::RVec3Arg inBaseOffset,
-        const JPH::CollideShapeResult& inCollisionResult) override {
-        // Accept all contacts
+    // Pre contact, no unity equivillent 
+    virtual JPH::ValidateResult OnContactValidate(const JPH::Body& inBody1, const JPH::Body& inBody2, JPH::RVec3Arg inBaseOffset, const JPH::CollideShapeResult& inCollisionResult) override {
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
     }
 
-    virtual void OnContactAdded(const JPH::Body& inBody1,
-        const JPH::Body& inBody2,
-        const JPH::ContactManifold& inManifold,
-        JPH::ContactSettings& ioSettings) override {
-        // Handle collision enter events
-        // You can dispatch events to your ECS here
+    // Unity OnContact
+    virtual void OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override {
+        m_physicsSystem->HandleCollisionEnter(inBody1, inBody2, inManifold);
     }
 
-    virtual void OnContactPersisted(const JPH::Body& inBody1,
-        const JPH::Body& inBody2,
-        const JPH::ContactManifold& inManifold,
-        JPH::ContactSettings& ioSettings) override {
-        // Handle collision stay events
+    // Unity OnStay
+    virtual void OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override {
+        m_physicsSystem->HandleCollisionStay(inBody1, inBody2, inManifold);
     }
 
+    // Unity OnLeave
     virtual void OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair) override {
-        // Handle collision exit events
+        m_physicsSystem->HandleCollisionExit(inSubShapePair);
     }
 
 private:
@@ -202,117 +195,18 @@ void PhysicsSystem::Init() {
 
     // Set gravity
     m_physicsSystem->SetGravity(JPH::Vec3(0.0f, -9.81f, 0.0f));
-}
 
-JPH::BodyID PhysicsSystem::CreateCharacterController(
-    ecs::world& world,
-    ecs::entity entity,
-    const CharacterControllerComponent& charComp,
-    const PositionComponent& pos,
-    const RotationComponent& rot)
-{
-    if (!m_bodyInterface) return JPH::BodyID();
-
-    // Create capsule shape for character
-    JPH::Ref<JPH::Shape> capsuleShape = new JPH::CapsuleShape(
-        charComp.capsuleHeight * 0.5f,  // Half height
-        charComp.capsuleRadius
-    );
-
-    // Create character settings
-    JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
-    settings->mMaxSlopeAngle = JPH::DegreesToRadians(charComp.maxSlopeAngle);
-    settings->mMass = charComp.mass;
-    settings->mFriction = charComp.friction;
-    settings->mGravityFactor = charComp.gravityFactor;
-    settings->mShape = capsuleShape;
-    settings->mLayer = Layers::MOVING;
-
-    // Create the character
-    JPH::Character* character = new JPH::Character(
-        settings,
-        PhysicsUtils::ToJolt(pos.m_WorldPos),
-        PhysicsUtils::EulerToJoltQuat(rot.m_Rotation),
-        entity.get_uuid(),  // Store entity ID as user data
-        m_physicsSystem.get()
-    );
-
-    // Add character to physics system
-    character->AddToPhysicsSystem(JPH::EActivation::Activate);
-
-    JPH::BodyID bodyID = character->GetBodyID();
-
-
-
-    return bodyID;
-}
-
-void PhysicsSystem::UpdateCharacterControllers(ecs::world& world, float deltaTime) {
-    if (!m_bodyInterface) return;
-    /*
-    auto characterEntities = world.filter_entities<
-        CharacterControllerComponent,
-        PositionComponent,
-        RotationComponent
-    >();
-
-    for (auto const& entity : characterEntities) {
-        auto [charComp, pos, rot] = entity.get<
-            CharacterControllerComponent,
-            PositionComponent,
-            RotationComponent
-        >();
-
-        if (!charComp.character || charComp.bodyID.IsInvalid()) continue;
-
-        JPH::Character* character = charComp.character.GetPtr();
-
-        // Get current velocity
-        JPH::Vec3 velocity = character->GetLinearVelocity();
-
-        // Apply horizontal movement input
-        JPH::Vec3 horizontalVelocity{};// = charComp.moveSpeed; // PhysicsUtils::ToJolt(charComp.movementInput) * charComp.moveSpeed;
-
-        // Preserve vertical velocity (gravity)
-        horizontalVelocity.SetY(velocity.GetY());
-
-        // Check ground state
-        JPH::Character::EGroundState groundState = character->GetGroundState();
-        charComp.isOnGround = (groundState == JPH::Character::EGroundState::OnGround);
-
-        // Handle jumping
-        if (charComp.wantsToJump && charComp.isOnGround) {
-            horizontalVelocity.SetY(charComp.jumpSpeed);
-            charComp.wantsToJump = false;  // Reset jump flag
-        }
-
-        // Apply velocity to character
-        character->SetLinearVelocity(horizontalVelocity);
-
-        // Update character physics (important!)
-        character->PostSimulation(0.05f);  // Max separation distance
-
-        // Sync position back to ECS
-        JPH::Vec3 newPosition = character->GetPosition();
-        JPH::Quat newRotation = character->GetRotation();
-
-        pos.m_WorldPos = PhysicsUtils::ToGLM(newPosition);
-        rot.m_Rotation = PhysicsUtils::JoltQuatToEuler(newRotation);
-
-        // Cache velocity for external queries
-        charComp.velocity = character->GetLinearVelocity();
-    }*/
+    auto entity = Engine::GetWorld().add_entity();
+    Engine::GetWorld().add_component_to_entity<BoxCollider>(entity);
+    Engine::GetWorld().remove_entity(entity);
 }
 
 
 void PhysicsSystem::FixedUpdate(ecs::world& world) {
     PF_SYSTEM("PhysicsSystem");
-    if (!m_physicsSystem || !m_bodyInterface) return;
+    if (!m_physicsSystem || !m_bodyInterface || !isActive) return;
 
     const float deltaTime = 1.0f / 60.0f;
-
-    // 1. Update character controllers BEFORE physics step
-    UpdateCharacterControllers(world, deltaTime);
 
     // 2. Sync transforms from ECS to physics (for kinematic bodies)
     SyncTransformsToPhysics(world);
@@ -332,38 +226,46 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
 
     // Update kinematic bodies from ECS transforms
-    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent, ScaleComponent, RotationComponent>();
+    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
 
     for (auto const& entity : list_of_entities) 
     {
+        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) { continue; }
         auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
+        auto Position = m_bodyInterface->GetPosition(m_entityToBodyID[entity]);
 
-        m_bodyInterface->SetPositionAndRotation(RigidBody.bodyID, PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerToJoltQuat(Transform.m_Rotation), JPH::EActivation::DontActivate);
-        //if (RigidBody.motionType == JPH::EMotionType::Kinematic && RigidBody.isActive)
+        spdlog::warn("PhysicsSystem: current Updating bodyId {} for entity {}", m_entityToBodyID[entity].GetIndexAndSequenceNumber(), entity.get_uuid());
+
+        m_bodyInterface->SetPositionAndRotation(m_entityToBodyID[entity], PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerDegreesToJoltQuat(Transform.m_Rotation), JPH::EActivation::Activate);
+
+        auto Position2 = m_bodyInterface->GetPosition(m_entityToBodyID[entity]);
+        spdlog::warn("Prevous Pos: {}, New Pos: {}, Trans Pos: {}", Position.GetX(), Position2.GetX(), Transform.m_Translation.x);
     }
 }
 
 void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
-
+   
     // Update ECS transforms from dynamic bodies
     auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
 
     for (auto const& entity : list_of_entities) 
     {
+        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) { continue; }
         auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
-        if (RigidBody.motionType == JPH::EMotionType::Dynamic && RigidBody.isActive) {
+        if ((RigidBody.motionType == RigidBodyComponent::MotionType::Dynamic) && RigidBody.isActive) {
+            JPH::BodyID BodyId = m_entityToBodyID[entity];
             JPH::Vec3 position;
             JPH::Quat rotation;
-            m_bodyInterface->GetPositionAndRotation(RigidBody.bodyID, position, rotation);
+            m_bodyInterface->GetPositionAndRotation(BodyId, position, rotation);
 
             Transform.m_Translation = PhysicsUtils::ToGLM(position);
-            Transform.m_Rotation = PhysicsUtils::JoltQuatToEuler(rotation);
+            Transform.m_Rotation = PhysicsUtils::JoltQuatToEulerDegrees(rotation);
 
             // Update cached velocity
-            RigidBody.velocity = m_bodyInterface->GetLinearVelocity(RigidBody.bodyID);
-            RigidBody.angularVelocity = m_bodyInterface->GetAngularVelocity(RigidBody.bodyID);
+            RigidBody.linearVelocity = PhysicsUtils::ToGLM(m_bodyInterface->GetLinearVelocity(BodyId));
+            RigidBody.angularVelocity = PhysicsUtils::ToGLM(m_bodyInterface->GetAngularVelocity(BodyId));
         }
     }
 }
@@ -374,80 +276,47 @@ void PhysicsSystem::ProcessCollisionEvents(ecs::world&) {
     // You might dispatch events, set flags on components, etc.
 }
 
-//void PhysicsSystem::OnEntityCreated(Entity entity) {
-//    auto* transform = m_ecsWorld->GetComponent<TransformComponent>(entity);
-//    auto* rigidBody = m_ecsWorld->GetComponent<RigidBodyComponent>(entity);
-//    auto* collider = m_ecsWorld->GetComponent<ColliderComponent>(entity);
-//
-//    if (!transform) return;
-//
-//    // Case 1: RigidBody + Collider (standard physics object)
-//    if (rigidBody && collider) {
-//        rigidBody->bodyID = CreateRigidBody(entity, *rigidBody, *transform, collider);
-//        rigidBody->hasCollision = true;
-//    }
-//    // Case 2: RigidBody only (kinematic tracker, force applicator)
-//    else if (rigidBody) {
-//        rigidBody->bodyID = CreateRigidBody(entity, *rigidBody, *transform, nullptr);
-//        rigidBody->hasCollision = false;
-//    }
-//    // Case 3: Collider only (static collision, no dynamics)
-//    // else if (collider) {
-//    //     CreateStaticCollider(entity, *collider, *transform);
-//    // }
-//}
-
-//void PhysicsSystem::OnEntityDestroyed(ecs::entity entity) {
-//    auto it = m_entityToBody.find(entity);
-//    if (it != m_entityToBody.end()) {
-//        DestroyRigidBody(it->second);
-//    }
-//}
-
 // Creates the body of a specific shape and returns the new bodyID
-JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, ecs::entity entity, const RigidBodyComponent& rbComp, const PositionComponent& Pos, const RotationComponent& rot, const ColliderComponent* collider)
-{
+JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, const RigidBodyComponent& rb, const TransformComponent&
+    trans, const ColliderComponent& collider) {
     if (!m_bodyInterface) return JPH::BodyID();
 
-    JPH::RefConst<JPH::Shape> shape;
+    JPH::RefConst<JPH::Shape> shape = collider.shape;
 
-    if (collider) {
-        shape = collider->shape;
-    }
-    else {
-        // Create a minimal sensor shape for bodies without collision
-        shape = new JPH::SphereShape(0.01f);
-    }
-
-    // Create body settings
-    JPH::BodyCreationSettings bodySettings(shape, PhysicsUtils::ToJolt(Pos.m_WorldPos), PhysicsUtils::EulerToJoltQuat(rot.m_Rotation), rbComp.motionType, rbComp.motionType == JPH::EMotionType::Static ? Layers::NON_MOVING : Layers::MOVING);
+    // Create body settings using Rigidbody's motion type
+    JPH::BodyCreationSettings bodySettings(
+        shape,
+        PhysicsUtils::ToJolt(trans.m_Translation),
+        PhysicsUtils::EulerDegreesToJoltQuat(trans.m_Rotation),
+        rb.ToJoltMotionType(),
+        rb.IsStatic() ? Layers::NON_MOVING : Layers::MOVING
+    );
 
     // Set mass properties
-    if (rbComp.motionType == JPH::EMotionType::Dynamic) {
+    if (rb.motionType == RigidBodyComponent::MotionType::Dynamic) {
         bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateMassAndInertia;
-        bodySettings.mMassPropertiesOverride.mMass = rbComp.mass;
+        bodySettings.mMassPropertiesOverride.mMass = rb.mass;
     }
 
-    // Set material properties
-    if (collider) {
-        bodySettings.mFriction = collider->friction;
-        bodySettings.mRestitution = collider->restitution;
-    }
+    bodySettings.mFriction = rb.friction;  // Use Rigidbody's friction
+    bodySettings.mRestitution = collider.restitution;
+    bodySettings.mLinearDamping = rb.linearDamping;
+    bodySettings.mAngularDamping = rb.angularDrag;
+    bodySettings.mGravityFactor = rb.useGravity ? rb.gravityFactor : 0.0f;
 
     // Create the body
     JPH::Body* body = m_bodyInterface->CreateBody(bodySettings);
     if (!body) {
-        // Handle error - log or throw exception
+        spdlog::error("PhysicsSystem: Failed to create body");
         return JPH::BodyID();
     }
 
     JPH::BodyID bodyID = body->GetID();
 
     // Add to physics world
-    m_bodyInterface->AddBody(bodyID, JPH::EActivation::Activate);
+    m_bodyInterface->AddBody(bodyID, rb.isActive ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
 
-    // Store mapping
-    m_JoltBodyIDs.push_back(bodyID);
+    // Note: Don't add to m_JoltBodyIDs vector anymore, it's stored in m_entityToBodyID map
 
     return bodyID;
 }
@@ -484,4 +353,488 @@ void PhysicsSystem::Exit() {
     JPH::UnregisterTypes();
     delete JPH::Factory::sInstance;
     JPH::Factory::sInstance = nullptr;
+}
+
+void PhysicsSystem::SetupObservers() {
+    if (m_observersEnabled) {
+        spdlog::warn("PhysicsSystem: Observers already enabled");
+        return;
+    }
+    EnableObservers();
+   
+}
+
+void PhysicsSystem::EnableObservers() {
+    if (m_observersEnabled) {
+        return;  // Already enabled
+    }
+    auto world = Engine::GetWorld();
+    entt::registry& registry = world.impl.get_registry();
+
+    // Disconnect first to ensure clean state
+    registry.on_construct<RigidBodyComponent>().disconnect();
+    registry.on_destroy<RigidBodyComponent>().disconnect();
+    registry.on_construct<BoxCollider>().disconnect();
+    registry.on_destroy<BoxCollider>().disconnect();
+    registry.on_construct<SphereCollider>().disconnect();
+    registry.on_destroy<SphereCollider>().disconnect();
+    registry.on_construct<CapsuleCollider>().disconnect();
+    registry.on_destroy<CapsuleCollider>().disconnect();
+
+    // Connect observers
+    registry.on_construct<RigidBodyComponent>().connect<&PhysicsSystem::OnRigidbodyAdded>(this);
+    registry.on_destroy<RigidBodyComponent>().connect<&PhysicsSystem::OnRigidbodyDestroyed>(this);
+    registry.on_construct<BoxCollider>().connect<&PhysicsSystem::OnColliderAdded>(this);
+    registry.on_destroy<BoxCollider>().connect<&PhysicsSystem::OnColliderDestroyed>(this);
+    registry.on_construct<SphereCollider>().connect<&PhysicsSystem::OnColliderAdded>(this);
+    registry.on_destroy<SphereCollider>().connect<&PhysicsSystem::OnColliderDestroyed>(this);
+    registry.on_construct<CapsuleCollider>().connect<&PhysicsSystem::OnColliderAdded>(this);
+    registry.on_destroy<CapsuleCollider>().connect<&PhysicsSystem::OnColliderDestroyed>(this);
+
+    m_observersEnabled = true;
+    spdlog::info("PhysicsSystem: Observers enabled");
+}
+
+void PhysicsSystem::DisableObservers() {
+    if (!m_observersEnabled) {
+        return;  // Already disabled
+    }
+    auto world = Engine::GetWorld();
+    entt::registry& registry = world.impl.get_registry();
+
+    // Disconnect all observers
+    registry.on_construct<RigidBodyComponent>().disconnect();
+    registry.on_destroy<RigidBodyComponent>().disconnect();
+    registry.on_construct<BoxCollider>().disconnect();
+    registry.on_destroy<BoxCollider>().disconnect();
+    registry.on_construct<SphereCollider>().disconnect();
+    registry.on_destroy<SphereCollider>().disconnect();
+    registry.on_construct<CapsuleCollider>().disconnect();
+    registry.on_destroy<CapsuleCollider>().disconnect();
+
+    m_observersEnabled = false;
+    spdlog::debug("PhysicsSystem: Observers disabled");
+}
+
+void PhysicsSystem::OnRigidbodyAdded(entt::registry& registry, entt::entity entity) {
+    // Convert to ecs::entity
+    ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+    auto world = Engine::GetWorld();
+    // Only create body if entity also has ColliderComponent
+    if (world.has_any_components_in_entity<ColliderComponent, BoxCollider, CapsuleCollider, SphereCollider>(ecsEntity))
+    {
+        TryCreateBodyForEntity(ecsEntity);
+    }
+}
+
+void PhysicsSystem::OnColliderAdded(entt::registry& registry, entt::entity entity) {
+    
+    ecs::entity ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+    auto world = Engine::GetWorld();
+    // Only create body if entity also has RigidBodyComponent
+    if (world.has_any_components_in_entity<RigidBodyComponent>(ecsEntity))
+    {
+        TryCreateBodyForEntity(ecsEntity);
+    }
+}
+
+void PhysicsSystem::OnRigidbodyDestroyed(entt::registry& registry, entt::entity entity) {
+    uint64_t uid = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
+
+    // Find and destroy associated Jolt body
+    auto it = m_entityToBodyID.find(uid);
+    if (it != m_entityToBodyID.end()) {
+        DestroyRigidBody(it->second);
+        m_entityToBodyID.erase(it);
+    }
+}
+
+void PhysicsSystem::OnColliderDestroyed(entt::registry& registry, entt::entity entity) {
+    // Collider removed = body needs recreation (or destruction if no Rigidbody)
+    uint64_t uid = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
+
+    auto it = m_entityToBodyID.find(uid);
+    if (it != m_entityToBodyID.end()) {
+        DestroyRigidBody(it->second);
+        m_entityToBodyID.erase(it);
+    }
+}
+
+void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
+    auto world = Engine::GetWorld();
+    
+    if (!world.has_all_components_in_entity<RigidBodyComponent, TransformComponent>(entity) || !world.has_any_components_in_entity<BoxCollider,SphereCollider,CapsuleCollider>(entity)) {
+        return;  // Needs to have rigid and transform + one of the 3 colliders
+    }
+
+    auto [rb, transform] = world.get_component_from_entity<RigidBodyComponent, TransformComponent>(entity);
+
+    // Don't create duplicate
+    if (m_entityToBodyID.contains(entity)) {
+        spdlog::warn("PhysicsSystem: Body already exists for entity {}", entity.get_uuid());
+        return;
+    }
+
+    JPH::RefConst<JPH::Shape> shape = CreateShapeFromCollider(entity);
+    if (!shape) {
+        spdlog::error("PhysicsSystem: Failed to create shape for entity {}", entity.get_uuid());
+        return;
+    }
+
+    // Get friction/restitution from collider
+    float friction = 0.5f;
+    float restitution = 0.0f;
+    
+    if (world.has_all_components_in_entity<BoxCollider>(entity)) {
+        friction = entity.get<BoxCollider>().friction;
+        restitution = entity.get<BoxCollider>().restitution;
+    }
+    else if (world.has_all_components_in_entity<SphereCollider>(entity)) {
+        friction = entity.get<SphereCollider>().friction;
+        restitution = entity.get<SphereCollider>().restitution;
+    }
+    else if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
+        friction = entity.get<CapsuleCollider>().friction;
+        restitution = entity.get<CapsuleCollider>().restitution;
+    }
+
+    // Create body
+    JPH::BodyCreationSettings bodySettings(
+        shape,
+        PhysicsUtils::ToJolt(transform.m_Translation),
+        PhysicsUtils::EulerDegreesToJoltQuat(transform.m_Rotation),
+        rb.ToJoltMotionType(),
+        rb.IsStatic() ? Layers::NON_MOVING : Layers::MOVING
+    );
+
+    bodySettings.mFriction = friction;
+    bodySettings.mRestitution = restitution;
+
+    JPH::BodyID bodyID = m_bodyInterface->CreateAndAddBody(bodySettings, rb.isActive ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
+    if (bodyID.IsInvalid()) {
+        spdlog::warn("PhysicsSystem: Body Id is invalid");
+        return;
+    }
+
+
+    // Store all mappings
+    m_entityToBodyID[entity] = bodyID;
+    m_bodyIDToEntity[bodyID.GetIndexAndSequenceNumber()] = entity;
+    //auto pos1 = m_bodyInterface->GetPosition(bodyID);
+    //m_bodyInterface->SetPosition(bodyID, { 3,0,0 }, JPH::EActivation::Activate);
+    //auto pos2 = m_bodyInterface->GetPosition(bodyID);
+
+    spdlog::critical("PhysicsSystem: Created body {} for entity {}", bodyID.GetIndexAndSequenceNumber(), entity.get_uuid());
+    spdlog::warn("Trying to get back Entity has {}, BodyID has {}", m_entityToBodyID[entity].GetIndexAndSequenceNumber(), m_bodyIDToEntity[bodyID.GetIndexAndSequenceNumber()].get_uuid());
+
+}
+
+ecs::entity PhysicsSystem::GetEntityFromBodyID(JPH::BodyID bodyID) const {
+    if (bodyID.IsInvalid()) return ecs::entity();
+
+    auto it = m_bodyIDToEntity.find(bodyID.GetIndexAndSequenceNumber());
+    if (it == m_bodyIDToEntity.end()) return ecs::entity();
+
+    // Convert UID back to entity (you'll need world reference)
+    auto world = Engine::GetWorld();  // Need to store world reference somewhere
+    // Iterate entities to find matching UID (or use a better lookup if available)
+    auto entities = world.get_all_entities();
+    for (auto& e : entities) {
+        if (e == it->second) {
+            spdlog::info("Found Entity {} paired to {}", e.get_uuid(), (*it).first);
+            return e;
+        }
+    }
+    return ecs::entity();
+}
+
+JPH::BodyID PhysicsSystem::GetBodyID(ecs::entity entity) const {
+    uint64_t uid = entity.get_uuid();
+    auto it = m_entityToBodyID.find(uid);
+    return (it != m_entityToBodyID.end()) ? it->second : JPH::BodyID();
+}
+
+bool PhysicsSystem::IsEntityTrigger(ecs::entity entity) {
+    auto world = Engine::GetWorld();
+    // Check all collider types
+    if (world.has_all_components_in_entity<BoxCollider>(entity)) {
+        return entity.get<BoxCollider>().isTrigger;
+    }
+    if (world.has_all_components_in_entity<SphereCollider>(entity)) {
+        return entity.get<SphereCollider>().isTrigger;
+    }
+    if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
+        return entity.get<CapsuleCollider>().isTrigger;
+    }
+    return false;
+}
+
+CollisionInfo PhysicsSystem::BuildCollisionInfo(ecs::entity otherEntity, const JPH::Body& otherBody, const JPH::ContactManifold& manifold, bool flipNormal) {
+    CollisionInfo info;
+    info.otherEntity = otherEntity;
+    info.otherBodyID = otherBody.GetID();
+
+    // Contact point (use first contact point in manifold)
+    if (manifold.mRelativeContactPointsOn1.size() > 0) {
+        JPH::Vec3 contactPointLocal = manifold.mRelativeContactPointsOn1[0];
+        JPH::Vec3 contactPointWorld = manifold.mBaseOffset + contactPointLocal;
+        info.contactPoint = PhysicsUtils::ToGLM(contactPointWorld);
+    }
+
+    // Contact normal (pointing from body2 to body1 by default)
+    JPH::Vec3 normal = manifold.mWorldSpaceNormal;
+    if (flipNormal) normal = -normal;  // Flip for second entity
+    info.contactNormal = PhysicsUtils::ToGLM(normal);
+
+    // Penetration depth
+    info.penetrationDepth = manifold.mPenetrationDepth;
+
+    // Relative velocity (approximate from body velocities)
+    JPH::Vec3 vel1 = otherBody.GetLinearVelocity();
+    JPH::Vec3 vel2 = JPH::Vec3::sZero();  // Would need to get from other body
+    info.relativeVelocity = PhysicsUtils::ToGLM(vel1 - vel2);
+
+    return info;
+}
+
+TriggerInfo PhysicsSystem::BuildTriggerInfo(ecs::entity otherEntity, JPH::BodyID otherBodyID) {
+    TriggerInfo info;
+    info.otherEntity = otherEntity;
+    info.otherBodyID = otherBodyID;
+    return info;
+}
+
+template<typename EventType>
+void PhysicsSystem::InvokeColliderCallback(ecs::entity entity, const EventType& eventData, const char* callbackType) {
+    auto world = Engine::GetWorld();
+    // Try BoxCollider
+    if (world.has_all_components_in_entity<BoxCollider>(entity)) {
+        auto& collider = entity.get<BoxCollider>();
+
+        if constexpr (std::is_same_v<EventType, CollisionInfo>) {
+            if (strcmp(callbackType, "Enter") == 0 && collider.onCollisionEnter) {
+                collider.onCollisionEnter(eventData);
+            }
+            else if (strcmp(callbackType, "Stay") == 0 && collider.onCollisionStay) {
+                collider.onCollisionStay(eventData);
+            }
+        }
+        else if constexpr (std::is_same_v<EventType, ecs::entity>) {
+            if (strcmp(callbackType, "Exit") == 0 && collider.onCollisionExit) {
+                collider.onCollisionExit(eventData);
+            }
+        }
+        else if constexpr (std::is_same_v<EventType, TriggerInfo>) {
+            if (strcmp(callbackType, "TriggerEnter") == 0 && collider.onTriggerEnter) {
+                collider.onTriggerEnter(eventData);
+            }
+            else if (strcmp(callbackType, "TriggerStay") == 0 && collider.onTriggerStay) {
+                collider.onTriggerStay(eventData);
+            }
+        }
+        return;
+    }
+
+    // Try SphereCollider
+    if (world.has_all_components_in_entity<SphereCollider>(entity)) {
+        auto& collider = entity.get<SphereCollider>();
+
+        if constexpr (std::is_same_v<EventType, CollisionInfo>) {
+            if (strcmp(callbackType, "Enter") == 0 && collider.onCollisionEnter) {
+                collider.onCollisionEnter(eventData);
+            }
+            else if (strcmp(callbackType, "Stay") == 0 && collider.onCollisionStay) {
+                collider.onCollisionStay(eventData);
+            }
+        }
+        else if constexpr (std::is_same_v<EventType, ecs::entity>) {
+            if (strcmp(callbackType, "Exit") == 0 && collider.onCollisionExit) {
+                collider.onCollisionExit(eventData);
+            }
+        }
+        else if constexpr (std::is_same_v<EventType, TriggerInfo>) {
+            if (strcmp(callbackType, "TriggerEnter") == 0 && collider.onTriggerEnter) {
+                collider.onTriggerEnter(eventData);
+            }
+            else if (strcmp(callbackType, "TriggerStay") == 0 && collider.onTriggerStay) {
+                collider.onTriggerStay(eventData);
+            }
+        }
+        return;
+    }
+
+    // Try CapsuleCollider
+    if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
+        auto& collider = entity.get<CapsuleCollider>();
+
+        if constexpr (std::is_same_v<EventType, CollisionInfo>) {
+            if (strcmp(callbackType, "Enter") == 0 && collider.onCollisionEnter) {
+                collider.onCollisionEnter(eventData);
+            }
+            else if (strcmp(callbackType, "Stay") == 0 && collider.onCollisionStay) {
+                collider.onCollisionStay(eventData);
+            }
+        }
+        else if constexpr (std::is_same_v<EventType, ecs::entity>) {
+            if (strcmp(callbackType, "Exit") == 0 && collider.onCollisionExit) {
+                collider.onCollisionExit(eventData);
+            }
+        }
+        else if constexpr (std::is_same_v<EventType, TriggerInfo>) {
+            if (strcmp(callbackType, "TriggerEnter") == 0 && collider.onTriggerEnter) {
+                collider.onTriggerEnter(eventData);
+            }
+            else if (strcmp(callbackType, "TriggerStay") == 0 && collider.onTriggerStay) {
+                collider.onTriggerStay(eventData);
+            }
+        }
+        return;
+    }
+}
+
+void PhysicsSystem::HandleCollisionEnter(
+    const JPH::Body& body1,
+    const JPH::Body& body2,
+    const JPH::ContactManifold& manifold)
+{
+    ecs::entity entity1 = GetEntityFromBodyID(body1.GetID());
+    ecs::entity entity2 = GetEntityFromBodyID(body2.GetID());
+
+    if (!entity1 || !entity2) return;
+
+    // Check if either is a trigger
+    bool trigger1 = IsEntityTrigger(entity1);
+    bool trigger2 = IsEntityTrigger(entity2);
+
+    if (trigger1 || trigger2) {
+        // Handle as trigger event
+        TriggerInfo info1 = BuildTriggerInfo(entity2, body2.GetID());
+        TriggerInfo info2 = BuildTriggerInfo(entity1, body1.GetID());
+
+        InvokeColliderCallback(entity1, info1, "TriggerEnter");
+        InvokeColliderCallback(entity2, info2, "TriggerEnter");
+    }
+    else {
+        // Handle as solid collision
+        CollisionInfo info1 = BuildCollisionInfo(entity2, body2, manifold, false);
+        CollisionInfo info2 = BuildCollisionInfo(entity1, body1, manifold, true);
+
+        InvokeColliderCallback(entity1, info1, "Enter");
+        InvokeColliderCallback(entity2, info2, "Enter");
+    }
+}
+
+void PhysicsSystem::HandleCollisionStay(
+    const JPH::Body& body1,
+    const JPH::Body& body2,
+    const JPH::ContactManifold& manifold)
+{
+    ecs::entity entity1 = GetEntityFromBodyID(body1.GetID());
+    ecs::entity entity2 = GetEntityFromBodyID(body2.GetID());
+
+    if (!entity1 || !entity2) return;
+
+    bool trigger1 = IsEntityTrigger(entity1);
+    bool trigger2 = IsEntityTrigger(entity2);
+
+    if (trigger1 || trigger2) {
+        TriggerInfo info1 = BuildTriggerInfo(entity2, body2.GetID());
+        TriggerInfo info2 = BuildTriggerInfo(entity1, body1.GetID());
+
+        InvokeColliderCallback(entity1, info1, "TriggerStay");
+        InvokeColliderCallback(entity2, info2, "TriggerStay");
+    }
+    else {
+        CollisionInfo info1 = BuildCollisionInfo(entity2, body2, manifold, false);
+        CollisionInfo info2 = BuildCollisionInfo(entity1, body1, manifold, true);
+
+        InvokeColliderCallback(entity1, info1, "Stay");
+        InvokeColliderCallback(entity2, info2, "Stay");
+    }
+}
+
+void PhysicsSystem::HandleCollisionExit(const JPH::SubShapeIDPair& subShapePair)
+{
+    // SubShapeIDPair contains both BodyIDs
+    JPH::BodyID bodyID1 = subShapePair.GetBody1ID();
+    JPH::BodyID bodyID2 = subShapePair.GetBody2ID();
+
+    ecs::entity entity1 = GetEntityFromBodyID(bodyID1);
+    ecs::entity entity2 = GetEntityFromBodyID(bodyID2);
+
+    if (!entity1 || !entity2) return;
+
+    bool trigger1 = IsEntityTrigger(entity1);
+    bool trigger2 = IsEntityTrigger(entity2);
+
+    if (trigger1 || trigger2) {
+        // Trigger exit uses entity, not TriggerInfo
+        InvokeColliderCallback(entity1, entity2, "TriggerExit");
+        InvokeColliderCallback(entity2, entity1, "TriggerExit");
+
+        // If they have onTriggerExit callbacks expecting TriggerInfo, adjust accordingly
+        // For now matching your signature: void(*)(ecs::entity)
+    }
+    else {
+        // Collision exit also uses entity
+        InvokeColliderCallback(entity1, entity2, "Exit");
+        InvokeColliderCallback(entity2, entity1, "Exit");
+    }
+}
+
+JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity entity) {
+    // Check BoxCollider
+    auto world = Engine::GetWorld();
+
+    if (world.has_all_components_in_entity<BoxCollider>(entity)) {
+        auto& box = entity.get<BoxCollider>();
+        JPH::Vec3 halfExtents = PhysicsUtils::ToJolt(box.size * 0.5f);
+        return new JPH::BoxShape(halfExtents);
+    }
+
+    // Check SphereCollider
+    if (world.has_all_components_in_entity<SphereCollider>(entity)) {
+        auto& sphere = entity.get<SphereCollider>();
+        return new JPH::SphereShape(sphere.radius);
+    }
+
+    // Check CapsuleCollider
+    if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
+        auto& capsule = entity.get<CapsuleCollider>();
+        return new JPH::CapsuleShape(capsule.GetHeight() * 0.5f, capsule.GetRadius());
+    }
+
+    return nullptr;
+}
+
+void PhysicsSystem::CreateAllBodiesForLoadedScene() {
+    spdlog::info("PhysicsSystem: Creating bodies for all loaded entities...");
+    auto world = Engine::GetWorld();
+    int createdCount = 0;
+    int skippedCount = 0;
+
+    // Query all entities that have RigidBodyComponent + TransformComponent + any collider
+    auto entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
+
+    for (auto const& entity : entities) {
+        // Check if entity has at least one collider
+        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) {
+            skippedCount++;
+            spdlog::debug("PhysicsSystem: Entity {} has RigidBody but no collider, skipping", entity.get_uuid());
+            continue;
+        }
+
+        // Check if body already exists (shouldn't happen, but safety check)
+        if (m_entityToBodyID.contains(entity)) {
+            skippedCount++;
+            spdlog::debug("PhysicsSystem: Body already exists for entity {}, skipping", entity.get_uuid());
+            continue;
+        }
+
+        // Create the body
+        TryCreateBodyForEntity(entity);
+        createdCount++;
+    }
+
+    spdlog::info("PhysicsSystem: Created {} bodies, skipped {} entities", createdCount, skippedCount);
 }

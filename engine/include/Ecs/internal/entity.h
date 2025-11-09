@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include "ecs/fwd.h"
+#include <rsc-core/guid.hpp>
 
 namespace ecs {
 	struct entity {
@@ -20,6 +21,10 @@ namespace ecs {
 			entity_name_t(std::string_view const& e_name) : m_name{ e_name } {};
 
 			operator std::string() { return m_name; }
+		};
+
+		struct active_t {
+			std::uint8_t m_tags; //reserved for future use
 		};
 
 	private:
@@ -85,16 +90,37 @@ namespace ecs {
 			return impl.descriptor;  
 		}
 
+		//id in entt registry (not stable)
 		std::uint32_t get_uid() const {
 			return impl.id;
 		}
 
+		//id in world and entt registry (not stable)
 		std::uint64_t get_uuid() const {
 			return handle;
 		}
 
+		//stable scene handle in scene registry
+		rp::Guid get_scene_handle() const;
+
+		//stable id in scene
+		std::uint32_t get_scene_uid() const;
+
+		void enable();
+		void disable();
+
+		bool is_active() const;
+
 		std::vector<std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>> get_reflectible_components() const;
 	};
 }
+
+template <>
+class std::hash<ecs::entity> {
+public:
+	std::size_t operator() (ecs::entity const& key) const noexcept {
+		return std::hash<std::uint64_t>{}(key.get_uuid());
+	}
+};
 
 #endif

@@ -3,6 +3,7 @@
 #include "Utility/FrameData.h"
 #include "Resources/PrimitiveGenerator.h"
 #include "Resources/Texture.h"
+#include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -73,7 +74,46 @@ void ParticleRenderer::InitializeResources()
 
 void ParticleRenderer::CreateBillboardQuad()
 {
-	Mesh quadMesh = PrimitiveGenerator::CreateFullscreenQuad();
+	// Create a centered quad in XY plane (for billboarding)
+	// The particle shader uses aPosition.x and aPosition.y for billboard rotation
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
+
+	// Create 4 vertices for a 1x1 quad centered at origin in XY plane
+	Vertex v;
+	for (int i = 0; i < MAX_BONE_INFLUENCE; ++i) 
+	{
+		v.m_BoneIDs[i] = -1;
+		v.m_Weights[i] = 0.0f;
+	}
+	v.Normal = glm::vec3(0.0f, 0.0f, 1.0f);  // Facing forward
+	v.Tangent = glm::vec3(1.0f, 0.0f, 0.0f);
+	v.Bitangent = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	// Bottom-left (-0.5, -0.5, 0)
+	v.Position = glm::vec3(-0.5f, -0.5f, 0.0f);
+	v.TexCoords = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+
+	// Bottom-right (0.5, -0.5, 0)
+	v.Position = glm::vec3(0.5f, -0.5f, 0.0f);
+	v.TexCoords = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+
+	// Top-right (0.5, 0.5, 0)
+	v.Position = glm::vec3(0.5f, 0.5f, 0.0f);
+	v.TexCoords = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+
+	// Top-left (-0.5, 0.5, 0)
+	v.Position = glm::vec3(-0.5f, 0.5f, 0.0f);
+	v.TexCoords = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+
+	// Two triangles (counter-clockwise winding)
+	indices = { 0, 1, 2, 0, 2, 3 };
+
+	Mesh quadMesh(vertices, indices, {});
 	m_QuadVAO = quadMesh.GetVertexArray();
 }
 
@@ -92,24 +132,26 @@ void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData 
 	{
 		return;
 	}
+
 	// bind shader
 	pass.Submit(RenderCommands::BindShaderData{ m_ParticleShader });
 	// bind ssbo
 	pass.Submit(RenderCommands::BindSSBOData{m_InstanceSSBO->GetSSBOHandle(), PARTICLE_SSBO_BINDING});
-	// set uniforms 
+	// set uniforms
 	pass.Submit(RenderCommands::SetUniformsData{ m_ParticleShader, glm::mat4(1.0f), frameData.viewMatrix, frameData.projectionMatrix, frameData.cameraPosition });
-	// bind texture 
-	if (system.texture)
-	{
-		std::vector<Texture> textures = { *system.texture };
-		pass.Submit(RenderCommands::BindTexturesData{ textures, m_ParticleShader });
-	}
+	// bind texture (commented out for pure color particles)
+	// if (system.texture)
+	// {
+	// 	std::vector<Texture> textures = { *system.texture };
+	// 	pass.Submit(RenderCommands::BindTexturesData{ textures, m_ParticleShader });
+	// }
 	// set blend mode
 	SetBlendMode(system.blendMode, pass);
 	// set depth test
-	pass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, system.depthWrite });
+	pass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, false });
 	// draw instanced
-	pass.Submit(RenderCommands::DrawElementsInstancedData{ m_QuadVAO->GetVAOHandle(), 6, activeCount, 0, GL_TRIANGLES });
+	uint32_t vaoHandle = m_QuadVAO->GetVAOHandle();
+	pass.Submit(RenderCommands::DrawElementsInstancedData{ vaoHandle, 6, activeCount, 0, GL_TRIANGLES });
 }
 
 void ParticleRenderer::UpdateSSBO(std::vector<Particle> const& particles)

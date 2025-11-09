@@ -26,6 +26,7 @@ Technology is prohibited.
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "ImGuizmo.h"
 #include <stdio.h>
 #include <crtdbg.h> // For memory leak detection
 #define GL_SILENCE_DEPRECATION
@@ -66,6 +67,7 @@ int main(int, char**)
 #endif
 
 	//_CrtSetBreakAlloc(457658);
+	//_CrtSetBreakAlloc(26635);
 
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit())
@@ -238,6 +240,10 @@ int main(int, char**)
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		// Initialize ImGuizmo for this frame (required for proper input handling)
+		ImGuizmo::BeginFrame();
+
 		editor.Update();
 		editor.Render();
 		
