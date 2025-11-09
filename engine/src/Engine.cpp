@@ -154,7 +154,7 @@ void Engine::CoreUpdate() {
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
-	ParticleSystem::GetInstance().Update(instance.m_World, instance.GetDeltaTime());
+	ParticleSystem::GetInstance().Update(instance.m_World, static_cast<float>(instance.GetDeltaTime()));
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
