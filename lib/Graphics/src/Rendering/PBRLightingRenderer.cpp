@@ -46,7 +46,7 @@ void PBRLightingRenderer::AddSpotLight(const SpotLight& light)
 }
 
 void PBRLightingRenderer::UpdateLighting(const std::vector<SubmittedLightData>& submittedLights,
-                                         const glm::vec3& ambientLight, const FrameData& /*frameData*/)
+                                         const glm::vec3& ambientLight, const FrameData& frameData)
 {
 	(void)frameData; // Unused parameter
 

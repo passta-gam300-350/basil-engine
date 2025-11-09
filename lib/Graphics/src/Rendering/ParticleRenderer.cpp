@@ -67,7 +67,7 @@ void ParticleRenderer::InitializeResources()
 {
 	CreateBillboardQuad();
 	size_t bufferSize = m_MaxParticles * sizeof(ParticleInstanceData);
-	m_InstanceSSBO = std::make_unique<ShaderStorageBuffer>(nullptr, bufferSize, GL_DYNAMIC_DRAW);
+	m_InstanceSSBO = std::make_unique<ShaderStorageBuffer>(nullptr, uint32_t(bufferSize), GL_DYNAMIC_DRAW);
 	m_InstanceSSBO->BindBase(PARTICLE_SSBO_BINDING);
 	// NOTE: Shader must be set via SetParticleShader() before rendering!
 }
