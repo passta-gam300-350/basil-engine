@@ -35,6 +35,7 @@ Technology is prohibited.
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
 #include <rsc-ext/rp.hpp>
+#include "Physics/Physics_Components.h"
 
 struct AudioComponent; // Forward declaration
 
@@ -112,7 +113,7 @@ public:
 	void Render_Component_Member(auto&, bool& is_dirty);
     void Render_Behaviour_Component(behaviour& component);
 	void Add_Script_Menu();
-
+	void Render_RigidBody_Component(RigidBodyComponent& component);
 	void Render_Add_Component_Menu();
 
 	// Accessor for custom material inspector
