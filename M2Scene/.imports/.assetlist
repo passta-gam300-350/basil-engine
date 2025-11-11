@@ -163,11 +163,20 @@
 "TableDetail":
   "m_guid": "6aefb5370c081ff79337e11c48e"
   "m_typeindex": "175488002581160416"
+"TableDetailV2":
+  "m_guid": "4ca2227f84add73c6119a6744e"
+  "m_typeindex": "175488002581160416"
 "TableDetails1":
   "m_guid": "6d98bed78c8b027c4b821c10ab4"
   "m_typeindex": "175488002581160416"
 "TableGlass":
   "m_guid": "6ad07bc7cfb9fc6084b68bf8798"
+  "m_typeindex": "175488002581160416"
+"TableGlassV2":
+  "m_guid": "491ae4713ca796d83ef2a9134e"
+  "m_typeindex": "175488002581160416"
+"TableGlassV3":
+  "m_guid": "5a697a72d5b36f9481d7ecc65c"
   "m_typeindex": "175488002581160416"
 "TableTop1":
   "m_guid": "6d98bef735eb0e9a1d6f8061409"
