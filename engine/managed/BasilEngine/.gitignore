@@ -20,7 +20,9 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
+*.timestamp
+![Dd]ebug/
+![Dd]ebug/*.cs
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
