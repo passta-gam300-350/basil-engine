@@ -90,6 +90,18 @@ struct LightComponent {
     bool m_IsEnabled;             ///< Light enabled state
 };
 
+/**
+ * @brief Result from interaction detection query
+ *
+ * Used for proximity-based interaction detection (e.g., "Press E to interact" prompts).
+ * Returned by QueryInteraction() to indicate if player is looking at an interactable object.
+ */
+struct InteractionResult {
+    bool hasHit = false;              ///< Was an object detected?
+    uint32_t entityUID = 0;           ///< ID of the detected entity
+    float distance = 0.0f;            ///< Distance from camera to object (meters)
+};
+
 struct RenderSystem : public ecs::SystemBase {
 public:
     // ========== Constructor and Destructor ==========
@@ -431,6 +443,18 @@ private:
      * @return Vector of entity UIDs that are potentially visible
      */
     std::vector<unsigned> GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera);
+
+    /**
+     * @brief Query for object in front of camera using ray casting
+     *
+     * Uses BVH ray casting to detect which entity the camera is looking at.
+     * Useful for proximity-based interaction detection (e.g., "Press E to interact").
+     *
+     * @param world The ECS world containing entities
+     * @param camera The camera to cast ray from (typically game entity camera)
+     * @return InteractionResult with detected entity info (hasHit=false if nothing detected)
+     */
+    InteractionResult QueryInteraction(ecs::world& world, const CameraSystem::Camera& camera);
 
     // ========== Render Subsystems ==========
 

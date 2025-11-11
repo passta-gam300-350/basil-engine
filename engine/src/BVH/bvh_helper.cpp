@@ -20,6 +20,12 @@ Frustum CameraToFrustum(CameraSystem::Camera const& camera)
     return Frustum(projection * view);
 }
 
+Ray CameraToRay(CameraSystem::Camera const& camera)
+{
+    // Create a ray from camera position in the forward direction
+    return Ray(camera.m_Pos, glm::normalize(camera.m_Front));
+}
+
 Aabb TransformAABB(Aabb const& localAABB, glm::mat4 const& matrix)
 {
     glm::vec3 AabbCorners[8] =

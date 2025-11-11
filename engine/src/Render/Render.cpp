@@ -200,11 +200,22 @@ void RenderSystem::Update(ecs::world& world) {
 
 	static int lastObjectCount = -1;
 	static int lastLightCount = -1;
-	if (objectCount != lastObjectCount || lightCount != lastLightCount) 
+	if (objectCount != lastObjectCount || lightCount != lastLightCount)
 	{
 		spdlog::info("RenderSystem: Processing {} visible objects (after culling), {} lights", objectCount, lightCount);
 		lastObjectCount = objectCount;
 		lastLightCount = lightCount;
+	}
+
+	// ========== Interaction Detection (Testing) ==========
+	auto interaction = QueryInteraction(world, world_camera);
+	if (interaction.hasHit) {
+		static uint32_t lastInteractableUID = 0;
+		//if (interaction.entityUID != lastInteractableUID) {
+			spdlog::info("RayTest: Looking at Entity {} (distance: {:.2f}m)",
+			             interaction.entityUID, interaction.distance);
+			lastInteractableUID = interaction.entityUID;
+		//}
 	}
 
 	// ========== Process only visible entities ==========
@@ -673,6 +684,43 @@ std::vector<unsigned> RenderSystem::GetVisibleEntities(ecs::world& world, const 
 		}
 	}
 	return visibleEntityID;
+}
+
+InteractionResult RenderSystem::QueryInteraction(ecs::world& world, const CameraSystem::Camera& camera)
+{
+	InteractionResult result;
+
+	// Check if BVH is built
+	if (m_BvhRenderables.empty() || m_bvh.Empty()) {
+		return result; // No objects to query
+	}
+
+	// Create ray from camera forward direction
+	Ray ray = CameraToRay(camera);
+
+	// Query BVH for closest hit
+	std::vector<unsigned> allHits;
+	std::vector<Bvh<BvhRenderable*>::Node const*> debugNodes;
+	auto closestHit = m_bvh.QueryDebug(ray, true, allHits, debugNodes);
+
+	if (!closestHit.has_value()) {
+		return result; // No hit detected
+	}
+
+	// Get the hit entity
+	uint32_t entityUID = closestHit.value();
+	ecs::entity entity = world.impl.entity_cast(static_cast<entt::entity>(entityUID));
+
+	// Calculate distance from camera to entity
+	auto& transform = entity.get<TransformComponent>();
+	result.distance = glm::distance(camera.m_Pos, transform.m_Translation);
+	
+
+	// Fill result
+	result.hasHit = true;
+	result.entityUID = entityUID;
+
+	return result;
 }
 
 void RenderSystem::BuildBVH(ecs::world& world)
