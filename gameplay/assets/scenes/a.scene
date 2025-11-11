@@ -1,0 +1,385 @@
+entities:
+  - Scene ID:
+      Scene ID: 11
+    entity name:
+      name: unnamed
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 0.949999988
+        z: 0.850000024
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0.200000003
+        y: -0.800000012
+        z: 0.300000012
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 5
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 10
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3
+        y: 0
+        z: 3
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.899999976
+          y: 0.899999976
+          z: 0.899999976
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 9
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3
+        y: 0
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.949999988
+          y: 0.75
+          z: 0.0500000007
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 8
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 3
+        y: 0
+        z: -3
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.100000001
+          y: 0.400000006
+          z: 0.899999976
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 7
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 3
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.949999988
+          y: 0.75
+          z: 0.0500000007
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 6
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.100000001
+          y: 0.400000006
+          z: 0.899999976
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 5
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: -3
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.100000001
+          y: 0.899999976
+          z: 0.100000001
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 4
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -3
+        y: 0
+        z: 3
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.100000001
+          y: 0.400000006
+          z: 0.899999976
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 3
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -3
+        y: 0
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.100000001
+          y: 0.899999976
+          z: 0.100000001
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 2
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: -3
+        y: 0
+        z: -3
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.899999976
+          y: 0.100000001
+          z: 0.100000001
