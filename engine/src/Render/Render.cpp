@@ -548,7 +548,7 @@ std::variant<std::shared_ptr<Mesh>, std::vector<std::pair<std::string, std::shar
 	//		if (meshPtr) return *meshPtr;
 	//	}
 	//}
-	Handle meshHandle{};
+	ResourceHandle meshHandle{};
 	auto* ptr = registry.Get<std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
 
 	if (ptr && !ptr->empty()) {

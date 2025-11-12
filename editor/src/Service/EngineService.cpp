@@ -201,7 +201,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 						// Query ResourceRegistry to find what soundHandle SHOULD be loaded for this GUID
 						ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audioComp->audioAssetGuid);
 						if (entry) {
-							Handle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
+							ResourceHandle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
 							int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
 
 							if (soundHandlePtr && *soundHandlePtr >= 0) {

@@ -23,7 +23,7 @@ Technology is prohibited.
 
 void WorkplaceManager::AddWorkplace(const std::string& name, const std::string& path)
 {
-	UUID<128> id = UUID<128>::Generate();
+	uuid::UUID<128> id = uuid::UUID<128>::Generate();
 	workplaces.emplace(name, Workplace{id, path, std::time(nullptr)});
 }
 
@@ -158,7 +158,7 @@ void WorkplaceManager::LoadWorkspace(std::string const& path)
 		
 
 		std::ofstream basilFile(path);
-		basilFile << UUID<128>::Generate().ToString() << "\n";
+		basilFile << uuid::UUID<128>::Generate().ToString() << "\n";
 		basilFile << name << "\n";
 		basilFile << std::filesystem::absolute(basilPath.parent_path()).string() << "\n";
 		basilFile.close();
