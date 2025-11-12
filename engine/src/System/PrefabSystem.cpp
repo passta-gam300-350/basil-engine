@@ -395,9 +395,10 @@ PrefabData PrefabSystem::LoadPrefabFromFile(const std::string& prefabPath)
             data.version = meta["version"].as<int>(1);
             data.createdDate = meta["created"].as<std::string>("");
 
-            // Parse UUID from string
-            std::string uuidStr = meta["uuid"].as<std::string>();
-            data.uuid = UUID<128>::FromString(uuidStr);
+            // Parse GUID from string
+            std::string guidStr = meta["guid"].as<std::string>();
+            data.guid.m_guid = rp::Guid::to_guid(guidStr);
+            data.guid.m_typeindex = meta["typeIndex"].as<std::uint64_t>(0);
         }
 
         // Load entity hierarchy
@@ -426,7 +427,8 @@ bool PrefabSystem::SavePrefabToFile(const PrefabData& data, const std::string& p
 
         // Serialize metadata
         YAML::Node metadata;
-        metadata["uuid"] = data.GetUuidString();
+        metadata["guid"] = data.GetGuidString();
+        metadata["typeIndex"] = data.guid.m_typeindex;
         metadata["name"] = data.name;
         metadata["version"] = data.version;
         metadata["created"] = data.createdDate.empty() ? GetCurrentTimestamp() : data.createdDate;
@@ -455,12 +457,11 @@ bool PrefabSystem::SavePrefabToFile(const PrefabData& data, const std::string& p
 // Core Prefab Operations
 // ========================
 
-ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const UUID<128>& prefabId, const glm::vec3& position)
+ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const rp::BasicIndexedGuid& prefabId, const glm::vec3& position)
 {
     // Load prefab data from cache
-    UUID<128> mutableId = prefabId;  // Make a mutable copy
-    std::string uuidStr = mutableId.ToString();
-    auto it = s_PrefabCache.find(uuidStr);
+    std::string guidStr = prefabId.m_guid.to_hex();
+    auto it = s_PrefabCache.find(guidStr);
     if (it == s_PrefabCache.end())
     {
         // Prefab not in cache
@@ -488,13 +489,13 @@ ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const UUID<128>& 
     return rootEntity;
 }
 
-ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& /*world*/, const UUID<128>& /*prefabId*/, ecs::entity rootEntityId, const glm::vec3& /*position*/)
+ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& /*world*/, const rp::BasicIndexedGuid& /*prefabId*/, ecs::entity rootEntityId, const glm::vec3& /*position*/)
 {
     // Similar to InstantiatePrefab but uses provided entity ID
     return rootEntityId;
 }
 
-int PrefabSystem::SyncPrefab(ecs::world& world, const UUID<128>& prefabId)
+int PrefabSystem::SyncPrefab(ecs::world& world, const rp::BasicIndexedGuid& prefabId)
 {
     int syncCount = 0;
 
@@ -521,9 +522,8 @@ bool PrefabSystem::SyncInstance(ecs::world& world, ecs::entity instance)
     auto& prefabComp = instance.get<PrefabComponent>();
 
     // Load prefab data from cache
-    UUID<128> mutableGuid = prefabComp.m_PrefabGuid;
-    std::string uuidStr = mutableGuid.ToString();
-    auto it = s_PrefabCache.find(uuidStr);
+    std::string guidStr = prefabComp.m_PrefabGuid.m_guid.to_hex();
+    auto it = s_PrefabCache.find(guidStr);
     if (it == s_PrefabCache.end())
         return false;  // Prefab not in cache
 
@@ -601,12 +601,12 @@ bool PrefabSystem::ApplyInstanceToPrefab(ecs::world& world, ecs::entity instance
 
     // Serialize entity hierarchy
     PrefabData prefabData;
-    prefabData.uuid = prefabComp.m_PrefabGuid;
+    prefabData.guid = prefabComp.m_PrefabGuid;
     prefabData.root = SerializeEntityHierarchy(world, instance);
 
     // Get name from cache if available
-    std::string uuidStr = prefabData.GetUuidString();
-    auto it = s_PrefabCache.find(uuidStr);
+    std::string guidStr = prefabData.GetGuidString();
+    auto it = s_PrefabCache.find(guidStr);
     if (it != s_PrefabCache.end())
     {
         prefabData.name = it->second.name;
@@ -622,7 +622,7 @@ bool PrefabSystem::ApplyInstanceToPrefab(ecs::world& world, ecs::entity instance
     if (SavePrefabToFile(prefabData, prefabPath))
     {
         // Update cache
-        s_PrefabCache[uuidStr] = prefabData;
+        s_PrefabCache[guidStr] = prefabData;
         return true;
     }
 
@@ -633,7 +633,7 @@ bool PrefabSystem::ApplyInstanceToPrefab(ecs::world& world, ecs::entity instance
 // Queries
 // ========================
 
-std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const UUID<128>& prefabId)
+std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const rp::BasicIndexedGuid& prefabId)
 {
     std::vector<ecs::entity> instances;
 
@@ -651,7 +651,7 @@ std::vector<ecs::entity> PrefabSystem::GetAllInstances(ecs::world& world, const 
     return instances;
 }
 
-bool PrefabSystem::IsInstanceOf(ecs::world& /*world*/, ecs::entity entity, const UUID<128>& prefabId)
+bool PrefabSystem::IsInstanceOf(ecs::world& /*world*/, ecs::entity entity, const rp::BasicIndexedGuid& prefabId)
 {
     if (!entity.all<PrefabComponent>())
         return false;
@@ -665,7 +665,7 @@ bool PrefabSystem::IsPrefabInstance(ecs::world& /*world*/, ecs::entity entity)
     return entity.all<PrefabComponent>();
 }
 
-UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
+rp::BasicIndexedGuid PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
                                                const std::string& prefabName,
                                                const std::string& prefabPath)
 {
@@ -679,11 +679,11 @@ UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity ro
     if (SavePrefabToFile(prefabData, prefabPath))
     {
         // Cache the prefab
-        s_PrefabCache[prefabData.GetUuidString()] = prefabData;
-        return prefabData.uuid;
+        s_PrefabCache[prefabData.GetGuidString()] = prefabData;
+        return prefabData.guid;
     }
 
-    return UUID<128>(); // Invalid UUID on failure
+    return rp::null_indexed_guid; // Invalid GUID on failure
 }
 
 // ========================
@@ -691,7 +691,7 @@ UUID<128> PrefabSystem::CreatePrefabFromEntity(ecs::world& world, ecs::entity ro
 // ========================
 
 ecs::entity PrefabSystem::InstantiateEntity(ecs::world& world, const PrefabEntity& prefabEntity,
-                                            ecs::entity parent, const UUID<128>& prefabId)
+                                            ecs::entity parent, const rp::BasicIndexedGuid& prefabId)
 {
     // Create entity
     ecs::entity entity = world.add_entity();

@@ -25,6 +25,8 @@ Technology is prohibited.
 #include <Engine.hpp>
 #include <Component/Transform.hpp>
 #include <Component/MaterialOverridesComponent.hpp>
+#include <Component/PrefabComponent.hpp>
+#include <System/PrefabSystem.hpp>
 #include <System/Audio.hpp>
 #include <Resources/PrimitiveGenerator.h>
 #include <Resources/Material.h>
@@ -793,6 +795,34 @@ void EditorMain::Render_Components()
 	auto& component_list{ engineService.m_cont->m_component_list_snapshot };
 	auto& type_map{ ReflectionRegistry::types() };
 	auto& internal_type_map{ ReflectionRegistry::InternalID() };
+
+	// Check if selected entity is a prefab instance
+	m_PrefabContext = PrefabOverrideContext{};  // Reset context
+	m_LoadedPrefabData.reset();  // Clear previous prefab data
+
+	// Find PrefabComponent if it exists
+	ReflectionRegistry::TypeID prefab_component_id{};
+	auto prefabIt = internal_type_map.find(entt::type_index<PrefabComponent>::value());
+	if (prefabIt != internal_type_map.end())
+	{
+		prefab_component_id = prefabIt->second;
+		auto prefabCompIt = std::find_if(component_list.begin(), component_list.end(),
+			[prefab_component_id](const auto& kvpair) { return kvpair.first == prefab_component_id; });
+		if (prefabCompIt != component_list.end())
+		{
+			const PrefabComponent* prefabComp = reinterpret_cast<const PrefabComponent*>(prefabCompIt->second.get());
+			m_PrefabContext.isPrefabInstance = true;
+			m_PrefabContext.prefabComponent = prefabComp;
+
+			// Load prefab data for comparison
+			std::string prefabGuidStr = prefabComp->m_PrefabGuid.m_guid.to_hex();
+			// TODO: Load from ResourceSystem - for now, we'll just track that it's a prefab instance
+			// m_LoadedPrefabData = std::make_unique<PrefabData>(PrefabSystem::LoadPrefabFromFile(prefabPath));
+			// m_PrefabContext.prefabData = m_LoadedPrefabData.get();
+
+			spdlog::debug("Rendering prefab instance with GUID: {}", prefabGuidStr);
+		}
+	}
 	
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	static const ReflectionRegistry::TypeID skip_sceneid_component{ internal_type_map[entt::type_index<SceneIDComponent>::value()] };
@@ -826,8 +856,8 @@ void EditorMain::Render_Components()
 	}
 
 	for (auto const& [type_id, uptr] : component_list) {
-		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
-			continue;
+		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component || type_id == prefab_component_id) {
+			continue;  // Skip PrefabComponent as it's internal
 		}
 		if (behaviour_component && type_id == behaviour_component)
 		{
@@ -851,8 +881,84 @@ void EditorMain::Render_Components()
 		{
 			componentLabel = itName->second.c_str();
 		}
-		if (ImGui::TreeNode(componentLabel)) {
+
+		// Check if this component has overrides in the prefab instance
+		bool hasOverrides = false;
+		int overrideCount = 0;
+		if (m_PrefabContext.isPrefabInstance && m_PrefabContext.prefabComponent)
+		{
+			for (const auto& override : m_PrefabContext.prefabComponent->m_OverriddenProperties)
+			{
+				if (override.componentTypeHash == type_id)
+				{
+					hasOverrides = true;
+					overrideCount++;
+				}
+			}
+		}
+
+		// Apply colored background for components with overrides
+		if (hasOverrides)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.5f, 0.8f, 0.25f));  // Light blue background
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.3f, 0.6f, 0.9f, 0.35f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.4f, 0.7f, 1.0f, 0.45f));
+		}
+
+		// Component header with override count
+		std::string headerLabel = std::string(componentLabel);
+		if (hasOverrides)
+		{
+			headerLabel += " (" + std::to_string(overrideCount) + " overrides)";
+		}
+
+		if (ImGui::TreeNode(headerLabel.c_str())) {
+			if (hasOverrides)
+			{
+				ImGui::PopStyleColor(3);  // Pop the colored background
+			}
+
+			// Show "Revert All Overrides" button for components with overrides
+			if (hasOverrides)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.3f, 0.3f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.4f, 0.4f, 1.0f));
+				if (ImGui::SmallButton("Revert All Component Overrides"))
+				{
+					ul.unlock();
+					engineService.ExecuteOnEngineThread([this, type_id, componentLabel]() {
+						auto world = Engine::GetWorld();
+						for (auto& entity : world.get_all_entities()) {
+							if (entity.get_uid() == m_SelectedEntityID) {
+								if (entity.all<PrefabComponent>())
+								{
+									auto& prefabComp = entity.get<PrefabComponent>();
+									// Remove all overrides for this component
+									prefabComp.m_OverriddenProperties.erase(
+										std::remove_if(prefabComp.m_OverriddenProperties.begin(),
+											prefabComp.m_OverriddenProperties.end(),
+											[type_id](const PropertyOverride& o) {
+												return o.componentTypeHash == type_id;
+											}),
+										prefabComp.m_OverriddenProperties.end()
+									);
+									// Sync the entity with prefab
+									PrefabSystem::SyncInstance(world, entity);
+									spdlog::info("Reverted all overrides for component: {}", componentLabel);
+								}
+								break;
+							}
+						}
+					});
+					ul.lock();
+				}
+				ImGui::PopStyleColor(2);
+				ImGui::Separator();
+			}
+
 			bool is_dirty = false;
+			m_PrefabContext.currentComponentTypeHash = type_id;
+			m_PrefabContext.currentComponentTypeName = componentLabel;
 			Render_Component_Member(comp, is_dirty);
 
 			if (rb_component && type_id == rb_component)
@@ -874,7 +980,6 @@ void EditorMain::Render_Components()
 							});
 						ul.lock();
 						
-
 					}
 
 					//if (ImGui::TreeNode("RigidBodyComponent"))
@@ -989,6 +1094,11 @@ void EditorMain::Render_Components()
 			if (is_dirty) {
 				engineService.m_cont->m_write_back_queue.push(type_id);
 			}
+		}
+		else if (hasOverrides)
+		{
+			// If tree node was not opened, we still need to pop the color styling
+			ImGui::PopStyleColor(3);
 		}
 	}
 }
@@ -2161,15 +2271,27 @@ void EditorMain::Render_SceneExplorer()
 			bool isDisabled{};
 			int stylect{};
 
+			// Check if this entity is a prefab instance
+			bool isPrefabInstance = false;
+			if (node.m_entity_handle) {
+				ecs::entity entity(node.m_entity_handle);
+				isPrefabInstance = entity.all<PrefabComponent>();
+			}
+
 			static const auto style_color_selected{ []() -> int {
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.761f, 0.542f, 0.223f, 1.0f)); // Yellow text for selected
 				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
-				ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1.0f, 0.9f, 0.0f, 1.0f)); 
+				ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
 				return 3;
 				} };
 			static const auto style_color_inactive{ []() -> int {
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.461f, 0.442f, 0.423f, 0.42f)); // Yellow text for selected
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.461f, 0.442f, 0.423f, 0.42f)); // Grayed text for inactive
 				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.15f, 0.123f, 0.10f));
+				return 2;
+				} };
+			static const auto style_color_prefab{ []() -> int {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.7f, 1.0f, 1.0f)); // Blue text for prefab instances
+				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.4f, 0.6f, 0.3f));
 				return 2;
 				} };
 
@@ -2187,8 +2309,18 @@ void EditorMain::Render_SceneExplorer()
 				stylect = current_style();
 				isDisabled = true;
 			}
+			else if (isPrefabInstance) {
+				current_style = style_color_prefab;
+				stylect = current_style();
+			}
 
-		if (ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", node.m_entity_name.c_str())) {
+		// Add prefab prefix for visual distinction
+		std::string displayName = node.m_entity_name;
+		if (isPrefabInstance) {
+			displayName = "[P] " + displayName;  // [P] indicates prefab instance
+		}
+
+		if (ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", displayName.c_str())) {
 			// Display entity info with selection highlighting
 			std::string entityName = node.m_entity_name;
 
@@ -2279,6 +2411,67 @@ void EditorMain::Render_SceneExplorer()
 				{
 					engineService.create_child_entity(node.m_entity_handle);
 				}
+
+				// Prefab-specific menu items
+				if (isPrefabInstance && node.m_entity_handle)
+				{
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Prefab");
+
+					if (ImGui::MenuItem("Select Prefab Asset"))
+					{
+						// TODO: Select the prefab asset in Asset Browser
+						spdlog::info("Select Prefab Asset - to be implemented");
+					}
+
+					if (ImGui::MenuItem("Revert to Prefab"))
+					{
+						engineService.ExecuteOnEngineThread([node]() {
+							ecs::entity entity(node.m_entity_handle);
+							auto world = Engine::GetWorld();
+							PrefabSystem::RevertAllOverrides(world, entity);
+						});
+					}
+
+					if (ImGui::MenuItem("Apply Overrides to Prefab"))
+					{
+						// TODO: Implement "Apply to Prefab" workflow
+						spdlog::info("Apply to Prefab - to be implemented in Phase 6");
+					}
+				}
+				else if (node.m_entity_handle && !isPrefabInstance)
+				{
+					ImGui::Separator();
+					if (ImGui::MenuItem("Create Prefab from Entity"))
+					{
+						// Open file dialog to choose save location
+						std::string prefabPath = m_AssetManager->GetCurrentPath() + "/" + node.m_entity_name + ".prefab";
+
+						engineService.ExecuteOnEngineThread([node, prefabPath, this]() {
+							ecs::entity entity(node.m_entity_handle);
+							auto world = Engine::GetWorld();
+
+							// Create prefab from entity
+							std::string prefabName = node.m_entity_name + "_Prefab";
+							rp::BasicIndexedGuid prefabGuid = PrefabSystem::CreatePrefabFromEntity(
+								world, entity, prefabName, prefabPath
+							);
+
+							if (prefabGuid != rp::null_indexed_guid)
+							{
+								spdlog::info("Prefab created successfully: {} at {}", prefabName, prefabPath);
+
+								// Attach PrefabComponent to the original entity to make it an instance
+								entity.add<PrefabComponent>(prefabGuid);
+							}
+							else
+							{
+								spdlog::error("Failed to create prefab from entity: {}", node.m_entity_name);
+							}
+						});
+					}
+				}
+
 				ImGui::Separator();
 				if (ImGui::MenuItem("Rename")) { }
 				ImGui::EndPopup();

@@ -36,8 +36,19 @@ Technology is prohibited.
 #include "Service/EngineService.hpp"
 #include <rsc-ext/rp.hpp>
 #include "Physics/Physics_Components.h"
+#include "Prefab/PrefabData.hpp"
+#include "Component/PrefabComponent.hpp"
 
 struct AudioComponent; // Forward declaration
+
+// Prefab override detection context (global state for rendering)
+struct PrefabOverrideContext {
+	bool isPrefabInstance = false;
+	const PrefabComponent* prefabComponent = nullptr;
+	const PrefabData* prefabData = nullptr;
+	std::uint32_t currentComponentTypeHash = 0;
+	std::string currentComponentTypeName = "";
+};
 
 class EditorMain : public Screen
 {
@@ -153,6 +164,10 @@ private:
 	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
 	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
 	uint32_t m_SelectedNodeID = 0;
+
+	// Prefab override detection
+	PrefabOverrideContext m_PrefabContext;
+	std::unique_ptr<PrefabData> m_LoadedPrefabData;  // Currently loaded prefab for comparison
 
 	// Debug rendering controls
 	bool m_ShowAABBs = false;

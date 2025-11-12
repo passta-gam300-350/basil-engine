@@ -1,8 +1,9 @@
 #ifndef PREFABDATA_HPP
 #define PREFABDATA_HPP
 
-#include "uuid/uuid.hpp"
+
 #include "Component/Component.hpp"
+#include <rsc-core/rp.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -187,7 +188,7 @@ struct PrefabEntity
  * @brief Complete prefab data structure for disk storage
  *
  * This represents the entire prefab asset as stored on disk.
- * Contains metadata (UUID, name, version) and the root entity hierarchy.
+ * Contains metadata (GUID, name, version) and the root entity hierarchy.
  *
  * File format: YAML (.prefab extension)
  * Location: Typically in assets/prefabs/ directory
@@ -195,32 +196,33 @@ struct PrefabEntity
 struct PrefabData
 {
     // Metadata
-    UUID<128> uuid;           ///< Unique identifier for this prefab
-    std::string name;         ///< Human-readable prefab name
-    int version = 1;          ///< Prefab format version (for future compatibility)
-    std::string createdDate;  ///< ISO 8601 timestamp of creation
+    rp::BasicIndexedGuid guid;  ///< Unique identifier for this prefab
+    std::string name;           ///< Human-readable prefab name
+    int version = 1;            ///< Prefab format version (for future compatibility)
+    std::string createdDate;    ///< ISO 8601 timestamp of creation
 
     // Entity hierarchy
-    PrefabEntity root;        ///< Root entity of the prefab hierarchy
+    PrefabEntity root;          ///< Root entity of the prefab hierarchy
 
     PrefabData() = default;
 
     /**
-     * @brief Create a new prefab with generated UUID
+     * @brief Create a new prefab with generated GUID
      * @param prefabName Name of the prefab
+     * @param typeIndex Type index for the prefab resource type
      */
-    explicit PrefabData(const std::string& prefabName)
-        : uuid(UUID<128>::Generate())
+    explicit PrefabData(const std::string& prefabName, std::uint64_t typeIndex = 0)
+        : guid{rp::Guid::generate(), typeIndex}
         , name(prefabName)
     {}
 
     /**
-     * @brief Get the UUID as a string
-     * @return String representation of the UUID
+     * @brief Get the GUID as a string
+     * @return String representation of the GUID
      */
-    std::string GetUuidString() const
+    std::string GetGuidString() const
     {
-        return const_cast<UUID<128>&>(uuid).ToString();
+        return guid.m_guid.to_hex();
     }
 
     /**
@@ -242,7 +244,7 @@ struct PrefabData
 struct PrefabInstanceSnapshot
 {
     ecs::entity entityId;                                    ///< Original entity ID
-    UUID<128> prefabId;                                      ///< Prefab reference
+    rp::BasicIndexedGuid prefabId;                                      ///< Prefab reference
     std::vector<Component::ComponentType> addedComponents;   ///< Added components
     std::vector<Component::ComponentType> deletedComponents; ///< Deleted components
 
@@ -259,13 +261,6 @@ struct PrefabInstanceSnapshot
     std::vector<PropertyOverrideData> propertyOverrides;     ///< Property overrides
 
     PrefabInstanceSnapshot() = default;
-
-    /**
-     * @brief Create a snapshot from an existing entity with PrefabComponent
-     * @param entity The entity to snapshot
-     * @param prefabComp The prefab component data
-     */
-    PrefabInstanceSnapshot(ecs::entity entity, const class PrefabComponent& prefabComp);
 };
 
 #endif // PREFABDATA_HPP

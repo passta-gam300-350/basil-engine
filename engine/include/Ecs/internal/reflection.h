@@ -24,6 +24,7 @@ Technology is prohibited.
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <glm/glm.hpp>
 using TypeName = entt::hashed_string;
 constexpr TypeName ToTypeName(std::string_view name) { return entt::hashed_string(name.data(), name.length()); };
 
