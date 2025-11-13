@@ -1,0 +1,7 @@
+base:
+  m_guid: fe7a3f7a57b95b4573cfd9df6c
+  m_importer: .texture
+  m_source: materials\wall_open\wall_open_wall_Roughness.png
+  m_name: wall_open_wall_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

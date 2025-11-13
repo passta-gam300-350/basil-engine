@@ -1,0 +1,7 @@
+base:
+  m_guid: fe79bf783eadc1ab368a76b355
+  m_importer: .texture
+  m_source: materials\trash_pile\trash_2\trash2_low_standardsurface13_Normal.png
+  m_name: trash2_low_standardsurface13_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

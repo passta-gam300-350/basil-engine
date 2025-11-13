@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0c987f3cb1354a06660bd4de
+  m_importer: .texture
+  m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_Roughness.png
+  m_name: kitchenCabinet_PandaMat_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

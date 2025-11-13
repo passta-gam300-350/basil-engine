@@ -1,0 +1,56 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for kitchenShelf
+# Generated for GAM300 Graphics Engine
+
+newmtl PandaMat1
+
+# Base color / diffuse map
+map_Kd kitchenShelf_PandaMat1_BaseColor.png
+
+# Normal map
+map_Bump kitchenShelf_PandaMat1_Normal.png
+bump kitchenShelf_PandaMat1_Normal.png
+
+# Metallic map
+map_Ks kitchenShelf_PandaMat1_Metallic.png
+
+# Roughness map
+map_Ns kitchenShelf_PandaMat1_Roughness.png
+
+# Emissive map
+map_Ke kitchenShelf_PandaMat1_Emissive.png
+
+# Height / displacement map
+map_d kitchenShelf_PandaMat1_Height.png
+disp kitchenShelf_PandaMat1_Height.png
+
+kd 1 1 1
+illum 1
+
+newmtl standardSurface2
+
+# Base color / diffuse map
+map_Kd kitchenShelf_standardSurface2_BaseColor.png
+
+# Normal map
+map_Bump kitchenShelf_standardSurface2_Normal.png
+bump kitchenShelf_standardSurface2_Normal.png
+
+# Metallic map
+map_Ks kitchenShelf_standardSurface2_Metallic.png
+
+# Roughness map
+map_Ns kitchenShelf_standardSurface2_Roughness.png
+
+# Emissive map
+map_Ke kitchenShelf_standardSurface2_Emissive.png
+
+# Height / displacement map
+map_d kitchenShelf_standardSurface2_Height.png
+disp kitchenShelf_standardSurface2_Height.png
+
+kd 0.4107 0 0
+illum 1
+

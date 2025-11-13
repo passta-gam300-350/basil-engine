@@ -1,0 +1,7 @@
+base:
+  m_guid: fe799c71a98b1e9306f92a2e37
+  m_importer: .texture
+  m_source: materials\trash_pile\trash_1\trash1_low_rubbish_Roughness.png
+  m_name: trash1_low_rubbish_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: fe7967731ea5943ecbc3249d38
+  m_importer: .texture
+  m_source: materials\floor\Floor_openPBR_shader1_Normal.png
+  m_name: Floor_openPBR_shader1_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

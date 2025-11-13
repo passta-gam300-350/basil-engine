@@ -1,0 +1,7 @@
+base:
+  m_guid: fe797a71da981f89ec8ac2114a
+  m_importer: .texture
+  m_source: materials\trash_pile\trash_1\trash1_low_rubbish_BaseColor.png
+  m_name: trash1_low_rubbish_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

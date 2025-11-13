@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0bf87401b5fd7290c8466efa
+  m_importer: .texture
+  m_source: materials\ceiling_fan\Ceilingfan_ceilingfan_Holder_Height.png
+  m_name: Ceilingfan_ceilingfan_Holder_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

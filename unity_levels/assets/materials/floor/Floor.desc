@@ -1,0 +1,27 @@
+base:
+  m_guid: 12b89517f17a0a25cd888e4b928
+  m_importer: .material
+  m_source: ""
+  m_name: Floor
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: Floor
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 1
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    roughness: fe796f71618b806e11210f1813
+    diffuse: fe79447b10b75889d5954df14f
+    metallic: fe79557a0cb0fbf6cabfeb1e13
+    emissive: 00
+    normal: fe7967731ea5943ecbc3249d38
+    height: fe794e74428ceb22ab0c2873d0

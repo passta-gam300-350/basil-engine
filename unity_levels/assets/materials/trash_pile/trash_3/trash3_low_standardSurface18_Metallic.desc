@@ -1,0 +1,7 @@
+base:
+  m_guid: fe79e075d39911d7edf4917afb
+  m_importer: .texture
+  m_source: materials\trash_pile\trash_3\trash3_low_standardSurface18_Metallic.png
+  m_name: trash3_low_standardSurface18_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

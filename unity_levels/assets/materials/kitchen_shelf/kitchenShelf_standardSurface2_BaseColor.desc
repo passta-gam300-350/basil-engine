@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0d2774fb9822d7db4fb69279
+  m_importer: .texture
+  m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_BaseColor.png
+  m_name: kitchenShelf_standardSurface2_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

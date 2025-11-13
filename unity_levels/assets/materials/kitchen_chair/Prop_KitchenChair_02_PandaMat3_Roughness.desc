@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0cf37d6f9fe729b1027f9312
+  m_importer: .texture
+  m_source: materials\kitchen_chair\Prop_KitchenChair_02_PandaMat3_Roughness.png
+  m_name: Prop_KitchenChair_02_PandaMat3_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

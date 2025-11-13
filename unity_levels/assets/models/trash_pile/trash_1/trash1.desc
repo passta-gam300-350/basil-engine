@@ -1,0 +1,20 @@
+base:
+  m_guid: fe7a5375b084497c9ca0fc795a
+  m_importer: .mesh
+  m_source: models\trash_pile\trash_1\trash1.obj
+  m_name: trash1.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

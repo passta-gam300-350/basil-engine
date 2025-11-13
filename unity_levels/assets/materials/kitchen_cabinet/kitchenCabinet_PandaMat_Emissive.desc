@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0c7477ebad53d45d61a4b026
+  m_importer: .texture
+  m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_Emissive.png
+  m_name: kitchenCabinet_PandaMat_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0dd77331811a08655f776314
+  m_importer: .texture
+  m_source: materials\workbench\Prop_Desk_03_table_top_1_BaseColor.png
+  m_name: Prop_Desk_03_table_top_1_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,56 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for cardboard_Fullyclosed
+# Generated for GAM300 Graphics Engine
+
+newmtl standardSurface1
+
+# Base color / diffuse map
+map_Kd CardboardBox_FullyClosed_standardSurface1_BaseColor.png
+
+# Normal map
+map_Bump CardboardBox_FullyClosed_standardSurface1_Normal.png
+bump CardboardBox_FullyClosed_standardSurface1_Normal.png
+
+# Metallic map
+map_Ks CardboardBox_FullyClosed_standardSurface1_Metallic.png
+
+# Roughness map
+map_Ns CardboardBox_FullyClosed_standardSurface1_Roughness.png
+
+# Emissive map
+map_Ke CardboardBox_FullyClosed_standardSurface1_Emissive.png
+
+# Height / displacement map
+map_d CardboardBox_FullyClosed_standardSurface1_Height.png
+disp CardboardBox_FullyClosed_standardSurface1_Height.png
+
+kd 0.4 0.4 0.4
+illum 1
+
+newmtl standardSurface7
+
+# Base color / diffuse map
+map_Kd CardboardBox_FullyClosed_standardSurface7_BaseColor.png
+
+# Normal map
+map_Bump CardboardBox_FullyClosed_standardSurface7_Normal.png
+bump CardboardBox_FullyClosed_standardSurface7_Normal.png
+
+# Metallic map
+map_Ks CardboardBox_FullyClosed_standardSurface7_Metallic.png
+
+# Roughness map
+map_Ns CardboardBox_FullyClosed_standardSurface7_Roughness.png
+
+# Emissive map
+map_Ke CardboardBox_FullyClosed_standardSurface7_Emissive.png
+
+# Height / displacement map
+map_d CardboardBox_FullyClosed_standardSurface7_Height.png
+disp CardboardBox_FullyClosed_standardSurface7_Height.png
+
+kd 0.5783 0.238 0
+illum 1
+
