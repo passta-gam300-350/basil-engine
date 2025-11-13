@@ -53,9 +53,6 @@ Technology is prohibited.
 #include <serialization/serializer.h>
 
 #include <glm/gtc/type_ptr.hpp>
-#include "Render/Render.h"
-#include "Messaging/Messaging_System.h"
-
 #include "Physics/Physics_System.h"
 #include "Manager/ObjectManager.hpp"
 #include <components/behaviour.hpp>
@@ -642,7 +639,7 @@ void EditorMain::cleanup()
 	//PhysSys.GetBodyInterface().RemoveBody(floorplan->GetID());
 	//PhysSys.GetBodyInterface().DestroyBody(floorplan->GetID());
 
-	
+
 	engineService.ExecuteOnEngineThread([]() {
 		PhysicsSystem::Instance().Exit();
 		spdlog::info("Physics Exit");
@@ -2548,7 +2545,7 @@ void EditorMain::Render_SceneExplorer()
 						if (node.m_entity_handle)
 						{
 							ecs::entity entity(node.m_entity_handle);
-							if (entity.has<PrefabComponent>())
+							if (entity.all<PrefabComponent>())
 							{
 								auto& prefabComp = entity.get<PrefabComponent>();
 								std::string prefabPath = m_AssetManager->ResolveAssetName(prefabComp.m_PrefabGuid);
@@ -2601,7 +2598,7 @@ void EditorMain::Render_SceneExplorer()
 							ecs::entity entity(node.m_entity_handle);
 							auto world = Engine::GetWorld();
 
-							if (entity.has<PrefabComponent>())
+							if (entity.all<PrefabComponent>())
 							{
 								auto& prefabComp = entity.get<PrefabComponent>();
 								std::string prefabPath = m_AssetManager->ResolveAssetName(prefabComp.m_PrefabGuid);
@@ -2692,122 +2689,6 @@ void EditorMain::Render_SceneExplorer()
 			RenderSceneGraphNode(scene, guid);
 		}
 	}
-	
-
-	/*
-	if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-	{
-		//int entityIndex = 0;
-		//for (auto& entity : entities)
-		//{
-		//	uint32_t entityID = static_cast<uint32_t>(entity.get_uid());
-
-		//	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf |
-		//		ImGuiTreeNodeFlags_NoTreePushOnOpen |
-		//		ImGuiTreeNodeFlags_SpanAvailWidth;
-
-		//	if (entityID == m_SelectedEntityID)
-		//		flags |= ImGuiTreeNodeFlags_Selected;
-
-
-		//	ImGui::TreeNodeEx((void*)(intptr_t)entityID, flags, "%s", entity.name().c_str());
-
-		//	if (ImGui::IsItemClicked())
-		//	{
-		//		m_SelectedEntityID = entityID;
-		//	}
-
-		//	// Right-click context menu
-		//	if (ImGui::BeginPopupContextItem())
-		//	{
-		//		if (ImGui::MenuItem("Duplicate")) { }
-		//		if (ImGui::MenuItem("Delete")) { }
-		//		ImGui::Separator();
-		//		if (ImGui::MenuItem("Rename")) { }
-		//		ImGui::EndPopup();
-		//	}
-
-		//	entityIndex++;
-		//}
-
-		for (size_t i = 0; i < entityHandles.size(); ++i) {
-			auto ehdl = entityHandles[i];
-			ImGui::PushID(static_cast<int>(i));
-
-			// Check if this entity is currently selected
-			uint32_t entityUID = ecs::entity(ehdl).get_uid();
-			bool isSelected = (m_SelectedEntityID == entityUID);
-
-			// DEBUG: Log entity IDs for all entities
-			static bool loggedOnce = false;
-			if (!loggedOnce && i == 0) {
-				spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
-				for (size_t j = 0; j < entityHandles.size(); ++j) {
-					uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
-					spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
-				}
-				loggedOnce = true;
-			}
-
-			// Display entity info with selection highlighting
-			std::string entityName = entityNames[i];
-
-			// Check what components this entity has (using snapshot)
-			bool hasTransform = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<TransformComponent>());
-			bool hasMesh = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>());
-			bool hasLight = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>());
-			bool hasVisibility = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<VisibilityComponent>());
-
-			UNREF_PARAM(hasTransform);
-
-			if (hasLight) entityName += " (Light)";
-			else if (hasMesh) entityName += " (Mesh)";
-			else entityName += " (Empty)";
-
-			// Highlight selected entity with different color
-			if (isSelected) {
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // Yellow text for selected
-				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
-			}
-
-			//bool nodeOpen = ImGui::TreeNode(entityName.c_str());
-			bool selectable = isSelected;
-			if (ImGui::Selectable(entityName.c_str(), &selectable))
-			{
-				spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
-				SelectEntity(entityUID);
-			}
-			
-		
-
-			if (ImGui::BeginPopupContextItem())
-			{
-				if (ImGui::MenuItem("Duplicate")) {  }
-				if (ImGui::MenuItem("Delete"))
-				{
-					// Clear selection if deleting the currently selected entity
-					if (isSelected) {
-						ClearEntitySelection();
-					}
-					engineService.delete_entity(ehdl);
-				}
-				ImGui::Separator();
-				if (ImGui::MenuItem("Rename")) {  }
-				ImGui::EndPopup();
-			}
-
-			// Pop the selection highlight color if it was applied
-			if (isSelected) {
-				ImGui::PopStyleColor(2);
-			}
-
-			ImGui::PopID();
-		}
-
-
-		ImGui::TreePop();
-	}
-	*/
 	ImGui::PopStyleVar();
 
 	// Right-click in empty space to create new objects
@@ -2835,147 +2716,42 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	// Drag-and-drop target for prefab instantiation
-	if (ImGui::BeginDragDropTarget())
+	// Create invisible button to act as drop zone for remaining space
+	ImVec2 dropZoneSize = ImGui::GetContentRegionAvail();
+	if (dropZoneSize.y > 0)
 	{
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
-		{
-			const char* droppedPath = static_cast<const char*>(payload->Data);
-			std::string assetPath(droppedPath);
-			std::filesystem::path filepath(assetPath);
+		ImGui::InvisibleButton("##HierarchyDropZone", dropZoneSize);
 
-			// Check if dropped asset is a prefab
-			if (filepath.extension().string() == ".prefab")
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
 			{
-				engineService.ExecuteOnEngineThread([assetPath]() {
-					auto world = Engine::GetWorld();
-					PrefabData prefabData = PrefabSystem::LoadPrefabFromFile(assetPath.c_str());
-					if (prefabData.IsValid()) {
-						ecs::entity instantiated = PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
-						if (instantiated) {
-							spdlog::info("Prefab instantiated from drag-and-drop: {}", prefabData.name);
+				const char* droppedPath = static_cast<const char*>(payload->Data);
+				std::string assetPath(droppedPath);
+				std::filesystem::path filepath(assetPath);
+
+				// Check if dropped asset is a prefab
+				if (filepath.extension().string() == ".prefab")
+				{
+					engineService.ExecuteOnEngineThread([assetPath]() {
+						auto world = Engine::GetWorld();
+						PrefabData prefabData = PrefabSystem::LoadAndCachePrefab(assetPath.c_str());
+						if (prefabData.IsValid()) {
+							ecs::entity instantiated = PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
+							if (instantiated) {
+								spdlog::info("Prefab instantiated from drag-and-drop: {}", prefabData.name);
+							} else {
+								spdlog::error("Failed to instantiate prefab: {}", prefabData.name);
+							}
 						}
-					} else {
-						spdlog::error("Failed to load prefab: {}", assetPath);
-					}
-				});
+					});
+				}
 			}
+			ImGui::EndDragDropTarget();
 		}
-		ImGui::EndDragDropTarget();
 	}
 
 	ImGui::End();
-
-	/*
-	ImGui::Begin("Hierarchy");
-
-	if (ImGui::CollapsingHeader("Create Entities")) {
-		// Entity creation buttons
-		if (ImGui::Button("Create Empty")) {
-			CreateDefaultEntity();
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Plane")) {
-			CreatePlaneEntity();
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Cube")) {
-			CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Light")) {
-			CreateLightEntity();
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Camera")) {
-			CreateCameraEntity();
-		}
-
-		if (ImGui::Button("Create Physics Cube"))
-		{
-			CreatePhysicsCube();
-		}
-	}
-
-
-	ImGui::Separator();
-
-	// FIXED: Use snapshot data instead of Engine::GetWorld()
-	const auto& entityHandles = engineService.GetEntitiesSnapshot();
-	const auto& entityNames = engineService.GetEntityNamesSnapshot();
-
-	ImGui::Text("Entities in scene:");
-	for (size_t i = 0; i < entityHandles.size(); ++i) {
-		auto ehdl = entityHandles[i];
-		ImGui::PushID(static_cast<int>(i));
-
-		// Check if this entity is currently selected
-		uint32_t entityUID = ecs::entity(ehdl).get_uid();
-		bool isSelected = (m_SelectedEntityID == entityUID);
-
-		// DEBUG: Log entity IDs for all entities
-		static bool loggedOnce = false;
-		if (!loggedOnce && i == 0) {
-			spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
-			for (size_t j = 0; j < entityHandles.size(); ++j) {
-				uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
-				spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
-			}
-			loggedOnce = true;
-		}
-
-		// Display entity info with selection highlighting
-		std::string entityName = entityNames[i];
-
-		// Check what components this entity has (using snapshot)
-		bool hasTransform = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<TransformComponent>());
-		bool hasMesh = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>());
-		bool hasLight = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>());
-		bool hasVisibility = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<VisibilityComponent>());
-
-		UNREF_PARAM(hasTransform);
-
-		if (hasLight) entityName += " (Light)";
-		else if (hasMesh) entityName += " (Mesh)";
-		else entityName += " (Empty)";
-
-		// Highlight selected entity with different color
-		if (isSelected) {
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow text for selected
-		}
-
-		bool nodeOpen = ImGui::TreeNode(entityName.c_str());
-
-		// Check if TreeNode header was clicked (must be done immediately after TreeNode call)
-		if (ImGui::IsItemClicked()) {
-			spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
-			SelectEntity(entityUID);
-		}
-
-		if (nodeOpen) {
-			// Show component info
-			if (hasVisibility) {
-				ImGui::Text("Has Visibility Component");
-				// Note: Detailed component data requires inspector (uses snapshot)
-			}
-
-			// Delete button
-			if (ImGui::Button("Delete Entity")) {
-				engineService.delete_entity(ehdl);
-			}
-
-			ImGui::TreePop();
-		}
-
-		// Pop the selection highlight color if it was applied
-		if (isSelected) {
-			ImGui::PopStyleColor();
-		}
-
-		ImGui::PopID();
-	}
-
-	ImGui::End();
-	*/
 }
 
 
@@ -3388,9 +3164,14 @@ void EditorMain::Render_AssetBrowser()
 					std::string prefabPath = it->second;
 					engineService.ExecuteOnEngineThread([prefabPath]() {
 						auto world = Engine::GetWorld();
-						PrefabData prefabData = PrefabSystem::LoadPrefabFromFile(prefabPath.c_str());
+						PrefabData prefabData = PrefabSystem::LoadAndCachePrefab(prefabPath.c_str());
 						if (prefabData.IsValid()) {
-							PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
+							ecs::entity instance = PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
+							if (instance) {
+								spdlog::info("Successfully instantiated prefab: {}", prefabData.name);
+							} else {
+								spdlog::error("Failed to instantiate prefab: {}", prefabData.name);
+							}
 						}
 					});
 				}
@@ -3585,6 +3366,37 @@ void EditorMain::Render_Scene()
 		bool imageClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 		bool viewportHovered = ImGui::IsItemHovered();
 
+		// Drag-and-drop target for viewport (instantiate prefabs by dropping into 3D view)
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
+			{
+				const char* droppedPath = static_cast<const char*>(payload->Data);
+				std::string assetPath(droppedPath);
+				std::filesystem::path filepath(assetPath);
+
+				// Check if dropped asset is a prefab
+				if (filepath.extension().string() == ".prefab")
+				{
+					// TODO: Calculate 3D world position from mouse position using camera ray
+					// For now, instantiate at origin
+					engineService.ExecuteOnEngineThread([assetPath]() {
+						auto world = Engine::GetWorld();
+						PrefabData prefabData = PrefabSystem::LoadAndCachePrefab(assetPath.c_str());
+						if (prefabData.IsValid()) {
+							ecs::entity instantiated = PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
+							if (instantiated) {
+								spdlog::info("Prefab instantiated from viewport drag-and-drop: {}", prefabData.name);
+							} else {
+								spdlog::error("Failed to instantiate prefab from viewport: {}", prefabData.name);
+							}
+						}
+					});
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		// Now render the gizmo with proper viewport coordinates
 		Gizmos(viewportPos, viewportSize);
 
@@ -3653,57 +3465,6 @@ void EditorMain::Render_Scene()
 		// Show placeholder text when no framebuffer is available
 		ImGui::Text("Scene rendering not available - start engine render loop");
 	}
-
-	// NOTE: Gizmos() moved earlier to give it input priority over viewport picking
-	/*
-	// Debug info below the viewport (using snapshot)
-	const auto& entityHandles = engineService.GetEntitiesSnapshot();
-	auto entityCount = entityHandles.size();
-
-	// Count entities by component type
-	size_t meshCount = 0, lightCount = 0, cameraCount = 0;
-	for (auto ehdl : entityHandles) {
-		if (engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>())) meshCount++;
-		if (engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>())) lightCount++;
-		if (engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<CameraComponent>())) cameraCount++;
-	}
-
-	ImGui::Text("Total entities: %d", entityCount);
-	ImGui::Text("Mesh entities: %d", meshCount);
-	ImGui::Text("Light entities: %d", lightCount);
-	ImGui::Text("Camera entities: %d", cameraCount);
-
-	// Debug camera info
-	if (m_EditorCamera) {
-		glm::vec3 pos = m_EditorCamera->GetPosition();
-		glm::vec3 rot = m_EditorCamera->GetRotation();
-		ImGui::Text("Editor Cam Pos: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
-		ImGui::Text("Editor Cam Rot: %.2f, %.2f, %.2f", rot.x, rot.y, rot.z);
-
-		// Debug input state
-		auto* input = InputManager::Get_Instance();
-		bool rightMousePressed = input->Is_MousePressed(GLFW_MOUSE_BUTTON_RIGHT);
-		bool middleMousePressed = input->Is_MousePressed(GLFW_MOUSE_BUTTON_MIDDLE);
-		bool wPressed = input->Is_KeyPressed(GLFW_KEY_W);
-
-		// Debug scroll state
-		double scrollX, scrollY;
-		input->Get_ScrollOffset(scrollX, scrollY);
-
-		ImGuiIO& io = ImGui::GetIO();
-		ImGui::Text("Right Mouse: %s, Middle Mouse: %s", rightMousePressed ? "Yes" : "No", middleMousePressed ? "Yes" : "No");
-		ImGui::Text("W Key: %s", wPressed ? "Yes" : "No");
-		ImGui::Text("Scroll Y: %.2f", scrollY);
-		ImGui::Text("ImGui wants mouse: %s, keyboard: %s", io.WantCaptureMouse ? "Yes" : "No", io.WantCaptureKeyboard ? "Yes" : "No");
-	}
-
-	// Show framebuffer status
-	ImGui::Text("Editor FBO: %s", frameData.editorResolvedBuffer ? "Valid" : "None");
-	if (frameData.editorResolvedBuffer) {
-		ImGui::Text("FBO Handle: %u", frameData.editorResolvedBuffer->GetFBOHandle());
-		ImGui::Text("Viewport Size: %.0fx%.0f", m_ViewportWidth, m_ViewportHeight);
-	}*/
-	 
 	ImGui::End();
 }
 

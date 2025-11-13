@@ -223,6 +223,18 @@ public:
     static PrefabData LoadPrefabFromFile(const std::string& prefabPath);
 
     /**
+     * @brief Load a prefab from disk and cache it for instantiation
+     *
+     * This is the preferred method for loading prefabs in the editor workflow.
+     * It loads the prefab data and adds it to the internal cache, allowing
+     * InstantiatePrefab() to find it.
+     *
+     * @param prefabPath Path to the .prefab file
+     * @return PrefabData structure (check IsValid())
+     */
+    static PrefabData LoadAndCachePrefab(const std::string& prefabPath);
+
+    /**
      * @brief Save a prefab to disk
      *
      * @param data The prefab data to save

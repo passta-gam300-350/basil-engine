@@ -38,6 +38,7 @@ Technology is prohibited.
 #include "Physics/Physics_Components.h"
 #include "Prefab/PrefabData.hpp"
 #include "Component/PrefabComponent.hpp"
+#include "Messaging/Messaging_System.h"
 
 struct AudioComponent; // Forward declaration
 
@@ -98,8 +99,6 @@ public:
 
 	// For setting up the style
 	void SetupUnityStyle();
-
-	void CreateObjectHelper();
 
 	void Render_AboutUI();
 

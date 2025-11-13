@@ -602,6 +602,10 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 
 	factory.template func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
 	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
+	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {
+		if (r.all_of<T>(e)) { r.remove<T>(e); }
+		r.emplace<T>(e, meta_any.cast<T>());
+	} > ("emplace_or_replace_meta_any"_tn);
 	ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
 	ReflectionRegistry::InternalID()[entt::type_index<T>::value()] = entt::type_hash<T>::value();
 	ReflectionRegistry::BinSerializerRegistryInstance().push_back({

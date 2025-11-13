@@ -2,6 +2,8 @@
 #include "Ecs/ecs.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "Engine.hpp"
+#include "Manager/ResourceSystem.hpp"
 
 std::optional<SerializedComponent> ComponentRegistry::SerializeComponent(
     ecs::entity entity,
@@ -136,45 +138,54 @@ bool ComponentRegistry::SetProperty(
         if (!parentValue)
             return false;
 
-        // Modify nested field
-        bool modified = std::visit([&childField, &value](auto&& parentVal) -> bool {
+        // Modify nested field - extract value, modify copy, and return
+        auto modifiedValue = std::visit([&childField, &value](const auto& parentVal) -> std::optional<SerializedPropertyValue> {
             using T = std::decay_t<decltype(parentVal)>;
 
             if constexpr (std::is_same_v<T, glm::vec3>)
             {
                 if (auto* floatVal = std::get_if<float>(&value))
                 {
-                    if (childField == "x") { parentVal.x = *floatVal; return true; }
-                    if (childField == "y") { parentVal.y = *floatVal; return true; }
-                    if (childField == "z") { parentVal.z = *floatVal; return true; }
+                    glm::vec3 modified = parentVal;
+                    if (childField == "x") modified.x = *floatVal;
+                    else if (childField == "y") modified.y = *floatVal;
+                    else if (childField == "z") modified.z = *floatVal;
+                    else return std::nullopt;
+                    return SerializedPropertyValue{modified};
                 }
             }
             else if constexpr (std::is_same_v<T, glm::vec4>)
             {
                 if (auto* floatVal = std::get_if<float>(&value))
                 {
-                    if (childField == "x") { parentVal.x = *floatVal; return true; }
-                    if (childField == "y") { parentVal.y = *floatVal; return true; }
-                    if (childField == "z") { parentVal.z = *floatVal; return true; }
-                    if (childField == "w") { parentVal.w = *floatVal; return true; }
+                    glm::vec4 modified = parentVal;
+                    if (childField == "x") modified.x = *floatVal;
+                    else if (childField == "y") modified.y = *floatVal;
+                    else if (childField == "z") modified.z = *floatVal;
+                    else if (childField == "w") modified.w = *floatVal;
+                    else return std::nullopt;
+                    return SerializedPropertyValue{modified};
                 }
             }
             else if constexpr (std::is_same_v<T, glm::vec2>)
             {
                 if (auto* floatVal = std::get_if<float>(&value))
                 {
-                    if (childField == "x") { parentVal.x = *floatVal; return true; }
-                    if (childField == "y") { parentVal.y = *floatVal; return true; }
+                    glm::vec2 modified = parentVal;
+                    if (childField == "x") modified.x = *floatVal;
+                    else if (childField == "y") modified.y = *floatVal;
+                    else return std::nullopt;
+                    return SerializedPropertyValue{modified};
                 }
             }
 
-            return false;
+            return std::nullopt;
         }, *parentValue);
 
-        if (modified)
+        if (modifiedValue)
         {
             // Update parent property with modified value
-            component.SetProperty(parentPath, *parentValue);
+            component.SetProperty(parentPath, *modifiedValue);
             return true;
         }
         return false;
@@ -206,7 +217,7 @@ bool ComponentRegistry::RemoveComponent(ecs::entity entity, TypeID typeHash)
     auto metaType = typeIt->second;
 
     // Get the ECS registry
-    auto& world = Engine::GetWorld();
+    auto world = Engine::GetWorld();
     auto& registry = world.impl.get_registry();
     entt::entity enttEntity = ecs::world::detail::entt_entity_cast(entity);
 

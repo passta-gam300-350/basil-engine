@@ -11,6 +11,8 @@
 #include <iomanip>
 #include <glm/ext.hpp>
 #include <entt/entt.hpp>
+#include <spdlog/spdlog.h>
+#include "Manager/ResourceSystem.hpp"
 
 // Static member initialization
 std::unordered_map<std::string, PrefabData> PrefabSystem::s_PrefabCache;
@@ -133,6 +135,77 @@ YAML::Node SerializeComponent(const SerializedComponent& comp)
     return node;
 }
 
+// Infer property type from YAML node structure
+std::string InferPropertyType(const YAML::Node& node)
+{
+    if (!node.IsDefined() || node.IsNull())
+        return "int"; // Default for null/undefined
+
+    if (node.IsScalar())
+    {
+        // Get the raw string value to inspect
+        std::string valueStr;
+        try {
+            valueStr = node.Scalar(); // Get raw scalar string without conversion
+        } catch (...) {
+            return "string";
+        }
+
+        if (valueStr.empty())
+            return "string";
+
+        // Check for boolean literals
+        if (valueStr == "true" || valueStr == "false")
+            return "bool";
+
+        // Check if it's a number
+        bool hasDigit = false;
+        bool hasDot = false;
+        bool hasE = false;
+        bool isNegative = (valueStr[0] == '-');
+        size_t startIdx = isNegative ? 1 : 0;
+
+        if (startIdx >= valueStr.length())
+            return "string"; // Just a minus sign
+
+        for (size_t i = startIdx; i < valueStr.length(); ++i)
+        {
+            char c = valueStr[i];
+            if (std::isdigit(c))
+                hasDigit = true;
+            else if (c == '.')
+                hasDot = true;
+            else if (c == 'e' || c == 'E')
+                hasE = true;
+            else
+                return "string"; // Non-numeric character found
+        }
+
+        if (!hasDigit)
+            return "string"; // No digits found
+
+        if (hasDot || hasE)
+            return "float";
+        else
+            return "int";
+    }
+    else if (node.IsSequence())
+    {
+        // Determine vector type by size
+        size_t size = node.size();
+        if (size == 2)
+            return "vec2";
+        else if (size == 3)
+            return "vec3";
+        else if (size == 4)
+            return "vec4"; // Could be vec4 or quat, default to vec4
+
+        return "float"; // Fallback
+    }
+
+    return "float"; // Default fallback
+}
+
 // Deserialize component
 SerializedComponent DeserializeComponent(const YAML::Node& node)
 {
@@ -145,7 +218,10 @@ SerializedComponent DeserializeComponent(const YAML::Node& node)
         for (const auto& prop : node["properties"])
         {
             std::string propName = prop.first.as<std::string>();
-            std::string typeName = prop.second["_type"].IsDefined() ? prop.second["_type"].as<std::string>() : "float";
+
+            // Infer type from YAML structure instead of expecting "_type" field
+            std::string typeName = InferPropertyType(prop.second);
+
             comp.properties[propName] = DeserializePropertyValue(prop.second, typeName);
         }
     }
@@ -319,18 +395,65 @@ bool DeserializeComponentViaReflection(entt::registry& registry, entt::entity en
         return false;  // No type name stored
 
     // Find meta_type by name
+    // The serialized typeHash is hash(typeName), stored in m_Names
+    // Try multiple strategies to find the correct meta_type
     entt::meta_type metaType;
-    for (const auto& [typeHash, mt] : ReflectionRegistry::types())
+    auto& reg = ReflectionRegistry::Registry();
+
+    // Strategy 1: Try direct lookup in m_Storage using serialized.typeHash
+    // (in case custom hash is also used as storage key)
+    auto storageIt = reg.m_Storage.find(serialized.typeHash);
+    if (storageIt != reg.m_Storage.end())
     {
-        if (ReflectionRegistry::GetTypeName(typeHash) == serialized.typeName)
+        metaType = storageIt->second;
+    }
+
+    // Strategy 2: If not found, iterate all meta types using entt's global registry
+    if (!metaType)
+    {
+        // EnTT's resolve() returns pairs of (id, meta_type)
+        auto range = entt::resolve();
+        for (auto&& [id, mt] : range)
         {
-            metaType = mt;
-            break;
+            if (mt)
+            {
+				const char* mtName = mt.info().name().data();
+                if (mtName && serialized.typeName == mtName)
+                {
+                    metaType = mt;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Strategy 3: Search m_Storage by checking if the component can be found in registry
+    if (!metaType)
+    {
+        for (const auto& [hash, mt] : reg.m_Storage)
+        {
+            if (!mt)
+                continue;
+
+            // Try to match by checking if this hash works with registry.storage()
+            // and checking the serialized.typeName
+            // This is a last resort - just try the first match we find
+            auto namesIt = reg.m_Names.find(serialized.typeHash);
+            if (namesIt != reg.m_Names.end() && namesIt->second == serialized.typeName)
+            {
+                // TypeHash is valid in m_Names, try this meta_type
+                metaType = mt;
+                break;
+            }
         }
     }
 
     if (!metaType)
-        return false;  // Type not found in reflection registry
+    {
+        spdlog::warn("Component '{}' (typeHash: {}) not found in reflection registry",
+                     serialized.typeName, serialized.typeHash);
+        return false;
+    }
 
     // Construct component instance
     entt::meta_any componentAny = metaType.construct();
@@ -362,8 +485,8 @@ bool DeserializeComponentViaReflection(entt::registry& registry, entt::entity en
         fieldData.set(componentAny, propValue);
     }
 
-    // Add component to entity using reflection's emplace function
-    auto emplaceFunc = metaType.func("emplace_meta_any"_tn);
+    // Add or replace component to entity using reflection (handles both new and existing components)
+    auto emplaceFunc = metaType.func("emplace_or_replace_meta_any"_tn);
     if (emplaceFunc)
     {
         emplaceFunc.invoke({}, entt::forward_as_meta(registry), enttEntity, entt::forward_as_meta(componentAny));
@@ -407,10 +530,28 @@ PrefabData PrefabSystem::LoadPrefabFromFile(const std::string& prefabPath)
             data.root = DeserializeEntityHierarchyHelper(root["root"]);
         }
     }
-    catch (const std::exception& /*e*/)
+    catch (const std::exception& e)
     {
-        // Log error
+        spdlog::error("Failed to load prefab from file '{}': {}", prefabPath, e.what());
         data.name = ""; // Mark as invalid
+    }
+
+    return data;
+}
+
+PrefabData PrefabSystem::LoadAndCachePrefab(const std::string& prefabPath)
+{
+    PrefabData data = LoadPrefabFromFile(prefabPath);
+
+    if (data.IsValid())
+    {
+        std::string guidStr = data.guid.m_guid.to_hex();
+        s_PrefabCache[guidStr] = data;
+        spdlog::info("Loaded and cached prefab: '{}' (GUID: {})", data.name, guidStr);
+    }
+    else
+    {
+        spdlog::error("Failed to load and cache prefab from: {}", prefabPath);
     }
 
     return data;
