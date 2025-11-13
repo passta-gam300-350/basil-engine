@@ -1,4 +1,37 @@
 entities:
+  - Scene ID:
+      Scene ID: 24
+    entity name:
+      name: Sun
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -1
+        z: 0
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 5
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -136,10 +169,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -175,10 +208,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -214,10 +247,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -253,10 +286,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -292,10 +325,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -331,10 +364,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -370,10 +403,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7
@@ -399,7 +432,7 @@ entities:
       m_Trans:
         x: 6.89687204
         y: 0.00240222365
-        z: -2.72157359
+        z: -2.85915852
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -409,10 +442,10 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         tableTop_glass:
-          guid: 6ad07bc7cfb9fc6084b68bf8798
+          guid: 5a697a72d5b36f9481d7ecc65c
           type: 175488002581160416
         TableDetails1:
-          guid: 6aefb5370c081ff79337e11c48e
+          guid: 4ca2227f84add73c6119a6744e
           type: 175488002581160416
         TableTop1:
           guid: 6ab6d0c716da672d67e53ffb1d7

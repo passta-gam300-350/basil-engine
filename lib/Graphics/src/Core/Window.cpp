@@ -142,7 +142,6 @@ Window::Window(GLFWwindow* ptr)
 Window::~Window()
 {
 	glfwDestroyWindow(m_Window);
-	glfwTerminate();
 }
 
 void Window::PollEvents()

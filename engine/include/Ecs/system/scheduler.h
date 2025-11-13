@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   scheduler.h
+\author Team PASSTA
+        Chew Bangxin Steven (banxginsteven.chew@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/09
+\brief    Declares the scheduler class
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef LIB_ECS_SCHEDULER
 #define LIB_ECS_SCHEDULER
 

@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   query.h
+\author Team PASSTA
+		Chew Bangxin Steven (banxginsteven.chew@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/09
+\brief    Declares the query ecs functions
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "world.h"
 #ifndef LIB_ECS_QUERY_H
 #define LIB_ECS_QUERY_H

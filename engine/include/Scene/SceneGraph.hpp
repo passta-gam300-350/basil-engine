@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   scenegraph.h
+\author Team PASSTA
+		Bryan Ang Wei Ze (bryanweize.ang@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/09
+\brief    Declares the scenegraph class
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef SCENE_GRAPH_HPP
 #define SCENE_GRAPH_HPP
 

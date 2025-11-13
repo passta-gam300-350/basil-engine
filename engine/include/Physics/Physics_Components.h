@@ -272,7 +272,8 @@ RegisterReflectionTypeBegin(RigidBodyComponent, "RigidBodyComponent")
     MemberRegistrationV<&RigidBodyComponent::linearVelocity, "linearVelocity">,
     MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
     MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
-    MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
+    MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">,
+    MemberRegistrationV<&RigidBodyComponent::isDirty, "isDirty">
 RegisterReflectionTypeEnd
 
 RegisterReflectionTypeBegin(CapsuleCollider, "CapsuleCollider")

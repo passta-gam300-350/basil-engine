@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   Audio.cpp
+\author Team PASSTA
+        Halis Ilyasa Bin Amat Sarijan (halisilyasa.b@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief    Defines AudioSystem and audio component to play sound in engine.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #include "System/Audio.hpp"
 #include "Component/Transform.hpp"
 #include <rsc-core/serialization/serializer.hpp>
@@ -5,6 +21,7 @@
 #include "Render/Camera.h"
 #include <filesystem>
 #include <algorithm>
+
 
 AudioSystem& AudioSystem::GetInstance() {
     static AudioSystem instance;
@@ -155,6 +172,7 @@ int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, boo
 
     FMOD::Sound* sound = nullptr;
 
+    // Sets audio characteristics
     FMOD_MODE mode = FMOD_DEFAULT;
 	mode |= is3D ? FMOD_3D : FMOD_2D;
 	mode |= isStream ? FMOD_CREATESTREAM : FMOD_CREATESAMPLE;
@@ -170,6 +188,7 @@ int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, boo
     if (is3D && m_result != FMOD_OK)
         spdlog::warn("Audio: Failed to set 3D distance for sound {}", FMOD_ErrorString(m_result));
 
+    // Increment handle for next audio loading
     const int handle = m_nextSoundHandle++;
     m_loadedSounds[handle] = sound;
     m_pathToHandle[dir] = handle;

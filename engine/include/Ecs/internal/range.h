@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   range.h
+\author Team PASSTA
+		Chew Bangxin Steven (banxginsteven.chew@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/09
+\brief    Declares the range class
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef LIB_ECS_RANGES
 #define LIB_ECS_RANGES
 

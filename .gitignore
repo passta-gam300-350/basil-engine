@@ -5,7 +5,10 @@
 *.slo
 *.lo
 *.o
+<<<<<<< .merge_file_HzEHe4
 *.obj
+=======
+>>>>>>> .merge_file_Ibcsdy
 
 # Precompiled Headers
 *.gch
@@ -73,8 +76,11 @@ out/
 build/
 _deps/
 
+<<<<<<< .merge_file_HzEHe4
 obj/
 
+=======
+>>>>>>> .merge_file_Ibcsdy
 # Mono Folder
 dep/vendor/mono/
 # Negation

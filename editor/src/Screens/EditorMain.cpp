@@ -818,6 +818,13 @@ void EditorMain::Render_Components()
 		rb_component = rbIt->second;
 	}
 
+	ReflectionRegistry::TypeID material_overrides_component{};
+	auto matOverridesIt = internal_type_map.find(entt::type_index<MaterialOverridesComponent>::value());
+	if (matOverridesIt != internal_type_map.end())
+	{
+		material_overrides_component = matOverridesIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component) {
 			continue;
@@ -835,6 +842,7 @@ void EditorMain::Render_Components()
 			continue;
 		}
 
+
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
 		const char* componentLabel = "Component";
@@ -846,6 +854,38 @@ void EditorMain::Render_Components()
 		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
 			Render_Component_Member(comp, is_dirty);
+
+			if (rb_component && type_id == rb_component)
+			{
+				if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
+				{
+					if (is_dirty)
+					{
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([&]() {
+							auto world = Engine::GetWorld();
+							for (auto& entity : world.get_all_entities()) {
+								if (entity.get_uid() == m_SelectedEntityID) {
+									world.get_component_from_entity<RigidBodyComponent>(entity).isDirty = true;
+									break;
+								}
+							}
+							spdlog::warn("Rb is dirty");
+							});
+						ul.lock();
+						
+
+					}
+
+					//if (ImGui::TreeNode("RigidBodyComponent"))
+					//{
+					//	Render_RigidBody_Component(*rb_component);
+					//	ImGui::TreePop();
+					//}
+				}
+				//continue;
+			}
+
 
 			// Special UI section for AudioComponent playback controls
 			if (audio_component && type_id == audio_component) {
@@ -899,6 +939,46 @@ void EditorMain::Render_Components()
 				}
 			}
 
+			// Special UI section for MaterialOverridesComponent
+			if (material_overrides_component && type_id == material_overrides_component) {
+				if (MaterialOverridesComponent* matOverrides = reinterpret_cast<MaterialOverridesComponent*>(uptr.get())) {
+					ImGui::Separator();
+					ImGui::TextDisabled("(?)");
+					if (ImGui::IsItemHovered()) {
+						ImGui::SetTooltip("Material Overrides allow per-entity customization of material properties.\n"
+							"Empty maps use base material values.\n"
+							"Add properties like 'u_MetallicValue' (float), 'u_AlbedoColor' (vec3), etc.");
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Populate from Material")) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<MeshRendererComponent, MaterialOverridesComponent>()) {
+								MeshRendererComponent& meshRenderer = entity.get<MeshRendererComponent>();
+								MaterialOverridesComponent& overrides = entity.get<MaterialOverridesComponent>();
+
+								// Clear existing overrides
+								overrides.ClearAll();
+
+								// For now, populate with standard PBR properties
+								// These are the common properties that most materials have
+								overrides.floatOverrides["u_MetallicValue"] = 0.7f;  // Default metallic
+								overrides.floatOverrides["u_RoughnessValue"] = 0.3f;  // Default roughness
+								overrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.7f, 0.6f);  // Default albedo
+
+								spdlog::info("Populated MaterialOverridesComponent with standard PBR properties");
+							} else {
+								spdlog::warn("Entity must have both MeshRendererComponent and MaterialOverridesComponent to populate overrides");
+							}
+						});
+						ul.lock();
+					}
+					ImGui::SameLine();
+					ImGui::TextDisabled("Adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_AlbedoColor)");
+				}
+			}
+
 
 			if (ImGui::Button("Delete Component")) {
 				ul.unlock();
@@ -912,6 +992,11 @@ void EditorMain::Render_Components()
 		}
 	}
 }
+
+template <typename T>
+void assign_enum_helper(void* dest, const void* src) {
+	*reinterpret_cast<T*>(dest) = *reinterpret_cast<const T*>(src);
+};
 
 void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 {
@@ -936,23 +1021,30 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
+				void(*assignment_by_type)(void*, const void*) {nullptr};
 
 				// Properly read enum value based on its underlying type size
 				int enum_value = 0;
 				if (meta_type.size_of() == sizeof(uint8_t)) {
 					enum_value = *static_cast<const uint8_t*>(val_ptr);
+					assignment_by_type = assign_enum_helper<uint8_t>;
 				}
 				else if (meta_type.size_of() == sizeof(uint16_t)) {
 					enum_value = *static_cast<const uint16_t*>(val_ptr);
+					assignment_by_type = assign_enum_helper<uint16_t>;
 				}
 				else if (meta_type.size_of() == sizeof(uint32_t)) {
 					enum_value = *static_cast<const uint32_t*>(val_ptr);
+					assignment_by_type = assign_enum_helper<uint32_t>;
 				}
 				else {
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 
-				ImGui::InputInt(field_name.c_str(), &enum_value);
+				if (ImGui::InputInt(field_name.c_str(), &enum_value) && assignment_by_type) {
+					is_dirty = true;
+					assignment_by_type(const_cast<void*>(val_ptr), &enum_value);
+				}
 			}
 
 			if (rp::BasicIndexedGuid* v = value.try_cast<rp::BasicIndexedGuid>()) {
@@ -1026,14 +1118,57 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					}
 					else {
 						int idx = 0;
+						std::vector<std::string> keysToDelete;
 						for (auto& [key, val] : *map_float) {
 							ImGui::PushID(idx++);
 							if (ImGui::InputFloat(key.c_str(), &val)) {
 								is_dirty = true;
 							}
+							ImGui::SameLine();
+							if (ImGui::SmallButton("X")) {
+								keysToDelete.push_back(key);
+								is_dirty = true;
+							}
 							ImGui::PopID();
 						}
+						// Delete marked entries
+						for (const auto& key : keysToDelete) {
+							map_float->erase(key);
+						}
 					}
+
+					// Add button to add new float override
+					if (ImGui::Button("+ Add Float Override")) {
+						ImGui::OpenPopup("AddFloatOverride");
+					}
+					if (ImGui::IsItemHovered()) {
+						ImGui::SetTooltip("Common float properties:\n- u_MetallicValue\n- u_RoughnessValue");
+					}
+
+					static char propertyName[128] = "";
+					static float propertyValue = 0.0f;
+					if (ImGui::BeginPopup("AddFloatOverride")) {
+						ImGui::Text("Add Float Property Override");
+						ImGui::Separator();
+						ImGui::InputText("Property Name", propertyName, 128);
+						ImGui::InputFloat("Value", &propertyValue);
+
+						if (ImGui::Button("Add") && strlen(propertyName) > 0) {
+							(*map_float)[std::string(propertyName)] = propertyValue;
+							is_dirty = true;
+							propertyName[0] = '\0';  // Clear input
+							propertyValue = 0.0f;
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel")) {
+							propertyName[0] = '\0';
+							propertyValue = 0.0f;
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::EndPopup();
+					}
+
 					ImGui::TreePop();
 				}
 			}
@@ -1045,15 +1180,58 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					}
 					else {
 						int idx = 0;
+						std::vector<std::string> keysToDelete;
 						for (auto& [key, val] : *map_vec3) {
 							ImGui::PushID(idx++);
 							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
 							if (ImGui::ColorEdit3(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
 								is_dirty = true;
 							}
+							ImGui::SameLine();
+							if (ImGui::SmallButton("X")) {
+								keysToDelete.push_back(key);
+								is_dirty = true;
+							}
 							ImGui::PopID();
 						}
+						// Delete marked entries
+						for (const auto& key : keysToDelete) {
+							map_vec3->erase(key);
+						}
 					}
+
+					// Add button to add new vec3 override
+					if (ImGui::Button("+ Add Vec3 Override")) {
+						ImGui::OpenPopup("AddVec3Override");
+					}
+					if (ImGui::IsItemHovered()) {
+						ImGui::SetTooltip("Common vec3 properties:\n- u_AlbedoColor\n- u_EmissiveColor");
+					}
+
+					static char propertyNameVec3[128] = "";
+					static glm::vec3 propertyValueVec3(0.0f);
+					if (ImGui::BeginPopup("AddVec3Override")) {
+						ImGui::Text("Add Vec3 Property Override");
+						ImGui::Separator();
+						ImGui::InputText("Property Name", propertyNameVec3, 128);
+						ImGui::ColorEdit3("Value", &propertyValueVec3.x, ImGuiColorEditFlags_Uint8);
+
+						if (ImGui::Button("Add") && strlen(propertyNameVec3) > 0) {
+							(*map_vec3)[std::string(propertyNameVec3)] = propertyValueVec3;
+							is_dirty = true;
+							propertyNameVec3[0] = '\0';  // Clear input
+							propertyValueVec3 = glm::vec3(0.0f);
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel")) {
+							propertyNameVec3[0] = '\0';
+							propertyValueVec3 = glm::vec3(0.0f);
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::EndPopup();
+					}
+
 					ImGui::TreePop();
 				}
 			}
@@ -1065,15 +1243,58 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					}
 					else {
 						int idx = 0;
+						std::vector<std::string> keysToDelete;
 						for (auto& [key, val] : *map_vec4) {
 							ImGui::PushID(idx++);
 							// Use Uint8 flag to display as 0-255 instead of 0.0-1.0
 							if (ImGui::ColorEdit4(key.c_str(), &val.x, ImGuiColorEditFlags_Uint8)) {
 								is_dirty = true;
 							}
+							ImGui::SameLine();
+							if (ImGui::SmallButton("X")) {
+								keysToDelete.push_back(key);
+								is_dirty = true;
+							}
 							ImGui::PopID();
 						}
+						// Delete marked entries
+						for (const auto& key : keysToDelete) {
+							map_vec4->erase(key);
+						}
 					}
+
+					// Add button to add new vec4 override
+					if (ImGui::Button("+ Add Vec4 Override")) {
+						ImGui::OpenPopup("AddVec4Override");
+					}
+					if (ImGui::IsItemHovered()) {
+						ImGui::SetTooltip("Vec4 properties typically include alpha channel\n- u_TintColor (RGBA)");
+					}
+
+					static char propertyNameVec4[128] = "";
+					static glm::vec4 propertyValueVec4(0.0f);
+					if (ImGui::BeginPopup("AddVec4Override")) {
+						ImGui::Text("Add Vec4 Property Override");
+						ImGui::Separator();
+						ImGui::InputText("Property Name", propertyNameVec4, 128);
+						ImGui::ColorEdit4("Value", &propertyValueVec4.x, ImGuiColorEditFlags_Uint8);
+
+						if (ImGui::Button("Add") && strlen(propertyNameVec4) > 0) {
+							(*map_vec4)[std::string(propertyNameVec4)] = propertyValueVec4;
+							is_dirty = true;
+							propertyNameVec4[0] = '\0';  // Clear input
+							propertyValueVec4 = glm::vec4(0.0f);
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel")) {
+							propertyNameVec4[0] = '\0';
+							propertyValueVec4 = glm::vec4(0.0f);
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::EndPopup();
+					}
+
 					ImGui::TreePop();
 				}
 			}
@@ -1084,10 +1305,27 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 						ImGui::TextDisabled("(empty)");
 					}
 					else {
+						int idx = 0;
+						std::vector<std::string> keysToDelete;
 						for (auto& [key, val] : *map_mat4) {
+							ImGui::PushID(idx++);
 							ImGui::Text("%s: [mat4 - not editable]", key.c_str());
+							ImGui::SameLine();
+							if (ImGui::SmallButton("X")) {
+								keysToDelete.push_back(key);
+								is_dirty = true;
+							}
+							ImGui::PopID();
+						}
+						// Delete marked entries
+						for (const auto& key : keysToDelete) {
+							map_mat4->erase(key);
 						}
 					}
+
+					// Note: Mat4 addition not implemented due to complexity
+					ImGui::TextDisabled("Note: Use code to add mat4 overrides");
+
 					ImGui::TreePop();
 				}
 			}
@@ -1327,6 +1565,61 @@ void EditorMain::Add_Script_Menu()
 		}
 
 		ImGui::EndPopup();
+	}
+}
+
+void EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
+	bool changed = false;
+
+	// Mass
+	if (ImGui::DragFloat("Mass", &rb.mass, 0.1f, 0.001f, 10000.0f)) {
+		changed = true;
+	}
+
+	// Friction
+	if (ImGui::DragFloat("Friction", &rb.friction, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+
+	// Gravity
+	if (ImGui::Checkbox("Use Gravity", &rb.useGravity)) {
+		changed = true;
+	}
+
+	if (ImGui::DragFloat("Gravity Factor", &rb.gravityFactor, 0.1f)) {
+		changed = true;
+	}
+
+	// Linear Damping
+	if (ImGui::DragFloat("Linear Damping", &rb.linearDamping, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+
+	// Angular Damping
+	if (ImGui::DragFloat("Angular Damping", &rb.angularDrag, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+
+	// Motion Type
+	const char* motionTypes[] = { "Static", "Dynamic", "Kinematic" };
+	int currentMotionType = static_cast<int>(rb.motionType);
+	if (ImGui::Combo("Motion Type", &currentMotionType, motionTypes, 3)) {
+		rb.motionType = static_cast<RigidBodyComponent::MotionType>(currentMotionType);
+		changed = true;
+	}
+
+	// Constraints
+	if (ImGui::Checkbox("Freeze Position X", &rb.freezePositionX)) changed = true;
+	if (ImGui::Checkbox("Freeze Position Y", &rb.freezePositionY)) changed = true;
+	if (ImGui::Checkbox("Freeze Position Z", &rb.freezePositionZ)) changed = true;
+	if (ImGui::Checkbox("Freeze Rotation X", &rb.freezeRotationX)) changed = true;
+	if (ImGui::Checkbox("Freeze Rotation Y", &rb.freezeRotationY)) changed = true;
+	if (ImGui::Checkbox("Freeze Rotation Z", &rb.freezeRotationZ)) changed = true;
+
+	// Mark dirty if any change occurred
+	if (changed) {
+		rb.isDirty = true;
+		spdlog::debug("EditorMain: Marked RigidBody as dirty for entity {}", m_SelectedEntityID);
 	}
 }
 
