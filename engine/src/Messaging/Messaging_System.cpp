@@ -19,18 +19,29 @@ void MessagingSystem::Init()
 
 void MessagingSystem::Update()
 {
-	// This loop employs FIFO
-	while (messageQueue.size())
+	// Swap messageQueue with local copy to prevent re-entrant modification during callbacks
+	std::deque<std::unique_ptr<Message>> localQueue;
+	localQueue.swap(messageQueue);
+
+	// Process messages from local copy (FIFO)
+	// New messages published during callbacks will go to the now-empty messageQueue
+	while (!localQueue.empty())
 	{
-		std::vector<Subscriber*> subscribers = this->subList.Call_Subscribers(messageQueue[0]->Get_Message_ID());
-		for (size_t i{}; i < subscribers.size(); ++i)
+		auto& currentMessage = localQueue.front();
+
+		// Get subscribers for this message
+		std::vector<Subscriber*> subscribers = this->subList.Call_Subscribers(currentMessage->Get_Message_ID());
+
+		// Invoke callbacks
+		for (size_t i = 0; i < subscribers.size(); ++i)
 		{
 			if (subscribers[i]->callbackNormal != nullptr)
 			{
-				subscribers[i]->callbackNormal(std::move(messageQueue[0]->clone()));
+				subscribers[i]->callbackNormal(std::move(currentMessage->clone()));
 			}
 		}
-		messageQueue.pop_front();
+
+		localQueue.pop_front();
 	}
 }
 
