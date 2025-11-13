@@ -1386,9 +1386,11 @@ void EditorMain::Render_StartStop()
 		{
 			LoadScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([]() {
+
 				PhysicsSystem::Instance().isActive = false;
 				PhysicsSystem::Instance().EnableObservers();
 				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
+				
 				BehaviourSystem::Instance().isActive = false;
 				spdlog::info("Physics Disable");
 				});
@@ -3409,6 +3411,13 @@ void EditorMain::LoadScene(const char* path)
 	ClearEntitySelection();
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
 	engineService.LoadScene(path);
+	auto reload = []
+	{
+		
+		BehaviourSystem::Instance().Reload();
+
+	};
+	engineService.ExecuteOnEngineThread(reload);
 	// Clear selection after loading new scene
 }
 

@@ -21,6 +21,7 @@ mono_crash.*
 
 # Build results
 [Dd]ebug/
+
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
@@ -492,9 +493,20 @@ obj/
 
 # Temporary files created by Visual Studio
 #unignore bin folder
-
+bin/Release/**/*.timestamp
+bin/Debug/**/*.timestamp
 !bin/
 !bin/Release/
 !bin/Release/**/
-!bin/Release/**/*
+!bin/Release/**/*.pdb
+!bin/Release/**/*.dll
 
+!bin/
+!bin/Debug/
+!bin/Debug/**/
+!bin/Debug/**/*.pdb
+!bin/Debug/**/*.dll
+
+
+!/Debug/
+!/Debug/**

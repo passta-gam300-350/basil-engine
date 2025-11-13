@@ -73,6 +73,8 @@ out/
 build/
 _deps/
 
+obj/
+
 # Mono Folder
 dep/vendor/mono/
 # Negation
@@ -82,5 +84,12 @@ dep/vendor/mono/
 !tools/bin/*
 !tools/bin/**/*
 
-!engine/managed/BasilEngine/*
 !engine/managed/BasilEngine/
+!engine/managed/BasilEngine/*
+!engine/managed/BasilEngine/Debug/
+!engine/managed/BasilEngine/Debug/*
+
+!assets/
+!assets/**
+!assets/**/*
+
