@@ -92,4 +92,11 @@ dep/vendor/mono/
 !assets/
 !assets/**
 !assets/**/*
+!assets/**/*.obj
 
+!/projects/
+!/projects/**/
+!/projects/**/*
+!/projects/**/*.obj
+/projects/.vs/
+/projects/**/.vs/
