@@ -1,0 +1,27 @@
+base:
+  m_guid: 12ff68f7a02b3b0d21cae704dc8
+  m_importer: .material
+  m_source: ""
+  m_name: Trash1
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: Trash1
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    roughness: fe799c71a98b1e9306f92a2e37
+    diffuse: fe797a71da981f89ec8ac2114a
+    emissive: fe79807540b1cfcbaafc9b4188
+    normal: fe799575028f3c765536d1f890
+    height: fe79867ebb95612d9cf36a0805
+    metallic: fe798d74db991c94faf89692ea

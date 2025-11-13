@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0d3d73d384c71b93fa5831ae
+  m_importer: .texture
+  m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_Metallic.png
+  m_name: kitchenShelf_standardSurface2_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

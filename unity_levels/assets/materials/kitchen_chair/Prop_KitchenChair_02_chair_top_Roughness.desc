@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0cc67e3cb4344a485293cbd2
+  m_importer: .texture
+  m_source: materials\kitchen_chair\Prop_KitchenChair_02_chair_top_Roughness.png
+  m_name: Prop_KitchenChair_02_chair_top_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

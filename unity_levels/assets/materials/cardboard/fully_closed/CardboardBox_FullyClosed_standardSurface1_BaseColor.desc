@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0b3c7102b1fc8aef15a01fed
+  m_importer: .texture
+  m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface1_BaseColor.png
+  m_name: CardboardBox_FullyClosed_standardSurface1_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

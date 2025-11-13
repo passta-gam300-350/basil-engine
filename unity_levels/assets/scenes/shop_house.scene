@@ -1,0 +1,124 @@
+entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a5375b084497c9ca0fc795a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        rubbish:
+          guid: 12ff68f7a02b3b0d21cae704dc8
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 3
+    entity name:
+      name: trash_pile1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0254999995
+        y: 0.0254999995
+        z: 0.0254999995
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.00405871123
+        z: 0.753239512
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a4a74a9a9b4c1cfcc879a04
+        type: 4838001395392124604
+      m_MaterialGuid:
+        openPBR_shader1:
+          guid: 12b89517f17a0a25cd888e4b928
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 2
+    entity name:
+      name: floor
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0500000007
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 1.20980632
+  - Scene ID:
+      Scene ID: 1
+    entity name:
+      name: light
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -1
+        z: 0
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 5
+        z: 4.66544104
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 114bb55776b90e3326cd9661a19
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Metal:
+          guid: 116ee887af4a867dd1a94484b14
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 0
+    entity name:
+      name: metal_shelf
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0

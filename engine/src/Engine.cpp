@@ -241,6 +241,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	Instance().m_World = WorldRegistry::NewWorld();
 
 	if (!cfg.empty()) {
+		Engine::GenerateDefaultConfig();
 		YAML::Node root{YAML::LoadFile(cfg)};
 
 		if (YAML::Node system{ root["system"] }; system) {

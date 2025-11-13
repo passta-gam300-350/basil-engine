@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0c907e94ab0463cbd70e467c
+  m_importer: .texture
+  m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_Normal.png
+  m_name: kitchenCabinet_PandaMat_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

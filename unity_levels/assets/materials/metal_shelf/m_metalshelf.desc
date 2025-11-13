@@ -1,0 +1,29 @@
+base:
+  m_guid: 116ee887af4a867dd1a94484b14
+  m_importer: .material
+  m_source: ""
+  m_name: m_metalshelf
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_metalshelf
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_DiffuseMap: 114ba607f33b8a12ddb33841933
+    u_RoughnessMap: 114ba9a71dc86caf65c33cc1f59
+    u_EmissiveMap: 114ba6a784ca3d43825877c201b
+    u_HeightMap: 114ba837138984724d4c7b847ef
+    u_NormalMap: 114ba947cc58f5d4e34b47126ac
+    u_MetallicMap: 114ba8a72518c4964f379fce4ed
+    u_SpecularMap: 00

@@ -1,0 +1,7 @@
+base:
+  m_guid: ef0c6c75ce865edab1f04c9dd9
+  m_importer: .texture
+  m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_BaseColor.png
+  m_name: kitchenCabinet_PandaMat_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
