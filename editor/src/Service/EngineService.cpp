@@ -475,6 +475,7 @@ void EngineContainerService::LoadScene(const char* path) {
 		spdlog::info("EngineService: Scene loaded from {}", path);
 		TransformSystem().FixedUpdate(world);
 		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 	});
 }
 
@@ -485,6 +486,7 @@ void EngineContainerService::NewScene() {
 		spdlog::info("EngineService: New Scene created");
 		TransformSystem().FixedUpdate(world);
 		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 		});
 
 }

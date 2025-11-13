@@ -690,36 +690,44 @@ InteractionResult RenderSystem::QueryInteraction(ecs::world& world, const Camera
 {
 	InteractionResult result;
 
-	// Check if BVH is built
-	if (m_BvhRenderables.empty() || m_bvh.Empty()) {
+	// check if BVH is built
+	if (m_BvhInteractables.empty() || m_bvhInteractables.Empty())
+	{
 		return result; // No objects to query
 	}
 
-	// Create ray from camera forward direction
+	// create ray from camera forward direction
 	Ray ray = CameraToRay(camera);
 
-	// Query BVH for closest hit
+	// query BVH for closest hit
 	std::vector<unsigned> allHits;
 	std::vector<Bvh<BvhRenderable*>::Node const*> debugNodes;
-	auto closestHit = m_bvh.QueryDebug(ray, true, allHits, debugNodes);
+	auto closestHit = m_bvhInteractables.QueryDebug(ray, true, allHits, debugNodes);
 
-	if (!closestHit.has_value()) {
-		return result; // No hit detected
+	if (!closestHit.has_value()) 
+	{
+		return result; // no hit detected
 	}
 
-	// Get the hit entity
+	// get the hit entity
 	uint32_t entityUID = closestHit.value();
 	ecs::entity entity = world.impl.entity_cast(static_cast<entt::entity>(entityUID));
 
-	// Calculate distance from camera to entity
-	auto& transform = entity.get<TransformComponent>();
+	// calculate distance from camera to entity
+	// get tuple
+	auto [interactable, transform] = entity.get<InteractableComponent, TransformComponent>();
+	if (interactable.m_IsEnabled == false)
+	{
+		return result; //disabled
+	}
 	result.distance = glm::distance(camera.m_Pos, transform.m_Translation);
-	
-
-	// Fill result
+	if (result.distance > interactable.m_InteractionDistance) 
+	{
+		return result;
+	}
+	// fill result
 	result.hasHit = true;
 	result.entityUID = entityUID;
-
 	return result;
 }
 
@@ -730,25 +738,7 @@ void RenderSystem::BuildBVH(ecs::world& world)
 	m_bvh.Clear();
 	m_BvhRenderables.clear();
 
-	//// Debug: Check what entities exist and what components they have
-	//auto allEntities = world.get_all_entities();
-	//int totalCount = 0;
-	//for (auto e : allEntities) { totalCount++; }
-	//spdlog::info("BuildBVH: Total entities in world: {}", totalCount);
-
-	//// Check for MeshRendererComponent only
-	//auto withMesh = world.filter_entities<MeshRendererComponent>();
-	//int meshCount = 0;
-	//for (auto e : withMesh) { meshCount++; }
-	//spdlog::info("BuildBVH: Entities with MeshRendererComponent: {}", meshCount);
-
-	//// Check for TransformMtxComponent only
-	//auto withTransformMtx = world.filter_entities<TransformMtxComponent>();
-	//int transformMtxCount = 0;
-	//for (auto e : withTransformMtx) { transformMtxCount++; }
-	//spdlog::info("BuildBVH: Entities with TransformMtxComponent: {}", transformMtxCount);
-
-	// Check for both
+	// check for both
 	auto allSceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent>();
 	int entityCount = 0;
 	for (auto eachObject : allSceneObjects)
@@ -801,6 +791,68 @@ void RenderSystem::BuildBVH(ecs::world& world)
 	}
 
 	spdlog::info("========== BuildBVH() END ==========");
+}
+
+void RenderSystem::BuildInteractableBVH(ecs::world& world)
+{
+	spdlog::info("========== BuildInteractableBVH() START ==========");
+
+	m_bvhInteractables.Clear();
+	m_BvhInteractables.clear();
+
+	// check for both
+	auto allSceneObjects = world.filter_entities<InteractableComponent, MeshRendererComponent, TransformMtxComponent>();
+	int entityCount = 0;
+	for (auto eachObject : allSceneObjects)
+	{
+		uint64_t entityID = eachObject.get_uid();
+		auto renderable = std::make_unique<BvhRenderable>();
+		renderable->id = static_cast<unsigned>(entityID);
+		renderable->bv = ComputeWorldAABB(eachObject);
+		if (renderable->bv.min == renderable->bv.max)
+		{
+			continue;
+		}
+		m_BvhInteractables[entityID] = std::move(renderable);
+		entityCount++;
+	}
+	if (!m_BvhInteractables.empty())
+	{
+		std::vector<BvhRenderable*> allRenderables;
+		allRenderables.reserve(m_BvhInteractables.size());
+		for (auto& [uid, interactables] : m_BvhInteractables)
+		{
+			allRenderables.push_back(interactables.get());
+		}
+
+		m_bvhInteractables.BuildTopDown(allRenderables.begin(), allRenderables.end(), m_BvhConfig);
+		/*spdlog::info("RenderSystem: Built BVH spatial index with {} entities", entityCount);
+		std::ostringstream oss;
+		m_bvh.DumpInfo(oss);
+		spdlog::info("BVH Info:\n{}", oss.str());*/
+
+		// Generate DOT graph file for visualization
+		std::ofstream dotFile("bvhinteractable_tree.dot");
+		if (dotFile.is_open())
+		{
+			m_bvhInteractables.DumpGraph(dotFile);
+			dotFile.close();
+			// get absolute path of the saved file
+			std::filesystem::path absolutePath = std::filesystem::absolute("bvhinteractable_tree.dot");
+			spdlog::info("BVH: Graph saved to: {}", absolutePath.string());
+			spdlog::info("BVH: To visualize, run: dot -Tpng \"{}\" -o bvhinteractable_tree.png", absolutePath.string());
+		}
+		else
+		{
+			spdlog::error("BVH: Failed to create bvh_tree.dot");
+		}
+	}
+	else
+	{
+		spdlog::warn("RenderSystem: No entities to build BVH");
+	}
+
+	spdlog::info("========== BuildInteractableBVH() END ==========");
 }
 
 std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {

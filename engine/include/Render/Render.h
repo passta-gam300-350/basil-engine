@@ -91,6 +91,19 @@ struct LightComponent {
 };
 
 /**
+ * @brief Component marking an entity as interactable for proximity-based interaction
+ *
+ * Used for gameplay mechanics where players can interact with objects when looking at them.
+ * Detection uses ray casting from camera forward direction.
+ * Only entities with this component will be detected by QueryInteraction().
+ */
+struct InteractableComponent {
+    bool m_IsEnabled = true;                     ///< Can be toggled on/off at runtime
+    float m_InteractionDistance = 5.0f;          ///< Maximum distance for interaction (meters)
+    std::string m_InteractionPrompt = "Press E to interact";  ///< UI text to display
+};
+
+/**
  * @brief Result from interaction detection query
  *
  * Used for proximity-based interaction detection (e.g., "Press E to interact" prompts).
@@ -373,16 +386,29 @@ public:
      */
     void BuildBVH(ecs::world& world);
 
+    /**
+     * @brief Build spatial index for interactable entities only
+     * Filters for entities with InteractableComponent.
+     * Should be called after scene load.
+     * @param world The ECS world containing entities
+     */
+    void BuildInteractableBVH(ecs::world& world);
+
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
     std::unique_ptr<Camera> m_Camera;                ///< Fallback camera (used if no CameraComponent exists)
 
-    // ========== BVH =====================
+    // ========== BVH for Frustum Culling ==========
     std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhRenderables;
     Bvh<BvhRenderable*> m_bvh;
     BvhBuildConfig m_BvhConfig;
-    bool m_frustumCullingEnabled = true; 
+    bool m_frustumCullingEnabled = true;
+
+    // ========== BVH for Interactables (Gameplay) ==========
+    std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhInteractables;
+    Bvh<BvhRenderable*> m_bvhInteractables;
+
 private:
     // ========== Internal Methods ==========
 
