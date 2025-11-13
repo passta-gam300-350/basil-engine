@@ -816,14 +816,139 @@ void EditorMain::Render_Components()
 
 			// Load prefab data for comparison
 			std::string prefabGuidStr = prefabComp->m_PrefabGuid.m_guid.to_hex();
-			// TODO: Load from ResourceSystem - for now, we'll just track that it's a prefab instance
-			// m_LoadedPrefabData = std::make_unique<PrefabData>(PrefabSystem::LoadPrefabFromFile(prefabPath));
-			// m_PrefabContext.prefabData = m_LoadedPrefabData.get();
+
+			// Try to load prefab data from ResourceSystem
+			// Note: This runs on the editor thread, ResourceSystem is accessed from engine thread
+			// For now, try to get the prefab path via AssetManager and load directly
+			std::string prefabPath = m_AssetManager->ResolveAssetName(prefabComp->m_PrefabGuid);
+
+			if (!prefabPath.empty() && std::filesystem::exists(prefabPath))
+			{
+				try {
+					PrefabData loadedData = PrefabSystem::LoadPrefabFromFile(prefabPath);
+					if (loadedData.IsValid())
+					{
+						m_LoadedPrefabData = std::make_unique<PrefabData>(std::move(loadedData));
+						m_PrefabContext.prefabData = m_LoadedPrefabData.get();
+						spdlog::debug("Loaded prefab data for comparison: {}", m_LoadedPrefabData->name);
+					}
+				}
+				catch (const std::exception& e) {
+					spdlog::warn("Failed to load prefab data for comparison: {}", e.what());
+				}
+			}
 
 			spdlog::debug("Rendering prefab instance with GUID: {}", prefabGuidStr);
 		}
 	}
-	
+
+	// Prefab Instance Control Panel
+	if (m_PrefabContext.isPrefabInstance && m_PrefabContext.prefabComponent)
+	{
+		ImGui::Separator();
+		ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.4f, 0.6f, 0.4f));
+		if (ImGui::CollapsingHeader("Prefab Instance", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PopStyleColor();
+			ImGui::Indent();
+
+			// Display prefab GUID
+			std::string prefabGuidStr = m_PrefabContext.prefabComponent->m_PrefabGuid.m_guid.to_hex();
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Prefab GUID:");
+			ImGui::SameLine();
+			ImGui::TextWrapped("%s", prefabGuidStr.c_str());
+
+			ImGui::Spacing();
+
+			// Count overrides
+			int overrideCount = static_cast<int>(m_PrefabContext.prefabComponent->m_OverriddenProperties.size());
+			ImGui::Text("Overrides: %d", overrideCount);
+
+			ImGui::Spacing();
+
+			// Apply to Prefab button
+			if (overrideCount > 0)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.3f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.4f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.8f, 0.5f, 1.0f));
+				if (ImGui::Button("Apply Overrides to Prefab", ImVec2(-1, 0)))
+				{
+					// Get prefab path from GUID via AssetManager
+					std::string prefabPath = m_AssetManager->ResolveAssetName(m_PrefabContext.prefabComponent->m_PrefabGuid);
+
+					if (prefabPath.empty())
+					{
+						spdlog::error("Failed to resolve prefab path from GUID");
+					}
+					else
+					{
+						engineService.ExecuteOnEngineThread([this, prefabPath]() {
+							auto world = Engine::GetWorld();
+							// Find the prefab instance entity
+							for (auto& entity : world.get_all_entities())
+							{
+								if (entity.get_uid() == m_SelectedEntityID && entity.all<PrefabComponent>())
+								{
+									// Apply instance state to prefab file
+									bool success = PrefabSystem::ApplyInstanceToPrefab(world, entity, prefabPath);
+
+									if (success)
+									{
+										spdlog::info("Successfully applied overrides to prefab: {}", prefabPath);
+
+										// Clear overrides since they're now baked into the prefab
+										auto& prefabComp = entity.get<PrefabComponent>();
+										prefabComp.m_OverriddenProperties.clear();
+
+										// Optionally: sync other instances of this prefab
+										// PrefabSystem::SyncPrefab(world, prefabComp.m_PrefabGuid);
+									}
+									else
+									{
+										spdlog::error("Failed to apply overrides to prefab: {}", prefabPath);
+									}
+									break;
+								}
+							}
+						});
+					}
+				}
+				ImGui::PopStyleColor(3);
+
+				ImGui::Spacing();
+			}
+
+			// Revert all button
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.3f, 0.3f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.5f, 0.5f, 1.0f));
+			if (ImGui::Button("Revert All to Prefab", ImVec2(-1, 0)))
+			{
+				engineService.ExecuteOnEngineThread([this]() {
+					auto world = Engine::GetWorld();
+					for (auto& entity : world.get_all_entities())
+					{
+						if (entity.get_uid() == m_SelectedEntityID)
+						{
+							PrefabSystem::RevertAllOverrides(world, entity);
+							spdlog::info("Reverted all overrides for entity {}", m_SelectedEntityID);
+							break;
+						}
+					}
+				});
+			}
+			ImGui::PopStyleColor(3);
+
+			ImGui::Unindent();
+		}
+		else
+		{
+			ImGui::PopStyleColor();
+		}
+		ImGui::Separator();
+	}
+
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	static const ReflectionRegistry::TypeID skip_sceneid_component{ internal_type_map[entt::type_index<SceneIDComponent>::value()] };
 	static const ReflectionRegistry::TypeID skip_relationship_component{ std::find_if(ReflectionRegistry::types().begin(), ReflectionRegistry::types().end(), [](auto const& kv) {return kv.second.id() == ToTypeName("Relationship"); })->first};
@@ -1642,7 +1767,6 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 
 void EditorMain::Add_Script_Menu()
 {
-	// TODO: Implement Add Script Menu
 	if (ImGui::BeginPopup("Add Script Popup"))
 	{
 		std::vector<std::string> scriptClasses{};
@@ -2420,8 +2544,45 @@ void EditorMain::Render_SceneExplorer()
 
 					if (ImGui::MenuItem("Select Prefab Asset"))
 					{
-						// TODO: Select the prefab asset in Asset Browser
-						spdlog::info("Select Prefab Asset - to be implemented");
+						// Navigate Asset Browser to prefab location
+						if (node.m_entity_handle)
+						{
+							ecs::entity entity(node.m_entity_handle);
+							if (entity.has<PrefabComponent>())
+							{
+								auto& prefabComp = entity.get<PrefabComponent>();
+								std::string prefabPath = m_AssetManager->ResolveAssetName(prefabComp.m_PrefabGuid);
+
+								if (!prefabPath.empty() && std::filesystem::exists(prefabPath))
+								{
+									// Get parent directory
+									std::filesystem::path filePath(prefabPath);
+									std::string parentDir = filePath.parent_path().string();
+
+									// Navigate to parent directory in Asset Browser
+									// Note: This assumes AssetManager has methods to navigate
+									// If not in current path, navigate to it
+									if (parentDir != m_AssetManager->GetCurrentPath())
+									{
+										// Navigate to root first, then to the target directory
+										while (m_AssetManager->GetCurrentPath() != m_AssetManager->GetRootPath())
+										{
+											m_AssetManager->GoToParentDirectory();
+										}
+
+										// Navigate to target directory
+										// This is a simplified approach - might need refinement
+										m_AssetManager->GoToSubDirectory(parentDir);
+									}
+
+									spdlog::info("Navigated to prefab asset: {}", prefabPath);
+								}
+								else
+								{
+									spdlog::warn("Prefab asset not found: {}", prefabPath);
+								}
+							}
+						}
 					}
 
 					if (ImGui::MenuItem("Revert to Prefab"))
@@ -2435,8 +2596,35 @@ void EditorMain::Render_SceneExplorer()
 
 					if (ImGui::MenuItem("Apply Overrides to Prefab"))
 					{
-						// TODO: Implement "Apply to Prefab" workflow
-						spdlog::info("Apply to Prefab - to be implemented in Phase 6");
+						// Apply current instance state to prefab file
+						engineService.ExecuteOnEngineThread([node, this]() {
+							ecs::entity entity(node.m_entity_handle);
+							auto world = Engine::GetWorld();
+
+							if (entity.has<PrefabComponent>())
+							{
+								auto& prefabComp = entity.get<PrefabComponent>();
+								std::string prefabPath = m_AssetManager->ResolveAssetName(prefabComp.m_PrefabGuid);
+
+								if (!prefabPath.empty())
+								{
+									bool success = PrefabSystem::ApplyInstanceToPrefab(world, entity, prefabPath);
+									if (success)
+									{
+										spdlog::info("Successfully applied overrides to prefab: {}", prefabPath);
+										prefabComp.m_OverriddenProperties.clear();
+									}
+									else
+									{
+										spdlog::error("Failed to apply overrides to prefab: {}", prefabPath);
+									}
+								}
+								else
+								{
+									spdlog::error("Failed to resolve prefab path from GUID");
+								}
+							}
+						});
 					}
 				}
 				else if (node.m_entity_handle && !isPrefabInstance)
@@ -2644,6 +2832,35 @@ void EditorMain::Render_SceneExplorer()
 			ImGui::EndMenu();
 		}
 		ImGui::EndPopup();
+	}
+
+	// Drag-and-drop target for prefab instantiation
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
+		{
+			const char* droppedPath = static_cast<const char*>(payload->Data);
+			std::string assetPath(droppedPath);
+			std::filesystem::path filepath(assetPath);
+
+			// Check if dropped asset is a prefab
+			if (filepath.extension().string() == ".prefab")
+			{
+				engineService.ExecuteOnEngineThread([assetPath]() {
+					auto world = Engine::GetWorld();
+					PrefabData prefabData = PrefabSystem::LoadPrefabFromFile(assetPath.c_str());
+					if (prefabData.IsValid()) {
+						ecs::entity instantiated = PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
+						if (instantiated) {
+							spdlog::info("Prefab instantiated from drag-and-drop: {}", prefabData.name);
+						}
+					} else {
+						spdlog::error("Failed to load prefab: {}", assetPath);
+					}
+				});
+			}
+		}
+		ImGui::EndDragDropTarget();
 	}
 
 	ImGui::End();
@@ -3145,10 +3362,41 @@ void EditorMain::Render_AssetBrowser()
 
 		if (filename.empty()) continue;
 
+		// Check if this is a prefab file
+		bool isPrefabFile = (filepath.extension().string() == ".prefab");
+
 		ImGui::PushID(filename.c_str());
+
+		// Style prefab files differently
+		if (isPrefabFile) {
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.6f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.5f, 0.7f, 0.8f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.6f, 0.8f, 1.0f));
+		}
+
 		ImGui::Button(filename.c_str(), { thumbnailSize, thumbnailSize }); // Creates a button for the folders
+
+		if (isPrefabFile) {
+			ImGui::PopStyleColor(3);
+		}
+
 		if (ImGui::BeginPopupContextItem()) // if you right click on an asset
 		{
+			if (isPrefabFile) {
+				// Prefab-specific menu items
+				if (ImGui::MenuItem("Instantiate Prefab")) {
+					std::string prefabPath = it->second;
+					engineService.ExecuteOnEngineThread([prefabPath]() {
+						auto world = Engine::GetWorld();
+						PrefabData prefabData = PrefabSystem::LoadPrefabFromFile(prefabPath.c_str());
+						if (prefabData.IsValid()) {
+							PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
+						}
+					});
+				}
+				ImGui::Separator();
+			}
+
 			if (ImGui::MenuItem("Import Asset")) // popup asking to import asset
 			{
 				rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(it->second) };

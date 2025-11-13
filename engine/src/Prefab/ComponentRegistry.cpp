@@ -66,44 +66,51 @@ std::optional<SerializedComponent> ComponentRegistry::SerializeComponent(
     return serialized;
 }
 
-bool ComponentRegistry::DeserializeComponent(
-    ecs::entity entity,
-    const SerializedComponent& data)
-{
-    // Get the meta type
-    auto& types = ReflectionRegistry::types();
-    auto typeIt = types.find(data.typeHash);
-    if (typeIt == types.end())
-    {
-        return false; // Type not registered
-    }
-
-    entt::meta_type metaType = typeIt->second;
-
-    // TODO: This is the tricky part - we need to create/get the component on the entity
-    // For now, this is a placeholder that would need to be implemented with proper
-    // component construction/access via the ECS system
-
-    // The proper implementation would require:
-    // 1. Check if entity has component (entity.all<T>())
-    // 2. If not, create it with default constructor (entity.add<T>())
-    // 3. Get reference to component (entity.get<T>())
-    // 4. Apply properties using reflection
-
-    // This requires runtime component construction which needs more infrastructure
-    // For now, we'll leave this as a TODO and implement it in the PrefabSystem
-    // where we can use template specialization for known component types
-
-    return false; // Not fully implemented yet
-}
-
 std::optional<SerializedPropertyValue> ComponentRegistry::GetProperty(
     const SerializedComponent& component,
     const std::string& propertyPath)
 {
-    // For now, support direct property access (not nested paths)
-    // TODO: Implement nested path parsing (e.g., "m_Position.x")
+    // Check if property path has nested access (e.g., "m_Translation.x")
+    size_t dotPos = propertyPath.find('.');
+    if (dotPos != std::string::npos)
+    {
+        // Split into parent and child
+        std::string parentPath = propertyPath.substr(0, dotPos);
+        std::string childField = propertyPath.substr(dotPos + 1);
 
+        // Get parent property
+        const auto* parentValue = component.GetProperty(parentPath);
+        if (!parentValue)
+            return std::nullopt;
+
+        // Handle nested access for common types
+        return std::visit([&childField](auto&& value) -> std::optional<SerializedPropertyValue> {
+            using T = std::decay_t<decltype(value)>;
+
+            if constexpr (std::is_same_v<T, glm::vec3>)
+            {
+                if (childField == "x") return value.x;
+                if (childField == "y") return value.y;
+                if (childField == "z") return value.z;
+            }
+            else if constexpr (std::is_same_v<T, glm::vec4>)
+            {
+                if (childField == "x") return value.x;
+                if (childField == "y") return value.y;
+                if (childField == "z") return value.z;
+                if (childField == "w") return value.w;
+            }
+            else if constexpr (std::is_same_v<T, glm::vec2>)
+            {
+                if (childField == "x") return value.x;
+                if (childField == "y") return value.y;
+            }
+
+            return std::nullopt;  // Unsupported type or field
+        }, *parentValue);
+    }
+
+    // Direct property access (no nesting)
     const auto* value = component.GetProperty(propertyPath);
     if (value)
         return *value;
@@ -116,9 +123,64 @@ bool ComponentRegistry::SetProperty(
     const std::string& propertyPath,
     SerializedPropertyValue value)
 {
-    // For now, support direct property access (not nested paths)
-    // TODO: Implement nested path parsing
+    // Check if property path has nested access (e.g., "m_Translation.x")
+    size_t dotPos = propertyPath.find('.');
+    if (dotPos != std::string::npos)
+    {
+        // Split into parent and child
+        std::string parentPath = propertyPath.substr(0, dotPos);
+        std::string childField = propertyPath.substr(dotPos + 1);
 
+        // Get parent property
+        auto* parentValue = component.GetProperty(parentPath);
+        if (!parentValue)
+            return false;
+
+        // Modify nested field
+        bool modified = std::visit([&childField, &value](auto&& parentVal) -> bool {
+            using T = std::decay_t<decltype(parentVal)>;
+
+            if constexpr (std::is_same_v<T, glm::vec3>)
+            {
+                if (auto* floatVal = std::get_if<float>(&value))
+                {
+                    if (childField == "x") { parentVal.x = *floatVal; return true; }
+                    if (childField == "y") { parentVal.y = *floatVal; return true; }
+                    if (childField == "z") { parentVal.z = *floatVal; return true; }
+                }
+            }
+            else if constexpr (std::is_same_v<T, glm::vec4>)
+            {
+                if (auto* floatVal = std::get_if<float>(&value))
+                {
+                    if (childField == "x") { parentVal.x = *floatVal; return true; }
+                    if (childField == "y") { parentVal.y = *floatVal; return true; }
+                    if (childField == "z") { parentVal.z = *floatVal; return true; }
+                    if (childField == "w") { parentVal.w = *floatVal; return true; }
+                }
+            }
+            else if constexpr (std::is_same_v<T, glm::vec2>)
+            {
+                if (auto* floatVal = std::get_if<float>(&value))
+                {
+                    if (childField == "x") { parentVal.x = *floatVal; return true; }
+                    if (childField == "y") { parentVal.y = *floatVal; return true; }
+                }
+            }
+
+            return false;
+        }, *parentValue);
+
+        if (modified)
+        {
+            // Update parent property with modified value
+            component.SetProperty(parentPath, *parentValue);
+            return true;
+        }
+        return false;
+    }
+
+    // Direct property access (no nesting)
     component.SetProperty(propertyPath, value);
     return true;
 }
@@ -136,10 +198,28 @@ bool ComponentRegistry::EntityHasComponent(ecs::entity entity, TypeID typeHash)
 
 bool ComponentRegistry::RemoveComponent(ecs::entity entity, TypeID typeHash)
 {
-    // TODO: Implement component removal by type hash
-    // This requires runtime type dispatch which needs more infrastructure
-    // For now, leave as placeholder
-    return false;
+    // Use reflection registry to find the meta type
+    auto typeIt = ReflectionRegistry::types().find(typeHash);
+    if (typeIt == ReflectionRegistry::types().end())
+        return false;  // Unknown component type
+
+    auto metaType = typeIt->second;
+
+    // Get the ECS registry
+    auto& world = Engine::GetWorld();
+    auto& registry = world.impl.get_registry();
+    entt::entity enttEntity = ecs::world::detail::entt_entity_cast(entity);
+
+    // Check if entity has the component
+    auto* storage = registry.storage(typeHash);
+    if (!storage || !storage->contains(enttEntity))
+        return false;  // Entity doesn't have this component
+
+    // Remove the component using EnTT's remove function
+    // EnTT storage has a remove() method
+    storage->remove(enttEntity);
+
+    return true;
 }
 
 std::vector<ComponentRegistry::TypeID> ComponentRegistry::GetAllComponentTypes(ecs::entity entity)

@@ -462,12 +462,27 @@ ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const rp::BasicIn
     // Load prefab data from cache
     std::string guidStr = prefabId.m_guid.to_hex();
     auto it = s_PrefabCache.find(guidStr);
+
+    // If not in cache, try loading from ResourceSystem
     if (it == s_PrefabCache.end())
     {
-        // Prefab not in cache
-        // TODO: Need file path to load from disk
-        // For now, return invalid entity
-        return ecs::entity();
+        spdlog::debug("Prefab {} not in cache, attempting to load from ResourceSystem", guidStr);
+
+        // Try to load via ResourceSystem
+        PrefabData* loadedPrefab = ResourceRegistry::Instance().Get<PrefabData>(prefabId.m_guid);
+
+        if (loadedPrefab && loadedPrefab->IsValid())
+        {
+            // Add to cache for future use
+            s_PrefabCache[guidStr] = *loadedPrefab;
+            it = s_PrefabCache.find(guidStr);
+            spdlog::info("Successfully loaded prefab '{}' from ResourceSystem", loadedPrefab->name);
+        }
+        else
+        {
+            spdlog::error("Failed to load prefab with GUID: {}", guidStr);
+            return ecs::entity();
+        }
     }
 
     const PrefabData& prefabData = it->second;
@@ -489,9 +504,60 @@ ecs::entity PrefabSystem::InstantiatePrefab(ecs::world& world, const rp::BasicIn
     return rootEntity;
 }
 
-ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& /*world*/, const rp::BasicIndexedGuid& /*prefabId*/, ecs::entity rootEntityId, const glm::vec3& /*position*/)
+ecs::entity PrefabSystem::InstantiatePrefabWithId(ecs::world& world, const rp::BasicIndexedGuid& prefabId, ecs::entity rootEntityId, const glm::vec3& position)
 {
-    // Similar to InstantiatePrefab but uses provided entity ID
+    // Load prefab data from cache
+    std::string guidStr = prefabId.m_guid.to_hex();
+    auto it = s_PrefabCache.find(guidStr);
+
+    // If not in cache, try loading from ResourceSystem
+    if (it == s_PrefabCache.end())
+    {
+        spdlog::debug("Prefab {} not in cache, attempting to load from ResourceSystem", guidStr);
+
+        PrefabData* loadedPrefab = ResourceRegistry::Instance().Get<PrefabData>(prefabId.m_guid);
+
+        if (loadedPrefab && loadedPrefab->IsValid())
+        {
+            s_PrefabCache[guidStr] = *loadedPrefab;
+            it = s_PrefabCache.find(guidStr);
+            spdlog::info("Successfully loaded prefab '{}' from ResourceSystem", loadedPrefab->name);
+        }
+        else
+        {
+            spdlog::error("Failed to load prefab with GUID: {}", guidStr);
+            return ecs::entity();
+        }
+    }
+
+    const PrefabData& prefabData = it->second;
+
+    // Use provided entity as root (instead of creating new one)
+    // Apply component data to root entity
+    for (const auto& compData : prefabData.root.components)
+    {
+        ApplyComponentData(world, rootEntityId, compData);
+    }
+
+    // Attach PrefabComponent to root
+    if (!rootEntityId.all<PrefabComponent>())
+    {
+        rootEntityId.add<PrefabComponent>(prefabId);
+    }
+
+    // Apply position to root entity's transform
+    if (rootEntityId.all<TransformComponent>())
+    {
+        auto& transform = rootEntityId.get<TransformComponent>();
+        transform.m_Translation = position;
+    }
+
+    // Recursively create children (they get new entity IDs)
+    for (const auto& childData : prefabData.root.children)
+    {
+        InstantiateEntity(world, childData, rootEntityId, prefabId);
+    }
+
     return rootEntityId;
 }
 
@@ -731,9 +797,60 @@ void PrefabSystem::ApplyPrefabDataToEntity(ecs::world& world, ecs::entity entity
         // Apply component data (this will create or update the component)
         ApplyComponentData(world, entity, compData);
 
-        // TODO: Reapply property overrides after setting base values
-        // This would require looking up overrides for this component type hash
-        // and setting them back on the component
+        // Reapply property overrides after setting base values
+        if (prefabComp && !prefabComp->m_OverriddenProperties.empty())
+        {
+            // Find overrides for this component type
+            for (const auto& override : prefabComp->m_OverriddenProperties)
+            {
+                if (override.componentTypeHash == compData.typeHash)
+                {
+                    // Get the component via reflection
+                    auto& registry = world.impl.get_registry();
+                    entt::entity enttEntity = ecs::world::detail::entt_entity_cast(entity);
+                    auto* storage = registry.storage(compData.typeHash);
+
+                    if (storage && storage->contains(enttEntity))
+                    {
+                        void* componentPtr = const_cast<void*>(storage->value(enttEntity));
+
+                        // Get the meta type for reflection
+                        auto typeIt = ReflectionRegistry::types().find(compData.typeHash);
+                        if (typeIt != ReflectionRegistry::types().end())
+                        {
+                            auto metaType = typeIt->second;
+
+                            // Use reflection to set the property value
+                            auto metaHandle = metaType.from_void(componentPtr);
+                            if (metaHandle)
+                            {
+                                auto metaData = metaHandle.type().data(entt::hashed_string(override.propertyPath.c_str()));
+                                if (metaData)
+                                {
+                                    // Convert PropertyValue to meta_any and set it
+                                    std::visit([&](auto&& value) {
+                                        using T = std::decay_t<decltype(value)>;
+                                        if constexpr (std::is_same_v<T, float>) {
+                                            metaData.set(metaHandle, value);
+                                        } else if constexpr (std::is_same_v<T, int>) {
+                                            metaData.set(metaHandle, value);
+                                        } else if constexpr (std::is_same_v<T, bool>) {
+                                            metaData.set(metaHandle, value);
+                                        } else if constexpr (std::is_same_v<T, std::string>) {
+                                            metaData.set(metaHandle, value);
+                                        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+                                            metaData.set(metaHandle, value);
+                                        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+                                            metaData.set(metaHandle, value);
+                                        }
+                                    }, override.value);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

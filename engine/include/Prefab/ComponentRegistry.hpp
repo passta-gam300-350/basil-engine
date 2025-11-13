@@ -34,16 +34,6 @@ public:
         TypeID typeHash);
 
     /**
-     * @brief Deserialize a component onto an entity
-     * @param entity The entity to add/update the component on
-     * @param data The serialized component data
-     * @return True if successful, false if component type is not registered
-     */
-    static bool DeserializeComponent(
-        ecs::entity entity,
-        const SerializedComponent& data);
-
-    /**
      * @brief Get the component type name from a type hash
      * @param typeHash The reflection type hash
      * @return Component type name (e.g., "TransformComponent"), or empty string if not found
