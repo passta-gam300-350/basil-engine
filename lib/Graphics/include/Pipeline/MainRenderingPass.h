@@ -52,6 +52,12 @@ public:
     void SetSkyboxMesh(std::shared_ptr<Mesh> mesh) { m_SkyboxMesh = mesh; }
     void EnableSkybox(bool enabled) { m_SkyboxEnabled = enabled; }
     bool IsSkyboxEnabled() const { return m_SkyboxEnabled; }
+    void SetSkyboxExposure(float exposure) { m_SkyboxExposure = exposure; }
+    void SetSkyboxRotation(const glm::vec3& rotation) { m_SkyboxRotation = rotation; }
+    void SetSkyboxTint(const glm::vec3& tint) { m_SkyboxTint = tint; }
+    float GetSkyboxExposure() const { return m_SkyboxExposure; }
+    glm::vec3 GetSkyboxRotation() const { return m_SkyboxRotation; }
+    glm::vec3 GetSkyboxTint() const { return m_SkyboxTint; }
 
     // Light cube visualization configuration (accessed by SceneRenderer)
     void SetPrimitiveShader(const std::shared_ptr<Shader>& shader) { m_PrimitiveShader = shader; }
@@ -83,6 +89,9 @@ private:
     std::shared_ptr<Shader> m_SkyboxShader;
     std::shared_ptr<Mesh> m_SkyboxMesh;
     bool m_SkyboxEnabled = false;
+    float m_SkyboxExposure = 1.0f;
+    glm::vec3 m_SkyboxRotation = glm::vec3(0.0f);
+    glm::vec3 m_SkyboxTint = glm::vec3(1.0f);
 
     // Light cube visualization resources
     std::shared_ptr<Shader> m_PrimitiveShader;

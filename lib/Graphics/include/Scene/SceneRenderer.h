@@ -98,6 +98,12 @@ public:
     void SetSkyboxShader(const std::shared_ptr<Shader> &shader);
     void EnableSkybox(bool enable);
     bool IsSkyboxEnabled() const;
+    void SetSkyboxExposure(float exposure);
+    void SetSkyboxRotation(const glm::vec3& rotation);
+    void SetSkyboxTint(const glm::vec3& tint);
+    float GetSkyboxExposure() const;
+    glm::vec3 GetSkyboxRotation() const;
+    glm::vec3 GetSkyboxTint() const;
 
     // Background color configuration
     void SetBackgroundColor(const glm::vec4& color);

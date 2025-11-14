@@ -31,6 +31,20 @@ struct SceneIDComponent {
 	std::uint32_t m_scene_id;
 };
 
+// Scene-level rendering settings
+struct SceneRenderSettings {
+	struct SkyboxSettings {
+		unsigned int cubemapID = 0;           // OpenGL cubemap texture ID
+		bool enabled = false;                 // Enable/disable skybox
+		float exposure = 1.0f;                // HDR exposure multiplier (0.0 - 10.0)
+		glm::vec3 rotation = glm::vec3(0.0f); // Euler angles (XYZ rotation in degrees)
+		glm::vec3 tint = glm::vec3(1.0f);     // Color tint (RGB, 0.0 - 1.0)
+	} skybox;
+
+	glm::vec3 ambientLight = glm::vec3(0.1f);     // Ambient light color
+	glm::vec4 backgroundColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f); // Background clear color
+};
+
 struct SceneComponent {
 	rp::BasicIndexedGuid m_scene_guid{};
 };
@@ -132,6 +146,14 @@ struct Scene
 		return m_is_dirty;
 	}
 
+	inline SceneRenderSettings& GetRenderSettings() {
+		return m_renderSettings;
+	}
+
+	inline const SceneRenderSettings& GetRenderSettings() const {
+		return m_renderSettings;
+	}
+
 private:
 	rp::Guid m_guid{};
 	std::string m_name;
@@ -139,6 +161,7 @@ private:
 	std::uint32_t m_slot_ct{};
 	std::vector<rp::Guid> m_scene_dependencies;
 	bool m_is_dirty;
+	SceneRenderSettings m_renderSettings;
 };
 
 struct SceneRegistry{

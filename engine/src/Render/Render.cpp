@@ -642,7 +642,7 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 void UnloadMeshFromResource(std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>&) {}
 
 using Meshes = std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>;
-
+ 
 // ========== Resource Type Registrations ==========
 REGISTER_RESOURCE_TYPE_ALIASE(Meshes, mesh, LoadMeshFromResource, UnloadMeshFromResource)
 
@@ -801,3 +801,39 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Texture>, texture,
 
 // Note: ShaderAssetData registration removed
 // Shaders are now loaded by name from MaterialResourceData
+
+// ========== Skybox Settings Implementation (Unity-style API) ==========
+
+void RenderSystem::SetSkyboxCubemap(unsigned int cubemapID) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxCubemap(cubemapID);
+	}
+}
+
+void RenderSystem::EnableSkybox(bool enable) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->EnableSkybox(enable);
+	}
+}
+
+bool RenderSystem::IsSkyboxEnabled() const {
+	return m_SceneRenderer ? m_SceneRenderer->IsSkyboxEnabled() : false;
+}
+
+void RenderSystem::SetSkyboxExposure(float exposure) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxExposure(exposure);
+	}
+}
+
+void RenderSystem::SetSkyboxRotation(const glm::vec3& rotation) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxRotation(rotation);
+	}
+}
+
+void RenderSystem::SetSkyboxTint(const glm::vec3& tint) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxTint(tint);
+	}
+}

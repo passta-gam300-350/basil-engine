@@ -233,6 +233,44 @@ public:
      */
     ShaderLibrary* GetShaderLibrary() const { return m_ShaderLibrary.get(); }
 
+    // ========== Skybox Settings (Unity-style API) ==========
+
+    /**
+     * @brief Set skybox cubemap texture
+     * @param cubemapID OpenGL texture ID of the cubemap (load via TextureLoader::CubemapFromFiles)
+     */
+    void SetSkyboxCubemap(unsigned int cubemapID);
+
+    /**
+     * @brief Enable or disable skybox rendering
+     * @param enable True to enable, false to disable
+     */
+    void EnableSkybox(bool enable);
+
+    /**
+     * @brief Check if skybox is currently enabled
+     * @return True if enabled, false otherwise
+     */
+    bool IsSkyboxEnabled() const;
+
+    /**
+     * @brief Set skybox HDR exposure multiplier
+     * @param exposure Exposure value (0.0 - 10.0), default is 1.0
+     */
+    void SetSkyboxExposure(float exposure);
+
+    /**
+     * @brief Set skybox rotation (Euler angles in degrees)
+     * @param rotation XYZ rotation in degrees
+     */
+    void SetSkyboxRotation(const glm::vec3& rotation);
+
+    /**
+     * @brief Set skybox color tint
+     * @param tint RGB color multiplier (0.0 - 1.0), default is white (1, 1, 1)
+     */
+    void SetSkyboxTint(const glm::vec3& tint);
+
     // ========== Static API for External Access ==========
 
     /**

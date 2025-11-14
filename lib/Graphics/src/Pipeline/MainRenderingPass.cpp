@@ -10,6 +10,7 @@
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <spdlog/spdlog.h>
 
 MainRenderingPass::MainRenderingPass()
@@ -243,6 +244,35 @@ void MainRenderingPass::RenderSkybox(RenderContext& context)
         context.frameData.cameraPosition    // Camera position (for potential effects)
     };
     Submit(uniformCmd);
+
+    // Set skybox exposure (HDR intensity control)
+    RenderCommands::SetUniformFloatData exposureCmd{
+        m_SkyboxShader,
+        "u_Exposure",
+        m_SkyboxExposure
+    };
+    Submit(exposureCmd);
+
+    // Set skybox rotation (convert Euler angles to rotation matrix)
+    glm::mat4 rotationMatrix = glm::eulerAngleXYZ(
+        glm::radians(m_SkyboxRotation.x),
+        glm::radians(m_SkyboxRotation.y),
+        glm::radians(m_SkyboxRotation.z)
+    );
+    RenderCommands::SetUniformMat4Data rotationCmd{
+        m_SkyboxShader,
+        "u_RotationMatrix",
+        rotationMatrix
+    };
+    Submit(rotationCmd);
+
+    // Set skybox tint color
+    RenderCommands::SetUniformVec3Data tintCmd{
+        m_SkyboxShader,
+        "u_Tint",
+        m_SkyboxTint
+    };
+    Submit(tintCmd);
 
     // Draw skybox geometry
     RenderCommands::DrawElementsData drawCmd{

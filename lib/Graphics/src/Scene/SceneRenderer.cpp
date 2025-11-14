@@ -436,6 +436,87 @@ bool SceneRenderer::IsSkyboxEnabled() const
     return false;
 }
 
+void SceneRenderer::SetSkyboxExposure(float exposure)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox exposure");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxExposure(exposure);
+        }
+    }
+}
+
+void SceneRenderer::SetSkyboxRotation(const glm::vec3& rotation)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox rotation");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxRotation(rotation);
+        }
+    }
+}
+
+void SceneRenderer::SetSkyboxTint(const glm::vec3& tint)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox tint");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxTint(tint);
+        }
+    }
+}
+
+float SceneRenderer::GetSkyboxExposure() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetSkyboxExposure();
+        }
+    }
+    return 1.0f;
+}
+
+glm::vec3 SceneRenderer::GetSkyboxRotation() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetSkyboxRotation();
+        }
+    }
+    return glm::vec3(0.0f);
+}
+
+glm::vec3 SceneRenderer::GetSkyboxTint() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetSkyboxTint();
+        }
+    }
+    return glm::vec3(1.0f);
+}
+
 void SceneRenderer::SetBackgroundColor(const glm::vec4& color)
 {
     assert(m_Pipeline && "Pipeline must be initialized before setting background color");
