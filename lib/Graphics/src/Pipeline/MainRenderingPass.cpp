@@ -286,14 +286,13 @@ void MainRenderingPass::RenderLightCubes(RenderContext& context)
 
     // Render each light as a cube (all light types: Directional, Point, Spot)
     for (const auto& light : context.lights) {
-        // Calculate cube size based on light intensity
-        float intensityBasedSize = m_BaseLightCubeSize + (light.diffuseIntensity * m_IntensityScaleFactor);
-        intensityBasedSize = glm::clamp(intensityBasedSize, m_MinCubeSize, m_MaxCubeSize);
+        // Use fixed cube size (intensity-based scaling disabled)
+        float cubeSize = m_BaseLightCubeSize;
 
-        // Calculate transform matrix for light position with intensity-based scaling
+        // Calculate transform matrix for light position with fixed scaling
         glm::mat4 modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, light.position);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(intensityBasedSize));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(cubeSize));
 
         // Set uniforms using the available SetUniformsData command
         RenderCommands::SetUniformsData uniformsCmd{
