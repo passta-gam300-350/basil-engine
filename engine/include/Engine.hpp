@@ -77,6 +77,9 @@ public:
 	static ecs::world GetWorld();
 	static double GetDeltaTime();
 
+	// Unity-style skybox system - sync active scene's render settings to renderer
+	static void SyncActiveSceneRenderSettings();
+
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
 	

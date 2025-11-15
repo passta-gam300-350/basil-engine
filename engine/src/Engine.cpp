@@ -16,6 +16,10 @@
 #include "System/HierarchySystem.hpp"
 
 #include "Scene/Scene.hpp"
+#include "Resources/Texture.h"
+#include <array>
+#include <glad/glad.h>
+#include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -131,7 +135,7 @@ void Engine::Init(std::string const& cfg ) {
 
 	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 	MaterialOverridesSystem::Instance().Init();
-	
+
 	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
@@ -159,6 +163,10 @@ void Engine::CoreUpdate() {
 	//JobID last_job{ instance.m_World.update_async()};
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
 	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetDeltaTime()));
+
+	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
+	Engine::SyncActiveSceneRenderSettings();
+
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
@@ -397,4 +405,89 @@ void Engine::BeginFrame()
 void Engine::EndFrame()
 {
 	PF_END_FRAME();
+}
+
+void Engine::SyncActiveSceneRenderSettings()
+{
+	// Unity-style: Apply active scene's render settings to the renderer
+	if (!Instance().m_SceneRegistry || !Instance().m_RenderSystem) {
+		return; // Not yet initialized
+	}
+
+	auto activeSceneOpt = Instance().m_SceneRegistry->GetActiveScene();
+	if (!activeSceneOpt.has_value()) {
+		return; // No active scene
+	}
+
+	Scene& activeScene = activeSceneOpt.value().get();
+	auto& settings = activeScene.GetRenderSettings();
+	auto& renderSystem = *Instance().m_RenderSystem;
+
+	// Load/reload skybox cubemap if needed (resource pipeline integration)
+	if (settings.skybox.needsReload && settings.skybox.enabled) {
+		// Check if all face texture GUIDs are valid
+		bool allGuidsValid = true;
+		for (const auto& guid : settings.skybox.faceTextures) {
+			if (guid == rp::null_guid) {
+				allGuidsValid = false;
+				break;
+			}
+		}
+
+		if (allGuidsValid) {
+			try {
+				auto& registry = ResourceRegistry::Instance();
+				std::array<unsigned int, 6> textureIDs;
+				bool loadSuccess = true;
+
+				// Load all 6 texture resources by GUID
+				for (int i = 0; i < 6; ++i) {
+					auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(settings.skybox.faceTextures[i]);
+
+					if (texturePtr && *texturePtr) {
+						textureIDs[i] = (*texturePtr)->id;  // Get OpenGL texture ID
+						GetSink()->logger()->debug("Skybox face {} loaded (GUID: {}, GPU ID: {})",
+							i, settings.skybox.faceTextures[i].to_hex().substr(0, 8), textureIDs[i]);
+					} else {
+						GetSink()->logger()->error("Failed to load skybox face {} (GUID: {})",
+							i, settings.skybox.faceTextures[i].to_hex().substr(0, 8));
+						loadSuccess = false;
+						break;
+					}
+				}
+
+				if (loadSuccess) {
+					// Create cubemap from 6 loaded texture IDs
+					unsigned int cubemapID = TextureLoader::CubemapFromTextureIDs(textureIDs, true);
+
+					if (cubemapID != 0) {
+						// Delete old cubemap if it exists
+						if (settings.skybox.cachedCubemapID != 0) {
+							glDeleteTextures(1, &settings.skybox.cachedCubemapID);
+						}
+
+						settings.skybox.cachedCubemapID = cubemapID;
+						settings.skybox.needsReload = false;
+						GetSink()->logger()->info("Skybox cubemap created successfully (ID: {})", cubemapID);
+					} else {
+						GetSink()->logger()->error("Failed to create skybox cubemap from texture IDs");
+					}
+				}
+			}
+			catch (const std::exception& e) {
+				GetSink()->logger()->error("Exception loading skybox cubemap: {}", e.what());
+			}
+		} else {
+			GetSink()->logger()->debug("Skybox: Not all face textures assigned (skipping load)");
+		}
+	}
+
+	// Sync skybox settings to renderer
+	renderSystem.SetSkyboxCubemap(settings.skybox.cachedCubemapID);
+	renderSystem.EnableSkybox(settings.skybox.enabled);
+	renderSystem.SetSkyboxExposure(settings.skybox.exposure);
+	renderSystem.SetSkyboxRotation(settings.skybox.rotation);
+	renderSystem.SetSkyboxTint(settings.skybox.tint);
+
+	// Future: Could sync ambient light, background color, fog, etc.
 }

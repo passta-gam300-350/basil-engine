@@ -271,6 +271,17 @@ public:
      */
     void SetSkyboxTint(const glm::vec3& tint);
 
+    /**
+     * @brief Load a cubemap from 6 image files and return the OpenGL texture ID
+     * @param facePaths Array of 6 file paths in order: +X, -X, +Y, -Y, +Z, -Z (right, left, top, bottom, front, back)
+     * @param directory Base directory for the face paths (optional)
+     * @return OpenGL texture ID, or 0 on failure
+     */
+    static unsigned int LoadCubemapFromFiles(
+        const std::array<std::string, 6>& facePaths,
+        const std::string& directory = ""
+    );
+
     // ========== Static API for External Access ==========
 
     /**

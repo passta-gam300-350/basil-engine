@@ -285,3 +285,89 @@ unsigned int TextureLoader::CubemapFromFiles(
     auto cubemapData = LoadCubemapFromFiles(facePaths, directory);
     return CreateGPUCubemap(cubemapData, generateMipmaps);
 }
+
+unsigned int TextureLoader::CubemapFromTextureIDs(
+    const std::array<unsigned int, 6>& textureIDs,
+    bool generateMipmaps)
+{
+    // Validate all texture IDs
+    for (int i = 0; i < 6; ++i) {
+        if (textureIDs[i] == 0) {
+            spdlog::error("CubemapFromTextureIDs: Texture ID {} is invalid (face {})", textureIDs[i], i);
+            return 0;
+        }
+    }
+
+    // Get dimensions from first texture (assume all are same size)
+    int width, height;
+    glBindTexture(GL_TEXTURE_2D, textureIDs[0]);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+    if (width != height) {
+        spdlog::warn("CubemapFromTextureIDs: Texture dimensions are not square ({}x{}), cubemap may look distorted", width, height);
+    }
+
+    // Create cubemap texture
+    unsigned int cubemapID;
+    glGenTextures(1, &cubemapID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+
+    // Get internal format from first texture to match it
+    GLint internalFormat;
+    glBindTexture(GL_TEXTURE_2D, textureIDs[0]);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+
+    // Allocate storage for all 6 cubemap faces BEFORE copying
+    // (glCopyImageSubData requires destination to have allocated storage)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+    for (int i = 0; i < 6; ++i) {
+        // Determine data format from internal format
+        GLenum format = GL_RGBA;
+        if (internalFormat == GL_RGB || internalFormat == GL_SRGB8 || internalFormat == GL_RGB8) {
+            format = GL_RGB;
+        } else if (internalFormat == GL_RED || internalFormat == GL_R8) {
+            format = GL_RED;
+        }
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat,
+                     width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+    }
+
+    // Copy each face from the 2D textures to cubemap faces
+    // Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back)
+    for (int i = 0; i < 6; ++i) {
+        // Use glCopyImageSubData to copy from 2D texture to cubemap face
+        // Requires OpenGL 4.3+
+        glCopyImageSubData(
+            textureIDs[i], GL_TEXTURE_2D, 0, 0, 0, 0,          // Source: 2D texture
+            cubemapID, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, 0,  // Dest: Cubemap face
+            width, height, 1                                    // Dimensions
+        );
+
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            spdlog::error("CubemapFromTextureIDs: Failed to copy face {} (OpenGL error: 0x{:X})", i, error);
+            glDeleteTextures(1, &cubemapID);
+            return 0;
+        }
+    }
+
+    // Set cubemap parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    if (generateMipmaps) {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    }
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    spdlog::info("CubemapFromTextureIDs: Successfully created cubemap (ID: {}) from 6 textures ({}x{})",
+        cubemapID, width, height);
+
+    return cubemapID;
+}

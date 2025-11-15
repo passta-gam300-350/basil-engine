@@ -614,6 +614,8 @@ void EditorMain::render()
 		Render_Profiler();
 	if (showInspector)
 		Render_Inspector();
+	if (showSkyboxSettings)
+		Render_SkyboxSettings();
 	Render_Scene();
 	Render_Game();
 	Render_CameraControls();
@@ -2050,6 +2052,7 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Scene Explorer", nullptr, &showSceneExplorer);
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
+		ImGui::MenuItem("Skybox Settings", nullptr, &showSkyboxSettings);
 
 		ImGui::Separator();
 
@@ -2982,6 +2985,175 @@ void EditorMain::Render_Console()
 
 	ImGui::EndChild();
 	*/
+	ImGui::End();
+}
+
+void EditorMain::Render_SkyboxSettings()
+{
+	ImGui::Begin("Skybox Settings", &showSkyboxSettings);
+
+	// Get active scene
+	auto activeSceneOpt = Engine::GetSceneRegistry().GetActiveScene();
+	if (!activeSceneOpt.has_value()) {
+		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "No active scene loaded");
+		ImGui::End();
+		return;
+	}
+
+	Scene& activeScene = activeSceneOpt.value().get();
+	auto& skyboxSettings = activeScene.GetRenderSettings().skybox;
+
+	// Enable/Disable checkbox
+	bool enabled = skyboxSettings.enabled;
+	if (ImGui::Checkbox("Enable Skybox", &enabled)) {
+		engineService.ExecuteOnEngineThread([enabled]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().skybox.enabled = enabled;
+		});
+	}
+
+	ImGui::Separator();
+
+	// Face texture selection (resource dropdowns)
+	ImGui::Text("Cubemap Face Textures:");
+	ImGui::Spacing();
+
+	const char* faceLabels[6] = {
+		"Right (+X)", "Left (-X)", "Top (+Y)",
+		"Bottom (-Y)", "Front (+Z)", "Back (-Z)"
+	};
+
+	// Helper to check if asset is a texture
+	auto is_texture_asset = [](std::string const& assetname) -> bool {
+		std::string lower = assetname;
+		std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+		static const std::vector<std::string> texture_exts = {
+			".png", ".jpg", ".jpeg", ".tga", ".bmp", ".hdr", ".dds"
+		};
+		for (auto const& ext : texture_exts) {
+			if (lower.ends_with(ext)) return true;
+		}
+		return false;
+	};
+
+	bool needsReload = false;
+
+	// Render dropdown for each cubemap face
+	for (int i = 0; i < 6; ++i) {
+		ImGui::PushID(i);
+
+		// Get current texture name
+		std::string current_name = "None";
+		if (skyboxSettings.faceTextures[i] != rp::null_guid) {
+			rp::BasicIndexedGuid indexed{skyboxSettings.faceTextures[i], 0};
+			current_name = m_AssetManager->ResolveAssetName(indexed);
+			if (current_name.empty()) {
+				current_name = skyboxSettings.faceTextures[i].to_hex().substr(0, 8) + "...";
+			}
+		}
+
+		// Dropdown combo box
+		ImGui::SetNextItemWidth(300.0f);
+		if (ImGui::BeginCombo(faceLabels[i], current_name.c_str())) {
+			// "None" option
+			if (ImGui::Selectable("None", skyboxSettings.faceTextures[i] == rp::null_guid)) {
+				rp::Guid cleared = rp::null_guid;
+				engineService.ExecuteOnEngineThread([i, cleared]() {
+					auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+					scene.GetRenderSettings().skybox.faceTextures[i] = cleared;
+					scene.GetRenderSettings().skybox.needsReload = true;
+				});
+				needsReload = true;
+			}
+
+			// List all texture assets
+			for (auto const& [assetname, indexed_guid] : m_AssetManager->m_AssetNameGuid) {
+				// Filter for textures only
+				if (!is_texture_asset(assetname)) continue;
+
+				bool selected = (indexed_guid.m_guid == skyboxSettings.faceTextures[i]);
+				if (ImGui::Selectable(assetname.c_str(), selected)) {
+					// Capture by value for thread safety
+					rp::Guid selectedGuid = indexed_guid.m_guid;
+					engineService.ExecuteOnEngineThread([i, selectedGuid]() {
+						auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+						scene.GetRenderSettings().skybox.faceTextures[i] = selectedGuid;
+						scene.GetRenderSettings().skybox.needsReload = true;
+					});
+					needsReload = true;
+				}
+				if (selected) ImGui::SetItemDefaultFocus();
+			}
+
+			ImGui::EndCombo();
+		}
+
+		ImGui::PopID();
+	}
+
+	ImGui::Separator();
+
+	// Load button (if textures changed)
+	if (ImGui::Button("Load Cubemap")) {
+		engineService.ExecuteOnEngineThread([]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().skybox.needsReload = true;
+			scene.GetRenderSettings().skybox.enabled = true;
+		});
+	}
+
+	ImGui::SameLine();
+
+	// Reload button
+	if (ImGui::Button("Reload")) {
+		engineService.ExecuteOnEngineThread([]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().skybox.needsReload = true;
+		});
+	}
+
+	ImGui::Separator();
+
+	// Skybox properties
+	float exposure = skyboxSettings.exposure;
+	if (ImGui::SliderFloat("Exposure", &exposure, 0.0f, 10.0f)) {
+		engineService.ExecuteOnEngineThread([exposure]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().skybox.exposure = exposure;
+		});
+	}
+
+	glm::vec3 rotation = skyboxSettings.rotation;
+	if (ImGui::DragFloat3("Rotation (degrees)", &rotation.x, 1.0f, 0.0f, 360.0f)) {
+		engineService.ExecuteOnEngineThread([rotation]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().skybox.rotation = rotation;
+		});
+	}
+
+	glm::vec3 tint = skyboxSettings.tint;
+	if (ImGui::ColorEdit3("Tint", &tint.x)) {
+		engineService.ExecuteOnEngineThread([tint]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().skybox.tint = tint;
+		});
+	}
+
+	ImGui::Separator();
+	ImGui::Text("Status:");
+	if (skyboxSettings.cachedCubemapID != 0) {
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Cubemap loaded (GPU ID: %u)", skyboxSettings.cachedCubemapID);
+	} else {
+		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "No cubemap loaded");
+	}
+
+	// Show texture assignments
+	int validTextures = 0;
+	for (const auto& guid : skyboxSettings.faceTextures) {
+		if (guid != rp::null_guid) validTextures++;
+	}
+	ImGui::Text("Face textures assigned: %d/6", validTextures);
+
 	ImGui::End();
 }
 

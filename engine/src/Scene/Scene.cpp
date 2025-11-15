@@ -23,6 +23,51 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 			Engine::GetSceneRegistry().LoadScene(scn_guid);
 		}
 	}
+	// Deserialize render settings (Unity-style skybox, etc.)
+	if (nd["render_settings"]) {
+		YAML::Node const& renderSettings = nd["render_settings"];
+		if (renderSettings["skybox"]) {
+			YAML::Node const& skybox = renderSettings["skybox"];
+
+			if (skybox["enabled"])
+				scn.m_renderSettings.skybox.enabled = skybox["enabled"].as<bool>();
+			if (skybox["exposure"])
+				scn.m_renderSettings.skybox.exposure = skybox["exposure"].as<float>();
+
+			if (skybox["rotation"] && skybox["rotation"].size() == 3) {
+				scn.m_renderSettings.skybox.rotation.x = skybox["rotation"][0].as<float>();
+				scn.m_renderSettings.skybox.rotation.y = skybox["rotation"][1].as<float>();
+				scn.m_renderSettings.skybox.rotation.z = skybox["rotation"][2].as<float>();
+			}
+
+			if (skybox["tint"] && skybox["tint"].size() == 3) {
+				scn.m_renderSettings.skybox.tint.x = skybox["tint"][0].as<float>();
+				scn.m_renderSettings.skybox.tint.y = skybox["tint"][1].as<float>();
+				scn.m_renderSettings.skybox.tint.z = skybox["tint"][2].as<float>();
+			}
+
+			// Deserialize face texture GUIDs (resource pipeline)
+			if (skybox["face_textures"] && skybox["face_textures"].size() == 6) {
+				for (size_t i = 0; i < 6; ++i) {
+					std::string guidStr = skybox["face_textures"][i].as<std::string>();
+					scn.m_renderSettings.skybox.faceTextures[i] = rp::Guid::to_guid(guidStr);
+				}
+			}
+
+			// Mark for reload if GUIDs are valid
+			bool hasValidGuids = true;
+			for (const auto& guid : scn.m_renderSettings.skybox.faceTextures) {
+				if (guid == rp::null_guid) {
+					hasValidGuids = false;
+					break;
+				}
+			}
+			if (hasValidGuids && scn.m_renderSettings.skybox.enabled) {
+				scn.m_renderSettings.skybox.needsReload = true;
+			}
+		}
+	}
+
 	YAML::Node const& entities{ nd["entities"] };
 	auto& reg = Engine::GetWorld().impl.get_registry();
 	entt::entity ententity{};

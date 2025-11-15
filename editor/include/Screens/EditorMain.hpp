@@ -61,6 +61,7 @@ public:
 	bool showSceneExplorer = true;
 	bool showProfiler = false;
 	bool showConsole = true;
+	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
 	bool isPlaying = false; // To check if the gameplay is enabled, not to beconfused with paused as you can be paused but resume the gameplay
 	bool isPaused = false; // To check if game play is paused, should only be false when the gameplay is enabled
 	
@@ -118,6 +119,8 @@ public:
 	void Render_Scene();
 	void Render_Game();
 	void Render_CameraControls();
+
+	void Render_SkyboxSettings();
 
 	void Render_Components();
 	void Render_Component_Member(auto&, bool& is_dirty);
