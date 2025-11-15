@@ -130,6 +130,9 @@
 "Floor_openPBR_shader1_Roughness.png":
   "m_guid": "fe796f71618b806e11210f1813"
   "m_typeindex": "126269861530532084"
+"GroundMaterial":
+  "m_guid": "4d66b47119893138e28c6578ae"
+  "m_typeindex": "175488002581160416"
 "Mesh_Bag2_rubberBand_BaseColor.png":
   "m_guid": "ef0d537db797c87f8f6679b724"
   "m_typeindex": "126269861530532084"
@@ -297,6 +300,9 @@
   "m_typeindex": "4838001395392124604"
 "Trash1":
   "m_guid": "12ff68f7a02b3b0d21cae704dc8"
+  "m_typeindex": "175488002581160416"
+"WallMaterial":
+  "m_guid": "4b5b0f74de9a00aebb34509032"
   "m_typeindex": "175488002581160416"
 "cardboard_Fullyclosed.obj":
   "m_guid": "ef0e2f7236b900e688d07fa0b6"

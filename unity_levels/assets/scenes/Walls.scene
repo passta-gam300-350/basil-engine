@@ -1,0 +1,523 @@
+entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 17
+    entity name:
+      name: Wall_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0719036683
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 58.4947586
+        y: 0
+        z: -102.588333
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a777765b03681233c53c91f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 16
+    entity name:
+      name: Wall_Open_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0325594805
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 68.2113571
+        y: 0
+        z: -33.3026276
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 15
+    entity name:
+      name: Wall_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0869144946
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 8.06483746
+        y: 0
+        z: -102.588333
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 14
+    entity name:
+      name: Wall_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.0500000007
+        z: 4.30618763
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 113.101875
+        y: 0
+        z: -63.5873604
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 13
+    entity name:
+      name: Wall_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0725934729
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 94.037056
+        y: 0
+        z: -33.3030014
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 12
+    entity name:
+      name: Wall
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.110050425
+        y: 0.0500000007
+        z: 0.0499999896
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: 0
+      m_Trans:
+        x: 71.677803
+        y: 0
+        z: -75.5205307
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 10
+    entity name:
+      name: Wall
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.084161438
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 93.0101624
+        y: 0
+        z: -95.7666092
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a777765b03681233c53c91f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 9
+    entity name:
+      name: Wall_Open
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0325594805
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 35.2460594
+        y: 0
+        z: -102.637436
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a777765b03681233c53c91f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 8
+    entity name:
+      name: Wall_Open_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0500000007
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.08853793
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 7
+    entity name:
+      name: Wall_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.0500000007
+        z: 1.08500385
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 61.3410721
+        y: 0
+        z: -16.7669621
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 6
+    entity name:
+      name: Wall_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.081482105
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 92.0491257
+        y: 0
+        z: -127.570915
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 4
+    entity name:
+      name: Wall_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.0500000007
+        z: 4.30618763
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -12.4220333
+        y: 0
+        z: -63.5873604
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x02"
+      hasAttachedMaterial: true
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 4d66b47119893138e28c6578ae
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 3
+    entity name:
+      name: Ground
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1234
+        y: 1
+        z: 1234
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.899999976
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.300000012
+          z: 0.300000012
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a777765b03681233c53c91f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 0
+    entity name:
+      name: Wall_Open
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0325594805
+        y: 0.0500000007
+        z: 0.0500000082
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 71.6766205
+        y: 0
+        z: -40.7544479
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 1
+    entity name:
+      name: Wall
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.081482105
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 9.00889492
+        y: 0
+        z: -127.443398
+  - Scene ID:
+      Scene ID: 11
+    entity name:
+      name: unnamed
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -1
+        z: 0
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 43.7527657
+        y: 86.4436569
+        z: -68.4907913
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: fe7a6f7a5181c63288b8de39db
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 4b5b0f74de9a00aebb34509032
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 5
+    entity name:
+      name: Wall_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.207808584
+        y: 0.0500000007
+        z: 0.0500000007
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 61.7114944
+        y: 0
+        z: 0
