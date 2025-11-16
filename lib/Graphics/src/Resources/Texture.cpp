@@ -336,16 +336,39 @@ unsigned int TextureLoader::CubemapFromTextureIDs(
 
     // Copy each face from the 2D textures to cubemap faces
     // Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back)
+    // Determine format for data transfer
+    GLenum format = GL_RGBA;
+    int numComponents = 4;
+    if (internalFormat == GL_RGB || internalFormat == GL_SRGB8 || internalFormat == GL_RGB8) {
+        format = GL_RGB;
+        numComponents = 3;
+    } else if (internalFormat == GL_RED || internalFormat == GL_R8) {
+        format = GL_RED;
+        numComponents = 1;
+    }
+
+    // Allocate temporary buffer for texture data
+    std::vector<unsigned char> tempData(width * height * numComponents);
+
     for (int i = 0; i < 6; ++i) {
-        // Use glCopyImageSubData to copy from 2D texture to cubemap face
-        // Requires OpenGL 4.3+
-        glCopyImageSubData(
-            textureIDs[i], GL_TEXTURE_2D, 0, 0, 0, 0,          // Source: 2D texture
-            cubemapID, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, 0,  // Dest: Cubemap face
-            width, height, 1                                    // Dimensions
-        );
+        // Read data from source 2D texture
+        glBindTexture(GL_TEXTURE_2D, textureIDs[i]);
+        glGetTexImage(GL_TEXTURE_2D, 0, format, GL_UNSIGNED_BYTE, tempData.data());
 
         GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            spdlog::error("CubemapFromTextureIDs: Failed to read face {} from source texture (OpenGL error: 0x{:X})", i, error);
+            glDeleteTextures(1, &cubemapID);
+            return 0;
+        }
+
+        // Write data to cubemap face
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+        glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                        0, 0, width, height,
+                        format, GL_UNSIGNED_BYTE, tempData.data());
+
+        error = glGetError();
         if (error != GL_NO_ERROR) {
             spdlog::error("CubemapFromTextureIDs: Failed to copy face {} (OpenGL error: 0x{:X})", i, error);
             glDeleteTextures(1, &cubemapID);
