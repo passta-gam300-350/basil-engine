@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BasilEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+48a158ee96b5db1b5e4a64e0ca08660bfb5bab80")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+84488385a469384762a8e48bf2f56ab56cbbc534")]
 [assembly: System.Reflection.AssemblyProductAttribute("BasilEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BasilEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

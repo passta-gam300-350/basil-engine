@@ -1,0 +1,7 @@
+base:
+  m_guid: 98e42657432ad97a4f6bc79e8c4
+  m_importer: .texture
+  m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface7_Roughness.png
+  m_name: CardboardBox_FullyClosed_standardSurface7_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

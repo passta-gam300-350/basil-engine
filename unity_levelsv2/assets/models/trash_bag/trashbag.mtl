@@ -1,0 +1,56 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file trashbag
+# Generated for GAM300 Graphics Engine
+
+newmtl trashbag
+
+# Base color / diffuse map
+map_Kd Mesh_Bag2_trashbag_BaseColor.png
+
+# Normal map
+map_Bump Mesh_Bag2_trashbag_Normal.png
+bump Mesh_Bag2_trashbag_Normal.png
+
+# Metallic map
+map_Ks Mesh_Bag2_trashbag_Metallic.png
+
+# Roughness map
+map_Ns Mesh_Bag2_trashbag_Roughness.png
+
+# Emissive map
+map_Ke Mesh_Bag2_trashbag_Emissive.png
+
+# Height / displacement map
+map_d Mesh_Bag2_trashbag_Height.png
+disp Mesh_Bag2_trashbag_Height.png
+
+kd 0.143455 0.143455 0.143455
+illum 1
+
+newmtl rubberBand
+
+# Base color / diffuse map
+map_Kd Mesh_Bag2_rubberBand_BaseColor.png
+
+# Normal map
+map_Bump Mesh_Bag2_rubberBand_Normal.png
+bump Mesh_Bag2_rubberBand_Normal.png
+
+# Metallic map
+map_Ks Mesh_Bag2_rubberBand_Metallic.png
+
+# Roughness map
+map_Ns Mesh_Bag2_rubberBand_Roughness.png
+
+# Emissive map
+map_Ke Mesh_Bag2_rubberBand_Emissive.png
+
+# Height / displacement map
+map_d Mesh_Bag2_rubberBand_Height.png
+disp Mesh_Bag2_rubberBand_Height.png
+
+kd 0.9678 1 0
+illum 1
+

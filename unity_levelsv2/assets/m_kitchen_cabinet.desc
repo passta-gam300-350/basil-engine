@@ -1,0 +1,29 @@
+base:
+  m_guid: 9f1a2e4709c98bce8ba8c0aeec9
+  m_importer: .material
+  m_source: ""
+  m_name: m_kitchen_cabinet
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_kitchen_cabinet
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 98e437575b697196d0ff99f9e70
+    u_DiffuseMap: 98e435370a185659071d40076bd
+    u_EmissiveMap: 98e435976fbb5420a115e49f579
+    u_NormalMap: 98e436e770cb63403de0d242fef
+    u_HeightMap: 98e43617b6a92c9d8f78af1d69b
+    u_SpecularMap: 00
+    u_MetallicMap: 98e4367726d926a1cc2d8536831

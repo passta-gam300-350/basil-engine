@@ -1,0 +1,7 @@
+base:
+  m_guid: 98e43e37f78b7aa6af2b9aec800
+  m_importer: .texture
+  m_source: materials\kitchen_shelf\kitchenShelf_PandaMat1_Roughness.png
+  m_name: kitchenShelf_PandaMat1_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
