@@ -1,0 +1,27 @@
+base:
+  m_guid: 915182b7651be0c5f4728bbbdb6
+  m_importer: .material
+  m_source: ""
+  m_name: m_ceiling_fan
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_ceiling_fan
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    roughness: ef0c107a37b78b43506c891748
+    diffuse: ef0be97367b375a96aee9ba346
+    emissive: ef0bf17e2a9fd9690651b62fce
+    normal: ef0c0777f8a7e8e686b80b9635
+    height: ef0bf87401b5fd7290c8466efa
+    metallic: ef0c00743f99b8af9a7cc0eb18

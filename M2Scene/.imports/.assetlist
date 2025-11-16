@@ -184,6 +184,9 @@
 "WallMaterial":
   "m_guid": "489d4ad7b7b9365c19ecc3b5151"
   "m_typeindex": "175488002581160416"
+"m_table_glass":
+  "m_guid": "96572477bd5bd75d01c1066c288"
+  "m_typeindex": "175488002581160416"
 "tableTop_glass":
   "m_guid": "6d98bf17b8ab87edf1bfa8e986c"
   "m_typeindex": "175488002581160416"
@@ -259,3 +262,6 @@
 "table_new_tableGlass_Roughness.png":
   "m_guid": "469fe0c74cdb76b563d7d456823"
   "m_typeindex": "126269861530532084"
+"test":
+  "m_guid": "965e0fb70238211d166da357ff0"
+  "m_typeindex": "175488002581160416"
