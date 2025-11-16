@@ -385,14 +385,35 @@
 "kitchenShelf_standardSurface2_Roughness.png":
   "m_guid": "ef0d4c74f68d5014b2e214580f"
   "m_typeindex": "126269861530532084"
+"m_ceiling_fan":
+  "m_guid": "915182b7651be0c5f4728bbbdb6"
+  "m_typeindex": "175488002581160416"
+"m_ceiling_fan_PBR":
+  "m_guid": "914e5727c658ad8ae32a333f253"
+  "m_typeindex": "175488002581160416"
+"m_dustbin":
+  "m_guid": "968f07d71c1945c226c9330938b"
+  "m_typeindex": "175488002581160416"
 "m_floor":
   "m_guid": "10109e973918d45549b3e4676cc"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_shelf_panda":
+  "m_guid": "90d34557dcb8b7877adaa281442"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_shelf_standard":
+  "m_guid": "90d0d7275c4b6203d7e31583d14"
   "m_typeindex": "175488002581160416"
 "m_metalshelf":
   "m_guid": "116ee887af4a867dd1a94484b14"
   "m_typeindex": "175488002581160416"
 "m_wall":
   "m_guid": "107a6c57606bb17b8e9f27d9810"
+  "m_typeindex": "175488002581160416"
+"m_workbench_bottom":
+  "m_guid": "9221c3274c0abf37eb45b5021d5"
+  "m_typeindex": "175488002581160416"
+"m_workbench_top":
+  "m_guid": "92250247f4a8d53eead690583c7"
   "m_typeindex": "175488002581160416"
 "mesh_TrashCart_trash can_BaseColor.png":
   "m_guid": "ef0c42744eb6ab4470a66e974d"
