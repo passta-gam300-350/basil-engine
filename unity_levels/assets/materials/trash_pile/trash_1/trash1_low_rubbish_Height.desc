@@ -1,7 +1,0 @@
-base:
-  m_guid: fe79867ebb95612d9cf36a0805
-  m_importer: .texture
-  m_source: materials\trash_pile\trash_1\trash1_low_rubbish_Height.png
-  m_name: trash1_low_rubbish_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

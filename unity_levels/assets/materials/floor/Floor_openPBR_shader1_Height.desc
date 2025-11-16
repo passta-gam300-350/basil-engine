@@ -1,7 +1,0 @@
-base:
-  m_guid: fe794e74428ceb22ab0c2873d0
-  m_importer: .texture
-  m_source: materials\floor\Floor_openPBR_shader1_Height.png
-  m_name: Floor_openPBR_shader1_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

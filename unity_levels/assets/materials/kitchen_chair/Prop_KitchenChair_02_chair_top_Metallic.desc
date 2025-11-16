@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0cb77766be51b4dfbafd4f19
-  m_importer: .texture
-  m_source: materials\kitchen_chair\Prop_KitchenChair_02_chair_top_Metallic.png
-  m_name: Prop_KitchenChair_02_chair_top_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

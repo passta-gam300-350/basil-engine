@@ -454,6 +454,69 @@
 "WallMaterial":
   "m_guid": "489d4ad7b7b9365c19ecc3b5151"
   "m_typeindex": "175488002581160416"
+"biscuit_tin_chocoBiscuit.obj":
+  "m_guid": "12279807add9cd85b75e19f7db8"
+  "m_typeindex": "4838001395392124604"
+"biscuit_tin_empty.obj":
+  "m_guid": "1227985796f81e4d5c327308919"
+  "m_typeindex": "4838001395392124604"
+"biscuit_tin_standardSurface1_BaseColor.png":
+  "m_guid": "122788d7d7e9d6e9af848e25fe8"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Emissive.png":
+  "m_guid": "122789e7b5db490f80590fd0dc3"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Height.png":
+  "m_guid": "12278a47341a042c9338d442f7c"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Metallic.png":
+  "m_guid": "12278b67b818449a2b809378990"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Normal.png":
+  "m_guid": "12278bd7c258ea78d8aa531f6e8"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Roughness.png":
+  "m_guid": "12278c277e69d42315014ee4665"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_BaseColor.png":
+  "m_guid": "12278c87759ad10aaca242baf96"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Emissive.png":
+  "m_guid": "12278d6736eaae3f219af9e6ef0"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Height.png":
+  "m_guid": "12278dd7aa4b7d6bcd4e6682e12"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Metallic.png":
+  "m_guid": "12278e378c892171522127ae84d"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Normal.png":
+  "m_guid": "12278e9744ea5d11673fa591434"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Roughness.png":
+  "m_guid": "12278f07b7c83e048ea4937bd23"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_BaseColor.png":
+  "m_guid": "12278f5769c859efb3b08b95b89"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Emissive.png":
+  "m_guid": "12278fc7d54aedc7718ca620d56"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Height.png":
+  "m_guid": "12279017342b3236d00101b7389"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Metallic.png":
+  "m_guid": "12279087de2880f166ee57a2019"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Normal.png":
+  "m_guid": "12279127aa086b12335955ee7fc"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Roughness.png":
+  "m_guid": "122791872f195d4c3a6e20af734"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_wafer.obj":
+  "m_guid": "122798c7953bba558f899785673"
+  "m_typeindex": "4838001395392124604"
 "cardboard_Fullyclosed.obj":
   "m_guid": "98e466c73278a961e6c2cf254a0"
   "m_typeindex": "4838001395392124604"
@@ -535,6 +598,27 @@
 "kitchenShelf_standardSurface2_Roughness.png":
   "m_guid": "98e44097c0f92f73dda745a2550"
   "m_typeindex": "126269861530532084"
+"kite":
+  "m_guid": "12279737ce4956276de22f3c339"
+  "m_typeindex": "4838001395392124604"
+"kite_AO.png":
+  "m_guid": "12276d17fad8d732164bf953707"
+  "m_typeindex": "126269861530532084"
+"kite_BaseColor.png":
+  "m_guid": "12276e378f0876f48f00fbac0fd"
+  "m_typeindex": "126269861530532084"
+"kite_Height.png":
+  "m_guid": "12276ea7e89b654784f7e5b9c69"
+  "m_typeindex": "126269861530532084"
+"kite_Metallic.png":
+  "m_guid": "1227701760e9367bbbd31045c1f"
+  "m_typeindex": "126269861530532084"
+"kite_Normal.png":
+  "m_guid": "12277097f4b82d60e7a28dabc00"
+  "m_typeindex": "126269861530532084"
+"kite_Roughness.png":
+  "m_guid": "122770e778ea346edeb167a7760"
+  "m_typeindex": "126269861530532084"
 "m_cardboard_closed":
   "m_guid": "9aa554375ad821f18fca50a025e"
   "m_typeindex": "175488002581160416"
@@ -580,11 +664,32 @@
 "m_kitchen_shelf_standard":
   "m_guid": "9be3fc8740f8a5f8a62d75ec69a"
   "m_typeindex": "175488002581160416"
+"m_kite":
+  "m_guid": "18fd078774191e9b6c2f602246d"
+  "m_typeindex": "175488002581160416"
 "m_metal_shelf":
   "m_guid": "9b10bb37872925796aa10feb2ae"
   "m_typeindex": "175488002581160416"
+"m_plain_wall":
+  "m_guid": "12888e77d30a7559556f11e04c4"
+  "m_typeindex": "175488002581160416"
+"m_stairs":
+  "m_guid": "150d7217426b6e22c30de98767f"
+  "m_typeindex": "175488002581160416"
 "m_table_glass":
   "m_guid": "96572477bd5bd75d01c1066c288"
+  "m_typeindex": "175488002581160416"
+"m_tin_chocolate":
+  "m_guid": "18751b17b0699634f993d532826"
+  "m_typeindex": "175488002581160416"
+"m_tin_empty_clear":
+  "m_guid": "19df4a572a084171defbcaee86e"
+  "m_typeindex": "175488002581160416"
+"m_tin_empty_standard":
+  "m_guid": "1a1f94a7051a6c8f0740656eafa"
+  "m_typeindex": "175488002581160416"
+"m_tin_empty_top":
+  "m_guid": "1a070777bafad0d466ac7f3bc60"
   "m_typeindex": "175488002581160416"
 "m_trash1":
   "m_guid": "9ccc1257d638a8b8f37818a0553"
@@ -640,6 +745,27 @@
 "rubbish":
   "m_guid": "9989f8776c9b5029caa508fd79f"
   "m_typeindex": "175488002581160416"
+"stair_wide.obj":
+  "m_guid": "122797978d99636534b098ddf7d"
+  "m_typeindex": "4838001395392124604"
+"staircase_low_stairs_BaseColor.png":
+  "m_guid": "12277157da8bf623f8bc25810d1"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Emissive.png":
+  "m_guid": "12277227820a6277e20abcece20"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Height.png":
+  "m_guid": "122772a7ce4b71bcad526b3f33f"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Metallic.png":
+  "m_guid": "12277317404bfc3771ac55eee1d"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Normal.png":
+  "m_guid": "12277377a7ea4890fd5d550e8fc"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Roughness.png":
+  "m_guid": "122773d742a8125dd1fc899fdff"
+  "m_typeindex": "126269861530532084"
 "standardSurface1":
   "m_guid": "99864537ac0924bef487e44c9fd"
   "m_typeindex": "175488002581160416"

@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0db47a24acd25446c5a6295b
-  m_importer: .texture
-  m_source: materials\workbench\Prop_Desk_03_table_bottom_Emissive.png
-  m_name: Prop_Desk_03_table_bottom_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

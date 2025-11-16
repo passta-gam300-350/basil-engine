@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0cdc710e831b1e3f4325b644
-  m_importer: .texture
-  m_source: materials\kitchen_chair\Prop_KitchenChair_02_PandaMat3_Height.png
-  m_name: Prop_KitchenChair_02_PandaMat3_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

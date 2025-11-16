@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0d4c74f68d5014b2e214580f
-  m_importer: .texture
-  m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_Roughness.png
-  m_name: kitchenShelf_standardSurface2_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

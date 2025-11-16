@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0c0777f8a7e8e686b80b9635
-  m_importer: .texture
-  m_source: materials\ceiling_fan\Ceilingfan_ceilingfan_Holder_Normal.png
-  m_name: Ceilingfan_ceilingfan_Holder_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

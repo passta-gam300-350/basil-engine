@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0c507413a56b467746927ff7
-  m_importer: .texture
-  m_source: materials\dustbin\mesh_TrashCart_trash can_Height.png
-  m_name: mesh_TrashCart_trash can_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

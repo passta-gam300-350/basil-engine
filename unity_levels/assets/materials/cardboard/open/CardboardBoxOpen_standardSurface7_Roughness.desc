@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0be27b00972edf9a4346d5be
-  m_importer: .texture
-  m_source: materials\cardboard\open\CardboardBoxOpen_standardSurface7_Roughness.png
-  m_name: CardboardBoxOpen_standardSurface7_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
