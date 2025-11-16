@@ -190,6 +190,15 @@ void AssetManager::CreateMaterialDescriptor(std::string const& material_name) {
 	matDesc.material.roughness = 0.5f;
 	matDesc.material.blend_mode = 0; // Opaque by default
 
+	matDesc.material.texture_properties["u_AOMap"];
+	matDesc.material.texture_properties["u_RoughnessMap"];
+	matDesc.material.texture_properties["u_DiffuseMap"];
+	matDesc.material.texture_properties["u_EmissiveMap"];
+	matDesc.material.texture_properties["u_NormalMap"];
+	matDesc.material.texture_properties["u_HeightMap"];
+	matDesc.material.texture_properties["u_SpecularMap"];
+	matDesc.material.texture_properties["u_MetallicMap"];
+
 	// 4. Save descriptor to .desc file in current directory
 	std::string desc_path = normalizePath(m_CurrentPath + "/" + material_name + ".desc");
 
