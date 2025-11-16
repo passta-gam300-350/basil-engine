@@ -35,7 +35,7 @@ struct SceneIDComponent {
 struct SceneRenderSettings {
 	struct SkyboxSettings {
 		// Unity-style: Skybox uses 6 texture assets loaded through resource pipeline
-		// Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back)
+		// Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (back), -Z (front)
 		std::array<rp::Guid, 6> faceTextures = {
 			rp::null_guid, rp::null_guid, rp::null_guid,
 			rp::null_guid, rp::null_guid, rp::null_guid

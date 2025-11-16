@@ -11,7 +11,8 @@ uniform mat4 u_RotationMatrix = mat4(1.0); // Rotation matrix
 
 void main() {
     // Apply rotation to texture coordinates
-    vec3 rotatedCoords = (u_RotationMatrix * vec4(TexCoords, 1.0)).xyz;
+    // Negate Y to correct OpenGL cubemap orientation for top/bottom faces
+    vec3 rotatedCoords = (u_RotationMatrix * vec4(TexCoords.x, -TexCoords.y, TexCoords.z, 1.0)).xyz;
 
     // Sample cubemap with rotated coordinates
     vec3 color = texture(u_Skybox, rotatedCoords).rgb;

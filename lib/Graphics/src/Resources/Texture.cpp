@@ -335,7 +335,7 @@ unsigned int TextureLoader::CubemapFromTextureIDs(
     }
 
     // Copy each face from the 2D textures to cubemap faces
-    // Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back)
+    // Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (back), -Z (front)
     // Determine format for data transfer
     GLenum format = GL_RGBA;
     int numComponents = 4;
@@ -351,8 +351,14 @@ unsigned int TextureLoader::CubemapFromTextureIDs(
     std::vector<unsigned char> tempData(width * height * numComponents);
 
     for (int i = 0; i < 6; ++i) {
+        // Swap Top (+Y, index 2) and Bottom (-Y, index 3) to compensate for Y-negation in shader
+        // This allows users to assign textures intuitively (up.png to Top, dn.png to Bottom)
+        int sourceIndex = i;
+        if (i == 2) sourceIndex = 3;      // +Y face gets Bottom texture
+        else if (i == 3) sourceIndex = 2; // -Y face gets Top texture
+
         // Read data from source 2D texture
-        glBindTexture(GL_TEXTURE_2D, textureIDs[i]);
+        glBindTexture(GL_TEXTURE_2D, textureIDs[sourceIndex]);
         glGetTexImage(GL_TEXTURE_2D, 0, format, GL_UNSIGNED_BYTE, tempData.data());
 
         GLenum error = glGetError();

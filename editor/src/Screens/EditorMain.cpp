@@ -3020,7 +3020,7 @@ void EditorMain::Render_SkyboxSettings()
 
 	const char* faceLabels[6] = {
 		"Right (+X)", "Left (-X)", "Top (+Y)",
-		"Bottom (-Y)", "Front (+Z)", "Back (-Z)"
+		"Bottom (-Y)", "Back (+Z)", "Front (-Z)"
 	};
 
 	// Helper to check if asset is a texture
