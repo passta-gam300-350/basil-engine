@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0d707d199b0dc62d04ef68df
-  m_importer: .texture
-  m_source: materials\trash_bag\Mesh_Bag2_rubberBand_Normal.png
-  m_name: Mesh_Bag2_rubberBand_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

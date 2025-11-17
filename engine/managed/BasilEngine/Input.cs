@@ -1,5 +1,7 @@
 ﻿
+using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
+using BasilEngine.Mathematics;
 using Engine.Bindings;
 
 namespace BasilEngine
@@ -159,6 +161,10 @@ namespace BasilEngine
         [StaticAccessor("ManagedInput", StaticAccessorType.DoubleColon)]
         private static extern bool GetKeyOnce(int key);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetMousePosition")]
+        [StaticAccessor("ManagedInput", StaticAccessorType.DoubleColon)]
+        public static extern void GetMouseScreenPosInternal(out float x, out float y);
 
         /// <summary>
         /// Get key held down.
@@ -179,6 +185,15 @@ namespace BasilEngine
             return GetKeyOnce((int)key);
         }
 
+
+        public static Vector2 mousePosition
+        {
+            get
+            {
+                GetMouseScreenPosInternal(out float x, out float y);
+                return new Vector2(x, y);
+            }
+        }
 
 
     }

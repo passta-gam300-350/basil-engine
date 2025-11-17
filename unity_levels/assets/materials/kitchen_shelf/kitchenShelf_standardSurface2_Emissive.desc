@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0d2f7af1a8a7383f385fe199
-  m_importer: .texture
-  m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_Emissive.png
-  m_name: kitchenShelf_standardSurface2_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

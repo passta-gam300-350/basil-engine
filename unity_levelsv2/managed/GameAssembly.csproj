@@ -9,13 +9,14 @@
         <AssemblyName>GameAssembly</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="BasilEngine"><HintPath>M:\gam300\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll</HintPath></Reference>
+        <Reference Include="BasilEngine"><HintPath>C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll</HintPath></Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\CameraTest.cs" />
-<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
-<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs" />
-<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\SimpleMovement.cs" />
-<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\UserTest.cs" />
+        <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CameraTest.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\PlayerController3D.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\SimpleMovement.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\UserTest.cs" />
     </ItemGroup>
 </Project>

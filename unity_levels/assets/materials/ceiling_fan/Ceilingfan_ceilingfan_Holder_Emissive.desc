@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0bf17e2a9fd9690651b62fce
-  m_importer: .texture
-  m_source: materials\ceiling_fan\Ceilingfan_ceilingfan_Holder_Emissive.png
-  m_name: Ceilingfan_ceilingfan_Holder_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

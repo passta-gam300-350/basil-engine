@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0cfa7115bdc4ddb5bf956c7b
-  m_importer: .texture
-  m_source: materials\kitchen_shelf\kitchenShelf_PandaMat1_BaseColor.png
-  m_name: kitchenShelf_PandaMat1_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

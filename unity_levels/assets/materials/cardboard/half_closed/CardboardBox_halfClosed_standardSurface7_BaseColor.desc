@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0b9275769cc33b481c334414
-  m_importer: .texture
-  m_source: materials\cardboard\half_closed\CardboardBox_halfClosed_standardSurface7_BaseColor.png
-  m_name: CardboardBox_halfClosed_standardSurface7_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

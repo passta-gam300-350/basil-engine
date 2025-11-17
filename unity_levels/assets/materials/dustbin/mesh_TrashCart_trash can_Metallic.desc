@@ -1,7 +1,0 @@
-base:
-  m_guid: ef0c5773d58a9aae81ad27751c
-  m_importer: .texture
-  m_source: materials\dustbin\mesh_TrashCart_trash can_Metallic.png
-  m_name: mesh_TrashCart_trash can_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

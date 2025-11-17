@@ -1,7 +1,0 @@
-base:
-  m_guid: fe7a2173238165ed0ac0aefb30
-  m_importer: .texture
-  m_source: materials\wall_open\wall_open_wall_Emissive.png
-  m_name: wall_open_wall_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

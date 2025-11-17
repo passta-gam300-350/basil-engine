@@ -1,7 +1,0 @@
-base:
-  m_guid: 114bb38792a9b086c5b7911a557
-  m_importer: .texture
-  m_source: materials\table\table_new_TableTop_Metallic.png
-  m_name: table_new_TableTop_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
