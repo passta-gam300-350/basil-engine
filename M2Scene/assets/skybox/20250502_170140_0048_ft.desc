@@ -1,7 +1,0 @@
-base:
-  m_guid: 95dbff7dbf9556e391cec97d8a
-  m_importer: .texture
-  m_source: skybox\20250502_170140_0048_ft.png
-  m_name: 20250502_170140_0048_ft.png
-  m_importer_type: 13238151832854353850
-compression: BC1_RGB4
