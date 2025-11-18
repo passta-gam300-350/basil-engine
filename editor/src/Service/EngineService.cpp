@@ -631,9 +631,13 @@ void EngineContainerService::SaveScene(const char* path) {
 	}
 
 	ExecuteOnEngineThread([path = std::string(path)]() {
-		ecs::world world = Engine::GetWorld();
-		world.SaveYAML(path.c_str());
-		spdlog::info("EngineService: Scene saved to {}", path);
+		auto activeSceneOpt = Engine::GetSceneRegistry().GetActiveScene();
+		if (activeSceneOpt.has_value()) {
+			activeSceneOpt.value().get().SerializeYaml(path);
+			spdlog::info("EngineService: Scene saved to {}", path);
+		} else {
+			spdlog::error("EngineService: No active scene to save!");
+		}
 	});
 }
 
@@ -644,10 +648,17 @@ void EngineContainerService::LoadScene(const char* path) {
 	}
 
 	ExecuteOnEngineThread([path = std::string(path)]() {
+		// Clear existing scenes
 		ecs::world world = Engine::GetWorld();
 		world.UnloadAll();
-		world.LoadYAML(path.c_str());
-		spdlog::info("EngineService: Scene loaded from {}", path);
+
+		// Load scene using SceneRegistry::LoadSceneFromPath which includes render settings (skybox, etc.)
+		auto sceneRefOpt = Engine::GetSceneRegistry().LoadSceneFromPath(path);
+		if (sceneRefOpt.has_value()) {
+			spdlog::info("EngineService: Scene loaded from {}", path);
+		} else {
+			spdlog::error("EngineService: Failed to load scene from {}", path);
+		}
 	});
 }
 

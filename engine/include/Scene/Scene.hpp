@@ -189,6 +189,10 @@ struct Scene
 		return m_renderSettings;
 	}
 
+	inline rp::Guid GetGuid() const {
+		return m_guid;
+	}
+
 private:
 	rp::Guid m_guid{};
 	std::string m_name;
@@ -214,6 +218,7 @@ public:
 		return m_loaded_scenes.find(scn_guid) != m_loaded_scenes.end();
 	}
 	std::optional<std::reference_wrapper<Scene>> LoadScene(rp::Guid scn_guid);
+	std::optional<std::reference_wrapper<Scene>> LoadSceneFromPath(std::string const& path);
 	void UnloadScene(rp::Guid scn_guid);
 	inline std::optional<std::reference_wrapper<Scene>> GetScene(rp::Guid scn_guid) {
 		auto it{ m_loaded_scenes.find(scn_guid) };
