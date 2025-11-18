@@ -222,6 +222,8 @@ namespace ecs {
 		std::for_each(transforms.begin(), transforms.end(), [](ecs::entity e) {
 			e.add<TransformMtxComponent>();
 			});
+
+		Engine::OnLoad();
 	}
 
 	void world::SaveYAML(std::string const& path) {
@@ -240,6 +242,7 @@ namespace ecs {
 		
 	}
 	void world::UnloadAll() {
+		Engine::OnUnload();
 		Engine::GetSceneRegistry().Clear();
 		impl.get_registry().clear();
 	}

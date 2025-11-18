@@ -12,7 +12,7 @@ class BehaviourSystem : public ecs::SystemBase
 	std::unordered_map<uint64_t, bool> enabledStates;
 
 public:
-	bool isActive = true;
+	bool isActive = false;
 	enum struct CollisionCallback
 	{
 		OnCollisionEnter,
@@ -21,6 +21,7 @@ public:
 	} ;
 	static BehaviourSystem& Instance();
 	void Init() override;
+	void Reload();
 	void Update(ecs::world&, float dt) override;
 	void FixedUpdate(ecs::world&) override;
 	void Exit() override;

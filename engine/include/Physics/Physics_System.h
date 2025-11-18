@@ -112,6 +112,7 @@ public:
 
     // Batch creation for scene loading
     void CreateAllBodiesForLoadedScene();
+    void DestroyAllBodiesForUnload();
 
     // Collision/Trigger handlers (called by ContactListener)
     void HandleCollisionEnter(const JPH::Body& body1, const JPH::Body& body2, const JPH::ContactManifold& manifold);

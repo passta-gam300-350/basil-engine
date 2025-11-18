@@ -1,0 +1,29 @@
+base:
+  m_guid: 965e0fb70238211d166da357ff0
+  m_importer: .material
+  m_source: ""
+  m_name: test
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: test
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 469fe0c74cdb76b563d7d456823
+    u_DiffuseMap: 469fdda770fb4ddb9d5928a500d
+    u_EmissiveMap: 469fde47b00b4b9f04b767b6f60
+    u_NormalMap: 469fe027061a8dea9b0952e2fd1
+    u_HeightMap: 469fdee7ae2b37a6742176e9a21
+    u_SpecularMap: 00
+    u_MetallicMap: 469fdf870a28569c59c855d9f41

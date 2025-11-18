@@ -1,0 +1,28 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl standardSurface7
+
+# Base color / diffuse map
+map_Kd CardboardBox_halfClosed_standardSurface7_BaseColor.png
+
+# Normal map
+map_Bump CardboardBox_halfClosed_standardSurface7_Normal.png
+bump CardboardBox_halfClosed_standardSurface7_Normal.png
+
+# Metallic map
+map_Ks CardboardBox_halfClosed_standardSurface7_Metallic.png
+
+# Roughness map
+map_Ns CardboardBox_halfClosed_standardSurface7_Roughness.png
+
+# Emissive map
+map_Ke CardboardBox_halfClosed_standardSurface7_Emissive.png
+
+# Height / displacement map
+map_d CardboardBox_halfClosed_standardSurface7_Height.png
+disp CardboardBox_halfClosed_standardSurface7_Height.png
+
+kd 0.5783 0.238 0
+illum 1
+

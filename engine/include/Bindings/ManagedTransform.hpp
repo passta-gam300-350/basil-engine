@@ -30,5 +30,10 @@ public:
 	static void GetRotation(uint64_t handle, float* pitch, float* yaw, float* roll);
 	static void GetScale(uint64_t handle, float* x, float* y, float* z);
 
+	// Basis getters (world-space if TransformMtxComponent exists, otherwise local rotation)
+	static void GetForward(uint64_t handle, float* x, float* y, float* z);
+	static void GetRight(uint64_t handle, float* x, float* y, float* z);
+	static void GetUp(uint64_t handle, float* x, float* y, float* z);
+
 };
 #endif // ManagedTransform_HPP

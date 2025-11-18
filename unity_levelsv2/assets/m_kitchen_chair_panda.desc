@@ -1,0 +1,29 @@
+base:
+  m_guid: 9ec93bb7a05acf9221ae785acd1
+  m_importer: .material
+  m_source: ""
+  m_name: m_kitchen_chair_panda
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_kitchen_chair_panda
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 98e43be7db4b64ab8a7b9958da1
+    u_DiffuseMap: 98e439f7fe099599b2ebeae6b2d
+    u_EmissiveMap: 98e43a67df0a22c0d351bb7378f
+    u_NormalMap: 98e43b87f6ca6549e47324d4c29
+    u_HeightMap: 98e43ac7ceabc2ce456b1bda50d
+    u_SpecularMap: 00
+    u_MetallicMap: 98e43b271eba926a3a1e0995d0f

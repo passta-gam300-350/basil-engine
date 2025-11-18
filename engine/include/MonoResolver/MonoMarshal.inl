@@ -68,4 +68,12 @@ inline auto MonoMarshal::NativeToMono<const char*>(const char* value) -> decltyp
 	return monoStr;
 }
 
+
+template <>
+inline auto MonoMarshal::NativeToMono<uint64_t>(uint64_t value) -> decltype(auto)
+{
+	uint64_t managedValue = value;
+	return managedValue;
+}
+
 #endif

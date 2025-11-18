@@ -56,6 +56,27 @@ void BehaviourSystem::Init()
 
 
 }
+
+void BehaviourSystem::Reload()
+{
+	auto world = Engine::GetWorld();
+
+	auto entities = world.filter_entities<behaviour>();
+	for (auto entity : entities) {
+		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		component.scriptIDs.clear();
+		for (auto val : component.classesName) {
+			std::string className, namespaceName;
+			parse_class_name(val, namespaceName, className);
+
+			if (namespaceName.empty()) {
+				AddScriptToEntityComponent(entity, world, className.c_str());
+			}
+			else AddScriptToEntityComponent(entity, world, className.c_str(), namespaceName.c_str());
+		}
+	}
+}
+
 void BehaviourSystem::Update(ecs::world& world, float)
 {
 	if (!isActive) return;

@@ -1,0 +1,7 @@
+base:
+  m_guid: 98e454477328d4a034355f8ce73
+  m_importer: .texture
+  m_source: materials\trash_pile\trash_2\trash2_low_standardsurface13_BaseColor.png
+  m_name: trash2_low_standardsurface13_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -222,6 +222,9 @@ void Engine::ReportLastError() {
 
 void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 	Engine::SetState(Info::State::Init);
+
+
+
 	Instance().m_Window = std::make_unique<Window>(wptr);
 
 	InitWithoutWindow(cfg);
@@ -229,6 +232,14 @@ void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 
 void Engine::InitWithoutWindow(std::string const& cfg) {
 	Engine::SetState(Info::State::Init);
+	Engine::SetOnLoadCallBack([](ecs::world& world) {
+		spdlog::info("World loaded with {} entities", world.get_all_entities().size());
+	});
+	Engine::SetOnUnloadCallBack([](ecs::world& world)
+	{
+		spdlog::info("World is unloaded.");
+
+	});
 
 	ReflectionRegistry::SetupNativeTypes();
 	ReflectionRegistry::SetupEngineTypes();
@@ -241,6 +252,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	Instance().m_World = WorldRegistry::NewWorld();
 
 	if (!cfg.empty()) {
+		Engine::GenerateDefaultConfig();
 		YAML::Node root{YAML::LoadFile(cfg)};
 
 		if (YAML::Node system{ root["system"] }; system) {

@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for Metal_shelfStand model
+# Generated for GAM300 Graphics Engine
+
+newmtl Metal
+
+# Base color / diffuse map
+map_Kd Metal_ShelfStand_Metal_BaseColor.png
+
+# Normal map
+map_Bump Metal_ShelfStand_Metal_Normal.png
+bump Metal_ShelfStand_Metal_Normal.png
+
+# Metallic map
+map_Ks Metal_ShelfStand_Metal_Metallic.png
+
+# Roughness map
+map_Ns Metal_ShelfStand_Metal_Roughness.png
+
+# Emissive map
+map_Ke Metal_ShelfStand_Metal_Emissive.png
+
+# Height / displacement map
+map_d Metal_ShelfStand_Metal_Height.png
+disp Metal_ShelfStand_Metal_Height.png
+
+kd 0.8 0.8 0.8
+illum 1
+
