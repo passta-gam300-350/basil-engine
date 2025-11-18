@@ -1,0 +1,57 @@
+﻿using BasilEngine;
+using BasilEngine.Components;
+using BasilEngine.Debug;
+using BasilEngine.Mathematics;
+using System;
+
+public class KiteTarget : Behavior
+{
+    private Rigidbody rb;
+
+    public float windSpeed = 0.4f;
+    public float collectDist = 2f;
+    private GameObject player;
+
+
+    public void Init()
+    {
+
+    }
+
+    public void Update()
+    {
+        if (player == null)
+        {
+            player = GameObject.Find("Player");
+
+        }
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+            if (rb == null) return;
+            rb.UseGravity = false;
+            rb.Drag = 0;
+
+
+            return;
+        }
+
+        Vector3 movement = new Vector3();
+
+
+        movement.x -= windSpeed;
+        rb.velocity = movement;
+        float d = Vector3.DistanceSqr(player.transform.position, transform.position);
+        if (d < collectDist)
+        {
+            // Collect the kite
+            GameObject.Destroy(gameObject);
+            
+        }   
+        Logger.Log(d);
+    }
+
+    public void FixedUpdate()
+    {
+    }
+}

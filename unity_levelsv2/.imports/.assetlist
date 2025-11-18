@@ -451,6 +451,12 @@
 "TableTop1":
   "m_guid": "6d98bef735eb0e9a1d6f8061409"
   "m_typeindex": "175488002581160416"
+"Terrain.obj":
+  "m_guid": "e02f8fa7eb18c1cafa05087c973"
+  "m_typeindex": "4838001395392124604"
+"TerrainBase":
+  "m_guid": "e04ed7e7cbd8b1ebe195259c9f7"
+  "m_typeindex": "175488002581160416"
 "WallMaterial":
   "m_guid": "489d4ad7b7b9365c19ecc3b5151"
   "m_typeindex": "175488002581160416"

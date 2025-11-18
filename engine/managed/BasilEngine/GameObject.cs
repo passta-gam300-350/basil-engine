@@ -13,14 +13,24 @@ namespace BasilEngine
     /// <summary>
     /// Represents a game object in the Basil Engine.
     /// </summary>
-    [Disabled]
+    //[Disabled]
+    [NativeHeader("Bindings/ManagedGameObjects.hpp")]
+    [NativeClass("ManagedGameObjects")]
     public class GameObject : NativeObject
     {
-        // TODO: Add Glue Gen Attribute
+        // TODO: Add Glue Gen Attribues
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern string internal_GetName(UInt64 handle);
+        [NativeMethod("FindByName")]
+        [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        private extern static UInt64 internal_Find(string name);
+
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void internal_SetName(UInt64 handle, string name);
+        [NativeMethod("DeleteGameObject")]
+        [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        public extern static void DeleteGameObjectInternal(UInt64 handle);
+
+
+
 
 
         private Transform transformComponent = null;
@@ -31,11 +41,13 @@ namespace BasilEngine
             {
                 if (transformComponent == null)
                 {
-                   transformComponent = new Transform(NativeID);
+                    transformComponent = new Transform(NativeID);
                 }
+
                 return transformComponent;
             }
         }
+
         public bool activeSelf
         {
             //TODO: Implement activeSelf getter
@@ -53,31 +65,46 @@ namespace BasilEngine
             get => false;
 
         }
+
         //TODO: Implement layer getter and setter
         public int layer
         {
             get => 0;
-            set
-            {
-                layer = value;
-            }
+            set { layer = value; }
 
         }
 
-        public string name
-        {
-            get => internal_GetName(this.NativeID);
-            set => internal_SetName(this.NativeID, value);
-        }
+
+
+
 
         public GameObject(UInt64 handle)
         {
             this.NativeID = handle;
-            Console.WriteLine("GameObject created with handle: " + handle); 
+            Console.WriteLine("GameObject created with handle: " + handle);
             transformComponent = new Transform(handle);
         }
 
+        public static GameObject Find(string name)
+        {
+            UInt64 handle = internal_Find(name);
+            if (handle == 0)
+            {
+                return null;
+            }
 
+            return new GameObject(handle);
+
+
+        }
+
+        public static void Destroy(GameObject obj)
+        {
+            if (obj != null)
+            {
+                DeleteGameObjectInternal(obj.NativeID);
+            }
+        }
     }
 }
          

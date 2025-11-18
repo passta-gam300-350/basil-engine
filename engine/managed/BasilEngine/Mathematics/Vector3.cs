@@ -109,6 +109,10 @@ namespace BasilEngine.Mathematics
         {
             return (b - a).Magnitude();
         }
+        public static float DistanceSqr(Vector3 a, Vector3 b)
+        {
+            return (b - a).MagnitudeSqr();
+        }
         // Lerp
         public static Vector3 Lerp(Vector3 a, Vector3 b, float t)
         {

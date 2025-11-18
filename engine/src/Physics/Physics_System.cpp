@@ -844,6 +844,45 @@ void PhysicsSystem::CreateAllBodiesForLoadedScene() {
     spdlog::info("PhysicsSystem: Created {} bodies, skipped {} entities", createdCount, skippedCount);
 }
 
+void PhysicsSystem::DestroyAllBodiesForUnload()
+{
+    spdlog::info("PhysicsSystem: Destroying all bodies for all loaded entities...");
+    auto world = Engine::GetWorld();
+
+    if (!m_bodyInterface) {
+        spdlog::warn("PhysicsSystem: Body interface not initialized, skipping body destruction");
+        return;
+    }
+
+    auto entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
+
+    int destroyedCount = 0;
+    int missingCount = 0;
+
+    for (auto const& entity : entities)
+    {
+        auto it = m_entityToBodyID.find(entity);
+        if (it == m_entityToBodyID.end()) {
+            ++missingCount;
+            continue;
+        }
+
+        JPH::BodyID bodyID = it->second;
+
+        if (!bodyID.IsInvalid()) {
+            m_bodyInterface->RemoveBody(bodyID);
+            m_bodyInterface->DestroyBody(bodyID);
+            m_bodyIDToEntity.erase(bodyID.GetIndexAndSequenceNumber());
+            ++destroyedCount;
+        }
+
+        m_entityToBodyID.erase(it);
+    }
+
+    spdlog::info("PhysicsSystem: Destroyed {} bodies ({} missing) during unload", destroyedCount, missingCount);
+}
+
+
 void PhysicsSystem::SyncDirtyRigidBodies(ecs::world& world) {
     // Query all entities with RigidBodyComponent
     auto entities = world.filter_entities<RigidBodyComponent>();

@@ -1,0 +1,20 @@
+base:
+  m_guid: e02f8fa7eb18c1cafa05087c973
+  m_importer: .mesh
+  m_source: models\terrain\Terrain.obj
+  m_name: Terrain.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0
