@@ -2142,7 +2142,7 @@ void EditorMain::Render_SceneExplorer()
 		return;
 	}
 
-	std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> scnGraphs;
+	std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> scnGraphs;
 	{
 		std::lock_guard guard{ engineService.m_cont->m_mtx };
 		scnGraphs = engineService.m_cont->m_loaded_scenes_scenegraph_snapshot;
@@ -2154,7 +2154,7 @@ void EditorMain::Render_SceneExplorer()
 		auto RenderNode{ [this, scnguid](const SceneGraphNode& node, auto&& fn) -> void {
 			// Check if this entity is currently selected
 			uint32_t entityUID = ecs::entity(node.m_entity_handle).get_uid();
-			bool isSelected = (m_SelectedEntityID == entityUID);
+			bool isSelected = (m_EntitiesIDSelection.find(entityUID) != m_EntitiesIDSelection.end());
 			if (isSelected) {
 				m_SelectedNodeID = node.m_entity_sid;
 			}
@@ -2275,9 +2275,21 @@ void EditorMain::Render_SceneExplorer()
 							});
 					}
 				}
-				if (node.m_entity_handle && ImGui::MenuItem("Add Child"))
+				if (node.m_entity_handle && ImGui::MenuItem("Create Child"))
 				{
 					engineService.create_child_entity(node.m_entity_handle);
+				}
+				if (node.m_parent && node.m_parent->m_parent == nullptr)
+				{
+					if (ImGui::MenuItem("Create Parent", "Ctrl+G")) {
+						(isSelected) ? engineService.create_parent_entity(m_EntitiesIDSelection) : engineService.create_parent_entity(node.m_entity_handle);
+					}
+					if (node.m_children.size() && ImGui::MenuItem("Orphan Children")) {
+						engineService.orphan_children_entities(node.m_entity_handle);
+					}
+				}
+				else if(node.m_entity_handle && ImGui::MenuItem("Clear Parent")) {
+					engineService.clear_parent_entity(node.m_entity_handle);
 				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Rename")) { }
@@ -2308,125 +2320,10 @@ void EditorMain::Render_SceneExplorer()
 	if (scnGraphs.size()) {
 		for (auto& [guid, kv] : scnGraphs) {
 			auto& [scene, stale] = kv;
-			RenderSceneGraphNode(scene, guid);
+			RenderSceneGraphNode(*scene, guid);
 		}
 	}
-	
 
-	/*
-	if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-	{
-		//int entityIndex = 0;
-		//for (auto& entity : entities)
-		//{
-		//	uint32_t entityID = static_cast<uint32_t>(entity.get_uid());
-
-		//	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf |
-		//		ImGuiTreeNodeFlags_NoTreePushOnOpen |
-		//		ImGuiTreeNodeFlags_SpanAvailWidth;
-
-		//	if (entityID == m_SelectedEntityID)
-		//		flags |= ImGuiTreeNodeFlags_Selected;
-
-
-		//	ImGui::TreeNodeEx((void*)(intptr_t)entityID, flags, "%s", entity.name().c_str());
-
-		//	if (ImGui::IsItemClicked())
-		//	{
-		//		m_SelectedEntityID = entityID;
-		//	}
-
-		//	// Right-click context menu
-		//	if (ImGui::BeginPopupContextItem())
-		//	{
-		//		if (ImGui::MenuItem("Duplicate")) { }
-		//		if (ImGui::MenuItem("Delete")) { }
-		//		ImGui::Separator();
-		//		if (ImGui::MenuItem("Rename")) { }
-		//		ImGui::EndPopup();
-		//	}
-
-		//	entityIndex++;
-		//}
-
-		for (size_t i = 0; i < entityHandles.size(); ++i) {
-			auto ehdl = entityHandles[i];
-			ImGui::PushID(static_cast<int>(i));
-
-			// Check if this entity is currently selected
-			uint32_t entityUID = ecs::entity(ehdl).get_uid();
-			bool isSelected = (m_SelectedEntityID == entityUID);
-
-			// DEBUG: Log entity IDs for all entities
-			static bool loggedOnce = false;
-			if (!loggedOnce && i == 0) {
-				spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
-				for (size_t j = 0; j < entityHandles.size(); ++j) {
-					uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
-					spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
-				}
-				loggedOnce = true;
-			}
-
-			// Display entity info with selection highlighting
-			std::string entityName = entityNames[i];
-
-			// Check what components this entity has (using snapshot)
-			bool hasTransform = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<TransformComponent>());
-			bool hasMesh = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>());
-			bool hasLight = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>());
-			bool hasVisibility = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<VisibilityComponent>());
-
-			UNREF_PARAM(hasTransform);
-
-			if (hasLight) entityName += " (Light)";
-			else if (hasMesh) entityName += " (Mesh)";
-			else entityName += " (Empty)";
-
-			// Highlight selected entity with different color
-			if (isSelected) {
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // Yellow text for selected
-				ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.337f, 0.612f, 0.839f, 0.5f));
-			}
-
-			//bool nodeOpen = ImGui::TreeNode(entityName.c_str());
-			bool selectable = isSelected;
-			if (ImGui::Selectable(entityName.c_str(), &selectable))
-			{
-				spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
-				SelectEntity(entityUID);
-			}
-			
-		
-
-			if (ImGui::BeginPopupContextItem())
-			{
-				if (ImGui::MenuItem("Duplicate")) {  }
-				if (ImGui::MenuItem("Delete"))
-				{
-					// Clear selection if deleting the currently selected entity
-					if (isSelected) {
-						ClearEntitySelection();
-					}
-					engineService.delete_entity(ehdl);
-				}
-				ImGui::Separator();
-				if (ImGui::MenuItem("Rename")) {  }
-				ImGui::EndPopup();
-			}
-
-			// Pop the selection highlight color if it was applied
-			if (isSelected) {
-				ImGui::PopStyleColor(2);
-			}
-
-			ImGui::PopID();
-		}
-
-
-		ImGui::TreePop();
-	}
-	*/
 	ImGui::PopStyleVar();
 
 	// Right-click in empty space to create new objects
@@ -2455,117 +2352,9 @@ void EditorMain::Render_SceneExplorer()
 
 	ImGui::End();
 
-	/*
-	ImGui::Begin("Hierarchy");
-
-	if (ImGui::CollapsingHeader("Create Entities")) {
-		// Entity creation buttons
-		if (ImGui::Button("Create Empty")) {
-			CreateDefaultEntity();
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Plane")) {
-			CreatePlaneEntity();
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Cube")) {
-			CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Light")) {
-			CreateLightEntity();
-		}
-		//ImGui::SameLine();
-		if (ImGui::Button("Create Camera")) {
-			CreateCameraEntity();
-		}
-
-		if (ImGui::Button("Create Physics Cube"))
-		{
-			CreatePhysicsCube();
-		}
+	if((ImGui::IsKeyDown(ImGuiKey_LeftCtrl)|| ImGui::IsKeyDown(ImGuiKey_RightCtrl)) && ImGui::IsKeyPressed(ImGuiKey_G)) {
+		engineService.create_parent_entity(m_EntitiesIDSelection);
 	}
-
-
-	ImGui::Separator();
-
-	// FIXED: Use snapshot data instead of Engine::GetWorld()
-	const auto& entityHandles = engineService.GetEntitiesSnapshot();
-	const auto& entityNames = engineService.GetEntityNamesSnapshot();
-
-	ImGui::Text("Entities in scene:");
-	for (size_t i = 0; i < entityHandles.size(); ++i) {
-		auto ehdl = entityHandles[i];
-		ImGui::PushID(static_cast<int>(i));
-
-		// Check if this entity is currently selected
-		uint32_t entityUID = ecs::entity(ehdl).get_uid();
-		bool isSelected = (m_SelectedEntityID == entityUID);
-
-		// DEBUG: Log entity IDs for all entities
-		static bool loggedOnce = false;
-		if (!loggedOnce && i == 0) {
-			spdlog::info("DEBUG: m_SelectedEntityID = {}", m_SelectedEntityID);
-			for (size_t j = 0; j < entityHandles.size(); ++j) {
-				uint32_t uid = static_cast<uint32_t>(entityHandles[j]);
-				spdlog::info("DEBUG: Entity [{}] UID = {}, Name = {}", j, uid, entityNames[j]);
-			}
-			loggedOnce = true;
-		}
-
-		// Display entity info with selection highlighting
-		std::string entityName = entityNames[i];
-
-		// Check what components this entity has (using snapshot)
-		bool hasTransform = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<TransformComponent>());
-		bool hasMesh = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<MeshRendererComponent>());
-		bool hasLight = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<LightComponent>());
-		bool hasVisibility = engineService.EntityHasComponent(ehdl, ReflectionRegistry::GetTypeID<VisibilityComponent>());
-
-		UNREF_PARAM(hasTransform);
-
-		if (hasLight) entityName += " (Light)";
-		else if (hasMesh) entityName += " (Mesh)";
-		else entityName += " (Empty)";
-
-		// Highlight selected entity with different color
-		if (isSelected) {
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // Yellow text for selected
-		}
-
-		bool nodeOpen = ImGui::TreeNode(entityName.c_str());
-
-		// Check if TreeNode header was clicked (must be done immediately after TreeNode call)
-		if (ImGui::IsItemClicked()) {
-			spdlog::info("DEBUG: Entity clicked - index {}, entityUID = {}, entityName = {}", i, entityUID, entityName);
-			SelectEntity(entityUID);
-		}
-
-		if (nodeOpen) {
-			// Show component info
-			if (hasVisibility) {
-				ImGui::Text("Has Visibility Component");
-				// Note: Detailed component data requires inspector (uses snapshot)
-			}
-
-			// Delete button
-			if (ImGui::Button("Delete Entity")) {
-				engineService.delete_entity(ehdl);
-			}
-
-			ImGui::TreePop();
-		}
-
-		// Pop the selection highlight color if it was applied
-		if (isSelected) {
-			ImGui::PopStyleColor();
-		}
-
-		ImGui::PopID();
-	}
-
-	ImGui::End();
-	*/
 }
 
 
@@ -3657,6 +3446,14 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 void EditorMain::SelectEntity(uint32_t objectID)
 {
 	m_SelectedEntityID = objectID;
+	if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey::ImGuiKey_RightCtrl)) {
+		m_EntitiesIDSelection.emplace(objectID);
+	}
+	else {
+		m_EntitiesIDSelection.clear();
+		m_EntitiesIDSelection.emplace(objectID);
+	}
+
 	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
 
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
@@ -3664,7 +3461,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 	// Add visual feedback: outline the selected entity
 	engineService.ClearOutlinedObjects();  // Clear previous selection
-	engineService.AddOutlinedObject(objectID);  // Outline new selection
+	for (auto const& objID : m_EntitiesIDSelection) {
+		engineService.AddOutlinedObject(objID);  // Outline new selection
+	}
 }
 
 void EditorMain::ClearEntitySelection()

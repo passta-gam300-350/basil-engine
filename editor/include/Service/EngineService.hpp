@@ -62,12 +62,22 @@ inline SceneGraphNode BuildSceneGraph(std::vector<ecs::entity> const& vec_e) {
 	return root;
 }
 
-inline SceneGraphNode BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::entity> const& map_guid_e) {
+inline std::shared_ptr<SceneGraphNode> BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::entity> const& map_guid_e) {
 	std::unordered_map<ecs::entity, bool> visited{};
 	std::unordered_map<ecs::entity, SceneGraphNode> orphan{}; //waiting to get picked up by parents
-	SceneGraphNode root{};
+	std::shared_ptr<SceneGraphNode> root{std::make_shared<SceneGraphNode>()};
 	bool is_scene_active{};
 
+	auto linkscenegraphnode{ [](SceneGraphNode& rootnd) {
+		auto visit_node{ [](SceneGraphNode& parent, auto&& fn) -> void {
+		for (auto& child : parent.m_children) {
+			child.m_parent = &parent;
+			fn(child, fn);
+		}
+		} }; 
+		visit_node(rootnd, visit_node);
+		}
+	};
 	auto buildscenegraphnode{ [&visited, &orphan, &is_scene_active](ecs::entity sentity) {
 		auto visit_entity{ [&visited, &orphan, &is_scene_active](ecs::entity se, auto&& fn) -> SceneGraphNode {
 			visited[se] = true;
@@ -94,12 +104,12 @@ inline SceneGraphNode BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::ent
 			continue;
 		auto sgraph = buildscenegraphnode(e);
 		if (!SceneGraph::HasParent(e)) {
-			sgraph.m_parent = &root; //dangling pointer
-			root.m_children.emplace_back(sgraph);
+			root->m_children.emplace_back(sgraph);
 		}
 	}
+	linkscenegraphnode(*root);
 
-	root.is_active = is_scene_active;
+	root->is_active = is_scene_active;
 
 	return root;
 }
@@ -140,7 +150,8 @@ public:
 		float m_pickingViewportHeight{ 0.0f };
 		std::function<void(bool, uint32_t)> m_pickingCallback;
 
-		std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> m_loaded_scenes_scenegraph_snapshot;
+		//make this shared ptr and called it a day. dont waste time on this
+		std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> m_loaded_scenes_scenegraph_snapshot;
 
 	private:
 		void engine_service();
@@ -169,6 +180,11 @@ public:
 	void inspect_entity(entity_handle ehdl) { if (m_cont) m_cont->m_snapshot_entity_handle = ehdl; else spdlog::info("engine container is empty."); }
 	void create_entity();
 	void create_child_entity(entity_handle parent);
+	void orphan_children_entities(entity_handle parent);
+	void create_parent_entity(entity_handle child);
+	void create_parent_entity(std::unordered_set<std::uint32_t> const& children);
+	void clear_parent_entity(entity_handle child);
+	void make_parent_entity(entity_handle parent, entity_handle child);
 	void delete_entity(entity_handle);
 	void add_component(entity_handle, std::uint32_t);
 	void delete_component(entity_handle, std::uint32_t);
@@ -220,7 +236,7 @@ public:
 	 * @brief Get snapshot of all entity names (updated each frame)
 	 * Thread-safe: Returns const reference to main thread snapshot
 	 */
-	const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& GetSceneGraphSnapshot() const;
+	const std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>>& GetSceneGraphSnapshot() const;
 
 	/**
 	 * @brief Check if an entity has a specific component (from snapshot)

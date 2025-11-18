@@ -151,6 +151,7 @@ private:
 
 	// Entity selection management
 	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
+	std::unordered_set<uint32_t> m_EntitiesIDSelection; //all selected entities
 	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
 	uint32_t m_SelectedNodeID = 0;
 
