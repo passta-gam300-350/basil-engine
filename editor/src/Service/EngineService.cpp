@@ -1,4 +1,5 @@
 #include "Service/EngineService.hpp"
+#include "System/TransformSystem.hpp"
 #include "Editor.hpp"
 #include "Manager/MonoEntityManager.hpp"
 
@@ -648,6 +649,9 @@ void EngineContainerService::LoadScene(const char* path) {
 		world.UnloadAll();
 		world.LoadYAML(path.c_str());
 		spdlog::info("EngineService: Scene loaded from {}", path);
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 	});
 }
 
@@ -660,5 +664,9 @@ void EngineContainerService::NewScene() {
 		root.m_entity_name = "Scene";
 		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid] = std::pair<SceneGraphNode, bool>(root, true);
 		spdlog::info("EngineService: New Scene created");
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 		});
+
 }
