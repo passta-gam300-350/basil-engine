@@ -1246,6 +1246,35 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 
 		auto value = data.get(comp);
 		auto meta_type = value.type();
+
+		// Auto-detect color properties: vec3/vec4 with "Color" or "Tint" in name
+		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
+			if (field_name.find("Color") != std::string::npos ||
+				field_name.find("Tint") != std::string::npos ||
+				field_name.find("color") != std::string::npos ||
+				field_name.find("tint") != std::string::npos) {
+				// Render as RGB color picker
+				if (ImGui::ColorEdit3(field_name.c_str(), &vec3_ptr->x)) {
+					is_dirty = true;
+				}
+				ImGui::PopID();
+				continue;
+			}
+		}
+		else if (glm::vec4 * vec4_ptr = value.try_cast<glm::vec4>()) {
+			if (field_name.find("Color") != std::string::npos ||
+				field_name.find("Tint") != std::string::npos ||
+				field_name.find("color") != std::string::npos ||
+				field_name.find("tint") != std::string::npos) {
+				// Render as RGBA color picker
+				if (ImGui::ColorEdit4(field_name.c_str(), &vec4_ptr->x)) {
+					is_dirty = true;
+				}
+				ImGui::PopID();
+				continue;
+			}
+		}
+
 		if (meta_type.data().begin() != meta_type.data().end()) {
 			if (ImGui::CollapsingHeader(field_name.c_str())) {
 				Render_Component_Member(value, is_dirty);

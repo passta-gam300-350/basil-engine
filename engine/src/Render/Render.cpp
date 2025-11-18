@@ -805,7 +805,7 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Texture>, texture,
 // ========== Skybox Settings Implementation (Unity-style API) ==========
 
 void RenderSystem::SetSkyboxCubemap(unsigned int cubemapID) {
-	if (m_SceneRenderer) {
+	if (m_SceneRenderer && cubemapID !=0) {
 		m_SceneRenderer->SetSkyboxCubemap(cubemapID);
 	}
 }

@@ -380,7 +380,6 @@ void SceneRenderer::EnablePicking(bool enable) const
 
 void SceneRenderer::SetSkyboxCubemap(unsigned int cubemapID)
 {
-    assert(cubemapID != 0 && "Skybox cubemap ID must be valid");
     assert(m_Pipeline && "Pipeline must be initialized before setting skybox");
 
     if (m_Pipeline)
