@@ -856,7 +856,7 @@ void EditorMain::Render_Components()
 		{
 			if (behaviour* behaviour_component_ptr = reinterpret_cast<behaviour*>(uptr.get()))
 			{
-				if (ImGui::TreeNode("Behaviour"))
+				if (ImGui::TreeNodeEx("Behaviour", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					Render_Behaviour_Component(*behaviour_component_ptr);
 					ImGui::TreePop();
@@ -875,7 +875,7 @@ void EditorMain::Render_Components()
 		{
 			componentLabel = itName->second.c_str();
 		}
-		if (ImGui::TreeNode(componentLabel)) {
+		if (ImGui::TreeNodeEx(componentLabel, ImGuiTreeNodeFlags_DefaultOpen)) {
 			bool is_dirty = false;
 			
 
@@ -2280,38 +2280,7 @@ void EditorMain::Render_MenuBar()
 	}
 
 	if (ImGui::BeginMenu("GameObject")) {
-		if (ImGui::MenuItem("Create Empty")) {
-			engineService.create_entity();
-		}
-
-		ImGui::Separator();
-
-		if (ImGui::BeginMenu("3D Object")) {
-			if (ImGui::MenuItem("Cube")) {
-				CreateCube();
-			}
-			if (ImGui::MenuItem("Physics Cube")) {
-				CreatePhysicsCube();
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Lights")) {
-			if (ImGui::MenuItem("Directional Light")) {
-				CreateLightEntity();
-			}
-			if (ImGui::MenuItem("Point Light")) {
-
-			}
-			if (ImGui::MenuItem("Spot Light")) {
-
-			}
-
-			ImGui::EndMenu();
-		}
-		if (ImGui::MenuItem("Create Camera")) {
-			CreateCameraEntity();
-		}
+		CreateObjectHelper();
 
 		ImGui::EndMenu();
 	}
@@ -2515,6 +2484,44 @@ void EditorMain::SetupUnityStyle()
 	style.ButtonTextAlign = ImVec2(0.5f, 0.5f); // Center button text
 }
 
+void EditorMain::CreateObjectHelper() {
+	if (ImGui::MenuItem("Create Empty")) {
+		engineService.create_entity();
+	}
+	ImGui::Separator();
+
+	if (ImGui::BeginMenu("3D Object")) {
+		if (ImGui::MenuItem("Cube")) {
+			CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+		}
+		if (ImGui::MenuItem("Plane")) {
+			CreatePlaneEntity();
+		}
+		if (ImGui::MenuItem("Physics Cube")) {
+			CreatePhysicsCube();
+		}
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("Lights")) {
+		if (ImGui::MenuItem("Directional Light")) {
+			CreateLightEntity();
+		}
+		if (ImGui::MenuItem("Point Light")) {
+
+		}
+		if (ImGui::MenuItem("Spot Light")) {
+
+		}
+
+		ImGui::EndMenu();
+	}
+	if (ImGui::MenuItem("Create Camera")) {
+		CreateCameraEntity();
+	}
+}
+
+
 
 void EditorMain::Render_AboutUI()
 {
@@ -2625,7 +2632,8 @@ void EditorMain::Render_SceneExplorer()
 
 			int(*current_style)() {nullptr};
 
-			static const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
+			// Unity-style tree node flags: OpenOnArrow makes it so only clicking the arrow opens/closes the node
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_OpenOnArrow | (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
 
 			// Highlight selected entity with different color
 			if (isSelected && node.m_entity_handle) { //root node handle is null
@@ -2884,20 +2892,7 @@ void EditorMain::Render_SceneExplorer()
 	{
 		if (ImGui::BeginMenu("Create"))
 		{
-			if (ImGui::MenuItem("Empty GameObject"))
-			{
-				CreateDefaultEntity();
-			}
-			ImGui::Separator();
-			if (ImGui::MenuItem("Cube"))
-			{
-				CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
-			}
-			if (ImGui::MenuItem("Sphere")) {  }
-			if (ImGui::MenuItem("Plane")) { CreatePlaneEntity(); }
-			ImGui::Separator();
-			if (ImGui::MenuItem("Camera")) { CreateCameraEntity(); }
-			if (ImGui::MenuItem("Light")) { CreateLightEntity(); }
+			CreateObjectHelper();
 			ImGui::EndMenu();
 		}
 		ImGui::EndPopup();
