@@ -114,10 +114,16 @@ public:
     void CreateAllBodiesForLoadedScene();
     void DestroyAllBodiesForUnload();
 
+    // Reset physics system (cleanup all bodies and mappings)
+    void Reset();
+
     // Collision/Trigger handlers (called by ContactListener)
     void HandleCollisionEnter(const JPH::Body& body1, const JPH::Body& body2, const JPH::ContactManifold& manifold);
     void HandleCollisionStay(const JPH::Body& body1, const JPH::Body& body2, const JPH::ContactManifold& manifold);
     void HandleCollisionExit(const JPH::SubShapeIDPair& subShapePair);
+
+    // Debug Function for checking jolt's position
+    void PrintDebugInfo(ecs::entity entity);
 
 private:
 

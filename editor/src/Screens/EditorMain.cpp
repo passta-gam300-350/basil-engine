@@ -842,6 +842,19 @@ void EditorMain::Render_Components()
 			continue;
 		}
 
+		if (rb_component && type_id == rb_component)
+		{
+			if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
+			{
+
+				if (ImGui::TreeNode("RigidBodyComponent"))
+				{
+					Render_RigidBody_Component(*rb_component);
+					ImGui::TreePop();
+				}
+			}
+			continue;
+		}
 
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
@@ -859,23 +872,23 @@ void EditorMain::Render_Components()
 			{
 				if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
 				{
-					if (is_dirty)
-					{
-						ul.unlock();
-						engineService.ExecuteOnEngineThread([&]() {
-							auto world = Engine::GetWorld();
-							for (auto& entity : world.get_all_entities()) {
-								if (entity.get_uid() == m_SelectedEntityID) {
-									world.get_component_from_entity<RigidBodyComponent>(entity).isDirty = true;
-									break;
-								}
-							}
-							spdlog::warn("Rb is dirty");
-							});
-						ul.lock();
-						
+					//if (is_dirty)
+					//{
+					//	ul.unlock();
+					//	engineService.ExecuteOnEngineThread([&]() {
+					//		auto world = Engine::GetWorld();
+					//		for (auto& entity : world.get_all_entities()) {
+					//			if (entity.get_uid() == m_SelectedEntityID) {
+					//				world.get_component_from_entity<RigidBodyComponent>(entity).isDirty = true;
+					//				break;
+					//			}
+					//		}
+					//		spdlog::warn("Rb is dirty");
+					//		});
+					//	ul.lock();
+					//	
 
-					}
+					//}
 
 					//if (ImGui::TreeNode("RigidBodyComponent"))
 					//{
@@ -1616,6 +1629,7 @@ void EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
 	if (ImGui::Checkbox("Freeze Rotation Y", &rb.freezeRotationY)) changed = true;
 	if (ImGui::Checkbox("Freeze Rotation Z", &rb.freezeRotationZ)) changed = true;
 
+	ImGui::Checkbox("isDirty", &rb.isDirty);
 	// Mark dirty if any change occurred
 	if (changed) {
 		rb.isDirty = true;
@@ -1662,7 +1676,7 @@ void EditorMain::Render_StartStop()
 		isPlaying = !isPlaying;
 		if (isPlaying) // Starts game
 		{
-			
+
 			SaveScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([&]() {
 				PhysicsSystem::Instance().isActive = true;
@@ -1670,24 +1684,29 @@ void EditorMain::Render_StartStop()
 				BehaviourSystem::Instance().isActive = true;
 				spdlog::info("Physics Active");
 
-				
+
 				});
-			
+
 			CameraSystem::SetActiveCamera(CameraSystem::CameraType::MAIN_CAMERA_ENTITY);
 		}
 		else // Stops Game
 		{
-			LoadScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([]() {
-
+				// Reset physics system first to clean up all bodies from play session
+				PhysicsSystem::Instance().Reset();
 				PhysicsSystem::Instance().isActive = false;
+				BehaviourSystem::Instance().isActive = false;
+				});
+
+			// Load scene after physics reset to create fresh entities
+			LoadScene("tmp.yaml");
+
+			engineService.ExecuteOnEngineThread([]() {
+				// Re-enable observers and create bodies for the reloaded scene
 				PhysicsSystem::Instance().EnableObservers();
 				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
-				
-				BehaviourSystem::Instance().isActive = false;
-				spdlog::info("Physics Disable");
 				});
-			
+
 			CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
 			isPaused = false; // Resets paused game as we are stopping
 		}
@@ -3744,6 +3763,22 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 			for (auto& entity : world.get_all_entities()) {
 				if (entity.get_uid() == m_SelectedEntityID) {
 					world.get_component_from_entity<BoxCollider>(entity).onTriggerEnter = [](const TriggerInfo&) {spdlog::critical("Hit");};
+					spdlog::info("Found");
+					break;
+				}
+			}
+			spdlog::info("Add Trigger");
+			});
+	}
+
+	if (ImGui::Button("Print Physics Details"))
+	{
+		engineService.ExecuteOnEngineThread([&]() {
+			spdlog::info("enter test");
+			ecs::world world = Engine::GetWorld();
+			for (auto& entity : world.get_all_entities()) {
+				if (entity.get_uid() == m_SelectedEntityID) {
+					world.get_component_from_entity<RigidBodyComponent>(entity);
 					spdlog::info("Found");
 					break;
 				}

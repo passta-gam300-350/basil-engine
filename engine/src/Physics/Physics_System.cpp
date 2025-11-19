@@ -273,49 +273,6 @@ void PhysicsSystem::ProcessCollisionEvents(ecs::world&) {
     // You might dispatch events, set flags on components, etc.
 }
 
-// Creates the body of a specific shape and returns the new bodyID
-//JPH::BodyID PhysicsSystem::CreateRigidBody(ecs::world& world, const RigidBodyComponent& rb, const TransformComponent&
-//    trans, const ColliderComponent& collider) {
-//    if (!m_bodyInterface) return JPH::BodyID();
-//
-//    JPH::RefConst<JPH::Shape> shape = collider.shape;
-//
-//    // Create body settings using Rigidbody's motion type
-//    JPH::BodyCreationSettings bodySettings(
-//        shape,
-//        PhysicsUtils::ToJolt(trans.m_Translation),
-//        PhysicsUtils::EulerDegreesToJoltQuat(trans.m_Rotation),
-//        rb.ToJoltMotionType(),
-//        rb.IsStatic() ? Layers::NON_MOVING : Layers::MOVING
-//    );
-//
-//    // Set mass properties
-//    if (rb.motionType == RigidBodyComponent::MotionType::Dynamic) {
-//        bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateMassAndInertia;
-//        bodySettings.mMassPropertiesOverride.mMass = rb.mass;
-//    }
-//
-//    bodySettings.mFriction = rb.friction;  // Use Rigidbody's friction
-//    bodySettings.mRestitution = collider.restitution;
-//    bodySettings.mLinearDamping = rb.linearDamping;
-//    bodySettings.mAngularDamping = rb.angularDrag;
-//    bodySettings.mGravityFactor = rb.useGravity ? rb.gravityFactor : 0.0f;
-//
-//    // Create the body
-//    JPH::Body* body = m_bodyInterface->CreateBody(bodySettings);
-//    if (!body) {
-//        spdlog::error("PhysicsSystem: Failed to create body");
-//        return JPH::BodyID();
-//    }
-//
-//    JPH::BodyID bodyID = body->GetID();
-//
-//    // Add to physics world
-//    m_bodyInterface->AddBody(bodyID, rb.isActive ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
-//
-//
-//    return bodyID;
-//}
 
 void PhysicsSystem::DestroyRigidBody(JPH::BodyID bodyID) {
     if (bodyID.IsInvalid() || !m_bodyInterface) return;
@@ -727,6 +684,8 @@ void PhysicsSystem::HandleCollisionEnter(
         InvokeColliderCallback(entity1, info1, "Enter");
         InvokeColliderCallback(entity2, info2, "Enter");
     }
+
+
 }
 
 void PhysicsSystem::HandleCollisionStay(
@@ -785,6 +744,14 @@ void PhysicsSystem::HandleCollisionExit(const JPH::SubShapeIDPair& subShapePair)
         InvokeColliderCallback(entity1, entity2, "Exit");
         InvokeColliderCallback(entity2, entity1, "Exit");
     }
+}
+
+void PhysicsSystem::PrintDebugInfo(ecs::entity entity) {
+    auto world = Engine::GetWorld();
+    auto [rb, coll] = world.get_component_from_entity<RigidBodyComponent, BoxCollider>(entity);
+    //m_bodyInterface->GetTransformedShape().
+    spdlog::critical("entity: {}, ", entity.name());
+    
 }
 
 JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity entity) {
@@ -880,6 +847,34 @@ void PhysicsSystem::DestroyAllBodiesForUnload()
     }
 
     spdlog::info("PhysicsSystem: Destroyed {} bodies ({} missing) during unload", destroyedCount, missingCount);
+}
+
+void PhysicsSystem::Reset()
+{
+    spdlog::info("PhysicsSystem: Resetting physics system - destroying all bodies and clearing mappings");
+
+    if (!m_bodyInterface) {
+        spdlog::warn("PhysicsSystem: Body interface not initialized, skipping reset");
+        return;
+    }
+
+    int destroyedCount = 0;
+
+    // Destroy all bodies using the m_entityToBodyID map
+    for (auto& [entity, bodyID] : m_entityToBodyID) {
+        if (!bodyID.IsInvalid()) {
+            m_bodyInterface->RemoveBody(bodyID);
+            m_bodyInterface->DestroyBody(bodyID);
+            ++destroyedCount;
+        }
+    }
+
+    // Clear all mapping data structures
+    m_entityToBodyID.clear();
+    m_bodyIDToEntity.clear();
+    m_JoltBodyIDs.clear();
+
+    spdlog::info("PhysicsSystem: Reset complete - destroyed {} bodies and cleared all mappings", destroyedCount);
 }
 
 
