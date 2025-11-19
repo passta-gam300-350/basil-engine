@@ -12,6 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Physics/Physics_System.h"
 #include "Profiler/profiler.hpp"
+#include <algorithm> // for std::sort in RaycastAll
 
 
 // Callback for traces, connect this to your own trace function if you have one
@@ -1285,4 +1286,324 @@ void PhysicsSystem::RecreateBodyWithNewShape(ecs::entity entity, ecs::world& wor
 
         spdlog::debug("PhysicsSystem: Recreated body {} for {} for entity {}", oldBodyID.GetIndexAndSequenceNumber(), newBodyID.GetIndexAndSequenceNumber(), entity.get_uuid());
     }
+}
+
+// ============================================================================
+// RAYCASTING IMPLEMENTATION
+// ============================================================================
+//
+// Usage Example for Player Interaction:
+//
+// // Get player camera position and look direction
+// glm::vec3 cameraPos = playerCamera.GetPosition();
+// glm::vec3 lookDir = playerCamera.GetForward();
+//
+// // Raycast from camera forward
+// auto hit = PhysicsSystem::Instance().Raycast(cameraPos, lookDir, 5.0f);
+//
+// if (hit.hasHit) {
+//     // Player is looking at an object
+//     std::cout << "Looking at entity: " << hit.entity.name() << std::endl;
+//     std::cout << "Distance: " << hit.distance << "m" << std::endl;
+//
+//     // Show UI prompt
+//     if (hit.distance < 2.0f) {
+//         ShowInteractionPrompt(hit.entity);
+//     }
+// }
+//
+// // Alternative: Ignore the player's own body
+// std::vector<ecs::entity> ignore = { playerEntity };
+// auto hit = PhysicsSystem::Instance().RaycastIgnoring(cameraPos, lookDir, ignore, 5.0f);
+//
+// ============================================================================
+
+PhysicsSystem::RaycastHit PhysicsSystem::Raycast(
+    const glm::vec3& origin,
+    const glm::vec3& direction,
+    float maxDistance,
+    bool ignoreTriggers)
+{
+    RaycastHit result;
+
+    if (!m_physicsSystem) {
+        spdlog::warn("PhysicsSystem::Raycast - Physics system not initialized");
+        return result;
+    }
+
+    // Normalize direction
+    glm::vec3 normalizedDir = glm::normalize(direction);
+
+    // Setup Jolt raycast
+    JPH::RRayCast ray;
+    ray.mOrigin = PhysicsUtils::ToJolt(origin);
+    ray.mDirection = PhysicsUtils::ToJolt(normalizedDir * maxDistance);
+
+    // Settings for raycast
+    JPH::RayCastSettings settings;
+
+    // Collector for closest hit
+    class ClosestHitCollector : public JPH::CastRayCollector
+    {
+    public:
+        bool ignoreTriggers;
+        PhysicsSystem* physicsSystem;
+        JPH::RayCastResult mHit;  // Store the closest hit
+        bool mHadHit = false;     // Track if we had any hit
+
+        ClosestHitCollector(bool ignoreTrig, PhysicsSystem* sys)
+            : ignoreTriggers(ignoreTrig), physicsSystem(sys) {}
+
+        void AddHit(const JPH::RayCastResult& result) override
+        {
+            // Check if we should ignore triggers
+            if (ignoreTriggers) {
+                JPH::BodyID bodyID = result.mBodyID;
+                ecs::entity entity = physicsSystem->GetEntityFromBodyID(bodyID);
+                if (entity && physicsSystem->IsEntityTrigger(entity)) {
+                    return; // Skip triggers
+                }
+            }
+
+            // Store this hit if it's the first or closer than previous
+            if (!mHadHit || result.mFraction < mHit.mFraction) {
+                mHit = result;
+                mHadHit = true;
+                UpdateEarlyOutFraction(result.mFraction);
+            }
+        }
+    };
+
+    ClosestHitCollector collector(ignoreTriggers, this);
+
+    // Perform raycast
+    m_physicsSystem->GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+
+    // Check if we hit something
+    if (collector.mHadHit)
+    {
+        result.hasHit = true;
+
+        // Get body ID from the hit
+        JPH::BodyID hitBodyID = collector.mHit.mBodyID;
+        result.bodyID = hitBodyID;
+
+        // Get entity from body ID
+        result.entity = GetEntityFromBodyID(hitBodyID);
+
+        // Calculate hit point
+        result.distance = collector.mHit.mFraction * maxDistance;
+        result.hitPoint = origin + normalizedDir * result.distance;
+
+        // Get surface normal
+        JPH::BodyLockRead lock(m_physicsSystem->GetBodyLockInterface(), hitBodyID);
+        if (lock.Succeeded())
+        {
+            const JPH::Body& body = lock.GetBody();
+
+            // Get the surface normal at the hit point
+            JPH::Vec3 joltHitPoint = PhysicsUtils::ToJolt(result.hitPoint);
+            JPH::Vec3 joltNormal = body.GetWorldSpaceSurfaceNormal(collector.mHit.mSubShapeID2, joltHitPoint);
+            result.hitNormal = PhysicsUtils::ToGLM(joltNormal);
+
+            // Check if it's a trigger
+            result.isTrigger = body.IsSensor();
+        }
+
+        spdlog::debug("PhysicsSystem::Raycast - Hit entity {} at distance {}",
+            result.entity.get_uuid(), result.distance);
+    }
+
+    return result;
+}
+
+PhysicsSystem::RaycastHit PhysicsSystem::RaycastIgnoring(
+    const glm::vec3& origin,
+    const glm::vec3& direction,
+    const std::vector<ecs::entity>& ignoreEntities,
+    float maxDistance,
+    bool ignoreTriggers)
+{
+    RaycastHit result;
+
+    if (!m_physicsSystem) {
+        spdlog::warn("PhysicsSystem::RaycastIgnoring - Physics system not initialized");
+        return result;
+    }
+
+    // Normalize direction
+    glm::vec3 normalizedDir = glm::normalize(direction);
+
+    // Setup Jolt raycast
+    JPH::RRayCast ray;
+    ray.mOrigin = PhysicsUtils::ToJolt(origin);
+    ray.mDirection = PhysicsUtils::ToJolt(normalizedDir * maxDistance);
+
+    // Settings for raycast
+    JPH::RayCastSettings settings;
+
+    // Collector for closest hit with ignore list
+    class IgnoreListCollector : public JPH::CastRayCollector
+    {
+    public:
+        bool ignoreTriggers;
+        PhysicsSystem* physicsSystem;
+        const std::vector<ecs::entity>& ignoreList;
+        JPH::RayCastResult mHit;  // Store the closest hit
+        bool mHadHit = false;     // Track if we had any hit
+
+        IgnoreListCollector(bool ignoreTrig, PhysicsSystem* sys, const std::vector<ecs::entity>& ignore)
+            : ignoreTriggers(ignoreTrig), physicsSystem(sys), ignoreList(ignore) {}
+
+        void AddHit(const JPH::RayCastResult& result) override
+        {
+            JPH::BodyID bodyID = result.mBodyID;
+            ecs::entity entity = physicsSystem->GetEntityFromBodyID(bodyID);
+
+            // Skip entities in ignore list
+            if (entity) {
+                for (const auto& ignoreEntity : ignoreList) {
+                    if (entity == ignoreEntity) {
+                        return; // Skip this entity
+                    }
+                }
+
+                // Check if we should ignore triggers
+                if (ignoreTriggers && physicsSystem->IsEntityTrigger(entity)) {
+                    return; // Skip triggers
+                }
+            }
+
+            // Store this hit if it's the first or closer than previous
+            if (!mHadHit || result.mFraction < mHit.mFraction) {
+                mHit = result;
+                mHadHit = true;
+                UpdateEarlyOutFraction(result.mFraction);
+            }
+        }
+    };
+
+    IgnoreListCollector collector(ignoreTriggers, this, ignoreEntities);
+
+    // Perform raycast
+    m_physicsSystem->GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+
+    // Check if we hit something
+    if (collector.mHadHit)
+    {
+        result.hasHit = true;
+
+        JPH::BodyID hitBodyID = collector.mHit.mBodyID;
+        result.bodyID = hitBodyID;
+        result.entity = GetEntityFromBodyID(hitBodyID);
+
+        result.distance = collector.mHit.mFraction * maxDistance;
+        result.hitPoint = origin + normalizedDir * result.distance;
+
+        JPH::BodyLockRead lock(m_physicsSystem->GetBodyLockInterface(), hitBodyID);
+        if (lock.Succeeded())
+        {
+            const JPH::Body& body = lock.GetBody();
+            JPH::Vec3 joltHitPoint = PhysicsUtils::ToJolt(result.hitPoint);
+            JPH::Vec3 joltNormal = body.GetWorldSpaceSurfaceNormal(collector.mHit.mSubShapeID2, joltHitPoint);
+            result.hitNormal = PhysicsUtils::ToGLM(joltNormal);
+            result.isTrigger = body.IsSensor();
+        }
+
+        spdlog::debug("PhysicsSystem::RaycastIgnoring - Hit entity {} at distance {}",
+            result.entity.get_uuid(), result.distance);
+    }
+
+    return result;
+}
+
+std::vector<PhysicsSystem::RaycastHit> PhysicsSystem::RaycastAll(
+    const glm::vec3& origin,
+    const glm::vec3& direction,
+    float maxDistance,
+    bool ignoreTriggers)
+{
+    std::vector<RaycastHit> results;
+
+    if (!m_physicsSystem) {
+        spdlog::warn("PhysicsSystem::RaycastAll - Physics system not initialized");
+        return results;
+    }
+
+    // Normalize direction
+    glm::vec3 normalizedDir = glm::normalize(direction);
+
+    // Setup Jolt raycast
+    JPH::RRayCast ray;
+    ray.mOrigin = PhysicsUtils::ToJolt(origin);
+    ray.mDirection = PhysicsUtils::ToJolt(normalizedDir * maxDistance);
+
+    // Settings for raycast
+    JPH::RayCastSettings settings;
+
+    // Collector for all hits
+    class AllHitsCollector : public JPH::CastRayCollector
+    {
+    public:
+        bool ignoreTriggers;
+        PhysicsSystem* physicsSystem;
+        std::vector<JPH::RayCastResult> hits;
+
+        AllHitsCollector(bool ignoreTrig, PhysicsSystem* sys)
+            : ignoreTriggers(ignoreTrig), physicsSystem(sys) {}
+
+        void AddHit(const JPH::RayCastResult& result) override
+        {
+            // Check if we should ignore triggers
+            if (ignoreTriggers) {
+                JPH::BodyID bodyID = result.mBodyID;
+                ecs::entity entity = physicsSystem->GetEntityFromBodyID(bodyID);
+                if (entity && physicsSystem->IsEntityTrigger(entity)) {
+                    return; // Skip triggers
+                }
+            }
+
+            // Store all hits
+            hits.push_back(result);
+        }
+    };
+
+    AllHitsCollector collector(ignoreTriggers, this);
+
+    // Perform raycast
+    m_physicsSystem->GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+
+    // Convert all Jolt hits to our RaycastHit structure
+    for (const auto& joltHit : collector.hits)
+    {
+        RaycastHit hit;
+        hit.hasHit = true;
+
+        JPH::BodyID hitBodyID = joltHit.mBodyID;
+        hit.bodyID = hitBodyID;
+        hit.entity = GetEntityFromBodyID(hitBodyID);
+
+        hit.distance = joltHit.mFraction * maxDistance;
+        hit.hitPoint = origin + normalizedDir * hit.distance;
+
+        JPH::BodyLockRead lock(m_physicsSystem->GetBodyLockInterface(), hitBodyID);
+        if (lock.Succeeded())
+        {
+            const JPH::Body& body = lock.GetBody();
+            JPH::Vec3 joltHitPoint = PhysicsUtils::ToJolt(hit.hitPoint);
+            JPH::Vec3 joltNormal = body.GetWorldSpaceSurfaceNormal(joltHit.mSubShapeID2, joltHitPoint);
+            hit.hitNormal = PhysicsUtils::ToGLM(joltNormal);
+            hit.isTrigger = body.IsSensor();
+        }
+
+        results.push_back(hit);
+    }
+
+    // Sort by distance (closest first)
+    std::sort(results.begin(), results.end(),
+        [](const RaycastHit& a, const RaycastHit& b) { return a.distance < b.distance; });
+
+    spdlog::debug("PhysicsSystem::RaycastAll - Found {} hits", results.size());
+
+    return results;
 }

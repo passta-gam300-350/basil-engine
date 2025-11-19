@@ -27,6 +27,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 
 // STL includes
 #include <iostream>
@@ -124,6 +126,44 @@ public:
 
     // Debug Function for checking jolt's position
     void PrintDebugInfo(ecs::entity entity);
+
+    // ===== RAYCASTING API =====
+
+    // Raycast result structure
+    struct RaycastHit {
+        bool hasHit = false;              // Did the ray hit anything?
+        ecs::entity entity;               // Entity that was hit
+        glm::vec3 hitPoint;               // World space hit point
+        glm::vec3 hitNormal;              // Surface normal at hit point
+        float distance = 0.0f;            // Distance from ray origin to hit point
+        JPH::BodyID bodyID;               // Jolt body ID (for advanced use)
+        bool isTrigger = false;           // Was the hit object a trigger?
+    };
+
+    // Simple raycast - returns first hit
+    RaycastHit Raycast(
+        const glm::vec3& origin,
+        const glm::vec3& direction,
+        float maxDistance = 1000.0f,
+        bool ignoreTriggers = true
+    );
+
+    // Raycast with entity ignore list
+    RaycastHit RaycastIgnoring(
+        const glm::vec3& origin,
+        const glm::vec3& direction,
+        const std::vector<ecs::entity>& ignoreEntities,
+        float maxDistance = 1000.0f,
+        bool ignoreTriggers = true
+    );
+
+    // Raycast returning all hits along the ray
+    std::vector<RaycastHit> RaycastAll(
+        const glm::vec3& origin,
+        const glm::vec3& direction,
+        float maxDistance = 1000.0f,
+        bool ignoreTriggers = true
+    );
 
 private:
 
