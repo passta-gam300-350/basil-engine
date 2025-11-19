@@ -79,7 +79,7 @@ struct RigidBodyComponent {
     float angularDrag = 0.05f;      // Angular drag. Prevents objects from spinning forever.
     float friction = 0.0f;          
     float linearDamping = 0.0f;
-    float gravityFactor = -9.81f; 
+    float gravityFactor = 1.00f; 
     bool useGravity = true;         // Is gravity applied to the entity, true: Object falls down(default - 9.81 m/s^2), false : Object floats(useful for flying enemies, UI elements in 3D space)
     bool isKinematic = false;       // Is this object controlled by animation/code or physics? false (Dynamic): Physics controls position (player can push it), true (Kinematic) : Your code controls position(moving platforms, doors)
      

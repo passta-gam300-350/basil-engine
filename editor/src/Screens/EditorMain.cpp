@@ -615,6 +615,8 @@ void EditorMain::render()
 		Render_Profiler();
 	if (showInspector)
 		Render_Inspector();
+	if (showPhysicsDebug)
+		Render_PhysicsDebugPanel();
 	Render_Scene();
 	Render_Game();
 	Render_CameraControls();
@@ -842,19 +844,7 @@ void EditorMain::Render_Components()
 			continue;
 		}
 
-		if (rb_component && type_id == rb_component)
-		{
-			if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
-			{
 
-				if (ImGui::TreeNode("RigidBodyComponent"))
-				{
-					Render_RigidBody_Component(*rb_component);
-					ImGui::TreePop();
-				}
-			}
-			continue;
-		}
 
 		entt::meta_type type = type_map[type_id];
 		entt::meta_any comp = type.from_void(uptr.get());
@@ -866,39 +856,26 @@ void EditorMain::Render_Components()
 		}
 		if (ImGui::TreeNode(componentLabel)) {
 			bool is_dirty = false;
-			Render_Component_Member(comp, is_dirty);
+			
 
 			if (rb_component && type_id == rb_component)
 			{
 				if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
 				{
-					//if (is_dirty)
-					//{
-					//	ul.unlock();
-					//	engineService.ExecuteOnEngineThread([&]() {
-					//		auto world = Engine::GetWorld();
-					//		for (auto& entity : world.get_all_entities()) {
-					//			if (entity.get_uid() == m_SelectedEntityID) {
-					//				world.get_component_from_entity<RigidBodyComponent>(entity).isDirty = true;
-					//				break;
-					//			}
-					//		}
-					//		spdlog::warn("Rb is dirty");
-					//		});
-					//	ul.lock();
-					//	
-
-					//}
-
-					//if (ImGui::TreeNode("RigidBodyComponent"))
-					//{
-					//	Render_RigidBody_Component(*rb_component);
-					//	ImGui::TreePop();
-					//}
+					is_dirty = Render_RigidBody_Component(*rb_component);
+					if (ImGui::Button("Delete Component")) {
+						ul.unlock();
+						engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+						ul.lock();
+					}
+					if (is_dirty) {
+						engineService.m_cont->m_write_back_queue.push(type_id);
+					}
 				}
-				//continue;
+				ImGui::TreePop();
+				continue;
 			}
-
+			Render_Component_Member(comp, is_dirty);
 
 			// Special UI section for AudioComponent playback controls
 			if (audio_component && type_id == audio_component) {
@@ -1581,26 +1558,104 @@ void EditorMain::Add_Script_Menu()
 	}
 }
 
-void EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
+bool EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
 	bool changed = false;
 
-	// Mass
-	if (ImGui::DragFloat("Mass", &rb.mass, 0.1f, 0.001f, 10000.0f)) {
-		changed = true;
+	// ===== Debug Info Section =====
+	ImGui::SeparatorText("Debug Info");
+	ImGui::PushStyleColor(ImGuiCol_Text, rb.isDirty ? ImVec4(1.0f, 0.7f, 0.3f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ImGui::Checkbox("Is Dirty (needs sync)", &rb.isDirty);
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("When true, component will sync to physics on next frame");
 	}
 
-	// Friction
-	if (ImGui::DragFloat("Friction", &rb.friction, 0.01f, 0.0f, 1.0f)) {
+	if (ImGui::Checkbox("Is Active", &rb.isActive)) {
 		changed = true;
 	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Whether this body participates in simulation");
+	}
+
+	// ===== Motion Properties Section =====
+	ImGui::SeparatorText("Motion Properties");
+
+	// Motion Type
+	const char* motionTypes[] = { "Static", "Dynamic", "Kinematic" };
+	int currentMotionType = static_cast<int>(rb.motionType);
+	if (ImGui::Combo("Motion Type", &currentMotionType, motionTypes, 3)) {
+		rb.motionType = static_cast<RigidBodyComponent::MotionType>(currentMotionType);
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Static: Doesn't move\nDynamic: Fully simulated\nKinematic: Controlled by code");
+	}
+
+	// Mass (only for dynamic)
+	if (rb.motionType == RigidBodyComponent::MotionType::Dynamic) {
+		if (ImGui::DragFloat("Mass (kg)", &rb.mass, 0.1f, 0.001f, 10000.0f)) {
+			changed = true;
+		}
+	} else {
+		ImGui::BeginDisabled();
+		ImGui::DragFloat("Mass (kg)", &rb.mass, 0.1f, 0.001f, 10000.0f);
+		ImGui::EndDisabled();
+	}
+
+	// Collision Detection Mode
+	const char* collisionModes[] = { "Discrete", "Continuous", "Continuous Dynamic", "Continuous Speculative" };
+	int currentCollisionMode = static_cast<int>(rb.collisionDetection);
+	if (ImGui::Combo("Collision Detection", &currentCollisionMode, collisionModes, 4)) {
+		rb.collisionDetection = static_cast<RigidBodyComponent::CollisionDetectionMode>(currentCollisionMode);
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Discrete: Fast but can miss fast collisions\nContinuous: Slower but catches everything");
+	}
+
+	// Interpolation Mode
+	const char* interpolationModes[] = { "None", "Interpolate", "Extrapolate" };
+	int currentInterpolation = static_cast<int>(rb.interpolation);
+	if (ImGui::Combo("Interpolation", &currentInterpolation, interpolationModes, 3)) {
+		rb.interpolation = static_cast<RigidBodyComponent::InterpolationMode>(currentInterpolation);
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Smoothing for rendering:\nNone: Can look jittery\nInterpolate: Smooth\nExtrapolate: Predictive");
+	}
+
+	// ===== Physics Properties Section =====
+	ImGui::SeparatorText("Physics Properties");
 
 	// Gravity
 	if (ImGui::Checkbox("Use Gravity", &rb.useGravity)) {
 		changed = true;
 	}
 
-	if (ImGui::DragFloat("Gravity Factor", &rb.gravityFactor, 0.1f)) {
+	if (ImGui::DragFloat("Gravity Factor", &rb.gravityFactor, 0.1f, -50.0f, 50.0f)) {
 		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Multiplier for gravity (default: 1.00 m/s²)");
+	}
+
+	// Friction
+	if (ImGui::DragFloat("Friction", &rb.friction, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Surface friction (0 = ice, 1 = rubber)");
+	}
+
+	// ===== Damping Section =====
+	ImGui::SeparatorText("Damping");
+
+	// Linear Drag
+	if (ImGui::DragFloat("Drag (Linear)", &rb.drag, 0.01f, 0.0f, 10.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Air resistance:\n0.0 = space (no resistance)\n0.5 = water\n5.0 = honey");
 	}
 
 	// Linear Damping
@@ -1612,29 +1667,58 @@ void EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
 	if (ImGui::DragFloat("Angular Damping", &rb.angularDrag, 0.01f, 0.0f, 1.0f)) {
 		changed = true;
 	}
-
-	// Motion Type
-	const char* motionTypes[] = { "Static", "Dynamic", "Kinematic" };
-	int currentMotionType = static_cast<int>(rb.motionType);
-	if (ImGui::Combo("Motion Type", &currentMotionType, motionTypes, 3)) {
-		rb.motionType = static_cast<RigidBodyComponent::MotionType>(currentMotionType);
-		changed = true;
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Prevents objects from spinning forever");
 	}
 
-	// Constraints
-	if (ImGui::Checkbox("Freeze Position X", &rb.freezePositionX)) changed = true;
-	if (ImGui::Checkbox("Freeze Position Y", &rb.freezePositionY)) changed = true;
-	if (ImGui::Checkbox("Freeze Position Z", &rb.freezePositionZ)) changed = true;
-	if (ImGui::Checkbox("Freeze Rotation X", &rb.freezeRotationX)) changed = true;
-	if (ImGui::Checkbox("Freeze Rotation Y", &rb.freezeRotationY)) changed = true;
-	if (ImGui::Checkbox("Freeze Rotation Z", &rb.freezeRotationZ)) changed = true;
+	// ===== Constraints Section =====
+	ImGui::SeparatorText("Constraints");
 
-	ImGui::Checkbox("isDirty", &rb.isDirty);
+	ImGui::Text("Freeze Position:");
+	if (ImGui::Checkbox("X##FreezePos", &rb.freezePositionX)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Y##FreezePos", &rb.freezePositionY)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Z##FreezePos", &rb.freezePositionZ)) changed = true;
+
+	ImGui::Text("Freeze Rotation:");
+	if (ImGui::Checkbox("X##FreezeRot", &rb.freezeRotationX)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Y##FreezeRot", &rb.freezeRotationY)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Z##FreezeRot", &rb.freezeRotationZ)) changed = true;
+
+	// ===== Advanced Section =====
+	if (ImGui::TreeNode("Advanced")) {
+		// Center of Mass
+		if (ImGui::DragFloat3("Center of Mass", &rb.centerOfMass.x, 0.01f)) {
+			changed = true;
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("Local space offset for center of mass");
+		}
+
+		ImGui::TreePop();
+	}
+
+	// ===== Runtime State (Read-Only) =====
+	ImGui::SeparatorText("Runtime State (Read-Only)");
+
+	ImGui::BeginDisabled();
+	ImGui::DragFloat3("Linear Velocity", &rb.linearVelocity.x, 0.0f);
+	ImGui::DragFloat3("Angular Velocity", &rb.angularVelocity.x, 0.0f);
+	ImGui::EndDisabled();
+
+	float linearSpeed = glm::length(rb.linearVelocity);
+	float angularSpeed = glm::length(rb.angularVelocity);
+	ImGui::Text("Speed: %.2f m/s | Angular: %.2f rad/s", linearSpeed, angularSpeed);
+
 	// Mark dirty if any change occurred
 	if (changed) {
 		rb.isDirty = true;
 		spdlog::debug("EditorMain: Marked RigidBody as dirty for entity {}", m_SelectedEntityID);
 	}
+	return changed;
 }
 
 
@@ -1676,15 +1760,12 @@ void EditorMain::Render_StartStop()
 		isPlaying = !isPlaying;
 		if (isPlaying) // Starts game
 		{
-
 			SaveScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([&]() {
 				PhysicsSystem::Instance().isActive = true;
 				PhysicsSystem::Instance().DisableObservers();
 				BehaviourSystem::Instance().isActive = true;
 				spdlog::info("Physics Active");
-
-
 				});
 
 			CameraSystem::SetActiveCamera(CameraSystem::CameraType::MAIN_CAMERA_ENTITY);
@@ -1705,6 +1786,7 @@ void EditorMain::Render_StartStop()
 				// Re-enable observers and create bodies for the reloaded scene
 				PhysicsSystem::Instance().EnableObservers();
 				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
+				spdlog::info("Physics Off");
 				});
 
 			CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
@@ -1840,6 +1922,7 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Scene Explorer", nullptr, &showSceneExplorer);
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
+		ImGui::MenuItem("Physics Debug", nullptr, &showPhysicsDebug);
 
 		ImGui::Separator();
 
@@ -2817,6 +2900,216 @@ void EditorMain::Render_Console()
 
 	ImGui::EndChild();
 	*/
+	ImGui::End();
+}
+
+void EditorMain::Render_PhysicsDebugPanel()
+{
+	ImGui::Begin("Physics Debug", &showPhysicsDebug);
+
+	if (m_SelectedEntityID == 0) {
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No entity selected");
+		ImGui::End();
+		return;
+	}
+
+	auto& entityHandles = engineService.m_cont->m_entities_snapshot;
+	auto& entityNames = engineService.m_cont->m_names_snapshot;
+	
+	for (size_t i = 0; i < entityHandles.size(); ++i) {
+		auto ehdl = entityHandles[i];
+		uint32_t entityUID = ecs::entity(ehdl).get_uid();
+		if (m_SelectedEntityID != entityUID) { continue; }
+		
+	
+	
+	
+	}
+
+
+	// Queue fetch on engine thread
+	engineService.ExecuteOnEngineThread([this, entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+		ecs::entity entity{ entityHandle };
+		auto world = Engine::GetWorld();
+
+		// Reset data
+		m_PhysicsDebugData = PhysicsDebugData{};
+
+		if (!entity) return;
+
+		// Check for components
+		m_PhysicsDebugData.hasRigidBody = world.has_all_components_in_entity<RigidBodyComponent>(entity);
+		m_PhysicsDebugData.hasCollider = world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity);
+
+		// Get Jolt body info
+		JPH::BodyID bodyID = PhysicsSystem::Instance().GetBodyID(entity);
+		m_PhysicsDebugData.hasPhysicsBody = !bodyID.IsInvalid();
+
+		if (m_PhysicsDebugData.hasPhysicsBody) {
+			auto& bodyInterface = PhysicsSystem::Instance().GetBodyInterface();
+			m_PhysicsDebugData.bodyID = bodyID.GetIndexAndSequenceNumber();
+
+			// Body state
+			m_PhysicsDebugData.isBodyActive = bodyInterface.IsActive(bodyID);
+			m_PhysicsDebugData.isSleeping = !m_PhysicsDebugData.isBodyActive;
+
+			// Position and rotation from Jolt
+			JPH::Vec3 joltPos = bodyInterface.GetPosition(bodyID);
+			JPH::Quat joltRot = bodyInterface.GetRotation(bodyID);
+			m_PhysicsDebugData.joltPosition = PhysicsUtils::ToGLM(joltPos);
+			m_PhysicsDebugData.joltRotation = PhysicsUtils::JoltQuatToEulerDegrees(joltRot);
+
+			// Velocities
+			m_PhysicsDebugData.linearVelocity = PhysicsUtils::ToGLM(bodyInterface.GetLinearVelocity(bodyID));
+			m_PhysicsDebugData.angularVelocity = PhysicsUtils::ToGLM(bodyInterface.GetAngularVelocity(bodyID));
+
+			// Motion type
+			JPH::EMotionType motionType = bodyInterface.GetMotionType(bodyID);
+			switch (motionType) {
+			case JPH::EMotionType::Static: m_PhysicsDebugData.motionType = "Static"; break;
+			case JPH::EMotionType::Kinematic: m_PhysicsDebugData.motionType = "Kinematic"; break;
+			case JPH::EMotionType::Dynamic: m_PhysicsDebugData.motionType = "Dynamic"; break;
+			default: m_PhysicsDebugData.motionType = "Unknown"; break;
+			}
+
+			// Body properties
+			m_PhysicsDebugData.friction = bodyInterface.GetFriction(bodyID);
+			m_PhysicsDebugData.restitution = bodyInterface.GetRestitution(bodyID);
+			m_PhysicsDebugData.joltGravFactor = bodyInterface.GetGravityFactor(bodyID);
+			
+		}
+
+		// RigidBody component data
+		if (m_PhysicsDebugData.hasRigidBody) {
+			auto& rb = entity.get<RigidBodyComponent>();
+			m_PhysicsDebugData.mass = rb.mass;
+			m_PhysicsDebugData.linearDamping = rb.linearDamping;
+			m_PhysicsDebugData.angularDamping = rb.angularDrag;
+			m_PhysicsDebugData.gravityFactor = rb.gravityFactor;
+			m_PhysicsDebugData.useGravity = rb.useGravity;
+		}
+
+		// Collider data
+		if (world.has_all_components_in_entity<BoxCollider>(entity)) {
+			auto& collider = entity.get<BoxCollider>();
+			m_PhysicsDebugData.colliderType = "Box";
+			m_PhysicsDebugData.isTrigger = collider.isTrigger;
+			m_PhysicsDebugData.colliderSize = collider.size;
+			m_PhysicsDebugData.friction = collider.friction;
+			m_PhysicsDebugData.restitution = collider.restitution;
+		}
+		else if (world.has_all_components_in_entity<SphereCollider>(entity)) {
+			auto& collider = entity.get<SphereCollider>();
+			m_PhysicsDebugData.colliderType = "Sphere";
+			m_PhysicsDebugData.isTrigger = collider.isTrigger;
+			m_PhysicsDebugData.colliderRadius = collider.radius;
+			m_PhysicsDebugData.friction = collider.friction;
+			m_PhysicsDebugData.restitution = collider.restitution;
+		}
+		else if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
+			auto& collider = entity.get<CapsuleCollider>();
+			m_PhysicsDebugData.colliderType = "Capsule";
+			m_PhysicsDebugData.isTrigger = collider.isTrigger;
+			m_PhysicsDebugData.colliderRadius = collider.GetRadius();
+			m_PhysicsDebugData.colliderHeight = collider.GetHeight();
+			m_PhysicsDebugData.friction = collider.friction;
+			m_PhysicsDebugData.restitution = collider.restitution;
+		}
+		});
+
+	// Display physics information
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+
+	// Component Status
+	ImGui::SeparatorText("Component Status");
+	ImGui::Text("Has RigidBody:    %s", m_PhysicsDebugData.hasRigidBody ? "Yes" : "No");
+	ImGui::Text("Has Collider:     %s", m_PhysicsDebugData.hasCollider ? "Yes" : "No");
+	ImGui::Text("Has Physics Body: %s", m_PhysicsDebugData.hasPhysicsBody ? "Yes" : "No");
+
+	if (!m_PhysicsDebugData.hasPhysicsBody) {
+		ImGui::Separator();
+		ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "No physics body created for this entity");
+		ImGui::TextWrapped("Add a collider component to create a physics body.");
+		ImGui::PopStyleColor();
+		ImGui::End();
+		return;
+	}
+
+	// Jolt Body Info
+	ImGui::SeparatorText("Jolt Body Info");
+	ImGui::Text("Body ID:          %u", m_PhysicsDebugData.bodyID);
+	ImGui::Text("Motion Type:      %s", m_PhysicsDebugData.motionType.c_str());
+	ImGui::Text("Collider Type:    %s", m_PhysicsDebugData.colliderType.c_str());
+	ImGui::Text("Is Trigger:       %s", m_PhysicsDebugData.isTrigger ? "Yes" : "No");
+
+	// Body State
+	ImGui::SeparatorText("Body State");
+	if (m_PhysicsDebugData.isBodyActive) {
+		ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Active");
+	}
+	else {
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Sleeping");
+	}
+
+	// Position & Rotation (from Jolt)
+	ImGui::SeparatorText("Transform (Jolt)");
+	ImGui::Text("Position:  (%.2f, %.2f, %.2f)",
+		m_PhysicsDebugData.joltPosition.x,
+		m_PhysicsDebugData.joltPosition.y,
+		m_PhysicsDebugData.joltPosition.z);
+	ImGui::Text("Rotation:  (%.2f, %.2f, %.2f)",
+		m_PhysicsDebugData.joltRotation.x,
+		m_PhysicsDebugData.joltRotation.y,
+		m_PhysicsDebugData.joltRotation.z);
+
+	// Velocities
+	ImGui::SeparatorText("Velocities");
+	ImGui::Text("Linear:    (%.2f, %.2f, %.2f)",
+		m_PhysicsDebugData.linearVelocity.x,
+		m_PhysicsDebugData.linearVelocity.y,
+		m_PhysicsDebugData.linearVelocity.z);
+	ImGui::Text("Angular:   (%.2f, %.2f, %.2f)",
+		m_PhysicsDebugData.angularVelocity.x,
+		m_PhysicsDebugData.angularVelocity.y,
+		m_PhysicsDebugData.angularVelocity.z);
+	ImGui::Text("Jolt Grav: %.2f m/s^2", m_PhysicsDebugData.joltGravFactor);
+
+	float linearSpeed = glm::length(m_PhysicsDebugData.linearVelocity);
+	float angularSpeed = glm::length(m_PhysicsDebugData.angularVelocity);
+	ImGui::Text("Linear Speed:  %.2f m/s", linearSpeed);
+	ImGui::Text("Angular Speed: %.2f rad/s", angularSpeed);
+
+	// RigidBody Properties
+	if (m_PhysicsDebugData.hasRigidBody) {
+		ImGui::SeparatorText("RigidBody Properties");
+		ImGui::Text("Mass:             %.2f kg", m_PhysicsDebugData.mass);
+		ImGui::Text("Linear Damping:   %.3f", m_PhysicsDebugData.linearDamping);
+		ImGui::Text("Angular Damping:  %.3f", m_PhysicsDebugData.angularDamping);
+		ImGui::Text("Gravity Factor:   %.2f", m_PhysicsDebugData.gravityFactor);
+		ImGui::Text("Use Gravity:      %s", m_PhysicsDebugData.useGravity ? "Yes" : "No");
+	}
+
+	// Collider Properties
+	ImGui::SeparatorText("Collider Properties");
+	ImGui::Text("Type:             %s", m_PhysicsDebugData.colliderType.c_str());
+	ImGui::Text("Friction:         %.3f", m_PhysicsDebugData.friction);
+	ImGui::Text("Restitution:      %.3f", m_PhysicsDebugData.restitution);
+
+	if (m_PhysicsDebugData.colliderType == "Box") {
+		ImGui::Text("Size:             (%.2f, %.2f, %.2f)",
+			m_PhysicsDebugData.colliderSize.x,
+			m_PhysicsDebugData.colliderSize.y,
+			m_PhysicsDebugData.colliderSize.z);
+	}
+	else if (m_PhysicsDebugData.colliderType == "Sphere") {
+		ImGui::Text("Radius:           %.2f", m_PhysicsDebugData.colliderRadius);
+	}
+	else if (m_PhysicsDebugData.colliderType == "Capsule") {
+		ImGui::Text("Radius:           %.2f", m_PhysicsDebugData.colliderRadius);
+		ImGui::Text("Height:           %.2f", m_PhysicsDebugData.colliderHeight);
+	}
+
+	ImGui::PopStyleColor();
 	ImGui::End();
 }
 
