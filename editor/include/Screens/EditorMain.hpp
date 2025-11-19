@@ -117,6 +117,9 @@ public:
     void Render_Behaviour_Component(behaviour& component);
 	void Add_Script_Menu();
 	bool Render_RigidBody_Component(RigidBodyComponent& component);
+	bool Render_BoxCollider_Component(BoxCollider& component);
+	bool Render_SphereCollider_Component(SphereCollider& component);
+	bool Render_CapsuleCollider_Component(CapsuleCollider& component);
 	void Render_Add_Component_Menu();
 
 	// Accessor for custom material inspector

@@ -820,6 +820,27 @@ void EditorMain::Render_Components()
 		rb_component = rbIt->second;
 	}
 
+	ReflectionRegistry::TypeID boxCol_component{};
+	auto boxIt = internal_type_map.find(entt::type_index<BoxCollider>::value());
+	if (boxIt != internal_type_map.end())
+	{
+		boxCol_component = boxIt->second;
+	}
+
+	ReflectionRegistry::TypeID sphereCol_component{};
+	auto sphereIt = internal_type_map.find(entt::type_index<SphereCollider>::value());
+	if (sphereIt != internal_type_map.end())
+	{
+		sphereCol_component = sphereIt->second;
+	}
+
+	ReflectionRegistry::TypeID capsuleCol_component{};
+	auto capsuleIt = internal_type_map.find(entt::type_index<CapsuleCollider>::value());
+	if (capsuleIt != internal_type_map.end())
+	{
+		capsuleCol_component = capsuleIt->second;
+	}
+
 	ReflectionRegistry::TypeID material_overrides_component{};
 	auto matOverridesIt = internal_type_map.find(entt::type_index<MaterialOverridesComponent>::value());
 	if (matOverridesIt != internal_type_map.end())
@@ -860,9 +881,9 @@ void EditorMain::Render_Components()
 
 			if (rb_component && type_id == rb_component)
 			{
-				if (RigidBodyComponent* rb_component = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
+				if (RigidBodyComponent* rb_comp = reinterpret_cast<RigidBodyComponent*>(uptr.get()))
 				{
-					is_dirty = Render_RigidBody_Component(*rb_component);
+					is_dirty = Render_RigidBody_Component(*rb_comp);
 					if (ImGui::Button("Delete Component")) {
 						ul.unlock();
 						engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
@@ -875,6 +896,61 @@ void EditorMain::Render_Components()
 				ImGui::TreePop();
 				continue;
 			}
+
+			if (sphereCol_component && type_id == sphereCol_component)
+			{
+				if (SphereCollider* sphereCol_comp = reinterpret_cast<SphereCollider*>(uptr.get()))
+				{
+					is_dirty = Render_SphereCollider_Component(*sphereCol_comp);
+					if (ImGui::Button("Delete Component")) {
+						ul.unlock();
+						engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+						ul.lock();
+					}
+					if (is_dirty) {
+						engineService.m_cont->m_write_back_queue.push(type_id);
+					}
+				}
+				ImGui::TreePop();
+				continue;
+			}
+
+			if (boxCol_component && type_id == boxCol_component)
+			{
+				if (BoxCollider* boxCol_comp = reinterpret_cast<BoxCollider*>(uptr.get()))
+				{
+					is_dirty = Render_BoxCollider_Component(*boxCol_comp);
+					if (ImGui::Button("Delete Component")) {
+						ul.unlock();
+						engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+						ul.lock();
+					}
+					if (is_dirty) {
+						engineService.m_cont->m_write_back_queue.push(type_id);
+					}
+				}
+				ImGui::TreePop();
+				continue;
+			}
+
+			if (capsuleCol_component && type_id == capsuleCol_component)
+			{
+				if (CapsuleCollider* capsuleCol_comp = reinterpret_cast<CapsuleCollider*>(uptr.get()))
+				{
+					is_dirty = Render_CapsuleCollider_Component(*capsuleCol_comp);
+					if (ImGui::Button("Delete Component")) {
+						ul.unlock();
+						engineService.delete_component(engineService.m_cont->m_snapshot_entity_handle, type_id);
+						ul.lock();
+					}
+					if (is_dirty) {
+						engineService.m_cont->m_write_back_queue.push(type_id);
+					}
+				}
+				ImGui::TreePop();
+				continue;
+			}
+
 			Render_Component_Member(comp, is_dirty);
 
 			// Special UI section for AudioComponent playback controls
@@ -1680,6 +1756,9 @@ bool EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
 	if (ImGui::Checkbox("Y##FreezePos", &rb.freezePositionY)) changed = true;
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Z##FreezePos", &rb.freezePositionZ)) changed = true;
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Locks position on specific axes\nAlso zeros velocity on those axes to prevent force accumulation");
+	}
 
 	ImGui::Text("Freeze Rotation:");
 	if (ImGui::Checkbox("X##FreezeRot", &rb.freezeRotationX)) changed = true;
@@ -1687,6 +1766,29 @@ bool EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
 	if (ImGui::Checkbox("Y##FreezeRot", &rb.freezeRotationY)) changed = true;
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Z##FreezeRot", &rb.freezeRotationZ)) changed = true;
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Locks rotation around specific axes\nAlso zeros angular velocity on those axes to prevent torque accumulation");
+	}
+
+	ImGui::Text("Freeze Linear Velocity:");
+	if (ImGui::Checkbox("X##FreezeLinVel", &rb.freezeLinearVelocityX)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Y##FreezeLinVel", &rb.freezeLinearVelocityY)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Z##FreezeLinVel", &rb.freezeLinearVelocityZ)) changed = true;
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Additional velocity constraints (independent of position freeze)\nUseful for advanced control scenarios");
+	}
+
+	ImGui::Text("Freeze Angular Velocity:");
+	if (ImGui::Checkbox("X##FreezeAngVel", &rb.freezeAngularVelocityX)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Y##FreezeAngVel", &rb.freezeAngularVelocityY)) changed = true;
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Z##FreezeAngVel", &rb.freezeAngularVelocityZ)) changed = true;
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Additional angular velocity constraints (independent of rotation freeze)\nUseful for advanced control scenarios");
+	}
 
 	// ===== Advanced Section =====
 	if (ImGui::TreeNode("Advanced")) {
@@ -1718,6 +1820,250 @@ bool EditorMain::Render_RigidBody_Component(RigidBodyComponent& rb) {
 		rb.isDirty = true;
 		spdlog::debug("EditorMain: Marked RigidBody as dirty for entity {}", m_SelectedEntityID);
 	}
+	return changed;
+}
+
+bool EditorMain::Render_BoxCollider_Component(BoxCollider& collider) {
+	bool changed = false;
+
+	// ===== Debug Info Section =====
+	ImGui::SeparatorText("Debug Info");
+	ImGui::PushStyleColor(ImGuiCol_Text, collider.isDirty ? ImVec4(1.0f, 0.7f, 0.3f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ImGui::Checkbox("Is Dirty (needs sync)", &collider.isDirty);
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("When true, collider shape will be recreated on next frame");
+	}
+
+	// ===== Collider Type =====
+	ImGui::SeparatorText("Collider Type");
+	ImGui::Text("Box Collider");
+
+	// ===== Trigger Settings =====
+	ImGui::SeparatorText("Trigger Settings");
+	if (ImGui::Checkbox("Is Trigger", &collider.isTrigger)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Triggers don't cause physical collisions but fire OnTrigger events");
+	}
+
+	// ===== Shape Properties =====
+	ImGui::SeparatorText("Shape Properties");
+	if (ImGui::DragFloat3("Size", &collider.size.x, 0.1f, 0.001f, 1000.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Full dimensions of the box (not half-extents)");
+	}
+
+	if (ImGui::DragFloat3("Center Offset", &collider.center.x, 0.01f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Local space offset from entity position");
+	}
+
+	// ===== Physics Material =====
+	ImGui::SeparatorText("Physics Material");
+	if (ImGui::DragFloat("Friction", &collider.friction, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Surface friction (0 = ice, 1 = rubber)");
+	}
+
+	if (ImGui::DragFloat("Restitution", &collider.restitution, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Bounciness (0 = no bounce, 1 = perfect bounce)");
+	}
+
+	if (ImGui::DragFloat("Density", &collider.density, 0.01f, 0.01f, 100.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Mass per unit volume (for auto mass calculation)");
+	}
+
+	// Mark dirty if any change occurred
+	if (changed) {
+		collider.isDirty = true;
+		spdlog::debug("EditorMain: Marked BoxCollider as dirty for entity {}", m_SelectedEntityID);
+	}
+
+	return changed;
+}
+
+bool EditorMain::Render_SphereCollider_Component(SphereCollider& collider) {
+	bool changed = false;
+
+	// ===== Debug Info Section =====
+	ImGui::SeparatorText("Debug Info");
+	ImGui::PushStyleColor(ImGuiCol_Text, collider.isDirty ? ImVec4(1.0f, 0.7f, 0.3f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ImGui::Checkbox("Is Dirty (needs sync)", &collider.isDirty);
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("When true, collider shape will be recreated on next frame");
+	}
+
+	// ===== Collider Type =====
+	ImGui::SeparatorText("Collider Type");
+	ImGui::Text("Sphere Collider");
+
+	// ===== Trigger Settings =====
+	ImGui::SeparatorText("Trigger Settings");
+	if (ImGui::Checkbox("Is Trigger", &collider.isTrigger)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Triggers don't cause physical collisions but fire OnTrigger events");
+	}
+
+	// ===== Shape Properties =====
+	ImGui::SeparatorText("Shape Properties");
+	if (ImGui::DragFloat("Radius", &collider.radius, 0.01f, 0.001f, 1000.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Radius of the sphere");
+	}
+
+	if (ImGui::DragFloat3("Center Offset", &collider.center.x, 0.01f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Local space offset from entity position");
+	}
+
+	// ===== Physics Material =====
+	ImGui::SeparatorText("Physics Material");
+	if (ImGui::DragFloat("Friction", &collider.friction, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Surface friction (0 = ice, 1 = rubber)");
+	}
+
+	if (ImGui::DragFloat("Restitution", &collider.restitution, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Bounciness (0 = no bounce, 1 = perfect bounce)");
+	}
+
+	if (ImGui::DragFloat("Density", &collider.density, 0.01f, 0.01f, 100.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Mass per unit volume (for auto mass calculation)");
+	}
+
+	// Mark dirty if any change occurred
+	if (changed) {
+		collider.isDirty = true;
+		spdlog::debug("EditorMain: Marked SphereCollider as dirty for entity {}", m_SelectedEntityID);
+	}
+
+	return changed;
+}
+
+bool EditorMain::Render_CapsuleCollider_Component(CapsuleCollider& collider) {
+	bool changed = false;
+
+	// ===== Debug Info Section =====
+	ImGui::SeparatorText("Debug Info");
+	ImGui::PushStyleColor(ImGuiCol_Text, collider.isDirty ? ImVec4(1.0f, 0.7f, 0.3f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ImGui::Checkbox("Is Dirty (needs sync)", &collider.isDirty);
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("When true, collider shape will be recreated on next frame");
+	}
+
+	// ===== Collider Type =====
+	ImGui::SeparatorText("Collider Type");
+	ImGui::Text("Capsule Collider");
+
+	// ===== Trigger Settings =====
+	ImGui::SeparatorText("Trigger Settings");
+	if (ImGui::Checkbox("Is Trigger", &collider.isTrigger)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Triggers don't cause physical collisions but fire OnTrigger events");
+	}
+
+	// ===== Shape Properties =====
+	ImGui::SeparatorText("Shape Properties");
+
+	// Direction
+	const char* directions[] = { "X Axis", "Y Axis", "Z Axis" };
+	int currentDirection = static_cast<int>(collider.GetDirection());
+	if (ImGui::Combo("Direction", &currentDirection, directions, 3)) {
+		collider.SetDirection(static_cast<CapsuleCollider::Direction>(currentDirection));
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Axis along which the capsule is oriented");
+	}
+
+	// Radius
+	float radius = collider.GetRadius();
+	if (ImGui::DragFloat("Radius", &radius, 0.01f, 0.001f, 1000.0f)) {
+		collider.SetRadius(radius);
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Radius of the capsule cylinder and end caps");
+	}
+
+	// Height
+	float height = collider.GetHeight();
+	if (ImGui::DragFloat("Height", &height, 0.01f, 0.001f, 1000.0f)) {
+		collider.SetHeight(height);
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Height of the capsule (including end caps)");
+	}
+
+	if (ImGui::DragFloat3("Center Offset", &collider.center.x, 0.01f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Local space offset from entity position");
+	}
+
+	// ===== Physics Material =====
+	ImGui::SeparatorText("Physics Material");
+	if (ImGui::DragFloat("Friction", &collider.friction, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Surface friction (0 = ice, 1 = rubber)");
+	}
+
+	if (ImGui::DragFloat("Restitution", &collider.restitution, 0.01f, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Bounciness (0 = no bounce, 1 = perfect bounce)");
+	}
+
+	if (ImGui::DragFloat("Density", &collider.density, 0.01f, 0.01f, 100.0f)) {
+		changed = true;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Mass per unit volume (for auto mass calculation)");
+	}
+
+	// Mark dirty if any change occurred
+	if (changed) {
+		collider.isDirty = true;
+		spdlog::debug("EditorMain: Marked CapsuleCollider as dirty for entity {}", m_SelectedEntityID);
+	}
+
 	return changed;
 }
 

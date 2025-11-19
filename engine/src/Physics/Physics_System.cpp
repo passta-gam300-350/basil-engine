@@ -242,27 +242,94 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
 
 void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
-   
+
     // Update ECS transforms from dynamic bodies
     auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
 
-    for (auto const& entity : list_of_entities) 
+    for (auto const& entity : list_of_entities)
     {
         if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) { continue; }
         auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
         if ((RigidBody.motionType == RigidBodyComponent::MotionType::Dynamic) && RigidBody.isActive) {
             JPH::BodyID BodyId = m_entityToBodyID[entity];
+
+            // Store original constrained values
+            glm::vec3 originalPosition = Transform.m_Translation;
+            glm::vec3 originalRotation = Transform.m_Rotation;
+
             JPH::Vec3 position;
             JPH::Quat rotation;
             m_bodyInterface->GetPositionAndRotation(BodyId, position, rotation);
 
-            Transform.m_Translation = PhysicsUtils::ToGLM(position);
-            Transform.m_Rotation = PhysicsUtils::JoltQuatToEulerDegrees(rotation);
+            glm::vec3 newPosition = PhysicsUtils::ToGLM(position);
+            glm::vec3 newRotation = PhysicsUtils::JoltQuatToEulerDegrees(rotation);
 
-            // Update cached velocity
-            RigidBody.linearVelocity = PhysicsUtils::ToGLM(m_bodyInterface->GetLinearVelocity(BodyId));
-            RigidBody.angularVelocity = PhysicsUtils::ToGLM(m_bodyInterface->GetAngularVelocity(BodyId));
+            // Apply position constraints - restore frozen axes
+            if (RigidBody.freezePositionX) newPosition.x = originalPosition.x;
+            if (RigidBody.freezePositionY) newPosition.y = originalPosition.y;
+            if (RigidBody.freezePositionZ) newPosition.z = originalPosition.z;
+
+            // Apply rotation constraints - restore frozen axes
+            if (RigidBody.freezeRotationX) newRotation.x = originalRotation.x;
+            if (RigidBody.freezeRotationY) newRotation.y = originalRotation.y;
+            if (RigidBody.freezeRotationZ) newRotation.z = originalRotation.z;
+
+            Transform.m_Translation = newPosition;
+            Transform.m_Rotation = newRotation;
+
+            // Update velocities from Jolt
+            glm::vec3 linearVel = PhysicsUtils::ToGLM(m_bodyInterface->GetLinearVelocity(BodyId));
+            glm::vec3 angularVel = PhysicsUtils::ToGLM(m_bodyInterface->GetAngularVelocity(BodyId));
+
+            // IMPORTANT: Frozen position/rotation axes must also freeze corresponding velocities
+            // This prevents velocity accumulation on frozen axes and ensures forces don't build up
+
+            // If position is frozen on an axis, velocity on that axis must be zero
+            if (RigidBody.freezePositionX) linearVel.x = 0.0f;
+            if (RigidBody.freezePositionY) linearVel.y = 0.0f;
+            if (RigidBody.freezePositionZ) linearVel.z = 0.0f;
+
+            // If rotation is frozen on an axis, angular velocity on that axis must be zero
+            if (RigidBody.freezeRotationX) angularVel.x = 0.0f;
+            if (RigidBody.freezeRotationY) angularVel.y = 0.0f;
+            if (RigidBody.freezeRotationZ) angularVel.z = 0.0f;
+
+            // Additional velocity constraints (independent of position/rotation)
+            if (RigidBody.freezeLinearVelocityX) linearVel.x = 0.0f;
+            if (RigidBody.freezeLinearVelocityY) linearVel.y = 0.0f;
+            if (RigidBody.freezeLinearVelocityZ) linearVel.z = 0.0f;
+
+            if (RigidBody.freezeAngularVelocityX) angularVel.x = 0.0f;
+            if (RigidBody.freezeAngularVelocityY) angularVel.y = 0.0f;
+            if (RigidBody.freezeAngularVelocityZ) angularVel.z = 0.0f;
+
+            // Update cached velocities
+            RigidBody.linearVelocity = linearVel;
+            RigidBody.angularVelocity = angularVel;
+
+            // Write constrained velocities back to Jolt to prevent accumulation
+            // This is critical: we must write back to prevent forces from building up on frozen axes
+            bool hasLinearConstraint = RigidBody.freezePositionX || RigidBody.freezePositionY || RigidBody.freezePositionZ ||
+                                       RigidBody.freezeLinearVelocityX || RigidBody.freezeLinearVelocityY || RigidBody.freezeLinearVelocityZ;
+            bool hasAngularConstraint = RigidBody.freezeRotationX || RigidBody.freezeRotationY || RigidBody.freezeRotationZ ||
+                                        RigidBody.freezeAngularVelocityX || RigidBody.freezeAngularVelocityY || RigidBody.freezeAngularVelocityZ;
+
+            if (hasLinearConstraint) {
+                m_bodyInterface->SetLinearVelocity(BodyId, PhysicsUtils::ToJolt(linearVel));
+            }
+            if (hasAngularConstraint) {
+                m_bodyInterface->SetAngularVelocity(BodyId, PhysicsUtils::ToJolt(angularVel));
+            }
+
+            // If position/rotation was constrained, write it back to Jolt to enforce constraints
+            if (RigidBody.freezePositionX || RigidBody.freezePositionY || RigidBody.freezePositionZ ||
+                RigidBody.freezeRotationX || RigidBody.freezeRotationY || RigidBody.freezeRotationZ) {
+                m_bodyInterface->SetPositionAndRotation(BodyId,
+                    PhysicsUtils::ToJolt(newPosition),
+                    PhysicsUtils::EulerDegreesToJoltQuat(newRotation),
+                    JPH::EActivation::DontActivate);
+            }
         }
     }
 }
@@ -374,7 +441,7 @@ void PhysicsSystem::OnRigidbodyAdded(entt::registry& registry, entt::entity enti
     ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
     auto world = Engine::GetWorld();
     // Only create body if entity also has ColliderComponent
-    if (world.has_any_components_in_entity<ColliderComponent, BoxCollider, CapsuleCollider, SphereCollider>(ecsEntity))
+    if (world.has_any_components_in_entity<BoxCollider, CapsuleCollider, SphereCollider>(ecsEntity))
     {
         TryCreateBodyForEntity(ecsEntity);
     }
@@ -498,10 +565,63 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
     bodySettings.mFriction = friction;
     bodySettings.mRestitution = restitution;
 
+    // Apply RigidBody properties to body creation settings
+    if (hasRigidBody) {
+        auto rb = entity.get<RigidBodyComponent>();
+
+        // Set initial velocities
+        bodySettings.mLinearVelocity = PhysicsUtils::ToJolt(rb.linearVelocity);
+        bodySettings.mAngularVelocity = PhysicsUtils::ToJolt(rb.angularVelocity);
+
+        // Override friction from RigidBody if it has one
+        if (rb.friction > 0.0f) {
+            bodySettings.mFriction = rb.friction;
+        }
+
+        // Gravity factor (for dynamic/kinematic bodies)
+        if (motionType != JPH::EMotionType::Static) {
+            bodySettings.mGravityFactor = rb.useGravity ? rb.gravityFactor : 0.0f;
+        }
+
+        // Mass override (will be set after creation for dynamic bodies)
+        // Linear and angular damping (will be set after creation)
+    }
+
     JPH::BodyID bodyID = m_bodyInterface->CreateAndAddBody(bodySettings, isActive ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
     if (bodyID.IsInvalid()) {
         spdlog::warn("PhysicsSystem: Body Id is invalid");
         return;
+    }
+
+    // Apply additional properties that require body interface (for non-static bodies)
+    if (hasRigidBody && motionType != JPH::EMotionType::Static) {
+        auto rb = entity.get<RigidBodyComponent>();
+
+        // Lock body to set additional properties
+        JPH::BodyLockWrite lock(m_physicsSystem->GetBodyLockInterface(), bodyID);
+        if (lock.Succeeded()) {
+            JPH::Body& body = lock.GetBody();
+            JPH::MotionProperties* motionProps = body.GetMotionProperties();
+
+            if (motionProps) {
+                // Set mass (only for dynamic bodies)
+                if (motionType == JPH::EMotionType::Dynamic && rb.mass > 0.0f) {
+                    JPH::MassProperties massProps = body.GetShape()->GetMassProperties();
+                    massProps.ScaleToMass(rb.mass);
+                    motionProps->SetMassProperties(JPH::EAllowedDOFs::All, massProps);
+                }
+
+                // Set damping
+                motionProps->SetLinearDamping(rb.linearDamping);
+                motionProps->SetAngularDamping(rb.angularDrag);
+
+                // Gravity factor already set in creation settings, but ensure it's correct
+                motionProps->SetGravityFactor(rb.useGravity ? rb.gravityFactor : 0.0f);
+            }
+        } else {
+            spdlog::warn("PhysicsSystem: Failed to lock body {} for initial property setup",
+                bodyID.GetIndexAndSequenceNumber());
+        }
     }
 
     // Store all mappings
@@ -1051,29 +1171,12 @@ void PhysicsSystem::UpdateBodyProperties(JPH::BodyID bodyID, const RigidBodyComp
             motionProps->SetGravityFactor(rb.useGravity ? rb.gravityFactor : 0.0f);
 
             // Update velocities (only meaningful for dynamic/kinematic bodies)
+            // Note: Velocity constraints are applied in SyncTransformsFromPhysics, not here
             body.SetLinearVelocity(PhysicsUtils::ToJolt(rb.linearVelocity));
             body.SetAngularVelocity(PhysicsUtils::ToJolt(rb.angularVelocity));
 
-            // Update constraints (freeze position/rotation)
-            JPH::EAllowedDOFs allowedDOFs = JPH::EAllowedDOFs::All;
-
-            // Build allowed DOFs based on freeze flags
-            if (rb.freezePositionX && rb.freezePositionY && rb.freezePositionZ &&
-                rb.freezeRotationX && rb.freezeRotationY && rb.freezeRotationZ) {
-                allowedDOFs = JPH::EAllowedDOFs::None;
-            }
-            else {
-                // Jolt doesn't support per-axis constraints directly
-                // You'd need to use JPH::SixDOFConstraint for fine-grained control
-                bool hasAnyFreeze = rb.freezePositionX || rb.freezePositionY || rb.freezePositionZ ||
-                                   rb.freezeRotationX || rb.freezeRotationY || rb.freezeRotationZ;
-                if (hasAnyFreeze) {
-                    spdlog::debug("PhysicsSystem: Per-axis constraints not fully supported, use constraints for fine control");
-                }
-            }
-
-            // Note: DOF changes require recreation in Jolt, which is expensive
-            // For now, we just log if constraints are used
+            // Note: Position/rotation/velocity constraints are enforced in SyncTransformsFromPhysics
+            // during the main physics update loop. This ensures constraints are applied every frame.
         }
     } else {
         // Static body - only friction can be updated
