@@ -41,7 +41,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Ecs/ecs.h"
 #include "Physics/Physics_Components.h"
 #include "components/transform.h"
-#include <glm/gtc/quaternion.hpp>  
+#include <glm/gtc/quaternion.hpp>
 
 JPH_SUPPRESS_WARNINGS
 
@@ -96,7 +96,12 @@ public:
     JPH::PhysicsSystem* GetJoltPhysicsSystem() noexcept { return m_physicsSystem.get(); } // Returns a pointer to the Jolt Engine
     JPH::BodyInterface& GetBodyInterface() noexcept { return *m_bodyInterface; } // Returns a reference to the Body Interface
 
-    
+    // Debug Rendering Configuration (controls what to draw, RenderSystem owns the renderer)
+    void SetDrawShapes(bool draw) { m_drawShapes = draw; }
+    void SetDrawVelocities(bool draw) { m_drawVelocities = draw; }
+    void SetDrawContacts(bool draw) { m_drawContacts = draw; }
+    void SetDrawBoundingBoxes(bool draw) { m_drawBoundingBoxes = draw; }
+
     void SyncTransformsToPhysics(ecs::world& world);        // 1. Syncs transform data from ecs to internal jolt data
                                                             // 2. Calls the update for jolt's internal engine, collision call back are also called by jolt when it detect collision
     void SyncTransformsFromPhysics(ecs::world& world);      // 3. Syncs the new internal jolt data to transform
@@ -168,6 +173,12 @@ private:
 
     // Contact listener
     std::unique_ptr<JPH::ContactListener> m_contactListener;
+
+    // Debug rendering flags (renderer owned by RenderSystem)
+    bool m_drawShapes = true;           // Draw collision shapes (wireframe)
+    bool m_drawVelocities = true;       // Draw velocity vectors
+    bool m_drawContacts = false;        // Draw contact points/normals
+    bool m_drawBoundingBoxes = false;   // Draw AABBs
 
     // Mapping between entities and bodies
     std::vector<JPH::BodyID> m_JoltBodyIDs;

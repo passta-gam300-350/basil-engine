@@ -64,6 +64,10 @@ public:
     void SetShowAABBs(bool show) { m_ShowAABBs = show; }
     bool GetShowAABBs() const { return m_ShowAABBs; }
 
+    // Physics debug visualization controls
+    void SetShowPhysicsDebug(bool show) { m_ShowPhysicsDebug = show; }
+    bool GetShowPhysicsDebug() const { return m_ShowPhysicsDebug; }
+
     // Debug buffer controls
     void SetClearColorBuffer(bool clear) { m_ClearColorBuffer = clear; }
     bool GetClearColorBuffer() const { return m_ClearColorBuffer; }
@@ -74,6 +78,9 @@ private:
 
     // AABB visualization
     void RenderAABBs(RenderContext& context);
+
+    // Physics debug line visualization
+    void RenderDebugLines(RenderContext& context);
 
     // Helper methods for ray rendering
     void RenderSingleRay(RenderContext& context, const std::shared_ptr<Mesh>& rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light);
@@ -92,6 +99,13 @@ private:
 
     // AABB settings
     bool m_ShowAABBs = false;              // Toggle for AABB wireframe visualization
+
+    // Physics debug settings
+    bool m_ShowPhysicsDebug = true;        // Toggle for physics debug line visualization
+
+    // OpenGL resources for physics debug lines
+    uint32_t m_DebugLineVAO = 0;           // VAO for debug lines
+    uint32_t m_DebugLineVBO = 0;           // VBO for debug line vertices
 
     // Debug buffer settings
     bool m_ClearColorBuffer = true;        // Whether to clear color buffer (enabled by default)

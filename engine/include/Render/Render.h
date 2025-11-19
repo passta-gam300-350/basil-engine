@@ -33,6 +33,7 @@ class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
 class MaterialPropertyBlock;
+class JoltDebugRenderer;
 
 
 RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
@@ -232,6 +233,24 @@ public:
      * @return Pointer to ShaderLibrary (may be nullptr if not initialized)
      */
     ShaderLibrary* GetShaderLibrary() const { return m_ShaderLibrary.get(); }
+
+    /**
+     * @brief Get the Jolt debug renderer instance
+     * @return Pointer to JoltDebugRenderer (may be nullptr if not initialized)
+     */
+    JoltDebugRenderer* GetJoltDebugRenderer() const { return m_JoltDebugRenderer.get(); }
+
+    /**
+     * @brief Enable or disable Jolt physics debug rendering
+     * @param enabled True to enable debug rendering, false to disable
+     */
+    void SetJoltDebugRenderingEnabled(bool enabled);
+
+    /**
+     * @brief Initialize Jolt debug renderer (must be called after PhysicsSystem::Init)
+     * @note This is called automatically during engine initialization
+     */
+    void InitJoltDebugRenderer();
 
     // ========== Skybox Settings (Unity-style API) ==========
 
@@ -477,6 +496,7 @@ private:
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
+    std::unique_ptr<JoltDebugRenderer> m_JoltDebugRenderer;     ///< Jolt physics debug renderer
 
     // ========== Material Property Blocks ==========
 

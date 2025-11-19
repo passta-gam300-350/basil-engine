@@ -24,6 +24,7 @@ Technology is prohibited.
 #include "Engine.hpp"  // For Engine::GetRenderSystem()
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
+#include "Render/JoltDebugRenderer.h"  // For Jolt physics debug rendering
 
 #include "Messaging/Messaging_System.h"
 
@@ -115,9 +116,19 @@ RenderSystem::RenderSystem() {
 
 	// Initialize component initializer (simplified, no longer needs subsystem references)
 	m_ComponentInitializer = std::make_unique<ComponentInitializer>();
+
+	// Note: JoltDebugRenderer initialization deferred to InitJoltDebugRenderer()
+	// (must be called after PhysicsSystem::Init() because Jolt needs to be initialized first)
 }
 
 RenderSystem::~RenderSystem() {
+	// Clean up Jolt debug renderer and reset singleton
+	if (m_JoltDebugRenderer) {
+		m_JoltDebugRenderer.reset();
+		JPH::DebugRenderer::sInstance = nullptr;
+		spdlog::info("RenderSystem: Jolt debug renderer cleaned up");
+	}
+
 	// Release subsystems in safe order
 	m_ComponentInitializer.reset();
 	m_MaterialInstanceManager.reset();
@@ -352,6 +363,12 @@ void RenderSystem::Update(ecs::world& world) {
 		m_SceneRenderer->SubmitLight(lightData);
 	}
 
+	// Flush Jolt physics debug geometry to FrameData (before rendering)
+	if (m_JoltDebugRenderer && m_JoltDebugRenderer->IsEnabled())
+	{
+		m_JoltDebugRenderer->FlushToFrameData(frameData);
+	}
+
 	//render frame
 	m_SceneRenderer->Render();
 
@@ -374,6 +391,25 @@ void RenderSystem::Exit() {
 	m_DefaultMaterial.reset();
 
 	// Destructor will handle cleanup automatically
+}
+
+void RenderSystem::SetJoltDebugRenderingEnabled(bool enabled) {
+	if (m_JoltDebugRenderer) {
+		m_JoltDebugRenderer->SetEnabled(enabled);
+	} else {
+		spdlog::warn("RenderSystem: Cannot set Jolt debug rendering state - debug renderer not initialized");
+	}
+}
+
+void RenderSystem::InitJoltDebugRenderer() {
+	// Only initialize if not already created and Jolt is initialized
+	if (!m_JoltDebugRenderer) {
+		m_JoltDebugRenderer = std::make_unique<JoltDebugRenderer>();
+		JPH::DebugRenderer::sInstance = m_JoltDebugRenderer.get();
+		spdlog::info("RenderSystem: Jolt debug renderer initialized and registered as singleton");
+	} else {
+		spdlog::warn("RenderSystem: Jolt debug renderer already initialized");
+	}
 }
 
 bool RenderSystem::RegisterEditorMesh(rp::Guid guid, std::shared_ptr<Mesh> mesh) {

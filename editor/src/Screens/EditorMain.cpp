@@ -2085,9 +2085,17 @@ void EditorMain::Render_MenuBar()
 
 		ImGui::Separator();
 
-		if (ImGui::MenuItem("Show Bounding Boxes", nullptr, &m_ShowAABBs)) {
-			SetDebugVisualization(m_ShowAABBs);
+		// Physics debug visualization toggle (thread-safe communication with engine)
+		if (ImGui::MenuItem("Show Physics Debug", nullptr, &showPhysicsDebug)) {
+			// Execute on engine thread to safely access RenderSystem
+			engineService.ExecuteOnEngineThread([enabled = showPhysicsDebug]() {
+				Engine::GetRenderSystem().SetJoltDebugRenderingEnabled(enabled);
+			});
 		}
+
+		/*if (ImGui::MenuItem("Show Bounding Boxes", nullptr, &m_ShowAABBs)) {
+			SetDebugVisualization(m_ShowAABBs);
+		}*/
 
 		ImGui::EndMenu();
 	}

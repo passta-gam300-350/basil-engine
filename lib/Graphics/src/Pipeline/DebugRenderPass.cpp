@@ -68,6 +68,11 @@ void DebugRenderPass::Execute(RenderContext& context)
         RenderAABBs(context);
     }
 
+    // Render physics debug lines for visualization
+    if (m_ShowPhysicsDebug && !context.frameData.debugLines.empty()) {
+        RenderDebugLines(context);
+    }
+
     // Disable blending after debug rendering
     RenderCommands::SetBlendingData disableBlendCmd{ false };
     Submit(disableBlendCmd);
@@ -330,6 +335,104 @@ void DebugRenderPass::RenderAABBs(RenderContext& context)
             Submit(restoreLineWidthCmd);
         }
     }
+
+    // Restore normal line width
+    RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };
+    Submit(restoreLineWidthCmd);
+}
+
+void DebugRenderPass::RenderDebugLines(RenderContext& context)
+{
+    if (!m_PrimitiveShader) {
+        spdlog::error("DebugRenderPass: No primitive shader available for physics debug line rendering.");
+        return;
+    }
+
+    if (context.frameData.debugLines.empty()) {
+        return;
+    }
+
+    // Initialize VAO/VBO on first use (lazy initialization)
+    if (m_DebugLineVAO == 0) {
+        glGenVertexArrays(1, &m_DebugLineVAO);
+        glGenBuffers(1, &m_DebugLineVBO);
+
+        glBindVertexArray(m_DebugLineVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_DebugLineVBO);
+
+        // Vertex format: position (vec3) + color (vec3)
+        // Position attribute (location 0)
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
+        // Color attribute (location 1)
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    // Prepare vertex data (2 vertices per line: from and to)
+    std::vector<float> vertices;
+    vertices.reserve(context.frameData.debugLines.size() * 12); // 2 vertices * 6 floats per line
+
+    for (const auto& line : context.frameData.debugLines) {
+        // First vertex (from)
+        vertices.push_back(line.from.x);
+        vertices.push_back(line.from.y);
+        vertices.push_back(line.from.z);
+        vertices.push_back(line.color.r);
+        vertices.push_back(line.color.g);
+        vertices.push_back(line.color.b);
+
+        // Second vertex (to)
+        vertices.push_back(line.to.x);
+        vertices.push_back(line.to.y);
+        vertices.push_back(line.to.z);
+        vertices.push_back(line.color.r);
+        vertices.push_back(line.color.g);
+        vertices.push_back(line.color.b);
+    }
+
+    // Upload vertex data to GPU
+    glBindBuffer(GL_ARRAY_BUFFER, m_DebugLineVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Bind the shader
+    RenderCommands::BindShaderData bindShaderCmd{ m_PrimitiveShader };
+    Submit(bindShaderCmd);
+
+    // Set line width for better visibility
+    RenderCommands::SetLineWidthData lineWidthCmd{ 2.0f };
+    Submit(lineWidthCmd);
+
+    // Set uniforms (identity model matrix for world-space lines)
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    RenderCommands::SetUniformsData uniformsCmd{
+        m_PrimitiveShader,
+        modelMatrix,
+        context.frameData.viewMatrix,
+        context.frameData.projectionMatrix,
+        context.frameData.cameraPosition
+    };
+    Submit(uniformsCmd);
+
+    // Note: Color is now per-vertex, but we need to check if the primitive shader
+    // supports vertex colors. For now, we'll use a white color uniform to let
+    // vertex colors pass through.
+    RenderCommands::SetUniformVec3Data colorCmd{
+        m_PrimitiveShader,
+        "u_Color",
+        glm::vec3(1.0f, 1.0f, 1.0f)  // White to pass through vertex colors
+    };
+    Submit(colorCmd);
+
+    // Draw the lines
+    glBindVertexArray(m_DebugLineVAO);
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(context.frameData.debugLines.size() * 2));
+    glBindVertexArray(0);
 
     // Restore normal line width
     RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };

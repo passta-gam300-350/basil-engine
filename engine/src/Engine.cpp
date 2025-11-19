@@ -294,6 +294,10 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	PhysicsSystem::Instance().Init();
 	PhysicsSystem::Instance().SetupObservers();
+
+	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
+	Instance().m_RenderSystem->InitJoltDebugRenderer();
+
 	Scheduler::CompileJobSchedule();
 
 	// [TEMP]
