@@ -53,6 +53,11 @@ void DebugRenderPass::Execute(RenderContext& context)
     RenderCommands::SetBlendingData enableBlendCmd{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
     Submit(enableBlendCmd);
 
+    // FIX: Ensure color mask is enabled (previous pass may have disabled it)
+    // This is critical for vertex colors to appear correctly
+    RenderCommands::SetColorMaskData enableColorMaskCmd{ true, true, true, true };
+    Submit(enableColorMaskCmd);
+
     // Disable depth writing but keep depth testing for proper overlay rendering
     RenderCommands::SetDepthTestData depthTestCmd{
         true,           // enable depth testing (to respect scene depth)
@@ -153,12 +158,12 @@ void DebugRenderPass::RenderDebugLines(RenderContext& context)
     Submit(bindShaderCmd);
 
     // Set line width for better visibility
-    RenderCommands::SetLineWidthData lineWidthCmd{ 2.0f };
+    RenderCommands::SetLineWidthData lineWidthCmd{ 5.0f };
     Submit(lineWidthCmd);
 
     // Set camera uniforms (debug_line shader only needs view and projection, no model matrix)
     // Debug lines are already in world space, so no model transform needed
-    // Use editorViewMatrix (preserved) instead of viewMatrix (overwritten by game camera)
+    // Use editor camera matrices (preserved) instead of general matrices (overwritten by game camera)
     Submit(RenderCommands::SetUniformMat4Data{
         m_DebugLineShader,
         "u_View",
@@ -168,13 +173,15 @@ void DebugRenderPass::RenderDebugLines(RenderContext& context)
     Submit(RenderCommands::SetUniformMat4Data{
         m_DebugLineShader,
         "u_Projection",
-        context.frameData.projectionMatrix
+        context.frameData.editorProjectionMatrix  // FIX: Use preserved editor projection matrix
     });
 
-    // Draw the lines
-    glBindVertexArray(m_DebugLineVAO);
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(context.frameData.debugLines.size() * 2));
-    glBindVertexArray(0);
+    // Draw the debug lines using command buffer
+    Submit(RenderCommands::DrawArraysData{
+        m_DebugLineVAO,
+        static_cast<uint32_t>(context.frameData.debugLines.size() * 2),
+        GL_LINES
+    });
 
     // Restore normal line width
     RenderCommands::SetLineWidthData restoreLineWidthCmd{ 1.0f };

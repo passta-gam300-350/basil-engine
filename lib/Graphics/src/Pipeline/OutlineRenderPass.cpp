@@ -77,6 +77,9 @@ void OutlineRenderPass::Execute(RenderContext& context)
     // Re-enable depth testing and depth writes
     Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
 
+    // FIX: Restore color mask to default (first pass disables it at line 99)
+    Submit(RenderCommands::SetColorMaskData{ true, true, true, true });
+
     // Ensure face culling is properly set (should already be enabled)
     Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
 
