@@ -106,6 +106,7 @@ public:
 	void Render_PhysicsDebugPanel();
 
 	void Render_AssetBrowser();
+	void Render_AssetBrowser_Old();
 	void Render_ImporterSettings();
 
 	void Render_Scene();
@@ -166,6 +167,31 @@ private:
 	// Material creation dialog state
 	bool m_ShowCreateMaterialDialog = false;
 	char m_NewMaterialNameBuffer[256] = "NewMaterial";
+
+	// Asset browser state
+	enum class AssetViewMode { Grid, List };
+	AssetViewMode m_AssetViewMode = AssetViewMode::Grid;
+	char m_AssetSearchBuffer[256] = "";
+	std::string m_SelectedAssetPath = "";
+	float m_FolderTreeWidth = 200.0f;
+
+	// Hierarchy panel state
+	char m_HierarchySearchBuffer[256] = "";
+
+	// Asset browser icon textures
+	struct AssetIcons {
+		unsigned int folderIcon = 0;
+		unsigned int fileIcon = 0;
+		unsigned int imageIcon = 0;
+		unsigned int modelIcon = 0;
+		unsigned int audioIcon = 0;
+		unsigned int scriptIcon = 0;
+		unsigned int materialIcon = 0;
+		unsigned int shaderIcon = 0;
+	} m_AssetIcons;
+
+	void LoadAssetIcons();
+	unsigned int GetIconForFile(const std::string& extension);
 
 	// Physics debug data
 	struct PhysicsDebugData {
