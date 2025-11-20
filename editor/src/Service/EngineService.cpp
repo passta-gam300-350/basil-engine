@@ -578,15 +578,6 @@ void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, fl
 	});
 }
 
-void EngineContainerService::EnableAABBVisualization(bool enable) {
-	ExecuteOnEngineThread([enable]() {
-		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-		if (sceneRenderer) {
-			sceneRenderer->EnableAABBVisualization(enable);
-		}
-	});
-}
-
 void EngineContainerService::AddOutlinedObject(uint32_t objectID) {
 	ExecuteOnEngineThread([objectID]() {
 		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();

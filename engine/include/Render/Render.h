@@ -195,8 +195,6 @@ public:
      *
      * Creates:
      * - Light visualization cube (5x5x5)
-     * - Directional light ray (3 units)
-     * - AABB wireframe cube (1x1x1)
      */
     void SetupDebugVisualization();
 

@@ -84,7 +84,6 @@ struct FrameData
     uint32_t viewportHeight = 720;
 
     // Debug rendering data
-    std::vector<DebugAABB> debugAABBs;
     std::vector<DebugLine> debugLines;  // Physics debug lines (collision shapes, velocities, contacts)
 
     // Timing data

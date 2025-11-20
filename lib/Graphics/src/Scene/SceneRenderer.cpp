@@ -63,7 +63,6 @@ void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();
 	m_SubmittedLights.clear();
-	GetFrameData().debugAABBs.clear();
     if (m_ParticleRenderer) {
         m_ParticleRenderer->ClearFrame();
     }
@@ -109,7 +108,6 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 4. Add debug rendering pass (shows light cubes) - BEFORE HDR resolve!
     auto debugPass = std::make_shared<DebugRenderPass>();
     mainPipeline->AddPass(debugPass);
-    mainPipeline->EnablePass("DebugPass", false);  // Enabled to visualize lights
 
     // 5. Add outline rendering pass (stencil-based outlines) - BEFORE HDR resolve!
     auto outlinePass = std::make_shared<OutlineRenderPass>();
@@ -299,36 +297,6 @@ void SceneRenderer::SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) con
         auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
         if (mainPass) {
             mainPass->SetLightCubeMesh(mesh);
-        }
-    }
-}
-
-void SceneRenderer::SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const
-{
-    assert(mesh && "Debug directional ray mesh cannot be null");
-    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
-    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
-    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
-
-    if (m_Pipeline) {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass) {
-            debugPass->SetDirectionalRayMesh(mesh);
-        }
-    }
-}
-
-void SceneRenderer::SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const
-{
-    assert(mesh && "Debug AABB wireframe mesh cannot be null");
-    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
-    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
-    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
-
-    if (m_Pipeline) {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass) {
-            debugPass->SetAABBWireframeMesh(mesh);
         }
     }
 }
@@ -682,12 +650,7 @@ void SceneRenderer::SetCameraData(const glm::mat4& view, const glm::mat4& proj, 
     m_FrameData.cameraPosition = pos;
 }
 
-void SceneRenderer::SetDebugAABBs(const std::vector<DebugAABB>& aabbs)
-{
-    m_FrameData.debugAABBs = aabbs;
-}
-
-void SceneRenderer::ToggleAABBVisualization()
+void SceneRenderer::EnablePhysicsDebugVisualization(bool enable)
 {
     assert(m_Pipeline && "Pipeline must be initialized");
 
@@ -696,34 +659,13 @@ void SceneRenderer::ToggleAABBVisualization()
         auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
         if (debugPass)
         {
-            bool newState = !debugPass->GetShowAABBs();
-            debugPass->SetShowAABBs(newState);
-            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
-                         newState ? "ENABLED" : "DISABLED");
-        }
-        else
-        {
-            spdlog::warn("SceneRenderer: Debug pass not found - cannot toggle AABB visualization");
-        }
-    }
-}
-
-void SceneRenderer::EnableAABBVisualization(bool enable)
-{
-    assert(m_Pipeline && "Pipeline must be initialized");
-
-    if (m_Pipeline)
-    {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass)
-        {
-            debugPass->SetShowAABBs(enable);
-            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
+            debugPass->SetShowPhysicsDebug(enable);
+            spdlog::info("SceneRenderer: Physics debug line visualization {}",
                          enable ? "ENABLED" : "DISABLED");
         }
         else
         {
-            spdlog::warn("SceneRenderer: Debug pass not found - cannot set AABB visualization");
+            spdlog::warn("SceneRenderer: Debug pass not found - cannot set physics debug visualization");
         }
     }
 }

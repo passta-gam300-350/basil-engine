@@ -60,22 +60,6 @@ std::shared_ptr<Mesh> PrimitiveManager::CreateDebugLightCube(float size) {
     return mesh;
 }
 
-std::shared_ptr<Mesh> PrimitiveManager::CreateDebugDirectionalRay(float length) {
-    auto mesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateDirectionalRay(length));
-    assert(mesh && "Directional ray mesh generation failed");
-    assert(!mesh->vertices.empty() && "Generated directional ray has no vertices");
-    spdlog::debug("PrimitiveManager: Created debug directional ray (length: {})", length);
-    return mesh;
-}
-
-std::shared_ptr<Mesh> PrimitiveManager::CreateDebugWireframeCube(float size) {
-    auto mesh = std::make_shared<Mesh>(PrimitiveGenerator::CreateWireframeCube(size));
-    assert(mesh && "Wireframe cube mesh generation failed");
-    assert(!mesh->vertices.empty() && "Generated wireframe cube has no vertices");
-    spdlog::debug("PrimitiveManager: Created debug wireframe cube (size: {})", size);
-    return mesh;
-}
-
 void PrimitiveManager::Clear() {
     m_SharedCubeMesh.reset();
     m_SharedPlaneMesh.reset();

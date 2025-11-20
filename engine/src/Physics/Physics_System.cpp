@@ -14,6 +14,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Profiler/profiler.hpp"
 #include <algorithm> // for std::sort in RaycastAll
 
+// Jolt DebugRenderer for accessing sInstance singleton
+#include <Jolt/Renderer/DebugRenderer.h>
+
+// JoltDebugRenderer (owned by RenderSystem, accessed via singleton)
+#include "Render/JoltDebugRenderer.h"
+
 
 // Callback for traces, connect this to your own trace function if you have one
 static void TraceImpl(const char* inFMT, ...)
@@ -224,6 +230,28 @@ void PhysicsSystem::FixedUpdate(ecs::world& world) {
 
     // 4. Process collision events
     ProcessCollisionEvents(world);
+
+    // 5. Draw physics debug visualization (if enabled)
+    // Note: JoltDebugRenderer is owned by RenderSystem, accessed via Jolt singleton
+    if (JPH::DebugRenderer::sInstance)
+    {
+        // Check if debug renderer is enabled
+        auto* debugRenderer = static_cast<JoltDebugRenderer*>(JPH::DebugRenderer::sInstance);
+        if (debugRenderer && debugRenderer->IsEnabled())
+        {
+            JPH::BodyManager::DrawSettings drawSettings;
+            drawSettings.mDrawShape = m_drawShapes;
+            drawSettings.mDrawShapeWireframe = m_drawShapes;
+            drawSettings.mDrawBoundingBox = m_drawBoundingBoxes;
+            drawSettings.mDrawVelocity = m_drawVelocities;
+            drawSettings.mDrawGetSupportFunction = false;
+            drawSettings.mDrawGetSupportingFace = false;
+            drawSettings.mDrawShapeColor = JPH::BodyManager::EShapeColor::InstanceColor;
+
+            // Draw all bodies in the physics world using the singleton
+            m_physicsSystem->DrawBodies(drawSettings, JPH::DebugRenderer::sInstance);
+        }
+    }
 }
 
 void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {

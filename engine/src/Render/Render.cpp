@@ -292,12 +292,6 @@ void RenderSystem::Update(ecs::world& world) {
 				assert(!meshResourcePtr->vertices.empty() && "Mesh must have vertices for rendering");
 
 				m_SceneRenderer->SubmitRenderable(renderData);
-
-				// Submit AABB for debug visualization (using pre-calculated mesh AABB)
-				if (visible.m_IsVisible && meshResourcePtr->GetAABB().IsValid()) {
-					DebugAABB debugAABB(meshResourcePtr->GetAABB(), transform.m_Mtx, glm::vec3(1.0f, 0.0f, 0.0f));
-					frameData.debugAABBs.push_back(debugAABB);
-				}
 			};
 		std::visit([&](auto&& var) {
 			using Type = std::remove_pointer_t<std::remove_cvref_t<decltype(var)>>;
@@ -532,13 +526,9 @@ void RenderSystem::SetupDebugVisualization() {
 	if (m_SceneRenderer && m_PrimitiveManager) {
 		// Create debug visualization meshes using PrimitiveManager
 		auto lightCube = m_PrimitiveManager->CreateDebugLightCube(5.0f);
-		auto lightRay = m_PrimitiveManager->CreateDebugDirectionalRay(3.0f);
-		auto wireframeCube = m_PrimitiveManager->CreateDebugWireframeCube(1.0f);
 
 		// Debug visualization uses primitive shader (loaded by ShaderLibrary)
 		m_SceneRenderer->SetDebugLightCubeMesh(lightCube);
-		m_SceneRenderer->SetDebugDirectionalRayMesh(lightRay);
-		m_SceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
 
 		spdlog::info("Debug visualization meshes configured");
 	} else {

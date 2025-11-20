@@ -50,20 +50,6 @@ public:
     // Set primitive shader (alternative to constructor injection)
     void SetPrimitiveShader(const std::shared_ptr<Shader>& shader) { m_PrimitiveShader = shader; }
 
-    // Set debug meshes (injected from application layer)
-    void SetDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) { m_DirectionalRay = mesh; }
-    void SetAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) { m_AABBWireframe = mesh; }
-
-    // Light ray visualization controls
-    void SetShowLightRays(bool show) { m_ShowLightRays = show; }
-    bool GetShowLightRays() const { return m_ShowLightRays; }
-    void SetRayLength(float length) { m_RayLength = length; }
-    void SetRayIntensityFactor(float factor) { m_RayIntensityFactor = factor; }  // Direct multiplier: rayLength = intensity * factor
-
-    // AABB visualization controls
-    void SetShowAABBs(bool show) { m_ShowAABBs = show; }
-    bool GetShowAABBs() const { return m_ShowAABBs; }
-
     // Physics debug visualization controls
     void SetShowPhysicsDebug(bool show) { m_ShowPhysicsDebug = show; }
     bool GetShowPhysicsDebug() const { return m_ShowPhysicsDebug; }
@@ -73,32 +59,11 @@ public:
     bool GetClearColorBuffer() const { return m_ClearColorBuffer; }
 
 private:
-    // Light visualization
-    void RenderLightRays(RenderContext& context);
-
-    // AABB visualization
-    void RenderAABBs(RenderContext& context);
-
     // Physics debug line visualization
     void RenderDebugLines(RenderContext& context);
 
-    // Helper methods for ray rendering
-    void RenderSingleRay(RenderContext& context, const std::shared_ptr<Mesh>& rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light);
-
     // Shader storage
     std::shared_ptr<Shader> m_PrimitiveShader;
-
-    // Debug visualization resources (injected, not owned)
-    std::shared_ptr<Mesh> m_DirectionalRay;
-    std::shared_ptr<Mesh> m_AABBWireframe;
-
-    // Light ray settings
-    bool m_ShowLightRays = true;          // Toggle for light ray visualization
-    float m_RayLength = 3.0f;              // Base length of the light rays (unused - kept for compatibility)
-    float m_RayIntensityFactor = 2.0f;     // Direct multiplier for intensity-to-length conversion
-
-    // AABB settings
-    bool m_ShowAABBs = false;              // Toggle for AABB wireframe visualization
 
     // Physics debug settings
     bool m_ShowPhysicsDebug = true;        // Toggle for physics debug line visualization

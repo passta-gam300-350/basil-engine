@@ -177,9 +177,6 @@ private:
 	PrefabOverrideContext m_PrefabContext;
 	std::unique_ptr<PrefabData> m_LoadedPrefabData;  // Currently loaded prefab for comparison
 
-	// Debug rendering controls
-	bool m_ShowAABBs = false;
-
 	// Material creation dialog state
 	bool m_ShowCreateMaterialDialog = false;
 	char m_NewMaterialNameBuffer[256] = "NewMaterial";
@@ -229,10 +226,6 @@ private:
 	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
 	void SelectEntity(uint32_t objectID);
 	void ClearEntitySelection();
-
-	// Debug visualization control
-	void SetDebugVisualization(bool showAABBs);
-
 
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);

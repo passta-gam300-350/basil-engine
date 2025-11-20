@@ -77,8 +77,6 @@ public:
     void SetSpotShadowShader(const std::shared_ptr<Shader>& shader) const;
     void SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const;
     void SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const;
-    void SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const;
-    void SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
     void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;
     void SetParticleShader(const std::shared_ptr<Shader>& shader) const;
@@ -130,9 +128,7 @@ public:
     void SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos);
 
     // Debug rendering facade
-    void SetDebugAABBs(const std::vector<DebugAABB>& aabbs);
-    void ToggleAABBVisualization();
-    void EnableAABBVisualization(bool enable);
+    void EnablePhysicsDebugVisualization(bool enable);  // Control physics debug line rendering
 
     // Pass control facade
     bool IsPassEnabled(const std::string& passName) const;
