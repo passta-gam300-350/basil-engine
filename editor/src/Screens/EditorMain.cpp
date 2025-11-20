@@ -1041,9 +1041,18 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 
-				if (ImGui::InputInt(field_name.c_str(), &enum_value) && assignment_by_type) {
-					is_dirty = true;
-					assignment_by_type(const_cast<void*>(val_ptr), &enum_value);
+				if (ImGui::BeginCombo(field_name.c_str(), std::string(meta_type.func("to_enum_name"_tn).invoke({}, enum_value).cast<const std::string_view>()).c_str())) {
+					auto names{ meta_type.func("enum_values"_tn).invoke({}).cast<std::span<const std::pair<std::string_view, std::uint32_t>>>() };
+					for (auto [enum_name, enum_val] : names) {
+						bool selected = (enum_val == enum_value);
+						if (ImGui::Selectable(std::string(enum_name).c_str(), selected)) {
+							enum_value = enum_val;
+							is_dirty = true;
+							assignment_by_type(const_cast<void*>(val_ptr), &enum_value);
+						}
+						if (selected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
 				}
 			}
 
@@ -2312,6 +2321,21 @@ void EditorMain::Render_SceneExplorer()
 		// Pop the selection highlight color if it was applied
 		ImGui::PopStyleColor(stylect);
 		stylect = 0;
+
+		if (ImGui::BeginDragDropSource()) {
+			// Payload can be any data type (e.g., pointer, ID, struct)
+			ImGui::SetDragDropPayload("SCENE_HIERARCHY", &node, sizeof(SceneGraphNode));
+			ImGui::Text("Dragging %s", node.m_entity_name.c_str());
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY")) {
+				const SceneGraphNode& dropped_node = *(const SceneGraphNode*)payload->Data;
+				engineService.make_parent_entity(node.m_entity_handle, dropped_node.m_entity_handle);
+			}
+			ImGui::EndDragDropTarget();
+		}
 
 		} };
 		RenderNode(node, RenderNode);

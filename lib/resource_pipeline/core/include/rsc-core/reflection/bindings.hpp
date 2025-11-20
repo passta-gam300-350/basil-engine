@@ -37,8 +37,8 @@ namespace rp {
 			const auto brace_pos{ func.rfind("<") };
 			const auto prefix_pos{ func.rfind(prefix) };
 			const auto start{ prefix_pos + prefix.size() };
-			const auto end{ func.rfind(suffix) };
-			return prefix_pos == std::string_view::npos || brace_pos > prefix_pos ? "" : func.substr(start, end - start);
+			const auto end{ func.rfind(suffix) != std::string_view::npos ? func.rfind(suffix) : func.rfind(">()")};
+			return prefix_pos == std::string_view::npos || brace_pos > prefix_pos || func.find(")") < end ? "" : func.substr(start, end - start);
 		}
 
 		namespace internal {
@@ -91,8 +91,10 @@ namespace rp {
 			template <typename Type>
 			struct enum_bruteforce_binding_helper {
 				static_assert(std::is_enum_v<Type>, "Type is not an enum!");
+#ifndef RP_REFLECTION_IGNORE_ENUM_DEDUCTION_RESTRICTION
 				static_assert(sizeof(std::underlying_type_t<Type>) == 1, "Underlying type is unsupported! Supported types are 1byte char(std::int8_t) and unsigned char(std::uint8_t). Overload EnumBindings() for custom enum support");
-				
+#endif
+
 				using underlying_type = std::underlying_type_t<Type>;
 				static constexpr std::size_t bruteforce_count = (std::numeric_limits<std::uint8_t>::max)() + 1ull;
 

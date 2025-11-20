@@ -189,7 +189,6 @@ public:
 	void add_component(entity_handle, std::uint32_t);
 	void delete_component(entity_handle, std::uint32_t);
 	
-
 	//safe to return reference, registration is done during startup with its data determined during compile time and reflection registry is not expected to change, unless reset is called.
 	std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& get_reflectible_component_id_name_list();
 
