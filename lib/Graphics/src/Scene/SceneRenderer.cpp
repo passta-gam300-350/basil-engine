@@ -71,6 +71,10 @@ void SceneRenderer::ClearFrame()
 	m_FrameData.shadowDataArray.clear();
 	m_FrameData.shadow2DTextures.clear();
 	m_FrameData.shadowCubemapTextures.clear();
+
+	// Clear physics debug lines for next frame
+	m_FrameData.debugLines.clear();
+
     if (m_ParticleRenderer)
     {
         m_ParticleRenderer->ClearFrame();
