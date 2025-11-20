@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for wall
+# Generated for GAM300 Graphics Engine
+
+newmtl standardSurface1
+
+# Base color / diffuse map
+map_Kd wall_wall_BaseColor.png
+
+# Normal map
+map_Bump wall_wall_Normal.png
+bump wall_wall_Normal.png
+
+# Metallic map
+map_Ks wall_wall_Metallic.png
+
+# Roughness map
+map_Ns wall_wall_Roughness.png
+
+# Emissive map
+map_Ke wall_wall_Emissive.png
+
+# Height / displacement map
+map_d wall_wall_Height.png
+disp wall_wall_Height.png
+
+kd 0.4 0.4 0.4
+illum 1
+

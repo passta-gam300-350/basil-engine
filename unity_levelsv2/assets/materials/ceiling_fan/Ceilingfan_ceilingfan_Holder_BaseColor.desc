@@ -1,0 +1,7 @@
+base:
+  m_guid: 98e42b97e7fa01f89b21de833fc
+  m_importer: .texture
+  m_source: materials\ceiling_fan\Ceilingfan_ceilingfan_Holder_BaseColor.png
+  m_name: Ceilingfan_ceilingfan_Holder_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

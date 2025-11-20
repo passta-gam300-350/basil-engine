@@ -616,6 +616,8 @@ void EditorMain::render()
 		Render_Inspector();
 	if (showSkyboxSettings)
 		Render_SkyboxSettings();
+	if (showPhysicsDebug)
+		Render_PhysicsDebugPanel();
 	Render_Scene();
 	Render_Game();
 	Render_CameraControls();
@@ -1036,7 +1038,7 @@ void EditorMain::Render_Components()
 			headerLabel += " (" + std::to_string(overrideCount) + " overrides)";
 		}
 
-		if (ImGui::TreeNode(headerLabel.c_str())) {
+		if (ImGui::TreeNodeEx(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
 			if (hasOverrides)
 			{
 				ImGui::PopStyleColor(3);  // Pop the colored background

@@ -79,7 +79,7 @@ struct RigidBodyComponent {
     float angularDrag = 0.05f;      // Angular drag. Prevents objects from spinning forever.
     float friction = 0.0f;          
     float linearDamping = 0.0f;
-    float gravityFactor = -9.81f; 
+    float gravityFactor = 1.00f; 
     bool useGravity = true;         // Is gravity applied to the entity, true: Object falls down(default - 9.81 m/s^2), false : Object floats(useful for flying enemies, UI elements in 3D space)
     bool isKinematic = false;       // Is this object controlled by animation/code or physics? false (Dynamic): Physics controls position (player can push it), true (Kinematic) : Your code controls position(moving platforms, doors)
      
@@ -93,6 +93,16 @@ struct RigidBodyComponent {
     bool freezeRotationY = false;
     bool freezeRotationZ = false;
 
+    // Constraints for Linear Velocity
+    bool freezeLinearVelocityX = false;
+    bool freezeLinearVelocityY = false;
+    bool freezeLinearVelocityZ = false;
+
+    // Constraints for Angular Velocity
+    bool freezeAngularVelocityX = false;
+    bool freezeAngularVelocityY = false;
+    bool freezeAngularVelocityZ = false;
+
     // Cached physics state
     glm::vec3 linearVelocity = glm::vec3(0.0f);
     glm::vec3 angularVelocity = glm::vec3(0.0f);
@@ -105,7 +115,7 @@ struct RigidBodyComponent {
     glm::vec3 centerOfMass = glm::vec3(0.0f);
 
     // Helper to determine if this should be static
-    bool IsStatic() const {
+    bool IsStatic() const noexcept {
         return motionType == MotionType::Static;
     }
 
@@ -229,27 +239,13 @@ public:
     Direction& GetDirection() noexcept { return mDirection; }
     void SetDirection(Direction direction) noexcept { mDirection = direction; }
 
-    float mRadius;
-    float mHeight;
-    Direction mDirection;
+    float mRadius = 0.50f;
+    float mHeight = 1.0f;
+    Direction mDirection{};
 private:
 
 };
 
-
-
-struct ColliderComponent {
-    JPH::RefConst<JPH::Shape> shape;  // The collision shape
-    JPH::Vec3 offset;  // Local offset from entity transform
-    JPH::Quat rotation;  // Local rotation
-
-    // Material properties
-    float friction = 0.5f;
-    float restitution = 0.0f;
-
-    // Collision filtering
-    uint32_t collisionMask;
-};
 
 
 RegisterReflectionTypeBegin(RigidBodyComponent, "RigidBodyComponent")
@@ -268,6 +264,12 @@ RegisterReflectionTypeBegin(RigidBodyComponent, "RigidBodyComponent")
     MemberRegistrationV<&RigidBodyComponent::freezeRotationX, "freezeRotationX">,
     MemberRegistrationV<&RigidBodyComponent::freezeRotationY, "freezeRotationY">,
     MemberRegistrationV<&RigidBodyComponent::freezeRotationZ, "freezeRotationZ">,
+    MemberRegistrationV<&RigidBodyComponent::freezeLinearVelocityX, "freezeLinearVelocityX">,
+    MemberRegistrationV<&RigidBodyComponent::freezeLinearVelocityY, "freezeLinearVelocityY">,
+    MemberRegistrationV<&RigidBodyComponent::freezeLinearVelocityZ, "freezeLinearVelocityZ">,
+    MemberRegistrationV<&RigidBodyComponent::freezeAngularVelocityX, "freezeAngularVelocityX">,
+    MemberRegistrationV<&RigidBodyComponent::freezeAngularVelocityY, "freezeAngularVelocityY">,
+    MemberRegistrationV<&RigidBodyComponent::freezeAngularVelocityZ, "freezeAngularVelocityZ">,
     MemberRegistrationV<&RigidBodyComponent::centerOfMass, "centerOfMass">,
     MemberRegistrationV<&RigidBodyComponent::linearVelocity, "linearVelocity">,
     MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
@@ -294,4 +296,13 @@ RegisterReflectionTypeBegin(BoxCollider, "BoxCollider")
     MemberRegistrationV<&BoxCollider::friction, "friction">,
     MemberRegistrationV<&BoxCollider::restitution, "restitution">,
     MemberRegistrationV<&BoxCollider::density, "density">
+RegisterReflectionTypeEnd
+
+RegisterReflectionTypeBegin(SphereCollider, "SphereCollider")
+MemberRegistrationV<&SphereCollider::radius, "size">,
+MemberRegistrationV<&SphereCollider::center, "CenterOffset">,
+MemberRegistrationV<&SphereCollider::isTrigger, "isTrigger">,
+MemberRegistrationV<&SphereCollider::friction, "friction">,
+MemberRegistrationV<&SphereCollider::restitution, "restitution">,
+MemberRegistrationV<&SphereCollider::density, "density">
 RegisterReflectionTypeEnd

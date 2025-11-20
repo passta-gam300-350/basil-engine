@@ -1,0 +1,29 @@
+base:
+  m_guid: 9be3fc8740f8a5f8a62d75ec69a
+  m_importer: .material
+  m_source: ""
+  m_name: m_kitchen_shelf_standard
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_kitchen_shelf_standard
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 98e44097c0f92f73dda745a2550
+    u_DiffuseMap: 98e43eb7df4b6cfa1b4894538d1
+    u_EmissiveMap: 98e43f17c169ee70c14728f22b9
+    u_NormalMap: 98e44037317b446245c76801192
+    u_HeightMap: 98e43f770c3baa6661e4366e264
+    u_SpecularMap: 00
+    u_MetallicMap: 98e43fd78afa1e8e9260790cb43

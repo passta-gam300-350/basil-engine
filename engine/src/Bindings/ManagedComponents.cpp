@@ -21,6 +21,7 @@ Technology is prohibited.
 
 #include "components/transform.h"
 #include "Manager/MonoEntityManager.hpp"
+#include "Physics/Physics_Components.h"
 #include "Render/Camera.h"
 
 std::unordered_map<uint32_t, ManagedComponents::ComponentChecker> ManagedComponents::componentTypeMap{};
@@ -67,6 +68,20 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		});
 		return id;
 	}
+	if (strName == "Rigidbody")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Rigidbody component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Rigidbody component check
+			bool result = entity.any<RigidBodyComponent>(); // Replace with actual Rigidbody component
+			return result;
+		});
+		return id;
+	}
+
+
 
 	
 

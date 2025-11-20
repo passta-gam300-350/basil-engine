@@ -16,12 +16,18 @@ struct GLFWwindow;
 
 class Engine
 {
+	using on_world_load_cb = void(*)(ecs::world&);
+	using on_world_unload_cb = void(*)(ecs::world&);
+
 	std::unique_ptr<Window> m_Window;
 	std::unique_ptr<RenderSystem> m_RenderSystem;
 	ecs::world m_World;
 	std::unique_ptr<Logger::Sink> m_Sink;
 	std::string m_WorkingDirectory;
 	std::unique_ptr<SceneRegistry> m_SceneRegistry;
+
+	on_world_load_cb m_OnWorldLoadCallback{};
+	on_world_unload_cb m_OnWorldUnloadCallback{};
 
 public:
 	struct Info {
@@ -58,7 +64,7 @@ public:
 	static void UpdateDebug();
 	static void Exit();
 
-
+	
 
 	static void BeginFrame();
 	static void EndFrame();
@@ -87,6 +93,31 @@ public:
 	static void SetState(Info::State state) { Instance().m_Info.m_State = state; }
 
 	static bool ShouldClose() { return Instance().m_Info.m_State == Info::State::Error || Instance().m_Info.m_State == Info::State::Exit; }
+
+	static void OnLoad()
+	{
+		if (Instance().m_OnWorldLoadCallback)
+		{
+			Instance().m_OnWorldLoadCallback(Instance().m_World);
+		}
+	}
+
+	static void OnUnload()
+	{
+		if (Instance().m_OnWorldUnloadCallback)
+		{
+			Instance().m_OnWorldUnloadCallback(Instance().m_World);
+		}
+	}
+
+	static void SetOnLoadCallBack(on_world_load_cb cb)
+	{
+		Instance().m_OnWorldLoadCallback = cb;
+	}
+	static void SetOnUnloadCallBack(on_world_unload_cb cb)
+	{
+		Instance().m_OnWorldUnloadCallback = cb;
+	}
 };
 
 

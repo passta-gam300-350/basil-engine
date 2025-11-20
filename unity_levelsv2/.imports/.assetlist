@@ -1,0 +1,987 @@
+"01.Daytime_Forest_Field_Sun_Loop.ogg":
+  "m_guid": "469fb3576aba7b5204f12747c31"
+  "m_typeindex": "17099568057112876377"
+"05.Fog-Desert_Loop.ogg":
+  "m_guid": "469fb4b72e3b016fbaf4537dc57"
+  "m_typeindex": "17099568057112876377"
+"08 Iris-Without You (The Reunion).ogg":
+  "m_guid": "469fb5574028fc06cb2a53ad894"
+  "m_typeindex": "17099568057112876377"
+"Affandi_1.ogg":
+  "m_guid": "469fb6079638903140335e2db84"
+  "m_typeindex": "17099568057112876377"
+"Affandi_2.ogg":
+  "m_guid": "469fb6c73a0b901c58ca434e7f7"
+  "m_typeindex": "17099568057112876377"
+"Affandi_3.ogg":
+  "m_guid": "469fb767b92b6856c2716382f89"
+  "m_typeindex": "17099568057112876377"
+"Affandi_4.ogg":
+  "m_guid": "469fb81757b9f1e2b64abde5908"
+  "m_typeindex": "17099568057112876377"
+"Affandi_5.ogg":
+  "m_guid": "469fb8b74ab82ac23876f9a6dee"
+  "m_typeindex": "17099568057112876377"
+"Affandi_6.ogg":
+  "m_guid": "469fb95744f8ed59f7707ae0900"
+  "m_typeindex": "17099568057112876377"
+"CardboardBoxOpen_standardSurface7_BaseColor.png":
+  "m_guid": "98e4294763590b1d5701ac2ee9b"
+  "m_typeindex": "126269861530532084"
+"CardboardBoxOpen_standardSurface7_Emissive.png":
+  "m_guid": "98e429a7d6f9b8072595c9663fe"
+  "m_typeindex": "126269861530532084"
+"CardboardBoxOpen_standardSurface7_Height.png":
+  "m_guid": "98e42a079e8be39f21ac15765fe"
+  "m_typeindex": "126269861530532084"
+"CardboardBoxOpen_standardSurface7_Metallic.png":
+  "m_guid": "98e42a77df8a30b40b1bd6f7047"
+  "m_typeindex": "126269861530532084"
+"CardboardBoxOpen_standardSurface7_Normal.png":
+  "m_guid": "98e42ad7cd598cb4b97319ac9cb"
+  "m_typeindex": "126269861530532084"
+"CardboardBoxOpen_standardSurface7_Roughness.png":
+  "m_guid": "98e42b37af49a4966ef4734a987"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface1_BaseColor.png":
+  "m_guid": "98e421c7657b779fbf7fb12d7a4"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface1_Emissive.png":
+  "m_guid": "98e42237841af59347c319709c2"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface1_Height.png":
+  "m_guid": "98e422a78f9a0de58ef3779eb45"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface1_Metallic.png":
+  "m_guid": "98e42317f90bab838da2859614f"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface1_Normal.png":
+  "m_guid": "98e423879269e79ec0fb21a20b4"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface1_Roughness.png":
+  "m_guid": "98e423f74ee971760ba086d06b2"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface7_BaseColor.png":
+  "m_guid": "98e424579e2ad3741e3288547c2"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface7_Emissive.png":
+  "m_guid": "98e424c7fe6a60702dd2f6e3427"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface7_Height.png":
+  "m_guid": "98e4252790dab1a90b44058b74c"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface7_Metallic.png":
+  "m_guid": "98e42597eeb8a881d1c38188ac8"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface7_Normal.png":
+  "m_guid": "98e425f7e66834315722688e706"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_FullyClosed_standardSurface7_Roughness.png":
+  "m_guid": "98e42657432ad97a4f6bc79e8c4"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_halfClosed_standardSurface7_BaseColor.png":
+  "m_guid": "98e426b7d509fa2b2e655ea9033"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_halfClosed_standardSurface7_Emissive.png":
+  "m_guid": "98e42737f6a97909c09adeeef53"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_halfClosed_standardSurface7_Height.png":
+  "m_guid": "98e42797b699ed3e92ca879bd8a"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_halfClosed_standardSurface7_Metallic.png":
+  "m_guid": "98e42807350ab48f3e8c21fc906"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_halfClosed_standardSurface7_Normal.png":
+  "m_guid": "98e428670ab8b7b31d5ba3dac79"
+  "m_typeindex": "126269861530532084"
+"CardboardBox_halfClosed_standardSurface7_Roughness.png":
+  "m_guid": "98e428d76c7a196310fbd53d895"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_ceilingfan_Holder_BaseColor.png":
+  "m_guid": "98e42b97e7fa01f89b21de833fc"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_ceilingfan_Holder_Emissive.png":
+  "m_guid": "98e42c173ca8c6352612948f1a9"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_ceilingfan_Holder_Height.png":
+  "m_guid": "98e42c87057ad6352509f52719b"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_ceilingfan_Holder_Metallic.png":
+  "m_guid": "98e42cd768f9a59ae6e8d575d06"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_ceilingfan_Holder_Normal.png":
+  "m_guid": "98e42d97ec885d5bd5131173880"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_ceilingfan_Holder_Roughness.png":
+  "m_guid": "98e42e37c7899c54f2c307bb269"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_openPBR_shader5_BaseColor.png":
+  "m_guid": "98e42e975669cff18120fa9454f"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_openPBR_shader5_Emissive.png":
+  "m_guid": "98e42ef7bdb9d0b6db878063e28"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_openPBR_shader5_Height.png":
+  "m_guid": "98e42f67ac9b3b27e1dd8be852b"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_openPBR_shader5_Metallic.png":
+  "m_guid": "98e42fc7605a7dafa530cf95e6c"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_openPBR_shader5_Normal.png":
+  "m_guid": "98e43037b2483d9f69fcd968f35"
+  "m_typeindex": "126269861530532084"
+"Ceilingfan_openPBR_shader5_Roughness.png":
+  "m_guid": "98e430979be8845f690a44df734"
+  "m_typeindex": "126269861530532084"
+"Dustbin.obj":
+  "m_guid": "98e46877d2caea1c5491392d609"
+  "m_typeindex": "4838001395392124604"
+"Floor.obj":
+  "m_guid": "98e468d7500b81165d791634200"
+  "m_typeindex": "4838001395392124604"
+"Floor_openPBR_shader1_BaseColor.png":
+  "m_guid": "98e4334725ebac8bede5ada8e0f"
+  "m_typeindex": "126269861530532084"
+"Floor_openPBR_shader1_Height.png":
+  "m_guid": "98e433b703ba39f0981f16538e6"
+  "m_typeindex": "126269861530532084"
+"Floor_openPBR_shader1_Metallic.png":
+  "m_guid": "98e434179c197532a320917117c"
+  "m_typeindex": "126269861530532084"
+"Floor_openPBR_shader1_Normal.png":
+  "m_guid": "98e434771fd89729762bb27204d"
+  "m_typeindex": "126269861530532084"
+"Floor_openPBR_shader1_Roughness.png":
+  "m_guid": "98e434d7b309e558349e75059d5"
+  "m_typeindex": "126269861530532084"
+"Footsteps-Barefoot-Concrete-Marble_1.ogg":
+  "m_guid": "469fba076c08d54c04a14a07fad"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_2.ogg":
+  "m_guid": "469fbaa73ec826b35c3e37a175c"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_3.ogg":
+  "m_guid": "469fbb87cdcb03a5a3041439c4f"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_4.ogg":
+  "m_guid": "469fbc37db1a777a1522b9bf8ec"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_5.ogg":
+  "m_guid": "469fbcf7eca89c5aab5bb1c4a53"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_6.ogg":
+  "m_guid": "469fbdb7dbf9deeb4b4a5bba7bc"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_7.ogg":
+  "m_guid": "469fbe67a9a89f02483fc374dde"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_8.ogg":
+  "m_guid": "469fbf27e9186aca24a6225da9c"
+  "m_typeindex": "17099568057112876377"
+"Footsteps-Barefoot-Concrete-Marble_9.ogg":
+  "m_guid": "469fbff7d86b3c00453d2b07001"
+  "m_typeindex": "17099568057112876377"
+"Happy Memory Jingle_Linear.ogg":
+  "m_guid": "469fc0b776e9bb6bd4dc6b3494c"
+  "m_typeindex": "17099568057112876377"
+"Kite-Spool-Start.ogg":
+  "m_guid": "469fc177af4911d47cafb43e953"
+  "m_typeindex": "17099568057112876377"
+"Kite-Spool-Stop.ogg":
+  "m_guid": "469fc24758e840f24d97e554294"
+  "m_typeindex": "17099568057112876377"
+"Kite-Spool_Loop.ogg":
+  "m_guid": "469fc30754b84adbf4bf9cbc7e3"
+  "m_typeindex": "17099568057112876377"
+"Meng_1.ogg":
+  "m_guid": "469fc3b7f92b2832c27268637a2"
+  "m_typeindex": "17099568057112876377"
+"Meng_2.ogg":
+  "m_guid": "469fc467693a3601c0837921776"
+  "m_typeindex": "17099568057112876377"
+"Meng_3.ogg":
+  "m_guid": "469fc52762aaf93fd66a82be426"
+  "m_typeindex": "17099568057112876377"
+"Meng_4.ogg":
+  "m_guid": "469fc5f7dfaa79f78fdfbc72dc4"
+  "m_typeindex": "17099568057112876377"
+"Meng_5.ogg":
+  "m_guid": "469fc6a7f9d98e7fa830a2b2666"
+  "m_typeindex": "17099568057112876377"
+"Meng_6.ogg":
+  "m_guid": "469fc747768bc6fbf1ae1ae0ab9"
+  "m_typeindex": "17099568057112876377"
+"Meng_7.ogg":
+  "m_guid": "469fc7e7ba5bcb9b5def2c68f74"
+  "m_typeindex": "17099568057112876377"
+"Meng_8.ogg":
+  "m_guid": "469fc89732ca0601b64e098f658"
+  "m_typeindex": "17099568057112876377"
+"Mesh_Bag2_rubberBand_BaseColor.png":
+  "m_guid": "98e44cc75ecaaba16e5c7742cc1"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_rubberBand_Emissive.png":
+  "m_guid": "98e44d278ec9f574c355d841fc9"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_rubberBand_Height.png":
+  "m_guid": "98e44d876919c5639b5dbaf4746"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_rubberBand_Metallic.png":
+  "m_guid": "98e44de72a19e3b4d55c57e13fc"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_rubberBand_Normal.png":
+  "m_guid": "98e44e5766887842edbabad93e2"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_rubberBand_Roughness.png":
+  "m_guid": "98e44ec7185ad672569f45a62ad"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_trashbag_BaseColor.png":
+  "m_guid": "98e44f372ec8ebef2b54bee6780"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_trashbag_Emissive.png":
+  "m_guid": "98e44fb7666b182ee714461fc06"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_trashbag_Height.png":
+  "m_guid": "98e4501757da10107147c30aa4f"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_trashbag_Metallic.png":
+  "m_guid": "98e450774a3bf1132ae9bcc7a1c"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_trashbag_Normal.png":
+  "m_guid": "98e450e76c1bc4db54d5a064429"
+  "m_typeindex": "126269861530532084"
+"Mesh_Bag2_trashbag_Roughness.png":
+  "m_guid": "98e45147682b8182f83f2b4bfa7"
+  "m_typeindex": "126269861530532084"
+"Metal":
+  "m_guid": "6d2de9273f4af2325de59c3cd38"
+  "m_typeindex": "175488002581160416"
+"Metal_ShelfStand.obj":
+  "m_guid": "469fe547dfcbead1a21fbd420ad"
+  "m_typeindex": "4838001395392124604"
+"Metal_ShelfStand_Metal_BaseColor.png":
+  "m_guid": "469fd177063990461b3020f8aec"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Emissive.png":
+  "m_guid": "469fd2275828e753efb713389a0"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Height.png":
+  "m_guid": "469fd2e7b7f9210efc68ac39599"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Metallic.png":
+  "m_guid": "469fd387caa8b12a10a0266b9ef"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Normal.png":
+  "m_guid": "469fd4373e3958d1e64c00f90f8"
+  "m_typeindex": "126269861530532084"
+"Metal_ShelfStand_Metal_Roughness.png":
+  "m_guid": "469fd4d76ff9dc0ee89d9d83fae"
+  "m_typeindex": "126269861530532084"
+"Mobile Phone Vibrate.ogg":
+  "m_guid": "469fc9476af8119e95140ee1e0f"
+  "m_typeindex": "17099568057112876377"
+"NewMaterial":
+  "m_guid": "98e657171e18b332cdb4fbd1d6b"
+  "m_typeindex": "175488002581160416"
+"NewMaterialGround":
+  "m_guid": "47d2a3570a6aa8c772d643467c4"
+  "m_typeindex": "175488002581160416"
+"NewMaterialTableMaterial":
+  "m_guid": "6a8c32674218670ef61b081bd35"
+  "m_typeindex": "175488002581160416"
+"NewMaterialTableTop":
+  "m_guid": "6ab6d0c716da672d67e53ffb1d7"
+  "m_typeindex": "175488002581160416"
+"PandaMat":
+  "m_guid": "99876a277d69f9cfbb7410ca045"
+  "m_typeindex": "175488002581160416"
+"PandaMat1":
+  "m_guid": "998842c733d9f0f194204c737d5"
+  "m_typeindex": "175488002581160416"
+"PandaMat2":
+  "m_guid": "998b553713e80eb789d8776390b"
+  "m_typeindex": "175488002581160416"
+"PandaMat3":
+  "m_guid": "9987cdf70cbbbf8a1b664db8f25"
+  "m_typeindex": "175488002581160416"
+"Paper-Shufle_1.ogg":
+  "m_guid": "469fc9f7918bb2ef7879bf955d7"
+  "m_typeindex": "17099568057112876377"
+"Paper-Shufle_2.ogg":
+  "m_guid": "469fcaa766cb7b95a801ae5a500"
+  "m_typeindex": "17099568057112876377"
+"Paper-Shufle_3.ogg":
+  "m_guid": "469fcb67e8fac6020765ec39a34"
+  "m_typeindex": "17099568057112876377"
+"Paper-Shufle_4.ogg":
+  "m_guid": "469fcc17d64b4156bad1544621f"
+  "m_typeindex": "17099568057112876377"
+"Paper-Shufle_5.ogg":
+  "m_guid": "469fcce77f5ba2898c4e8a3d8d3"
+  "m_typeindex": "17099568057112876377"
+"Paper-Shufle_6.ogg":
+  "m_guid": "469fcda737c9c1c67f6f941c52b"
+  "m_typeindex": "17099568057112876377"
+"Prop_Desk_03_table_bottom_BaseColor.png":
+  "m_guid": "98e45f77c0aa26b2d6d76749d69"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_bottom_Emissive.png":
+  "m_guid": "98e45fe7e5cb94d8c88d512f630"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_bottom_Height.png":
+  "m_guid": "98e460476f9a172b73ef13d77e2"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_bottom_Metallic.png":
+  "m_guid": "98e460a78bd9bb7c8e0f44c0584"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_bottom_Normal.png":
+  "m_guid": "98e46117be0bddc36c8ac9cbb60"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_bottom_Roughness.png":
+  "m_guid": "98e4617718381259371249c905e"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_1_BaseColor.png":
+  "m_guid": "98e461e75cf938a1bbec0a0deb4"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_1_Emissive.png":
+  "m_guid": "98e46247d05a17c76143a4b3a9f"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_1_Height.png":
+  "m_guid": "98e462a7b86bce74202afb20a97"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_1_Metallic.png":
+  "m_guid": "98e46307440bd966c3da9d80735"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_1_Normal.png":
+  "m_guid": "98e463879fbb873f39a8bae250e"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_1_Roughness.png":
+  "m_guid": "98e463d7f398077ec5404648a15"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_BaseColor.png":
+  "m_guid": "98e4644771591bd802f36efe156"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_Emissive.png":
+  "m_guid": "98e464a7f439898e5b55e94a965"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_Height.png":
+  "m_guid": "98e4651769e8b897aae79271dc4"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_Metallic.png":
+  "m_guid": "98e465774d1bf7b3302415a0a88"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_Normal.png":
+  "m_guid": "98e465e71e18b5ce45f0b196561"
+  "m_typeindex": "126269861530532084"
+"Prop_Desk_03_table_top_Roughness.png":
+  "m_guid": "98e466678c3952706ac8f9b51c1"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_PandaMat3_BaseColor.png":
+  "m_guid": "98e439f7fe099599b2ebeae6b2d"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_PandaMat3_Emissive.png":
+  "m_guid": "98e43a67df0a22c0d351bb7378f"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_PandaMat3_Height.png":
+  "m_guid": "98e43ac7ceabc2ce456b1bda50d"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_PandaMat3_Metallic.png":
+  "m_guid": "98e43b271eba926a3a1e0995d0f"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_PandaMat3_Normal.png":
+  "m_guid": "98e43b87f6ca6549e47324d4c29"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_PandaMat3_Roughness.png":
+  "m_guid": "98e43be7db4b64ab8a7b9958da1"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_chair_top_BaseColor.png":
+  "m_guid": "98e437b74dd8bfcc8796f59c9cb"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_chair_top_Emissive.png":
+  "m_guid": "98e43817ab08dcf60623ab04026"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_chair_top_Height.png":
+  "m_guid": "98e43877a4e8e6611f44c311a5b"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_chair_top_Metallic.png":
+  "m_guid": "98e438d78fa8801e27e99394038"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_chair_top_Normal.png":
+  "m_guid": "98e439379eeb7f2a1085250c250"
+  "m_typeindex": "126269861530532084"
+"Prop_KitchenChair_02_chair_top_Roughness.png":
+  "m_guid": "98e439978b3a05c1c9265fe45f1"
+  "m_typeindex": "126269861530532084"
+"Sad Memory Jingle_Linear.ogg":
+  "m_guid": "469fce676718c72e4cd8d8e15d8"
+  "m_typeindex": "17099568057112876377"
+"Singapore Koi Ambience_Loop.ogg":
+  "m_guid": "469fcf3705599a35e3062779325"
+  "m_typeindex": "17099568057112876377"
+"Singapore MRT Outdoor Ambience_Loop.ogg":
+  "m_guid": "469fd0c7c6c9a345090186739ee"
+  "m_typeindex": "17099568057112876377"
+"Singapore Morning Distant Trafic Outdoor Ambience_Loop.ogg":
+  "m_guid": "469fd007c18a3be9fe09c9f964a"
+  "m_typeindex": "17099568057112876377"
+"Table.obj":
+  "m_guid": "469fe62783e94020d815147dca7"
+  "m_typeindex": "4838001395392124604"
+"TableBottom":
+  "m_guid": "6d98bf173c396a1898dbde9a509"
+  "m_typeindex": "175488002581160416"
+"TableDetail":
+  "m_guid": "6aefb5370c081ff79337e11c48e"
+  "m_typeindex": "175488002581160416"
+"TableDetailV2":
+  "m_guid": "4ca2227f84add73c6119a6744e"
+  "m_typeindex": "175488002581160416"
+"TableDetails1":
+  "m_guid": "6d98bed78c8b027c4b821c10ab4"
+  "m_typeindex": "175488002581160416"
+"TableGlass":
+  "m_guid": "6ad07bc7cfb9fc6084b68bf8798"
+  "m_typeindex": "175488002581160416"
+"TableGlassV2":
+  "m_guid": "491ae4713ca796d83ef2a9134e"
+  "m_typeindex": "175488002581160416"
+"TableGlassV3":
+  "m_guid": "5a697a72d5b36f9481d7ecc65c"
+  "m_typeindex": "175488002581160416"
+"TableTop1":
+  "m_guid": "6d98bef735eb0e9a1d6f8061409"
+  "m_typeindex": "175488002581160416"
+"Terrain.obj":
+  "m_guid": "e02f8fa7eb18c1cafa05087c973"
+  "m_typeindex": "4838001395392124604"
+"TerrainBase":
+  "m_guid": "e04ed7e7cbd8b1ebe195259c9f7"
+  "m_typeindex": "175488002581160416"
+"WallMaterial":
+  "m_guid": "489d4ad7b7b9365c19ecc3b5151"
+  "m_typeindex": "175488002581160416"
+"biscuit_tin_chocoBiscuit.obj":
+  "m_guid": "12279807add9cd85b75e19f7db8"
+  "m_typeindex": "4838001395392124604"
+"biscuit_tin_empty.obj":
+  "m_guid": "1227985796f81e4d5c327308919"
+  "m_typeindex": "4838001395392124604"
+"biscuit_tin_standardSurface1_BaseColor.png":
+  "m_guid": "122788d7d7e9d6e9af848e25fe8"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Emissive.png":
+  "m_guid": "122789e7b5db490f80590fd0dc3"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Height.png":
+  "m_guid": "12278a47341a042c9338d442f7c"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Metallic.png":
+  "m_guid": "12278b67b818449a2b809378990"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Normal.png":
+  "m_guid": "12278bd7c258ea78d8aa531f6e8"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_standardSurface1_Roughness.png":
+  "m_guid": "12278c277e69d42315014ee4665"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_BaseColor.png":
+  "m_guid": "12278c87759ad10aaca242baf96"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Emissive.png":
+  "m_guid": "12278d6736eaae3f219af9e6ef0"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Height.png":
+  "m_guid": "12278dd7aa4b7d6bcd4e6682e12"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Metallic.png":
+  "m_guid": "12278e378c892171522127ae84d"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Normal.png":
+  "m_guid": "12278e9744ea5d11673fa591434"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_plastic_clear_Roughness.png":
+  "m_guid": "12278f07b7c83e048ea4937bd23"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_BaseColor.png":
+  "m_guid": "12278f5769c859efb3b08b95b89"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Emissive.png":
+  "m_guid": "12278fc7d54aedc7718ca620d56"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Height.png":
+  "m_guid": "12279017342b3236d00101b7389"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Metallic.png":
+  "m_guid": "12279087de2880f166ee57a2019"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Normal.png":
+  "m_guid": "12279127aa086b12335955ee7fc"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_tin_top_Roughness.png":
+  "m_guid": "122791872f195d4c3a6e20af734"
+  "m_typeindex": "126269861530532084"
+"biscuit_tin_wafer.obj":
+  "m_guid": "122798c7953bba558f899785673"
+  "m_typeindex": "4838001395392124604"
+"cardboard_Fullyclosed.obj":
+  "m_guid": "98e466c73278a961e6c2cf254a0"
+  "m_typeindex": "4838001395392124604"
+"cardboard_halfclosed.obj":
+  "m_guid": "98e46747f82af28f50daf1512d8"
+  "m_typeindex": "4838001395392124604"
+"cardboard_open.obj":
+  "m_guid": "98e467b7b89871731e2713d6ddc"
+  "m_typeindex": "4838001395392124604"
+"ceilingfan.obj":
+  "m_guid": "98e46817f8fa0aa495a51c2a535"
+  "m_typeindex": "4838001395392124604"
+"ceilingfan_Holder":
+  "m_guid": "998681971d3b68c3e7a002281fe"
+  "m_typeindex": "175488002581160416"
+"chair_top":
+  "m_guid": "9987cdf71459d97703d4b1bcd92"
+  "m_typeindex": "175488002581160416"
+"kitchenCabinet.obj":
+  "m_guid": "98e46937e72ac6d40e2610281a0"
+  "m_typeindex": "4838001395392124604"
+"kitchenCabinet_PandaMat_BaseColor.png":
+  "m_guid": "98e435370a185659071d40076bd"
+  "m_typeindex": "126269861530532084"
+"kitchenCabinet_PandaMat_Emissive.png":
+  "m_guid": "98e435976fbb5420a115e49f579"
+  "m_typeindex": "126269861530532084"
+"kitchenCabinet_PandaMat_Height.png":
+  "m_guid": "98e43617b6a92c9d8f78af1d69b"
+  "m_typeindex": "126269861530532084"
+"kitchenCabinet_PandaMat_Metallic.png":
+  "m_guid": "98e4367726d926a1cc2d8536831"
+  "m_typeindex": "126269861530532084"
+"kitchenCabinet_PandaMat_Normal.png":
+  "m_guid": "98e436e770cb63403de0d242fef"
+  "m_typeindex": "126269861530532084"
+"kitchenCabinet_PandaMat_Roughness.png":
+  "m_guid": "98e437575b697196d0ff99f9e70"
+  "m_typeindex": "126269861530532084"
+"kitchenChair.obj":
+  "m_guid": "98e469a764aa833695e340fcc10"
+  "m_typeindex": "4838001395392124604"
+"kitchenShelf.obj":
+  "m_guid": "98e46a174c696692318e374794b"
+  "m_typeindex": "4838001395392124604"
+"kitchenShelf_PandaMat1_BaseColor.png":
+  "m_guid": "98e43c577209298b140e3ed9e1c"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_PandaMat1_Emissive.png":
+  "m_guid": "98e43cb7761851a1c076679be95"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_PandaMat1_Height.png":
+  "m_guid": "98e43d17a40b0c2a4c225fff1dc"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_PandaMat1_Metallic.png":
+  "m_guid": "98e43d774f0b20d7dad5ae7a511"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_PandaMat1_Normal.png":
+  "m_guid": "98e43dd71338ad31df8e12055fc"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_PandaMat1_Roughness.png":
+  "m_guid": "98e43e37f78b7aa6af2b9aec800"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_standardSurface2_BaseColor.png":
+  "m_guid": "98e43eb7df4b6cfa1b4894538d1"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_standardSurface2_Emissive.png":
+  "m_guid": "98e43f17c169ee70c14728f22b9"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_standardSurface2_Height.png":
+  "m_guid": "98e43f770c3baa6661e4366e264"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_standardSurface2_Metallic.png":
+  "m_guid": "98e43fd78afa1e8e9260790cb43"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_standardSurface2_Normal.png":
+  "m_guid": "98e44037317b446245c76801192"
+  "m_typeindex": "126269861530532084"
+"kitchenShelf_standardSurface2_Roughness.png":
+  "m_guid": "98e44097c0f92f73dda745a2550"
+  "m_typeindex": "126269861530532084"
+"kite":
+  "m_guid": "12279737ce4956276de22f3c339"
+  "m_typeindex": "4838001395392124604"
+"kite_AO.png":
+  "m_guid": "12276d17fad8d732164bf953707"
+  "m_typeindex": "126269861530532084"
+"kite_BaseColor.png":
+  "m_guid": "12276e378f0876f48f00fbac0fd"
+  "m_typeindex": "126269861530532084"
+"kite_Height.png":
+  "m_guid": "12276ea7e89b654784f7e5b9c69"
+  "m_typeindex": "126269861530532084"
+"kite_Metallic.png":
+  "m_guid": "1227701760e9367bbbd31045c1f"
+  "m_typeindex": "126269861530532084"
+"kite_Normal.png":
+  "m_guid": "12277097f4b82d60e7a28dabc00"
+  "m_typeindex": "126269861530532084"
+"kite_Roughness.png":
+  "m_guid": "122770e778ea346edeb167a7760"
+  "m_typeindex": "126269861530532084"
+"m_cardboard_closed":
+  "m_guid": "9aa554375ad821f18fca50a025e"
+  "m_typeindex": "175488002581160416"
+"m_cardboard_closed1":
+  "m_guid": "9ab9a3d7614a9dd141c3a2473ff"
+  "m_typeindex": "175488002581160416"
+"m_cardboard_closed7":
+  "m_guid": "9ad52e37edb89da9712c6069961"
+  "m_typeindex": "175488002581160416"
+"m_cardboard_fully_open":
+  "m_guid": "9b4e65974a0a116470462088500"
+  "m_typeindex": "175488002581160416"
+"m_cardboard_half_open":
+  "m_guid": "9b7cfb67446aac5b0aae33cbcc4"
+  "m_typeindex": "175488002581160416"
+"m_chair_panda":
+  "m_guid": "9e94a0e74f2bf0c7d5b4d383f7a"
+  "m_typeindex": "175488002581160416"
+"m_dustbin":
+  "m_guid": "9f6579373688678038425892980"
+  "m_typeindex": "175488002581160416"
+"m_floor":
+  "m_guid": "98f196a704f962aa1cab73c4773"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_cabinet":
+  "m_guid": "9f1a2e4709c98bce8ba8c0aeec9"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_chair":
+  "m_guid": "9e890537222bbbdb89095fa05d5"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_chair_panda":
+  "m_guid": "9ec93bb7a05acf9221ae785acd1"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_chair_top":
+  "m_guid": "9ea769d734d8442a958a1a5e515"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_shelf":
+  "m_guid": "9bb02157e60a98e3326f48651a6"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_shelf_panda":
+  "m_guid": "9bca0c57316b6f3576d16ac2fd1"
+  "m_typeindex": "175488002581160416"
+"m_kitchen_shelf_standard":
+  "m_guid": "9be3fc8740f8a5f8a62d75ec69a"
+  "m_typeindex": "175488002581160416"
+"m_kite":
+  "m_guid": "18fd078774191e9b6c2f602246d"
+  "m_typeindex": "175488002581160416"
+"m_metal_shelf":
+  "m_guid": "9b10bb37872925796aa10feb2ae"
+  "m_typeindex": "175488002581160416"
+"m_plain_wall":
+  "m_guid": "12888e77d30a7559556f11e04c4"
+  "m_typeindex": "175488002581160416"
+"m_stairs":
+  "m_guid": "150d7217426b6e22c30de98767f"
+  "m_typeindex": "175488002581160416"
+"m_table_glass":
+  "m_guid": "96572477bd5bd75d01c1066c288"
+  "m_typeindex": "175488002581160416"
+"m_tin_chocolate":
+  "m_guid": "18751b17b0699634f993d532826"
+  "m_typeindex": "175488002581160416"
+"m_tin_empty_clear":
+  "m_guid": "19df4a572a084171defbcaee86e"
+  "m_typeindex": "175488002581160416"
+"m_tin_empty_standard":
+  "m_guid": "1a1f94a7051a6c8f0740656eafa"
+  "m_typeindex": "175488002581160416"
+"m_tin_empty_top":
+  "m_guid": "1a070777bafad0d466ac7f3bc60"
+  "m_typeindex": "175488002581160416"
+"m_trash1":
+  "m_guid": "9ccc1257d638a8b8f37818a0553"
+  "m_typeindex": "175488002581160416"
+"m_trash2":
+  "m_guid": "9d0228771888e951fb2e63aa123"
+  "m_typeindex": "175488002581160416"
+"m_trash3":
+  "m_guid": "9d47bbb74a48f822245f6e12f91"
+  "m_typeindex": "175488002581160416"
+"m_wall":
+  "m_guid": "9de16a172969186227c8f591621"
+  "m_typeindex": "175488002581160416"
+"m_wall_open":
+  "m_guid": "9e1c7cd7ddf984a6192df379e9b"
+  "m_typeindex": "175488002581160416"
+"m_workbench":
+  "m_guid": "9d75f257546a69888c6d30b5076"
+  "m_typeindex": "175488002581160416"
+"m_workbench_bottom":
+  "m_guid": "9dc0ff974378e1553dfa1081728"
+  "m_typeindex": "175488002581160416"
+"m_workbench_top":
+  "m_guid": "9d89b517742ba444906fac13f74"
+  "m_typeindex": "175488002581160416"
+"mesh_TrashCart_trash can_BaseColor.png":
+  "m_guid": "98e4310799fbfa1d5ee0f8441c0"
+  "m_typeindex": "126269861530532084"
+"mesh_TrashCart_trash can_Emissive.png":
+  "m_guid": "98e431678e4acca761dc65a5ac3"
+  "m_typeindex": "126269861530532084"
+"mesh_TrashCart_trash can_Height.png":
+  "m_guid": "98e431c7cbdb3eae6c0b8000b8f"
+  "m_typeindex": "126269861530532084"
+"mesh_TrashCart_trash can_Metallic.png":
+  "m_guid": "98e43227b198430448275947bdf"
+  "m_typeindex": "126269861530532084"
+"mesh_TrashCart_trash can_Normal.png":
+  "m_guid": "98e4328797e9281f719fbc53cd9"
+  "m_typeindex": "126269861530532084"
+"mesh_TrashCart_trash can_Roughness.png":
+  "m_guid": "98e432e7240b3cc3373d26b84c5"
+  "m_typeindex": "126269861530532084"
+"openPBR_shader1":
+  "m_guid": "9a8087c7bafbcc5939d4c8bbfcf"
+  "m_typeindex": "175488002581160416"
+"openPBR_shader5":
+  "m_guid": "99868197731ba0ea52cd13a86ca"
+  "m_typeindex": "175488002581160416"
+"rubberBand":
+  "m_guid": "99713b07489b0c13bf4439c3795"
+  "m_typeindex": "175488002581160416"
+"rubbish":
+  "m_guid": "9989f8776c9b5029caa508fd79f"
+  "m_typeindex": "175488002581160416"
+"stair_wide.obj":
+  "m_guid": "122797978d99636534b098ddf7d"
+  "m_typeindex": "4838001395392124604"
+"staircase_low_stairs_BaseColor.png":
+  "m_guid": "12277157da8bf623f8bc25810d1"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Emissive.png":
+  "m_guid": "12277227820a6277e20abcece20"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Height.png":
+  "m_guid": "122772a7ce4b71bcad526b3f33f"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Metallic.png":
+  "m_guid": "12277317404bfc3771ac55eee1d"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Normal.png":
+  "m_guid": "12277377a7ea4890fd5d550e8fc"
+  "m_typeindex": "126269861530532084"
+"staircase_low_stairs_Roughness.png":
+  "m_guid": "122773d742a8125dd1fc899fdff"
+  "m_typeindex": "126269861530532084"
+"standardSurface1":
+  "m_guid": "99864537ac0924bef487e44c9fd"
+  "m_typeindex": "175488002581160416"
+"standardSurface13":
+  "m_guid": "9989fac7484a7728eac2826f27c"
+  "m_typeindex": "175488002581160416"
+"standardSurface18":
+  "m_guid": "9989fcf777395580a1b5ea757f9"
+  "m_typeindex": "175488002581160416"
+"standardSurface2":
+  "m_guid": "998842c7fd9a89bf34d56f6bb8a"
+  "m_typeindex": "175488002581160416"
+"standardSurface7":
+  "m_guid": "998645475fd80f9c023f5e655d6"
+  "m_typeindex": "175488002581160416"
+"tableTop_glass":
+  "m_guid": "6d98bf17b8ab87edf1bfa8e986c"
+  "m_typeindex": "175488002581160416"
+"table_bottom":
+  "m_guid": "998b5537514b3fd03d386eb75b0"
+  "m_typeindex": "175488002581160416"
+"table_new_TableBottom_BaseColor.png":
+  "m_guid": "469fd577f68907dfd137409b119"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Emissive.png":
+  "m_guid": "469fd627012a504ca241d9aea6b"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Height.png":
+  "m_guid": "469fd6c73e7b5037599b7be3673"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Metallic.png":
+  "m_guid": "469fd777c54ba502b82a1e51f6e"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Normal.png":
+  "m_guid": "469fd8270d0a8360f876f12184d"
+  "m_typeindex": "126269861530532084"
+"table_new_TableBottom_Roughness.png":
+  "m_guid": "469fd8d76e08cfb93c7fdd212fc"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_BaseColor.png":
+  "m_guid": "469fd9b7e3f99c1d3e38e86fab1"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Emissive.png":
+  "m_guid": "469fda7725285c32e1fd0735abb"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Height.png":
+  "m_guid": "469fdb178dd910a45c5e809f96a"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Metallic.png":
+  "m_guid": "469fdbb76f785512d506dc0aed4"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Normal.png":
+  "m_guid": "469fdc57fdbb35170add9f250b2"
+  "m_typeindex": "126269861530532084"
+"table_new_TableDetails_Roughness.png":
+  "m_guid": "469fdcf7a058b047b8a9a094fc6"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_BaseColor.png":
+  "m_guid": "469fe177ab7a2b45dfe1bf492ff"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Emissive.png":
+  "m_guid": "469fe217d4eab203c982915630b"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Height.png":
+  "m_guid": "469fe2b7d7c89aab7887cae1add"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Metallic.png":
+  "m_guid": "469fe3479ea9a5a479da15828e1"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Normal.png":
+  "m_guid": "469fe3f76e893fa7887c6b37e48"
+  "m_typeindex": "126269861530532084"
+"table_new_TableTop_Roughness.png":
+  "m_guid": "469fe497109a3a4a74188733765"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_BaseColor.png":
+  "m_guid": "469fdda770fb4ddb9d5928a500d"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Emissive.png":
+  "m_guid": "469fde47b00b4b9f04b767b6f60"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Height.png":
+  "m_guid": "469fdee7ae2b37a6742176e9a21"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Metallic.png":
+  "m_guid": "469fdf870a28569c59c855d9f41"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Normal.png":
+  "m_guid": "469fe027061a8dea9b0952e2fd1"
+  "m_typeindex": "126269861530532084"
+"table_new_tableGlass_Roughness.png":
+  "m_guid": "469fe0c74cdb76b563d7d456823"
+  "m_typeindex": "126269861530532084"
+"table_top":
+  "m_guid": "998b553738391801b1a8ca31ab1"
+  "m_typeindex": "175488002581160416"
+"test":
+  "m_guid": "965e0fb70238211d166da357ff0"
+  "m_typeindex": "175488002581160416"
+"trash can":
+  "m_guid": "9986d0d779d912ba301d073bb87"
+  "m_typeindex": "175488002581160416"
+"trash1.obj":
+  "m_guid": "98e46bb75f49fdc9ff91c281af1"
+  "m_typeindex": "4838001395392124604"
+"trash1_low_rubbish_BaseColor.png":
+  "m_guid": "98e451b7feb880e3be8ca328de0"
+  "m_typeindex": "126269861530532084"
+"trash1_low_rubbish_Emissive.png":
+  "m_guid": "98e45227f9d80cf4cf567c3fd27"
+  "m_typeindex": "126269861530532084"
+"trash1_low_rubbish_Height.png":
+  "m_guid": "98e452a736ab61324ece694fdde"
+  "m_typeindex": "126269861530532084"
+"trash1_low_rubbish_Metallic.png":
+  "m_guid": "98e45307ab5a67c428ee764afce"
+  "m_typeindex": "126269861530532084"
+"trash1_low_rubbish_Normal.png":
+  "m_guid": "98e45387469a26ca3f94502ce60"
+  "m_typeindex": "126269861530532084"
+"trash1_low_rubbish_Roughness.png":
+  "m_guid": "98e453e7b39bb89f09ca387ba42"
+  "m_typeindex": "126269861530532084"
+"trash2.obj":
+  "m_guid": "98e46c174f1b45e15591412db9f"
+  "m_typeindex": "4838001395392124604"
+"trash2_low_standardsurface13_BaseColor.png":
+  "m_guid": "98e454477328d4a034355f8ce73"
+  "m_typeindex": "126269861530532084"
+"trash2_low_standardsurface13_Emissive.png":
+  "m_guid": "98e454c74eb8efc7929b5bca427"
+  "m_typeindex": "126269861530532084"
+"trash2_low_standardsurface13_Height.png":
+  "m_guid": "98e45547e158c5b6c102cd1d12a"
+  "m_typeindex": "126269861530532084"
+"trash2_low_standardsurface13_Metallic.png":
+  "m_guid": "98e455c70568f8f6f96bb7322a9"
+  "m_typeindex": "126269861530532084"
+"trash2_low_standardsurface13_Normal.png":
+  "m_guid": "98e45637e80a1883b07d8a54e03"
+  "m_typeindex": "126269861530532084"
+"trash2_low_standardsurface13_Roughness.png":
+  "m_guid": "98e456a76e0b61670da689cfd25"
+  "m_typeindex": "126269861530532084"
+"trash3.obj":
+  "m_guid": "98e46c77e4a9b3be74b48cda8b1"
+  "m_typeindex": "4838001395392124604"
+"trash3_low_standardSurface18_BaseColor.png":
+  "m_guid": "98e4572791797f37389443a156c"
+  "m_typeindex": "126269861530532084"
+"trash3_low_standardSurface18_Emissive.png":
+  "m_guid": "98e45797c8e8cb7c76f872f3855"
+  "m_typeindex": "126269861530532084"
+"trash3_low_standardSurface18_Height.png":
+  "m_guid": "98e45807136a3a807100c6304e8"
+  "m_typeindex": "126269861530532084"
+"trash3_low_standardSurface18_Metallic.png":
+  "m_guid": "98e458773d7963fab1b8e6ba060"
+  "m_typeindex": "126269861530532084"
+"trash3_low_standardSurface18_Normal.png":
+  "m_guid": "98e458f7df696b0b42953a7163d"
+  "m_typeindex": "126269861530532084"
+"trash3_low_standardSurface18_Roughness.png":
+  "m_guid": "98e45967f629d1fdc81b4ada1ae"
+  "m_typeindex": "126269861530532084"
+"trashbag":
+  "m_guid": "99713b07f088d5310a0a4246503"
+  "m_typeindex": "175488002581160416"
+"wall.obj":
+  "m_guid": "98e46cd7735859afaf829532dd8"
+  "m_typeindex": "4838001395392124604"
+"wall_open.obj":
+  "m_guid": "98e46d67bd9ad12a5a6ae13df56"
+  "m_typeindex": "4838001395392124604"
+"wall_open_wall_BaseColor.png":
+  "m_guid": "98e45ca70a89c3bd5d373f88720"
+  "m_typeindex": "126269861530532084"
+"wall_open_wall_Emissive.png":
+  "m_guid": "98e45d072389614badc0f2a4ac2"
+  "m_typeindex": "126269861530532084"
+"wall_open_wall_Height.png":
+  "m_guid": "98e45d872e9bb4e0075eeb9ce2c"
+  "m_typeindex": "126269861530532084"
+"wall_open_wall_Metallic.png":
+  "m_guid": "98e45e07b939f8a9de20d998cc1"
+  "m_typeindex": "126269861530532084"
+"wall_open_wall_Normal.png":
+  "m_guid": "98e45e8747d98b724440585cb04"
+  "m_typeindex": "126269861530532084"
+"wall_open_wall_Roughness.png":
+  "m_guid": "98e45f07d57b71f5edf4036730f"
+  "m_typeindex": "126269861530532084"
+"wall_wall_BaseColor.png":
+  "m_guid": "98e459e76fba062f1299315fef7"
+  "m_typeindex": "126269861530532084"
+"wall_wall_Emissive.png":
+  "m_guid": "98e45a570f2a9d8294cb9bbb5c7"
+  "m_typeindex": "126269861530532084"
+"wall_wall_Height.png":
+  "m_guid": "98e45ac7ce29530740f2e97bce4"
+  "m_typeindex": "126269861530532084"
+"wall_wall_Metallic.png":
+  "m_guid": "98e45b47bafb3aea9d3ae2e3c71"
+  "m_typeindex": "126269861530532084"
+"wall_wall_Normal.png":
+  "m_guid": "98e45bb719ca36d1e71154e19c8"
+  "m_typeindex": "126269861530532084"
+"wall_wall_Roughness.png":
+  "m_guid": "98e45c37354ba01abc8c0c8697f"
+  "m_typeindex": "126269861530532084"
+"workbench.obj":
+  "m_guid": "98e46de7a6697e1c8abc89d5a22"
+  "m_typeindex": "4838001395392124604"

@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for kitchenCabinet
+# Generated for GAM300 Graphics Engine
+
+newmtl PandaMat
+
+# Base color / diffuse map
+map_Kd kitchenCabinet_PandaMat_BaseColor.png
+
+# Normal map
+map_Bump kitchenCabinet_PandaMat_Normal.png
+bump kitchenCabinet_PandaMat_Normal.png
+
+# Metallic map
+map_Ks kitchenCabinet_PandaMat_Metallic.png
+
+# Roughness map
+map_Ns kitchenCabinet_PandaMat_Roughness.png
+
+# Emissive map
+map_Ke kitchenCabinet_PandaMat_Emissive.png
+
+# Height / displacement map
+map_d kitchenCabinet_PandaMat_Height.png
+disp kitchenCabinet_PandaMat_Height.png
+
+kd 1 1 1
+illum 1
+
