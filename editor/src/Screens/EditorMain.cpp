@@ -2373,10 +2373,10 @@ void EditorMain::Render_StartStop()
 				BehaviourSystem::Instance().isActive = true;
 				spdlog::info("Physics Active");
 
-				
+
 				});
-			
-			CameraSystem::SetActiveCamera(CameraSystem::CameraType::MAIN_CAMERA_ENTITY);
+
+			// No longer need to switch cameras - dual rendering handles both viewports
 		}
 		else // Stops Game
 		{
@@ -2388,8 +2388,8 @@ void EditorMain::Render_StartStop()
 				BehaviourSystem::Instance().isActive = false;
 				spdlog::info("Physics Disable");
 				});
-			
-			CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
+
+			// No longer need to switch cameras - dual rendering handles both viewports
 			isPaused = false; // Resets paused game as we are stopping
 		}
 
@@ -3625,16 +3625,74 @@ void EditorMain::Render_PhysicsDebugPanel()
 {
 	ImGui::Begin("Physics Debug", &showPhysicsDebug);
 
-	// Toggle for enabling/disabling Jolt debug rendering (wireframes, velocities, etc.)
-	static bool debugRenderingEnabled = true;
-	if (ImGui::Checkbox("Enable Debug Rendering", &debugRenderingEnabled)) {
+	// First-time initialization: sync physics debug rendering state with engine
+	static bool initialized = false;
+	if (!initialized) {
+		initialized = true;
 		// Execute on engine thread to safely access RenderSystem
-		engineService.ExecuteOnEngineThread([enabled = debugRenderingEnabled]() {
+		engineService.ExecuteOnEngineThread([enabled = m_PhysicsDebugRenderingEnabled]() {
+			Engine::GetRenderSystem().SetJoltDebugRenderingEnabled(enabled);
+			Engine::GetRenderSystem().m_SceneRenderer->EnablePhysicsDebugVisualization(enabled);
+			spdlog::info("EditorMain: Physics debug rendering initialized (enabled: {})", enabled);
+		});
+	}
+
+	// Toggle for enabling/disabling Jolt debug rendering (wireframes, velocities, etc.)
+	if (ImGui::Checkbox("Enable Debug Rendering", &m_PhysicsDebugRenderingEnabled)) {
+		// Execute on engine thread to safely access RenderSystem
+		engineService.ExecuteOnEngineThread([enabled = m_PhysicsDebugRenderingEnabled]() {
 			Engine::GetRenderSystem().SetJoltDebugRenderingEnabled(enabled);
 			Engine::GetRenderSystem().m_SceneRenderer->EnablePhysicsDebugVisualization(enabled);
 		});
 	}
 
+	// Granular debug visualization controls (PhysicsSystem flags)
+	ImGui::Spacing();
+	ImGui::Text("Debug Visualization Options:");
+	ImGui::Indent();
+
+	static bool drawShapes = true;           // Collision shapes (wireframe)
+	static bool drawVelocities = true;       // Velocity vectors
+	static bool drawContacts = false;        // Contact points/normals
+	static bool drawBoundingBoxes = false;   // AABBs
+
+	if (ImGui::Checkbox("Draw Collision Shapes", &drawShapes)) {
+		engineService.ExecuteOnEngineThread([enabled = drawShapes]() {
+			PhysicsSystem::Instance().SetDrawShapes(enabled);
+		});
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Render collision geometry as wireframes");
+	}
+
+	if (ImGui::Checkbox("Draw Velocities", &drawVelocities)) {
+		engineService.ExecuteOnEngineThread([enabled = drawVelocities]() {
+			PhysicsSystem::Instance().SetDrawVelocities(enabled);
+		});
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Show velocity vectors for dynamic bodies");
+	}
+
+	if (ImGui::Checkbox("Draw Bounding Boxes", &drawBoundingBoxes)) {
+		engineService.ExecuteOnEngineThread([enabled = drawBoundingBoxes]() {
+			PhysicsSystem::Instance().SetDrawBoundingBoxes(enabled);
+		});
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Show axis-aligned bounding boxes (AABBs)");
+	}
+
+	if (ImGui::Checkbox("Draw Contact Points", &drawContacts)) {
+		engineService.ExecuteOnEngineThread([enabled = drawContacts]() {
+			PhysicsSystem::Instance().SetDrawContacts(enabled);
+		});
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Show collision contact points and normals");
+	}
+
+	ImGui::Unindent();
 	ImGui::Separator();
 
 	if (m_SelectedEntityID == 0) {
@@ -3841,7 +3899,34 @@ void EditorMain::Render_PhysicsDebugPanel()
 
 void EditorMain::Render_Game()
 {
-	ImGui::Begin("Game");
+	ImGui::Begin("Game", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+	// Get frame data from engine thread
+	auto& frameData = engineService.GetFrameData();
+
+	if (frameData.gameResolvedBuffer)
+	{
+		// Get texture from game framebuffer
+		GLuint textureID = frameData.gameResolvedBuffer->GetColorAttachmentRendererID(0);
+
+		// Get available viewport size
+		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+		// Display game camera view (flip Y-axis with ImVec2(0,1) to ImVec2(1,0))
+		ImGui::Image(
+			reinterpret_cast<void*>(static_cast<intptr_t>(textureID)),
+			viewportSize,
+			ImVec2(0, 1),  // UV coordinates flipped vertically
+			ImVec2(1, 0)
+		);
+	}
+	else
+	{
+		// No game camera or game buffer not initialized
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No active game camera");
+		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Add a Camera component with 'Is Active' enabled to see the game view");
+	}
+
 	ImGui::End();
 }
 
@@ -3889,20 +3974,11 @@ void EditorMain::Render_CameraControls()
 
 		// Control instructions
 		ImGui::Text("Controls:");
-		ImGui::BulletText("Fly Mode:");
 		ImGui::Text("  Right Click + Drag: Look around");
 		ImGui::Text("  WASD: Move horizontally");
 		ImGui::Text("  Q/E: Move up/down");
 		ImGui::Text("  Shift: Speed boost");
 		ImGui::Text("  Scroll: Adjust move speed");
-
-		ImGui::BulletText("Orbit Mode:");
-		ImGui::Text("  Middle Click + Drag: Orbit");
-		ImGui::Text("  Shift + Middle: Pan");
-		ImGui::Text("  Scroll: Zoom in/out");
-
-		ImGui::BulletText("Pan Mode:");
-		ImGui::Text("  Middle Click + Drag: Pan");
 
 		ImGui::Separator();
 

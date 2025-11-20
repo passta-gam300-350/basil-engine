@@ -164,6 +164,9 @@ private:
 	// Play mode state
 	bool m_IsPlayMode = false;
 
+	// Physics debug rendering state
+	bool m_PhysicsDebugRenderingEnabled = true;
+
 	// Viewport size tracking for aspect ratio
 	float m_ViewportWidth = 1280.0f;
 	float m_ViewportHeight = 720.0f;

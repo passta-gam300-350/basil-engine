@@ -1,3 +1,28 @@
+scene:
+  name: shop_house_cam
+  version: v0.0.1
+  slot: 0
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
 entities:
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
