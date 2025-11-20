@@ -75,7 +75,8 @@ public:
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
     void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
     void SetSpotShadowShader(const std::shared_ptr<Shader>& shader) const;
-    void SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const;
+    void SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shader) const;  // For light cube rendering in MainPass
+    void SetDebugLineShader(const std::shared_ptr<Shader>& shader) const;       // For physics debug visualization in DebugPass
     void SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
     void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;

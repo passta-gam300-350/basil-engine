@@ -246,7 +246,7 @@ void PhysicsSystem::FixedUpdate(ecs::world& world) {
             drawSettings.mDrawVelocity = m_drawVelocities;
             drawSettings.mDrawGetSupportFunction = false;
             drawSettings.mDrawGetSupportingFace = false;
-            drawSettings.mDrawShapeColor = JPH::BodyManager::EShapeColor::InstanceColor;
+            drawSettings.mDrawShapeColor = JPH::BodyManager::EShapeColor::MotionTypeColor;
 
             // Draw all bodies in the physics world using the singleton
             m_physicsSystem->DrawBodies(drawSettings, JPH::DebugRenderer::sInstance);

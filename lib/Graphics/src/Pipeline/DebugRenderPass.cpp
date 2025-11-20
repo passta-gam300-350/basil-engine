@@ -10,13 +10,13 @@
 
 DebugRenderPass::DebugRenderPass()
     : RenderPass("DebugPass"),  // No framebuffer needed
-      m_PrimitiveShader(nullptr)
+      m_DebugLineShader(nullptr)
 {
 }
 
-DebugRenderPass::DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader)
+DebugRenderPass::DebugRenderPass(const std::shared_ptr<Shader>& debugLineShader)
     : RenderPass("DebugPass"),  // No framebuffer needed
-      m_PrimitiveShader(primitiveShader)
+      m_DebugLineShader(debugLineShader)
 {
 }
 
@@ -26,6 +26,13 @@ void DebugRenderPass::Execute(RenderContext& context)
     if (!context.frameData.mainColorBuffer)
     {
         return; // No main buffer to render to
+    }
+
+    // ONLY execute for editor camera (Scene viewport)
+    // Debug visualization should not appear in game camera (Game viewport)
+    if (context.frameData.currentCamera != FrameData::CameraContext::EDITOR)
+    {
+        return; // Skip for game camera renders
     }
 
     // Begin the pass (no framebuffer binding since we don't have one)
@@ -84,8 +91,8 @@ void DebugRenderPass::Execute(RenderContext& context)
 
 void DebugRenderPass::RenderDebugLines(RenderContext& context)
 {
-    if (!m_PrimitiveShader) {
-        spdlog::error("DebugRenderPass: No primitive shader available for physics debug line rendering.");
+    if (!m_DebugLineShader) {
+        spdlog::error("DebugRenderPass: No debug line shader available for physics debug line rendering.");
         return;
     }
 
@@ -141,34 +148,28 @@ void DebugRenderPass::RenderDebugLines(RenderContext& context)
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Bind the shader
-    RenderCommands::BindShaderData bindShaderCmd{ m_PrimitiveShader };
+    // Bind the debug line shader
+    RenderCommands::BindShaderData bindShaderCmd{ m_DebugLineShader };
     Submit(bindShaderCmd);
 
     // Set line width for better visibility
     RenderCommands::SetLineWidthData lineWidthCmd{ 2.0f };
     Submit(lineWidthCmd);
 
-    // Set uniforms (identity model matrix for world-space lines)
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-    RenderCommands::SetUniformsData uniformsCmd{
-        m_PrimitiveShader,
-        modelMatrix,
-        context.frameData.viewMatrix,
-        context.frameData.projectionMatrix,
-        context.frameData.cameraPosition
-    };
-    Submit(uniformsCmd);
+    // Set camera uniforms (debug_line shader only needs view and projection, no model matrix)
+    // Debug lines are already in world space, so no model transform needed
+    // Use editorViewMatrix (preserved) instead of viewMatrix (overwritten by game camera)
+    Submit(RenderCommands::SetUniformMat4Data{
+        m_DebugLineShader,
+        "u_View",
+        context.frameData.editorViewMatrix
+    });
 
-    // Note: Color is now per-vertex, but we need to check if the primitive shader
-    // supports vertex colors. For now, we'll use a white color uniform to let
-    // vertex colors pass through.
-    RenderCommands::SetUniformVec3Data colorCmd{
-        m_PrimitiveShader,
-        "u_Color",
-        glm::vec3(1.0f, 1.0f, 1.0f)  // White to pass through vertex colors
-    };
-    Submit(colorCmd);
+    Submit(RenderCommands::SetUniformMat4Data{
+        m_DebugLineShader,
+        "u_Projection",
+        context.frameData.projectionMatrix
+    });
 
     // Draw the lines
     glBindVertexArray(m_DebugLineVAO);

@@ -3,6 +3,7 @@
 #include "Pipeline/DebugRenderPass.h"
 #include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
+#include "Pipeline/GameResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/FrustumCuller.h"
@@ -147,11 +148,15 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui Scene viewport)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 12. Add present pass (executes last)
+    // 12. Add game resolve pass (resolve MSAA game buffer for ImGui Game viewport - always enabled)
+    auto gameResolvePass = std::make_shared<GameResolvePass>();
+    mainPipeline->AddPass(gameResolvePass);
+
+    // 13. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -280,11 +285,23 @@ void SceneRenderer::SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shade
         if (mainPass) {
             mainPass->SetPrimitiveShader(shader);
         }
+    }
+}
 
-        // Set primitive shader on DebugRenderPass (for light rays and AABBs)
+void SceneRenderer::SetDebugLineShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Debug line shader cannot be null");
+    assert(shader->ID != 0 && "Debug line shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting debug line shader");
+
+    if (m_Pipeline) {
+        // Set debug line shader on DebugRenderPass (for physics debug visualization)
         auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
         if (debugPass) {
-            debugPass->SetPrimitiveShader(shader);
+            debugPass->SetDebugLineShader(shader);
+            spdlog::info("SceneRenderer: Debug line shader set on DebugRenderPass");
+        } else {
+            spdlog::warn("SceneRenderer: DebugPass not found in pipeline");
         }
     }
 }

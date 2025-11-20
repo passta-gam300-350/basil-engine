@@ -29,15 +29,16 @@ class Shader;
 /**
  * Debug Rendering Pass - Handles debug visualizations
  *
- * Uses the primitive shader to render debug geometry like light cubes,
- * wireframes, bounding boxes, etc. This pass renders after the main
- * scene to overlay debug information.
+ * Uses the debug_line shader to render physics debug lines (wireframes,
+ * collision shapes, contact points, velocities, etc). This pass renders
+ * after the main scene to overlay debug information. Renders only in
+ * editor camera context (Scene viewport).
  */
 class DebugRenderPass : public RenderPass
 {
 public:
     DebugRenderPass();
-    explicit DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader);
+    explicit DebugRenderPass(const std::shared_ptr<Shader>& debugLineShader);
     DebugRenderPass(const DebugRenderPass&) = delete;
     DebugRenderPass& operator=(const DebugRenderPass&) = delete;
     DebugRenderPass(DebugRenderPass&&) = delete;
@@ -47,8 +48,8 @@ public:
     // Context-based execution
     void Execute(RenderContext& context) override;
 
-    // Set primitive shader (alternative to constructor injection)
-    void SetPrimitiveShader(const std::shared_ptr<Shader>& shader) { m_PrimitiveShader = shader; }
+    // Set debug line shader (alternative to constructor injection)
+    void SetDebugLineShader(const std::shared_ptr<Shader>& shader) { m_DebugLineShader = shader; }
 
     // Physics debug visualization controls
     void SetShowPhysicsDebug(bool show) { m_ShowPhysicsDebug = show; }
@@ -63,7 +64,7 @@ private:
     void RenderDebugLines(RenderContext& context);
 
     // Shader storage
-    std::shared_ptr<Shader> m_PrimitiveShader;
+    std::shared_ptr<Shader> m_DebugLineShader;  // Dedicated shader for debug line rendering
 
     // Physics debug settings
     bool m_ShowPhysicsDebug = true;        // Toggle for physics debug line visualization
