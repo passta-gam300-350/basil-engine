@@ -1835,6 +1835,27 @@ bool EditorMain::Render_BoxCollider_Component(BoxCollider& collider) {
 		ImGui::SetTooltip("When true, collider shape will be recreated on next frame");
 	}
 
+	// Collision tracking (read-only)
+	ImGui::PushStyleColor(ImGuiCol_Text, collider.isColliding ? ImVec4(1.0f, 0.3f, 0.3f, 1.0f) : ImVec4(0.3f, 1.0f, 0.3f, 1.0f));
+	ImGui::Text("Colliding: %s", collider.isColliding ? "YES" : "NO");
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Updated by physics system - shows if currently colliding with any object");
+	}
+
+	ImGui::Text("Collision Count: %d", collider.collisionCount);
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Number of active collisions/triggers with this collider");
+	}
+
+	// Show list of colliding entities
+	if (collider.collisionCount > 0 && ImGui::TreeNode("Colliding With:")) {
+		for (const auto& entity : collider.collidingWith) {
+			ImGui::BulletText("%s (ID: %u)", entity.name().c_str(), entity.get_uid());
+		}
+		ImGui::TreePop();
+	}
+
 	// ===== Collider Type =====
 	ImGui::SeparatorText("Collider Type");
 	ImGui::Text("Box Collider");
@@ -1908,6 +1929,27 @@ bool EditorMain::Render_SphereCollider_Component(SphereCollider& collider) {
 		ImGui::SetTooltip("When true, collider shape will be recreated on next frame");
 	}
 
+	// Collision tracking (read-only)
+	ImGui::PushStyleColor(ImGuiCol_Text, collider.isColliding ? ImVec4(1.0f, 0.3f, 0.3f, 1.0f) : ImVec4(0.3f, 1.0f, 0.3f, 1.0f));
+	ImGui::Text("Colliding: %s", collider.isColliding ? "YES" : "NO");
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Updated by physics system - shows if currently colliding with any object");
+	}
+
+	ImGui::Text("Collision Count: %d", collider.collisionCount);
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Number of active collisions/triggers with this collider");
+	}
+
+	// Show list of colliding entities
+	if (collider.collisionCount > 0 && ImGui::TreeNode("Colliding With:")) {
+		for (const auto& entity : collider.collidingWith) {
+			ImGui::BulletText("%s (ID: %u)", entity.name().c_str(), entity.get_uid());
+		}
+		ImGui::TreePop();
+	}
+
 	// ===== Collider Type =====
 	ImGui::SeparatorText("Collider Type");
 	ImGui::Text("Sphere Collider");
@@ -1979,6 +2021,27 @@ bool EditorMain::Render_CapsuleCollider_Component(CapsuleCollider& collider) {
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered()) {
 		ImGui::SetTooltip("When true, collider shape will be recreated on next frame");
+	}
+
+	// Collision tracking (read-only)
+	ImGui::PushStyleColor(ImGuiCol_Text, collider.isColliding ? ImVec4(1.0f, 0.3f, 0.3f, 1.0f) : ImVec4(0.3f, 1.0f, 0.3f, 1.0f));
+	ImGui::Text("Colliding: %s", collider.isColliding ? "YES" : "NO");
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Updated by physics system - shows if currently colliding with any object");
+	}
+
+	ImGui::Text("Collision Count: %d", collider.collisionCount);
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Number of active collisions/triggers with this collider");
+	}
+
+	// Show list of colliding entities
+	if (collider.collisionCount > 0 && ImGui::TreeNode("Colliding With:")) {
+		for (const auto& entity : collider.collidingWith) {
+			ImGui::BulletText("%s (ID: %u)", entity.name().c_str(), entity.get_uid());
+		}
+		ImGui::TreePop();
 	}
 
 	// ===== Collider Type =====

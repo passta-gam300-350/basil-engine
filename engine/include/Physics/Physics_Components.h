@@ -198,6 +198,11 @@ struct CollisionBase {
     // Runtime state
     bool isDirty = true;                     // Needs recreation
 
+    // Collision tracking (updated by physics system)
+    bool isColliding = false;                // Is currently colliding with anything
+    int collisionCount = 0;                  // Number of active collisions/triggers
+    std::vector<ecs::entity> collidingWith;  // List of entities currently colliding with
+
     bool& GetIsTrigger() { return isTrigger; }
     void SetIsTrigger(bool newTrigger) { isTrigger = newTrigger; }
 
@@ -244,6 +249,55 @@ public:
     Direction mDirection{};
 private:
 
+};
+
+// ============================================================================
+// MESH COLLIDER - Complex geometry collision
+// ============================================================================
+// MeshCollider uses actual mesh geometry for physics collision.
+//
+// **IMPORTANT PERFORMANCE NOTES:**
+// - MESH mode: Very accurate but EXPENSIVE - use only for static/kinematic objects
+// - CONVEX_HULL mode: Faster approximation - can be used for dynamic objects
+//
+// **USE CASES:**
+// - MESH: Terrain, buildings, static complex geometry
+// - CONVEX_HULL: Dynamic objects like barrels, crates, rocks
+//
+// **SETUP:**
+// 1. Add MeshCollider component to entity
+// 2. Ensure entity has MeshRendererComponent (if useRendererMesh = true)
+// 3. Choose collision mode based on whether object is static or dynamic
+//
+// **TODO FOR FULL FUNCTIONALITY:**
+// You need to implement mesh data extraction in Physics_System.cpp line ~940
+// Example:
+//   auto meshAsset = ResourceSystem::GetMesh(meshRenderer.m_MeshGuid);
+//   vertices = meshAsset->GetVertexPositions();
+//   indices = meshAsset->GetIndices();
+//
+// ============================================================================
+struct MeshCollider : public CollisionBase {
+    enum CollisionMode {
+        MESH,           // Uses exact mesh geometry (static/kinematic only - expensive but accurate)
+        CONVEX_HULL     // Uses convex hull approximation (works for dynamic - faster, less accurate)
+    };
+
+    CollisionMode collisionMode = MESH;
+
+    // If true, uses the MeshRendererComponent's mesh data automatically
+    // If false, you need to manually provide vertex/index data
+    bool useRendererMesh = true;
+
+    // Optional: manually provided mesh data (only used if useRendererMesh = false)
+    std::vector<glm::vec3> customVertices;
+    std::vector<uint32_t> customIndices;
+
+    // Convex hull parameters (only used when collisionMode = CONVEX_HULL)
+    float convexRadius = 0.05f;  // Tolerance for convex hull generation
+
+    CollisionMode& GetCollisionMode() noexcept { return collisionMode; }
+    void SetCollisionMode(CollisionMode mode) noexcept { collisionMode = mode; }
 };
 
 
@@ -305,4 +359,15 @@ MemberRegistrationV<&SphereCollider::isTrigger, "isTrigger">,
 MemberRegistrationV<&SphereCollider::friction, "friction">,
 MemberRegistrationV<&SphereCollider::restitution, "restitution">,
 MemberRegistrationV<&SphereCollider::density, "density">
+RegisterReflectionTypeEnd
+
+RegisterReflectionTypeBegin(MeshCollider, "MeshCollider")
+    MemberRegistrationV<&MeshCollider::center, "CenterOffset">,
+    MemberRegistrationV<&MeshCollider::isTrigger, "isTrigger">,
+    MemberRegistrationV<&MeshCollider::collisionMode, "collisionMode">,
+    MemberRegistrationV<&MeshCollider::useRendererMesh, "useRendererMesh">,
+    MemberRegistrationV<&MeshCollider::convexRadius, "convexRadius">,
+    MemberRegistrationV<&MeshCollider::friction, "friction">,
+    MemberRegistrationV<&MeshCollider::restitution, "restitution">,
+    MemberRegistrationV<&MeshCollider::density, "density">
 RegisterReflectionTypeEnd
