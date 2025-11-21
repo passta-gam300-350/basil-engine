@@ -2884,6 +2884,43 @@ void EditorMain::Setup_Dockspace(unsigned id)
 
 }
 
+void EditorMain::CreateObjectHelper() {
+	if (ImGui::MenuItem("Create Empty")) {
+		engineService.create_entity();
+	}
+	ImGui::Separator();
+
+	if (ImGui::BeginMenu("3D Object")) {
+		if (ImGui::MenuItem("Cube")) {
+			CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+		}
+		if (ImGui::MenuItem("Plane")) {
+			CreatePlaneEntity();
+		}
+		if (ImGui::MenuItem("Physics Cube")) {
+			CreatePhysicsCube();
+		}
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("Lights")) {
+		if (ImGui::MenuItem("Directional Light")) {
+			CreateLightEntity();
+		}
+		if (ImGui::MenuItem("Point Light")) {
+
+		}
+		if (ImGui::MenuItem("Spot Light")) {
+
+		}
+
+		ImGui::EndMenu();
+	}
+	if (ImGui::MenuItem("Create Camera")) {
+		CreateCameraEntity();
+	}
+}
+
 void EditorMain::Render_SceneExplorer()
 {
 

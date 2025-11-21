@@ -141,6 +141,7 @@ public:
 
 private:
 	// Entity management
+	void CreateObjectHelper();
 	void CreateDefaultEntity();
 	void CreatePlaneEntity();
 	void CreateLightEntity();
