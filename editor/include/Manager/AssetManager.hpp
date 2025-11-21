@@ -82,6 +82,9 @@ struct AssetManager {
 	std::string const& GetRootPath() const {
 		return m_RootPath;
 	}
+	void SetCurrentPath(std::string const& path) {
+		m_CurrentPath = path;
+	}
 	std::string const& GoToParentDirectory();
 	static std::string getFileExtension(std::string const&);
 	static std::string getParentPath(std::string const&);

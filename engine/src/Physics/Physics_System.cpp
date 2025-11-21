@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 // JoltDebugRenderer (owned by RenderSystem, accessed via singleton)
 #include "Render/JoltDebugRenderer.h"
 
+#include "Render/Render.h"
 
 // Callback for traces, connect this to your own trace function if you have one
 static void TraceImpl(const char* inFMT, ...)
@@ -35,19 +36,19 @@ static void TraceImpl(const char* inFMT, ...)
     std::cout << buffer << std::endl;
 }
 
-//#ifdef JPH_ENABLE_ASSERTS
-//
-//// Callback for asserts, connect this to your own assert handler if you have one
-//static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
-//{
-//    // Print to the TTY
-//    std::cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr ? inMessage : "") << std::endl;
-//
-//    // Breakpoint
-//    return true;
-//};
-//
-//#endif // JPH_ENABLE_ASSERTS
+#ifdef JPH_ENABLE_ASSERTS
+
+// Callback for asserts, connect this to your own assert handler if you have one
+static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
+{
+    // Print to the TTY
+    std::cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr ? inMessage : "") << std::endl;
+
+    // Breakpoint
+    return true;
+};
+
+#endif // JPH_ENABLE_ASSERTS
 
 
 // BroadPhaseLayerInterface implementation
@@ -171,7 +172,7 @@ void PhysicsSystem::Init() {
 
     // Install callbacks
     JPH::Trace = TraceImpl;
-    //JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
+    JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = AssertFailedImpl;)
 
 
     // Create a factory, this class is responsible for creating instances of classes based on their name or hash and is mainly used for deserialization of saved data.
@@ -263,7 +264,7 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
 
     for (auto const& entity : list_of_entities) 
     {
-        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) { continue; }
+        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>(entity)) { continue; }
         auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
         m_bodyInterface->SetPositionAndRotation(m_entityToBodyID[entity], PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerDegreesToJoltQuat(Transform.m_Rotation), JPH::EActivation::Activate);
@@ -278,7 +279,7 @@ void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
 
     for (auto const& entity : list_of_entities)
     {
-        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) { continue; }
+        if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>(entity)) { continue; }
         auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
 
         if ((RigidBody.motionType == RigidBodyComponent::MotionType::Dynamic) && RigidBody.isActive) {
@@ -501,7 +502,7 @@ void PhysicsSystem::OnRigidbodyDestroyed(entt::registry& registry, entt::entity 
     }
 
     // If entity still has a collider, recreate as trigger-only/static body
-    if (world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(ecsEntity)) {
+    if (world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>(ecsEntity)) {
         TryCreateBodyForEntity(ecsEntity);
     }
 }
@@ -522,7 +523,7 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
 
     // Must have transform and at least one collider
     if (!world.has_all_components_in_entity<TransformComponent>(entity) ||
-        !world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider>(entity)) {
+        !world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>(entity)) {
         return;
     }
 
@@ -833,6 +834,50 @@ void PhysicsSystem::InvokeColliderCallback(ecs::entity entity, const EventType& 
     }
 }
 
+// Helper function to update collision tracking state
+static void UpdateCollisionTracking(ecs::entity entity, ecs::entity otherEntity, bool isEntering) {
+    auto world = Engine::GetWorld();
+
+    // Lambda to update collider state
+    auto updateCollider = [&](auto& collider) {
+        if (isEntering) {
+            // Add to collision list if not already present
+            auto it = std::find(collider.collidingWith.begin(), collider.collidingWith.end(), otherEntity);
+            if (it == collider.collidingWith.end()) {
+                collider.collidingWith.push_back(otherEntity);
+            }
+        } else {
+            // Remove from collision list
+            auto it = std::find(collider.collidingWith.begin(), collider.collidingWith.end(), otherEntity);
+            if (it != collider.collidingWith.end()) {
+                collider.collidingWith.erase(it);
+            }
+        }
+
+        // Update collision count and flag
+        collider.collisionCount = static_cast<int>(collider.collidingWith.size());
+        collider.isColliding = (collider.collisionCount > 0);
+    };
+
+    // Check each collider type and update
+    if (world.has_all_components_in_entity<BoxCollider>(entity)) {
+        auto& collider = entity.get<BoxCollider>();
+        updateCollider(collider);
+    }
+    if (world.has_all_components_in_entity<SphereCollider>(entity)) {
+        auto& collider = entity.get<SphereCollider>();
+        updateCollider(collider);
+    }
+    if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
+        auto& collider = entity.get<CapsuleCollider>();
+        updateCollider(collider);
+    }
+    if (world.has_all_components_in_entity<MeshCollider>(entity)) {
+        auto& collider = entity.get<MeshCollider>();
+        updateCollider(collider);
+    }
+}
+
 void PhysicsSystem::HandleCollisionEnter(
     const JPH::Body& body1,
     const JPH::Body& body2,
@@ -842,6 +887,10 @@ void PhysicsSystem::HandleCollisionEnter(
     ecs::entity entity2 = GetEntityFromBodyID(body2.GetID());
 
     if (!entity1 || !entity2) return;
+
+    // Update collision tracking
+    UpdateCollisionTracking(entity1, entity2, true);
+    UpdateCollisionTracking(entity2, entity1, true);
 
     // Check if either is a trigger
     bool trigger1 = IsEntityTrigger(entity1);
@@ -907,6 +956,10 @@ void PhysicsSystem::HandleCollisionExit(const JPH::SubShapeIDPair& subShapePair)
 
     if (!entity1 || !entity2) return;
 
+    // Update collision tracking
+    UpdateCollisionTracking(entity1, entity2, false);
+    UpdateCollisionTracking(entity2, entity1, false);
+
     bool trigger1 = IsEntityTrigger(entity1);
     bool trigger2 = IsEntityTrigger(entity2);
 
@@ -953,6 +1006,89 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
     if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
         auto& capsule = entity.get<CapsuleCollider>();
         return new JPH::CapsuleShape(capsule.GetHeight() * 0.5f, capsule.GetRadius());
+    }
+
+    // Check MeshCollider
+    if (world.has_all_components_in_entity<MeshCollider>(entity)) {
+        auto& meshCollider = entity.get<MeshCollider>();
+
+        std::vector<glm::vec3> vertices;
+        std::vector<uint32_t> indices;
+
+        // Get mesh data - either from renderer or custom data
+        if (meshCollider.useRendererMesh && world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
+            // Extract mesh data from MeshRendererComponent
+            auto& meshRenderer = entity.get<MeshRendererComponent>();
+
+            // TODO: You need to implement mesh data extraction based on your asset system
+            // This is a placeholder - you'll need to load the actual mesh data from your mesh GUID
+            // Example approach:
+            // auto meshAsset = AssetManager::GetMesh(meshRenderer.m_MeshGuid);
+            // vertices = meshAsset->GetVertices();
+            // indices = meshAsset->GetIndices();
+
+            spdlog::warn("PhysicsSystem: MeshCollider mesh extraction not fully implemented - using placeholder");
+
+            // For now, return nullptr and log a warning
+            // You should implement mesh loading from your asset system
+            return nullptr;
+        }
+        else if (!meshCollider.customVertices.empty() && !meshCollider.customIndices.empty()) {
+            // Use manually provided mesh data
+            vertices = meshCollider.customVertices;
+            indices = meshCollider.customIndices;
+        }
+        else {
+            spdlog::error("PhysicsSystem: MeshCollider has no valid mesh data");
+            return nullptr;
+        }
+
+        // Create the appropriate shape based on collision mode
+        if (meshCollider.collisionMode == MeshCollider::MESH) {
+            // Create exact mesh shape (static/kinematic only)
+            JPH::TriangleList triangles;
+            triangles.reserve(indices.size() / 3);
+
+            for (size_t i = 0; i < indices.size(); i += 3) {
+                JPH::Vec3 v0 = PhysicsUtils::ToJolt(vertices[indices[i]]);
+                JPH::Vec3 v1 = PhysicsUtils::ToJolt(vertices[indices[i + 1]]);
+                JPH::Vec3 v2 = PhysicsUtils::ToJolt(vertices[indices[i + 2]]);
+                triangles.push_back(JPH::Triangle(v0, v1, v2));
+            }
+
+            JPH::MeshShapeSettings settings(triangles);
+            JPH::ShapeSettings::ShapeResult result = settings.Create();
+
+            if (result.IsValid()) {
+                spdlog::info("PhysicsSystem: Created MeshShape with {} triangles", triangles.size());
+                return result.Get();
+            }
+            else {
+                spdlog::error("PhysicsSystem: Failed to create MeshShape: {}", result.GetError().c_str());
+                return nullptr;
+            }
+        }
+        else { // CONVEX_HULL
+            // Create convex hull shape (works for dynamic objects)
+            std::vector<JPH::Vec3> joltVertices;
+            joltVertices.reserve(vertices.size());
+
+            for (const auto& vertex : vertices) {
+                joltVertices.push_back(PhysicsUtils::ToJolt(vertex));
+            }
+
+            JPH::ConvexHullShapeSettings settings(joltVertices.data(), (int)joltVertices.size(), meshCollider.convexRadius);
+            JPH::ShapeSettings::ShapeResult result = settings.Create();
+
+            if (result.IsValid()) {
+                spdlog::info("PhysicsSystem: Created ConvexHullShape with {} vertices", joltVertices.size());
+                return result.Get();
+            }
+            else {
+                spdlog::error("PhysicsSystem: Failed to create ConvexHullShape: {}", result.GetError().c_str());
+                return nullptr;
+            }
+        }
     }
 
     return nullptr;
@@ -1252,6 +1388,19 @@ void PhysicsSystem::SyncDirtyColliders(ecs::world& world) {
         auto entities = world.filter_entities<CapsuleCollider>();
         for (auto const& entity : entities) {
             auto& collider = entity.get<CapsuleCollider>();
+
+            if (collider.isDirty) {
+                RecreateBodyWithNewShape(entity, world);
+                collider.isDirty = false;
+            }
+        }
+    }
+
+    // Check MeshCollider (with or without RigidBodyComponent)
+    {
+        auto entities = world.filter_entities<MeshCollider>();
+        for (auto const& entity : entities) {
+            auto& collider = entity.get<MeshCollider>();
 
             if (collider.isDirty) {
                 RecreateBodyWithNewShape(entity, world);
