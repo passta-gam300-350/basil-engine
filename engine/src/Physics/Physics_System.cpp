@@ -217,19 +217,6 @@ void PhysicsSystem::FixedUpdate(ecs::world& world) {
     // 0. Sync dirty components BEFORE physics update
     SyncDirtyRigidBodies(world);
     SyncDirtyColliders(world);
-    if (!isActive) return;
-    // 1. Sync transforms from ECS to physics (for kinematic bodies)
-    SyncTransformsToPhysics(world);
-
-    // 2. Step the physics simulation
-    const int collisionSteps = 1;
-    m_physicsSystem->Update(deltaTime, collisionSteps, m_tempAllocator.get(), m_jobSystem.get());
-
-    // 3. Sync transforms from physics back to ECS (for dynamic bodies)
-    SyncTransformsFromPhysics(world);
-
-    // 4. Process collision events
-    ProcessCollisionEvents(world);
 
     // 5. Draw physics debug visualization (if enabled)
     // Note: JoltDebugRenderer is owned by RenderSystem, accessed via Jolt singleton
@@ -252,6 +239,20 @@ void PhysicsSystem::FixedUpdate(ecs::world& world) {
             m_physicsSystem->DrawBodies(drawSettings, JPH::DebugRenderer::sInstance);
         }
     }
+
+    if (!isActive) return;
+    // 1. Sync transforms from ECS to physics (for kinematic bodies)
+    SyncTransformsToPhysics(world);
+
+    // 2. Step the physics simulation
+    const int collisionSteps = 1;
+    m_physicsSystem->Update(deltaTime, collisionSteps, m_tempAllocator.get(), m_jobSystem.get());
+
+    // 3. Sync transforms from physics back to ECS (for dynamic bodies)
+    SyncTransformsFromPhysics(world);
+
+    // 4. Process collision events
+    ProcessCollisionEvents(world);
 }
 
 void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {

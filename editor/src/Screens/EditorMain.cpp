@@ -1105,7 +1105,7 @@ void EditorMain::Render_Components()
 			bool is_dirty = false;
 			m_PrefabContext.currentComponentTypeHash = type_id;
 			m_PrefabContext.currentComponentTypeName = componentLabel;
-			Render_Component_Member(comp, is_dirty);
+			
 
 			if (rb_component && type_id == rb_component)
 			{
@@ -1178,6 +1178,8 @@ void EditorMain::Render_Components()
 				ImGui::TreePop();
 				continue;
 			}
+
+			Render_Component_Member(comp, is_dirty);
 
 			// Special UI section for AudioComponent playback controls
 			if (audio_component && type_id == audio_component) {
@@ -2380,13 +2382,16 @@ void EditorMain::Render_StartStop()
 		}
 		else // Stops Game
 		{
+			engineService.ExecuteOnEngineThread([]() {
+				PhysicsSystem::Instance().Reset();
+				PhysicsSystem::Instance().isActive = false;
+				BehaviourSystem::Instance().isActive = false;
+			});
 			LoadScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([]() {
-				PhysicsSystem::Instance().isActive = false;
 				PhysicsSystem::Instance().EnableObservers();
 				PhysicsSystem::Instance().CreateAllBodiesForLoadedScene();
-				BehaviourSystem::Instance().isActive = false;
-				spdlog::info("Physics Disable");
+				spdlog::info("Physics Off");
 				});
 
 			// No longer need to switch cameras - dual rendering handles both viewports
