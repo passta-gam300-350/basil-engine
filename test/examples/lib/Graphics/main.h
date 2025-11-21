@@ -62,10 +62,6 @@ private:
     // HDR state tracking
     bool m_HDREnabled;
 
-    // AABB caching (avoid recalculating from 2.6M vertices every frame)
-    std::vector<DebugAABB> m_CachedAABBs;
-    bool m_AABBsCached;
-
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -98,8 +94,6 @@ private:
                                        float ambientIntensity = 0.0f, float range = 10.0f,
                                        float innerCone = 30.0f, float outerCone = 45.0f);
 
-    // AABB calculation and debug rendering
-    void CalculateAndSubmitAABBs();
     void UpdateInstanceTransforms();
 
     // Debug output

@@ -187,8 +187,23 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
     // Render each outlined object with scaled transform
     // (Must be done individually since each has a unique scaled transform)
     for (const auto* renderable : outlinedPtrs) {
-        // Calculate scaled transform
-        glm::mat4 scaledTransform = glm::scale(renderable->transform, glm::vec3(m_OutlineScale));
+        // Calculate scaled transform with scale compensation for constant world-space thickness
+        // Extract the object's current scale from the transform matrix
+        glm::vec3 objectScale = glm::vec3(
+            glm::length(glm::vec3(renderable->transform[0])),
+            glm::length(glm::vec3(renderable->transform[1])),
+            glm::length(glm::vec3(renderable->transform[2]))
+        );
+
+        // Calculate constant world-space thickness (configurable)
+        float constantThickness = 0.05f; // 0.05 world units
+
+        // Calculate scale factor that compensates for object's scale
+        // This produces constant thickness regardless of object size
+        glm::vec3 scaleCompensation = (objectScale + constantThickness) / objectScale;
+
+        // Apply compensated scale
+        glm::mat4 scaledTransform = glm::scale(renderable->transform, scaleCompensation);
 
         // Set uniforms
         Submit(RenderCommands::SetUniformsData{
