@@ -444,7 +444,8 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 	else
 	{
-		// No game camera - Game viewport will show nothing
+		// No game camera - clear buffer so editor displays "No active game camera" message
+		m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
 		spdlog::debug("RenderSystem: No active game camera found, Game viewport will be empty");
 	}
 
