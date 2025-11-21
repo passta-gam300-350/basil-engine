@@ -444,7 +444,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
 					dir_path = getParentPath(nfile);
 					if (!std::filesystem::exists(descriptor_filepath)) {
-						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile);
+						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile, m_RootPath);
 						{
 							std::lock_guard lg{ m_DescriptorListMtx };
 							m_FileList.emplace(dir_path, descriptor_filepath);
@@ -525,7 +525,7 @@ void AssetManager::RescanDirectory() {
 
 			// This file is missing a descriptor - create one
 			std::string dir_path = getParentPath(file_path);
-			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path);
+			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path, m_RootPath);
 			{
 				std::lock_guard lg{ m_DescriptorListMtx };
 				m_FileList.emplace(dir_path, file_path);
