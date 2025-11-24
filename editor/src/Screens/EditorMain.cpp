@@ -514,6 +514,9 @@ void EditorMain::init()
 	LoadAssetIcons();
 
 	MonoEntityManager::GetInstance().Attach();
+
+	engineService.set_on_load();
+	engineService.set_on_unload();
 }
 
 

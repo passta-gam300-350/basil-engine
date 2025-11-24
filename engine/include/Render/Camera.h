@@ -81,15 +81,18 @@ public:
         Instance().m_AuxCamera = sptr;
     }
 
+    static glm::vec3 GetWorldFromScreen(glm::vec2 screenPos, glm::vec2 screenSize, float depth) {
+        Camera const& cam{ GetActiveCamera() };
+        
+	}
+
     static std::shared_ptr<Camera> GetAuxCamera() {
         return Instance().m_AuxCamera;
     }
 
     void FixedUpdate(ecs::world& w) {
         auto& [aux_cam, main_cam, is_aux] {Instance()};
-        if (is_aux) {
-            return;
-        }
+       
         auto cmp_rng{w.query_components<CameraComponent, TransformComponent>()};
         for (auto [camera_comp, transform_comp] : cmp_rng) {
             if (!camera_comp.m_IsActive) {

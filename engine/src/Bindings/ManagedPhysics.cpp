@@ -17,6 +17,8 @@ Technology is prohibited.
 /******************************************************************************/
 
 #include "Bindings/ManagedPhysics.hpp"
+
+#include "Engine.hpp"
 #include "ecs/ecs.h"
 #include "Physics/Physics_Components.h"
 
@@ -336,6 +338,18 @@ bool ManagedPhysics::GetFreezeRotationZ(uint64_t handle)
 
 
 
+void ManagedPhysics::MovePosition(uint64_t handle, float x, float y, float z)
+{
+	ecs::entity entity{ handle };
+	TransformComponent& transform = entity.get<TransformComponent>();
+	glm::vec3 pos = { x,y,z };
+	glm::vec3 current_rot = transform.m_Rotation;
+
+	RigidBodyComponent& body = entity.get<RigidBodyComponent>();
+
+
+	body.MoveKinematic(pos, current_rot, static_cast<float>(Engine::Instance().GetDeltaTime()));
+}
 
 
 

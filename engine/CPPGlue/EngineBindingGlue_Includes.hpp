@@ -2,6 +2,7 @@
 
 #include "BasilEngine_GameObject_GLUE_GEN.hpp"
 #include "BasilEngine_Input_GLUE_GEN.hpp"
+#include "BasilEngine_Physics_GLUE_GEN.hpp"
 #include "BasilEngine_Debug_Logger_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Audio_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Camera_GLUE_GEN.hpp"

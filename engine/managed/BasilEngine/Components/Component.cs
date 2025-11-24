@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using BasilEngine.Debug;
 
 namespace BasilEngine.Components
 {
@@ -42,6 +43,11 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedComponents", StaticAccessorType.DoubleColon)]
         public extern static bool Internal_HasComponent(UInt64 handle, UInt32 typeHandle);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetManagedComponent")]
+        [StaticAccessor("ManagedComponents", StaticAccessorType.DoubleColon)]
+        public extern static Object Internal_GetScriptableComponent(UInt64 handle, string fullName);
+
         public GameObject gameObject
         {
             get
@@ -77,13 +83,24 @@ namespace BasilEngine.Components
 
         public T GetComponent<T>() where T : Component, new()
         {
+            // Check if we getting a behavior component
+            // Check if T derived from Behavior
+
+          
+            if (typeof(Behavior).IsAssignableFrom(typeof(T)))
+            {
+                // Type is a Behavior
+                return (T)(Internal_GetScriptableComponent(NativeID, typeof(T).FullName) ?? null);
+
+            }
+
             T obj = new T();
-           bool res = Internal_HasComponent(NativeID, obj.typeID);
-           if (res)
-           {
-               return new T { NativeID = NativeID };
-           }
-           return null;
+            bool res = Internal_HasComponent(NativeID, obj.typeID);
+            if (res)
+            {
+                return new T { NativeID = NativeID };
+            }
+            return null;
         }
 
 

@@ -51,6 +51,12 @@ entities:
       freezeRotationX: false
       freezeRotationY: false
       freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
       centerOfMass:
         x: 0
         y: 0
@@ -100,6 +106,44 @@ entities:
     Behaviour:
       classesName:
         - KiteController
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -15.9999857
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 100
+      m_Up:
+        x: 0
+        y: 0.961261749
+        z: -0.27563715
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0.27563715
+        z: 0.961261749
+      m_Yaw: -90
+      m_Pitch: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -296,47 +340,7 @@ entities:
           y: 0.5
           z: 1
   - Scene ID:
-      Scene ID: 2
-    entity name:
-      name: Camera
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 0.99999994
-        z: 0.99999994
-      m_Rotate:
-        x: -15.9999857
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 1.18654835
-        z: -6.32290268
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 45
-      m_AspectRatio: 1.77777779
-      m_Near: 0.100000001
-      m_Far: 100
-      m_Up:
-        x: 0
-        y: 0.96126169
-        z: -0.275637358
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0.275637358
-        z: 0.96126169
-      m_Yaw: -90
-      m_Pitch: 0
-  - Scene ID:
       Scene ID: 1
-    entity name:
-      name: Light
     LightComponent:
       Type: 0
       Color:
@@ -353,6 +357,8 @@ entities:
       "[Point/Spot] Range": 10
       "[Spot] Inner Cone Angle": 30
       "[Spot] Outer Cone Angle": 45
+    entity name:
+      name: Light
     TransformComponent:
       m_Scale:
         x: 1
@@ -493,7 +499,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: -9.81000042
-      useGravity: true
+      useGravity: false
       isKinematic: false
       freezePositionX: false
       freezePositionY: false
@@ -501,6 +507,12 @@ entities:
       freezeRotationX: false
       freezeRotationY: false
       freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
       centerOfMass:
         x: 0
         y: 0
@@ -569,7 +581,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: -9.81000042
-      useGravity: true
+      useGravity: false
       isKinematic: false
       freezePositionX: false
       freezePositionY: false
@@ -577,6 +589,12 @@ entities:
       freezeRotationX: false
       freezeRotationY: false
       freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
       centerOfMass:
         x: 0
         y: 0
@@ -645,7 +663,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: -9.81000042
-      useGravity: true
+      useGravity: false
       isKinematic: false
       freezePositionX: false
       freezePositionY: false
@@ -653,6 +671,12 @@ entities:
       freezeRotationX: false
       freezeRotationY: false
       freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
       centerOfMass:
         x: 0
         y: 0
@@ -721,7 +745,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: -9.81000042
-      useGravity: true
+      useGravity: false
       isKinematic: false
       freezePositionX: false
       freezePositionY: false
@@ -729,6 +753,12 @@ entities:
       freezeRotationX: false
       freezeRotationY: false
       freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
       centerOfMass:
         x: 0
         y: 0

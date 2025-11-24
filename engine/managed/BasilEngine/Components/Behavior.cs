@@ -10,6 +10,5 @@ namespace BasilEngine.Components
     [Disabled]
     public class Behavior : Component
     {
-
     }
 }

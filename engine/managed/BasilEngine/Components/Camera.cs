@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using BasilEngine.Mathematics;
 using Engine.Bindings;
 
 namespace BasilEngine.Components
@@ -105,7 +106,10 @@ namespace BasilEngine.Components
             set => Internal_SetFarPlane(NativeID, value);
         }
 
-
+        public Vector3 ScreenToWorldPoint(Vector2 screenPoint, float depth=0)
+        {
+            
+        }
 
     }
 }

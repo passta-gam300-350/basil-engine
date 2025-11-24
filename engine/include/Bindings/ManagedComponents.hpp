@@ -45,6 +45,7 @@ public:
 
 	static uint32_t ManagedRegisterComponent(MonoString* name);
 
+	static MonoObject* GetManagedComponent(uint64_t handle, MonoString* fullname);
 
 
 

@@ -81,7 +81,7 @@ public:
 	static void AddForceInternal(uint64_t handle, float x, float y, float z);
 	static void AddImpulseInternal(uint64_t handle, float x, float y, float z);
 
-
+	static void MovePosition(uint64_t handle, float x, float y, float z);
 };
 
 #endif

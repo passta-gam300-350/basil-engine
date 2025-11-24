@@ -87,3 +87,10 @@ void ManagedCamera::setFar(uint64_t handle, float farClip)
 	cameraComponent.m_Far = farClip;
 }
 
+void ManagedCamera::ScreenToWorldPoint(uint64_t handle, float x, float y, float depth, float* p_x, float* p_y, float* p_z)
+{
+	ecs::entity target{ handle };
+	auto& cameraComponent = target.get<CameraComponent>();
+	glm::vec2 screenPos = glm::vec2{ x, y };
+	
+}

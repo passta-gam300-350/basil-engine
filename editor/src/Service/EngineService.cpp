@@ -9,6 +9,8 @@
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
 
+#include "System/BehaviourSystem.hpp"
+
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
 
@@ -650,6 +652,7 @@ void EngineContainerService::LoadScene(const char* path) {
 		} else {
 			spdlog::error("EngineService: Failed to load scene from {}", path);
 		}
+
 	});
 }
 
@@ -663,4 +666,25 @@ void EngineContainerService::NewScene() {
 		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid] = std::pair<SceneGraphNode, bool>(root, true);
 		spdlog::info("EngineService: New Scene created");
 		});
+}
+
+void EngineContainerService::set_on_load()
+{
+	ExecuteOnEngineThread([]
+	{
+		Engine::SetOnLoadCallBack([](ecs::world& w)
+		{
+			BehaviourSystem::Instance().Reload();
+		});
+	});
+}
+
+void EngineContainerService::set_on_unload()
+{
+	ExecuteOnEngineThread([]
+	{
+		Engine::SetOnUnloadCallBack([](ecs::world& w)
+		{
+		});
+	});
 }

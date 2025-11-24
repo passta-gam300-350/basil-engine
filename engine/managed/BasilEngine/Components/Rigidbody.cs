@@ -29,7 +29,7 @@ namespace BasilEngine.Components
             Kinematic = 2
         }
 
-     
+
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         [StaticAccessor("ManagedPhysics", StaticAccessorType.DoubleColon)]
@@ -152,6 +152,11 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedPhysics", StaticAccessorType.DoubleColon)]
         public static extern void AddImpulseInternal(UInt64 handle, float x, float y, float z);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [StaticAccessor("ManagedPhysics", StaticAccessorType.DoubleColon)]
+        [NativeMethod("MovePosition")]
+        public static extern void MovePositionInternal(UInt64 handle, float x, float y, float z);
+
         public MotionType motionType
         {
             get => (MotionType)GetMotionType(NativeID);
@@ -189,7 +194,7 @@ namespace BasilEngine.Components
         }
 
 
-            
+
         public float Mass
         {
             get => GetMass(NativeID);
@@ -266,6 +271,10 @@ namespace BasilEngine.Components
             set => SetAngularVelocity(NativeID, value.x, value.y, value.z);
         }
 
+        public void MovePosition(Vector3 position)
+        {
+            MovePositionInternal(NativeID, position.x, position.y, position.z);
+        }
 
 
         public void AddForce(Vector3 force, ForceMode mode)
@@ -273,16 +282,17 @@ namespace BasilEngine.Components
             switch (mode)
             {
                 case ForceMode.Force:
-                    AddForceInternal(NativeID, force.x,force.y,force.z);
+                    AddForceInternal(NativeID, force.x, force.y, force.z);
                     break;
                 case ForceMode.Impulse:
-                    AddImpulseInternal(NativeID, force.x,force.y,force.z);
+                    AddImpulseInternal(NativeID, force.x, force.y, force.z);
                     break;
                 default:
                     break;
             }
 
         }
+
         
 
 

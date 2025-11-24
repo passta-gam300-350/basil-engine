@@ -39,6 +39,9 @@ public:
 	static void setFar(uint64_t handle, float farClip);
 
 
+	static void ScreenToWorldPoint(uint64_t handle, float x, float y, float depth, float* p_x, float* p_y, float* p_z);
+
+
 
 
 
