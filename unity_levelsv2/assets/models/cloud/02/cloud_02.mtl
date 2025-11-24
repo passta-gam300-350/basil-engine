@@ -1,0 +1,28 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl cloud_02
+
+# Base color / diffuse map
+map_Kd cloud_02_BaseColor.png
+
+# Normal map
+map_Bump cloud_02_Normal.png
+bump cloud_02_Normal.png
+
+# Metallic map
+map_Ks cloud_02_Metallic.png
+
+# Roughness map
+map_Ns cloud_02_Roughness.png
+
+# Emissive map
+map_Ke cloud_02_Emissive.png
+
+# Height / displacement map
+map_d cloud_02_Height.png
+disp cloud_02_Height.png
+
+kd 0.5 0.5 0.5
+illum 1
+

@@ -1,0 +1,28 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl tree_01
+
+# Base color / diffuse map
+map_Kd tree_01_BaseColor.png
+
+# Normal map
+map_Bump tree_01_Normal.png
+bump tree_01_Normal.png
+
+# Metallic map
+map_Ks tree_01_Metallic.png
+
+# Roughness map
+map_Ns tree_01_Roughness.png
+
+# Emissive map
+map_Ke tree_01_Emissive.png
+
+# Height / displacement map
+map_d tree_01_Height.png
+disp tree_01_Height.png
+
+kd 0.5 0.5 0.5
+illum 1
+
