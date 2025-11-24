@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd4871768c8a0034d05c711d52
+  m_importer: .texture
+  m_source: materials\kite\kite_player\kite_player_BaseColor.png
+  m_name: kite_player_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd48ad7b6eb98b76bbd8b3ff13
+  m_importer: .texture
+  m_source: materials\metal_rack\Metal_Pillar_Mat_Metallic.png
+  m_name: Metal_Pillar_Mat_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

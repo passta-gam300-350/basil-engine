@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd48187b8b93748b08136d44dc
+  m_importer: .texture
+  m_source: materials\kite\kite_enemy_03\kite_enemy_03_Emissive.png
+  m_name: kite_enemy_03_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

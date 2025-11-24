@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd475d75ba98b1a5828993068c
+  m_importer: .texture
+  m_source: materials\hdb\01\hdb_01_Normal.png
+  m_name: hdb_01_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

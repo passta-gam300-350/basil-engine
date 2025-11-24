@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd48047242969038b44f7ba380
+  m_importer: .texture
+  m_source: materials\kite\kite_enemy_02\kite_enemy_02_Normal.png
+  m_name: kite_enemy_02_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

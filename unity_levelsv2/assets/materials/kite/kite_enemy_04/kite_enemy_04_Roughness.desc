@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd485b74b99a1341b9d1321777
+  m_importer: .texture
+  m_source: materials\kite\kite_enemy_04\kite_enemy_04_Roughness.png
+  m_name: kite_enemy_04_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

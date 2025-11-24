@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd47137e778d3fc7d9d5a52397
+  m_importer: .texture
+  m_source: materials\grass\02\Grass_02_Emissive.png
+  m_name: Grass_02_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

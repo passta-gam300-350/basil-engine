@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd48797fb899c458e9c54e2682
+  m_importer: .texture
+  m_source: materials\kite\kite_player\kite_player_Emissive.png
+  m_name: kite_player_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

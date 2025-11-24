@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd468473b1992a1d8f2db16650
+  m_importer: .texture
+  m_source: materials\cloud\01\cloud_01_Emissive.png
+  m_name: cloud_01_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

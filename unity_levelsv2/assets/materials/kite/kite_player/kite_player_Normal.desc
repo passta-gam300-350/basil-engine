@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd488c7df1b38a6295f351b199
+  m_importer: .texture
+  m_source: materials\kite\kite_player\kite_player_Normal.png
+  m_name: kite_player_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

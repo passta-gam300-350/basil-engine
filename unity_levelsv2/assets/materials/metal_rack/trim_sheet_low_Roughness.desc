@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd49487c8a9feaf6b72ba89816
+  m_importer: .texture
+  m_source: materials\metal_rack\trim_sheet_low_Roughness.png
+  m_name: trim_sheet_low_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
