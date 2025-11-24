@@ -1374,9 +1374,18 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					std::cerr << "Unsupported enum underlying type size: " << meta_type.size_of() << " bytes\n";
 				}
 
-				if (ImGui::InputInt(field_name.c_str(), &enum_value) && assignment_by_type) {
-					is_dirty = true;
-					assignment_by_type(const_cast<void*>(val_ptr), &enum_value);
+				if (ImGui::BeginCombo(field_name.c_str(), std::string(meta_type.func("to_enum_name"_tn).invoke({}, enum_value).cast<const std::string_view>()).c_str())) {
+					auto names{ meta_type.func("enum_values"_tn).invoke({}).cast<std::span<const std::pair<std::string_view, std::uint32_t>>>() };
+					for (auto [enum_name, enum_val] : names) {
+						bool selected = (enum_val == enum_value);
+						if (ImGui::Selectable(std::string(enum_name).c_str(), selected)) {
+							enum_value = enum_val;
+							is_dirty = true;
+							assignment_by_type(const_cast<void*>(val_ptr), &enum_value);
+						}
+						if (selected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
 				}
 			}
 
@@ -2962,7 +2971,7 @@ void EditorMain::Render_SceneExplorer()
 		return;
 	}
 
-	std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> scnGraphs;
+	std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> scnGraphs;
 	{
 		std::lock_guard guard{ engineService.m_cont->m_mtx };
 		scnGraphs = engineService.m_cont->m_loaded_scenes_scenegraph_snapshot;
@@ -2974,7 +2983,7 @@ void EditorMain::Render_SceneExplorer()
 		auto RenderNode{ [this, scnguid](const SceneGraphNode& node, auto&& fn) -> void {
 			// Check if this entity is currently selected
 			uint32_t entityUID = ecs::entity(node.m_entity_handle).get_uid();
-			bool isSelected = (m_SelectedEntityID == entityUID);
+			bool isSelected = (m_EntitiesIDSelection.find(entityUID) != m_EntitiesIDSelection.end());
 			if (isSelected) {
 				m_SelectedNodeID = node.m_entity_sid;
 			}
@@ -3117,7 +3126,7 @@ void EditorMain::Render_SceneExplorer()
 							});
 					}
 				}
-				if (node.m_entity_handle && ImGui::MenuItem("Add Child"))
+				if (node.m_entity_handle && ImGui::MenuItem("Create Child"))
 				{
 					engineService.create_child_entity(node.m_entity_handle);
 				}
@@ -3246,6 +3255,18 @@ void EditorMain::Render_SceneExplorer()
 					}
 				}
 
+				if (node.m_parent && node.m_parent->m_parent == nullptr)
+				{
+					if (ImGui::MenuItem("Create Parent", "Ctrl+G")) {
+						(isSelected) ? engineService.create_parent_entity(m_EntitiesIDSelection) : engineService.create_parent_entity(node.m_entity_handle);
+					}
+					if (node.m_children.size() && ImGui::MenuItem("Orphan Children")) {
+						engineService.orphan_children_entities(node.m_entity_handle);
+					}
+				}
+				else if(node.m_entity_handle && ImGui::MenuItem("Clear Parent")) {
+					engineService.clear_parent_entity(node.m_entity_handle);
+				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Rename")) { }
 				ImGui::EndPopup();
@@ -3268,6 +3289,21 @@ void EditorMain::Render_SceneExplorer()
 		ImGui::PopStyleColor(stylect);
 		stylect = 0;
 
+		if (ImGui::BeginDragDropSource()) {
+			// Payload can be any data type (e.g., pointer, ID, struct)
+			ImGui::SetDragDropPayload("SCENE_HIERARCHY", &node, sizeof(SceneGraphNode));
+			ImGui::Text("Dragging %s", node.m_entity_name.c_str());
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY")) {
+				const SceneGraphNode& dropped_node = *(const SceneGraphNode*)payload->Data;
+				engineService.make_parent_entity(node.m_entity_handle, dropped_node.m_entity_handle);
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		} };
 		RenderNode(node, RenderNode);
 		} };
@@ -3275,9 +3311,10 @@ void EditorMain::Render_SceneExplorer()
 	if (scnGraphs.size()) {
 		for (auto& [guid, kv] : scnGraphs) {
 			auto& [scene, stale] = kv;
-			RenderSceneGraphNode(scene, guid);
+			RenderSceneGraphNode(*scene, guid);
 		}
 	}
+
 	ImGui::PopStyleVar();
 
 	// Right-click in empty space to create new objects
@@ -3341,6 +3378,9 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::End();
+	if((ImGui::IsKeyDown(ImGuiKey_LeftCtrl)|| ImGui::IsKeyDown(ImGuiKey_RightCtrl)) && ImGui::IsKeyPressed(ImGuiKey_G)) {
+		engineService.create_parent_entity(m_EntitiesIDSelection);
+	}
 }
 
 
@@ -5642,6 +5682,14 @@ void EditorMain::PerformEntityPicking(float mouseX, float mouseY, float viewport
 void EditorMain::SelectEntity(uint32_t objectID)
 {
 	m_SelectedEntityID = objectID;
+	if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey::ImGuiKey_RightCtrl)) {
+		m_EntitiesIDSelection.emplace(objectID);
+	}
+	else {
+		m_EntitiesIDSelection.clear();
+		m_EntitiesIDSelection.emplace(objectID);
+	}
+
 	spdlog::info("Editor: Selected entity with Object ID: {}", m_SelectedEntityID);
 
 	// FIXED: Pure encapsulation - all Engine API access in EngineService
@@ -5649,7 +5697,9 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 	// Add visual feedback: outline the selected entity
 	engineService.ClearOutlinedObjects();  // Clear previous selection
-	engineService.AddOutlinedObject(objectID);  // Outline new selection
+	for (auto const& objID : m_EntitiesIDSelection) {
+		engineService.AddOutlinedObject(objID);  // Outline new selection
+	}
 }
 
 void EditorMain::ClearEntitySelection()
