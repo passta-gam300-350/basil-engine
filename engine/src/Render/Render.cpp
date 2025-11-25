@@ -398,6 +398,8 @@ void RenderSystem::Update(ecs::world& world) {
 			messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE,
 				std::make_unique<Camera_Calculation_Update>(view, m_Camera->GetProjectionMatrix()));
 		}
+		CameraSystem::SetCachedMatrices(view, m_Camera->GetProjectionMatrix());
+		CameraSystem::SetViewportSize(glm::vec2{ static_cast<float>(frameData.viewportWidth), static_cast<float>(frameData.viewportHeight) });
 
 		// Store editor camera matrices (for picking system)
 		frameData.viewMatrix = frameData.editorViewMatrix = view;
@@ -431,6 +433,8 @@ void RenderSystem::Update(ecs::world& world) {
 			m_Camera->SetPerspective(gameCamera.m_Fov, gameCamera.m_AspectRatio, gameCamera.m_Near, gameCamera.m_Far);
 			frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
 		}
+		CameraSystem::SetCachedMatrices(view, m_Camera->GetProjectionMatrix());
+		CameraSystem::SetViewportSize(glm::vec2{ static_cast<float>(frameData.viewportWidth), static_cast<float>(frameData.viewportHeight) });
 
 		frameData.viewMatrix = view;
 		frameData.cameraPosition = gameCamera.m_Pos;

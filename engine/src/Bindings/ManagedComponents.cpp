@@ -19,10 +19,13 @@ Technology is prohibited.
 
 #include <iostream>
 
+#include "ABI/CSKlass.hpp"
+#include "components/behaviour.hpp"
 #include "components/transform.h"
 #include "Manager/MonoEntityManager.hpp"
 #include "Physics/Physics_Components.h"
 #include "Render/Camera.h"
+#include "System/BehaviourSystem.hpp"
 
 std::unordered_map<uint32_t, ManagedComponents::ComponentChecker> ManagedComponents::componentTypeMap{};
 std::unordered_map<std::string, uint32_t> ManagedComponents::componentMapped{};
@@ -40,7 +43,7 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 
 	if (componentMapped.contains(strName))
 		return componentMapped[strName];
-	
+
 
 	if (strName == "Transform")
 	{
@@ -83,7 +86,7 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 
 
 
-	
+
 
 	return 0;
 }
@@ -106,6 +109,47 @@ bool ManagedComponents::HasComponent(uint64_t handle, uint32_t typeHandle)
 		return checker(ent);
 	}
 	return false;
+}
+
+
+MonoObject* ManagedComponents::GetManagedComponent(uint64_t handle, MonoString* fullname)
+{
+	ecs::entity ent{ handle };
+
+	const char* nativeName = mono_string_to_utf8(fullname);
+
+	std::string strName = nativeName;
+
+	behaviour& bhvr = ent.get<behaviour>();
+
+	{
+		for (auto id : bhvr.scriptIDs)
+		{
+			auto instance = MonoEntityManager::GetInstance().GetInstance(id);
+			if (!instance)
+				continue;
+			auto klass = instance->Klass();
+
+			std::string_view name = klass->Name();
+			std::string_view ns = klass->Namespace();
+			std::string fn{};
+			if (ns.empty())
+			{
+				fn = name;
+			}
+			else
+			{
+				fn = std::format("{}.{}", ns, name);
+			}
+			if (fn == nativeName)
+			{
+				return instance->Object();
+			}
+
+		}
+	}
+
+	return nullptr;
 }
 
 

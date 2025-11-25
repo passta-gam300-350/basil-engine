@@ -514,6 +514,9 @@ void EditorMain::init()
 	LoadAssetIcons();
 
 	MonoEntityManager::GetInstance().Attach();
+
+	engineService.set_on_load();
+	engineService.set_on_unload();
 }
 
 
@@ -5305,6 +5308,11 @@ void EditorMain::Render_Scene()
 	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
 		// Store viewport position for picking calculations
 		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
+		// Push viewport rect to camera system so ScreenPointToRay/World use the correct offset
+		engineService.ExecuteOnEngineThread([viewportPos, viewportSize]() {
+			CameraSystem::SetViewportOffset(glm::vec2{ viewportPos.x, viewportPos.y });
+			CameraSystem::SetViewportSize(glm::vec2{ viewportSize.x, viewportSize.y });
+		});
 
 		// Get the color attachment texture ID (not the FBO handle)
 		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
