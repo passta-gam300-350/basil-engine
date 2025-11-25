@@ -583,8 +583,7 @@ constexpr auto InterfaceRegistrationV = InterfaceRegistration<SetPtr, GetPtr, Na
 template<typename T>
 void RegisterEnum(auto& factory) {
 	constexpr auto get_enum_val{ []() -> std::span<const std::pair<std::string_view, std::uint32_t>> {
-		static constexpr auto enum_list{
-		[]() {
+		static constexpr auto enum_list{ []() {
 			constexpr auto elist{ rp::reflection::get_enum_list<T>() };
 			std::array<std::pair<std::string_view, std::uint32_t>, elist.size()> emlist{};
 			for (int i{}; i < elist.size(); i++) {
@@ -592,8 +591,7 @@ void RegisterEnum(auto& factory) {
 				emlist[i].second = static_cast<std::uint32_t>(elist[i].m_enum_value);
 			}
 			return emlist;
-			}()
-		};
+			}()};
 		return std::span<const std::pair<std::string_view, std::uint32_t>>(enum_list);
 		} };
 	factory.template func<get_enum_val, entt::as_is_t> ("enum_values"_tn);
@@ -608,7 +606,7 @@ void RegisterDataMember(auto& factory) {
 		//implement next time for enum registration
 	}
 	else {
-		factory.template data<T::ptr, entt::as_ref_t>(T::hash);
+		factory.template data<T::ptr, entt::as_ref_t>(T::hash); 
 	}
 	/*using underlying_type = decltype(T::ptr);
 	if constexpr (std::is_enum_v<underlying_type>) {
