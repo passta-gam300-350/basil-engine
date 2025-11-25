@@ -1,0 +1,7 @@
+base:
+  m_guid: 2176718175318f7a9c5dde4e7cae
+  m_importer: .texture
+  m_source: materials\trashbag\trashbag_rubberBand_Metallic.png
+  m_name: trashbag_rubberBand_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

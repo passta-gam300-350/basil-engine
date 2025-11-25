@@ -1,0 +1,7 @@
+base:
+  m_guid: 2176724b77f1bad94b740bb40510
+  m_importer: .texture
+  m_source: materials\trashbag\trashbag_trashbag_BaseColor.png
+  m_name: trashbag_trashbag_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: 217672d2782c86e3edee414e23dd
+  m_importer: .texture
+  m_source: materials\trashbag\trashbag_trashbag_Normal.png
+  m_name: trashbag_trashbag_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
