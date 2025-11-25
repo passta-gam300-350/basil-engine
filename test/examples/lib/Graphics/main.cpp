@@ -95,7 +95,6 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_LastY(360.0f)
     , m_RotationEnabled(false)
     , m_HDREnabled(false)  // HDR starts disabled
-    , m_AABBsCached(false)
 {
     s_Instance = this;
 }
@@ -266,11 +265,7 @@ void GraphicsTestDriver::Run()
         // Clear instance cache when transforms change (enables animation)
         if (m_RotationEnabled) {
             m_SceneRenderer->ClearInstanceCache();
-            m_AABBsCached = false;  // Also invalidate AABB cache for rotating objects
         }
-
-        // Calculate and submit debug AABBs for visualization (cached)
-        CalculateAndSubmitAABBs();
 
         // ===== OUTLINE UPDATE =====
         // Outline selection is now CLICK-BASED via HandleObjectPicking()
@@ -335,8 +330,6 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Configure debug meshes
         m_SceneRenderer->SetDebugLightCubeMesh(lightCube);
-        m_SceneRenderer->SetDebugDirectionalRayMesh(lightRay);
-        m_SceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
 
         // Load advanced traditional texture binding shaders for maximum visual quality
         auto instancedShader = m_ResourceManager->LoadShader("main_pbr",
@@ -1152,63 +1145,6 @@ SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position
     return light;
 }
 
-void GraphicsTestDriver::CalculateAndSubmitAABBs()
-{
-    // Cache AABBs on first frame (avoids iterating through 2.6M vertices every frame)
-    if (!m_AABBsCached) {
-        m_CachedAABBs.clear();
-
-        // Group meshes by model instance (based on position)
-        struct Vec3Compare {
-            bool operator()(const glm::vec3& a, const glm::vec3& b) const {
-                const float epsilon = 0.01f;
-                if (std::abs(a.x - b.x) > epsilon) return a.x < b.x;
-                if (std::abs(a.y - b.y) > epsilon) return a.y < b.y;
-                return a.z < b.z;
-            }
-        };
-
-        std::map<glm::vec3, std::vector<const RenderableData*>, Vec3Compare> modelInstances;
-
-        // Group all meshes by their position (model instance)
-        for (const auto& renderable : m_SceneObjects) {
-            if (!renderable.visible || !renderable.mesh) {
-                continue;
-            }
-
-            // Extract position from transform matrix
-            glm::vec3 position = glm::vec3(renderable.transform[3]);
-            modelInstances[position].push_back(&renderable);
-        }
-
-        // Calculate AABB per model instance (EXPENSIVE - only done once!)
-        for (auto it = modelInstances.begin(); it != modelInstances.end(); ++it) {
-            const glm::vec3& instancePosition = it->first;
-            const std::vector<const RenderableData*>& meshes = it->second;
-
-            AABB modelAABB; // Start with invalid AABB
-            glm::mat4 instanceTransform = meshes[0]->transform;
-
-            // Combine all mesh AABBs to create model AABB
-            for (const auto* renderable : meshes) {
-                AABB meshAABB = AABB::CreateFromMesh(renderable->mesh);
-                modelAABB.ExpandToInclude(meshAABB);
-            }
-
-            // Create debug color
-            glm::vec3 debugColor = glm::vec3(1.0f, 0.0f, 0.0f);
-
-            // Cache the AABB with local space bounds
-            m_CachedAABBs.emplace_back(modelAABB, instanceTransform, debugColor);
-        }
-
-        m_AABBsCached = true;
-    }
-
-    // Submit cached AABBs to scene renderer (fast - just copies data)
-    m_SceneRenderer->SetDebugAABBs(m_CachedAABBs);
-}
-
 void GraphicsTestDriver::UpdateInstanceTransforms()
 {
     // Only rotate if rotation is enabled
@@ -1338,10 +1274,6 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_3:
                 s_Instance->m_SceneRenderer->ToggleRenderPass("DebugPass");
-                break;
-
-            case GLFW_KEY_4:
-                s_Instance->m_SceneRenderer->ToggleAABBVisualization();
                 break;
 
             case GLFW_KEY_5:
