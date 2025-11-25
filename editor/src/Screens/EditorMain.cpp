@@ -570,42 +570,6 @@ void EditorMain::render()
 		Setup_Dockspace(dockspace_id);
 	}
 
-
-
-	//glClearColor(1, 1, 1, 1);
-
-	//// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
-	//if (!m_IsPlayMode && m_EditorCamera) {
-	//	ecs::world world = Engine::GetWorld();
-	//	auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
-
-	//	if (cameraEntities) {
-	//		auto entity = *cameraEntities.begin();
-	//		auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
-	//		auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
-
-	//		// Update ECS camera with EditorCamera data
-	//		positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
-
-	//		// DEBUG: Check what vectors EditorCamera produces and only update position
-	//		glm::vec3 editorForward = m_EditorCamera->GetForward();
-	//		glm::vec3 editorUp = m_EditorCamera->GetUp();
-	//		glm::vec3 editorRight = m_EditorCamera->GetRight();
-
-
-	//		// Update ECS camera vectors with EditorCamera data
-	//		cameraComponent.m_Front = editorForward;
-	//		cameraComponent.m_Up = editorUp;
-	//		cameraComponent.m_Right = editorRight;
-	//		cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-	//	}
-	//}
-
-	//// Update engine systems
-	//ecs::world world = Engine::GetWorld();
-	//RenderSystem::System().Update(world);
-	//Engine::EndFrame();
-	//Engine::UpdateDebug();
 	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 4.0f);
 	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
@@ -1317,6 +1281,31 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 		auto value = data.get(comp);
 		auto meta_type = value.type();
 
+		// === PREFAB OVERRIDE DETECTION (Per-Property) ===
+		bool isPropertyOverridden = false;
+		if (m_PrefabContext.isPrefabInstance && m_PrefabContext.prefabComponent)
+		{
+			// Check if this specific property is overridden
+			for (const auto& override : m_PrefabContext.prefabComponent->m_OverriddenProperties)
+			{
+				if (override.componentTypeHash == m_PrefabContext.currentComponentTypeHash &&
+					override.propertyPath == field_name)
+				{
+					isPropertyOverridden = true;
+					break;
+				}
+			}
+		}
+
+		// Apply visual styling for overridden properties
+		if (isPropertyOverridden)
+		{
+			// Push bold font (if available)
+			// ImGui doesn't have built-in bold, so we use color instead
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.6f, 1.0f)); // Light yellow text
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.3f, 0.5f, 0.7f, 0.15f)); // Light blue background
+		}
+
 		// Auto-detect color properties: vec3/vec4 with "Color" or "Tint" in name
 		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
 			if (field_name.find("Color") != std::string::npos ||
@@ -1766,6 +1755,51 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 			}
 		}
+
+		// === PREFAB OVERRIDE: Revert Button (Per-Property) ===
+		if (isPropertyOverridden)
+		{
+			// Pop the style colors we pushed earlier
+			ImGui::PopStyleColor(2);
+
+			// Add small revert button on the same line
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.3f, 0.3f, 0.8f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.5f, 0.5f, 1.0f));
+
+			if (ImGui::SmallButton("Revert"))
+			{
+				// Revert this specific property override
+				engineService.ExecuteOnEngineThread([this, field_name]() {
+					auto world = Engine::GetWorld();
+					for (auto& entity : world.get_all_entities())
+					{
+						if (entity.get_uid() == m_SelectedEntityID && entity.all<PrefabComponent>())
+						{
+							PrefabSystem::RevertOverride(
+								world,
+								entity,
+								m_PrefabContext.currentComponentTypeHash,
+								field_name
+							);
+							spdlog::info("Reverted property override: {}.{}",
+								m_PrefabContext.currentComponentTypeName, field_name);
+							break;
+						}
+					}
+				});
+			}
+
+			ImGui::PopStyleColor(3);
+
+			// Tooltip for the revert button
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Revert '%s' to prefab value", field_name.c_str());
+			}
+		}
+
 		ImGui::PopID();
 	}
 }
@@ -3033,10 +3067,20 @@ void EditorMain::Render_SceneExplorer()
 				stylect = current_style();
 			}
 
-		// Add prefab prefix for visual distinction
+		// Add prefab prefix for visual distinction (with nesting level)
 		std::string displayName = node.m_entity_name;
 		if (isPrefabInstance) {
-			displayName = "[P] " + displayName;  // [P] indicates prefab instance
+			ecs::entity entity(node.m_entity_handle);
+			const auto& prefabComp = entity.get<PrefabComponent>();
+
+			// Show nesting level for nested prefabs
+			if (prefabComp.IsNestedPrefabInstance()) {
+				// Nested prefab: show level (e.g., [P:1], [P:2])
+				displayName = "[P:" + std::to_string(prefabComp.m_NestingLevel) + "] " + displayName;
+			} else {
+				// Root prefab instance
+				displayName = "[P] " + displayName;
+			}
 		}
 
 		if (ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", displayName.c_str())) {
@@ -3136,6 +3180,19 @@ void EditorMain::Render_SceneExplorer()
 				{
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Prefab");
+
+					if (ImGui::MenuItem("Unpack Prefab"))
+					{
+						// Remove PrefabComponent to break connection with prefab
+						engineService.ExecuteOnEngineThread([node]() {
+							ecs::entity entity(node.m_entity_handle);
+							if (entity.all<PrefabComponent>())
+							{
+								entity.remove<PrefabComponent>();
+								spdlog::info("Unpacked prefab instance: {}", entity.name());
+							}
+						});
+					}
 
 					if (ImGui::MenuItem("Select Prefab Asset"))
 					{
@@ -3316,6 +3373,55 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::PopStyleVar();
+
+	// === DRAG-DROP: Accept prefab files from Asset Browser ===
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
+		{
+			// Get the dropped file path
+			std::string droppedPath = static_cast<const char*>(payload->Data);
+
+			// Check if it's a .prefab file
+			std::filesystem::path filePath(droppedPath);
+			if (filePath.extension() == ".prefab")
+			{
+				spdlog::info("Dropped prefab file into hierarchy: {}", droppedPath);
+
+				// Instantiate the prefab
+				engineService.ExecuteOnEngineThread([droppedPath, this]() {
+					auto world = Engine::GetWorld();
+
+					// Load and cache the prefab
+					PrefabData prefabData = PrefabSystem::LoadAndCachePrefab(droppedPath);
+
+					if (prefabData.IsValid())
+					{
+						// Instantiate at origin (or camera position in the future)
+						ecs::entity instance = PrefabSystem::InstantiatePrefab(
+							world,
+							prefabData.guid,
+							glm::vec3(0, 0, 0)
+						);
+
+						if (instance.get_uuid() != 0)
+						{
+							spdlog::info("Instantiated prefab '{}' in scene", prefabData.name);
+						}
+						else
+						{
+							spdlog::error("Failed to instantiate prefab: {}", prefabData.name);
+						}
+					}
+					else
+					{
+						spdlog::error("Failed to load prefab from: {}", droppedPath);
+					}
+				});
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
 
 	// Right-click in empty space to create new objects
 	if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
@@ -5139,6 +5245,12 @@ unsigned int EditorMain::GetIconForFile(const std::string& extension)
 	else if (ext == ".shader" || ext == ".vert" || ext == ".frag" || ext == ".glsl" ||
 			 ext == ".vs" || ext == ".fs" || ext == ".comp") {
 		return m_AssetIcons.shaderIcon;
+	}
+	// Prefab files (Unity-style prefab assets)
+	else if (ext == ".prefab") {
+		// Use script icon for now (could add custom prefab icon in the future)
+		// Prefabs are data/template files, similar to scripts in nature
+		return m_AssetIcons.scriptIcon != 0 ? m_AssetIcons.scriptIcon : m_AssetIcons.fileIcon;
 	}
 	// Default file icon
 	return m_AssetIcons.fileIcon;

@@ -258,6 +258,50 @@ public:
                                             const std::string& prefabName,
                                             const std::string& prefabPath);
 
+    // ========================
+    // Nested Prefab Support
+    // ========================
+
+    /**
+     * @brief Detect circular dependencies in nested prefab hierarchy
+     *
+     * Unity-style nested prefabs require checking for circular references:
+     * - Prefab A cannot contain Prefab B if Prefab B contains Prefab A
+     * - Deeper circular chains are also invalid (A→B→C→A)
+     *
+     * This function recursively traverses the nested prefab hierarchy and
+     * detects any circular dependencies.
+     *
+     * Example circular dependency:
+     *   Tank.prefab contains Turret.prefab (nested)
+     *   Turret.prefab contains Tank.prefab (nested) ❌ CIRCULAR!
+     *
+     * @param prefabId GUID of the prefab to check
+     * @param visitedPrefabs Set of prefab GUIDs already visited (for recursion)
+     * @return True if a circular dependency is detected
+     */
+    static bool DetectCircularDependency(const rp::BasicIndexedGuid& prefabId,
+                                         std::vector<rp::BasicIndexedGuid>& visitedPrefabs);
+
+    /**
+     * @brief Detect circular dependencies (convenience overload)
+     *
+     * @param prefabId GUID of the prefab to check
+     * @return True if a circular dependency is detected
+     */
+    static bool DetectCircularDependency(const rp::BasicIndexedGuid& prefabId);
+
+    /**
+     * @brief Get all nested prefab dependencies for a prefab
+     *
+     * Returns all nested prefabs referenced by this prefab (recursively).
+     * Useful for asset management and dependency tracking.
+     *
+     * @param prefabId GUID of the prefab
+     * @return Vector of nested prefab GUIDs (may contain duplicates if referenced multiple times)
+     */
+    static std::vector<rp::BasicIndexedGuid> GetNestedPrefabDependencies(const rp::BasicIndexedGuid& prefabId);
+
 private:
     // Internal helper methods
 
@@ -291,6 +335,17 @@ private:
     static bool IsPropertyOverridden(const PrefabComponent* prefabComp,
                                      std::uint32_t componentTypeHash,
                                      const std::string& propertyPath);
+
+    /**
+     * @brief Recursively collect all nested prefab references from a PrefabEntity
+     *
+     * Traverses the entity hierarchy and collects all nested prefab GUIDs.
+     *
+     * @param prefabEntity The prefab entity to traverse
+     * @param outNestedPrefabs Output vector to collect nested prefab GUIDs
+     */
+    static void CollectNestedPrefabReferences(const PrefabEntity& prefabEntity,
+                                              std::vector<rp::BasicIndexedGuid>& outNestedPrefabs);
 
     // Prefab cache (UUID -> PrefabData)
     static std::unordered_map<std::string, PrefabData> s_PrefabCache;
