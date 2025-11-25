@@ -106,9 +106,34 @@ namespace BasilEngine.Components
             set => Internal_SetFarPlane(NativeID, value);
         }
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("ScreenToWorldPoint")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
+        private static extern void Internal_ScreenToWorldPoint(UInt64 handle, float x, float y, float depth, out float wx, out float wy, out float wz);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("ScreenPointToRay")]
+        [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
+        private static extern void Internal_ScreenPointToRay(UInt64 handle, float x, float y, float _unusedDepth,
+                                                             out float ox, out float oy, out float oz,
+                                                             out float dx, out float dy, out float dz);
+
         public Vector3 ScreenToWorldPoint(Vector2 screenPoint, float depth=0)
         {
-            
+            // Treat depth as world-space distance from the near plane (depth=0 => near plane)
+            float distRange = far - near;
+            float depthClamped = depth < 0 ? 0f : depth;
+            float normalizedDepth = distRange > 0 ? depthClamped / distRange : 0f;
+            Internal_ScreenToWorldPoint(NativeID, screenPoint.x, screenPoint.y, normalizedDepth, out var wx, out var wy, out var wz);
+            return new Vector3(wx, wy, wz);
+        }
+
+        public Ray ScreenPointToRay(Vector2 screenPoint)
+        {
+            Internal_ScreenPointToRay(NativeID, screenPoint.x, screenPoint.y, 0f,
+                                      out var ox, out var oy, out var oz,
+                                      out var dx, out var dy, out var dz);
+            return new Ray(new Vector3(ox, oy, oz), new Vector3(dx, dy, dz));
         }
 
     }

@@ -21,6 +21,8 @@ Technology is prohibited.
 #include "Engine.hpp"
 #include "ecs/ecs.h"
 #include "Physics/Physics_Components.h"
+#include "Physics/Physics_System.h"
+#include <glm/glm.hpp>
 
 
 int ManagedPhysics::GetMotionType(uint64_t handle)
@@ -349,6 +351,45 @@ void ManagedPhysics::MovePosition(uint64_t handle, float x, float y, float z)
 
 
 	body.MoveKinematic(pos, current_rot, static_cast<float>(Engine::Instance().GetDeltaTime()));
+}
+
+bool ManagedPhysics::Raycast(float ox, float oy, float oz,
+	float dx, float dy, float dz,
+	float maxDistance, bool ignoreTriggers,
+	uint64_t* entity,
+	float* p_x, float* p_y, float* p_z,
+	float* n_x, float* n_y, float* n_z,
+	float* distance,
+	uint8_t* isTrigger)
+{
+	auto hit = PhysicsSystem::Instance().Raycast(glm::vec3{ ox, oy, oz }, glm::vec3{ dx, dy, dz }, maxDistance, ignoreTriggers);
+
+	if (hit.hasHit)
+	{
+		if (entity) *entity = hit.entity ? hit.entity.get_uuid() : 0;
+		if (p_x) *p_x = hit.hitPoint.x;
+		if (p_y) *p_y = hit.hitPoint.y;
+		if (p_z) *p_z = hit.hitPoint.z;
+		if (n_x) *n_x = hit.hitNormal.x;
+		if (n_y) *n_y = hit.hitNormal.y;
+		if (n_z) *n_z = hit.hitNormal.z;
+		if (distance) *distance = hit.distance;
+		if (isTrigger) *isTrigger = hit.isTrigger ? 1 : 0;
+	}
+	else
+	{
+		if (entity) *entity = 0;
+		if (p_x) *p_x = 0.f;
+		if (p_y) *p_y = 0.f;
+		if (p_z) *p_z = 0.f;
+		if (n_x) *n_x = 0.f;
+		if (n_y) *n_y = 0.f;
+		if (n_z) *n_z = 0.f;
+		if (distance) *distance = 0.f;
+		if (isTrigger) *isTrigger = 0;
+	}
+
+	return hit.hasHit;
 }
 
 

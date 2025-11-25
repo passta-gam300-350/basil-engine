@@ -40,6 +40,9 @@ public:
 
 
 	static void ScreenToWorldPoint(uint64_t handle, float x, float y, float depth, float* p_x, float* p_y, float* p_z);
+	static void ScreenPointToRay(uint64_t handle, float x, float y, [[maybe_unused]]float distance,
+		float* o_x, float* o_y, float* o_z,
+		float* d_x, float* d_y, float* d_z);
 
 
 

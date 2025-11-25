@@ -18,6 +18,7 @@ Technology is prohibited.
 #ifndef MANAGEDPHYSICS_HPP
 #define MANAGEDPHYSICS_HPP
 #include <cstdint>
+#include <cstddef>
 
 class ManagedPhysics
 {
@@ -82,6 +83,16 @@ public:
 	static void AddImpulseInternal(uint64_t handle, float x, float y, float z);
 
 	static void MovePosition(uint64_t handle, float x, float y, float z);
+
+	// Raycast returning hit info
+	static bool Raycast(float ox, float oy, float oz,
+		float dx, float dy, float dz,
+		float maxDistance, bool ignoreTriggers,
+		uint64_t* entity,
+		float* p_x, float* p_y, float* p_z,
+		float* n_x, float* n_y, float* n_z,
+		float* distance,
+		uint8_t* isTrigger);
 };
 
 #endif

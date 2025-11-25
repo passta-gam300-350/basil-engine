@@ -13,10 +13,15 @@ namespace BasilEngine
     [StructLayout(LayoutKind.Sequential)]
     public struct RaycastHit
     {
-                public Vector3 Point;
-        public Vector3 Normal;
-        public float Distance;
-        
+        public GameObject entity;
+        public Vector3 point;
+        public Vector3 normal;
+        public float distance;
+        public byte hasHit;
+        public byte isTrigger;
+
+        public bool Hit => hasHit != 0;
+        public bool Trigger => isTrigger != 0;
     }
     
 }
