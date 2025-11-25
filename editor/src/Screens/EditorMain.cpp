@@ -1218,7 +1218,7 @@ void EditorMain::Render_Components()
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
 							ecs::entity entity{ entityHandle };
 							if (entity.all<MeshRendererComponent, MaterialOverridesComponent>()) {
-								MeshRendererComponent& meshRenderer = entity.get<MeshRendererComponent>();
+								//MeshRendererComponent& meshRenderer = entity.get<MeshRendererComponent>();
 								MaterialOverridesComponent& overrides = entity.get<MaterialOverridesComponent>();
 
 								// Clear existing overrides
@@ -2389,11 +2389,11 @@ bool EditorMain::Render_CapsuleCollider_Component(CapsuleCollider& collider) {
 	if (ImGui::IsItemHovered()) {
 		ImGui::SetTooltip("Radius of the capsule cylinder and end caps");
 	}
-
+	
 	// Height
-	float height = collider.GetHeight();
-	if (ImGui::DragFloat("Height", &height, 0.01f, 0.001f, 1000.0f)) {
-		collider.SetHeight(height);
+	float colheight = collider.GetHeight();
+	if (ImGui::DragFloat("Height", &colheight, 0.01f, 0.001f, 1000.0f)) {
+		collider.SetHeight(colheight);
 		changed = true;
 	}
 	if (ImGui::IsItemHovered()) {
@@ -3015,6 +3015,25 @@ void EditorMain::Render_SceneExplorer()
 
 	auto RenderSceneGraphNode{ [this] (const SceneGraphNode& node, rp::Guid scnguid){
 		auto RenderNode{ [this, scnguid](const SceneGraphNode& node, auto&& fn) -> void {
+			// Search filter - convert both to lowercase for case-insensitive search
+			std::string searchFilter = m_HierarchySearchBuffer;
+			std::string entityNameJump = node.m_entity_name;
+
+			if (!searchFilter.empty()) {
+				std::transform(searchFilter.begin(), searchFilter.end(), searchFilter.begin(), ::tolower);
+				std::string lowerEntityName = entityNameJump;
+				std::transform(lowerEntityName.begin(), lowerEntityName.end(), lowerEntityName.begin(), ::tolower);
+
+				// Skip this node if it doesn't match the search filter
+				if (lowerEntityName.find(searchFilter) == std::string::npos) {
+					// Still recursively check children
+					for (const auto& child : node.m_children) {
+						fn(child, fn);
+					}
+					return;
+				}
+			}
+
 			// Check if this entity is currently selected
 			uint32_t entityUID = ecs::entity(node.m_entity_handle).get_uid();
 			bool isSelected = (m_EntitiesIDSelection.find(entityUID) != m_EntitiesIDSelection.end());
@@ -3978,7 +3997,6 @@ void EditorMain::Render_PhysicsDebugPanel()
 		if (m_SelectedEntityID != entityUID) { continue; }
 	}
 
-
 	// Queue fetch on engine thread
 	engineService.ExecuteOnEngineThread([this, entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
 		ecs::entity entity{ entityHandle };
@@ -4286,9 +4304,6 @@ void EditorMain::Render_AssetBrowser()
 	float statusBarHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2;
 	float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
 
-	// Total reserved space = toolbar + status bar + spacing between sections
-	float reservedHeight = toolbarHeight + statusBarHeight + (itemSpacing * 2);
-
 	// === TOOLBAR ===
 	ImGui::BeginChild("AssetToolbar", ImVec2(0, toolbarHeight), true, ImGuiWindowFlags_NoScrollbar);
 	{
@@ -4542,7 +4557,8 @@ void EditorMain::Render_AssetBrowser()
 						ImGui::EndPopup();
 					}
 
-					ImGui::TextWrapped("%s", folderName.c_str());
+					// Clip filename if too long instead of wrapping
+					ImGui::Text("%s", folderName.c_str());
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
@@ -4654,7 +4670,8 @@ void EditorMain::Render_AssetBrowser()
 						ImGui::EndDragDropSource();
 					}
 
-					ImGui::TextWrapped("%s", filename.c_str());
+					// Clip filename if too long instead of wrapping
+					ImGui::Text("%s", filename.c_str());
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
@@ -4818,7 +4835,7 @@ void EditorMain::Render_AssetBrowser()
 		else
 		{
 			auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
-			int fileCount = std::distance(files.first, files.second);
+			int fileCount = static_cast<int>(std::distance(files.first, files.second));
 			int folderCount = static_cast<int>(m_AssetManager->GetSubDirectories().size());
 			ImGui::Text("%d items (%d folders, %d files)", fileCount + folderCount, folderCount, fileCount);
 		}
@@ -5854,7 +5871,7 @@ void EditorMain::NewScene()
 	// Clear selection after loading new scene
 }
 
-void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
+void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 {
 	ImGui::Begin("Gizmo Debug");
 	ImGuiIO& io = ImGui::GetIO();
@@ -5965,5 +5982,73 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 		GuizmoEntityTransformMTX = nullptr;
 	}
 
+	// ========================================================================
+	// VIEW CUBE - Unity-style camera orientation widget
+	// ========================================================================
+	// Draw view cube in top right corner
+	float viewCubeSize = 128.0f;
+	float viewCubePadding = 10.0f;
+	ImVec2 viewCubePos = ImVec2(viewportPos.x + viewportSize.x - viewCubeSize - viewCubePadding,viewportPos.y + viewCubePadding);
 
+	// Set up for view manipulator (always active, regardless of entity selection)
+	ImGuizmo::SetDrawlist();
+	ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
+
+	// Determine if we should orbit around selected entity (LOCAL mode) or rotate in place (WORLD mode)
+	bool isLocalMode = (mode == ImGuizmo::OPERATION::TRANSLATE || mode == ImGuizmo::OPERATION::ROTATE || mode == ImGuizmo::OPERATION::SCALE) && (m_SelectedEntityID != 0);
+	glm::vec3 orbitTarget = glm::vec3(0.0f);
+
+	if (isLocalMode && GuizmoEntityTransform != nullptr) {
+		// LOCAL MODE: Orbit around selected entity
+		orbitTarget = GuizmoEntityTransform->m_Translation;
+	}
+	// else: WORLD MODE - will rotate camera in place
+
+	// Build view matrix for ViewManipulate
+	glm::mat4 originalViewMatrix = m_EditorCamera->GetViewMatrix();
+	glm::mat4 viewMatrix = originalViewMatrix;
+
+	// Calculate distance for ViewManipulate
+	glm::vec3 cameraPos = m_EditorCamera->GetPosition();
+	float cameraDistance = isLocalMode ? glm::length(cameraPos - orbitTarget) : 10.0f;
+	if (cameraDistance < 0.1f) cameraDistance = 10.0f;
+
+	// ViewManipulate modifies the view matrix when user clicks on the cube
+	ImGuizmo::ViewManipulate(glm::value_ptr(viewMatrix), cameraDistance, viewCubePos, ImVec2(viewCubeSize, viewCubeSize), 0x10101010);
+
+	//// Check if the view matrix was modified
+	bool viewMatrixChanged = glm::any(glm::notEqual(viewMatrix[0], originalViewMatrix[0])) ||
+	                         glm::any(glm::notEqual(viewMatrix[1], originalViewMatrix[1])) ||
+	                         glm::any(glm::notEqual(viewMatrix[2], originalViewMatrix[2])) ||
+	                         glm::any(glm::notEqual(viewMatrix[3], originalViewMatrix[3]));
+
+	if (viewMatrixChanged) {
+	//	if (isLocalMode) {
+	//		// LOCAL MODE: Camera orbits around selected entity
+			// Extract new camera position from modified view matrix
+			//glm::mat4 cameraTransform = glm::inverse(viewMatrix);
+			//glm::vec3 newPosition = glm::vec3(cameraTransform[3]);
+
+	//		// Update camera to look at the entity
+			//m_EditorCamera->SetPosition(newPosition);
+			//m_EditorCamera->SetTarget(orbitTarget);
+	//	}
+	//	else {
+	//		// WORLD MODE: Camera rotates in place, doesn't move position
+	//		// Extract rotation from the modified view matrix
+	//		glm::mat4 cameraTransform = glm::inverse(viewMatrix);
+
+	//		// Extract basis vectors (rotation only)
+	//		glm::vec3 right = glm::normalize(glm::vec3(cameraTransform[0]));
+	//		glm::vec3 up = glm::normalize(glm::vec3(cameraTransform[1]));
+	//		glm::vec3 forward = -glm::normalize(glm::vec3(cameraTransform[2]));
+
+	//		// Calculate pitch and yaw from forward vector
+	//		float pitch = glm::degrees(asin(-forward.y));
+	//		float yaw = glm::degrees(atan2(forward.x, forward.z));
+
+	//		// Keep current position, only change rotation
+	//		m_EditorCamera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+	//	}
+	}
 }
