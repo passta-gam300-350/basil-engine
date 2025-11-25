@@ -13,7 +13,7 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 	}
 	Scene scn;
 	scn.m_name = nd["scene"]["name"].as<std::string>();
-	scn.m_slot_ct = nd["scene"]["slots"].as<std::uint32_t>();
+	scn.m_slot_ct = nd["scene"]["slot"].as<std::uint32_t>();
 	scn.m_guid = rp::Guid::to_guid(nd["scene"]["guid"].as<std::string>());
 	YAML::Node const& deps{ nd["scene"]["dependencies"] };
 	for (auto const& guid : deps) {
@@ -23,6 +23,51 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 			Engine::GetSceneRegistry().LoadScene(scn_guid);
 		}
 	}
+	// Deserialize render settings (Unity-style skybox, etc.)
+	if (nd["render_settings"]) {
+		YAML::Node const& renderSettings = nd["render_settings"];
+		if (renderSettings["skybox"]) {
+			YAML::Node const& skybox = renderSettings["skybox"];
+
+			if (skybox["enabled"])
+				scn.m_renderSettings.skybox.enabled = skybox["enabled"].as<bool>();
+			if (skybox["exposure"])
+				scn.m_renderSettings.skybox.exposure = skybox["exposure"].as<float>();
+
+			if (skybox["rotation"] && skybox["rotation"].size() == 3) {
+				scn.m_renderSettings.skybox.rotation.x = skybox["rotation"][0].as<float>();
+				scn.m_renderSettings.skybox.rotation.y = skybox["rotation"][1].as<float>();
+				scn.m_renderSettings.skybox.rotation.z = skybox["rotation"][2].as<float>();
+			}
+
+			if (skybox["tint"] && skybox["tint"].size() == 3) {
+				scn.m_renderSettings.skybox.tint.x = skybox["tint"][0].as<float>();
+				scn.m_renderSettings.skybox.tint.y = skybox["tint"][1].as<float>();
+				scn.m_renderSettings.skybox.tint.z = skybox["tint"][2].as<float>();
+			}
+
+			// Deserialize face texture GUIDs (resource pipeline)
+			if (skybox["face_textures"] && skybox["face_textures"].size() == 6) {
+				for (size_t i = 0; i < 6; ++i) {
+					std::string guidStr = skybox["face_textures"][i].as<std::string>();
+					scn.m_renderSettings.skybox.faceTextures[i] = rp::Guid::to_guid(guidStr);
+				}
+			}
+
+			// Mark for reload if GUIDs are valid
+			bool hasValidGuids = true;
+			for (const auto& guid : scn.m_renderSettings.skybox.faceTextures) {
+				if (guid == rp::null_guid) {
+					hasValidGuids = false;
+					break;
+				}
+			}
+			if (hasValidGuids && scn.m_renderSettings.skybox.enabled) {
+				scn.m_renderSettings.skybox.needsReload = true;
+			}
+		}
+	}
+
 	YAML::Node const& entities{ nd["entities"] };
 	auto& reg = Engine::GetWorld().impl.get_registry();
 	entt::entity ententity{};
@@ -32,6 +77,20 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 		enty.add<SceneComponent>().m_scene_guid.m_guid = scn.m_guid;
 		scn.m_scene_entities.emplace(enty.get_scene_uid(), enty);
 	}
+
+	// Activate all loaded entities (required for ECS queries to find them)
+	for (auto const& [sceneId, entity] : scn.m_scene_entities) {
+		const_cast<ecs::entity&>(entity).add<ecs::entity::active_t>();
+	}
+
+	// Add TransformMtxComponent to all entities with TransformComponent
+	auto transforms = reg.view<TransformComponent>();
+	for (auto e : transforms) {
+		if (!reg.all_of<TransformMtxComponent>(e)) {
+			reg.emplace<TransformMtxComponent>(e);
+		}
+	}
+
 	scn.m_is_dirty = true;
 	return std::make_optional(scn);
 }
@@ -46,6 +105,35 @@ std::optional<std::reference_wrapper<Scene>> SceneRegistry::LoadScene(rp::Guid s
 		m_loaded_scenes.emplace(scn_guid, scnloadres->value());
 	}
 	return GetScene(scn_guid);
+}
+
+std::optional<std::reference_wrapper<Scene>> SceneRegistry::LoadSceneFromPath(std::string const& path)
+{
+	// Load scene using Scene::LoadYAML which includes render settings (skybox, etc.)
+	auto sceneOpt = Scene::LoadYAML(path);
+	if (!sceneOpt.has_value()) {
+		spdlog::error("SceneRegistry: Failed to load scene from path: {}", path);
+		return std::nullopt;
+	}
+
+	Scene& loadedScene = sceneOpt.value();
+	rp::Guid sceneGuid = loadedScene.GetGuid();
+
+	// Check if already loaded, if so replace it
+	if (IsLoaded(sceneGuid)) {
+		UnloadScene(sceneGuid);
+	}
+
+	// Add scene to registry
+	m_loaded_scenes.emplace(sceneGuid, std::move(loadedScene));
+
+	// Set as active scene
+	SetActiveScene(sceneGuid);
+
+	spdlog::info("SceneRegistry: Scene loaded from {} with GUID {}, skybox enabled: {}",
+		path, sceneGuid.to_hex(), GetActiveScene().value().get().GetRenderSettings().skybox.enabled);
+
+	return GetScene(sceneGuid);
 }
 
 void SceneRegistry::UnloadScene(rp::Guid scn_guid)

@@ -29,15 +29,16 @@ class Shader;
 /**
  * Debug Rendering Pass - Handles debug visualizations
  *
- * Uses the primitive shader to render debug geometry like light cubes,
- * wireframes, bounding boxes, etc. This pass renders after the main
- * scene to overlay debug information.
+ * Uses the debug_line shader to render physics debug lines (wireframes,
+ * collision shapes, contact points, velocities, etc). This pass renders
+ * after the main scene to overlay debug information. Renders only in
+ * editor camera context (Scene viewport).
  */
 class DebugRenderPass : public RenderPass
 {
 public:
     DebugRenderPass();
-    explicit DebugRenderPass(const std::shared_ptr<Shader>& primitiveShader);
+    explicit DebugRenderPass(const std::shared_ptr<Shader>& debugLineShader);
     DebugRenderPass(const DebugRenderPass&) = delete;
     DebugRenderPass& operator=(const DebugRenderPass&) = delete;
     DebugRenderPass(DebugRenderPass&&) = delete;
@@ -47,51 +48,30 @@ public:
     // Context-based execution
     void Execute(RenderContext& context) override;
 
-    // Set primitive shader (alternative to constructor injection)
-    void SetPrimitiveShader(const std::shared_ptr<Shader>& shader) { m_PrimitiveShader = shader; }
+    // Set debug line shader (alternative to constructor injection)
+    void SetDebugLineShader(const std::shared_ptr<Shader>& shader) { m_DebugLineShader = shader; }
 
-    // Set debug meshes (injected from application layer)
-    void SetDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) { m_DirectionalRay = mesh; }
-    void SetAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) { m_AABBWireframe = mesh; }
-
-    // Light ray visualization controls
-    void SetShowLightRays(bool show) { m_ShowLightRays = show; }
-    bool GetShowLightRays() const { return m_ShowLightRays; }
-    void SetRayLength(float length) { m_RayLength = length; }
-    void SetRayIntensityFactor(float factor) { m_RayIntensityFactor = factor; }  // Direct multiplier: rayLength = intensity * factor
-
-    // AABB visualization controls
-    void SetShowAABBs(bool show) { m_ShowAABBs = show; }
-    bool GetShowAABBs() const { return m_ShowAABBs; }
+    // Physics debug visualization controls
+    void SetShowPhysicsDebug(bool show) { m_ShowPhysicsDebug = show; }
+    bool GetShowPhysicsDebug() const { return m_ShowPhysicsDebug; }
 
     // Debug buffer controls
     void SetClearColorBuffer(bool clear) { m_ClearColorBuffer = clear; }
     bool GetClearColorBuffer() const { return m_ClearColorBuffer; }
 
 private:
-    // Light visualization
-    void RenderLightRays(RenderContext& context);
-
-    // AABB visualization
-    void RenderAABBs(RenderContext& context);
-
-    // Helper methods for ray rendering
-    void RenderSingleRay(RenderContext& context, const std::shared_ptr<Mesh>& rayMesh, const glm::mat4& modelMatrix, const SubmittedLightData& light);
+    // Physics debug line visualization
+    void RenderDebugLines(RenderContext& context);
 
     // Shader storage
-    std::shared_ptr<Shader> m_PrimitiveShader;
+    std::shared_ptr<Shader> m_DebugLineShader;  // Dedicated shader for debug line rendering
 
-    // Debug visualization resources (injected, not owned)
-    std::shared_ptr<Mesh> m_DirectionalRay;
-    std::shared_ptr<Mesh> m_AABBWireframe;
+    // Physics debug settings
+    bool m_ShowPhysicsDebug = true;        // Toggle for physics debug line visualization
 
-    // Light ray settings
-    bool m_ShowLightRays = true;          // Toggle for light ray visualization
-    float m_RayLength = 3.0f;              // Base length of the light rays (unused - kept for compatibility)
-    float m_RayIntensityFactor = 2.0f;     // Direct multiplier for intensity-to-length conversion
-
-    // AABB settings
-    bool m_ShowAABBs = false;              // Toggle for AABB wireframe visualization
+    // OpenGL resources for physics debug lines
+    uint32_t m_DebugLineVAO = 0;           // VAO for debug lines
+    uint32_t m_DebugLineVBO = 0;           // VBO for debug line vertices
 
     // Debug buffer settings
     bool m_ClearColorBuffer = true;        // Whether to clear color buffer (enabled by default)

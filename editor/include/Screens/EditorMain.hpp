@@ -36,8 +36,20 @@ Technology is prohibited.
 #include "Service/EngineService.hpp"
 #include <rsc-ext/rp.hpp>
 #include "Physics/Physics_Components.h"
+#include "Prefab/PrefabData.hpp"
+#include "Component/PrefabComponent.hpp"
+#include "Messaging/Messaging_System.h"
 
 struct AudioComponent; // Forward declaration
+
+// Prefab override detection context (global state for rendering)
+struct PrefabOverrideContext {
+	bool isPrefabInstance = false;
+	const PrefabComponent* prefabComponent = nullptr;
+	const PrefabData* prefabData = nullptr;
+	std::uint32_t currentComponentTypeHash = 0;
+	std::string currentComponentTypeName = "";
+};
 
 class EditorMain : public Screen
 {
@@ -47,8 +59,10 @@ public:
 	bool showAboutModal = false;
 	bool showInspector = true;
 	bool showSceneExplorer = true;
-	bool showProfiler = false;
+	bool showProfiler = true;
 	bool showConsole = true;
+	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
+	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
 	bool isPlaying = false; // To check if the gameplay is enabled, not to beconfused with paused as you can be paused but resume the gameplay
 	bool isPaused = false; // To check if game play is paused, should only be false when the gameplay is enabled
 	
@@ -88,8 +102,6 @@ public:
 	// For setting up the style
 	void SetupUnityStyle();
 
-	void CreateObjectHelper();
-
 	void Render_AboutUI();
 
 	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
@@ -102,18 +114,26 @@ public:
 
 	void Render_Console();
 
+	void Render_PhysicsDebugPanel();
+
 	void Render_AssetBrowser();
+	void Render_AssetBrowser_Old();
 	void Render_ImporterSettings();
 
 	void Render_Scene();
 	void Render_Game();
 	void Render_CameraControls();
 
+	void Render_SkyboxSettings();
+
 	void Render_Components();
 	void Render_Component_Member(auto&, bool& is_dirty);
     void Render_Behaviour_Component(behaviour& component);
 	void Add_Script_Menu();
-	void Render_RigidBody_Component(RigidBodyComponent& component);
+	bool Render_RigidBody_Component(RigidBodyComponent& component);
+	bool Render_BoxCollider_Component(BoxCollider& component);
+	bool Render_SphereCollider_Component(SphereCollider& component);
+	bool Render_CapsuleCollider_Component(CapsuleCollider& component);
 	void Render_Add_Component_Menu();
 
 	// Accessor for custom material inspector
@@ -121,6 +141,7 @@ public:
 
 private:
 	// Entity management
+	void CreateObjectHelper();
 	void CreateDefaultEntity();
 	void CreatePlaneEntity();
 	void CreateLightEntity();
@@ -145,6 +166,9 @@ private:
 	// Play mode state
 	bool m_IsPlayMode = false;
 
+	// Physics debug rendering state
+	bool m_PhysicsDebugRenderingEnabled = true;
+
 	// Viewport size tracking for aspect ratio
 	float m_ViewportWidth = 1280.0f;
 	float m_ViewportHeight = 720.0f;
@@ -155,22 +179,84 @@ private:
 	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
 	uint32_t m_SelectedNodeID = 0;
 
-	// Debug rendering controls
-	bool m_ShowAABBs = false;
+	// Prefab override detection
+	PrefabOverrideContext m_PrefabContext;
+	std::unique_ptr<PrefabData> m_LoadedPrefabData;  // Currently loaded prefab for comparison
 
 	// Material creation dialog state
 	bool m_ShowCreateMaterialDialog = false;
 	char m_NewMaterialNameBuffer[256] = "NewMaterial";
+
+	// Asset browser state
+	enum class AssetViewMode { Grid, List };
+	AssetViewMode m_AssetViewMode = AssetViewMode::Grid;
+	char m_AssetSearchBuffer[256] = "";
+	std::string m_SelectedAssetPath = "";
+	float m_FolderTreeWidth = 200.0f;
+
+	// Hierarchy panel state
+	char m_HierarchySearchBuffer[256] = "";
+
+	// Asset browser icon textures
+	struct AssetIcons {
+		unsigned int folderIcon = 0;
+		unsigned int fileIcon = 0;
+		unsigned int imageIcon = 0;
+		unsigned int modelIcon = 0;
+		unsigned int audioIcon = 0;
+		unsigned int scriptIcon = 0;
+		unsigned int materialIcon = 0;
+		unsigned int shaderIcon = 0;
+	} m_AssetIcons;
+
+	void LoadAssetIcons();
+	unsigned int GetIconForFile(const std::string& extension);
+
+	// Physics debug data
+	struct PhysicsDebugData {
+		bool hasPhysicsBody = false;
+		bool hasRigidBody = false;
+		bool hasCollider = false;
+
+		// Jolt Body Info
+		uint32_t bodyID = 0;
+		bool isBodyActive = false;
+		bool isSleeping = false;
+		std::string motionType = "None";
+		std::string colliderType = "None";
+		bool isTrigger = false;
+
+		// Position/Rotation (from Jolt)
+		glm::vec3 joltPosition = glm::vec3(0.0f);
+		glm::vec3 joltRotation = glm::vec3(0.0f);
+
+		// Velocities
+		glm::vec3 linearVelocity = glm::vec3(0.0f);
+		glm::vec3 angularVelocity = glm::vec3(0.0f);
+
+		// Jolt BodyInfo
+		float joltGravFactor = 0.0f;
+
+		// RigidBody properties
+		float mass = 0.0f;
+		float friction = 0.0f;
+		float restitution = 0.0f;
+		float linearDamping = 0.0f;
+		float angularDamping = 0.0f;
+		float gravityFactor = 1.0f;
+		bool useGravity = true;
+
+		// Collider properties
+		glm::vec3 colliderSize = glm::vec3(0.0f);
+		float colliderRadius = 0.0f;
+		float colliderHeight = 0.0f;
+	} m_PhysicsDebugData;
 
 	// Viewport picking implementation
 	void HandleViewportPicking();
 	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
 	void SelectEntity(uint32_t objectID);
 	void ClearEntitySelection();
-
-	// Debug visualization control
-	void SetDebugVisualization(bool showAABBs);
-
 
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);

@@ -15,7 +15,6 @@
 
 #ifndef ENGINE_RENDER_H
 #define ENGINE_RENDER_H
-#pragma once
 
 #include <memory>
 #include <Scene/SceneRenderer.h>
@@ -34,6 +33,7 @@ class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
 class MaterialPropertyBlock;
+class JoltDebugRenderer;
 
 
 RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
@@ -195,8 +195,6 @@ public:
      *
      * Creates:
      * - Light visualization cube (5x5x5)
-     * - Directional light ray (3 units)
-     * - AABB wireframe cube (1x1x1)
      */
     void SetupDebugVisualization();
 
@@ -233,6 +231,73 @@ public:
      * @return Pointer to ShaderLibrary (may be nullptr if not initialized)
      */
     ShaderLibrary* GetShaderLibrary() const { return m_ShaderLibrary.get(); }
+
+    /**
+     * @brief Get the Jolt debug renderer instance
+     * @return Pointer to JoltDebugRenderer (may be nullptr if not initialized)
+     */
+    JoltDebugRenderer* GetJoltDebugRenderer() const { return m_JoltDebugRenderer.get(); }
+
+    /**
+     * @brief Enable or disable Jolt physics debug rendering
+     * @param enabled True to enable debug rendering, false to disable
+     */
+    void SetJoltDebugRenderingEnabled(bool enabled);
+
+    /**
+     * @brief Initialize Jolt debug renderer (must be called after PhysicsSystem::Init)
+     * @note This is called automatically during engine initialization
+     */
+    void InitJoltDebugRenderer();
+
+    // ========== Skybox Settings (Unity-style API) ==========
+
+    /**
+     * @brief Set skybox cubemap texture
+     * @param cubemapID OpenGL texture ID of the cubemap (load via TextureLoader::CubemapFromFiles)
+     */
+    void SetSkyboxCubemap(unsigned int cubemapID);
+
+    /**
+     * @brief Enable or disable skybox rendering
+     * @param enable True to enable, false to disable
+     */
+    void EnableSkybox(bool enable);
+
+    /**
+     * @brief Check if skybox is currently enabled
+     * @return True if enabled, false otherwise
+     */
+    bool IsSkyboxEnabled() const;
+
+    /**
+     * @brief Set skybox HDR exposure multiplier
+     * @param exposure Exposure value (0.0 - 10.0), default is 1.0
+     */
+    void SetSkyboxExposure(float exposure);
+
+    /**
+     * @brief Set skybox rotation (Euler angles in degrees)
+     * @param rotation XYZ rotation in degrees
+     */
+    void SetSkyboxRotation(const glm::vec3& rotation);
+
+    /**
+     * @brief Set skybox color tint
+     * @param tint RGB color multiplier (0.0 - 1.0), default is white (1, 1, 1)
+     */
+    void SetSkyboxTint(const glm::vec3& tint);
+
+    /**
+     * @brief Load a cubemap from 6 image files and return the OpenGL texture ID
+     * @param facePaths Array of 6 file paths in order: +X, -X, +Y, -Y, +Z, -Z (right, left, top, bottom, front, back)
+     * @param directory Base directory for the face paths (optional)
+     * @return OpenGL texture ID, or 0 on failure
+     */
+    static unsigned int LoadCubemapFromFiles(
+        const std::array<std::string, 6>& facePaths,
+        const std::string& directory = ""
+    );
 
     // ========== Static API for External Access ==========
 
@@ -429,6 +494,7 @@ private:
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
+    std::unique_ptr<JoltDebugRenderer> m_JoltDebugRenderer;     ///< Jolt physics debug renderer
 
     // ========== Material Property Blocks ==========
 

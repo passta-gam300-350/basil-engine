@@ -190,6 +190,15 @@ void AssetManager::CreateMaterialDescriptor(std::string const& material_name) {
 	matDesc.material.roughness = 0.5f;
 	matDesc.material.blend_mode = 0; // Opaque by default
 
+	matDesc.material.texture_properties["u_AOMap"];
+	matDesc.material.texture_properties["u_RoughnessMap"];
+	matDesc.material.texture_properties["u_DiffuseMap"];
+	matDesc.material.texture_properties["u_EmissiveMap"];
+	matDesc.material.texture_properties["u_NormalMap"];
+	matDesc.material.texture_properties["u_HeightMap"];
+	matDesc.material.texture_properties["u_SpecularMap"];
+	matDesc.material.texture_properties["u_MetallicMap"];
+
 	// 4. Save descriptor to .desc file in current directory
 	std::string desc_path = normalizePath(m_CurrentPath + "/" + material_name + ".desc");
 
@@ -293,6 +302,14 @@ void AssetManager::FileIndexingWorkerLoop() {
 				std::string desc_name = entry.path().string();
 				std::string dir_path = getParentPath(desc_name);
 				std::string ext_name = getFileExtension(desc_name);
+
+				// Handle .prefab files separately - they're self-contained assets
+				if (ext_name == ".prefab") {
+					std::lock_guard lg{ m_DescriptorListMtx };
+					m_FileList.emplace(dir_path, desc_name);
+					continue;
+				}
+
 				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
 				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio") {
 					continue;
@@ -405,12 +422,29 @@ void AssetManager::FileIndexingWorkerLoop() {
 					if (file_ext.empty()) {
 						break;
 					}
+
+					// Handle .prefab file modifications
+					if (file_ext == ".prefab") {
+						std::wcout << L"Prefab changed: " << filename << "\n";
+						std::lock_guard lg{ m_ChangedPrefabsMtx };
+						// Check if not already in the list
+						if (std::find(m_ChangedPrefabs.begin(), m_ChangedPrefabs.end(), nfile) == m_ChangedPrefabs.end()) {
+							m_ChangedPrefabs.push_back(nfile);
+						}
+						dir_path = getParentPath(nfile);
+						{
+							std::lock_guard lg_file{ m_DescriptorListMtx };
+							m_FileList.emplace(dir_path, nfile);
+						}
+						break;
+					}
+
 					// Mark that we need a rescan after quiet period
 					m_NeedsRescan = true;
 					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
 					dir_path = getParentPath(nfile);
 					if (!std::filesystem::exists(descriptor_filepath)) {
-						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile);
+						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile, m_RootPath);
 						{
 							std::lock_guard lg{ m_DescriptorListMtx };
 							m_FileList.emplace(dir_path, descriptor_filepath);
@@ -491,7 +525,7 @@ void AssetManager::RescanDirectory() {
 
 			// This file is missing a descriptor - create one
 			std::string dir_path = getParentPath(file_path);
-			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path);
+			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path, m_RootPath);
 			{
 				std::lock_guard lg{ m_DescriptorListMtx };
 				m_FileList.emplace(dir_path, file_path);
@@ -504,4 +538,11 @@ void AssetManager::RescanDirectory() {
 	catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Rescan error: " << e.what() << "\n";
 	}
+}
+
+std::vector<std::string> AssetManager::GetAndClearChangedPrefabs() {
+	std::lock_guard lg{ m_ChangedPrefabsMtx };
+	std::vector<std::string> changed = std::move(m_ChangedPrefabs);
+	m_ChangedPrefabs.clear();
+	return changed;
 }

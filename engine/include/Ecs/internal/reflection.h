@@ -27,6 +27,7 @@ Technology is prohibited.
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <glm/glm.hpp>
 using TypeName = entt::hashed_string;
 constexpr TypeName ToTypeName(std::string_view name) { return entt::hashed_string(name.data(), name.length()); };
 
@@ -275,6 +276,16 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 					out[field_name].push_back(vuint);
 				}
 			}
+			else if (std::vector<std::string> const* vstr = value.try_cast<std::vector<std::string> const>()) {
+				for (auto const& entry : *vstr) {
+					out[field_name].push_back(entry);
+				}
+			}
+			else if (std::vector<rp::Guid> const* vguid = value.try_cast<std::vector<rp::Guid> const>()) {
+				for (auto const& guid : *vguid) {
+					out[field_name].push_back(guid.to_hex());
+				}
+			}
 			
 
 			// primitives
@@ -449,6 +460,26 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 				vec_uint.emplace_back(value.template as<std::uint32_t>());
 			}
 			data.set(obj, vec_uint);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::vector<std::string>>::value()) {
+			auto vecnode = in[field_name];
+			std::vector<std::string> vec_str{};
+			for (auto const& value : vecnode) {
+				vec_str.emplace_back(value.template as<std::string>());
+			}
+			data.set(obj, vec_str);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::vector<rp::Guid>>::value()) {
+			auto vecnode = in[field_name];
+			std::vector<rp::Guid> vec_guid{};
+			for (auto const& value : vecnode) {
+				vec_guid.emplace_back(rp::Guid::to_guid(value.template as<std::string>()));
+			}
+			data.set(obj, vec_guid);
 			continue;
 		}
 
@@ -630,6 +661,10 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 	}
 	factory.template func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
 	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
+	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {
+		if (r.all_of<T>(e)) { r.remove<T>(e); }
+		r.emplace<T>(e, meta_any.cast<T>());
+	} > ("emplace_or_replace_meta_any"_tn);
 	ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
 	ReflectionRegistry::InternalID()[entt::type_index<T>::value()] = entt::type_hash<T>::value();
 	ReflectionRegistry::BinSerializerRegistryInstance().push_back({

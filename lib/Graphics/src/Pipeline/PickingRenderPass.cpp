@@ -29,6 +29,12 @@ void PickingRenderPass::Execute(RenderContext& context)
         return; // Skip if disabled or no picking shader
     }
 
+    // ONLY execute for editor camera (Scene viewport)
+    // Picking is not needed for game camera (Game viewport)
+    if (context.frameData.currentCamera != FrameData::CameraContext::EDITOR) {
+        return; // Skip for game camera renders
+    }
+
     //spdlog::info("PickingRenderPass::Execute - Starting picking render...");
 
     // Auto-resize framebuffer to match viewport if needed
@@ -185,8 +191,9 @@ PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, co
         // Convert to clip space
         glm::vec4 clipPos(ndcX, ndcY, ndcZ, 1.0f);
 
-        // Convert to world space
-        glm::mat4 invViewProj = glm::inverse(context.frameData.projectionMatrix * context.frameData.viewMatrix);
+        // Convert to world space using EDITOR camera matrices
+        // (picking always uses editor camera, even if game camera rendered last)
+        glm::mat4 invViewProj = glm::inverse(context.frameData.editorProjectionMatrix * context.frameData.editorViewMatrix);
         glm::vec4 worldPos = invViewProj * clipPos;
         worldPos /= worldPos.w;
 

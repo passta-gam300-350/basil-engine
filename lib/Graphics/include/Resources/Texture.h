@@ -90,5 +90,17 @@ public:
         const std::string &directory,
         bool generateMipmaps = true
     );
+
+    /**
+     * @brief Create a cubemap from 6 existing 2D texture IDs (for resource pipeline integration)
+     * @param textureIDs Array of 6 OpenGL texture IDs in order: +X, -X, +Y, -Y, +Z, -Z
+     * @param generateMipmaps Whether to generate mipmaps for the cubemap
+     * @return OpenGL cubemap texture ID, or 0 on failure
+     * @note This copies pixel data from existing textures to a new cubemap
+     */
+    static unsigned int CubemapFromTextureIDs(
+        const std::array<unsigned int, 6>& textureIDs,
+        bool generateMipmaps = true
+    );
 };
 

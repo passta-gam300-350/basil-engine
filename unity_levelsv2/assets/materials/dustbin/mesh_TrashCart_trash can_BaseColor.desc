@@ -1,0 +1,7 @@
+base:
+  m_guid: 98e4310799fbfa1d5ee0f8441c0
+  m_importer: .texture
+  m_source: materials\dustbin\mesh_TrashCart_trash can_BaseColor.png
+  m_name: mesh_TrashCart_trash can_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

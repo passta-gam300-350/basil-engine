@@ -1,8 +1,9 @@
 #ifndef PREFABDATA_HPP
 #define PREFABDATA_HPP
 
-#include "uuid/uuid.hpp"
+
 #include "Component/Component.hpp"
+#include <rsc-core/rp.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -25,7 +26,8 @@ using SerializedPropertyValue = std::variant<
     glm::vec2,
     glm::vec3,
     glm::vec4,
-    glm::quat
+    glm::quat,
+    rp::BasicIndexedGuid
 >;
 
 /**
@@ -74,15 +76,54 @@ struct SerializedComponent
 };
 
 /**
+ * @brief Represents a reference to a nested prefab instance within a parent prefab
+ *
+ * Unity-style nested prefabs: Instead of expanding the nested prefab's entities,
+ * we store a reference to the prefab asset and track any overrides applied at this level.
+ * When instantiating, we recursively instantiate nested prefabs and apply overrides.
+ *
+ * Example hierarchy:
+ *   Tank (prefab)
+ *     └─ Turret (nested prefab reference)
+ *          └─ Barrel (in Turret's prefab, not expanded here)
+ */
+struct NestedPrefabReference
+{
+    rp::BasicIndexedGuid prefabGuid;             ///< GUID of the nested prefab asset
+    std::string prefabName;                      ///< Human-readable name for debugging
+
+    // Transform override for positioning the nested prefab within parent
+    // (applied on top of the nested prefab's root transform)
+    glm::vec3 positionOverride = glm::vec3(0.0f);
+    glm::quat rotationOverride = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // identity quaternion
+    glm::vec3 scaleOverride = glm::vec3(1.0f);
+
+    // Property overrides specific to this nested prefab instance
+    // (applied to the nested prefab's entities during instantiation)
+    std::vector<SerializedComponent> componentOverrides;
+
+    NestedPrefabReference() = default;
+    NestedPrefabReference(const rp::BasicIndexedGuid& guid, std::string name)
+        : prefabGuid(guid), prefabName(std::move(name)) {}
+};
+
+/**
  * @brief Represents a single entity in a prefab hierarchy
  *
  * Stores all components attached to this entity and references to child entities.
  * This forms a tree structure representing the prefab's entity hierarchy.
+ *
+ * **Nested Prefab Support (Unity 2018.3+ style):**
+ * - Regular child entities are stored in `children`
+ * - Nested prefab instances are stored in `nestedPrefabs`
+ * - Nested prefabs are NOT expanded - they remain as references
+ * - At instantiation time, nested prefabs are recursively instantiated
  */
 struct PrefabEntity
 {
     std::vector<SerializedComponent> components; ///< Components attached to this entity
-    std::vector<PrefabEntity> children;          ///< Child entities in the hierarchy
+    std::vector<PrefabEntity> children;          ///< Regular child entities (fully expanded)
+    std::vector<NestedPrefabReference> nestedPrefabs; ///< Nested prefab references (NOT expanded)
 
     /**
      * @brief Find a component by type hash
@@ -187,7 +228,7 @@ struct PrefabEntity
  * @brief Complete prefab data structure for disk storage
  *
  * This represents the entire prefab asset as stored on disk.
- * Contains metadata (UUID, name, version) and the root entity hierarchy.
+ * Contains metadata (GUID, name, version) and the root entity hierarchy.
  *
  * File format: YAML (.prefab extension)
  * Location: Typically in assets/prefabs/ directory
@@ -195,32 +236,33 @@ struct PrefabEntity
 struct PrefabData
 {
     // Metadata
-    UUID<128> uuid;           ///< Unique identifier for this prefab
-    std::string name;         ///< Human-readable prefab name
-    int version = 1;          ///< Prefab format version (for future compatibility)
-    std::string createdDate;  ///< ISO 8601 timestamp of creation
+    rp::BasicIndexedGuid guid;  ///< Unique identifier for this prefab
+    std::string name;           ///< Human-readable prefab name
+    int version = 1;            ///< Prefab format version (for future compatibility)
+    std::string createdDate;    ///< ISO 8601 timestamp of creation
 
     // Entity hierarchy
-    PrefabEntity root;        ///< Root entity of the prefab hierarchy
+    PrefabEntity root;          ///< Root entity of the prefab hierarchy
 
     PrefabData() = default;
 
     /**
-     * @brief Create a new prefab with generated UUID
+     * @brief Create a new prefab with generated GUID
      * @param prefabName Name of the prefab
+     * @param typeIndex Type index for the prefab resource type
      */
-    explicit PrefabData(const std::string& prefabName)
-        : uuid(UUID<128>::Generate())
+    explicit PrefabData(const std::string& prefabName, std::uint64_t typeIndex = 0)
+        : guid{rp::Guid::generate(), typeIndex}
         , name(prefabName)
     {}
 
     /**
-     * @brief Get the UUID as a string
-     * @return String representation of the UUID
+     * @brief Get the GUID as a string
+     * @return String representation of the GUID
      */
-    std::string GetUuidString() const
+    std::string GetGuidString() const
     {
-        return const_cast<UUID<128>&>(uuid).ToString();
+        return guid.m_guid.to_hex();
     }
 
     /**
@@ -242,7 +284,7 @@ struct PrefabData
 struct PrefabInstanceSnapshot
 {
     ecs::entity entityId;                                    ///< Original entity ID
-    UUID<128> prefabId;                                      ///< Prefab reference
+    rp::BasicIndexedGuid prefabId;                                      ///< Prefab reference
     std::vector<Component::ComponentType> addedComponents;   ///< Added components
     std::vector<Component::ComponentType> deletedComponents; ///< Deleted components
 
@@ -259,13 +301,6 @@ struct PrefabInstanceSnapshot
     std::vector<PropertyOverrideData> propertyOverrides;     ///< Property overrides
 
     PrefabInstanceSnapshot() = default;
-
-    /**
-     * @brief Create a snapshot from an existing entity with PrefabComponent
-     * @param entity The entity to snapshot
-     * @param prefabComp The prefab component data
-     */
-    PrefabInstanceSnapshot(ecs::entity entity, const class PrefabComponent& prefabComp);
 };
 
 #endif // PREFABDATA_HPP

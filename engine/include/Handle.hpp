@@ -4,14 +4,14 @@
 
 #include "uuid/uuid.hpp"
 
-
-struct Handle
+// Renamed from Handle to ComponentHandle to avoid conflict with Windows HANDLE and the ResourceSystem Handle struct
+struct ComponentHandle
 {
-	UUID<128> id;
+	uuid::UUID<128> id;
 	uint32_t handle_name;
-	Handle() = default;
-	Handle(std::string name);
-	Handle(std::string name, UUID<128> const& uuid);
+	ComponentHandle() = default;
+	ComponentHandle(std::string name);
+	ComponentHandle(std::string name, uuid::UUID<128> const& uuid);
 };
 
 #endif // !HANDLE_HPP

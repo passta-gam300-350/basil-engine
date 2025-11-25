@@ -3,6 +3,7 @@
 #include "Pipeline/DebugRenderPass.h"
 #include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
+#include "Pipeline/GameResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/FrustumCuller.h"
@@ -63,7 +64,6 @@ void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();
 	m_SubmittedLights.clear();
-	GetFrameData().debugAABBs.clear();
     if (m_ParticleRenderer) {
         m_ParticleRenderer->ClearFrame();
     }
@@ -72,6 +72,10 @@ void SceneRenderer::ClearFrame()
 	m_FrameData.shadowDataArray.clear();
 	m_FrameData.shadow2DTextures.clear();
 	m_FrameData.shadowCubemapTextures.clear();
+
+	// Clear physics debug lines for next frame
+	m_FrameData.debugLines.clear();
+
     if (m_ParticleRenderer)
     {
         m_ParticleRenderer->ClearFrame();
@@ -109,7 +113,6 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 4. Add debug rendering pass (shows light cubes) - BEFORE HDR resolve!
     auto debugPass = std::make_shared<DebugRenderPass>();
     mainPipeline->AddPass(debugPass);
-    mainPipeline->EnablePass("DebugPass", false);  // Enabled to visualize lights
 
     // 5. Add outline rendering pass (stencil-based outlines) - BEFORE HDR resolve!
     auto outlinePass = std::make_shared<OutlineRenderPass>();
@@ -145,11 +148,15 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui Scene viewport)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 12. Add present pass (executes last)
+    // 12. Add game resolve pass (resolve MSAA game buffer for ImGui Game viewport - always enabled)
+    auto gameResolvePass = std::make_shared<GameResolvePass>();
+    mainPipeline->AddPass(gameResolvePass);
+
+    // 13. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -278,11 +285,23 @@ void SceneRenderer::SetDebugPrimitiveShader(const std::shared_ptr<Shader>& shade
         if (mainPass) {
             mainPass->SetPrimitiveShader(shader);
         }
+    }
+}
 
-        // Set primitive shader on DebugRenderPass (for light rays and AABBs)
+void SceneRenderer::SetDebugLineShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Debug line shader cannot be null");
+    assert(shader->ID != 0 && "Debug line shader must be compiled and linked");
+    assert(m_Pipeline && "Pipeline must be initialized before setting debug line shader");
+
+    if (m_Pipeline) {
+        // Set debug line shader on DebugRenderPass (for physics debug visualization)
         auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
         if (debugPass) {
-            debugPass->SetPrimitiveShader(shader);
+            debugPass->SetDebugLineShader(shader);
+            spdlog::info("SceneRenderer: Debug line shader set on DebugRenderPass");
+        } else {
+            spdlog::warn("SceneRenderer: DebugPass not found in pipeline");
         }
     }
 }
@@ -299,36 +318,6 @@ void SceneRenderer::SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) con
         auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
         if (mainPass) {
             mainPass->SetLightCubeMesh(mesh);
-        }
-    }
-}
-
-void SceneRenderer::SetDebugDirectionalRayMesh(const std::shared_ptr<Mesh>& mesh) const
-{
-    assert(mesh && "Debug directional ray mesh cannot be null");
-    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
-    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
-    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
-
-    if (m_Pipeline) {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass) {
-            debugPass->SetDirectionalRayMesh(mesh);
-        }
-    }
-}
-
-void SceneRenderer::SetDebugAABBWireframeMesh(const std::shared_ptr<Mesh>& mesh) const
-{
-    assert(mesh && "Debug AABB wireframe mesh cannot be null");
-    assert(mesh->GetVertexArray() && "Debug mesh must have a valid vertex array");
-    assert(mesh->GetVertexArray()->GetVAOHandle() != 0 && "Debug mesh VAO handle must be valid");
-    assert(m_Pipeline && "Pipeline must be initialized before setting debug mesh");
-
-    if (m_Pipeline) {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass) {
-            debugPass->SetAABBWireframeMesh(mesh);
         }
     }
 }
@@ -380,7 +369,6 @@ void SceneRenderer::EnablePicking(bool enable) const
 
 void SceneRenderer::SetSkyboxCubemap(unsigned int cubemapID)
 {
-    assert(cubemapID != 0 && "Skybox cubemap ID must be valid");
     assert(m_Pipeline && "Pipeline must be initialized before setting skybox");
 
     if (m_Pipeline)
@@ -434,6 +422,87 @@ bool SceneRenderer::IsSkyboxEnabled() const
         }
     }
     return false;
+}
+
+void SceneRenderer::SetSkyboxExposure(float exposure)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox exposure");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxExposure(exposure);
+        }
+    }
+}
+
+void SceneRenderer::SetSkyboxRotation(const glm::vec3& rotation)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox rotation");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxRotation(rotation);
+        }
+    }
+}
+
+void SceneRenderer::SetSkyboxTint(const glm::vec3& tint)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting skybox tint");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetSkyboxTint(tint);
+        }
+    }
+}
+
+float SceneRenderer::GetSkyboxExposure() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetSkyboxExposure();
+        }
+    }
+    return 1.0f;
+}
+
+glm::vec3 SceneRenderer::GetSkyboxRotation() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetSkyboxRotation();
+        }
+    }
+    return glm::vec3(0.0f);
+}
+
+glm::vec3 SceneRenderer::GetSkyboxTint() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetSkyboxTint();
+        }
+    }
+    return glm::vec3(1.0f);
 }
 
 void SceneRenderer::SetBackgroundColor(const glm::vec4& color)
@@ -602,12 +671,7 @@ void SceneRenderer::SetCameraData(const glm::mat4& view, const glm::mat4& proj, 
     m_FrameData.cameraPosition = pos;
 }
 
-void SceneRenderer::SetDebugAABBs(const std::vector<DebugAABB>& aabbs)
-{
-    m_FrameData.debugAABBs = aabbs;
-}
-
-void SceneRenderer::ToggleAABBVisualization()
+void SceneRenderer::EnablePhysicsDebugVisualization(bool enable)
 {
     assert(m_Pipeline && "Pipeline must be initialized");
 
@@ -616,34 +680,13 @@ void SceneRenderer::ToggleAABBVisualization()
         auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
         if (debugPass)
         {
-            bool newState = !debugPass->GetShowAABBs();
-            debugPass->SetShowAABBs(newState);
-            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
-                         newState ? "ENABLED" : "DISABLED");
-        }
-        else
-        {
-            spdlog::warn("SceneRenderer: Debug pass not found - cannot toggle AABB visualization");
-        }
-    }
-}
-
-void SceneRenderer::EnableAABBVisualization(bool enable)
-{
-    assert(m_Pipeline && "Pipeline must be initialized");
-
-    if (m_Pipeline)
-    {
-        auto debugPass = std::dynamic_pointer_cast<DebugRenderPass>(m_Pipeline->GetPass("DebugPass"));
-        if (debugPass)
-        {
-            debugPass->SetShowAABBs(enable);
-            spdlog::info("SceneRenderer: AABB wireframe visualization {}",
+            debugPass->SetShowPhysicsDebug(enable);
+            spdlog::info("SceneRenderer: Physics debug line visualization {}",
                          enable ? "ENABLED" : "DISABLED");
         }
         else
         {
-            spdlog::warn("SceneRenderer: Debug pass not found - cannot set AABB visualization");
+            spdlog::warn("SceneRenderer: Debug pass not found - cannot set physics debug visualization");
         }
     }
 }

@@ -35,6 +35,9 @@ RFC 4122                  A UUID URN Namespace                 July 2005
 
 */
 
+// Note: UUID class is in uuid namespace to avoid conflict with Windows GUID typedef
+// Use uuid::UUID<128> or uuid::UUID<64> instead of UUID<128> directly
+namespace uuid {
 
 template <size_t N>
 concept AllowedSize = (N == 128) || (N == 64);
@@ -313,7 +316,7 @@ uint64_t UUID<N>::getHigh() const
 	return high;
 }
 
-
+} // namespace uuid
 
 #endif  // UUID_HPP
 

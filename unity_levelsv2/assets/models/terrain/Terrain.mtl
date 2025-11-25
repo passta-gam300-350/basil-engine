@@ -1,0 +1,30 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for table model
+# Generated for GAM300 Graphics Engine
+
+newmtl TerrainDefault
+# Base color / diffuse map
+map_Kd table_new_TableDetails_BaseColor.png
+
+# Normal map
+map_Bump table_new_TableDetails_Normal.png
+bump table_new_TableDetails_Normal.png
+
+# Metallic map
+map_Ks table_new_TableDetails_Metallic.png
+
+# Roughness map
+map_Ns table_new_TableDetails_Roughness.png
+
+# Emissive map
+map_Ke table_new_TableDetails_Emissive.png
+
+# Height / displacement map
+map_d table_new_TableDetails_Height.png
+disp table_new_TableDetails_Height.png
+
+# Material properties
+kd 0.3581 0 0
+illum 1

@@ -24,6 +24,7 @@ Technology is prohibited.
 #include "Engine.hpp"  // For Engine::GetRenderSystem()
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
+#include "Render/JoltDebugRenderer.h"  // For Jolt physics debug rendering
 
 #include "Messaging/Messaging_System.h"
 
@@ -86,6 +87,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetPrimitiveShader()) {
 		m_SceneRenderer->SetDebugPrimitiveShader(m_ShaderLibrary->GetPrimitiveShader());
 	}
+	if (m_ShaderLibrary->GetDebugLineShader()) {
+		m_SceneRenderer->SetDebugLineShader(m_ShaderLibrary->GetDebugLineShader());
+	}
 	if (m_ShaderLibrary->GetOutlineShader()) {
 		m_SceneRenderer->SetOutlineShader(m_ShaderLibrary->GetOutlineShader());
 	}
@@ -115,9 +119,19 @@ RenderSystem::RenderSystem() {
 
 	// Initialize component initializer (simplified, no longer needs subsystem references)
 	m_ComponentInitializer = std::make_unique<ComponentInitializer>();
+
+	// Note: JoltDebugRenderer initialization deferred to InitJoltDebugRenderer()
+	// (must be called after PhysicsSystem::Init() because Jolt needs to be initialized first)
 }
 
 RenderSystem::~RenderSystem() {
+	// Clean up Jolt debug renderer and reset singleton
+	if (m_JoltDebugRenderer) {
+		m_JoltDebugRenderer.reset();
+		JPH::DebugRenderer::sInstance = nullptr;
+		spdlog::info("RenderSystem: Jolt debug renderer cleaned up");
+	}
+
 	// Release subsystems in safe order
 	m_ComponentInitializer.reset();
 	m_MaterialInstanceManager.reset();
@@ -166,24 +180,34 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 void RenderSystem::Update(ecs::world& world) {
 	PF_SYSTEM("GraphicSystem");
 
-	auto world_camera = CameraSystem::GetActiveCamera();
 	auto& frameData = m_SceneRenderer->GetFrameData();
 
-	//update camera
-	m_Camera->SetPosition(world_camera.m_Pos);
-	glm::mat4 view = glm::lookAt(
-		world_camera.m_Pos,
-		world_camera.m_Pos + world_camera.m_Front,  // Look at position + front vector
-		world_camera.m_Up
-	);
-	if (world_camera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
-		m_Camera->SetPerspective(world_camera.m_Fov, world_camera.m_AspectRatio, world_camera.m_Near, world_camera.m_Far);
-		frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
-		messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE, std::make_unique<Camera_Calculation_Update>(frameData.viewMatrix,m_Camera->GetProjectionMatrix()));
-	}
+	// ========== DUAL CAMERA SETUP (Unity-style) ==========
+	// Get both editor and game cameras
 
-	frameData.viewMatrix = view;
-	frameData.cameraPosition = world_camera.m_Pos;
+	// 1. Editor camera (for Scene viewport) - always from aux camera
+	auto editorCamera = CameraSystem::GetAuxCamera();
+
+	// 2. Game camera (for Game viewport) - query from ECS for active camera
+	CameraSystem::Camera gameCamera;
+	bool hasGameCamera = false;
+
+	auto cameraQuery = world.query_components<CameraComponent, TransformComponent>();
+	for (auto [cam, trans] : cameraQuery) {
+		if (cam.m_IsActive) {
+			gameCamera.m_Pos = trans.m_Translation;
+			gameCamera.m_Front = cam.m_Front;
+			gameCamera.m_Up = cam.m_Up;
+			gameCamera.m_Right = cam.m_Right;
+			gameCamera.m_Type = cam.m_Type;
+			gameCamera.m_Fov = cam.m_Fov;
+			gameCamera.m_AspectRatio = cam.m_AspectRatio;
+			gameCamera.m_Near = cam.m_Near;
+			gameCamera.m_Far = cam.m_Far;
+			hasGameCamera = true;
+			break;
+		}
+	}
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
@@ -281,12 +305,6 @@ void RenderSystem::Update(ecs::world& world) {
 				assert(!meshResourcePtr->vertices.empty() && "Mesh must have vertices for rendering");
 
 				m_SceneRenderer->SubmitRenderable(renderData);
-
-				// Submit AABB for debug visualization (using pre-calculated mesh AABB)
-				if (visible.m_IsVisible && meshResourcePtr->GetAABB().IsValid()) {
-					DebugAABB debugAABB(meshResourcePtr->GetAABB(), transform.m_Mtx, glm::vec3(1.0f, 0.0f, 0.0f));
-					frameData.debugAABBs.push_back(debugAABB);
-				}
 			};
 		std::visit([&](auto&& var) {
 			using Type = std::remove_pointer_t<std::remove_cvref_t<decltype(var)>>;
@@ -352,8 +370,88 @@ void RenderSystem::Update(ecs::world& world) {
 		m_SceneRenderer->SubmitLight(lightData);
 	}
 
-	//render frame
-	m_SceneRenderer->Render();
+	// Flush Jolt physics debug geometry to FrameData (before rendering)
+	if (m_JoltDebugRenderer && m_JoltDebugRenderer->IsEnabled())
+	{
+		m_JoltDebugRenderer->FlushToFrameData(frameData);
+	}
+
+	// ========== DUAL RENDERING (Unity-style) ==========
+	// Render scene twice: once with editor camera, once with game camera
+
+	// --- FIRST RENDER PASS: Editor Camera (Scene viewport) ---
+	{
+		// Set camera context to EDITOR
+		frameData.currentCamera = FrameData::CameraContext::EDITOR;
+
+		// Set editor camera data
+		m_Camera->SetPosition(editorCamera->m_Pos);
+		glm::mat4 view = glm::lookAt(
+			editorCamera->m_Pos,
+			editorCamera->m_Pos + editorCamera->m_Front,
+			editorCamera->m_Up
+		);
+
+		if (editorCamera->m_Type == CameraComponent::CameraType::PERSPECTIVE) {
+			m_Camera->SetPerspective(editorCamera->m_Fov, editorCamera->m_AspectRatio, editorCamera->m_Near, editorCamera->m_Far);
+			frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+			messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE,
+				std::make_unique<Camera_Calculation_Update>(view, m_Camera->GetProjectionMatrix()));
+		}
+
+		// Store editor camera matrices (for picking system)
+		frameData.viewMatrix = frameData.editorViewMatrix = view;
+		frameData.projectionMatrix = frameData.editorProjectionMatrix = m_Camera->GetProjectionMatrix();
+		frameData.cameraPosition = frameData.editorCameraPosition = editorCamera->m_Pos;
+
+		// Enable editor resolve, disable game resolve for this pass
+		m_SceneRenderer->EnablePass("GameResolvePass", false);
+		m_SceneRenderer->EnablePass("EditorResolvePass", true);
+
+		// Render with editor camera
+		m_SceneRenderer->Render();
+	}
+
+	// --- SECOND RENDER PASS: Game Camera (Game viewport) ---
+	// Only render if a game camera exists in the scene
+	if (hasGameCamera)
+	{
+		// Set camera context to GAME
+		frameData.currentCamera = FrameData::CameraContext::GAME;
+
+		// Set game camera data
+		m_Camera->SetPosition(gameCamera.m_Pos);
+		glm::mat4 view = glm::lookAt(
+			gameCamera.m_Pos,
+			gameCamera.m_Pos + gameCamera.m_Front,
+			gameCamera.m_Up
+		);
+
+		if (gameCamera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
+			m_Camera->SetPerspective(gameCamera.m_Fov, gameCamera.m_AspectRatio, gameCamera.m_Near, gameCamera.m_Far);
+			frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+		}
+
+		frameData.viewMatrix = view;
+		frameData.cameraPosition = gameCamera.m_Pos;
+
+		// Enable game resolve, disable editor resolve for this pass
+		m_SceneRenderer->EnablePass("EditorResolvePass", false);
+		m_SceneRenderer->EnablePass("GameResolvePass", true);
+
+		// Render with game camera
+		m_SceneRenderer->Render();
+	}
+	else
+	{
+		// No game camera - clear buffer so editor displays "No active game camera" message
+		m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
+		spdlog::debug("RenderSystem: No active game camera found, Game viewport will be empty");
+	}
+
+	// Re-enable both passes for next frame
+	m_SceneRenderer->EnablePass("EditorResolvePass", true);
+	m_SceneRenderer->EnablePass("GameResolvePass", true);
 
 	//clear frame data AFTER rendering (so particles submitted before render are included)
 	m_SceneRenderer->ClearFrame();
@@ -374,6 +472,25 @@ void RenderSystem::Exit() {
 	m_DefaultMaterial.reset();
 
 	// Destructor will handle cleanup automatically
+}
+
+void RenderSystem::SetJoltDebugRenderingEnabled(bool enabled) {
+	if (m_JoltDebugRenderer) {
+		m_JoltDebugRenderer->SetEnabled(enabled);
+	} else {
+		spdlog::warn("RenderSystem: Cannot set Jolt debug rendering state - debug renderer not initialized");
+	}
+}
+
+void RenderSystem::InitJoltDebugRenderer() {
+	// Only initialize if not already created and Jolt is initialized
+	if (!m_JoltDebugRenderer) {
+		m_JoltDebugRenderer = std::make_unique<JoltDebugRenderer>();
+		JPH::DebugRenderer::sInstance = m_JoltDebugRenderer.get();
+		spdlog::info("RenderSystem: Jolt debug renderer initialized and registered as singleton");
+	} else {
+		spdlog::warn("RenderSystem: Jolt debug renderer already initialized");
+	}
 }
 
 bool RenderSystem::RegisterEditorMesh(rp::Guid guid, std::shared_ptr<Mesh> mesh) {
@@ -496,13 +613,9 @@ void RenderSystem::SetupDebugVisualization() {
 	if (m_SceneRenderer && m_PrimitiveManager) {
 		// Create debug visualization meshes using PrimitiveManager
 		auto lightCube = m_PrimitiveManager->CreateDebugLightCube(5.0f);
-		auto lightRay = m_PrimitiveManager->CreateDebugDirectionalRay(3.0f);
-		auto wireframeCube = m_PrimitiveManager->CreateDebugWireframeCube(1.0f);
 
 		// Debug visualization uses primitive shader (loaded by ShaderLibrary)
 		m_SceneRenderer->SetDebugLightCubeMesh(lightCube);
-		m_SceneRenderer->SetDebugDirectionalRayMesh(lightRay);
-		m_SceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
 
 		spdlog::info("Debug visualization meshes configured");
 	} else {
@@ -548,7 +661,7 @@ std::variant<std::shared_ptr<Mesh>, std::vector<std::pair<std::string, std::shar
 	//		if (meshPtr) return *meshPtr;
 	//	}
 	//}
-	Handle meshHandle{};
+	ResourceHandle meshHandle{};
 	auto* ptr = registry.Get<std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>>(meshComp.m_MeshGuid.m_guid, &meshHandle);
 
 	if (ptr && !ptr->empty()) {
@@ -642,7 +755,7 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 void UnloadMeshFromResource(std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>&) {}
 
 using Meshes = std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>;
-
+ 
 // ========== Resource Type Registrations ==========
 REGISTER_RESOURCE_TYPE_ALIASE(Meshes, mesh, LoadMeshFromResource, UnloadMeshFromResource)
 
@@ -801,3 +914,39 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Texture>, texture,
 
 // Note: ShaderAssetData registration removed
 // Shaders are now loaded by name from MaterialResourceData
+
+// ========== Skybox Settings Implementation (Unity-style API) ==========
+
+void RenderSystem::SetSkyboxCubemap(unsigned int cubemapID) {
+	if (m_SceneRenderer && cubemapID !=0) {
+		m_SceneRenderer->SetSkyboxCubemap(cubemapID);
+	}
+}
+
+void RenderSystem::EnableSkybox(bool enable) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->EnableSkybox(enable);
+	}
+}
+
+bool RenderSystem::IsSkyboxEnabled() const {
+	return m_SceneRenderer ? m_SceneRenderer->IsSkyboxEnabled() : false;
+}
+
+void RenderSystem::SetSkyboxExposure(float exposure) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxExposure(exposure);
+	}
+}
+
+void RenderSystem::SetSkyboxRotation(const glm::vec3& rotation) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxRotation(rotation);
+	}
+}
+
+void RenderSystem::SetSkyboxTint(const glm::vec3& tint) {
+	if (m_SceneRenderer) {
+		m_SceneRenderer->SetSkyboxTint(tint);
+	}
+}

@@ -66,6 +66,12 @@ public:
     std::shared_ptr<Shader> GetPrimitiveShader() const { return m_PrimitiveShader; }
 
     /**
+     * @brief Get shader for debug line rendering (physics debug visualization)
+     * @return Debug line shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetDebugLineShader() const { return m_DebugLineShader; }
+
+    /**
      * @brief Get shader for point shadow mapping (with geometry shader)
      * @return Point shadow shader, or nullptr if not loaded
      */
@@ -168,6 +174,7 @@ private:
     std::shared_ptr<Shader> m_ShadowShader;
     std::shared_ptr<Shader> m_PickingShader;
     std::shared_ptr<Shader> m_PrimitiveShader;
+    std::shared_ptr<Shader> m_DebugLineShader;       // Debug line shader for physics visualization
     std::shared_ptr<Shader> m_PointShadowShader;     // Point shadow with geometry shader
     std::shared_ptr<Shader> m_OutlineShader;
     std::shared_ptr<Shader> m_SkyboxShader;
@@ -183,6 +190,7 @@ private:
     bool LoadShadowShader();
     bool LoadPickingShader();
     bool LoadPrimitiveShader();
+    bool LoadDebugLineShader();
     bool LoadPointShadowShader();
     bool LoadOutlineShader();
     bool LoadSkyboxShader();

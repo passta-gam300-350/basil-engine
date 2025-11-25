@@ -10,7 +10,7 @@
 
 class Component {
 protected:
-	Handle handle;
+	ComponentHandle handle;
 public:
 	bool enabled = true;
 	Component() = default;

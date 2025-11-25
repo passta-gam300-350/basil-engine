@@ -1,0 +1,29 @@
+base:
+  m_guid: 9ea769d734d8442a958a1a5e515
+  m_importer: .material
+  m_source: ""
+  m_name: m_kitchen_chair_top
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_kitchen_chair_top
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 98e439978b3a05c1c9265fe45f1
+    u_DiffuseMap: 98e437b74dd8bfcc8796f59c9cb
+    u_EmissiveMap: 98e43817ab08dcf60623ab04026
+    u_NormalMap: 98e439379eeb7f2a1085250c250
+    u_HeightMap: 98e43877a4e8e6611f44c311a5b
+    u_SpecularMap: 00
+    u_MetallicMap: 98e438d78fa8801e27e99394038

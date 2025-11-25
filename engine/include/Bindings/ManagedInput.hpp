@@ -26,6 +26,7 @@ public:
 	static bool GetKeyDown(int keycode); // returns true only on the frame the key was pressed
 	static bool GetKeyUp(int keycode); // returns true only on the frame the key was released
 	static bool GetKeyPress(int keycode); // returns true only on the frame the key was pressed
+	static void GetMousePosition(float* xp, float* yp); // Mouse screen position
 
 };
 

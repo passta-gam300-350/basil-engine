@@ -2,11 +2,13 @@
 #define PREFABCOMPONENT_HPP
 
 #include "Component.hpp"
-#include "uuid/uuid.hpp"
+#include "rsc-core/guid.hpp"
+#include "rsc-core/rp.hpp"
 #include <vector>
 #include <string>
 #include <variant>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 /**
  * @brief Type-erased property value container for prefab overrides
@@ -23,7 +25,8 @@ using PropertyValue = std::variant<
     glm::vec2,
     glm::vec3,
     glm::vec4,
-    glm::quat
+    glm::quat,
+    rp::BasicIndexedGuid
 >;
 
 /**
@@ -54,7 +57,7 @@ struct PropertyOverride
  *
  * This component is attached to entities that are instances of a prefab.
  * It tracks:
- * - Reference to the source prefab (via UUID)
+ * - Reference to the source prefab (via rp::BasicIndexedGuid)
  * - Components added to this instance (not in original prefab)
  * - Components deleted from this instance (present in prefab)
  * - Property overrides (values different from prefab)
@@ -68,7 +71,7 @@ class PrefabComponent : public Component
 {
 public:
     // Reference to the prefab resource
-    UUID<128> m_PrefabGuid;
+    rp::BasicIndexedGuid m_PrefabGuid;
 
     // Components added to this instance (not in prefab) - stored as reflection type hashes
     std::vector<std::uint32_t> m_AddedComponents;
@@ -82,14 +85,51 @@ public:
     // Enable/disable automatic syncing when prefab changes
     bool m_AutoSync = true;
 
+    // --- Nested Prefab Support (Unity 2018.3+ style) ---
+
+    /**
+     * @brief Nesting level of this prefab instance
+     *
+     * - 0 = Root prefab instance (directly placed in scene)
+     * - 1 = Nested within another prefab (1 level deep)
+     * - 2 = Nested within a nested prefab (2 levels deep)
+     * - etc.
+     *
+     * Used for recursive syncing and override resolution.
+     */
+    int m_NestingLevel = 0;
+
+    /**
+     * @brief GUID of the parent prefab (if this is a nested prefab instance)
+     *
+     * If m_NestingLevel > 0, this contains the GUID of the prefab that
+     * contains this nested prefab reference.
+     *
+     * Example: Tank prefab contains Turret nested prefab
+     *   - Tank instance: m_PrefabGuid = TankGuid, m_ParentPrefabGuid = invalid, m_NestingLevel = 0
+     *   - Turret instance: m_PrefabGuid = TurretGuid, m_ParentPrefabGuid = TankGuid, m_NestingLevel = 1
+     */
+    rp::BasicIndexedGuid m_ParentPrefabGuid;
+
+    /**
+     * @brief Is this entity part of a nested prefab hierarchy?
+     *
+     * True if this entity is:
+     * - A nested prefab instance (m_NestingLevel > 0), OR
+     * - A child entity of a nested prefab instance
+     *
+     * Used to determine sync behavior and override propagation.
+     */
+    bool m_IsPartOfNestedPrefab = false;
+
 public:
     PrefabComponent() = default;
 
     /**
      * @brief Construct a prefab component with a specific prefab reference
-     * @param prefabGuid UUID of the source prefab
+     * @param prefabGuid BasicIndexedGuid of the source prefab
      */
-    explicit PrefabComponent(const UUID<128>& prefabGuid)
+    explicit PrefabComponent(const rp::BasicIndexedGuid& prefabGuid)
         : m_PrefabGuid(prefabGuid)
     {}
 
@@ -233,11 +273,52 @@ public:
 
     /**
      * @brief Get the prefab GUID as a string
-     * @return String representation of the prefab UUID
+     * @return String representation of the prefab GUID
      */
     std::string GetPrefabGuidString() const
     {
-        return const_cast<UUID<128>&>(m_PrefabGuid).ToString();
+        return m_PrefabGuid.m_guid.to_hex();
+    }
+
+    // --- Nested Prefab Helper Methods ---
+
+    /**
+     * @brief Check if this is a root prefab instance (placed directly in scene)
+     * @return True if nesting level is 0
+     */
+    bool IsRootPrefabInstance() const
+    {
+        return m_NestingLevel == 0;
+    }
+
+    /**
+     * @brief Check if this is a nested prefab instance
+     * @return True if nesting level > 0 (contained within another prefab)
+     */
+    bool IsNestedPrefabInstance() const
+    {
+        return m_NestingLevel > 0;
+    }
+
+    /**
+     * @brief Set nesting information for this prefab instance
+     * @param nestingLevel The nesting depth (0 for root, 1+ for nested)
+     * @param parentPrefabGuid GUID of the parent prefab (if nested)
+     */
+    void SetNestingInfo(int nestingLevel, const rp::BasicIndexedGuid& parentPrefabGuid = rp::BasicIndexedGuid())
+    {
+        m_NestingLevel = nestingLevel;
+        m_ParentPrefabGuid = parentPrefabGuid;
+        m_IsPartOfNestedPrefab = (nestingLevel > 0);
+    }
+
+    /**
+     * @brief Get the parent prefab GUID as a string (for debugging)
+     * @return String representation of the parent prefab GUID
+     */
+    std::string GetParentPrefabGuidString() const
+    {
+        return m_ParentPrefabGuid.m_guid.to_hex();
     }
 };
 

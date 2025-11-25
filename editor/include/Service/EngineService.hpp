@@ -289,12 +289,6 @@ public:
 	                          std::function<void(bool hasHit, uint32_t objectID)> resultCallback);
 
 	/**
-	 * @brief Enable or disable AABB wireframe visualization for debugging
-	 * @param enable True to show AABBs, false to hide
-	 */
-	void EnableAABBVisualization(bool enable);
-
-	/**
 	 * @brief Add object outline for visual selection feedback
 	 * @param objectID Object ID to outline
 	 */

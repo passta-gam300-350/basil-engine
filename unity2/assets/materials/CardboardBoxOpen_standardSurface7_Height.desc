@@ -1,0 +1,7 @@
+base:
+  m_guid: 25916bd759c8c8d8c7c25bba6c3
+  m_importer: .texture
+  m_source: materials\CardboardBoxOpen_standardSurface7_Height.png
+  m_name: CardboardBoxOpen_standardSurface7_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

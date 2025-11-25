@@ -37,7 +37,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
-		while (!Engine::ShouldClose() && ((Engine::GetState() != Engine::Info::State::Wait) || Engine::GetState() != Engine::Info::State::Pause)) { //wait completely suspends the engine
+		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
 			engine_snapshot_callback();
 			Engine::BeginFrame();
 			Engine::CoreUpdate();
@@ -201,7 +201,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 						// Query ResourceRegistry to find what soundHandle SHOULD be loaded for this GUID
 						ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audioComp->audioAssetGuid);
 						if (entry) {
-							Handle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
+							ResourceHandle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
 							int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
 
 							if (soundHandlePtr && *soundHandlePtr >= 0) {
@@ -630,15 +630,6 @@ void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, fl
 	});
 }
 
-void EngineContainerService::EnableAABBVisualization(bool enable) {
-	ExecuteOnEngineThread([enable]() {
-		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-		if (sceneRenderer) {
-			sceneRenderer->EnableAABBVisualization(enable);
-		}
-	});
-}
-
 void EngineContainerService::AddOutlinedObject(uint32_t objectID) {
 	ExecuteOnEngineThread([objectID]() {
 		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
@@ -683,9 +674,13 @@ void EngineContainerService::SaveScene(const char* path) {
 	}
 
 	ExecuteOnEngineThread([path = std::string(path)]() {
-		ecs::world world = Engine::GetWorld();
-		world.SaveYAML(path.c_str());
-		spdlog::info("EngineService: Scene saved to {}", path);
+		auto activeSceneOpt = Engine::GetSceneRegistry().GetActiveScene();
+		if (activeSceneOpt.has_value()) {
+			activeSceneOpt.value().get().SerializeYaml(path);
+			spdlog::info("EngineService: Scene saved to {}", path);
+		} else {
+			spdlog::error("EngineService: No active scene to save!");
+		}
 	});
 }
 
@@ -696,10 +691,17 @@ void EngineContainerService::LoadScene(const char* path) {
 	}
 
 	ExecuteOnEngineThread([path = std::string(path)]() {
+		// Clear existing scenes
 		ecs::world world = Engine::GetWorld();
 		world.UnloadAll();
-		world.LoadYAML(path.c_str());
-		spdlog::info("EngineService: Scene loaded from {}", path);
+
+		// Load scene using SceneRegistry::LoadSceneFromPath which includes render settings (skybox, etc.)
+		auto sceneRefOpt = Engine::GetSceneRegistry().LoadSceneFromPath(path);
+		if (sceneRefOpt.has_value()) {
+			spdlog::info("EngineService: Scene loaded from {}", path);
+		} else {
+			spdlog::error("EngineService: Failed to load scene from {}", path);
+		}
 	});
 }
 

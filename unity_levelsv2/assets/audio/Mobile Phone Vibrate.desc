@@ -1,0 +1,14 @@
+base:
+  m_guid: 98e41d37eeca2fd36316754a67d
+  m_importer: .audio
+  m_source: audio\Mobile Phone Vibrate.ogg
+  m_name: Mobile Phone Vibrate.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

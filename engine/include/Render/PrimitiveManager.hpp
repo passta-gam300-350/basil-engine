@@ -54,20 +54,6 @@ public:
     std::shared_ptr<Mesh> CreateDebugLightCube(float size = 5.0f);
 
     /**
-     * @brief Create debug visualization mesh for directional lights
-     * @param length Length of the directional ray
-     * @return Directional ray mesh
-     */
-    std::shared_ptr<Mesh> CreateDebugDirectionalRay(float length = 3.0f);
-
-    /**
-     * @brief Create wireframe cube for AABB visualization
-     * @param size Size of the wireframe cube
-     * @return Wireframe cube mesh
-     */
-    std::shared_ptr<Mesh> CreateDebugWireframeCube(float size = 1.0f);
-
-    /**
      * @brief Clear all cached primitive meshes
      */
     void Clear();

@@ -53,6 +53,13 @@ bool ManagedInput::GetKeyPress(int keycode)
 	return false;
 }
 
+void ManagedInput::GetMousePosition(float* xp, float* yp)
+{
+	double x, y;
+	InputManager::Get_Instance()->Get_MousePosition(x,y);
+	*xp = static_cast<float>(x);
+	*yp = static_cast<float>(y);
+}
 
 
 

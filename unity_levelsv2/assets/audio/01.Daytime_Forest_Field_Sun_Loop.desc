@@ -1,0 +1,14 @@
+base:
+  m_guid: 98e40f273549e1839d3540bd58e
+  m_importer: .audio
+  m_source: audio\01.Daytime_Forest_Field_Sun_Loop.ogg
+  m_name: 01.Daytime_Forest_Field_Sun_Loop.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

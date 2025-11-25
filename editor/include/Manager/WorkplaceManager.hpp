@@ -30,7 +30,7 @@ public:
 	
 	struct Workplace
 	{
-		UUID<128> id;
+		uuid::UUID<128> id;
 		std::string path;
 		std::time_t lastOpened;
 	};

@@ -1,0 +1,19 @@
+Prefabs-Instances
+- Serialize entity ID + prefab resource GUID
+- Serialize added / deleted components
+- Serialize overwritten properties
+
+When loading
+- Instantiate using prefab
+	- Pre-filter based on Added / Deleted Components
+	- Use the right Entity ID
+- Start setting/overwriting properties
+
+What happens when a prefab is updated?
+- Serialize all the prefab instances that use it into a temp file
+  - Includes any instances from a variant that have in its hierarchy a reference to the prefab
+- Then delete all the prefab-instances
+  - Also the actual prefab resource
+- Loads the new version of the prefab and the relevant variants
+- Reload all the temp file to create the new instances
+  - Think carefully about the IDs!

@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for Dustbin
+# Generated for GAM300 Graphics Engine
+
+newmtl trash can
+
+# Base color / diffuse map
+map_Kd mesh_TrashCart_trash can_BaseColor.png
+
+# Normal map
+map_Bump mesh_TrashCart_trash can_Normal.png
+bump mesh_TrashCart_trash can_Normal.png
+
+# Metallic map
+map_Ks mesh_TrashCart_trash can_Metallic.png
+
+# Roughness map
+map_Ns mesh_TrashCart_trash can_Roughness.png
+
+# Emissive map
+map_Ke mesh_TrashCart_trash can_Emissive.png
+
+# Height / displacement map
+map_d mesh_TrashCart_trash can_Height.png
+disp mesh_TrashCart_trash can_Height.png
+
+kd 0.800347 0.73689 0.718117
+illum 1
+
