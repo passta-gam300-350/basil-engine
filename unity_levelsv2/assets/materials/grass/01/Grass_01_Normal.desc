@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd46eb7b65a4005d80c5de8ba7
+  m_guid: 2120c95378a7bf8f5393db395698
   m_importer: .texture
   m_source: materials\grass\01\Grass_01_Normal.png
   m_name: Grass_01_Normal.png

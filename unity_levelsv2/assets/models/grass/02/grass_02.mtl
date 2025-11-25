@@ -7,7 +7,7 @@ newmtl Grass_02
 map_Kd Grass_02_BaseColor.png
 
 # Normal map
-map_Bump hdb_02_Normal.png
+map_Bump Grass_02_Normal.png
 bump Grass_02_Normal.png
 
 # Metallic map

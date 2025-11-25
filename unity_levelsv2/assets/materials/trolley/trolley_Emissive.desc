@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd4b407c568dfa188c69e52831
-  m_importer: .texture
-  m_source: materials\trolley\trolley_Emissive.png
-  m_name: trolley_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

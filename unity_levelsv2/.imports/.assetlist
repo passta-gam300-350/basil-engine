@@ -181,6 +181,9 @@
 "Footsteps-Barefoot-Concrete-Marble_9.ogg":
   "m_guid": "469fbff7d86b3c00453d2b07001"
   "m_typeindex": "17099568057112876377"
+"Grass_01":
+  "m_guid": "2120c9a6767f873e79654f47d80c"
+  "m_typeindex": "4838001395392124604"
 "Grass_01_BaseColor.png":
   "m_guid": "7cd46d17841a1939b9e0f05c599"
   "m_typeindex": "126269861530532084"
@@ -199,6 +202,9 @@
 "Grass_01_Roughness.png":
   "m_guid": "7cd47037c66aed2b441aedab44a"
   "m_typeindex": "126269861530532084"
+"Grass_02":
+  "m_guid": "2120c9b07f68be0d23acfda5b9a6"
+  "m_typeindex": "4838001395392124604"
 "Grass_02_BaseColor.png":
   "m_guid": "7cd470b730996f9914d9c91fbfd"
   "m_typeindex": "126269861530532084"
@@ -676,6 +682,9 @@
 "chair_top":
   "m_guid": "9987cdf71459d97703d4b1bcd92"
   "m_typeindex": "175488002581160416"
+"cloud.obj":
+  "m_guid": "211dd9ab7898819a0b856f6201da"
+  "m_typeindex": "4838001395392124604"
 "cloud_01":
   "m_guid": "7e1406b7541adc765a6a55432a1"
   "m_typeindex": "175488002581160416"
@@ -1015,6 +1024,12 @@
 "m_floor":
   "m_guid": "98f196a704f962aa1cab73c4773"
   "m_typeindex": "175488002581160416"
+"m_grass1":
+  "m_guid": "215ee8487fe2ba5a5a4cf897c32f"
+  "m_typeindex": "175488002581160416"
+"m_grass2":
+  "m_guid": "21612d9075bc93f713ad67ba4c5b"
+  "m_typeindex": "175488002581160416"
 "m_kitchen_cabinet":
   "m_guid": "9f1a2e4709c98bce8ba8c0aeec9"
   "m_typeindex": "175488002581160416"
@@ -1092,6 +1107,30 @@
   "m_typeindex": "175488002581160416"
 "m_tree1":
   "m_guid": "819c75372e08629a4b32e5a444a"
+  "m_typeindex": "175488002581160416"
+"m_tree2":
+  "m_guid": "2119f9f17d908c8a60445372ce7a"
+  "m_typeindex": "175488002581160416"
+"m_tree3":
+  "m_guid": "211bd0427a0bb1426dd1b9a5d2b5"
+  "m_typeindex": "175488002581160416"
+"m_tree4":
+  "m_guid": "212f8e3772dda3b060fb06b1a6c5"
+  "m_typeindex": "175488002581160416"
+"m_tree5":
+  "m_guid": "212b01e87d9bb0e69544e7e10514"
+  "m_typeindex": "175488002581160416"
+"m_tree6":
+  "m_guid": "2132eefe7617b63f76402b69fda3"
+  "m_typeindex": "175488002581160416"
+"m_tree7":
+  "m_guid": "21384e6479119a14a0c38478798a"
+  "m_typeindex": "175488002581160416"
+"m_tree8":
+  "m_guid": "214ad9ca7ee7aa1d1c7fbb4b7b10"
+  "m_typeindex": "175488002581160416"
+"m_tree9":
+  "m_guid": "214d210f77e383c472a2071571bb"
   "m_typeindex": "175488002581160416"
 "m_wall":
   "m_guid": "9de16a172969186227c8f591621"

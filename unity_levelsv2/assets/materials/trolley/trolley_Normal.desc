@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd4b537e99a125c9b1e3f8ab27
-  m_importer: .texture
-  m_source: materials\trolley\trolley_Normal.png
-  m_name: trolley_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
