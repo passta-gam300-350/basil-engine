@@ -7,6 +7,7 @@ using System;
 public class PlayerController3D : Behavior
 {
     private Camera cam;
+    private Rigidbody rb;
 
     public float mouseSensitivity = 0.075f;
     public float moveSpeed = 2.5f;
@@ -42,6 +43,16 @@ public class PlayerController3D : Behavior
             yaw = currentRot.y;
         }
 
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                Logger.Warn("Rigidbody is NULL!");
+                return;
+            }
+
+        }
         //-------------------------------------------------------
         // 1. Mouse Look (delta from last frame)
         //-------------------------------------------------------
@@ -77,7 +88,7 @@ public class PlayerController3D : Behavior
         if (vel.MagnitudeSqr() > 0.001f)
             vel = vel.Normalize() * moveSpeed * 0.016f; // Assuming ~60 FPS, so deltaTime ~0.016s
 
-        transform.position += vel;
+        rb.MovePosition(transform.position + vel);
     }
 
     public void FixedUpdate()

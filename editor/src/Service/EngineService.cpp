@@ -9,6 +9,8 @@
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
 
+#include "System/BehaviourSystem.hpp"
+
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
 
@@ -126,7 +128,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 		m_loaded_scenes_scenegraph_snapshot[guid].second = true;
 		if (!scn.IsStale()) {
 			m_loaded_scenes_scenegraph_snapshot[guid].first = BuildSceneGraph(scn.GetSceneEntitites());
-			m_loaded_scenes_scenegraph_snapshot[guid].first.m_entity_name = scn.SceneName();
+			m_loaded_scenes_scenegraph_snapshot[guid].first->m_entity_name = scn.SceneName();
 		}
 	}
 	rp::Guid deletion_arr[16]{}; //no point create queue, scene deletions are rare
@@ -409,6 +411,58 @@ void EngineContainerService::create_child_entity(entity_handle parent)
 		});
 }
 
+void EngineContainerService::orphan_children_entities(entity_handle parent)
+{
+	ecs::entity parentent = ecs::entity(parent);
+	ExecuteOnEngineThread([parentent]() {
+		auto children{ SceneGraph::GetChildren(parentent) };
+		for (auto child : children) {
+			SceneGraph::RemoveParent(child, true);
+		}
+		});
+}
+
+void EngineContainerService::create_parent_entity(entity_handle child)
+{
+	ecs::entity childent = ecs::entity(child);
+	ExecuteOnEngineThread([childent]() {
+		ecs::entity parent = ecs::world(childent.get_world_handle()).add_entity();
+		SceneGraph::SetParent(childent, parent, true);
+		parent.add<TransformComponent>();
+		});
+}
+
+void EngineContainerService::create_parent_entity(std::unordered_set<std::uint32_t> const& children)
+{
+	ExecuteOnEngineThread([children]() {
+		ecs::entity parent = ecs::world(Engine::GetWorld().impl.handle).add_entity();
+		for (auto const& child : children) {
+			ecs::entity childent = ecs::entity(parent.get_world_handle(), child);
+			if (!childent)
+				continue;
+			SceneGraph::SetParent(childent, parent, true);
+		}
+		parent.add<TransformComponent>();
+		});
+}
+
+void EngineContainerService::clear_parent_entity(entity_handle child)
+{
+	ecs::entity childent = ecs::entity(child);
+	ExecuteOnEngineThread([childent]() {
+		SceneGraph::RemoveParent(childent, true);
+		});
+}
+
+void EngineContainerService::make_parent_entity(entity_handle parent, entity_handle child)
+{
+	ecs::entity parentent = ecs::entity(parent);
+	ecs::entity childent = ecs::entity(child);
+	ExecuteOnEngineThread([parentent, childent]() {
+		SceneGraph::SetParent(childent, parentent, true);
+		});
+}
+
 void EngineContainerService::delete_entity(entity_handle ehdl) {
 	if (!m_cont) {
 		spdlog::warn("EngineService: Cannot delete entity, engine container not initialized");
@@ -490,9 +544,9 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 	return m_cont->m_names_snapshot;
 }
 
-const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
+const std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
 {
-	static const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> empty{};
+	static const std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> empty{};
 	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : empty;
 }
 
@@ -650,6 +704,7 @@ void EngineContainerService::LoadScene(const char* path) {
 		} else {
 			spdlog::error("EngineService: Failed to load scene from {}", path);
 		}
+
 	});
 }
 
@@ -660,7 +715,29 @@ void EngineContainerService::NewScene() {
 		m_cont->m_loaded_scenes_scenegraph_snapshot.clear();
 		SceneGraphNode root{};
 		root.m_entity_name = "Scene";
-		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid] = std::pair<SceneGraphNode, bool>(root, true);
+		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].first = std::make_shared<SceneGraphNode>(root);
+		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].second = true;
 		spdlog::info("EngineService: New Scene created");
 		});
+}
+
+void EngineContainerService::set_on_load()
+{
+	ExecuteOnEngineThread([]
+	{
+		Engine::SetOnLoadCallBack([](ecs::world& w)
+		{
+			BehaviourSystem::Instance().Reload();
+		});
+	});
+}
+
+void EngineContainerService::set_on_unload()
+{
+	ExecuteOnEngineThread([]
+	{
+		Engine::SetOnUnloadCallBack([](ecs::world& w)
+		{
+		});
+	});
 }

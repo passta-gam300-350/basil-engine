@@ -17,6 +17,7 @@ Technology is prohibited.
 #define ENGINE_CAMERA_H
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "Ecs/ecs.h"
 #include "Component/Transform.hpp"
 
@@ -51,6 +52,11 @@ private:
     std::shared_ptr<Camera> m_AuxCamera{nullptr};
     Camera m_MainCamera{};
     bool m_UseAux{false};
+    inline static glm::mat4 s_ViewMatrix{ 1.f };
+    inline static glm::mat4 s_ProjMatrix{ 1.f };
+    inline static bool s_HasCachedMatrices{ false };
+    inline static glm::vec2 s_ViewportSize{ 0.f, 0.f };
+    inline static glm::vec2 s_ViewportOffset{ 0.f, 0.f };
 
     CameraSystem(CameraSystem const&) = delete;
     CameraSystem(CameraSystem &&) = delete;
@@ -81,15 +87,85 @@ public:
         Instance().m_AuxCamera = sptr;
     }
 
+    static void SetCachedMatrices(glm::mat4 const& view, glm::mat4 const& proj) {
+        s_ViewMatrix = view;
+        s_ProjMatrix = proj;
+        s_HasCachedMatrices = true;
+    }
+
+    static void SetViewportSize(glm::vec2 viewport) {
+        s_ViewportSize = viewport;
+    }
+
+    static void SetViewportOffset(glm::vec2 offset) {
+        s_ViewportOffset = offset;
+    }
+
+    static glm::vec2 GetCachedViewport() {
+        return s_ViewportSize;
+    }
+
+    static glm::vec2 GetCachedViewportOffset() {
+        return s_ViewportOffset;
+    }
+
+    static std::pair<glm::mat4, glm::mat4> GetCachedMatrices() {
+        return { s_ViewMatrix, s_ProjMatrix };
+    }
+
+    static glm::vec3 GetWorldFromScreen(glm::vec2 screenPos, glm::vec2 screenSize, float depth) {
+        Camera const& cam{ GetActiveCamera() };
+        if (!s_HasCachedMatrices) {
+            return cam.m_Pos;
+        }
+
+        glm::mat4 invViewProj = glm::inverse(s_ProjMatrix * s_ViewMatrix);
+
+        glm::vec4 ndc;
+        ndc.x = (screenPos.x / screenSize.x) * 2.f - 1.f;
+        ndc.y = 1.f - (screenPos.y / screenSize.y) * 2.f; // flip Y because screen origin is top-left
+        ndc.z = depth * 2.f - 1.f;                        // depth expected in [0,1]
+        ndc.w = 1.f;
+
+        glm::vec4 world = invViewProj * ndc;
+        world /= world.w;
+        return glm::vec3(world);
+	}
+
+    static void GetRayFromScreen(glm::vec2 screenPos, glm::vec2 screenSize, glm::vec3& outOrigin, glm::vec3& outDir) {
+        Camera const& cam{ GetActiveCamera() };
+        if (!s_HasCachedMatrices) {
+            outOrigin = cam.m_Pos;
+            outDir = cam.m_Front;
+            return;
+        }
+
+        glm::mat4 invViewProj = glm::inverse(s_ProjMatrix * s_ViewMatrix);
+
+        auto ndcFromScreen = [&](float depth) {
+            glm::vec4 ndc;
+            ndc.x = (screenPos.x / screenSize.x) * 2.f - 1.f;
+            ndc.y = 1.f - (screenPos.y / screenSize.y) * 2.f;
+            ndc.z = depth * 2.f - 1.f;
+            ndc.w = 1.f;
+            glm::vec4 world = invViewProj * ndc;
+            return world / world.w;
+        };
+
+        glm::vec4 nearP = ndcFromScreen(0.f);
+        glm::vec4 farP = ndcFromScreen(1.f);
+
+        outOrigin = glm::vec3(nearP);
+        outDir = glm::normalize(glm::vec3(farP) - outOrigin);
+    }
+
     static std::shared_ptr<Camera> GetAuxCamera() {
         return Instance().m_AuxCamera;
     }
 
     void FixedUpdate(ecs::world& w) {
         auto& [aux_cam, main_cam, is_aux] {Instance()};
-        if (is_aux) {
-            return;
-        }
+       
         auto cmp_rng{w.query_components<CameraComponent, TransformComponent>()};
         for (auto [camera_comp, transform_comp] : cmp_rng) {
             if (!camera_comp.m_IsActive) {

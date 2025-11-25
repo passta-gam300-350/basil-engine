@@ -187,7 +187,6 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
     // Render each outlined object with scaled transform
     // (Must be done individually since each has a unique scaled transform)
     for (const auto* renderable : outlinedPtrs) {
-        // Calculate scaled transform
         glm::mat4 scaledTransform = glm::scale(renderable->transform, glm::vec3(m_OutlineScale));
 
         // Set uniforms

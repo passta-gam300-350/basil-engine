@@ -1,5 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Target Name="PrintTargetPath">
+		<Message Text="$(TargetPath)" Importance="High" />
+	</Target>
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <LangVersion>latest</LangVersion>

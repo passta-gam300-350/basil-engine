@@ -49,16 +49,15 @@ void SceneGraph::SetParent(ecs::entity child, ecs::entity parent, bool keepWorld
 		}
 		auto& parentRelationship = parent.get<RelationshipComponent>();
 		parentRelationship.addChild(child);
-
-		// Adjust local transform to maintain world position if requested
-		if (keepWorldTransform)
-		{
-			ConvertWorldToLocal(child, currentWorldTransform);
-		}
 	}
 	else
 	{
 		childRelationship->setParent(ecs::entity{}); // Invalid entity = no parent
+	}
+	// Adjust local transform to maintain world position if requested
+	if (keepWorldTransform)
+	{
+		ConvertWorldToLocal(child, currentWorldTransform);
 	}
 
 	MarkTransformDirty(child);

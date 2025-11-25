@@ -156,6 +156,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&rp::BasicIndexedGuid::m_typeindex, "Type Index">
 	);*/
 
+	RegisterReflectionComponent<MeshRendererComponent::PrimitiveType>("PrimitiveType");
+
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
 		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
@@ -164,6 +166,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
 		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
+
+	RegisterReflectionComponent<Light::Type>("Light Type");
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",

@@ -25,6 +25,24 @@
 "Affandi_6.ogg":
   "m_guid": "469fb95744f8ed59f7707ae0900"
   "m_typeindex": "17099568057112876377"
+"Blue_Sky_Back.png":
+  "m_guid": "d8b15167931942c4d4809169900"
+  "m_typeindex": "126269861530532084"
+"Blue_Sky_Bottom.png":
+  "m_guid": "d8b156a7f7dab2591de43726e55"
+  "m_typeindex": "126269861530532084"
+"Blue_Sky_Front.png":
+  "m_guid": "d8b16157cd2a5d8f2367e7910f5"
+  "m_typeindex": "126269861530532084"
+"Blue_Sky_Left.png":
+  "m_guid": "d8b16837b42a5dd3114ae3242b2"
+  "m_typeindex": "126269861530532084"
+"Blue_Sky_Right.png":
+  "m_guid": "d8b172d72c6b7483b0f048d3c89"
+  "m_typeindex": "126269861530532084"
+"Blue_Sky_Top.png":
+  "m_guid": "d8b17877ce5ba3b286f5789acd0"
+  "m_typeindex": "126269861530532084"
 "CardboardBoxOpen_standardSurface7_BaseColor.png":
   "m_guid": "98e4294763590b1d5701ac2ee9b"
   "m_typeindex": "126269861530532084"
