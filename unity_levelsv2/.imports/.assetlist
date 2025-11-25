@@ -1105,6 +1105,9 @@
 "m_trash3":
   "m_guid": "9d47bbb74a48f822245f6e12f91"
   "m_typeindex": "175488002581160416"
+"m_trashbag":
+  "m_guid": "2190515c7012a9df65766726f5a7"
+  "m_typeindex": "175488002581160416"
 "m_tree1":
   "m_guid": "819c75372e08629a4b32e5a444a"
   "m_typeindex": "175488002581160416"
@@ -1411,6 +1414,27 @@
 "trashbag":
   "m_guid": "99713b07f088d5310a0a4246503"
   "m_typeindex": "175488002581160416"
+"trashbag1":
+  "m_guid": "218ecc1f72f797b8d1dc924e95c3"
+  "m_typeindex": "4838001395392124604"
+"trashbag1_trashbag1_BaseColor.png":
+  "m_guid": "218ecbac75d7837c54dcf4cb827a"
+  "m_typeindex": "126269861530532084"
+"trashbag1_trashbag1_Emissive.png":
+  "m_guid": "218ecbc07ea987baa9e722eb41ce"
+  "m_typeindex": "126269861530532084"
+"trashbag1_trashbag1_Height.png":
+  "m_guid": "218ecbd579f2896dcdcaae6c4e63"
+  "m_typeindex": "126269861530532084"
+"trashbag1_trashbag1_Metallic.png":
+  "m_guid": "218ecbe77ce69ba8ccd4ccd735fa"
+  "m_typeindex": "126269861530532084"
+"trashbag1_trashbag1_Normal.png":
+  "m_guid": "218ecbf97326b2f13ec83deb98ee"
+  "m_typeindex": "126269861530532084"
+"trashbag1_trashbag1_Roughness.png":
+  "m_guid": "218ecc0b7e9787c8934e71fbceb5"
+  "m_typeindex": "126269861530532084"
 "tree_01":
   "m_guid": "7cd4bcc7a949a4109284e690b1c"
   "m_typeindex": "4838001395392124604"

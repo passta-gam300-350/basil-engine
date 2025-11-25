@@ -1,0 +1,29 @@
+base:
+  m_guid: 2190515c7012a9df65766726f5a7
+  m_importer: .material
+  m_source: ""
+  m_name: m_trashbag
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_trashbag
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 218ecc0b7e9787c8934e71fbceb5
+    u_DiffuseMap: 218ecbac75d7837c54dcf4cb827a
+    u_EmissiveMap: 218ecbc07ea987baa9e722eb41ce
+    u_NormalMap: 218ecbf97326b2f13ec83deb98ee
+    u_HeightMap: 218ecbd579f2896dcdcaae6c4e63
+    u_SpecularMap: 00
+    u_MetallicMap: 218ecbe77ce69ba8ccd4ccd735fa

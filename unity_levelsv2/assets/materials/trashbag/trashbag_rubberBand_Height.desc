@@ -1,7 +1,0 @@
-base:
-  m_guid: 217671717cdaace632a2d5578a4a
-  m_importer: .texture
-  m_source: materials\trashbag\trashbag_rubberBand_Height.png
-  m_name: trashbag_rubberBand_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

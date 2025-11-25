@@ -1,7 +1,0 @@
-base:
-  m_guid: 2176715c761aab695db0cf74ce14
-  m_importer: .texture
-  m_source: materials\trashbag\trashbag_rubberBand_Emissive.png
-  m_name: trashbag_rubberBand_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

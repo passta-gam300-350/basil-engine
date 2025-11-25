@@ -1,7 +1,0 @@
-base:
-  m_guid: 217672c27303aa4d42af162d37fd
-  m_importer: .texture
-  m_source: materials\trashbag\trashbag_trashbag_Metallic.png
-  m_name: trashbag_trashbag_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
