@@ -5185,6 +5185,19 @@ void EditorMain::Render_Scene()
 			CameraSystem::SetViewportSize(glm::vec2{ viewportSize.x, viewportSize.y });
 		});
 
+
+		// Draw a square on mouse pos
+		ImVec2 mousePos = ImGui::GetMousePos();
+		// Debug : Draw a small rectangle at mouse position
+
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		float rectSize = 5.0f;
+		mousePos.x -= viewportPos.x;
+		mousePos.y -= viewportPos.y;
+		spdlog::info("Mouse position screen space in scene: ({:.0f}, {:.0f})", mousePos.x, mousePos.y);
+
+
+
 		// Get the color attachment texture ID (not the FBO handle)
 		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
 
