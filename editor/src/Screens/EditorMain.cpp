@@ -1337,6 +1337,76 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			}
 		}
 
+		// Unity-style vec2 rendering (horizontal layout with X/Y labels)
+		if (glm::vec2* vec2_ptr = value.try_cast<glm::vec2>()) {
+			ImGui::Text("%s", field_name.c_str());
+			ImGui::SameLine(150);  // Align input fields
+
+			ImGui::PushItemWidth(60);  // Narrow input boxes
+
+			// X component (red label)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+			ImGui::Text("X");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::DragFloat("##X", &vec2_ptr->x, 0.1f)) is_dirty = true;
+			ImGui::SameLine();
+
+			// Y component (green label)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
+			ImGui::Text("Y");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::DragFloat("##Y", &vec2_ptr->y, 0.1f)) is_dirty = true;
+
+			ImGui::PopItemWidth();
+			ImGui::PopID();
+			continue;
+		}
+
+		// Unity-style vec3 rendering (horizontal layout with X/Y/Z labels)
+		// Skip if it's a color field (already handled above with ColorEdit3)
+		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
+			bool isColorField = (field_name.find("Color") != std::string::npos ||
+			                     field_name.find("color") != std::string::npos ||
+			                     field_name.find("Tint") != std::string::npos ||
+			                     field_name.find("tint") != std::string::npos);
+
+			if (!isColorField) {
+				ImGui::Text("%s", field_name.c_str());
+				ImGui::SameLine(150);  // Align input fields
+
+				ImGui::PushItemWidth(60);  // Narrow input boxes
+
+				// X component (red label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+				ImGui::Text("X");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##X", &vec3_ptr->x, 0.1f)) is_dirty = true;
+				ImGui::SameLine();
+
+				// Y component (green label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
+				ImGui::Text("Y");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##Y", &vec3_ptr->y, 0.1f)) is_dirty = true;
+				ImGui::SameLine();
+
+				// Z component (blue label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 1.0f, 1.0f));
+				ImGui::Text("Z");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##Z", &vec3_ptr->z, 0.1f)) is_dirty = true;
+
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+				continue;
+			}
+		}
+
 		if (meta_type.data().begin() != meta_type.data().end()) {
 			if (ImGui::CollapsingHeader(field_name.c_str())) {
 				Render_Component_Member(value, is_dirty);
