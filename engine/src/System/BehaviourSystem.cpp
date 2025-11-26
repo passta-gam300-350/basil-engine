@@ -85,10 +85,12 @@ void BehaviourSystem::Update(ecs::world& world, float)
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
-				instance->Invoke("Update", nullptr, nullptr,0);
+				if (firstRun) instance->Invoke("Init", nullptr, nullptr, 0);
+				else instance->Invoke("Update", nullptr, nullptr, 0);
 			}
 		}
 	}
+	firstRun = false;
 }
 void BehaviourSystem::FixedUpdate(ecs::world& world)
 {

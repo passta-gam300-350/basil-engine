@@ -1,5 +1,5 @@
 scene:
-  name: Scene
+  name: raycast
   version: v0.0.1
   slot: 2
   guid: 00
