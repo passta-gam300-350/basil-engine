@@ -42,6 +42,12 @@ void HUDRenderPass::Execute(RenderContext& context)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_CULL_FACE);        // Render both sides
 
+    // Enable scissor test to clip HUD to viewport bounds
+    // HUD renders at fixed reference resolution (e.g., 1920x1080)
+    // Scissor ensures only the visible portion is drawn when viewport is smaller
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, context.frameData.viewportWidth, context.frameData.viewportHeight);
+
     // Bind appropriate render target
     // HUD should render to the same buffer that will be displayed (postProcessBuffer after tone mapping)
     if (m_RenderToScreen) {
@@ -83,6 +89,7 @@ void HUDRenderPass::Execute(RenderContext& context)
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
+    glDisable(GL_SCISSOR_TEST);  // Restore scissor test state
 }
 
 void HUDRenderPass::SetHUDShader(const std::shared_ptr<Shader>& shader)

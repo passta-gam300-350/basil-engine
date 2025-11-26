@@ -200,6 +200,14 @@ void HUDRenderer::RenderBatch(RenderPass& renderPass, const TextureBatch& batch,
     };
     renderPass.Submit(viewportCmd);
 
+    // Set reference resolution uniform (for fixed-size HUD layout)
+    RenderCommands::SetUniformVec2Data referenceResolutionCmd{
+        m_HUDShader,
+        "u_ReferenceResolution",
+        m_ReferenceResolution
+    };
+    renderPass.Submit(referenceResolutionCmd);
+
     // Bind instance data SSBO via command buffer (so it's bound at the right time during execution)
     uint32_t ssboHandle = batch.ssbo->GetSSBOHandle();
     /*spdlog::info("HUDRenderer::RenderBatch() - submitting SSBO bind command: handle={}, binding={}",

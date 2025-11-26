@@ -69,6 +69,10 @@ public:
     // Shader configuration
     void SetHUDShader(const std::shared_ptr<Shader>& shader) { m_HUDShader = shader; }
 
+    // Reference resolution configuration
+    void SetReferenceResolution(const glm::vec2& resolution) { m_ReferenceResolution = resolution; }
+    glm::vec2 GetReferenceResolution() const { return m_ReferenceResolution; }
+
     // Stats
     uint32_t GetElementCount() const { return m_TotalElements; }
     uint32_t GetBatchCount() const { return static_cast<uint32_t>(m_TextureBatches.size()); }
@@ -94,6 +98,10 @@ private:
     // Quad mesh (shared by all HUD elements)
     uint32_t m_QuadVAO = 0;
     uint32_t m_QuadVBO = 0;
+
+    // Fixed reference resolution for HUD layout (default: 1920x1080)
+    // HUD element positions are interpreted in this coordinate space
+    glm::vec2 m_ReferenceResolution = glm::vec2(1920.0f, 1080.0f);
 
     // Stats
     uint32_t m_TotalElements = 0;

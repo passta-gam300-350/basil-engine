@@ -22,7 +22,8 @@ layout(std430, binding = 3) buffer HUDInstanceBuffer
 };
 
 // Uniforms
-uniform vec2 u_ViewportSize;  // Viewport width and height in pixels
+uniform vec2 u_ViewportSize;       // Actual viewport width and height in pixels
+uniform vec2 u_ReferenceResolution;  // Fixed reference resolution (e.g., 1920x1080) for HUD layout
 
 // Outputs
 out vec2 vTexCoord;
@@ -80,11 +81,13 @@ void main()
     vec2 screenPos = instance.position + scaledPos;
 
     // Convert from pixel coordinates to NDC
+    // HUD positions are in reference resolution space (e.g., 1920x1080)
+    // This ensures HUD elements maintain fixed pixel sizes regardless of viewport
     // OpenGL NDC: (-1,-1) = bottom-left, (1,1) = top-right
     // Screen coords: (0,0) = top-left, (width,height) = bottom-right
     vec2 ndc;
-    ndc.x = (screenPos.x / u_ViewportSize.x) * 2.0 - 1.0;  // 0..width -> -1..1
-    ndc.y = 1.0 - (screenPos.y / u_ViewportSize.y) * 2.0;  // 0..height -> 1..-1 (flip Y)
+    ndc.x = (screenPos.x / u_ReferenceResolution.x) * 2.0 - 1.0;  // 0..refWidth -> -1..1
+    ndc.y = (screenPos.y / u_ReferenceResolution.y) * 2.0 - 1.0;  // 0..refHeight -> 1..-1 (flip Y)
 
     gl_Position = vec4(ndc, 0.0, 1.0);
 

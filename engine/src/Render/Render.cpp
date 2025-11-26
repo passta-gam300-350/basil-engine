@@ -25,6 +25,8 @@ Technology is prohibited.
 #include "components/transform.h"
 #include "Manager/ResourceSystem.hpp"
 #include "Render/JoltDebugRenderer.h"  // For Jolt physics debug rendering
+#include <Utility/HUDData.h>  // For HUD rendering
+#include <Rendering/HUDRenderer.h>  // For HUD renderer methods
 
 #include "Messaging/Messaging_System.h"
 
@@ -104,6 +106,9 @@ RenderSystem::RenderSystem() {
 	}
 	if (m_ShaderLibrary->GetParticleShader()) {
 		m_SceneRenderer->SetParticleShader(m_ShaderLibrary->GetParticleShader());
+	}
+	if (m_ShaderLibrary->GetHUDShader()) {
+		m_SceneRenderer->SetHUDShader(m_ShaderLibrary->GetHUDShader());
 	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
@@ -211,6 +216,7 @@ void RenderSystem::Update(ecs::world& world) {
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
+	auto sceneHUDElements = world.filter_entities<HUDComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = 0;
@@ -370,6 +376,67 @@ void RenderSystem::Update(ecs::world& world) {
 		m_SceneRenderer->SubmitLight(lightData);
 	}
 
+	// ========== HUD ELEMENT SUBMISSION ==========
+	// Submit HUD elements to renderer (rendered in screen space after 3D scene)
+	bool hasHUDElements = false;
+	for (auto hudEntity : sceneHUDElements) {
+		auto& hud = hudEntity.get<HUDComponent>();
+
+		if (!hud.visible) continue;
+
+		hasHUDElements = true;
+
+		HUDElementData hudData;
+
+		// Load texture from GUID via ResourceRegistry
+		auto& registry = ResourceRegistry::Instance();
+
+		// Check for null GUID (0 = solid color quad, no texture)
+		if (hud.m_TextureGuid.m_guid != rp::null_guid) {
+			// Get texture from ResourceRegistry (synchronous)
+			auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(hud.m_TextureGuid.m_guid);
+			if (texturePtr && *texturePtr) {
+				// Extract OpenGL texture ID from loaded texture
+				hudData.textureID = (*texturePtr)->id;
+			} else {
+				// Texture not found - fallback to solid color
+				static std::unordered_set<std::string> warnedTextureGuids;
+				std::string guidStr = hud.m_TextureGuid.m_guid.to_hex();
+				if (warnedTextureGuids.find(guidStr) == warnedTextureGuids.end()) {
+					spdlog::warn("HUD: Texture GUID {} not found - falling back to solid color", guidStr.substr(0, 16));
+					warnedTextureGuids.insert(guidStr);
+				}
+				hudData.textureID = 0;  // Fallback to solid color
+			}
+		} else {
+			hudData.textureID = 0;  // No texture - solid color quad
+		}
+
+		hudData.position = hud.position;
+		hudData.size = hud.size;
+
+		// Convert component anchor enum to graphics library anchor enum
+		hudData.anchor = static_cast<HUDAnchor>(hud.anchor);
+
+		hudData.color = hud.color;
+		hudData.rotation = hud.rotation;
+		hudData.layer = hud.layer;
+		hudData.visible = hud.visible;
+
+		m_SceneRenderer->SubmitHUDElement(hudData);
+	}
+
+	// Enable/disable HUD pass based on presence of HUD elements
+	if (hasHUDElements) {
+		m_SceneRenderer->EnablePass("HUDPass", true);
+		// Signal end of HUD frame to trigger batching
+		if (m_SceneRenderer->GetHUDRenderer()) {
+			m_SceneRenderer->GetHUDRenderer()->EndFrame();
+		}
+	} else {
+		m_SceneRenderer->EnablePass("HUDPass", false);
+	}
+
 	// Flush Jolt physics debug geometry to FrameData (before rendering)
 	if (m_JoltDebugRenderer && m_JoltDebugRenderer->IsEnabled())
 	{
@@ -383,6 +450,12 @@ void RenderSystem::Update(ecs::world& world) {
 	{
 		// Set camera context to EDITOR
 		frameData.currentCamera = FrameData::CameraContext::EDITOR;
+
+		// Update viewport dimensions for Scene viewport (for correct HUD rendering)
+		if (m_editorViewportWidth > 0 && m_editorViewportHeight > 0) {
+			frameData.viewportWidth = m_editorViewportWidth;
+			frameData.viewportHeight = m_editorViewportHeight;
+		}
 
 		// Set editor camera data
 		m_Camera->SetPosition(editorCamera->m_Pos);
@@ -420,6 +493,12 @@ void RenderSystem::Update(ecs::world& world) {
 	{
 		// Set camera context to GAME
 		frameData.currentCamera = FrameData::CameraContext::GAME;
+
+		// Update viewport dimensions for Game viewport (for correct HUD rendering)
+		if (m_gameViewportWidth > 0 && m_gameViewportHeight > 0) {
+			frameData.viewportWidth = m_gameViewportWidth;
+			frameData.viewportHeight = m_gameViewportHeight;
+		}
 
 		// Set game camera data
 		m_Camera->SetPosition(gameCamera.m_Pos);
