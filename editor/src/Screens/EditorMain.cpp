@@ -1425,6 +1425,29 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					is_dirty = true;
 				}
 			}
+			else if (uint8_t* vui8 = value.try_cast<uint8_t>())
+			{
+				uint8_t minValue = 0;
+				uint8_t maxValue = 255;
+
+				// Special case for "layer" fields to limit max to 10
+				if (field_name.find("layer") != std::string::npos)
+				{
+					uint8_t maxLayer = 10;
+					if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U8, vui8, &minValue, &maxLayer, "%u")) {
+						is_dirty = true;
+					}
+				}
+				else
+				{
+					
+					if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U8, vui8, &minValue, &maxValue, "%u")) {
+						is_dirty = true;
+					}
+				}
+
+				
+			}
 			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
@@ -2642,6 +2665,7 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
 		ImGui::MenuItem("Skybox Settings", nullptr, &showSkyboxSettings);
+		ImGui::MenuItem("View Cube", nullptr, &showViewCube);
 
 		ImGui::EndMenu();
 	}
@@ -3629,7 +3653,6 @@ void EditorMain::Render_Console()
 
 
 	// Example log messages
-
 	if (!consoleMessages.empty())
 	{
 		ImGui::BeginChild("ConsoleScrollRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -5912,24 +5935,31 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 	ImGui::End();
 
 	// This is for toggling the gizmo
-	if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
-	{
-		mode = (ImGuizmo::OPERATION)0;
-	}
+	// Only process shortcuts when camera is NOT in free-look mode (right-click held)
+	auto* input = InputManager::Get_Instance();
+	bool isCameraActive = input->Is_MousePressed(GLFW_MOUSE_BUTTON_RIGHT);
 
-	if (ImGui::IsKeyPressed(ImGuiKey_W, false))
+	if (!isCameraActive)
 	{
-		mode = ImGuizmo::OPERATION::TRANSLATE;
-	}
+		if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
+		{
+			mode = (ImGuizmo::OPERATION)0;
+		}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_E, false))
-	{
-		mode = ImGuizmo::OPERATION::ROTATE;
-	}
+		if (ImGui::IsKeyPressed(ImGuiKey_W, false))
+		{
+			mode = ImGuizmo::OPERATION::TRANSLATE;
+		}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_R, false))
-	{
-		mode = ImGuizmo::OPERATION::SCALE;
+		if (ImGui::IsKeyPressed(ImGuiKey_E, false))
+		{
+			mode = ImGuizmo::OPERATION::ROTATE;
+		}
+
+		if (ImGui::IsKeyPressed(ImGuiKey_R, false))
+		{
+			mode = ImGuizmo::OPERATION::SCALE;
+		}
 	}
 
 	// Only display gizmos if there is an entity selected and the gizmo is set to one of the 3 active modes
@@ -5993,8 +6023,9 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 	// ========================================================================
 	// VIEW CUBE - Unity-style camera orientation widget
 	// ========================================================================
-	// Draw view cube in top right corner
-	float viewCubeSize = 128.0f;
+	if (showViewCube) {
+		// Draw view cube in top right corner
+		float viewCubeSize = 128.0f;
 	float viewCubePadding = 10.0f;
 	ImVec2 viewCubePos = ImVec2(viewportPos.x + viewportSize.x - viewCubeSize - viewCubePadding,viewportPos.y + viewCubePadding);
 
@@ -6059,4 +6090,5 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 	//		m_EditorCamera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
 	//	}
 	}
+	}  // End of if (showViewCube)
 }

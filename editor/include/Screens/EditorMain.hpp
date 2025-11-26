@@ -63,6 +63,7 @@ public:
 	bool showConsole = true;
 	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
+	bool showViewCube = true;  // Toggle for Unity-style view cube in Scene viewport
 	bool isPlaying = false; // To check if the gameplay is enabled, not to beconfused with paused as you can be paused but resume the gameplay
 	bool isPaused = false; // To check if game play is paused, should only be false when the gameplay is enabled
 	
