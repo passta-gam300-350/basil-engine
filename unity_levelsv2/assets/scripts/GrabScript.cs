@@ -16,10 +16,13 @@ public class GrabScript : Behavior
 
     public void Init()
     {
+        Logger.Log("GrabScript Has been initialized");
     }
 
     public void Update()
     {
+   
+
         if (cam == null)
         {
             cam = GetComponent<Camera>();
@@ -62,4 +65,6 @@ public class GrabScript : Behavior
             heldTransform.position = desired;
         }
     }
+
+    
 }

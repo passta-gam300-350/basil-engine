@@ -1,7 +1,7 @@
 scene:
-  name: shop_house_movement_collectable_collider2
+  name: Scene
   version: v0.0.1
-  slot: 53
+  slot: 75
   guid: 00
   dependencies: ~
 render_settings:
@@ -294,12 +294,12 @@ entities:
         z: 0.327943057
       m_Rotate:
         x: 89.9992294
-        y: -9.28478767e-06
-        z: 180
+        y: -9.28478585e-06
+        z: -179.999893
       m_Trans:
         x: -0.597955465
         y: 0.36430338
-        z: -0.842048943
+        z: -0.84387958
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -767,6 +767,45 @@ entities:
         y: 0.000119883451
         z: -0.967983067
   - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 65
+    entity name:
+      name: ToyPart_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.033000011
+        y: 0.033000011
+        z: 0.033000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.21873689
+        y: 0.385498196
+        z: 1.7373395
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
       isPrimitive: false
@@ -796,6 +835,45 @@ entities:
         x: 0
         y: 0
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 64
+    entity name:
+      name: ToyPart_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.033000011
+        y: 0.033000011
+        z: 0.033000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.18246603
+        y: 0.385498196
+        z: 1.7373395
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -830,6 +908,45 @@ entities:
         y: 0.695945621
         z: -0.736877501
   - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 66
+    entity name:
+      name: ToyPart_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.033000011
+        y: 0.033000011
+        z: 0.033000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.2024436
+        y: 0.419999301
+        z: 1.7373395
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
       isPrimitive: false
@@ -859,6 +976,66 @@ entities:
         x: -2.39668703
         y: -6.50805014e-05
         z: -0.476697505
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 67
+    entity name:
+      name: Camera3
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.0243000295
+        y: 0.0242999624
+        z: 0.0242999624
+      m_Rotate:
+        x: 90
+        y: -180
+        z: 0
+      m_Trans:
+        x: -1.94828773
+        y: 0.696306884
+        z: -0.177012876
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: false
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 8.74227766e-08
+        y: 5.96046448e-08
+        z: -0.99999994
+      m_Right:
+        x: -0.999999881
+        y: 0
+        z: -8.74227766e-08
+      m_Front:
+        x: 0
+        y: -0.99999994
+        z: 5.96046448e-08
+      m_Yaw: 0
+      m_Pitch: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
   - Scene ID:
       Scene ID: 4
     LightComponent:
@@ -941,17 +1118,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00499999942
-        y: 0.00499999989
-        z: 0.00499999942
+        x: 0.00344999973
+        y: 0.00344999996
+        z: 0.00344999973
       m_Rotate:
         x: 0
-        y: 25.2709084
+        y: 25.2708759
         z: 0
       m_Trans:
-        x: -2.43999195
+        x: -2.84486723
         y: 0.365567952
-        z: 1.61042058
+        z: 1.66944706
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1762,117 +1939,6 @@ entities:
         unnamed slot:
           guid: 00
           type: 175488002581160416
-    CapsuleCollider:
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      Radius: 0.150000006
-      Height: 0.800000012
-      isTrigger: false
-      Direction: 0
-      friction: 0.5
-      restitution: 0
-      density: 1
-    RigidBodyComponent:
-      motionType: "\x01"
-      mass: 1
-      drag: 0
-      angularDrag: 0.0500000007
-      friction: 0
-      linearDamping: 0
-      gravityFactor: 0
-      useGravity: false
-      isKinematic: false
-      freezePositionX: false
-      freezePositionY: true
-      freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
-      freezeLinearVelocityX: false
-      freezeLinearVelocityY: false
-      freezeLinearVelocityZ: false
-      freezeAngularVelocityX: false
-      freezeAngularVelocityY: false
-      freezeAngularVelocityZ: false
-      centerOfMass:
-        x: 0
-        y: 0
-        z: 0
-      linearVelocity:
-        x: 0
-        y: 0
-        z: 0
-      angularVelocity:
-        x: 0
-        y: 0
-        z: 0
-      isActive: true
-      isDirty: false
-    Scene ID:
-      Scene ID: 48
-    entity name:
-      name: Player
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.200000003
-        y: 0.800000012
-        z: 0.200000003
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -1.05350363
-        y: 0.415434897
-        z: 0.54468596
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 45
-      m_AspectRatio: 1.77777779
-      m_Near: 0.100000001
-      m_Far: 1000
-      m_Up:
-        x: 0
-        y: 1
-        z: 0
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0
-        z: 1
-      m_Yaw: 0
-      m_Pitch: 0
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 0.5
-          y: 0.5
-          z: 1
-    Behaviour:
-      classesName:
-        - PlayerController3D
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
     RigidBodyComponent:
       motionType: "\x01"
       mass: 1
@@ -1940,7 +2006,7 @@ entities:
       m_Trans:
         x: -0.615493417
         y: 1.16312194
-        z: -0.578773797
+        z: -1.14790463
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -2073,3 +2139,563 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
+  - RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: true
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: true
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 53
+    Relationship:
+      parent: 0
+      child:
+        - 55
+        - 57
+    entity name:
+      name: PlayerGroup
+    TransformComponent:
+      m_Scale:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.997274101
+        y: 0.415434897
+        z: 0.710635602
+    Behaviour:
+      classesName:
+        - PlayerController3D
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 55
+    Relationship:
+      parent: 53
+    entity name:
+      name: Body
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 57
+    Relationship:
+      parent: 53
+    entity name:
+      name: Camera
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.200000018
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.0423420072
+        z: -4.76837158e-07
+    Behaviour:
+      classesName:
+        - PlayerCameraPlacementController
+  - Scene ID:
+      Scene ID: 58
+    Relationship:
+      parent: 0
+      child:
+        - 61
+    entity name:
+      name: GlobalCamera
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.505396366
+        y: 1.02380919
+        z: 0.54210192
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: 0
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 59
+    entity name:
+      name: CameraManager
+    Behaviour:
+      classesName:
+        - CameraManager
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 61
+    Relationship:
+      parent: 58
+    entity name:
+      name: ThrashCollect
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.25
+        y: 0.25
+        z: 0.25
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.346241951
+        y: -0.141690969
+        z: 0.5971753
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 62
+    entity name:
+      name: Camera2
+    TransformComponent:
+      m_Scale:
+        x: 0.0575999841
+        y: 0.0575999878
+        z: 0.0575999767
+      m_Rotate:
+        x: 90
+        y: 89.9999466
+        z: 0
+      m_Trans:
+        x: -0.583733857
+        y: 0.981609762
+        z: -0.904262125
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: false
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 1
+        y: 0
+        z: 9.53674316e-07
+      m_Right:
+        x: 9.53674316e-07
+        y: 0
+        z: -1
+      m_Front:
+        x: 0
+        y: -1
+        z: 0
+      m_Yaw: 0
+      m_Pitch: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 63
+    entity name:
+      name: ToyPart
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.033000011
+        y: 0.033000011
+        z: 0.033000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.41800475
+        y: 0.381210923
+        z: 1.62002552
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 68
+    entity name:
+      name: ToyPartBoxed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0308000073
+        y: 0.0308000073
+        z: 0.030800011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.07410526
+        y: 0.0208344609
+        z: -0.262955487
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 69
+    entity name:
+      name: ToyPartBoxed_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0308000073
+        y: 0.0308000073
+        z: 0.0308000073
+      m_Rotate:
+        x: 6.77633858
+        y: -27.2777271
+        z: -4.94519138
+      m_Trans:
+        x: -1.82709384
+        y: 0.00314993272
+        z: -0.103692614
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 70
+    entity name:
+      name: ToyPartBoxed_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0308000073
+        y: 0.0308000073
+        z: 0.030800011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.03452873
+        y: 0.0208344609
+        z: -0.27529636
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 71
+    entity name:
+      name: ToyPartBoxed_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0308000073
+        y: 0.0308000073
+        z: 0.030800011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.03642344
+        y: 0.0208344609
+        z: -0.221389577
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 72
+    entity name:
+      name: ToyPartBoxed_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0308000073
+        y: 0.0308000073
+        z: 0.030800011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.07410526
+        y: 0.0208344609
+        z: -0.262955487
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 73
+    entity name:
+      name: ToyPartBoxed_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0308000073
+        y: 0.0308000073
+        z: 0.030800011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.80296707
+        y: 0.0208344609
+        z: -0.139584661
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 74
+    entity name:
+      name: GameManager
+    Behaviour: ~

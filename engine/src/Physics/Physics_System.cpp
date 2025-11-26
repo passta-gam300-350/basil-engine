@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Render/JoltDebugRenderer.h"
 
 #include "Render/Render.h"
+#include "System/BehaviourSystem.hpp"
 
 // Callback for traces, connect this to your own trace function if you have one
 static void TraceImpl(const char* inFMT, ...)
@@ -369,6 +370,8 @@ void PhysicsSystem::ProcessCollisionEvents(ecs::world&) {
     // Process any queued collision events
     // This depends on how you want to handle events in your ECS
     // You might dispatch events, set flags on components, etc.
+
+    
 }
 
 
@@ -551,18 +554,57 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         friction = Collider.friction;
         restitution = Collider.restitution;
         isTrigger = Collider.isTrigger;
+
+        /*Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionEnter);
+		};
+        Collider.onCollisionStay = [entity](CollisionInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionStay);
+        };
+        Collider.onCollisionExit = [entity](ecs::entity other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnCollisionExit);
+		};*/
     }
     else if (world.has_all_components_in_entity<SphereCollider>(entity)) {
         auto Collider = entity.get<SphereCollider>();
         friction = Collider.friction;
         restitution = Collider.restitution;
         isTrigger = Collider.isTrigger;
+
+        /*Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionEnter);
+        };
+        Collider.onCollisionStay = [entity](CollisionInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionStay);
+        };
+        Collider.onCollisionExit = [entity](ecs::entity other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnCollisionExit);
+        };*/
     }
     else if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
         auto Collider = entity.get<CapsuleCollider>();
         friction = Collider.friction;
         restitution = Collider.restitution;
         isTrigger = Collider.isTrigger;
+
+        /*Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionEnter);
+        };
+        Collider.onCollisionStay = [entity](CollisionInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionStay);
+        };
+        Collider.onCollisionExit = [entity](ecs::entity other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnCollisionExit);
+        };*/
     }
 
     // Determine motion type and layer
@@ -764,6 +806,7 @@ void PhysicsSystem::InvokeColliderCallback(ecs::entity entity, const EventType& 
         else if constexpr (std::is_same_v<EventType, ecs::entity>) {
             if (strcmp(callbackType, "Exit") == 0 && collider.onCollisionExit) {
                 collider.onCollisionExit(eventData);
+
             }
         }
         else if constexpr (std::is_same_v<EventType, TriggerInfo>) {
@@ -784,19 +827,23 @@ void PhysicsSystem::InvokeColliderCallback(ecs::entity entity, const EventType& 
         if constexpr (std::is_same_v<EventType, CollisionInfo>) {
             if (strcmp(callbackType, "Enter") == 0 && collider.onCollisionEnter) {
                 collider.onCollisionEnter(eventData);
+                
             }
             else if (strcmp(callbackType, "Stay") == 0 && collider.onCollisionStay) {
                 collider.onCollisionStay(eventData);
+                
             }
         }
         else if constexpr (std::is_same_v<EventType, ecs::entity>) {
             if (strcmp(callbackType, "Exit") == 0 && collider.onCollisionExit) {
                 collider.onCollisionExit(eventData);
+                
             }
         }
         else if constexpr (std::is_same_v<EventType, TriggerInfo>) {
             if (strcmp(callbackType, "TriggerEnter") == 0 && collider.onTriggerEnter) {
                 collider.onTriggerEnter(eventData);
+               
             }
             else if (strcmp(callbackType, "TriggerStay") == 0 && collider.onTriggerStay) {
                 collider.onTriggerStay(eventData);
@@ -812,6 +859,7 @@ void PhysicsSystem::InvokeColliderCallback(ecs::entity entity, const EventType& 
         if constexpr (std::is_same_v<EventType, CollisionInfo>) {
             if (strcmp(callbackType, "Enter") == 0 && collider.onCollisionEnter) {
                 collider.onCollisionEnter(eventData);
+
             }
             else if (strcmp(callbackType, "Stay") == 0 && collider.onCollisionStay) {
                 collider.onCollisionStay(eventData);

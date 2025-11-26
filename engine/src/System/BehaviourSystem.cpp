@@ -4,6 +4,7 @@
 #include "components/behaviour.hpp"
 #include "Engine.hpp"
 #include "ABI/ABI.h"
+#include "Bindings/MANAGED_CONSOLE.hpp"
 #include "spdlog/spdlog.h"
 const char* defSearchDirs[] = {
 	"Scripts/Bin/",
@@ -35,7 +36,7 @@ BehaviourSystem& BehaviourSystem::Instance() {
 
 void BehaviourSystem::Init()
 {
-	MonoEntityManager::GetInstance().Attach(); // A
+	MonoEntityManager::GetInstance().Attach(); 
 
 	auto world = Engine::GetWorld();
 
@@ -75,6 +76,8 @@ void BehaviourSystem::Reload()
 			else AddScriptToEntityComponent(entity, world, className.c_str(), namespaceName.c_str());
 		}
 	}
+
+	firstRun = true;
 }
 
 void BehaviourSystem::Update(ecs::world& world, float)
@@ -85,8 +88,24 @@ void BehaviourSystem::Update(ecs::world& world, float)
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
-				if (firstRun) instance->Invoke("Init", nullptr, nullptr, 0);
-				else instance->Invoke("Update", nullptr, nullptr, 0);
+				MonoObject* exception = nullptr;
+				if (firstRun) instance->Invoke("Init", nullptr, &exception, 0);
+				else instance->Invoke("Update", nullptr, &exception, 0);
+
+
+				if (exception) {
+					MonoString* excStr = mono_object_to_string(exception, nullptr);
+					ManagedConsole::LogError(excStr);
+					// Unload the script instance to prevent further errors
+					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
+					auto instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
+					if (it != component.scriptIDs.end()) {
+						instance->Reset();
+						component.scriptIDs.erase(it);
+					}
+					
+					
+				}
 			}
 		}
 	}
@@ -189,8 +208,15 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 {
 	behaviour& component = entity.get<behaviour>();
 
+	auto GameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+
+
 	void* args[1];
 	args[0] = &other;
+	auto monoOther = GameObjectKlass->CreateInstance(nullptr, args);
+
+	void* argsCollision[1];
+	argsCollision[0] = &monoOther;
 	for (auto ScriptID : component.scriptIDs)
 	{
 		CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(ScriptID);
@@ -199,13 +225,13 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 			switch (callback)
 			{
 			case CollisionCallback::OnCollisionEnter:
-				inst->Invoke("OnCollisionEnter", args, nullptr, 1);
+				inst->Invoke("OnCollisionEnter", argsCollision, nullptr, 1);
 				break;
 			case CollisionCallback::OnCollisionStay:
-				inst->Invoke("OnCollisionStay", args, nullptr, 1);
+				inst->Invoke("OnCollisionStay", argsCollision, nullptr, 1);
 				break;
 			case CollisionCallback::OnCollisionExit:
-				inst->Invoke("OnCollisionExit", args, nullptr, 1);
+				inst->Invoke("OnCollisionExit", argsCollision, nullptr, 1);
 				break;
 			}
 		}

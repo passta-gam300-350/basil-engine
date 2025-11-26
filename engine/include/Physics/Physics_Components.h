@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <vector>
 #include <functional>
 #include "ecs/internal/reflection.h"
+#include "System/BehaviourSystem.hpp"
 //#include <Jolt/Math/Vec3.h>
 //#include <Jolt/Math/Quat.h>
 

@@ -8,7 +8,7 @@ public class TrashCollectable : Behavior
 {
     private GameObject player;
     public float collect_distance = 0.4f;
-
+    
 
 
 
@@ -21,15 +21,18 @@ public class TrashCollectable : Behavior
     {
         if (player == null)
         {
-            player =  GameObject.Find("Player");
+            player =  GameObject.Find("PlayerGroup");
             return;
         } 
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         if (distance <= collect_distance && Input.GetKey(KeyCode.E))
         {
+            
+
             //TODO: REMOVAL?
             Logger.Log("Player should collect the trash!");
+            gameObject.transform.position = new Vector3(1000, 1000, 1000);
             GameObject.Destroy(gameObject);
         }
         Logger.Log("Distance" + distance);

@@ -1,3 +1,23 @@
+
+/******************************************************************************/
+/*!
+\file   MonoEntityManager.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the implementation for the MonoEntityManager class, which
+manages the lifecycle of managed entities, classes, and assemblies within the Mono runtime
+in the engine. It provides functionality to add, retrieve, and manage
+managed assemblies, classes, and instances, as well as type registration and lookup.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #include "Manager/MonoEntityManager.hpp"
 #include "ABI/ABI.h"
 #include "MonoManager.hpp"
@@ -387,24 +407,6 @@ void MonoEntityManager::StartCompilation() {
 	}
 }
 
-/******************************************************************************/
-/*!
-\file   MonoEntityManager.cpp
-\author Team PASSTA
-		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/11/05
-\brief This file contains the implementation for the MonoEntityManager class, which
-manages the lifecycle of managed entities, classes, and assemblies within the Mono runtime
-in the engine. It provides functionality to add, retrieve, and manage
-managed assemblies, classes, and instances, as well as type registration and lookup.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 
 void MonoEntityManager::AddSearchDirectory(const char* path) {
 	std::filesystem::path file_path = path;

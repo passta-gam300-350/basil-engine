@@ -1,7 +1,7 @@
 scene:
-  name: shop_house_movement_collectable_collider2
+  name: Scene
   version: v0.0.1
-  slot: 53
+  slot: 59
   guid: 00
   dependencies: ~
 render_settings:
@@ -65,39 +65,6 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 98e46a174c696692318e374794b
-        type: 4838001395392124604
-      m_MaterialGuid:
-        PandaMat1:
-          guid: 9bca0c57316b6f3576d16ac2fd1
-          type: 175488002581160416
-        standardSurface2:
-          guid: 9be3fc8740f8a5f8a62d75ec69a
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 30
-    entity name:
-      name: kitchen_shelf_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00600021705
-        y: 0.00499999942
-        z: 0.00500010699
-      m_Rotate:
-        x: 89.9993896
-        y: -88.7030716
-        z: -89.9993896
-      m_Trans:
-        x: 0.0367141403
-        y: 0.690294325
-        z: -1.39697111
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
         guid: 1227985796f81e4d5c327308919
         type: 4838001395392124604
       m_MaterialGuid:
@@ -144,24 +111,24 @@ entities:
           guid: 9be3fc8740f8a5f8a62d75ec69a
           type: 175488002581160416
     Scene ID:
-      Scene ID: 29
+      Scene ID: 30
     entity name:
       name: kitchen_shelf_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00606634421
-        y: 0.00500000408
-        z: 0.00500006229
+        x: 0.00600021705
+        y: 0.00499999942
+        z: 0.00500010699
       m_Rotate:
-        x: 89.9991074
-        y: -87.1214905
-        z: -89.9991074
+        x: 89.9993896
+        y: -88.7030716
+        z: -89.9993896
       m_Trans:
-        x: 0.0367146172
-        y: 0.686894774
-        z: -0.0771824718
+        x: 0.0367141403
+        y: 0.690294325
+        z: -1.39697111
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -198,6 +165,39 @@ entities:
         x: -1.67562032
         y: 0.0301287249
         z: -0.733406961
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46a174c696692318e374794b
+        type: 4838001395392124604
+      m_MaterialGuid:
+        PandaMat1:
+          guid: 9bca0c57316b6f3576d16ac2fd1
+          type: 175488002581160416
+        standardSurface2:
+          guid: 9be3fc8740f8a5f8a62d75ec69a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 29
+    entity name:
+      name: kitchen_shelf_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00606634421
+        y: 0.00500000408
+        z: 0.00500006229
+      m_Rotate:
+        x: 89.9991074
+        y: -87.1214905
+        z: -89.9991074
+      m_Trans:
+        x: 0.0367146172
+        y: 0.686894774
+        z: -0.0771824718
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1762,117 +1762,6 @@ entities:
         unnamed slot:
           guid: 00
           type: 175488002581160416
-    CapsuleCollider:
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      Radius: 0.150000006
-      Height: 0.800000012
-      isTrigger: false
-      Direction: 0
-      friction: 0.5
-      restitution: 0
-      density: 1
-    RigidBodyComponent:
-      motionType: "\x01"
-      mass: 1
-      drag: 0
-      angularDrag: 0.0500000007
-      friction: 0
-      linearDamping: 0
-      gravityFactor: 0
-      useGravity: false
-      isKinematic: false
-      freezePositionX: false
-      freezePositionY: true
-      freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
-      freezeLinearVelocityX: false
-      freezeLinearVelocityY: false
-      freezeLinearVelocityZ: false
-      freezeAngularVelocityX: false
-      freezeAngularVelocityY: false
-      freezeAngularVelocityZ: false
-      centerOfMass:
-        x: 0
-        y: 0
-        z: 0
-      linearVelocity:
-        x: 0
-        y: 0
-        z: 0
-      angularVelocity:
-        x: 0
-        y: 0
-        z: 0
-      isActive: true
-      isDirty: false
-    Scene ID:
-      Scene ID: 48
-    entity name:
-      name: Player
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.200000003
-        y: 0.800000012
-        z: 0.200000003
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -1.05350363
-        y: 0.415434897
-        z: 0.54468596
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 45
-      m_AspectRatio: 1.77777779
-      m_Near: 0.100000001
-      m_Far: 1000
-      m_Up:
-        x: 0
-        y: 1
-        z: 0
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0
-        z: 1
-      m_Yaw: 0
-      m_Pitch: 0
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 0.5
-          y: 0.5
-          z: 1
-    Behaviour:
-      classesName:
-        - PlayerController3D
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
     RigidBodyComponent:
       motionType: "\x01"
       mass: 1
@@ -2073,3 +1962,178 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
+  - RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: true
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: false
+      freezeRotationY: false
+      freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 53
+    Relationship:
+      parent: 0
+      child:
+        - 55
+        - 57
+    entity name:
+      name: PlayerGroup
+    TransformComponent:
+      m_Scale:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.555764019
+        y: 0.415434897
+        z: 0.710635602
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 55
+    Relationship:
+      parent: 53
+    entity name:
+      name: Body
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 57
+    Relationship:
+      parent: 53
+    entity name:
+      name: Camera
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.200000018
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.660443127
+        z: -7.15255737e-07
+  - Scene ID:
+      Scene ID: 58
+    entity name:
+      name: GlobalCamera
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.505396366
+        y: 1.02380919
+        z: 0.54210192
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: 0
+      m_Pitch: 0

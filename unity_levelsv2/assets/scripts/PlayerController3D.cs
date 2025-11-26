@@ -6,15 +6,20 @@ using System;
 
 public class PlayerController3D : Behavior
 {
+    private GameObject PlayerHead;
     private Camera cam;
     private Rigidbody rb;
 
     public float mouseSensitivity = 0.075f;
     public float moveSpeed = 2.5f;
 
+    public bool disabled = false;
+
     private Vector2 lastMouse;
     private float pitch = 0f; // X rotation
     private float yaw = 0f;   // Y rotation
+
+    
 
 
 
@@ -22,60 +27,19 @@ public class PlayerController3D : Behavior
 
     public void Init()
     {
-       
+       PlayerHead = GameObject.Find("Camera");
+       rb = gameObject.transform.GetComponent<Rigidbody>();
     }
 
     public void Update()
     {
-        // Lazy init camera reference and align our yaw/pitch with current transform once
-        if (cam == null)
-        {
-            cam = GetComponent<Camera>();
-            if (cam == null)
-            {
-                Logger.Warn("Camera is NULL!");
-                return;
-            }
-
-            lastMouse = Input.mousePosition;
-            Vector3 currentRot = transform.rotation;
-            pitch = currentRot.x;
-            yaw = currentRot.y;
-        }
-
-        if (rb == null)
-        {
-            rb = GetComponent<Rigidbody>();
-            if (rb == null)
-            {
-                Logger.Warn("Rigidbody is NULL!");
-                return;
-            }
-
-        }
-        //-------------------------------------------------------
-        // 1. Mouse Look (delta from last frame)
-        //-------------------------------------------------------
-        Vector2 mouse = Input.mousePosition;
-        Vector2 delta = mouse - lastMouse;
-        lastMouse = mouse;
-
-		// Invert yaw so mouse left rotates left (match engine handedness)
-		yaw -= delta.x * mouseSensitivity;
-		// Invert pitch direction so moving mouse up looks up
-		pitch += delta.y * mouseSensitivity;
-
-        pitch = Mathf.Clamp(pitch, -89f, 89f);
-
-        // Apply camera rotation
-        transform.rotation = new Vector3(pitch, yaw, 0f);
-        // (Optional) add debug logging here if needed
-
+        if (disabled) return;
+        
 		//-------------------------------------------------------
 		// 2. Movement (WASD) - FPS style on ground plane
 		//-------------------------------------------------------
-		Vector3 forward = transform.forward; forward.y = 0f;
-		Vector3 right = transform.right;     right.y = 0f;
+		Vector3 forward = PlayerHead.transform.forward; forward.y = 0f;
+		Vector3 right = PlayerHead.transform.right;     right.y = 0f;
 
         Vector3 vel = Vector3.Zero;
 
@@ -93,5 +57,10 @@ public class PlayerController3D : Behavior
 
     public void FixedUpdate()
     {
+    }
+
+    public void OnCollisionEnter(GameObject other)
+    {
+        Logger.Log("Entered collision with " + other.NativeID);
     }
 }

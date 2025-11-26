@@ -182,6 +182,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&LightComponent::m_OuterCone, "[Spot] Outer Cone Angle">
 	);
 
+	RegisterReflectionComponent<CameraComponent::CameraType>("Camera Type");
+
 	RegisterReflectionComponent<CameraComponent>(
 		"CameraComponent",
 		MemberRegistrationV<&CameraComponent::m_Type, "m_Type">,
