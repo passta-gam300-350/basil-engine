@@ -1,8 +1,10 @@
 ﻿using BasilEngine.Mathematics;
+using Engine.Bindings;
 using System.Runtime.InteropServices;
 
 namespace BasilEngine
 {
+    [Disabled]
     [StructLayout(LayoutKind.Sequential)]
     public struct Ray
     {
