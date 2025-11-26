@@ -1,0 +1,7 @@
+base:
+  m_guid: 546d68f7b1d9209aa64ffe01617
+  m_importer: .texture
+  m_source: materials\kite\enemy3\kite_enemy3_mat_BaseColor.png
+  m_name: kite_enemy3_mat_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

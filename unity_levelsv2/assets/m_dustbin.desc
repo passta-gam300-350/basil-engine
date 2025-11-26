@@ -9,9 +9,9 @@ material:
   frag_name: main_pbr.frag
   material_name: m_dustbin
   albedo:
-    x: 0.800000012
-    y: 0.800000012
-    z: 0.800000012
+    x: 1
+    y: 1
+    z: 1
   metallic: 0
   roughness: 0.5
   blend_mode: 0

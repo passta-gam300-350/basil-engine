@@ -1,0 +1,29 @@
+base:
+  m_guid: 37277ea7f1b9ef64e01fb8c0f5e
+  m_importer: .material
+  m_source: ""
+  m_name: m_kite_enemy
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_kite_enemy
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 36fd7b1781ba8f62eddc741118a
+    u_DiffuseMap: 36fd77a78e6abcccb070dbe06ba
+    u_EmissiveMap: 36fd7887ea892e0a0c9e8ea672d
+    u_NormalMap: 36fd7a873a9bd07e1bf5d785249
+    u_HeightMap: 36fd79377a58af6b04cc03bcb18
+    u_SpecularMap: 00
+    u_MetallicMap: 36fd79f7fd5bd1d5e2abe551cde

@@ -1,0 +1,7 @@
+base:
+  m_guid: 55e4fa27ccc9c25dea74ed20db5
+  m_importer: .texture
+  m_source: materials\train\wheel1\Wheel1_Train_Roughness.png
+  m_name: Wheel1_Train_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

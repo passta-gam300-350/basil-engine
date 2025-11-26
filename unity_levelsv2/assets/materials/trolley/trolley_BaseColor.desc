@@ -1,0 +1,7 @@
+base:
+  m_guid: 899173792a8043d7c42aaab8be
+  m_importer: .texture
+  m_source: materials\trolley\trolley_BaseColor.png
+  m_name: trolley_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

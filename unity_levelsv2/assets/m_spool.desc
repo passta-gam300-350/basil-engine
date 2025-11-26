@@ -1,0 +1,29 @@
+base:
+  m_guid: 810fa4373069cab3f750d101a1d
+  m_importer: .material
+  m_source: ""
+  m_name: m_spool
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_spool
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 7cd49b17cb99935beb680a7ff95
+    u_DiffuseMap: 7cd49967d698289ffc23a9a4473
+    u_EmissiveMap: 00
+    u_NormalMap: 7cd49aa741c8f7963be813dfe83
+    u_HeightMap: 7cd499c77d8af7575183d1648d9
+    u_SpecularMap: 00
+    u_MetallicMap: 7cd49a4751c947c770a46c71bbe
