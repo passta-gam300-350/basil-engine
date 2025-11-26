@@ -97,6 +97,24 @@
 "CardboardBox_halfClosed_standardSurface7_Roughness.png":
   "m_guid": "98e428d76c7a196310fbd53d895"
   "m_typeindex": "126269861530532084"
+"Carryon.obj":
+  "m_guid": "560dde97c4ebf6ceb2788ef91f9"
+  "m_typeindex": "4838001395392124604"
+"Carryon_Train_BaseColor.png":
+  "m_guid": "560ddb077609b3e9c23b73eac7f"
+  "m_typeindex": "126269861530532084"
+"Carryon_Train_Height.png":
+  "m_guid": "560ddb97bce8be42aeb28af06b5"
+  "m_typeindex": "126269861530532084"
+"Carryon_Train_Metallic.png":
+  "m_guid": "560ddc1780bb0be8c1e2fc680fa"
+  "m_typeindex": "126269861530532084"
+"Carryon_Train_Normal.png":
+  "m_guid": "560ddc8723a9a008a97d82ace01"
+  "m_typeindex": "126269861530532084"
+"Carryon_Train_Roughness.png":
+  "m_guid": "560ddd07cadb39066039e59b27b"
+  "m_typeindex": "126269861530532084"
 "Ceilingfan_ceilingfan_Holder_BaseColor.png":
   "m_guid": "98e42b97e7fa01f89b21de833fc"
   "m_typeindex": "126269861530532084"
@@ -541,9 +559,120 @@
 "TerrainBase":
   "m_guid": "e04ed7e7cbd8b1ebe195259c9f7"
   "m_typeindex": "175488002581160416"
+"Train":
+  "m_guid": "562499a7b07b3fcc15737394824"
+  "m_typeindex": "175488002581160416"
+"TrainBody.obj":
+  "m_guid": "55e50167fb292fb9c5efc576e6e"
+  "m_typeindex": "4838001395392124604"
+"TrainBody_Train_BaseColor.png":
+  "m_guid": "55e4f267a2a8458cf2d6c5758a1"
+  "m_typeindex": "126269861530532084"
+"TrainBody_Train_Height.png":
+  "m_guid": "55e4f317d81a3f8b0439e8c8c54"
+  "m_typeindex": "126269861530532084"
+"TrainBody_Train_Metallic.png":
+  "m_guid": "55e4f4d7bba88558c657b6302b6"
+  "m_typeindex": "126269861530532084"
+"TrainBody_Train_Normal.png":
+  "m_guid": "55e4f54772ea65f462cb5a40df8"
+  "m_typeindex": "126269861530532084"
+"TrainBody_Train_Roughness.png":
+  "m_guid": "55e4f5c7214ac2e2dd70dac3b30"
+  "m_typeindex": "126269861530532084"
+"TrainCombine.obj":
+  "m_guid": "55e501d7c9f8342886bae692574"
+  "m_typeindex": "4838001395392124604"
+"Train_Combine_Train_BaseColor.png":
+  "m_guid": "55e4f6370f583da10d972ef6fc7"
+  "m_typeindex": "126269861530532084"
+"Train_Combine_Train_Height.png":
+  "m_guid": "55e4f6a7ff4adffde925f966764"
+  "m_typeindex": "126269861530532084"
+"Train_Combine_Train_Metallic.png":
+  "m_guid": "55e4f717de681abc3bf7213078a"
+  "m_typeindex": "126269861530532084"
+"Train_Combine_Train_Normal.png":
+  "m_guid": "55e4f79779c92ae00b75f0f1c55"
+  "m_typeindex": "126269861530532084"
+"Train_Combine_Train_Roughness.png":
+  "m_guid": "55e4f8070058b703514244e9a0f"
+  "m_typeindex": "126269861530532084"
 "WallMaterial":
   "m_guid": "489d4ad7b7b9365c19ecc3b5151"
   "m_typeindex": "175488002581160416"
+"Wheel1.obj":
+  "m_guid": "55e5023711ab6484a3f94d308b3"
+  "m_typeindex": "4838001395392124604"
+"Wheel1_Train_BaseColor.png":
+  "m_guid": "55e4f8772dbbf3056ff0bb48c48"
+  "m_typeindex": "126269861530532084"
+"Wheel1_Train_Height.png":
+  "m_guid": "55e4f8e7e12997197b2dd240a2c"
+  "m_typeindex": "126269861530532084"
+"Wheel1_Train_Metallic.png":
+  "m_guid": "55e4f957f479cfe9ab4bf7fbc64"
+  "m_typeindex": "126269861530532084"
+"Wheel1_Train_Normal.png":
+  "m_guid": "55e4f9b7e62a5287ac04ffb5722"
+  "m_typeindex": "126269861530532084"
+"Wheel1_Train_Roughness.png":
+  "m_guid": "55e4fa27ccc9c25dea74ed20db5"
+  "m_typeindex": "126269861530532084"
+"Wheel2.obj":
+  "m_guid": "55e502b79baaf22bd7a6e4790fa"
+  "m_typeindex": "4838001395392124604"
+"Wheel2_Train_BaseColor.png":
+  "m_guid": "55e4fa8720d81e55753ef7fb1ea"
+  "m_typeindex": "126269861530532084"
+"Wheel2_Train_Height.png":
+  "m_guid": "55e4faf76bca084d5262b758f75"
+  "m_typeindex": "126269861530532084"
+"Wheel2_Train_Metallic.png":
+  "m_guid": "55e4fb57341b384e6b3a5a33d62"
+  "m_typeindex": "126269861530532084"
+"Wheel2_Train_Normal.png":
+  "m_guid": "55e4fbb701fa9dabcb5262a000c"
+  "m_typeindex": "126269861530532084"
+"Wheel2_Train_Roughness.png":
+  "m_guid": "55e4fc17a2090bce2a3c618ad1e"
+  "m_typeindex": "126269861530532084"
+"Wheel3.obj":
+  "m_guid": "55e503172eea4df7c6094d12130"
+  "m_typeindex": "4838001395392124604"
+"Wheel3_Train_BaseColor.png":
+  "m_guid": "55e4fc77a759c72f1b89d2f7fc0"
+  "m_typeindex": "126269861530532084"
+"Wheel3_Train_Height.png":
+  "m_guid": "55e4fce7a288e905df69eb9ef2e"
+  "m_typeindex": "126269861530532084"
+"Wheel3_Train_Metallic.png":
+  "m_guid": "55e4fd47089880b2e93218ec01c"
+  "m_typeindex": "126269861530532084"
+"Wheel3_Train_Normal.png":
+  "m_guid": "55e4fdb7e48a3428917e624952c"
+  "m_typeindex": "126269861530532084"
+"Wheel3_Train_Roughness.png":
+  "m_guid": "55e4fe37be892c499b68696d44b"
+  "m_typeindex": "126269861530532084"
+"Wheel4.obj":
+  "m_guid": "55e50387d378ec337fd222e3913"
+  "m_typeindex": "4838001395392124604"
+"Wheel4_Train_BaseColor.png":
+  "m_guid": "55e4fe97f7e83535f86e9de7137"
+  "m_typeindex": "126269861530532084"
+"Wheel4_Train_Height.png":
+  "m_guid": "55e4fef78a5b1e85848d607127c"
+  "m_typeindex": "126269861530532084"
+"Wheel4_Train_Metallic.png":
+  "m_guid": "55e4ff575dbaf0448a4daeed437"
+  "m_typeindex": "126269861530532084"
+"Wheel4_Train_Normal.png":
+  "m_guid": "55e4ffc707fae58f071fc6f0110"
+  "m_typeindex": "126269861530532084"
+"Wheel4_Train_Roughness.png":
+  "m_guid": "55e500377b9a45f33a39bc67ea3"
+  "m_typeindex": "126269861530532084"
 "biscuit_tin1.obj":
   "m_guid": "36fd872715aa00c70870415f7f2"
   "m_typeindex": "4838001395392124604"
@@ -727,6 +856,48 @@
 "cloud_02_Roughness.png":
   "m_guid": "7cd46c876bfa0f1dcfcb3e7be7e"
   "m_typeindex": "126269861530532084"
+"cloud_1.obj":
+  "m_guid": "53f19c67e9a90aad1cea52c47ed"
+  "m_typeindex": "4838001395392124604"
+"cloud_1_mat_BaseColor.png":
+  "m_guid": "53f19197b7981230901f4187166"
+  "m_typeindex": "126269861530532084"
+"cloud_1_mat_Emissive.png":
+  "m_guid": "53f1921717ea840126e993f4683"
+  "m_typeindex": "126269861530532084"
+"cloud_1_mat_Height.png":
+  "m_guid": "53f19287b6c951f726bb12198b9"
+  "m_typeindex": "126269861530532084"
+"cloud_1_mat_Metallic.png":
+  "m_guid": "53f1941784cbe80c811d339426a"
+  "m_typeindex": "126269861530532084"
+"cloud_1_mat_Normal.png":
+  "m_guid": "53f194875b9a09ebc974ecd803e"
+  "m_typeindex": "126269861530532084"
+"cloud_1_mat_Roughness.png":
+  "m_guid": "53f194e751aab7864fc5dc2668c"
+  "m_typeindex": "126269861530532084"
+"cloud_2.obj":
+  "m_guid": "53f19cd767ea5f9e771db6b0161"
+  "m_typeindex": "4838001395392124604"
+"cloud_2_mat_BaseColor.png":
+  "m_guid": "53f19557971b8c801a9a84b4293"
+  "m_typeindex": "126269861530532084"
+"cloud_2_mat_Emissive.png":
+  "m_guid": "53f195b7dc2acc678c1f337b6c5"
+  "m_typeindex": "126269861530532084"
+"cloud_2_mat_Height.png":
+  "m_guid": "53f19617bd3b012881fbb80b604"
+  "m_typeindex": "126269861530532084"
+"cloud_2_mat_Metallic.png":
+  "m_guid": "53f196879ae9d61cb2aaf4a7d63"
+  "m_typeindex": "126269861530532084"
+"cloud_2_mat_Normal.png":
+  "m_guid": "53f196d7114a3779bd9567bf850"
+  "m_typeindex": "126269861530532084"
+"cloud_2_mat_Roughness.png":
+  "m_guid": "53f197572b5b8ae99c890beeef2"
+  "m_typeindex": "126269861530532084"
 "hdb_01":
   "m_guid": "7e10c2f7ab78320cc8af2c84e5a"
   "m_typeindex": "175488002581160416"
@@ -874,6 +1045,72 @@
 "kite_Roughness.png":
   "m_guid": "122770e778ea346edeb167a7760"
   "m_typeindex": "126269861530532084"
+"kite_enemy1.obj":
+  "m_guid": "546d71f73608b858a14be1bdbf0"
+  "m_typeindex": "4838001395392124604"
+"kite_enemy2.obj":
+  "m_guid": "546d7267279b6d12a182207c6f8"
+  "m_typeindex": "4838001395392124604"
+"kite_enemy2_mat_BaseColor.png":
+  "m_guid": "546d6647c4fa9dbd09f87b52b1d"
+  "m_typeindex": "126269861530532084"
+"kite_enemy2_mat_Emissive.png":
+  "m_guid": "546d66a782487d7ee01ea99c099"
+  "m_typeindex": "126269861530532084"
+"kite_enemy2_mat_Height.png":
+  "m_guid": "546d6727627a891b533bdc5fb53"
+  "m_typeindex": "126269861530532084"
+"kite_enemy2_mat_Metallic.png":
+  "m_guid": "546d6797dc1aa78ec8f5b02d573"
+  "m_typeindex": "126269861530532084"
+"kite_enemy2_mat_Normal.png":
+  "m_guid": "546d68072e48b0730f47e8074a1"
+  "m_typeindex": "126269861530532084"
+"kite_enemy2_mat_Roughness.png":
+  "m_guid": "546d68779bc893ed527bacf63e5"
+  "m_typeindex": "126269861530532084"
+"kite_enemy3.obj":
+  "m_guid": "546d72d7f81a9262afa8ae6c176"
+  "m_typeindex": "4838001395392124604"
+"kite_enemy3_mat_BaseColor.png":
+  "m_guid": "546d68f7b1d9209aa64ffe01617"
+  "m_typeindex": "126269861530532084"
+"kite_enemy3_mat_Emissive.png":
+  "m_guid": "546d69570da8d2935a83a518a28"
+  "m_typeindex": "126269861530532084"
+"kite_enemy3_mat_Height.png":
+  "m_guid": "546d69c761ab54973fc88495747"
+  "m_typeindex": "126269861530532084"
+"kite_enemy3_mat_Metallic.png":
+  "m_guid": "546d6a373e98125a7804834d90b"
+  "m_typeindex": "126269861530532084"
+"kite_enemy3_mat_Normal.png":
+  "m_guid": "546d6aa76d9a571232e9b7b2735"
+  "m_typeindex": "126269861530532084"
+"kite_enemy3_mat_Roughness.png":
+  "m_guid": "546d6b27bbeb1b473f3dfa04643"
+  "m_typeindex": "126269861530532084"
+"kite_enemy4.obj":
+  "m_guid": "546d7347c899d035f806ce3c242"
+  "m_typeindex": "4838001395392124604"
+"kite_enemy4_mat_BaseColor.png":
+  "m_guid": "546d6b9706287ed40bb9e75c666"
+  "m_typeindex": "126269861530532084"
+"kite_enemy4_mat_Emissive.png":
+  "m_guid": "546d6c17d3cb0b3e03b5c05686b"
+  "m_typeindex": "126269861530532084"
+"kite_enemy4_mat_Height.png":
+  "m_guid": "546d6c97519b2106928886b67a4"
+  "m_typeindex": "126269861530532084"
+"kite_enemy4_mat_Metallic.png":
+  "m_guid": "546d6d077248747137688deb66f"
+  "m_typeindex": "126269861530532084"
+"kite_enemy4_mat_Normal.png":
+  "m_guid": "546d6d87a18bec47528ffccf733"
+  "m_typeindex": "126269861530532084"
+"kite_enemy4_mat_Roughness.png":
+  "m_guid": "546d6df7246aa4dc7c621cb53b1"
+  "m_typeindex": "126269861530532084"
 "kite_enemy_01":
   "m_guid": "7e1b3fb79218833cc3d8bc57979"
   "m_typeindex": "175488002581160416"
@@ -958,9 +1195,30 @@
 "kite_enemy_04_Roughness.png":
   "m_guid": "7cd485b74b99a1341b9d1321777"
   "m_typeindex": "126269861530532084"
+"kite_kite_enemy1_mat_BaseColor.png":
+  "m_guid": "546d63370a897d9aa9e566db374"
+  "m_typeindex": "126269861530532084"
+"kite_kite_enemy1_mat_Emissive.png":
+  "m_guid": "546d63e74c3806c957f3b65cd1c"
+  "m_typeindex": "126269861530532084"
+"kite_kite_enemy1_mat_Height.png":
+  "m_guid": "546d64675c689d54c04a784141f"
+  "m_typeindex": "126269861530532084"
+"kite_kite_enemy1_mat_Metallic.png":
+  "m_guid": "546d64e7fd49b5d0b0f885ae9fc"
+  "m_typeindex": "126269861530532084"
+"kite_kite_enemy1_mat_Normal.png":
+  "m_guid": "546d6557c829c73201679947927"
+  "m_typeindex": "126269861530532084"
+"kite_kite_enemy1_mat_Roughness.png":
+  "m_guid": "546d65c7ccba85b7948c6a47559"
+  "m_typeindex": "126269861530532084"
 "kite_player":
   "m_guid": "7e1bf4f7d4aab0bfd1780c1979a"
   "m_typeindex": "175488002581160416"
+"kite_player.obj":
+  "m_guid": "546d73b7ac39cca8ce2f4074fa5"
+  "m_typeindex": "4838001395392124604"
 "kite_player_BaseColor.png":
   "m_guid": "7cd4871768c8a0034d05c711d52"
   "m_typeindex": "126269861530532084"
@@ -978,6 +1236,24 @@
   "m_typeindex": "126269861530532084"
 "kite_player_Roughness.png":
   "m_guid": "7cd48927ebe8a7da6e0f54f3848"
+  "m_typeindex": "126269861530532084"
+"kite_player_mat_BaseColor.png":
+  "m_guid": "546d6e77462943df763ce0daa92"
+  "m_typeindex": "126269861530532084"
+"kite_player_mat_Emissive.png":
+  "m_guid": "546d6ee7f40b9032129955dfbba"
+  "m_typeindex": "126269861530532084"
+"kite_player_mat_Height.png":
+  "m_guid": "546d6f57406827e6a734bc35613"
+  "m_typeindex": "126269861530532084"
+"kite_player_mat_Metallic.png":
+  "m_guid": "546d6fd71a6b06e81ae8562fbb2"
+  "m_typeindex": "126269861530532084"
+"kite_player_mat_Normal.png":
+  "m_guid": "546d70379faadaccccaaf84e96e"
+  "m_typeindex": "126269861530532084"
+"kite_player_mat_Roughness.png":
+  "m_guid": "546d70a73668aa0ed9c3e2f4718"
   "m_typeindex": "126269861530532084"
 "kite_scene.obj":
   "m_guid": "36fd8677e7093c121dec93d508e"
@@ -1018,6 +1294,12 @@
 "m_chair_panda":
   "m_guid": "9e94a0e74f2bf0c7d5b4d383f7a"
   "m_typeindex": "175488002581160416"
+"m_cloud1":
+  "m_guid": "540bd867bac88a73f63c6271cfb"
+  "m_typeindex": "175488002581160416"
+"m_cloud2":
+  "m_guid": "542b0327c5a882eb5ac5e75fed7"
+  "m_typeindex": "175488002581160416"
 "m_dustbin":
   "m_guid": "9f6579373688678038425892980"
   "m_typeindex": "175488002581160416"
@@ -1057,6 +1339,12 @@
 "m_kite_enemy":
   "m_guid": "37277ea7f1b9ef64e01fb8c0f5e"
   "m_typeindex": "175488002581160416"
+"m_kite_enemy1":
+  "m_guid": "54f94557151b6536992ee587232"
+  "m_typeindex": "175488002581160416"
+"m_kite_player":
+  "m_guid": "549be077d859642e725a0913676"
+  "m_typeindex": "175488002581160416"
 "m_metal_rack":
   "m_guid": "806c1727ecb8f259ffa0a021a01"
   "m_typeindex": "175488002581160416"
@@ -1095,6 +1383,27 @@
   "m_typeindex": "175488002581160416"
 "m_tin_empty_top":
   "m_guid": "1a070777bafad0d466ac7f3bc60"
+  "m_typeindex": "175488002581160416"
+"m_train_body":
+  "m_guid": "564b72f7fee86a8dd492cec2123"
+  "m_typeindex": "175488002581160416"
+"m_train_carryon":
+  "m_guid": "565d7a276b09f0eca2900dd35d7"
+  "m_typeindex": "175488002581160416"
+"m_train_combined":
+  "m_guid": "563095f7c34a697fb88547f7714"
+  "m_typeindex": "175488002581160416"
+"m_train_wheel1":
+  "m_guid": "566ba0372389dcc8df9192d9026"
+  "m_typeindex": "175488002581160416"
+"m_train_wheel2":
+  "m_guid": "567c51274678ff9868cf72dd57d"
+  "m_typeindex": "175488002581160416"
+"m_train_wheel3":
+  "m_guid": "5691c0b7451b290d8a80cffb758"
+  "m_typeindex": "175488002581160416"
+"m_train_wheel4":
+  "m_guid": "56a4fab772f94f2e9b0c0803d6c"
   "m_typeindex": "175488002581160416"
 "m_trash1":
   "m_guid": "9ccc1257d638a8b8f37818a0553"
