@@ -790,9 +790,9 @@ void EditorMain::SetupUnityStyle()
 	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.400f, 0.690f, 0.890f, 1.00f);
 	colors[ImGuiCol_Tab] = ImVec4(0.040f, 0.040f, 0.040f, 1.000f);
 	colors[ImGuiCol_TabHovered] = ImVec4(0.337f, 0.612f, 0.839f, 1.00f);
-	colors[ImGuiCol_TabActive] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
-	colors[ImGuiCol_TabUnfocused] = ImVec4(0.157f, 0.157f, 0.157f, 1.00f);
-	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.196f, 0.196f, 0.196f, 1.00f);
+	colors[ImGuiCol_TabSelected] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
+	colors[ImGuiCol_TabDimmed] = ImVec4(0.040f, 0.040f, 0.040f, 1.000f);
+	colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.235f, 0.235f, 0.235f, 1.00f);
 	colors[ImGuiCol_DockingPreview] = ImVec4(0.337f, 0.612f, 0.839f, 0.70f);
 	colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.00f);
 	colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
