@@ -973,6 +973,13 @@ void EditorMain::Render_Components()
 		material_overrides_component = matOverridesIt->second;
 	}
 
+	ReflectionRegistry::TypeID hud_component{};
+	auto hudIt = internal_type_map.find(entt::type_index<HUDComponent>::value());
+	if (hudIt != internal_type_map.end())
+	{
+		hud_component = hudIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component || type_id == prefab_component_id) {
 			continue;  // Skip PrefabComponent as it's internal
@@ -1242,6 +1249,61 @@ void EditorMain::Render_Components()
 					}
 					ImGui::SameLine();
 					ImGui::TextDisabled("Adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_AlbedoColor)");
+				}
+			}
+
+			// Special UI section for HUDComponent
+			if (hud_component && type_id == hud_component) {
+				if (HUDComponent* hudComp = reinterpret_cast<HUDComponent*>(uptr.get())) {
+					ImGui::Separator();
+
+					// Only show button if texture is assigned
+					bool hasTexture = (hudComp->m_TextureGuid.m_guid != rp::null_guid);
+
+					if (!hasTexture) {
+						ImGui::BeginDisabled();
+					}
+
+					if (ImGui::Button("Set Native Size", ImVec2(-1, 0))) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<HUDComponent>()) {
+								HUDComponent& hud = entity.get<HUDComponent>();
+
+								// Load texture and get dimensions
+								auto& registry = ResourceRegistry::Instance();
+								auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(hud.m_TextureGuid.m_guid);
+
+								if (texturePtr && *texturePtr) {
+									unsigned int textureID = (*texturePtr)->id;
+
+									// Query texture dimensions from OpenGL
+									glBindTexture(GL_TEXTURE_2D, textureID);
+									int width = 0, height = 0;
+									glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+									glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+									glBindTexture(GL_TEXTURE_2D, 0);
+
+									if (width > 0 && height > 0) {
+										hud.size = glm::vec2(static_cast<float>(width), static_cast<float>(height));
+										spdlog::info("Set HUD native size to {}x{}", width, height);
+									} else {
+										spdlog::warn("Failed to get texture dimensions for HUD component");
+									}
+								}
+							}
+						});
+						ul.lock();
+					}
+
+					if (!hasTexture) {
+						ImGui::EndDisabled();
+					}
+
+					if (!hasTexture && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+						ImGui::SetTooltip("Assign a texture to use Set Native Size");
+					}
 				}
 			}
 
