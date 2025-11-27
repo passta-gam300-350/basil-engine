@@ -961,6 +961,48 @@
 "hdb_03_Roughness.png":
   "m_guid": "7cd47b77f4590247ff1f4627df4"
   "m_typeindex": "126269861530532084"
+"hdb_1_BaseColor.png":
+  "m_guid": "136e637a9498a9088994efc3a6"
+  "m_typeindex": "126269861530532084"
+"hdb_1_Emissive.png":
+  "m_guid": "136e6d72f59815b04082bf7746"
+  "m_typeindex": "126269861530532084"
+"hdb_1_Height.png":
+  "m_guid": "136e747fedaa2a5f779ab5a6bd"
+  "m_typeindex": "126269861530532084"
+"hdb_1_Metallic.png":
+  "m_guid": "136e7a7874ac4929c94f362bb8"
+  "m_typeindex": "126269861530532084"
+"hdb_1_Normal.png":
+  "m_guid": "136e8077869e7be74aa29efa60"
+  "m_typeindex": "126269861530532084"
+"hdb_1_Roughness.png":
+  "m_guid": "136e8771c8926346aad161513c"
+  "m_typeindex": "126269861530532084"
+"hdb_1_mesh.obj":
+  "m_guid": "136ed17a7ebfa469010ff3b90f"
+  "m_typeindex": "4838001395392124604"
+"hdb_2_BaseColor.png":
+  "m_guid": "136e8d7ed1a0359659113b06f8"
+  "m_typeindex": "126269861530532084"
+"hdb_2_Emissive.png":
+  "m_guid": "136e9477a9b3ba00d8ae24fb69"
+  "m_typeindex": "126269861530532084"
+"hdb_2_Height.png":
+  "m_guid": "136e9a79fa81e7c3e166231595"
+  "m_typeindex": "126269861530532084"
+"hdb_2_Metallic.png":
+  "m_guid": "136ea173f99514e526c5a77157"
+  "m_typeindex": "126269861530532084"
+"hdb_2_Normal.png":
+  "m_guid": "136ea77abda2a66b7d1dfc67cb"
+  "m_typeindex": "126269861530532084"
+"hdb_2_Roughness.png":
+  "m_guid": "136eae7a36b87402bb6665b7ce"
+  "m_typeindex": "126269861530532084"
+"hdb_2_mesh.obj":
+  "m_guid": "136eda7db6a000955607460181"
+  "m_typeindex": "4838001395392124604"
 "kitchenCabinet.obj":
   "m_guid": "98e46937e72ac6d40e2610281a0"
   "m_typeindex": "4838001395392124604"
@@ -1311,6 +1353,12 @@
   "m_typeindex": "175488002581160416"
 "m_grass2":
   "m_guid": "21612d9075bc93f713ad67ba4c5b"
+  "m_typeindex": "175488002581160416"
+"m_hdb1":
+  "m_guid": "14c66b7c1d98726db576722310"
+  "m_typeindex": "175488002581160416"
+"m_hdb2":
+  "m_guid": "172e8c76c6a3a70b7a4f4e6c68"
   "m_typeindex": "175488002581160416"
 "m_kitchen_cabinet":
   "m_guid": "9f1a2e4709c98bce8ba8c0aeec9"
