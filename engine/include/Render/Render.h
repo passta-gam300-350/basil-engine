@@ -38,6 +38,7 @@ class JoltDebugRenderer;
 
 RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
 RegisterResourceTypeForward(MaterialResourceData, "material", materialdefine)
+RegisterResourceTypeForward(TextureResourceData, "texture", texturedefine)
 
 /**
  * @brief Component for rendering meshes on entities
@@ -49,7 +50,7 @@ struct MeshRendererComponent {
     bool isPrimitive;              ///< True if using a primitive mesh (cube/plane)
     bool hasAttachedMaterial;      ///< True if using an external material asset
 
-    /// Primitive mesh types available
+    // Primitive mesh types available
     enum struct PrimitiveType : std::uint8_t {
         NONE,
         CUBE,
@@ -58,7 +59,7 @@ struct MeshRendererComponent {
     rp::BasicIndexedGuid m_MeshGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"mesh">{}) };     ///< GUID of the mesh asset (or zero for primitives)
     std::unordered_map<std::string, rp::BasicIndexedGuid> m_MaterialGuid{ std::pair<std::string, rp::BasicIndexedGuid>("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}))}; ///< GUID of the material asset
 
-    /// Per-entity material properties (used when hasAttachedMaterial is false)
+    // Per-entity material properties (used when hasAttachedMaterial is false)
     struct Material
     {
         rp::BasicIndexedGuid m_MaterialGuid;
@@ -90,6 +91,43 @@ struct LightComponent {
     bool m_CastShadows = true;    ///< Enable/disable shadow casting for this light
 };
 
+/**
+ * @brief Component for rendering HUD/UI elements in screen space
+ *
+ * HUD elements are rendered in pixel coordinates after all 3D rendering and post-processing.
+ * Supports textured quads and solid color rectangles with rotation and layering.
+ */
+struct HUDComponent {
+    rp::BasicIndexedGuid m_TextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };  ///< GUID of the texture asset (0 = solid color quad)
+
+    // Screen-space positioning (pixels)
+    glm::vec2 position = glm::vec2(0.0f);  ///< Position in pixels from anchor point
+    glm::vec2 size = glm::vec2(100.0f);    ///< Size in pixels
+
+    /**
+     * @brief Anchor point for positioning
+     *
+     * Determines which point of the element corresponds to the specified position.
+     * For example, TopLeft means position=(0,0) places the top-left corner at screen origin.
+     */
+    enum class Anchor : uint8_t {
+        TopLeft,
+        TopCenter,
+        TopRight,
+        CenterLeft,
+        Center,
+        CenterRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight
+    } anchor = Anchor::TopLeft;
+
+    // Visual properties
+    glm::vec4 color = glm::vec4(1.0f);  ///< Tint color (multiplied with texture) or solid color
+    float rotation = 0.0f;              ///< Rotation in degrees (clockwise, around anchor point)
+    uint8_t layer = 0;                 ///< Layer for depth sorting (higher values render on top)
+    bool visible = true;                ///< Visibility toggle
+};
 
 
 struct Camera_Calculation_Update : Message {
@@ -187,6 +225,36 @@ public:
     void Exit();
 
     void DisableHDRForEditor();
+
+    // ========== Viewport Management ==========
+
+    /**
+     * @brief Set Editor (Scene) viewport dimensions
+     *
+     * Called by EngineService when the Scene viewport is resized.
+     * Used for correct HUD rendering and framebuffer sizing.
+     *
+     * @param width Scene viewport width in pixels
+     * @param height Scene viewport height in pixels
+     */
+    void SetEditorViewportSize(uint32_t width, uint32_t height) {
+        m_editorViewportWidth = width;
+        m_editorViewportHeight = height;
+    }
+
+    /**
+     * @brief Set Game viewport dimensions
+     *
+     * Called by EngineService when the Game viewport is resized.
+     * Used for correct HUD rendering and framebuffer sizing.
+     *
+     * @param width Game viewport width in pixels
+     * @param height Game viewport height in pixels
+     */
+    void SetGameViewportSize(uint32_t width, uint32_t height) {
+        m_gameViewportWidth = width;
+        m_gameViewportHeight = height;
+    }
 
     // ========== System Setup Methods ==========
 
@@ -508,6 +576,16 @@ private:
     /// Shared across all entities with hasAttachedMaterial=false
     /// Ensures stable memory address to prevent cache thrashing
     mutable std::shared_ptr<Material> m_DefaultMaterial;
+
+    // ========== Viewport Dimensions ==========
+
+    /// Editor (Scene) viewport dimensions for framebuffer sizing
+    uint32_t m_editorViewportWidth{ 0 };
+    uint32_t m_editorViewportHeight{ 0 };
+
+    /// Game viewport dimensions for framebuffer sizing
+    uint32_t m_gameViewportWidth{ 0 };
+    uint32_t m_gameViewportHeight{ 0 };
 };
 
 #endif

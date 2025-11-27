@@ -575,42 +575,6 @@ void EditorMain::render()
 		Setup_Dockspace(dockspace_id);
 	}
 
-
-
-	//glClearColor(1, 1, 1, 1);
-
-	//// Update ECS camera entity with EditorCamera data BEFORE RenderSystem::Update
-	//if (!m_IsPlayMode && m_EditorCamera) {
-	//	ecs::world world = Engine::GetWorld();
-	//	auto cameraEntities = world.filter_entities<CameraComponent, PositionComponent>();
-
-	//	if (cameraEntities) {
-	//		auto entity = *cameraEntities.begin();
-	//		auto& cameraComponent = world.get_component_from_entity<CameraComponent>(entity);
-	//		auto& positionComponent = world.get_component_from_entity<PositionComponent>(entity);
-
-	//		// Update ECS camera with EditorCamera data
-	//		positionComponent.m_WorldPos = m_EditorCamera->GetPosition();
-
-	//		// DEBUG: Check what vectors EditorCamera produces and only update position
-	//		glm::vec3 editorForward = m_EditorCamera->GetForward();
-	//		glm::vec3 editorUp = m_EditorCamera->GetUp();
-	//		glm::vec3 editorRight = m_EditorCamera->GetRight();
-
-
-	//		// Update ECS camera vectors with EditorCamera data
-	//		cameraComponent.m_Front = editorForward;
-	//		cameraComponent.m_Up = editorUp;
-	//		cameraComponent.m_Right = editorRight;
-	//		cameraComponent.m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-	//	}
-	//}
-
-	//// Update engine systems
-	//ecs::world world = Engine::GetWorld();
-	//RenderSystem::System().Update(world);
-	//Engine::EndFrame();
-	//Engine::UpdateDebug();
 	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 4.0f);
 	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
@@ -1011,6 +975,13 @@ void EditorMain::Render_Components()
 		material_overrides_component = matOverridesIt->second;
 	}
 
+	ReflectionRegistry::TypeID hud_component{};
+	auto hudIt = internal_type_map.find(entt::type_index<HUDComponent>::value());
+	if (hudIt != internal_type_map.end())
+	{
+		hud_component = hudIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component || type_id == prefab_component_id) {
 			continue;  // Skip PrefabComponent as it's internal
@@ -1259,7 +1230,7 @@ void EditorMain::Render_Components()
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
 							ecs::entity entity{ entityHandle };
 							if (entity.all<MeshRendererComponent, MaterialOverridesComponent>()) {
-								MeshRendererComponent& meshRenderer = entity.get<MeshRendererComponent>();
+								//MeshRendererComponent& meshRenderer = entity.get<MeshRendererComponent>();
 								MaterialOverridesComponent& overrides = entity.get<MaterialOverridesComponent>();
 
 								// Clear existing overrides
@@ -1280,6 +1251,61 @@ void EditorMain::Render_Components()
 					}
 					ImGui::SameLine();
 					ImGui::TextDisabled("Adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_AlbedoColor)");
+				}
+			}
+
+			// Special UI section for HUDComponent
+			if (hud_component && type_id == hud_component) {
+				if (HUDComponent* hudComp = reinterpret_cast<HUDComponent*>(uptr.get())) {
+					ImGui::Separator();
+
+					// Only show button if texture is assigned
+					bool hasTexture = (hudComp->m_TextureGuid.m_guid != rp::null_guid);
+
+					if (!hasTexture) {
+						ImGui::BeginDisabled();
+					}
+
+					if (ImGui::Button("Set Native Size", ImVec2(-1, 0))) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<HUDComponent>()) {
+								HUDComponent& hud = entity.get<HUDComponent>();
+
+								// Load texture and get dimensions
+								auto& registry = ResourceRegistry::Instance();
+								auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(hud.m_TextureGuid.m_guid);
+
+								if (texturePtr && *texturePtr) {
+									unsigned int textureID = (*texturePtr)->id;
+
+									// Query texture dimensions from OpenGL
+									glBindTexture(GL_TEXTURE_2D, textureID);
+									int width = 0, height = 0;
+									glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+									glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+									glBindTexture(GL_TEXTURE_2D, 0);
+
+									if (width > 0 && height > 0) {
+										hud.size = glm::vec2(static_cast<float>(width), static_cast<float>(height));
+										spdlog::info("Set HUD native size to {}x{}", width, height);
+									} else {
+										spdlog::warn("Failed to get texture dimensions for HUD component");
+									}
+								}
+							}
+						});
+						ul.lock();
+					}
+
+					if (!hasTexture) {
+						ImGui::EndDisabled();
+					}
+
+					if (!hasTexture && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+						ImGui::SetTooltip("Assign a texture to use Set Native Size");
+					}
 				}
 			}
 
@@ -1322,6 +1348,31 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 		auto value = data.get(comp);
 		auto meta_type = value.type();
 
+		// === PREFAB OVERRIDE DETECTION (Per-Property) ===
+		bool isPropertyOverridden = false;
+		if (m_PrefabContext.isPrefabInstance && m_PrefabContext.prefabComponent)
+		{
+			// Check if this specific property is overridden
+			for (const auto& override : m_PrefabContext.prefabComponent->m_OverriddenProperties)
+			{
+				if (override.componentTypeHash == m_PrefabContext.currentComponentTypeHash &&
+					override.propertyPath == field_name)
+				{
+					isPropertyOverridden = true;
+					break;
+				}
+			}
+		}
+
+		// Apply visual styling for overridden properties
+		if (isPropertyOverridden)
+		{
+			// Push bold font (if available)
+			// ImGui doesn't have built-in bold, so we use color instead
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.6f, 1.0f)); // Light yellow text
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.3f, 0.5f, 0.7f, 0.15f)); // Light blue background
+		}
+
 		// Auto-detect color properties: vec3/vec4 with "Color" or "Tint" in name
 		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
 			if (field_name.find("Color") != std::string::npos ||
@@ -1345,6 +1396,76 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::ColorEdit4(field_name.c_str(), &vec4_ptr->x)) {
 					is_dirty = true;
 				}
+				ImGui::PopID();
+				continue;
+			}
+		}
+
+		// Unity-style vec2 rendering (horizontal layout with X/Y labels)
+		if (glm::vec2* vec2_ptr = value.try_cast<glm::vec2>()) {
+			ImGui::Text("%s", field_name.c_str());
+			ImGui::SameLine(150);  // Align input fields
+
+			ImGui::PushItemWidth(60);  // Narrow input boxes
+
+			// X component (red label)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+			ImGui::Text("X");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::DragFloat("##X", &vec2_ptr->x)) is_dirty = true;
+			ImGui::SameLine();
+
+			// Y component (green label)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
+			ImGui::Text("Y");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::DragFloat("##Y", &vec2_ptr->y)) is_dirty = true;
+
+			ImGui::PopItemWidth();
+			ImGui::PopID();
+			continue;
+		}
+
+		// Unity-style vec3 rendering (horizontal layout with X/Y/Z labels)
+		// Skip if it's a color field (already handled above with ColorEdit3)
+		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
+			bool isColorField = (field_name.find("Color") != std::string::npos ||
+			                     field_name.find("color") != std::string::npos ||
+			                     field_name.find("Tint") != std::string::npos ||
+			                     field_name.find("tint") != std::string::npos);
+
+			if (!isColorField) {
+				ImGui::Text("%s", field_name.c_str());
+				ImGui::SameLine(150);  // Align input fields
+
+				ImGui::PushItemWidth(60);  // Narrow input boxes
+
+				// X component (red label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+				ImGui::Text("X");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##X", &vec3_ptr->x)) is_dirty = true;
+				ImGui::SameLine();
+
+				// Y component (green label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
+				ImGui::Text("Y");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##Y", &vec3_ptr->y)) is_dirty = true;
+				ImGui::SameLine();
+
+				// Z component (blue label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 1.0f, 1.0f));
+				ImGui::Text("Z");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##Z", &vec3_ptr->z)) is_dirty = true;
+
+				ImGui::PopItemWidth();
 				ImGui::PopID();
 				continue;
 			}
@@ -1437,6 +1558,29 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::InputDouble(field_name.c_str(), vd)) {
 					is_dirty = true;
 				}
+			}
+			else if (uint8_t* vui8 = value.try_cast<uint8_t>())
+			{
+				uint8_t minValue = 0;
+				uint8_t maxValue = 255;
+
+				// Special case for "layer" fields to limit max to 10
+				if (field_name.find("layer") != std::string::npos)
+				{
+					uint8_t maxLayer = 10;
+					if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U8, vui8, &minValue, &maxLayer, "%u")) {
+						is_dirty = true;
+					}
+				}
+				else
+				{
+					
+					if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U8, vui8, &minValue, &maxValue, "%u")) {
+						is_dirty = true;
+					}
+				}
+
+				
 			}
 			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
@@ -1771,6 +1915,51 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 			}
 		}
+
+		// === PREFAB OVERRIDE: Revert Button (Per-Property) ===
+		if (isPropertyOverridden)
+		{
+			// Pop the style colors we pushed earlier
+			ImGui::PopStyleColor(2);
+
+			// Add small revert button on the same line
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.3f, 0.3f, 0.8f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.5f, 0.5f, 1.0f));
+
+			if (ImGui::SmallButton("Revert"))
+			{
+				// Revert this specific property override
+				engineService.ExecuteOnEngineThread([this, field_name]() {
+					auto world = Engine::GetWorld();
+					for (auto& entity : world.get_all_entities())
+					{
+						if (entity.get_uid() == m_SelectedEntityID && entity.all<PrefabComponent>())
+						{
+							PrefabSystem::RevertOverride(
+								world,
+								entity,
+								m_PrefabContext.currentComponentTypeHash,
+								field_name
+							);
+							spdlog::info("Reverted property override: {}.{}",
+								m_PrefabContext.currentComponentTypeName, field_name);
+							break;
+						}
+					}
+				});
+			}
+
+			ImGui::PopStyleColor(3);
+
+			// Tooltip for the revert button
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Revert '%s' to prefab value", field_name.c_str());
+			}
+		}
+
 		ImGui::PopID();
 	}
 }
@@ -2360,11 +2549,11 @@ bool EditorMain::Render_CapsuleCollider_Component(CapsuleCollider& collider) {
 	if (ImGui::IsItemHovered()) {
 		ImGui::SetTooltip("Radius of the capsule cylinder and end caps");
 	}
-
+	
 	// Height
-	float height = collider.GetHeight();
-	if (ImGui::DragFloat("Height", &height, 0.01f, 0.001f, 1000.0f)) {
-		collider.SetHeight(height);
+	float colheight = collider.GetHeight();
+	if (ImGui::DragFloat("Height", &colheight, 0.01f, 0.001f, 1000.0f)) {
+		collider.SetHeight(colheight);
 		changed = true;
 	}
 	if (ImGui::IsItemHovered()) {
@@ -2610,6 +2799,7 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
 		ImGui::MenuItem("Skybox Settings", nullptr, &showSkyboxSettings);
+		ImGui::MenuItem("View Cube", nullptr, &showViewCube);
 
 		ImGui::EndMenu();
 	}
@@ -2986,6 +3176,25 @@ void EditorMain::Render_SceneExplorer()
 
 	auto RenderSceneGraphNode{ [this] (const SceneGraphNode& node, rp::Guid scnguid){
 		auto RenderNode{ [this, scnguid](const SceneGraphNode& node, auto&& fn) -> void {
+			// Search filter - convert both to lowercase for case-insensitive search
+			std::string searchFilter = m_HierarchySearchBuffer;
+			std::string entityNameJump = node.m_entity_name;
+
+			if (!searchFilter.empty()) {
+				std::transform(searchFilter.begin(), searchFilter.end(), searchFilter.begin(), ::tolower);
+				std::string lowerEntityName = entityNameJump;
+				std::transform(lowerEntityName.begin(), lowerEntityName.end(), lowerEntityName.begin(), ::tolower);
+
+				// Skip this node if it doesn't match the search filter
+				if (lowerEntityName.find(searchFilter) == std::string::npos) {
+					// Still recursively check children
+					for (const auto& child : node.m_children) {
+						fn(child, fn);
+					}
+					return;
+				}
+			}
+
 			// Check if this entity is currently selected
 			uint32_t entityUID = ecs::entity(node.m_entity_handle).get_uid();
 			bool isSelected = (m_EntitiesIDSelection.find(entityUID) != m_EntitiesIDSelection.end());
@@ -3038,10 +3247,20 @@ void EditorMain::Render_SceneExplorer()
 				stylect = current_style();
 			}
 
-		// Add prefab prefix for visual distinction
+		// Add prefab prefix for visual distinction (with nesting level)
 		std::string displayName = node.m_entity_name;
 		if (isPrefabInstance) {
-			displayName = "[P] " + displayName;  // [P] indicates prefab instance
+			ecs::entity entity(node.m_entity_handle);
+			const auto& prefabComp = entity.get<PrefabComponent>();
+
+			// Show nesting level for nested prefabs
+			if (prefabComp.IsNestedPrefabInstance()) {
+				// Nested prefab: show level (e.g., [P:1], [P:2])
+				displayName = "[P:" + std::to_string(prefabComp.m_NestingLevel) + "] " + displayName;
+			} else {
+				// Root prefab instance
+				displayName = "[P] " + displayName;
+			}
 		}
 
 		if (ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", displayName.c_str())) {
@@ -3141,6 +3360,19 @@ void EditorMain::Render_SceneExplorer()
 				{
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Prefab");
+
+					if (ImGui::MenuItem("Unpack Prefab"))
+					{
+						// Remove PrefabComponent to break connection with prefab
+						engineService.ExecuteOnEngineThread([node]() {
+							ecs::entity entity(node.m_entity_handle);
+							if (entity.all<PrefabComponent>())
+							{
+								entity.remove<PrefabComponent>();
+								spdlog::info("Unpacked prefab instance: {}", entity.name());
+							}
+						});
+					}
 
 					if (ImGui::MenuItem("Select Prefab Asset"))
 					{
@@ -3321,6 +3553,55 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::PopStyleVar();
+
+	// === DRAG-DROP: Accept prefab files from Asset Browser ===
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
+		{
+			// Get the dropped file path
+			std::string droppedPath = static_cast<const char*>(payload->Data);
+
+			// Check if it's a .prefab file
+			std::filesystem::path filePath(droppedPath);
+			if (filePath.extension() == ".prefab")
+			{
+				spdlog::info("Dropped prefab file into hierarchy: {}", droppedPath);
+
+				// Instantiate the prefab
+				engineService.ExecuteOnEngineThread([droppedPath, this]() {
+					auto world = Engine::GetWorld();
+
+					// Load and cache the prefab
+					PrefabData prefabData = PrefabSystem::LoadAndCachePrefab(droppedPath);
+
+					if (prefabData.IsValid())
+					{
+						// Instantiate at origin (or camera position in the future)
+						ecs::entity instance = PrefabSystem::InstantiatePrefab(
+							world,
+							prefabData.guid,
+							glm::vec3(0, 0, 0)
+						);
+
+						if (instance.get_uuid() != 0)
+						{
+							spdlog::info("Instantiated prefab '{}' in scene", prefabData.name);
+						}
+						else
+						{
+							spdlog::error("Failed to instantiate prefab: {}", prefabData.name);
+						}
+					}
+					else
+					{
+						spdlog::error("Failed to load prefab from: {}", droppedPath);
+					}
+				});
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
 
 	// Right-click in empty space to create new objects
 	if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
@@ -3506,7 +3787,6 @@ void EditorMain::Render_Console()
 
 
 	// Example log messages
-
 	if (!consoleMessages.empty())
 	{
 		ImGui::BeginChild("ConsoleScrollRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -3877,7 +4157,6 @@ void EditorMain::Render_PhysicsDebugPanel()
 		if (m_SelectedEntityID != entityUID) { continue; }
 	}
 
-
 	// Queue fetch on engine thread
 	engineService.ExecuteOnEngineThread([this, entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
 		ecs::entity entity{ entityHandle };
@@ -4185,9 +4464,6 @@ void EditorMain::Render_AssetBrowser()
 	float statusBarHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2;
 	float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
 
-	// Total reserved space = toolbar + status bar + spacing between sections
-	float reservedHeight = toolbarHeight + statusBarHeight + (itemSpacing * 2);
-
 	// === TOOLBAR ===
 	ImGui::BeginChild("AssetToolbar", ImVec2(0, toolbarHeight), true, ImGuiWindowFlags_NoScrollbar);
 	{
@@ -4441,7 +4717,8 @@ void EditorMain::Render_AssetBrowser()
 						ImGui::EndPopup();
 					}
 
-					ImGui::TextWrapped("%s", folderName.c_str());
+					// Clip filename if too long instead of wrapping
+					ImGui::Text("%s", folderName.c_str());
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
@@ -4553,7 +4830,8 @@ void EditorMain::Render_AssetBrowser()
 						ImGui::EndDragDropSource();
 					}
 
-					ImGui::TextWrapped("%s", filename.c_str());
+					// Clip filename if too long instead of wrapping
+					ImGui::Text("%s", filename.c_str());
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
@@ -4717,7 +4995,7 @@ void EditorMain::Render_AssetBrowser()
 		else
 		{
 			auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
-			int fileCount = std::distance(files.first, files.second);
+			int fileCount = static_cast<int>(std::distance(files.first, files.second));
 			int folderCount = static_cast<int>(m_AssetManager->GetSubDirectories().size());
 			ImGui::Text("%d items (%d folders, %d files)", fileCount + folderCount, folderCount, fileCount);
 		}
@@ -5144,6 +5422,12 @@ unsigned int EditorMain::GetIconForFile(const std::string& extension)
 	else if (ext == ".shader" || ext == ".vert" || ext == ".frag" || ext == ".glsl" ||
 			 ext == ".vs" || ext == ".fs" || ext == ".comp") {
 		return m_AssetIcons.shaderIcon;
+	}
+	// Prefab files (Unity-style prefab assets)
+	else if (ext == ".prefab") {
+		// Use script icon for now (could add custom prefab icon in the future)
+		// Prefabs are data/template files, similar to scripts in nature
+		return m_AssetIcons.scriptIcon != 0 ? m_AssetIcons.scriptIcon : m_AssetIcons.fileIcon;
 	}
 	// Default file icon
 	return m_AssetIcons.fileIcon;
@@ -5787,7 +6071,7 @@ void EditorMain::NewScene()
 	// Clear selection after loading new scene
 }
 
-void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
+void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 {
 	ImGui::Begin("Gizmo Debug");
 	ImGuiIO& io = ImGui::GetIO();
@@ -5820,24 +6104,31 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 	ImGui::End();
 
 	// This is for toggling the gizmo
-	if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
-	{
-		mode = (ImGuizmo::OPERATION)0;
-	}
+	// Only process shortcuts when camera is NOT in free-look mode (right-click held)
+	auto* input = InputManager::Get_Instance();
+	bool isCameraActive = input->Is_MousePressed(GLFW_MOUSE_BUTTON_RIGHT);
 
-	if (ImGui::IsKeyPressed(ImGuiKey_W, false))
+	if (!isCameraActive)
 	{
-		mode = ImGuizmo::OPERATION::TRANSLATE;
-	}
+		if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
+		{
+			mode = (ImGuizmo::OPERATION)0;
+		}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_E, false))
-	{
-		mode = ImGuizmo::OPERATION::ROTATE;
-	}
+		if (ImGui::IsKeyPressed(ImGuiKey_W, false))
+		{
+			mode = ImGuizmo::OPERATION::TRANSLATE;
+		}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_R, false))
-	{
-		mode = ImGuizmo::OPERATION::SCALE;
+		if (ImGui::IsKeyPressed(ImGuiKey_E, false))
+		{
+			mode = ImGuizmo::OPERATION::ROTATE;
+		}
+
+		if (ImGui::IsKeyPressed(ImGuiKey_R, false))
+		{
+			mode = ImGuizmo::OPERATION::SCALE;
+		}
 	}
 
 	// Only display gizmos if there is an entity selected and the gizmo is set to one of the 3 active modes
@@ -5898,5 +6189,75 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize) // UndoToAdd
 		GuizmoEntityTransformMTX = nullptr;
 	}
 
+	// ========================================================================
+	// VIEW CUBE - Unity-style camera orientation widget
+	// ========================================================================
+	if (showViewCube) {
+		// Draw view cube in top right corner
+		float viewCubeSize = 128.0f;
+	float viewCubePadding = 10.0f;
+	ImVec2 viewCubePos = ImVec2(viewportPos.x + viewportSize.x - viewCubeSize - viewCubePadding,viewportPos.y + viewCubePadding);
 
+	// Set up for view manipulator (always active, regardless of entity selection)
+	ImGuizmo::SetDrawlist();
+	ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
+
+	// Determine if we should orbit around selected entity (LOCAL mode) or rotate in place (WORLD mode)
+	bool isLocalMode = (mode == ImGuizmo::OPERATION::TRANSLATE || mode == ImGuizmo::OPERATION::ROTATE || mode == ImGuizmo::OPERATION::SCALE) && (m_SelectedEntityID != 0);
+	glm::vec3 orbitTarget = glm::vec3(0.0f);
+
+	if (isLocalMode && GuizmoEntityTransform != nullptr) {
+		// LOCAL MODE: Orbit around selected entity
+		orbitTarget = GuizmoEntityTransform->m_Translation;
+	}
+	// else: WORLD MODE - will rotate camera in place
+
+	// Build view matrix for ViewManipulate
+	glm::mat4 originalViewMatrix = m_EditorCamera->GetViewMatrix();
+	glm::mat4 viewMatrix = originalViewMatrix;
+
+	// Calculate distance for ViewManipulate
+	glm::vec3 cameraPos = m_EditorCamera->GetPosition();
+	float cameraDistance = isLocalMode ? glm::length(cameraPos - orbitTarget) : 10.0f;
+	if (cameraDistance < 0.1f) cameraDistance = 10.0f;
+
+	// ViewManipulate modifies the view matrix when user clicks on the cube
+	ImGuizmo::ViewManipulate(glm::value_ptr(viewMatrix), cameraDistance, viewCubePos, ImVec2(viewCubeSize, viewCubeSize), 0x10101010);
+
+	//// Check if the view matrix was modified
+	bool viewMatrixChanged = glm::any(glm::notEqual(viewMatrix[0], originalViewMatrix[0])) ||
+	                         glm::any(glm::notEqual(viewMatrix[1], originalViewMatrix[1])) ||
+	                         glm::any(glm::notEqual(viewMatrix[2], originalViewMatrix[2])) ||
+	                         glm::any(glm::notEqual(viewMatrix[3], originalViewMatrix[3]));
+
+	if (viewMatrixChanged) {
+	//	if (isLocalMode) {
+	//		// LOCAL MODE: Camera orbits around selected entity
+			// Extract new camera position from modified view matrix
+			//glm::mat4 cameraTransform = glm::inverse(viewMatrix);
+			//glm::vec3 newPosition = glm::vec3(cameraTransform[3]);
+
+	//		// Update camera to look at the entity
+			//m_EditorCamera->SetPosition(newPosition);
+			//m_EditorCamera->SetTarget(orbitTarget);
+	//	}
+	//	else {
+	//		// WORLD MODE: Camera rotates in place, doesn't move position
+	//		// Extract rotation from the modified view matrix
+	//		glm::mat4 cameraTransform = glm::inverse(viewMatrix);
+
+	//		// Extract basis vectors (rotation only)
+	//		glm::vec3 right = glm::normalize(glm::vec3(cameraTransform[0]));
+	//		glm::vec3 up = glm::normalize(glm::vec3(cameraTransform[1]));
+	//		glm::vec3 forward = -glm::normalize(glm::vec3(cameraTransform[2]));
+
+	//		// Calculate pitch and yaw from forward vector
+	//		float pitch = glm::degrees(asin(-forward.y));
+	//		float yaw = glm::degrees(atan2(forward.x, forward.z));
+
+	//		// Keep current position, only change rotation
+	//		m_EditorCamera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+	//	}
+	}
+	}  // End of if (showViewCube)
 }

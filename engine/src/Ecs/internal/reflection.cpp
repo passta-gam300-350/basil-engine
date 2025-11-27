@@ -182,7 +182,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&LightComponent::m_OuterCone, "[Spot] Outer Cone Angle">
 	);
 
-	RegisterReflectionComponent<CameraComponent::CameraType>("Camera Type");
+	// Register CameraComponent enum type
+	RegisterReflectionComponent<CameraComponent::CameraType>("CameraComponent::CameraType");
 
 	RegisterReflectionComponent<CameraComponent>(
 		"CameraComponent",
@@ -229,5 +230,20 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
 		MemberRegistrationV<&AudioComponent::position, "position">,
 		MemberRegistrationV<&AudioComponent::velocity, "velocity">
+	);
+
+	// Register HUDComponent anchor enum
+	RegisterReflectionComponent<HUDComponent::Anchor>("HUDComponent::Anchor");
+
+	RegisterReflectionComponent<HUDComponent>(
+		"HUDComponent",
+		MemberRegistrationV<&HUDComponent::m_TextureGuid, "m_TextureGuid">,
+		MemberRegistrationV<&HUDComponent::position, "position">,
+		MemberRegistrationV<&HUDComponent::size, "size">,
+		MemberRegistrationV<&HUDComponent::anchor, "anchor">,
+		MemberRegistrationV<&HUDComponent::color, "color">,
+		MemberRegistrationV<&HUDComponent::rotation, "rotation">,
+		MemberRegistrationV<&HUDComponent::layer, "layer">,
+		MemberRegistrationV<&HUDComponent::visible, "visible">
 	);
 }

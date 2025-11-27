@@ -17,6 +17,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 // Jolt DebugRenderer for accessing sInstance singleton
 #include <Jolt/Renderer/DebugRenderer.h>
 
+// For applying center offset to shapes
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+
 // JoltDebugRenderer (owned by RenderSystem, accessed via singleton)
 #include "Render/JoltDebugRenderer.h"
 
@@ -444,6 +447,8 @@ void PhysicsSystem::EnableObservers() {
     registry.on_destroy<SphereCollider>().connect<&PhysicsSystem::OnColliderDestroyed>(this);
     registry.on_construct<CapsuleCollider>().connect<&PhysicsSystem::OnColliderAdded>(this);
     registry.on_destroy<CapsuleCollider>().connect<&PhysicsSystem::OnColliderDestroyed>(this);
+    registry.on_construct<MeshCollider>().connect<&PhysicsSystem::OnColliderAdded>(this);
+    registry.on_destroy<MeshCollider>().connect<&PhysicsSystem::OnColliderDestroyed>(this);
 
     m_observersEnabled = true;
     spdlog::info("PhysicsSystem: Observers enabled");
@@ -465,6 +470,8 @@ void PhysicsSystem::DisableObservers() {
     registry.on_destroy<SphereCollider>().disconnect();
     registry.on_construct<CapsuleCollider>().disconnect();
     registry.on_destroy<CapsuleCollider>().disconnect();
+    registry.on_construct<MeshCollider>().disconnect();
+    registry.on_destroy<MeshCollider>().disconnect();
 
     m_observersEnabled = false;
     spdlog::debug("PhysicsSystem: Observers disabled");
@@ -483,7 +490,7 @@ void PhysicsSystem::OnRigidbodyAdded(entt::registry& registry, entt::entity enti
 
 void PhysicsSystem::OnColliderAdded(entt::registry& registry, entt::entity entity) {
 
-    ecs::entity ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+    ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
     auto world = Engine::GetWorld();
 
     // Create body if entity has RigidBodyComponent OR if it's a trigger-only collider
@@ -492,12 +499,11 @@ void PhysicsSystem::OnColliderAdded(entt::registry& registry, entt::entity entit
 }
 
 void PhysicsSystem::OnRigidbodyDestroyed(entt::registry& registry, entt::entity entity) {
-    uint64_t uid = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
-    ecs::entity ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+    ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
     auto world = Engine::GetWorld();
 
     // Find and destroy associated Jolt body
-    auto it = m_entityToBodyID.find(uid);
+    auto it = m_entityToBodyID.find(ecsEntity);
     if (it != m_entityToBodyID.end()) {
         DestroyRigidBody(it->second);
         m_entityToBodyID.erase(it);
@@ -511,13 +517,17 @@ void PhysicsSystem::OnRigidbodyDestroyed(entt::registry& registry, entt::entity 
 }
 
 void PhysicsSystem::OnColliderDestroyed(entt::registry& registry, entt::entity entity) {
-    // Collider removed = body needs recreation (or destruction if no Rigidbody)
-    uint64_t uid = static_cast<uint64_t>(ecs::world::detail::entity_id_cast(entity));
+    // Collider removed = body needs recreation (or destruction if no other colliders)
+    ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+    auto world = Engine::GetWorld();
 
-    auto it = m_entityToBodyID.find(uid);
+    // Find and destroy associated Jolt body
+    auto it = m_entityToBodyID.find(ecsEntity);
     if (it != m_entityToBodyID.end()) {
-        DestroyRigidBody(it->second);
+        JPH::BodyID const bodyID = it->second;
+        DestroyRigidBody(bodyID);
         m_entityToBodyID.erase(it);
+        m_bodyIDToEntity.erase(bodyID.GetIndexAndSequenceNumber());
     }
 }
 
@@ -610,13 +620,13 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
     // Determine motion type and layer
     JPH::EMotionType motionType = JPH::EMotionType::Static;
     JPH::ObjectLayer layer = Layers::NON_MOVING;
-    bool isActive = true;
+    bool isActiveBody = true;
 
     if (hasRigidBody) {
         auto rb = entity.get<RigidBodyComponent>();
         motionType = rb.ToJoltMotionType();
         layer = rb.IsStatic() ? Layers::NON_MOVING : Layers::MOVING;
-        isActive = rb.isActive;
+        isActiveBody = rb.isActive;
     }
 
     // Triggers are always static
@@ -659,8 +669,8 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         // Mass override (will be set after creation for dynamic bodies)
         // Linear and angular damping (will be set after creation)
     }
-
-    JPH::BodyID bodyID = m_bodyInterface->CreateAndAddBody(bodySettings, isActive ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
+    
+    JPH::BodyID bodyID = m_bodyInterface->CreateAndAddBody(bodySettings, isActiveBody ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
     if (bodyID.IsInvalid()) {
         spdlog::warn("PhysicsSystem: Body Id is invalid");
         return;
@@ -1041,19 +1051,40 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
     if (world.has_all_components_in_entity<BoxCollider>(entity)) {
         auto& box = entity.get<BoxCollider>();
         JPH::Vec3 halfExtents = PhysicsUtils::ToJolt(box.size * 0.5f);
-        return new JPH::BoxShape(halfExtents);
+        JPH::RefConst<JPH::Shape> baseShape = new JPH::BoxShape(halfExtents);
+
+        // Apply center offset if non-zero
+        JPH::Vec3 centerOffset = PhysicsUtils::ToJolt(box.center);
+        if (!centerOffset.IsNearZero()) {
+            return new JPH::RotatedTranslatedShape(centerOffset, JPH::Quat::sIdentity(), baseShape);
+        }
+        return baseShape;
     }
 
     // Check SphereCollider
     if (world.has_all_components_in_entity<SphereCollider>(entity)) {
         auto& sphere = entity.get<SphereCollider>();
-        return new JPH::SphereShape(sphere.radius);
+        JPH::RefConst<JPH::Shape> baseShape = new JPH::SphereShape(sphere.radius);
+
+        // Apply center offset if non-zero
+        JPH::Vec3 centerOffset = PhysicsUtils::ToJolt(sphere.center);
+        if (!centerOffset.IsNearZero()) {
+            return new JPH::RotatedTranslatedShape(centerOffset, JPH::Quat::sIdentity(), baseShape);
+        }
+        return baseShape;
     }
 
     // Check CapsuleCollider
     if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
         auto& capsule = entity.get<CapsuleCollider>();
-        return new JPH::CapsuleShape(capsule.GetHeight() * 0.5f, capsule.GetRadius());
+        JPH::RefConst<JPH::Shape> baseShape = new JPH::CapsuleShape(capsule.GetHeight() * 0.5f, capsule.GetRadius());
+
+        // Apply center offset if non-zero
+        JPH::Vec3 centerOffset = PhysicsUtils::ToJolt(capsule.center);
+        if (!centerOffset.IsNearZero()) {
+            return new JPH::RotatedTranslatedShape(centerOffset, JPH::Quat::sIdentity(), baseShape);
+        }
+        return baseShape;
     }
 
     // Check MeshCollider
@@ -1067,7 +1098,7 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
         if (meshCollider.useRendererMesh && world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
             // Extract mesh data from MeshRendererComponent
             auto& meshRenderer = entity.get<MeshRendererComponent>();
-
+            
             // TODO: You need to implement mesh data extraction based on your asset system
             // This is a placeholder - you'll need to load the actual mesh data from your mesh GUID
             // Example approach:
@@ -1092,6 +1123,8 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
         }
 
         // Create the appropriate shape based on collision mode
+        JPH::RefConst<JPH::Shape> baseShape = nullptr;
+
         if (meshCollider.collisionMode == MeshCollider::MESH) {
             // Create exact mesh shape (static/kinematic only)
             JPH::TriangleList triangles;
@@ -1109,7 +1142,7 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
 
             if (result.IsValid()) {
                 spdlog::info("PhysicsSystem: Created MeshShape with {} triangles", triangles.size());
-                return result.Get();
+                baseShape = result.Get();
             }
             else {
                 spdlog::error("PhysicsSystem: Failed to create MeshShape: {}", result.GetError().c_str());
@@ -1130,13 +1163,20 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
 
             if (result.IsValid()) {
                 spdlog::info("PhysicsSystem: Created ConvexHullShape with {} vertices", joltVertices.size());
-                return result.Get();
+                baseShape = result.Get();
             }
             else {
                 spdlog::error("PhysicsSystem: Failed to create ConvexHullShape: {}", result.GetError().c_str());
                 return nullptr;
             }
         }
+
+        // Apply center offset if non-zero
+        JPH::Vec3 centerOffset = PhysicsUtils::ToJolt(meshCollider.center);
+        if (!centerOffset.IsNearZero()) {
+            return new JPH::RotatedTranslatedShape(centerOffset, JPH::Quat::sIdentity(), baseShape);
+        }
+        return baseShape;
     }
 
     return nullptr;

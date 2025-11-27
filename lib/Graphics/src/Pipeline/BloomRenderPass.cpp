@@ -8,7 +8,7 @@
 BloomRenderPass::BloomRenderPass()
 	: RenderPass("BloomPass")  // No base framebuffer (creates its own mip chain)
 {
-	spdlog::info("BloomRenderPass: Created (will initialize on first execute)");
+	//spdlog::info("BloomRenderPass: Created (will initialize on first execute)");
 
 	// Configure custom resize logic
 	SetResizeMode(ResizeMode::Custom);
@@ -50,7 +50,7 @@ void BloomRenderPass::Initialize(uint32_t windowWidth, uint32_t windowHeight)
 
 		m_MipChain.push_back(mip);
 
-		spdlog::info("BloomRenderPass: Created mip {} ({}x{})", i, mipIntSize.x, mipIntSize.y);
+		//spdlog::info("BloomRenderPass: Created mip {} ({}x{})", i, mipIntSize.x, mipIntSize.y);
 	}
 
 	// Load shaders
@@ -74,7 +74,7 @@ void BloomRenderPass::Initialize(uint32_t windowWidth, uint32_t windowHeight)
 	glUseProgram(0);
 
 	m_Initialized = true;
-	spdlog::info("BloomRenderPass: Initialized with {} mips", NUM_BLOOM_MIPS);
+	//spdlog::info("BloomRenderPass: Initialized with {} mips", NUM_BLOOM_MIPS);
 }
 
 void BloomRenderPass::Execute(RenderContext& context)
