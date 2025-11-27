@@ -1,0 +1,48 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 1
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+entities:
+  - Scene ID:
+      Scene ID: 0
+    entity name:
+      name: mainmenu
+    HUDComponent:
+      m_TextureGuid:
+        guid: 276196b17e2da9feda4147f14d77
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
