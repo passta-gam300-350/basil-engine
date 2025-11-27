@@ -8,6 +8,8 @@
 #include "GLFW/glfw3.h"
 #include <algorithm>
 #include <ranges>
+#include <numeric>
+#include <unordered_map>
 
 void EditorMain::Render_Profiler()
 {
@@ -36,19 +38,106 @@ void EditorMain::Render_Profiler()
 	auto events = Profiler::instance().getEventCurrentFrame();
 	auto last = Profiler::instance().Get_Last_Frame();
 
+	// Frame time history for graph (last 120 frames)
+	static std::vector<float> frameTimeHistory(120, 0.0f);
+	static size_t frameHistoryIndex = 0;
 
+	// Update frame time history (circular buffer)
+	if (last.frameMs > 0.0) {
+		frameTimeHistory[frameHistoryIndex] = static_cast<float>(last.frameMs);
+		frameHistoryIndex = (frameHistoryIndex + 1) % frameTimeHistory.size();
+	}
 
+	// Frame time graph
+	ImGui::Text("Frame Time History (last 120 frames):");
+
+	// Calculate min/max for auto-scaling
+	float minFrameTime = *std::min_element(frameTimeHistory.begin(), frameTimeHistory.end());
+	float maxFrameTime = *std::max_element(frameTimeHistory.begin(), frameTimeHistory.end());
+
+	// Ensure minimum range for visibility
+	if (maxFrameTime < 20.0f) maxFrameTime = 20.0f;
+
+	// Draw graph with target line overlay
+	char overlay[64];
+	const float TARGET_60FPS = 16.67f;
+	const float TARGET_30FPS = 33.33f;
+
+	if (last.frameMs > TARGET_60FPS) {
+		sprintf_s(overlay, "%.2f ms (%.0f FPS) - OVER 60 FPS BUDGET!", last.frameMs, 1000.0 / last.frameMs);
+	} else {
+		sprintf_s(overlay, "%.2f ms (%.0f FPS)", last.frameMs, 1000.0 / last.frameMs);
+	}
+
+	ImGui::PlotLines("##FrameTimeGraph", frameTimeHistory.data(), static_cast<int>(frameTimeHistory.size()),
+	                 static_cast<int>(frameHistoryIndex), overlay, minFrameTime, maxFrameTime, ImVec2(0, 100));
+
+	// Target frame time indicators
+	ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Target 60 FPS: %.2f ms", TARGET_60FPS);
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Target 30 FPS: %.2f ms", TARGET_30FPS);
+
+	ImGui::Separator();
+
+	// System statistics (min/max/avg tracking)
+	static std::unordered_map<std::string, std::vector<double>> systemHistory; // Store last N samples
+	static const size_t STAT_WINDOW = 60; // Track last 60 frames
+
+	// Update system history
+	for (auto& kv : last.systemMs) {
+		auto& history = systemHistory[kv.first];
+		history.push_back(kv.second);
+		if (history.size() > STAT_WINDOW) {
+			history.erase(history.begin());
+		}
+	}
+
+	// Calculate total time
 	double totalMs = 0.0;
 	for (auto& kv : last.systemMs) {
 		totalMs += kv.second;
 	}
 
+	// Display systems with statistics
+	ImGui::Text("System Performance (last %zu frames):", STAT_WINDOW);
+	ImGui::Columns(6, "SystemStats");
+	ImGui::Separator();
+	ImGui::Text("System"); ImGui::NextColumn();
+	ImGui::Text("Current"); ImGui::NextColumn();
+	ImGui::Text("Min"); ImGui::NextColumn();
+	ImGui::Text("Max"); ImGui::NextColumn();
+	ImGui::Text("Avg"); ImGui::NextColumn();
+	ImGui::Text("%%"); ImGui::NextColumn();
+	ImGui::Separator();
+
 	for (auto& kv : last.systemMs) {
+		const std::string& systemName = kv.first;
 		double sysMs = kv.second;
 		double pct = (totalMs > 0.0) ? (sysMs / totalMs) * 100.0 : 0.0;
 
-		ImGui::Text("%s: %.2f ms (%.1f%%)", kv.first.c_str(), sysMs, pct);
+		// Calculate stats from history
+		auto& history = systemHistory[systemName];
+		if (!history.empty()) {
+			double minMs = *std::min_element(history.begin(), history.end());
+			double maxMs = *std::max_element(history.begin(), history.end());
+			double avgMs = std::accumulate(history.begin(), history.end(), 0.0) / history.size();
+
+			// Color-code current value based on severity
+			ImVec4 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // White default
+			if (pct > 50.0) color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // Red if >50%
+			else if (pct > 30.0) color = ImVec4(1.0f, 0.5f, 0.0f, 1.0f); // Orange if >30%
+
+			ImGui::TextColored(color, "%s", systemName.c_str()); ImGui::NextColumn();
+			ImGui::Text("%.2f ms", sysMs); ImGui::NextColumn();
+			ImGui::Text("%.2f ms", minMs); ImGui::NextColumn();
+			ImGui::Text("%.2f ms", maxMs); ImGui::NextColumn();
+			ImGui::Text("%.2f ms", avgMs); ImGui::NextColumn();
+			ImGui::TextColored(color, "%.1f%%", pct); ImGui::NextColumn();
+		}
 	}
+
+	ImGui::Columns(1);
+	ImGui::Separator();
 
 	ImGui::End();
 }
