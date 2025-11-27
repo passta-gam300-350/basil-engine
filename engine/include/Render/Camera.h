@@ -20,6 +20,7 @@ Technology is prohibited.
 #include <glm/gtc/matrix_transform.hpp>
 #include "Ecs/ecs.h"
 #include "Component/Transform.hpp"
+#include "Profiler/profiler.hpp"
 
 struct CameraComponent {
     enum class CameraType : std::uint8_t {
@@ -159,6 +160,7 @@ public:
     // Phase 4: Removed GetAuxCamera method - editor camera uses snapshot pattern
 
     void FixedUpdate(ecs::world& w) {
+        PF_SYSTEM("Camera System");
         auto& cache = Instance().m_CachedGameCamera;
 
         // Reset active flag - will be set to true if active camera found

@@ -21,7 +21,7 @@ Technology is prohibited.
 #include "Render/Camera.h"
 #include <filesystem>
 #include <algorithm>
-
+#include "Profiler/profiler.hpp"
 
 AudioSystem& AudioSystem::GetInstance() {
     static AudioSystem instance;
@@ -67,7 +67,7 @@ bool AudioSystem::Init(void* extraDriverData) {
 void AudioSystem::Update(ecs::world& world) {
     if (!m_initialized || !m_system)
         return;
-
+    PF_SYSTEM("Audio System");
     // Update listener from active game camera (cached @ 60Hz in CameraSystem::FixedUpdate)
     // Editor camera is separate and not used for audio positioning
     const auto& camera = CameraSystem::GetActiveCameraData();

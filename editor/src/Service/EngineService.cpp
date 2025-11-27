@@ -45,10 +45,15 @@ void EngineContainerService::EngineContainer::engine_service() {
 			Engine::BeginFrame();
 
 			{
-				PF_SYSTEM("EngineWork");
-				engine_snapshot_callback();
-				Engine::CoreUpdate();
-				Engine::UpdateDebug();
+				{
+					PF_SCOPE("EngineWork");
+					{
+						PF_SYSTEM("Snapshot callback");
+						engine_snapshot_callback();
+					}
+					Engine::CoreUpdate();
+					Engine::UpdateDebug();
+				}
 			}
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore

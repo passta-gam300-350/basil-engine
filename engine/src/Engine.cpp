@@ -206,7 +206,7 @@ void Engine::Update() {
 }
 
 void Engine::UpdateDebug() {
-
+	PF_SYSTEM("Update Debug");
 	Engine& instance{ Instance() };
 	std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt };
 	std::uint64_t& frame_counter{ instance.m_Info.m_FrameLogCounter };
@@ -425,6 +425,7 @@ void Engine::EndFrame()
 
 void Engine::SyncActiveSceneRenderSettings()
 {
+	PF_SYSTEM("SyncActiveSceneRenderSettings");
 	// Unity-style: Apply active scene's render settings to the renderer
 	if (!Instance().m_SceneRegistry || !Instance().m_RenderSystem) {
 		return; // Not yet initialized
