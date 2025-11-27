@@ -1349,7 +1349,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			ImGui::Text("X");
 			ImGui::PopStyleColor();
 			ImGui::SameLine();
-			if (ImGui::DragFloat("##X", &vec2_ptr->x, 0.1f)) is_dirty = true;
+			if (ImGui::DragFloat("##X", &vec2_ptr->x)) is_dirty = true;
 			ImGui::SameLine();
 
 			// Y component (green label)
@@ -1357,7 +1357,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			ImGui::Text("Y");
 			ImGui::PopStyleColor();
 			ImGui::SameLine();
-			if (ImGui::DragFloat("##Y", &vec2_ptr->y, 0.1f)) is_dirty = true;
+			if (ImGui::DragFloat("##Y", &vec2_ptr->y)) is_dirty = true;
 
 			ImGui::PopItemWidth();
 			ImGui::PopID();
@@ -1383,7 +1383,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text("X");
 				ImGui::PopStyleColor();
 				ImGui::SameLine();
-				if (ImGui::DragFloat("##X", &vec3_ptr->x, 0.1f)) is_dirty = true;
+				if (ImGui::DragFloat("##X", &vec3_ptr->x)) is_dirty = true;
 				ImGui::SameLine();
 
 				// Y component (green label)
@@ -1391,7 +1391,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text("Y");
 				ImGui::PopStyleColor();
 				ImGui::SameLine();
-				if (ImGui::DragFloat("##Y", &vec3_ptr->y, 0.1f)) is_dirty = true;
+				if (ImGui::DragFloat("##Y", &vec3_ptr->y)) is_dirty = true;
 				ImGui::SameLine();
 
 				// Z component (blue label)
@@ -1399,7 +1399,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text("Z");
 				ImGui::PopStyleColor();
 				ImGui::SameLine();
-				if (ImGui::DragFloat("##Z", &vec3_ptr->z, 0.1f)) is_dirty = true;
+				if (ImGui::DragFloat("##Z", &vec3_ptr->z)) is_dirty = true;
 
 				ImGui::PopItemWidth();
 				ImGui::PopID();
