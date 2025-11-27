@@ -10,6 +10,7 @@
 #include <Scene/Scene.hpp>
 
 #include "System/BehaviourSystem.hpp"
+#include "Profiler/profiler.hpp"
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -40,62 +41,75 @@ void EngineContainerService::EngineContainer::engine_service() {
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
-			engine_snapshot_callback();
-			Engine::BeginFrame();
-			Engine::CoreUpdate();
-			Engine::EndFrame();
-			Engine::UpdateDebug();
+			{
+				PF_SCOPE("EngineWork");
+				engine_snapshot_callback();
+				Engine::BeginFrame();
+				Engine::CoreUpdate();
+				Engine::EndFrame();
+				Engine::UpdateDebug();
+			}
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
 			// This prevents screen tearing when editor reads the framebuffer texture
 			//glFinish();
 
-			if (m_hasPickingQuery)
 			{
-				auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-				if (sceneRenderer)
+				PF_SCOPE("EntityPicking");
+				if (m_hasPickingQuery)
 				{
-					// Create picking query
-					MousePickingQuery query;
-					query.screenX = static_cast<int>(m_pickingMouseX);
-					query.screenY = static_cast<int>(m_pickingMouseY);
-					query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
-					query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
-
-					// Query the picking buffer (picking pass already rendered)
-					PickingResult result = sceneRenderer->QueryObjectPicking(query);
-
-					// Disable picking pass for subsequent frames
-					sceneRenderer->EnablePicking(false);
-
-					// Handle result immediately (we're on engine thread)
-					if (result.hasHit && result.objectID != 0)
+					auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+					if (sceneRenderer)
 					{
-						spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-							result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+						// Create picking query
+						MousePickingQuery query;
+						query.screenX = static_cast<int>(m_pickingMouseX);
+						query.screenY = static_cast<int>(m_pickingMouseY);
+						query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
+						query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
 
-						// Set outline immediately
-						sceneRenderer->ClearOutlinedObjects();
-						sceneRenderer->AddOutlinedObject(result.objectID);
+						// Query the picking buffer (picking pass already rendered)
+						PickingResult result = sceneRenderer->QueryObjectPicking(query);
 
-						// Notify editor via callback
-						if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+						// Disable picking pass for subsequent frames
+						sceneRenderer->EnablePicking(false);
+
+						// Handle result immediately (we're on engine thread)
+						if (result.hasHit && result.objectID != 0)
+						{
+							spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+								result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+
+							// Set outline immediately
+							sceneRenderer->ClearOutlinedObjects();
+							sceneRenderer->AddOutlinedObject(result.objectID);
+
+							// Notify editor via callback
+							if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+						}
+						else
+						{
+							spdlog::info("EngineService: No entity picked");
+							sceneRenderer->ClearOutlinedObjects();
+							if (m_pickingCallback) m_pickingCallback(false, 0);
+						}
 					}
-					else
-					{
-						spdlog::info("EngineService: No entity picked");
-						sceneRenderer->ClearOutlinedObjects();
-						if (m_pickingCallback) m_pickingCallback(false, 0);
-					}
+
+					// Clear picking query flag
+					m_hasPickingQuery = false;
+					m_pickingCallback = nullptr;
 				}
-
-				// Clear picking query flag
-				m_hasPickingQuery = false;
-				m_pickingCallback = nullptr;
 			}
 
-			m_container_is_presentable.acquire();
-			engine_snapshot_writeback();
+			{
+				PF_SCOPE("WaitForEditor");
+				m_container_is_presentable.acquire();
+			}
+
+			{
+				PF_SCOPE("Writeback");
+				engine_snapshot_writeback();
+			}
 		}
 	}
 	Engine::Exit();

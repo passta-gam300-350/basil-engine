@@ -1,8 +1,11 @@
 #include"Screens/EditorMain.hpp"
 #include "Manager/ResourceSystem.hpp"
+#include "Profiler/profiler.hpp"
 
 void EditorMain::Render_AssetBrowser()
 {
+	PF_EDITOR_SCOPE("Render_AssetBrowser");
+
 	// Padding Variables: Asset Grid/List
 	static float thumbnailSize = 72.0f;
 	static float padding = thumbnailSize * 0.1f; // Unity-like: padding is 10% of thumbnail size

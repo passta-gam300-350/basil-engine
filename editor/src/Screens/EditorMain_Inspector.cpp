@@ -9,6 +9,7 @@
 #include <components/behaviour.hpp>
 #include <Render/Render.h>
 #include "Physics/Physics_Components.h"
+#include "Profiler/profiler.hpp"
 
 template <typename T>
 void assign_enum_helper(void* dest, const void* src) {
@@ -17,6 +18,7 @@ void assign_enum_helper(void* dest, const void* src) {
 
 void EditorMain::Render_Inspector()
 {
+	PF_EDITOR_SCOPE("Render_Inspector");
 	ImGui::Begin("Inspector", nullptr);
 
 	// Show selected entity information

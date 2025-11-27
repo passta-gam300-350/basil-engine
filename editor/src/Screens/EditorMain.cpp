@@ -117,7 +117,7 @@ namespace {
 
 		return uniforms;
 	}
-
+	
 	void SyncMaterialProperties(MaterialDescriptor& desc, std::string const& shader_dir) {
 		ShaderUniforms all_uniforms;
 
@@ -319,7 +319,7 @@ void EditorMain::init()
 						needs_sync = true;
 					}
 				}
-
+				
 				// Only sync if needed
 				if (needs_sync) {
 					std::string shader_dir = Editor::GetInstance().GetConfig().project_workingDir + "/assets/shaders";
@@ -519,6 +519,7 @@ void EditorMain::init()
 void EditorMain::update()
 {
 	if (!active) return;
+	PF_EDITOR_SCOPE("WaitForEngineSnapshot");
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
 
@@ -526,77 +527,89 @@ void EditorMain::render()
 {
 	if (!active) return;
 
-	ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+	static uint64_t editorFrameIndex = 0;
+	PF_EDITOR_BEGIN_FRAME(editorFrameIndex++);
 
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(viewport->WorkPos);
-	ImGui::SetNextWindowSize(viewport->WorkSize);
-	ImGui::SetNextWindowViewport(viewport->ID);
-
-	ImGuiWindowFlags host_flags = ImGuiWindowFlags_NoDocking |
-		ImGuiWindowFlags_NoTitleBar |
-		ImGuiWindowFlags_NoCollapse |
-		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoBringToFrontOnFocus |
-		ImGuiWindowFlags_NoNavFocus |
-		ImGuiWindowFlags_NoDecoration;
-
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-	ImGui::Begin("DockSpaceHost", nullptr, host_flags);
-
-	Render_MenuBar(); // The menu bar is attached to the dockspace therefore is fixed and should not be outside 
-	Render_StartStop(); // The startstop bar is attached to the dockspace therefore is fixed and should not be outside where it will become dockable
-
-	ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-
-	// kill bluish empty dockspace background
-	ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, IM_COL32(0, 0, 0, 0));
-	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dock_flags);
-	ImGui::PopStyleColor();
-
-	ImGui::End();
-
-	ImGui::PopStyleVar(3);
-
-
-	static bool firstRun = true;
-	if (firstRun && ImGui::DockBuilderGetNode(dockspace_id))
 	{
-		Setup_Dockspace(dockspace_id);
+		PF_EDITOR_SCOPE("EditorUIWork");
+
+		ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->WorkPos);
+		ImGui::SetNextWindowSize(viewport->WorkSize);
+		ImGui::SetNextWindowViewport(viewport->ID);
+
+		ImGuiWindowFlags host_flags = ImGuiWindowFlags_NoDocking |
+			ImGuiWindowFlags_NoTitleBar |
+			ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoResize |
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoNavFocus |
+			ImGuiWindowFlags_NoDecoration;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+		ImGui::Begin("DockSpaceHost", nullptr, host_flags);
+
+		Render_MenuBar(); // The menu bar is attached to the dockspace therefore is fixed and should not be outside
+		Render_StartStop(); // The startstop bar is attached to the dockspace therefore is fixed and should not be outside where it will become dockable
+
+		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+
+		// kill bluish empty dockspace background
+		ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, IM_COL32(0, 0, 0, 0));
+		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dock_flags);
+		ImGui::PopStyleColor();
+
+		ImGui::End();
+
+		ImGui::PopStyleVar(3);
+
+
+		static bool firstRun = true;
+		if (firstRun && ImGui::DockBuilderGetNode(dockspace_id))
+		{
+			Setup_Dockspace(dockspace_id);
+		}
+
+		ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 4.0f);
+		ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.337f, 0.612f, 0.839f, 1.0f));
+
+		if (showSceneExplorer)
+			Render_SceneExplorer();
+		if (showConsole)
+			Render_Console();
+		if (showEngineConsole)
+			Render_EngineConsole();
+		if (showProfiler)
+			Render_Profiler();
+		if (showInspector)
+			Render_Inspector();
+		if (showSkyboxSettings)
+			Render_SkyboxSettings();
+		Render_PhysicsDebugPanel();
+		Render_Scene();
+		Render_Game();
+		Render_CameraControls();
+		Render_AssetBrowser();
+
+		ImGui::PopStyleColor(3);
+		ImGui::PopStyleVar();
 	}
 
-	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 4.0f);
-	ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(0.235f, 0.235f, 0.235f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(0.337f, 0.612f, 0.839f, 1.0f));
+	{
+		PF_EDITOR_SCOPE("ReleaseEngine");
+		engineService.m_cont->m_container_is_presentable.release();
+		engineService.start();
+	}
 
-	if (showSceneExplorer)
-		Render_SceneExplorer();
-	if (showConsole)
-		Render_Console();
-	if (showEngineConsole)
-		Render_EngineConsole();
-	if (showProfiler)
-		Render_Profiler();
-	if (showInspector)
-		Render_Inspector();
-	if (showSkyboxSettings)
-		Render_SkyboxSettings();
-	Render_PhysicsDebugPanel();
-	Render_Scene();
-	Render_Game();
-	Render_CameraControls();
-	Render_AssetBrowser();
-
-	ImGui::PopStyleColor(3);
-	ImGui::PopStyleVar();
-
-	engineService.m_cont->m_container_is_presentable.release();
-	engineService.start();
+	PF_EDITOR_END_FRAME();
 }
 
 

@@ -10,6 +10,7 @@
 #include "System/BehaviourSystem.hpp"
 
 #include "Physics/Physics_System.h"
+#include "Profiler/profiler.hpp"
 
 
 /*
@@ -20,6 +21,8 @@ when Stepped, phyics and logic is stepped by one
 */
 void EditorMain::Render_StartStop()
 {
+	PF_EDITOR_SCOPE("Render_StartStop");
+
 	// Toolbar background
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.157f, 0.157f, 0.157f, 1.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 6.0f));
@@ -140,6 +143,8 @@ void EditorMain::Render_StartStop()
 
 void EditorMain::Render_MenuBar()
 {
+	PF_EDITOR_SCOPE("Render_MenuBar");
+
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("File"))
 	{

@@ -40,10 +40,14 @@ struct FrameAggregate {
 
 class Profiler {
 public:
+    // Singleton accessor (for backward compatibility - uses engine profiler)
     static Profiler& instance() {
         static Profiler inst;
         return inst;
     }
+
+    // Constructor made public for creating multiple instances
+    Profiler() = default;
 
 #if ENABLE_PROFILING
     void beginFrame(uint64_t index) {
@@ -63,7 +67,7 @@ public:
         agg.frameIndex = _currentFrameIndex;
         agg.frameMs = frameNs / 1e6;
 
-		
+
 
         // finalize system totals for this frame (copy atomics snapshot)
         {
@@ -80,6 +84,12 @@ public:
             if (_frames.size() > _frameHistory)
                 _frames.erase(_frames.begin());
         }
+
+        // Snapshot completed frame events for editor (double buffering)
+        {
+            std::lock_guard<std::mutex> lock(_eventsMutex);
+            _lastCompleteFrameEvents = _currentEvents;  // Copy completed frame
+        }
     }
 
     // Record an event (called by RAII scope)
@@ -87,10 +97,18 @@ public:
         Event e{ name, cat, startNs, durNs, depth, std::this_thread::get_id() };
         {
             std::lock_guard<std::mutex> lock(_eventsMutex);
-            _events.push_back(e);
+
+            // Circular buffer write - O(1) instead of O(n) erase!
+            _events[_eventWriteIndex] = e;
+            _eventWriteIndex = (_eventWriteIndex + 1) % _eventHistory;
+
+            // Track if we've filled the buffer at least once
+            if (!_eventsBufferFull && _eventWriteIndex == 0) {
+                _eventsBufferFull = true;
+            }
+
+            // Current frame events still use push_back (cleared each frame)
             _currentEvents.push_back(e);
-            if (_events.size() > _eventHistory)
-                _events.erase(_events.begin());
         }
 
         // Aggregate per-system totals each frame
@@ -103,14 +121,29 @@ public:
     // Optional: snapshot events for visualization/debug overlay
     std::vector<Event> getEventsSnapshot() const {
         std::lock_guard<std::mutex> lock(_eventsMutex);
-        return _events;
+
+        // Return events in chronological order (oldest to newest)
+        std::vector<Event> snapshot;
+
+        if (!_eventsBufferFull) {
+            // Buffer not full yet - just return [0, _eventWriteIndex)
+            snapshot.assign(_events.begin(), _events.begin() + _eventWriteIndex);
+        } else {
+            // Buffer is full - oldest event is at _eventWriteIndex
+            snapshot.reserve(_eventHistory);
+            // Copy from oldest to end of buffer
+            snapshot.insert(snapshot.end(), _events.begin() + _eventWriteIndex, _events.end());
+            // Copy from start to newest
+            snapshot.insert(snapshot.end(), _events.begin(), _events.begin() + _eventWriteIndex);
+        }
+
+        return snapshot;
     }
 
     std::vector<Event> getEventCurrentFrame()
     {
         std::lock_guard<std::mutex> lock(_eventsMutex);
-		return _currentEvents;
-
+        return _lastCompleteFrameEvents;  // Return stable, completed frame (not in-progress)
     }
 
     // Optional: snapshot last N frame aggregates
@@ -198,7 +231,13 @@ public:
 
     // Configuration
     void setFrameHistory(size_t n) { _frameHistory = n; }
-    void setEventHistory(size_t n) { _eventHistory = n; }
+    void setEventHistory(size_t n) {
+        std::lock_guard<std::mutex> lock(_eventsMutex);
+        _eventHistory = n;
+        _events.resize(n);  // Resize circular buffer
+        _eventWriteIndex = 0;  // Reset position
+        _eventsBufferFull = false;  // Reset full flag
+    }
 
 #else
     void beginFrame(uint64_t) {}
@@ -213,8 +252,6 @@ public:
 #endif
 
 private:
-    Profiler() = default;
-
 #if ENABLE_PROFILING
     // Time conversion helpers
     static uint64_t toNs(TimePoint tp) {
@@ -225,10 +262,13 @@ private:
     TimePoint _frameStart = Clock::now();
     uint64_t _currentFrameIndex = 0;
 
-    // Event storage (ring-like behavior by truncation)
+    // Event storage (true circular buffer - O(1) writes)
     mutable std::mutex _eventsMutex;
-    std::vector<Event> _events;
-    std::vector<Event> _currentEvents;
+    std::vector<Event> _events = std::vector<Event>(100000);  // Pre-allocated circular buffer
+    size_t _eventWriteIndex = 0;         // Current write position
+    bool _eventsBufferFull = false;      // Whether we've wrapped around at least once
+    std::vector<Event> _currentEvents;   // Per-frame events (cleared each frame, being built)
+    std::vector<Event> _lastCompleteFrameEvents;  // Completed previous frame (stable for reading)
     size_t _eventHistory = 100000;
 
     // Frame aggregates
@@ -257,17 +297,26 @@ inline thread_local uint32_t t_scopeDepth = 0;
 // RAII scope for arbitrary blocks/functions
 class Scope {
 public:
-    Scope(const char* name, Category cat)
+    Scope(const char* name, Category cat, Profiler& profiler)
 #if ENABLE_PROFILING
-        : _name(name), _cat(cat), _start(Clock::now()), _depth(t_scopeDepth++)
+        : _name(name), _cat(cat), _profiler(profiler), _start(Clock::now()), _depth(t_scopeDepth++)
 #endif
     {
     }
+
+    // Backward compatibility constructor (uses singleton)
+    Scope(const char* name, Category cat)
+#if ENABLE_PROFILING
+        : _name(name), _cat(cat), _profiler(Profiler::instance()), _start(Clock::now()), _depth(t_scopeDepth++)
+#endif
+    {
+    }
+
     ~Scope() {
 #if ENABLE_PROFILING
         auto end = Clock::now();
         auto durNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - _start).count();
-        Profiler::instance().recordEvent(_name, _cat, toNs(_start), durNs, _depth);
+        _profiler.recordEvent(_name, _cat, toNs(_start), durNs, _depth);
         t_scopeDepth--;
 #endif
     }
@@ -275,6 +324,7 @@ private:
 #if ENABLE_PROFILING
     const char* _name;
     Category _cat;
+    Profiler& _profiler;
     TimePoint _start;
     uint32_t _depth;
     static uint64_t toNs(TimePoint tp) {
@@ -286,25 +336,59 @@ private:
 // Specialization for system-level aggregation (Category::System)
 class SystemScope : public Scope {
 public:
+    explicit SystemScope(const char* systemName, Profiler& profiler)
+        : Scope(systemName, Category::System, profiler) {
+    }
+
+    // Backward compatibility constructor (uses singleton)
     explicit SystemScope(const char* systemName)
         : Scope(systemName, Category::System) {
     }
 };
 
 
-// Convenience macros (compile out when profiling disabled)
+// ============================================================================
+// Global Profiler Instances
+// ============================================================================
 #if ENABLE_PROFILING
+// Editor profiler instance (declared inline for header-only definition)
+inline Profiler g_EditorProfiler;
+
+// Helper to get editor profiler (for use in editor code)
+inline Profiler& GetEditorProfiler() {
+    return g_EditorProfiler;
+}
+#endif
+
+// ============================================================================
+// Convenience Macros (compile out when profiling disabled)
+// ============================================================================
+#if ENABLE_PROFILING
+// Engine profiler macros (use singleton - backward compatible)
 #define PF_BEGIN_FRAME(i) ::Profiler::instance().beginFrame(i)
 #define PF_END_FRAME()    ::Profiler::instance().endFrame()
 #define PF_SCOPE(name)    ::Scope scope_##__LINE__{ name, ::Category::Function }
 #define PF_FUNC()         ::Scope scope_##__LINE__{ __func__, ::Category::Function }
 #define PF_SYSTEM(name)   ::SystemScope sys_##__LINE__{ name }
+
+// Editor profiler macros (use g_EditorProfiler)
+#define PF_EDITOR_BEGIN_FRAME(i) ::GetEditorProfiler().beginFrame(i)
+#define PF_EDITOR_END_FRAME()    ::GetEditorProfiler().endFrame()
+#define PF_EDITOR_SCOPE(name)    ::Scope scope_##__LINE__{ name, ::Category::Function, ::GetEditorProfiler() }
+#define PF_EDITOR_FUNC()         ::Scope scope_##__LINE__{ __func__, ::Category::Function, ::GetEditorProfiler() }
+#define PF_EDITOR_SYSTEM(name)   ::SystemScope sys_##__LINE__{ name, ::GetEditorProfiler() }
 #else
 #define PF_BEGIN_FRAME(i) (void)0
 #define PF_END_FRAME()    (void)0
 #define PF_SCOPE(name)    (void)0
 #define PF_FUNC()         (void)0
 #define PF_SYSTEM(name)   (void)0
+
+#define PF_EDITOR_BEGIN_FRAME(i) (void)0
+#define PF_EDITOR_END_FRAME()    (void)0
+#define PF_EDITOR_SCOPE(name)    (void)0
+#define PF_EDITOR_FUNC()         (void)0
+#define PF_EDITOR_SYSTEM(name)   (void)0
 #endif
 
 #endif

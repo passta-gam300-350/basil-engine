@@ -29,6 +29,7 @@ Technology is prohibited.
 #include "ecs/fwd.h"
 #include "Manager/AssetManager.hpp"
 #include "Console/ENGINE_CONSOLE.hpp"
+#include "Profiler/EDITOR_PROFILER.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <components/behaviour.hpp>
@@ -79,6 +80,10 @@ public:
 	unsigned char m_EngineConsoleFilterType = 0x7F;  // All message types enabled by default
 	std::vector<std::pair<int, EngineConsole::Message>> m_EngineConsoleLocalMessages;  // Editor-local message storage with counts
 
+	// ========================================================================
+	// PROFILER STATE
+	// ========================================================================
+	EditorProfiler m_Profiler;
 
 	// ========================================================================
 	// PLAY MODE STATE

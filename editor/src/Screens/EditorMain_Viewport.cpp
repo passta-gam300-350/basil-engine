@@ -10,12 +10,14 @@
 
 #include <Render/Render.h>
 #include <Input/InputManager.h>
+#include "Profiler/profiler.hpp"
 
 // ============================================================================
 // GAME VIEWPORT RENDERING
 // ============================================================================
 void EditorMain::Render_Game()
 {
+	PF_EDITOR_SCOPE("Render_Game");
 	ImGui::Begin("Game", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 	// Get frame data from engine thread
@@ -52,6 +54,7 @@ void EditorMain::Render_Game()
 // ============================================================================
 void EditorMain::Render_CameraControls()
 {
+	PF_EDITOR_SCOPE("Render_CameraControls");
 	ImGui::Begin("Camera Controls");
 
 	if (m_EditorCamera) {
@@ -125,6 +128,8 @@ void EditorMain::Render_CameraControls()
 // ============================================================================
 void EditorMain::Render_Scene()
 {
+	PF_EDITOR_SCOPE("Render_Scene");
+
 	// Get delta time for camera updates
 	float deltaTime = static_cast<float>(engineService.GetDeltaTime());
 

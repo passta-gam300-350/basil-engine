@@ -5,10 +5,12 @@
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Particles/ParticleComponent.h"
 #include "Scene/Scene.hpp"
+#include "Profiler/profiler.hpp"
 
 
 void EditorMain::Render_SceneExplorer()
 {
+	PF_EDITOR_SCOPE("Render_SceneExplorer");
 
 	ImGui::Begin("Hierarchy", &showSceneExplorer);
 
