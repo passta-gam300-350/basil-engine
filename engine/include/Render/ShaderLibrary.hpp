@@ -108,6 +108,13 @@ public:
     std::shared_ptr<Shader> GetEditorResolveShader() const { return m_EditorResolveShader; }
 
     std::shared_ptr<Shader> GetParticleShader() const { return m_ParticleShader; }
+
+    /**
+     * @brief Get shader for HUD/UI rendering in screen space
+     * @return HUD shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetHUDShader() const { return m_HUDShader; }
+
     /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
@@ -182,6 +189,7 @@ private:
     std::shared_ptr<Shader> m_ToneMappingShader;
     std::shared_ptr<Shader> m_EditorResolveShader;   // Editor resolve with gamma correction
     std::shared_ptr<Shader> m_ParticleShader;
+    std::shared_ptr<Shader> m_HUDShader;             // HUD/UI screen-space rendering
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
 
@@ -198,6 +206,7 @@ private:
     bool LoadToneMappingShader();
     bool LoadEditorResolveShader();
     bool LoadParticleShader();
+    bool LoadHUDShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP

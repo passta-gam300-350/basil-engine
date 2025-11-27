@@ -194,6 +194,14 @@ namespace RenderCommands {
         uint32_t first = 0;            // Starting index
     };
 
+    struct DrawArraysInstancedData {
+        uint32_t vao;
+        uint32_t vertexCount;
+        uint32_t instanceCount;
+        uint32_t mode = GL_TRIANGLES;  // GL_TRIANGLES, GL_LINES, GL_POINTS, etc.
+        uint32_t first = 0;            // Starting vertex index
+    };
+
     struct DispatchComputeData {
         std::shared_ptr<Shader> computeShader;
         uint32_t numGroupsX;
@@ -316,6 +324,7 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BindTextureIDData,
     RenderCommands::BindTexture3DData,
     RenderCommands::DrawArraysData,
+    RenderCommands::DrawArraysInstancedData,
     RenderCommands::DispatchComputeData,
     RenderCommands::MemoryBarrierData,
     // Lighting commands (Option A)
@@ -357,6 +366,9 @@ private:
     std::vector<VariantRenderCommand> m_Commands;
     TextureSlotManager* m_TextureBindingSystem;
 
+    // Shader state tracking for optimization (avoid redundant binds)
+    mutable GLuint m_CurrentShaderID = 0;
+
     // Command execution visitors
     void ExecuteCommand(const RenderCommands::ClearData& cmd);
     void ExecuteCommand(const RenderCommands::BindShaderData& cmd);
@@ -384,6 +396,7 @@ private:
     void ExecuteCommand(const RenderCommands::BindTextureIDData &cmd);
     void ExecuteCommand(const RenderCommands::BindTexture3DData &cmd);
     void ExecuteCommand(const RenderCommands::DrawArraysData &cmd);
+    void ExecuteCommand(const RenderCommands::DrawArraysInstancedData &cmd);
     void ExecuteCommand(const RenderCommands::DispatchComputeData &cmd);
     void ExecuteCommand(const RenderCommands::MemoryBarrierData &cmd);
     // Lighting command execution (Option A)

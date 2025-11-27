@@ -82,6 +82,7 @@ public:
 	// GIZMO STATE
 	// ========================================================================
 	ImGuizmo::OPERATION mode = (ImGuizmo::OPERATION)0;
+	bool showViewCube = true;  // Toggle for Unity-style view cube in Scene viewport
 	glm::mat4 GuizmoViewMec4;
 	glm::mat4 GuizmoprojectionMat4;
 	TransformComponent* GuizmoEntityTransform;

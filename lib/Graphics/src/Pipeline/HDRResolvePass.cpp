@@ -41,8 +41,8 @@ void HDRResolvePass::Execute(RenderContext& context)
         resolvedSpec.Samples = 1;  // Force non-MSAA
         context.frameData.hdrResolvedBuffer = std::make_shared<FrameBuffer>(resolvedSpec);
 
-        spdlog::info("HDRResolvePass: Created HDR resolved buffer ({}x{}, RGB16F, 1x sample)",
-            resolvedSpec.Width, resolvedSpec.Height);
+        /*spdlog::info("HDRResolvePass: Created HDR resolved buffer ({}x{}, RGB16F, 1x sample)",
+            resolvedSpec.Width, resolvedSpec.Height);*/
     }
 
     // Resolve MSAA main buffer to non-MSAA resolved buffer
