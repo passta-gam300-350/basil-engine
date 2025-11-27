@@ -28,6 +28,7 @@ Technology is prohibited.
 #include "Camera/EditorCamera.hpp"
 #include "ecs/fwd.h"
 #include "Manager/AssetManager.hpp"
+#include "Console/ENGINE_CONSOLE.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <components/behaviour.hpp>
@@ -68,8 +69,15 @@ public:
 	bool showSceneExplorer = true;
 	bool showProfiler = true;
 	bool showConsole = true;
+	bool showEngineConsole = true;
 	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
+
+	// ========================================================================
+	// ENGINE CONSOLE STATE
+	// ========================================================================
+	unsigned char m_EngineConsoleFilterType = 0x7F;  // All message types enabled by default
+	std::vector<std::pair<int, EngineConsole::Message>> m_EngineConsoleLocalMessages;  // Editor-local message storage with counts
 
 
 	// ========================================================================
@@ -122,7 +130,8 @@ public:
 	// ========================================================================
 	void Render_SceneExplorer();    // Hierarchy panel
 	void Render_Inspector();         // Inspector panel
-	void Render_Console();           // Console panel
+	void Render_Console();           // Console panel (C# scripts)
+	void Render_EngineConsole();     // Engine Console panel (spdlog)
 	void Render_Profiler();          // Profiler panel
 	void Render_PhysicsDebugPanel(); // Physics debug panel
 

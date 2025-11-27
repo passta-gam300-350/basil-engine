@@ -501,7 +501,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 	{
 
 		// CRITICAL FIX: Use viewport content area position, not window title bar position
-		ImGuizmo::SetOrthographic(true);
+		ImGuizmo::SetOrthographic(false);
 		ImGuizmo::SetDrawlist();
 		ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
@@ -534,7 +534,6 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 			{
 				// Break down the edited matrix so we can save the values
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityParentTransformMTX ? glm::inverse(GuizmoEntityParentTransformMTX->m_Mtx) * GuizmoEntityTransformMTX->m_Mtx : GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
-				std::cout << GuizmoEntityTransform->m_Translation.x;
 				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff
 				//EditingID = selectedEnitityID; // Set the Id

@@ -6,6 +6,8 @@
 #include "Render/Render.h"
 #include "Physics/Physics_System.h"
 #include "GLFW/glfw3.h"
+#include <algorithm>
+#include <ranges>
 
 void EditorMain::Render_Profiler()
 {
@@ -55,7 +57,7 @@ void EditorMain::Render_Console()
 {
 
 	ImGui::Begin("Console");
-
+	
 	ImGui::PushID("ConsoleClearBtn");
 	bool clearConsole = ImGui::Button("Clear Console");
 	ImGui::PopID();
@@ -159,6 +161,263 @@ void EditorMain::Render_Console()
 		if (clearConsole)
 		{
 			ManagedConsole::Shutdown();
+		}
+		ImGui::EndChild();
+	}
+
+	ImGui::End();
+}
+
+void EditorMain::Render_EngineConsole()
+{
+	// Initialize the engine console sink on first call
+	InitializeEngineConsoleSink();
+
+	ImGui::Begin("Engine Console");
+
+	ImGui::PushID("EngineConsoleClearBtn");
+	bool clearConsole = ImGui::Button("Clear Console");
+	ImGui::PopID();
+
+	// Transfer new messages from engine buffer (short critical section!)
+	auto newMessages = EngineConsole::TransferMessages();
+
+	// Deduplicate into local storage (NO LOCK - only editor thread accesses this!)
+	for (auto& newMsg : newMessages) {
+		auto it = std::find_if(m_EngineConsoleLocalMessages.begin(), m_EngineConsoleLocalMessages.end(),
+			[&newMsg](const std::pair<int, EngineConsole::Message>& msg) {
+				return msg.second.type == newMsg.type && msg.second.content == newMsg.content;
+			});
+		if (it == m_EngineConsoleLocalMessages.end()) {
+			m_EngineConsoleLocalMessages.push_back({ 1, std::move(newMsg) });
+		}
+		else {
+			it->first += 1; // Increment count
+		}
+	}
+
+	// Filter messages for display (reading from local storage, no lock!)
+	auto filteredMessages = m_EngineConsoleLocalMessages | std::views::filter([this](const std::pair<int, EngineConsole::Message>& msg) {
+		switch (msg.second.type) {
+		case EngineConsole::Message::Type::Trace:
+			return (m_EngineConsoleFilterType & 0x01) != 0;
+		case EngineConsole::Message::Type::Debug:
+			return (m_EngineConsoleFilterType & 0x02) != 0;
+		case EngineConsole::Message::Type::Info:
+			return (m_EngineConsoleFilterType & 0x04) != 0;
+		case EngineConsole::Message::Type::Warn:
+			return (m_EngineConsoleFilterType & 0x08) != 0;
+		case EngineConsole::Message::Type::Error:
+			return (m_EngineConsoleFilterType & 0x10) != 0;
+		case EngineConsole::Message::Type::Critical:
+			return (m_EngineConsoleFilterType & 0x20) != 0;
+		case EngineConsole::Message::Type::Undefined:
+			return (m_EngineConsoleFilterType & 0x40) != 0;
+		default:
+			return false;
+		}
+	});
+
+	// Trace filter button
+	if (m_EngineConsoleFilterType & 0x01) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Light gray
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineTraceFilterBtn");
+	if (ImGui::Button("Trace")) {
+		m_EngineConsoleFilterType ^= 0x01;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Debug filter button
+	if (m_EngineConsoleFilterType & 0x02) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.5f, 1.0f)); // Cyan
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.6f, 0.6f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.7f, 0.7f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineDebugFilterBtn");
+	if (ImGui::Button("Debug")) {
+		m_EngineConsoleFilterType ^= 0x02;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Info filter button
+	if (m_EngineConsoleFilterType & 0x04) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.0f, 1.0f)); // Green
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.7f, 0.0f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineInfoFilterBtn");
+	if (ImGui::Button("Info")) {
+		m_EngineConsoleFilterType ^= 0x04;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Warn filter button
+	if (m_EngineConsoleFilterType & 0x08) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.0f, 1.0f)); // Yellow
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.7f, 0.0f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineWarnFilterBtn");
+	if (ImGui::Button("Warn")) {
+		m_EngineConsoleFilterType ^= 0x08;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Error filter button
+	if (m_EngineConsoleFilterType & 0x10) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.0f, 0.0f, 1.0f)); // Red
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.0f, 0.0f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineErrorFilterBtn");
+	if (ImGui::Button("Error")) {
+		m_EngineConsoleFilterType ^= 0x10;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Critical filter button
+	if (m_EngineConsoleFilterType & 0x20) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.0f, 0.3f, 1.0f)); // Magenta
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 0.4f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.0f, 0.5f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineCriticalFilterBtn");
+	if (ImGui::Button("Critical")) {
+		m_EngineConsoleFilterType ^= 0x20;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Undefined filter button
+	if (m_EngineConsoleFilterType & 0x40) {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.4f, 0.4f, 1.0f)); // Gray
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f)); // Greyed out
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+	}
+	ImGui::SameLine();
+	ImGui::PushID("EngineUndefinedFilterBtn");
+	if (ImGui::Button("Undefined")) {
+		m_EngineConsoleFilterType ^= 0x40;
+	}
+	ImGui::PopID();
+	ImGui::PopStyleColor(3);
+
+	// Display messages (reading from local storage, no lock needed!)
+	if (!m_EngineConsoleLocalMessages.empty())
+	{
+		ImGui::BeginChild("EngineConsoleScrollRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+		// Check if we're at the bottom before rendering new messages
+		bool shouldAutoScroll = (ImGui::GetScrollY() >= ImGui::GetScrollMaxY());
+
+		for (const auto& msg : filteredMessages) {
+			switch (msg.second.type) {
+			case EngineConsole::Message::Type::Trace:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[TRACE]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[TRACE]: %s", msg.second.content.c_str());
+				break;
+			case EngineConsole::Message::Type::Debug:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.8f, 1.0f), "[DEBUG]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.8f, 1.0f), "[DEBUG]: %s", msg.second.content.c_str());
+				break;
+			case EngineConsole::Message::Type::Info:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[INFO]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[INFO]: %s", msg.second.content.c_str());
+				break;
+			case EngineConsole::Message::Type::Warn:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[WARN]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[WARN]: %s", msg.second.content.c_str());
+				break;
+			case EngineConsole::Message::Type::Error:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[ERROR]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[ERROR]: %s", msg.second.content.c_str());
+				break;
+			case EngineConsole::Message::Type::Critical:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.5f, 1.0f), "[CRITICAL]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.5f, 1.0f), "[CRITICAL]: %s", msg.second.content.c_str());
+				break;
+			case EngineConsole::Message::Type::Undefined:
+				if (msg.first > 1)
+					ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "[UNDEFINED]: %s [%d]", msg.second.content.c_str(), msg.first);
+				else
+					ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "[UNDEFINED]: %s", msg.second.content.c_str());
+				break;
+			default:
+				ImGui::Text("[UNKNOWN]: %s", msg.second.content.c_str());
+				break;
+			}
+		}
+
+		// Auto-scroll to bottom if we were already at the bottom
+		if (shouldAutoScroll)
+		{
+			ImGui::SetScrollHereY(1.0f);  // 1.0f = bottom of the scrollable region
+		}
+
+		if (clearConsole)
+		{
+			m_EngineConsoleLocalMessages.clear();
 		}
 		ImGui::EndChild();
 	}

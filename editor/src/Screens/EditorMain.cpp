@@ -578,6 +578,8 @@ void EditorMain::render()
 		Render_SceneExplorer();
 	if (showConsole)
 		Render_Console();
+	if (showEngineConsole)
+		Render_EngineConsole();
 	if (showProfiler)
 		Render_Profiler();
 	if (showInspector)
