@@ -13,6 +13,10 @@ namespace BasilEngine
     [Disabled]
     public enum KeyCode
     {
+        LEFT_MOUSE = 0,
+        RIGHT_MOUSE = 1,
+        MIDDLE_MOUSE = 2,
+
         SPACE = 32,
         APOSTROPHE = 39,
         COMMA = 44,
@@ -185,6 +189,15 @@ namespace BasilEngine
             return GetKeyOnce((int)key);
         }
 
+        public static bool GetMouse(int key)
+        {
+            return GetKeyInternal(key);
+        }
+
+        public static bool GetMouseDown(int key)
+        {
+            return GetKeyOnce(key);
+        }
 
         public static Vector2 mousePosition
         {

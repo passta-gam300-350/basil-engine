@@ -21,6 +21,15 @@ Technology is prohibited.
 #include "ecs/internal/entity.h"
 #include "Render/Camera.h"
 #include "Input/InputGraphics_Helper.h"
+#include <atomic>
+
+namespace {
+	std::atomic<bool> s_ViewportOverrideEnabled{ false };
+	std::atomic<float> s_ViewportOffsetX{ 0.0f };
+	std::atomic<float> s_ViewportOffsetY{ 0.0f };
+	std::atomic<float> s_ViewportWidth{ 0.0f };
+	std::atomic<float> s_ViewportHeight{ 0.0f };
+}
 
 
 int ManagedCamera::GetCameraType(uint64_t handle)
@@ -89,14 +98,32 @@ void ManagedCamera::setFar(uint64_t handle, float farClip)
 	cameraComponent.m_Far = farClip;
 }
 
+void ManagedCamera::SetViewportOverride(float offsetX, float offsetY, float width, float height, bool enabled)
+{
+	s_ViewportOverrideEnabled.store(enabled);
+	if (enabled) {
+		s_ViewportOffsetX.store(offsetX);
+		s_ViewportOffsetY.store(offsetY);
+		s_ViewportWidth.store(width);
+		s_ViewportHeight.store(height);
+	}
+}
+
 void ManagedCamera::ScreenToWorldPoint(uint64_t handle, float x, float y, float depth, float* p_x, float* p_y, float* p_z)
 {
 	ecs::entity target{ handle };
 	auto& cameraComponent = target.get<CameraComponent>();
 	glm::vec2 screenPos = glm::vec2{ x, y };
 	(void)cameraComponent; // parameters unused currently; kept for parity with other methods
-	glm::vec2 screenSize{ static_cast<float>(ManagedScreen::GetWidth()), static_cast<float>(ManagedScreen::GetHeight()) };
-	glm::vec2 offset = CameraSystem::GetCachedViewportOffset();
+	glm::vec2 screenSize;
+	glm::vec2 offset;
+	if (s_ViewportOverrideEnabled.load()) {
+		screenSize = glm::vec2{ s_ViewportWidth.load(), s_ViewportHeight.load() };
+		offset = glm::vec2{ s_ViewportOffsetX.load(), s_ViewportOffsetY.load() };
+	} else {
+		screenSize = glm::vec2{ static_cast<float>(ManagedScreen::GetWidth()), static_cast<float>(ManagedScreen::GetHeight()) };
+		offset = CameraSystem::GetCachedViewportOffset();
+	}
 	glm::vec2 localPos = screenPos - offset;
 	glm::vec3 world = CameraSystem::GetWorldFromScreen(localPos, screenSize, depth);
 	if (p_x) *p_x = world.x;
@@ -112,8 +139,15 @@ void ManagedCamera::ScreenPointToRay(uint64_t handle, float x, float y, float /*
 	auto& cameraComponent = target.get<CameraComponent>();
 	(void)cameraComponent;
 	glm::vec2 screenPos{ x, y };
-	glm::vec2 screenSize{ static_cast<float>(ManagedScreen::GetWidth()), static_cast<float>(ManagedScreen::GetHeight()) };
-	glm::vec2 offset = CameraSystem::GetCachedViewportOffset();
+	glm::vec2 screenSize;
+	glm::vec2 offset;
+	if (s_ViewportOverrideEnabled.load()) {
+		screenSize = glm::vec2{ s_ViewportWidth.load(), s_ViewportHeight.load() };
+		offset = glm::vec2{ s_ViewportOffsetX.load(), s_ViewportOffsetY.load() };
+	} else {
+		screenSize = glm::vec2{ static_cast<float>(ManagedScreen::GetWidth()), static_cast<float>(ManagedScreen::GetHeight()) };
+		offset = CameraSystem::GetCachedViewportOffset();
+	}
 	glm::vec2 localPos = screenPos - offset;
 	glm::vec3 origin{}, dir{};
 	CameraSystem::GetRayFromScreen(localPos, screenSize, origin, dir);

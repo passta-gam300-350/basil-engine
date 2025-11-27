@@ -28,14 +28,21 @@ public class TrashCollectable : Behavior
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         if (distance <= collect_distance && Input.GetKey(KeyCode.E))
         {
-            
+            if (GameManager.instance.isHoldingThrash)
+            {
+                Logger.Log("No hands to use!");
+                return;
+            }
 
             //TODO: REMOVAL?
             Logger.Log("Player should collect the trash!");
             gameObject.transform.position = new Vector3(1000, 1000, 1000);
             GameObject.Destroy(gameObject);
+
+            GameManager.instance.ShowCollected();
+            
         }
-        Logger.Log("Distance" + distance);
+        //Logger.Log("Distance" + distance);
     }
 
     public void FixedUpdate()

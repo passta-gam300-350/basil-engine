@@ -29,6 +29,17 @@ namespace BasilEngine
         [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
         public extern static void DeleteGameObjectInternal(UInt64 handle);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetVisible")]
+        [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        public extern static void SetVisibleInternal(UInt64 handle, bool visible);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetVisible")]
+        [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        public extern static bool GetVisibleInternal(UInt64 handle);
+
+
 
 
 
@@ -46,6 +57,12 @@ namespace BasilEngine
 
                 return transformComponent;
             }
+        }
+
+        public bool visibility
+        {
+            get => GetVisibleInternal(NativeID);
+            set => SetVisibleInternal(NativeID, value);
         }
 
         public bool activeSelf

@@ -6,26 +6,31 @@ using System;
 
 public class PlayerCameraPlacementController : Behavior
 {
-
+    
     public float mouseSensitivity = 0.075f;
 
     private Vector2 lastMouse = new Vector2(0f, 0f);
     private float pitch = 0f; // X rotation
     private float yaw = 0f;   // Y rotation
 
+    private GameObject player;
+    PlayerController3D playerController;
 
 
 
 
     public void Init()
     {
+        player = GameObject.Find("PlayerGroup");
         lastMouse = Input.mousePosition;
+        playerController = player.transform.GetComponent<PlayerController3D>();
     }
 
     public void Update()
     {
+        if (playerController.disabled) return;
         // Lazy init camera reference and align our yaw/pitch with current transform once
-        
+
         //-------------------------------------------------------
         // 1. Mouse Look (delta from last frame)
         //-------------------------------------------------------

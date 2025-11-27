@@ -21,11 +21,17 @@ public class BoxInteractablePoint : Behavior
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         if (distance <= interact_distance && Input.GetKeyPress(KeyCode.E))
         {
+            if (GameManager.instance.isHoldingThrash)
+            {
+                Logger.Log("No hands to use!");
+                return;
+            }
 
             if (!interacted)
             {
                 interacted = true;
                 CameraManager.instance.ActivateBoxPuzzleCam();
+                PuzzleManager.manager.Puzzle();
                 GameManager.instance.DisableControls();
                 
             }

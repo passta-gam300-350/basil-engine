@@ -50,6 +50,8 @@ Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
 #include "Bindings/MANAGED_CONSOLE.hpp"
+#include "Bindings/ManagedInput.hpp"
+#include "Bindings/ManagedCamera.hpp"
 #include "rsc-core/rp.hpp"
 #include <descriptors/audio.hpp>
 #include <serialization/serializer.h>
@@ -5177,24 +5179,40 @@ void EditorMain::Render_Scene()
 	// Check if editor framebuffer is available before trying to access it
 	auto& frameData = engineService.GetFrameData();
 	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
-		// Store viewport position for picking calculations
-		ImVec2 viewportPos = ImGui::GetCursorScreenPos();
+		// Store viewport position for picking calculations.
+		// Use screen-space cursor and convert to the owning viewport's window space; no scaling (we'll feed ImGui mouse directly to managed).
+		ImVec2 cursorScreen = ImGui::GetCursorScreenPos();
+		ImVec2 viewportPos = cursorScreen; // logical/screen-space top-left of the viewport image (for ImGuizmo/picking)
+		const ImGuiViewport* sceneViewport = ImGui::GetWindowViewport();
+		ImVec2 windowScreenOrigin = sceneViewport ? sceneViewport->Pos : ImVec2(0.f, 0.f);
+		ImVec2 localWindowPos = ImVec2(cursorScreen.x - windowScreenOrigin.x, cursorScreen.y - windowScreenOrigin.y);
+		glm::vec2 viewportOffset{
+			viewportPos.x, // use image top-left in screen space (same as picking)
+			viewportPos.y
+		};
+		glm::vec2 viewportSizePixels{
+			viewportSize.x,
+			viewportSize.y
+		};
+
 		// Push viewport rect to camera system so ScreenPointToRay/World use the correct offset
-		engineService.ExecuteOnEngineThread([viewportPos, viewportSize]() {
-			CameraSystem::SetViewportOffset(glm::vec2{ viewportPos.x, viewportPos.y });
-			CameraSystem::SetViewportSize(glm::vec2{ viewportSize.x, viewportSize.y });
+		engineService.ExecuteOnEngineThread([viewportOffset, viewportSizePixels]() {
+			CameraSystem::SetViewportOffset(viewportOffset);
+			CameraSystem::SetViewportSize(viewportSizePixels);
 		});
+		// Also set managed camera override so ScreenPointToRay uses the same rect
+		ManagedCamera::SetViewportOverride(viewportOffset.x, viewportOffset.y, viewportSizePixels.x, viewportSizePixels.y, true);
 
 
 		// Draw a square on mouse pos
 		ImVec2 mousePos = ImGui::GetMousePos();
-		// Debug : Draw a small rectangle at mouse position
+			// Debug : Draw a small rectangle at mouse position
 
-		ImDrawList* draw_list = ImGui::GetWindowDrawList();
-		float rectSize = 5.0f;
-		mousePos.x -= viewportPos.x;
-		mousePos.y -= viewportPos.y;
-		spdlog::info("Mouse position screen space in scene: ({:.0f}, {:.0f})", mousePos.x, mousePos.y);
+			ImDrawList* draw_list = ImGui::GetWindowDrawList();
+			float rectSize = 5.0f;
+			mousePos.x -= viewportPos.x;
+			mousePos.y -= viewportPos.y;
+			spdlog::info("Mouse position screen space in scene: ({:.0f}, {:.0f})", mousePos.x, mousePos.y);
 
 
 
@@ -5202,8 +5220,14 @@ void EditorMain::Render_Scene()
 		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
 
 		// Render the scene viewport using the texture ID
-		ImGui::Image((ImTextureID)(uintptr_t)textureID,
-			viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image((ImTextureID)(uintptr_t)textureID,
+				viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+
+			// Feed ImGui mouse position to managed input override so ScreenPointToRay uses matching space
+			if (frameData.editorResolvedBuffer) {
+				ImVec2 mouseScreen = ImGui::GetMousePos();
+				ManagedInput::SetMouseOverride(mouseScreen.x, mouseScreen.y, true);
+			}
 
 		// CRITICAL: Query click state IMMEDIATELY after Image (while it's the "last item")
 		// IsItemClicked() doesn't "consume" clicks - it just queries if this item was clicked
