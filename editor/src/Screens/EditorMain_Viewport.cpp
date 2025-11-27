@@ -469,24 +469,31 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 	ImGui::End();
 
 	// This is for toggling the gizmo
-	if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
-	{
-		mode = (ImGuizmo::OPERATION)0;
-	}
+	// Only process shortcuts when camera is NOT in free-look mode (right-click held)
+	auto* input = InputManager::Get_Instance();
+	bool isCameraActive = input->Is_MousePressed(GLFW_MOUSE_BUTTON_RIGHT);
 
-	if (ImGui::IsKeyPressed(ImGuiKey_W, false))
+	if (!isCameraActive)
 	{
-		mode = ImGuizmo::OPERATION::TRANSLATE;
-	}
+		if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
+		{
+			mode = (ImGuizmo::OPERATION)0;
+		}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_E, false))
-	{
-		mode = ImGuizmo::OPERATION::ROTATE;
-	}
+		if (ImGui::IsKeyPressed(ImGuiKey_W, false))
+		{
+			mode = ImGuizmo::OPERATION::TRANSLATE;
+		}
 
-	if (ImGui::IsKeyPressed(ImGuiKey_R, false))
-	{
-		mode = ImGuizmo::OPERATION::SCALE;
+		if (ImGui::IsKeyPressed(ImGuiKey_E, false))
+		{
+			mode = ImGuizmo::OPERATION::ROTATE;
+		}
+
+		if (ImGui::IsKeyPressed(ImGuiKey_R, false))
+		{
+			mode = ImGuizmo::OPERATION::SCALE;
+		}
 	}
 
 	// Only display gizmos if there is an entity selected and the gizmo is set to one of the 3 active modes
@@ -550,70 +557,72 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 	// ========================================================================
 	// VIEW CUBE - Unity-style camera orientation widget
 	// ========================================================================
-	// Draw view cube in top right corner
-	float viewCubeSize = 128.0f;
-	float viewCubePadding = 10.0f;
-	ImVec2 viewCubePos = ImVec2(viewportPos.x + viewportSize.x - viewCubeSize - viewCubePadding, viewportPos.y + viewCubePadding);
+	if (showViewCube) {
+		// Draw view cube in top right corner
+		float viewCubeSize = 128.0f;
+		float viewCubePadding = 10.0f;
+		ImVec2 viewCubePos = ImVec2(viewportPos.x + viewportSize.x - viewCubeSize - viewCubePadding, viewportPos.y + viewCubePadding);
 
-	// Set up for view manipulator (always active, regardless of entity selection)
-	ImGuizmo::SetDrawlist();
-	ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
+		// Set up for view manipulator (always active, regardless of entity selection)
+		ImGuizmo::SetDrawlist();
+		ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
-	// Determine if we should orbit around selected entity (LOCAL mode) or rotate in place (WORLD mode)
-	bool isLocalMode = (mode == ImGuizmo::OPERATION::TRANSLATE || mode == ImGuizmo::OPERATION::ROTATE || mode == ImGuizmo::OPERATION::SCALE) && (m_SelectedEntityID != 0);
-	glm::vec3 orbitTarget = glm::vec3(0.0f);
+		// Determine if we should orbit around selected entity (LOCAL mode) or rotate in place (WORLD mode)
+		bool isLocalMode = (mode == ImGuizmo::OPERATION::TRANSLATE || mode == ImGuizmo::OPERATION::ROTATE || mode == ImGuizmo::OPERATION::SCALE) && (m_SelectedEntityID != 0);
+		glm::vec3 orbitTarget = glm::vec3(0.0f);
 
-	if (isLocalMode && GuizmoEntityTransform != nullptr) {
-		// LOCAL MODE: Orbit around selected entity
-		orbitTarget = GuizmoEntityTransform->m_Translation;
-	}
-	// else: WORLD MODE - will rotate camera in place
+		if (isLocalMode && GuizmoEntityTransform != nullptr) {
+			// LOCAL MODE: Orbit around selected entity
+			orbitTarget = GuizmoEntityTransform->m_Translation;
+		}
+		// else: WORLD MODE - will rotate camera in place
 
-	// Build view matrix for ViewManipulate
-	glm::mat4 originalViewMatrix = m_EditorCamera->GetViewMatrix();
-	glm::mat4 viewMatrix = originalViewMatrix;
+		// Build view matrix for ViewManipulate
+		glm::mat4 originalViewMatrix = m_EditorCamera->GetViewMatrix();
+		glm::mat4 viewMatrix = originalViewMatrix;
 
-	// Calculate distance for ViewManipulate
-	glm::vec3 cameraPos = m_EditorCamera->GetPosition();
-	float cameraDistance = isLocalMode ? glm::length(cameraPos - orbitTarget) : 10.0f;
-	if (cameraDistance < 0.1f) cameraDistance = 10.0f;
+		// Calculate distance for ViewManipulate
+		glm::vec3 cameraPos = m_EditorCamera->GetPosition();
+		float cameraDistance = isLocalMode ? glm::length(cameraPos - orbitTarget) : 10.0f;
+		if (cameraDistance < 0.1f) cameraDistance = 10.0f;
 
-	// ViewManipulate modifies the view matrix when user clicks on the cube
-	ImGuizmo::ViewManipulate(glm::value_ptr(viewMatrix), cameraDistance, viewCubePos, ImVec2(viewCubeSize, viewCubeSize), 0x10101010);
+		// ViewManipulate modifies the view matrix when user clicks on the cube
+		ImGuizmo::ViewManipulate(glm::value_ptr(viewMatrix), cameraDistance, viewCubePos, ImVec2(viewCubeSize, viewCubeSize), 0x10101010);
 
-	//// Check if the view matrix was modified
-	bool viewMatrixChanged = glm::any(glm::notEqual(viewMatrix[0], originalViewMatrix[0])) ||
-		glm::any(glm::notEqual(viewMatrix[1], originalViewMatrix[1])) ||
-		glm::any(glm::notEqual(viewMatrix[2], originalViewMatrix[2])) ||
-		glm::any(glm::notEqual(viewMatrix[3], originalViewMatrix[3]));
+		//// Check if the view matrix was modified
+		bool viewMatrixChanged = glm::any(glm::notEqual(viewMatrix[0], originalViewMatrix[0])) ||
+			glm::any(glm::notEqual(viewMatrix[1], originalViewMatrix[1])) ||
+			glm::any(glm::notEqual(viewMatrix[2], originalViewMatrix[2])) ||
+			glm::any(glm::notEqual(viewMatrix[3], originalViewMatrix[3]));
 
-	if (viewMatrixChanged) {
-		//	if (isLocalMode) {
-		//		// LOCAL MODE: Camera orbits around selected entity
-				// Extract new camera position from modified view matrix
-				//glm::mat4 cameraTransform = glm::inverse(viewMatrix);
-				//glm::vec3 newPosition = glm::vec3(cameraTransform[3]);
+		if (viewMatrixChanged) {
+			//	if (isLocalMode) {
+			//		// LOCAL MODE: Camera orbits around selected entity
+					// Extract new camera position from modified view matrix
+					//glm::mat4 cameraTransform = glm::inverse(viewMatrix);
+					//glm::vec3 newPosition = glm::vec3(cameraTransform[3]);
 
-		//		// Update camera to look at the entity
-				//m_EditorCamera->SetPosition(newPosition);
-				//m_EditorCamera->SetTarget(orbitTarget);
-		//	}
-		//	else {
-		//		// WORLD MODE: Camera rotates in place, doesn't move position
-		//		// Extract rotation from the modified view matrix
-		//		glm::mat4 cameraTransform = glm::inverse(viewMatrix);
+			//		// Update camera to look at the entity
+					//m_EditorCamera->SetPosition(newPosition);
+					//m_EditorCamera->SetTarget(orbitTarget);
+			//	}
+			//	else {
+			//		// WORLD MODE: Camera rotates in place, doesn't move position
+			//		// Extract rotation from the modified view matrix
+			//		glm::mat4 cameraTransform = glm::inverse(viewMatrix);
 
-		//		// Extract basis vectors (rotation only)
-		//		glm::vec3 right = glm::normalize(glm::vec3(cameraTransform[0]));
-		//		glm::vec3 up = glm::normalize(glm::vec3(cameraTransform[1]));
-		//		glm::vec3 forward = -glm::normalize(glm::vec3(cameraTransform[2]));
+			//		// Extract basis vectors (rotation only)
+			//		glm::vec3 right = glm::normalize(glm::vec3(cameraTransform[0]));
+			//		glm::vec3 up = glm::normalize(glm::vec3(cameraTransform[1]));
+			//		glm::vec3 forward = -glm::normalize(glm::vec3(cameraTransform[2]));
 
-		//		// Calculate pitch and yaw from forward vector
-		//		float pitch = glm::degrees(asin(-forward.y));
-		//		float yaw = glm::degrees(atan2(forward.x, forward.z));
+			//		// Calculate pitch and yaw from forward vector
+			//		float pitch = glm::degrees(asin(-forward.y));
+			//		float yaw = glm::degrees(atan2(forward.x, forward.z));
 
-		//		// Keep current position, only change rotation
-		//		m_EditorCamera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
-		//	}
-	}
+			//		// Keep current position, only change rotation
+			//		m_EditorCamera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+			//	}
+		}
+	}  // End of if (showViewCube)
 }

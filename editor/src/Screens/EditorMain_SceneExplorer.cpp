@@ -130,7 +130,18 @@ void EditorMain::Render_SceneExplorer()
 			// Add prefab prefix for visual distinction
 			std::string displayName = node.m_entity_name;
 			if (isPrefabInstance) {
-				displayName = "[P] " + displayName;  // [P] indicates prefab instance
+				ecs::entity entity(node.m_entity_handle);
+				const auto& prefabComp = entity.get<PrefabComponent>();
+
+				// Show nesting level for nested prefabs
+				if (prefabComp.IsNestedPrefabInstance()) {
+					// Nested prefab: show level (e.g., [P:1], [P:2])
+					displayName = "[P:" + std::to_string(prefabComp.m_NestingLevel) + "] " + displayName;
+				}
+				else {
+					// Root prefab instance
+					displayName = "[P] " + displayName;
+				}
 			}
 
 			// Render tree node - use label format for normal mode, empty for rename mode
@@ -302,6 +313,19 @@ void EditorMain::Render_SceneExplorer()
 					{
 						ImGui::Separator();
 						ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Prefab");
+
+						if (ImGui::MenuItem("Unpack Prefab"))
+						{
+							// Remove PrefabComponent to break connection with prefab
+							engineService.ExecuteOnEngineThread([node]() {
+								ecs::entity entity(node.m_entity_handle);
+								if (entity.all<PrefabComponent>())
+								{
+									entity.remove<PrefabComponent>();
+									spdlog::info("Unpacked prefab instance: {}", entity.name());
+								}
+								});
+						}
 
 						if (ImGui::MenuItem("Select Prefab Asset"))
 						{
@@ -558,3 +582,4 @@ void EditorMain::Render_SceneExplorer()
 		//FrameSelectedEntity();
 	}
 }
+

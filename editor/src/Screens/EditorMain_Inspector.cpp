@@ -342,6 +342,13 @@ void EditorMain::Render_Components()
 		material_overrides_component = matOverridesIt->second;
 	}
 
+	ReflectionRegistry::TypeID hud_component{};
+	auto hudIt = internal_type_map.find(entt::type_index<HUDComponent>::value());
+	if (hudIt != internal_type_map.end())
+	{
+		hud_component = hudIt->second;
+	}
+
 	for (auto const& [type_id, uptr] : component_list) {
 		if (type_id == skip_name_component || type_id == skip_sceneid_component || type_id == skip_relationship_component || type_id == prefab_component_id) {
 			continue;  // Skip PrefabComponent as it's internal
@@ -681,6 +688,61 @@ void EditorMain::Render_Components()
 				}
 			}
 
+			// Special UI section for HUDComponent
+			if (hud_component && type_id == hud_component) {
+				if (HUDComponent* hudComp = reinterpret_cast<HUDComponent*>(uptr.get())) {
+					ImGui::Separator();
+
+					// Only show button if texture is assigned
+					bool hasTexture = (hudComp->m_TextureGuid.m_guid != rp::null_guid);
+
+					if (!hasTexture) {
+						ImGui::BeginDisabled();
+					}
+
+					if (ImGui::Button("Set Native Size", ImVec2(-1, 0))) {
+						ul.unlock();
+						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<HUDComponent>()) {
+								HUDComponent& hud = entity.get<HUDComponent>();
+
+								// Load texture and get dimensions
+								auto& registry = ResourceRegistry::Instance();
+								auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(hud.m_TextureGuid.m_guid);
+
+								if (texturePtr && *texturePtr) {
+									unsigned int textureID = (*texturePtr)->id;
+
+									// Query texture dimensions from OpenGL
+									glBindTexture(GL_TEXTURE_2D, textureID);
+									int width = 0, height = 0;
+									glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+									glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+									glBindTexture(GL_TEXTURE_2D, 0);
+
+									if (width > 0 && height > 0) {
+										hud.size = glm::vec2(static_cast<float>(width), static_cast<float>(height));
+										spdlog::info("Set HUD native size to {}x{}", width, height);
+									}
+									else {
+										spdlog::warn("Failed to get texture dimensions for HUD component");
+									}
+								}
+							}
+							});
+						ul.lock();
+					}
+
+					if (!hasTexture) {
+						ImGui::EndDisabled();
+					}
+
+					if (!hasTexture && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+						ImGui::SetTooltip("Assign a texture to use Set Native Size");
+					}
+				}
+			}
 
 			if (ImGui::Button("Delete Component")) {
 				ul.unlock();
@@ -721,6 +783,31 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 		auto value = data.get(comp);
 		auto meta_type = value.type();
 
+		// === PREFAB OVERRIDE DETECTION (Per-Property) ===
+		bool isPropertyOverridden = false;
+		if (m_PrefabContext.isPrefabInstance && m_PrefabContext.prefabComponent)
+		{
+			// Check if this specific property is overridden
+			for (const auto& override : m_PrefabContext.prefabComponent->m_OverriddenProperties)
+			{
+				if (override.componentTypeHash == m_PrefabContext.currentComponentTypeHash &&
+					override.propertyPath == field_name)
+				{
+					isPropertyOverridden = true;
+					break;
+				}
+			}
+		}
+
+		// Apply visual styling for overridden properties
+		if (isPropertyOverridden)
+		{
+			// Push bold font (if available)
+			// ImGui doesn't have built-in bold, so we use color instead
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.6f, 1.0f)); // Light yellow text
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.3f, 0.5f, 0.7f, 0.15f)); // Light blue background
+		}
+
 		// Auto-detect color properties: vec3/vec4 with "Color" or "Tint" in name
 		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
 			if (field_name.find("Color") != std::string::npos ||
@@ -744,6 +831,76 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::ColorEdit4(field_name.c_str(), &vec4_ptr->x)) {
 					is_dirty = true;
 				}
+				ImGui::PopID();
+				continue;
+			}
+		}
+
+		// Unity-style vec2 rendering (horizontal layout with X/Y labels)
+		if (glm::vec2* vec2_ptr = value.try_cast<glm::vec2>()) {
+			ImGui::Text("%s", field_name.c_str());
+			ImGui::SameLine(150);  // Align input fields
+
+			ImGui::PushItemWidth(60);  // Narrow input boxes
+
+			// X component (red label)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+			ImGui::Text("X");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::DragFloat("##X", &vec2_ptr->x)) is_dirty = true;
+			ImGui::SameLine();
+
+			// Y component (green label)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
+			ImGui::Text("Y");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::DragFloat("##Y", &vec2_ptr->y)) is_dirty = true;
+
+			ImGui::PopItemWidth();
+			ImGui::PopID();
+			continue;
+		}
+
+		// Unity-style vec3 rendering (horizontal layout with X/Y/Z labels)
+		// Skip if it's a color field (already handled above with ColorEdit3)
+		if (glm::vec3* vec3_ptr = value.try_cast<glm::vec3>()) {
+			bool isColorField = (field_name.find("Color") != std::string::npos ||
+				field_name.find("color") != std::string::npos ||
+				field_name.find("Tint") != std::string::npos ||
+				field_name.find("tint") != std::string::npos);
+
+			if (!isColorField) {
+				ImGui::Text("%s", field_name.c_str());
+				ImGui::SameLine(150);  // Align input fields
+
+				ImGui::PushItemWidth(60);  // Narrow input boxes
+
+				// X component (red label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+				ImGui::Text("X");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##X", &vec3_ptr->x)) is_dirty = true;
+				ImGui::SameLine();
+
+				// Y component (green label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
+				ImGui::Text("Y");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##Y", &vec3_ptr->y)) is_dirty = true;
+				ImGui::SameLine();
+
+				// Z component (blue label)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 1.0f, 1.0f));
+				ImGui::Text("Z");
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				if (ImGui::DragFloat("##Z", &vec3_ptr->z)) is_dirty = true;
+
+				ImGui::PopItemWidth();
 				ImGui::PopID();
 				continue;
 			}
@@ -837,12 +994,30 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					is_dirty = true;
 				}
 			}
+			else if (uint8_t* vui8 = value.try_cast<uint8_t>())
+			{
+				uint8_t minValue = 0;
+				uint8_t maxValue = 255;
+
+				// Special case for "layer" fields to limit max to 10
+				if (field_name.find("layer") != std::string::npos) {
+					uint8_t maxLayer = 10;
+					if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U8, vui8, &minValue, &maxLayer, "%u")) {
+						is_dirty = true;
+					}
+				}
+				else {
+					if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U8, vui8, &minValue, &maxValue, "%u")) {
+						is_dirty = true;
+					}
+				}
+			}
 			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
 
 				// With custom format
-				if (ImGui::SliderScalar("My Slider", ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
+				if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
 					is_dirty = true;
 				}
 
@@ -1168,6 +1343,45 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					}
 					ImGui::TreePop();
 				}
+			}
+		}
+		// === PREFAB OVERRIDE: Revert Button (Per-Property) ===
+		if (isPropertyOverridden)
+		{
+			// Pop the style colors we pushed earlier
+			ImGui::PopStyleColor(2);
+
+			// Add small revert button on the same line
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.3f, 0.3f, 0.8f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.5f, 0.5f, 1.0f));
+
+			if (ImGui::SmallButton("Revert")) {
+				// Revert this specific property override
+				engineService.ExecuteOnEngineThread([this, field_name]() {
+					auto world = Engine::GetWorld();
+					for (auto& entity : world.get_all_entities()) {
+						if (entity.get_uid() == m_SelectedEntityID && entity.all<PrefabComponent>()) {
+							PrefabSystem::RevertOverride(
+								world,
+								entity,
+								m_PrefabContext.currentComponentTypeHash,
+								field_name
+							);
+							spdlog::info("Reverted property override: {}.{}",
+								m_PrefabContext.currentComponentTypeName, field_name);
+							break;
+						}
+					}
+					});
+			}
+
+			ImGui::PopStyleColor(3);
+
+			// Tooltip for the revert button
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("Revert '%s' to prefab value", field_name.c_str());
 			}
 		}
 		ImGui::PopID();
@@ -1689,3 +1903,9 @@ bool EditorMain::Render_CapsuleCollider_Component(CapsuleCollider& collider) {
 
 	return changed;
 }
+
+
+
+
+
+

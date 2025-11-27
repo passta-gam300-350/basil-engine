@@ -211,6 +211,7 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
 		ImGui::MenuItem("Skybox Settings", nullptr, &showSkyboxSettings);
+		ImGui::MenuItem("View Cube", nullptr, &showViewCube);
 
 		ImGui::EndMenu();
 	}
