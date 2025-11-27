@@ -1,7 +1,0 @@
-base:
-  m_guid: 8991837095b56bda594b2d9c04
-  m_importer: .texture
-  m_source: materials\trolley\trolley_Height.png
-  m_name: trolley_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
