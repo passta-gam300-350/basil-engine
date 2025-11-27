@@ -68,10 +68,15 @@ void AudioSystem::Update(ecs::world& world) {
     if (!m_initialized || !m_system)
         return;
 
-    // Update listener from active camera
-    const CameraSystem::Camera& camera = CameraSystem::GetActiveCamera();
-    SetListenerPosition(camera.m_Pos);
-    SetListenerOrientation(camera.m_Front, camera.m_Up);
+    // Update listener from active game camera (cached @ 60Hz in CameraSystem::FixedUpdate)
+    // Editor camera is separate and not used for audio positioning
+    const auto& camera = CameraSystem::GetActiveCameraData();
+    if (!camera.isActive) {
+        // No active camera in scene - skip audio update this frame
+        return;
+    }
+    SetListenerPosition(camera.position);
+    SetListenerOrientation(camera.front, camera.up);
 
     // Update listener velocity and position
     if (m_listenerMoved) {

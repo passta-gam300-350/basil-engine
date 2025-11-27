@@ -205,7 +205,7 @@ private:
 	// ========================================================================
 	// CAMERA AND VIEWPORT
 	// ========================================================================
-	std::shared_ptr<EditorCamera> m_EditorCamera;
+	std::unique_ptr<EditorCamera> m_EditorCamera;  // Phase 3: Exclusive ownership
 
 
 	// Physics debug rendering state

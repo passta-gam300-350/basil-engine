@@ -473,16 +473,15 @@ void EditorMain::init()
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
 
-	// Initialize Editor Camera
-	m_EditorCamera = std::make_shared<EditorCamera>();
+	// Initialize Editor Camera (Phase 3: unique_ptr, no CameraSystem coupling)
+	m_EditorCamera = std::make_unique<EditorCamera>();
 	m_EditorCamera->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 	// Set rotation to look towards origin from (0,5,10): pitch down, yaw to face -Z direction
 	m_EditorCamera->SetRotation(glm::vec3(-25.0f, -90.0f, 0.0f));
 	// Set orbit target to origin so orbit mode works
 	m_EditorCamera->SetTarget(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	CameraSystem::SetAuxCamera(m_EditorCamera);
-	CameraSystem::SetActiveCamera(CameraSystem::CameraType::AUX);
+	// Phase 3: Removed SetAuxCamera and SetActiveCamera calls - camera data flows via snapshot
 
 	glfwMakeContextCurrent(nullptr);
 	// init engine
@@ -521,6 +520,20 @@ void EditorMain::update()
 	if (!active) return;
 	PF_EDITOR_SYSTEM("WaitForEngineSnapshot");
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
+
+	// Update editor camera snapshot for engine thread (Phase 1: Snapshot pattern)
+	if (m_EditorCamera) {
+		auto& snapshot = engineService.m_cont->m_editorCameraSnapshot;
+		snapshot.position = m_EditorCamera->GetPosition();
+		snapshot.front = m_EditorCamera->GetForward();
+		snapshot.up = m_EditorCamera->GetUp();
+		snapshot.right = m_EditorCamera->GetRight();
+		snapshot.fov = m_EditorCamera->m_Fov;
+		snapshot.aspectRatio = m_EditorCamera->m_AspectRatio;
+		snapshot.nearPlane = m_EditorCamera->m_Near;
+		snapshot.farPlane = m_EditorCamera->m_Far;
+		snapshot.isPerspective = (m_EditorCamera->m_Type == EditorCamera::CameraType::PERSPECTIVE);
+	}
 }
 
 void EditorMain::render()
