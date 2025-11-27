@@ -21,6 +21,7 @@ Technology is prohibited.
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <deque>
 #include <imgui.h>  // For ImVec4 in SystemStats
 
 // Forward declarations
@@ -34,23 +35,15 @@ public:
 	void Render(EngineContainerService& engineService);
 
 private:
-	// Helper methods
-	void RenderEventTree(const std::vector<struct Event>& events);
-	// FPS display throttling
-	double m_LastUpdateTime = 0.0;
-	double m_DisplayFPS = 0.0;
-	double m_DisplayDeltaTime = 0.0;
-	float m_UpdateInterval = 0.25f;  // Update every 0.25 seconds
-	bool m_EnableRateLimiting = true;  // Toggle for rate limiting display updates
-
-	// Frame time history (circular buffer for graph)
-	std::vector<float> m_FrameTimeHistory;
-	size_t m_FrameHistoryIndex = 0;
-	static constexpr size_t FRAME_HISTORY_SIZE = 120;
-
-	// System statistics (min/max/avg tracking)
-	std::unordered_map<std::string, std::vector<double>> m_SystemHistory;
-	static constexpr size_t STAT_WINDOW = 60;  // Track last 60 frames
+	// Spike detection info
+	struct SpikeInfo {
+		size_t frameIndex;
+		std::string systemName;  // Empty for frame spikes
+		double value;
+		double average;
+		double multiplier;
+		double timestamp;  // glfwGetTime() when detected
+	};
 
 	// Cached system stats for rate-limited display
 	struct SystemStats {
@@ -61,9 +54,50 @@ private:
 		double percent;
 		ImVec4 color;
 	};
-	std::unordered_map<std::string, SystemStats> m_CachedSystemStats;
+
+	// Per-profiler data (separate for engine and editor to avoid contamination)
+	struct ProfilerData {
+		std::vector<float> frameTimeHistory;
+		size_t frameHistoryIndex = 0;
+		std::unordered_map<std::string, std::vector<double>> systemHistory;
+		std::unordered_map<std::string, SystemStats> cachedSystemStats;
+		std::vector<SpikeInfo> recentSpikes;
+
+		ProfilerData() : frameTimeHistory(FRAME_HISTORY_SIZE, 0.0f) {}
+	};
+
+	// Helper methods
+	void RenderEventTree(const std::vector<struct Event>& events);
+	void RenderFrameOverviewTab();
+	void RenderDetailedTab(int profilerIndex, const char* threadName);
+
+	// FPS display throttling
+	double m_LastUpdateTime = 0.0;
+	double m_DisplayFPS = 0.0;
+	double m_DisplayDeltaTime = 0.0;
+	float m_UpdateInterval = 0.25f;  // Update every 0.25 seconds
+	bool m_EnableRateLimiting = true;  // Toggle for rate limiting display updates
+
+	// Separate data for engine and editor profilers
+	ProfilerData m_EngineData;
+	ProfilerData m_EditorData;
+
+	// Frame Overview tab statistics tracking
+	struct OverviewStats {
+		std::deque<double> engineWorkHistory;
+		std::deque<double> engineWaitHistory;
+		std::deque<double> editorWorkHistory;
+		std::deque<double> editorWaitHistory;
+		std::deque<double> engineFrameHistory;
+		std::deque<double> editorFrameHistory;
+		std::deque<double> totalFrameHistory;
+	};
+	OverviewStats m_OverviewStats;
 
 	// Frame time targets
+	static constexpr size_t FRAME_HISTORY_SIZE = 120;
+	static constexpr size_t STAT_WINDOW = 60;  // Track last 60 frames
+	static constexpr size_t MAX_SPIKE_HISTORY = 20;
 	static constexpr float TARGET_60FPS = 16.67f;
 	static constexpr float TARGET_30FPS = 33.33f;
 
@@ -92,16 +126,6 @@ private:
 	bool m_ShowCallCountAnalysis = false;
 
 	// Spike detection
-	struct SpikeInfo {
-		size_t frameIndex;
-		std::string systemName;  // Empty for frame spikes
-		double value;
-		double average;
-		double multiplier;
-		double timestamp;  // glfwGetTime() when detected
-	};
-	std::vector<SpikeInfo> m_RecentSpikes;
-	static constexpr size_t MAX_SPIKE_HISTORY = 20;
 	float m_SpikeThresholdMultiplier = 2.0f;  // Spike = value > avg * multiplier
 	float m_MinSpikeValueMs = 0.5f;            // Ignore spikes below this absolute value (ms)
 	bool m_EnableSpikeDetection = true;

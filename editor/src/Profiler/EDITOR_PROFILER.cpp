@@ -27,7 +27,6 @@ Technology is prohibited.
 #include <cmath>
 
 EditorProfiler::EditorProfiler()
-	: m_FrameTimeHistory(FRAME_HISTORY_SIZE, 0.0f)
 {
 }
 
@@ -81,62 +80,104 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 	ImGui::Columns(1);
 	ImGui::PopStyleColor();
 
-	// Alert banner for recent spikes
-	if (!m_RecentSpikes.empty() && m_EnableSpikeDetection) {
-		const SpikeInfo& latestSpike = m_RecentSpikes.back();
-		double timeSinceSpike = glfwGetTime() - latestSpike.timestamp;
+	// Alert banner for recent spikes (check both engine and editor)
+	if (m_EnableSpikeDetection) {
+		const SpikeInfo* latestSpike = nullptr;
+		const char* spikeThread = "";
 
-		// Show warning if spike was within last 3 seconds
-		if (timeSinceSpike < 3.0) {
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.3f, 0.0f, 0.0f, 0.5f));
-
-			if (latestSpike.systemName.empty()) {
-				ImGui::Text("! FRAME SPIKE DETECTED! %.2f ms (%.1fx average)", latestSpike.value, latestSpike.multiplier);
+		// Find most recent spike from either profiler
+		if (!m_EngineData.recentSpikes.empty() && !m_EditorData.recentSpikes.empty()) {
+			if (m_EngineData.recentSpikes.back().timestamp > m_EditorData.recentSpikes.back().timestamp) {
+				latestSpike = &m_EngineData.recentSpikes.back();
+				spikeThread = "[Engine]";
 			} else {
-				ImGui::Text("! SYSTEM SPIKE: %s - %.2f ms (%.1fx average)", latestSpike.systemName.c_str(), latestSpike.value, latestSpike.multiplier);
+				latestSpike = &m_EditorData.recentSpikes.back();
+				spikeThread = "[Editor]";
 			}
-			ImGui::PopStyleColor(2);
+		} else if (!m_EngineData.recentSpikes.empty()) {
+			latestSpike = &m_EngineData.recentSpikes.back();
+			spikeThread = "[Engine]";
+		} else if (!m_EditorData.recentSpikes.empty()) {
+			latestSpike = &m_EditorData.recentSpikes.back();
+			spikeThread = "[Editor]";
+		}
+
+		if (latestSpike) {
+			double timeSinceSpike = glfwGetTime() - latestSpike->timestamp;
+
+			// Show warning if spike was within last 3 seconds
+			if (timeSinceSpike < 3.0) {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.3f, 0.0f, 0.0f, 0.5f));
+
+				if (latestSpike->systemName.empty()) {
+					ImGui::Text("! %s FRAME SPIKE DETECTED! %.2f ms (%.1fx average)", spikeThread, latestSpike->value, latestSpike->multiplier);
+				} else {
+					ImGui::Text("! %s SYSTEM SPIKE: %s - %.2f ms (%.1fx average)", spikeThread, latestSpike->systemName.c_str(), latestSpike->value, latestSpike->multiplier);
+				}
+				ImGui::PopStyleColor(2);
+			}
 		}
 	}
 
 	ImGui::Separator();
 
-	// === TABS FOR ENGINE VS EDITOR ===
-	static int activeTab = 0; // 0 = Engine, 1 = Editor
+	// === TABS: FRAME OVERVIEW | ENGINE THREAD | EDITOR THREAD ===
+	static int activeTab = 0; // 0 = Frame Overview, 1 = Engine, 2 = Editor
 	if (ImGui::BeginTabBar("ProfilerTabs", ImGuiTabBarFlags_None))
 	{
-		if (ImGui::BeginTabItem("Engine Thread"))
+		if (ImGui::BeginTabItem("Frame Overview"))
 		{
 			activeTab = 0;
 			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem("Editor Thread"))
+		if (ImGui::BeginTabItem("Engine Thread"))
 		{
 			activeTab = 1;
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Editor Thread"))
+		{
+			activeTab = 2;
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
 	}
 
-	// Get data from the appropriate profiler
-	Profiler& activeProfiler = (activeTab == 0) ? Profiler::instance() : GetEditorProfiler();
+	// Route to appropriate tab rendering
+	if (activeTab == 0) {
+		RenderFrameOverviewTab();
+	} else if (activeTab == 1) {
+		RenderDetailedTab(0, "Engine");
+	} else if (activeTab == 2) {
+		RenderDetailedTab(1, "Editor");
+	}
+
+	ImGui::End();
+}
+
+void EditorProfiler::RenderDetailedTab(int profilerIndex, const char* threadName)
+{
+	// Get the appropriate profiler and data
+	Profiler& activeProfiler = (profilerIndex == 0) ? Profiler::instance() : GetEditorProfiler();
+	ProfilerData& activeData = (profilerIndex == 0) ? m_EngineData : m_EditorData;
+
 	auto events = activeProfiler.getEventCurrentFrame();
 	auto last = activeProfiler.Get_Last_Frame();
 
-	const char* threadName = (activeTab == 0) ? "Engine" : "Editor";
+	double currentTime = glfwGetTime();
 
 	// Update frame time history (circular buffer)
 	if (last.frameMs > 0.0) {
-		m_FrameTimeHistory[m_FrameHistoryIndex] = static_cast<float>(last.frameMs);
-		m_FrameHistoryIndex = (m_FrameHistoryIndex + 1) % m_FrameTimeHistory.size();
+		activeData.frameTimeHistory[activeData.frameHistoryIndex] = static_cast<float>(last.frameMs);
+		activeData.frameHistoryIndex = (activeData.frameHistoryIndex + 1) % activeData.frameTimeHistory.size();
 
 		// Spike detection for frame time
 		if (m_EnableSpikeDetection) {
 			// Calculate average frame time (exclude zeros)
 			double sumFrameTime = 0.0;
 			int validFrames = 0;
-			for (float ft : m_FrameTimeHistory) {
+			for (float ft : activeData.frameTimeHistory) {
 				if (ft > 0.0f) {
 					sumFrameTime += ft;
 					validFrames++;
@@ -156,9 +197,9 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 					spike.multiplier = multiplier;
 					spike.timestamp = glfwGetTime();
 
-					m_RecentSpikes.push_back(spike);
-					if (m_RecentSpikes.size() > MAX_SPIKE_HISTORY) {
-						m_RecentSpikes.erase(m_RecentSpikes.begin());
+					activeData.recentSpikes.push_back(spike);
+					if (activeData.recentSpikes.size() > MAX_SPIKE_HISTORY) {
+						activeData.recentSpikes.erase(activeData.recentSpikes.begin());
 					}
 				}
 			}
@@ -169,32 +210,28 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 	ImGui::Text("%s Thread - Frame Time History (last %zu frames):", threadName, FRAME_HISTORY_SIZE);
 
 	// Calculate min/max for auto-scaling
-	float minFrameTime = *std::min_element(m_FrameTimeHistory.begin(), m_FrameTimeHistory.end());
-	float maxFrameTime = *std::max_element(m_FrameTimeHistory.begin(), m_FrameTimeHistory.end());
+	float minFrameTime = *std::min_element(activeData.frameTimeHistory.begin(), activeData.frameTimeHistory.end());
+	float maxFrameTime = *std::max_element(activeData.frameTimeHistory.begin(), activeData.frameTimeHistory.end());
 
 	// Ensure minimum range for visibility
 	if (maxFrameTime < 20.0f) maxFrameTime = 20.0f;
 
 	// Draw graph with target line overlay
 	char overlay[64];
-	if (last.frameMs > TARGET_60FPS) {
-		sprintf_s(overlay, "%.2f ms (%.0f FPS) - OVER 60 FPS BUDGET!", last.frameMs, 1000.0 / last.frameMs);
-	} else {
-		sprintf_s(overlay, "%.2f ms (%.0f FPS)", last.frameMs, 1000.0 / last.frameMs);
-	}
+	sprintf_s(overlay, "%.2f ms (%.0f FPS)", last.frameMs, 1000.0 / last.frameMs);
 
-	ImGui::PlotLines("##FrameTimeGraph", m_FrameTimeHistory.data(), static_cast<int>(m_FrameTimeHistory.size()),
-	                 static_cast<int>(m_FrameHistoryIndex), overlay, minFrameTime, maxFrameTime, ImVec2(0, 100));
+	ImGui::PlotLines("##FrameTimeGraph", activeData.frameTimeHistory.data(), static_cast<int>(activeData.frameTimeHistory.size()),
+	                 static_cast<int>(activeData.frameHistoryIndex), overlay, minFrameTime, maxFrameTime, ImVec2(0, 100));
 
 	// Draw spike markers on the graph
-	if (!m_RecentSpikes.empty() && m_EnableSpikeDetection) {
+	if (!activeData.recentSpikes.empty() && m_EnableSpikeDetection) {
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
 		ImVec2 graphMin = ImGui::GetItemRectMin();
 		ImVec2 graphMax = ImGui::GetItemRectMax();
 		float graphWidth = graphMax.x - graphMin.x;
 		float graphHeight = graphMax.y - graphMin.y;
 
-		for (const SpikeInfo& spike : m_RecentSpikes) {
+		for (const SpikeInfo& spike : activeData.recentSpikes) {
 			if (spike.systemName.empty()) {  // Only mark frame spikes on graph
 				// Calculate relative position in circular buffer
 				// Find how many frames ago this spike was
@@ -221,7 +258,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Target 30 FPS: %.2f ms", TARGET_30FPS);
 	ImGui::SameLine();
-	if (!m_RecentSpikes.empty()) {
+	if (!activeData.recentSpikes.empty()) {
 		ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "| Red lines = Spikes");
 	}
 
@@ -229,7 +266,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 
 	// Update system history (always runs - don't lose data!)
 	for (auto& kv : last.systemMs) {
-		auto& history = m_SystemHistory[kv.first];
+		auto& history = activeData.systemHistory[kv.first];
 		history.push_back(kv.second);
 		if (history.size() > STAT_WINDOW) {
 			history.erase(history.begin());
@@ -250,7 +287,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 			double sysMs = kv.second;
 			double pct = (totalMs > 0.0) ? (sysMs / totalMs) * 100.0 : 0.0;
 
-			auto& history = m_SystemHistory[systemName];
+			auto& history = activeData.systemHistory[systemName];
 			if (!history.empty()) {
 				double minMs = *std::min_element(history.begin(), history.end());
 				double maxMs = *std::max_element(history.begin(), history.end());
@@ -262,7 +299,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 					if (multiplier > m_SpikeThresholdMultiplier && sysMs > m_MinSpikeValueMs) {
 						// Check if we already recorded this spike recently (avoid duplicates)
 						bool alreadyRecorded = false;
-						for (auto& recentSpike : m_RecentSpikes) {
+						for (auto& recentSpike : activeData.recentSpikes) {
 							if (recentSpike.systemName == systemName &&
 							    recentSpike.frameIndex == last.frameIndex) {
 								alreadyRecorded = true;
@@ -279,9 +316,9 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 							spike.multiplier = multiplier;
 							spike.timestamp = glfwGetTime();
 
-							m_RecentSpikes.push_back(spike);
-							if (m_RecentSpikes.size() > MAX_SPIKE_HISTORY) {
-								m_RecentSpikes.erase(m_RecentSpikes.begin());
+							activeData.recentSpikes.push_back(spike);
+							if (activeData.recentSpikes.size() > MAX_SPIKE_HISTORY) {
+								activeData.recentSpikes.erase(activeData.recentSpikes.begin());
 							}
 						}
 					}
@@ -304,7 +341,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 				}
 
 				// Cache the calculated stats
-				SystemStats& stats = m_CachedSystemStats[systemName];
+				SystemStats& stats = activeData.cachedSystemStats[systemName];
 				stats.current = sysMs;
 				stats.min = minMs;
 				stats.max = maxMs;
@@ -328,7 +365,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 	ImGui::Separator();
 
 	// Render from cached stats
-	for (const auto& kv : m_CachedSystemStats) {
+	for (const auto& kv : activeData.cachedSystemStats) {
 		const std::string& systemName = kv.first;
 		const SystemStats& stats = kv.second;
 
@@ -351,7 +388,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 			ImGui::Separator();
 
 			// Render a graph for each system
-			for (const auto& kv : m_SystemHistory) {
+			for (const auto& kv : activeData.systemHistory) {
 				const std::string& systemName = kv.first;
 				const std::vector<double>& history = kv.second;
 
@@ -474,7 +511,8 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 					                      ImGuiTableFlags_Sortable |
 					                      ImGuiTableFlags_Borders |
 					                      ImGuiTableFlags_RowBg |
-					                      ImGuiTableFlags_ScrollY,
+					                      ImGuiTableFlags_ScrollY |
+					                      ImGuiTableFlags_Resizable,
 					                      ImVec2(0, 300))) {
 					// Setup columns
 					ImGui::TableSetupColumn("Function", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthStretch);
@@ -624,7 +662,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 
 						// Display event breakdown for this thread
 						if (ImGui::BeginTable(("ThreadTable_" + std::to_string(threadIndex)).c_str(), 4,
-						                      ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg,
+						                      ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable,
 						                      ImVec2(0, 200))) {
 							ImGui::TableSetupColumn("Event");
 							ImGui::TableSetupColumn("Count", ImGuiTableColumnFlags_WidthFixed, 60.0f);
@@ -898,7 +936,8 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 				                      ImGuiTableFlags_Sortable |
 				                      ImGuiTableFlags_Borders |
 				                      ImGuiTableFlags_RowBg |
-				                      ImGuiTableFlags_ScrollY,
+				                      ImGuiTableFlags_ScrollY |
+				                      ImGuiTableFlags_Resizable,
 				                      ImVec2(0, 300))) {
 					ImGui::TableSetupColumn("Event Name", ImGuiTableColumnFlags_WidthStretch);
 					ImGui::TableSetupColumn("Calls/Frame", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, 90.0f);
@@ -981,16 +1020,16 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 		ImGui::SliderFloat("Minimum Value Threshold", &m_MinSpikeValueMs, 0.01f, 2.0f, "%.2f ms");
 		ImGui::TextDisabled("(Spikes must exceed BOTH thresholds to be detected)");
 
-		if (m_RecentSpikes.empty()) {
+		if (activeData.recentSpikes.empty()) {
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "No performance spikes detected! (%.1fx & >%.2fms)",
 			                   m_SpikeThresholdMultiplier, m_MinSpikeValueMs);
 		} else {
-			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Detected %zu spike(s) in last %zu frames:", m_RecentSpikes.size(), MAX_SPIKE_HISTORY);
+			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Detected %zu spike(s) in last %zu frames:", activeData.recentSpikes.size(), MAX_SPIKE_HISTORY);
 
 			ImGui::Separator();
 
 			// Display spikes in reverse order (most recent first)
-			for (auto it = m_RecentSpikes.rbegin(); it != m_RecentSpikes.rend(); ++it) {
+			for (auto it = activeData.recentSpikes.rbegin(); it != activeData.recentSpikes.rend(); ++it) {
 				const SpikeInfo& spike = *it;
 				double timeAgo = glfwGetTime() - spike.timestamp;
 
@@ -1016,7 +1055,7 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 			ImGui::Separator();
 
 			if (ImGui::Button("Clear Spike Log")) {
-				m_RecentSpikes.clear();
+				activeData.recentSpikes.clear();
 			}
 		}
 	}
@@ -1037,14 +1076,404 @@ void EditorProfiler::Render(EngineContainerService& engineService)
 			ImGui::TextDisabled("No events recorded this frame");
 		}
 	}
+}
 
-	ImGui::End();
+void EditorProfiler::RenderFrameOverviewTab()
+{
+	// ===================================================================
+	// STEP 1: GET DATA FROM BOTH PROFILERS
+	// ===================================================================
+	auto engineLast = Profiler::instance().Get_Last_Frame();
+	auto editorLast = GetEditorProfiler().Get_Last_Frame();
+
+	double totalFrameTime = std::max(engineLast.frameMs, editorLast.frameMs);
+	double fps = (totalFrameTime > 0.0) ? 1000.0 / totalFrameTime : 0.0;
+
+	// ===================================================================
+	// STEP 2: EXTRACT WAIT/WORK TIMES FROM SYSTEM DATA
+	// ===================================================================
+	double engineWork = 0.0, engineWait = 0.0, engineWriteback = 0.0;
+	double editorWork = 0.0, editorWait = 0.0;
+
+	// Engine thread breakdown
+	for (const auto& kv : engineLast.systemMs) {
+		if (kv.first == "EngineWork") engineWork = kv.second;
+		else if (kv.first == "WaitForEditor") engineWait = kv.second;
+		else if (kv.first == "Writeback") engineWriteback = kv.second;
+	}
+
+	// Editor thread breakdown
+	for (const auto& kv : editorLast.systemMs) {
+		if (kv.first == "EditorUIWork") editorWork = kv.second;
+		else if (kv.first == "WaitForEngineSnapshot") editorWait = kv.second;
+	}
+
+	// ===================================================================
+	// STEP 3: UPDATE HISTORY FOR STATISTICS (CIRCULAR BUFFER)
+	// ===================================================================
+
+	// Update history for statistics (circular buffer)
+	m_OverviewStats.engineWorkHistory.push_back(engineWork);
+	if (m_OverviewStats.engineWorkHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.engineWorkHistory.pop_front();
+	}
+
+	m_OverviewStats.engineWaitHistory.push_back(engineWait);
+	if (m_OverviewStats.engineWaitHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.engineWaitHistory.pop_front();
+	}
+
+	m_OverviewStats.editorWorkHistory.push_back(editorWork);
+	if (m_OverviewStats.editorWorkHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.editorWorkHistory.pop_front();
+	}
+
+	m_OverviewStats.editorWaitHistory.push_back(editorWait);
+	if (m_OverviewStats.editorWaitHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.editorWaitHistory.pop_front();
+	}
+
+	m_OverviewStats.totalFrameHistory.push_back(totalFrameTime);
+	if (m_OverviewStats.totalFrameHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.totalFrameHistory.pop_front();
+	}
+
+	m_OverviewStats.engineFrameHistory.push_back(engineLast.frameMs);
+	if (m_OverviewStats.engineFrameHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.engineFrameHistory.pop_front();
+	}
+
+	m_OverviewStats.editorFrameHistory.push_back(editorLast.frameMs);
+	if (m_OverviewStats.editorFrameHistory.size() > STAT_WINDOW) {
+		m_OverviewStats.editorFrameHistory.pop_front();
+	}
+
+	// ===================================================================
+	// STEP 4: CALCULATE STATISTICS
+	// ===================================================================
+	auto calcStats = [](const std::deque<double>& history) -> std::tuple<double, double, double> {
+		if (history.empty()) return {0.0, 0.0, 0.0};
+		double minVal = *std::min_element(history.begin(), history.end());
+		double maxVal = *std::max_element(history.begin(), history.end());
+		double avgVal = std::accumulate(history.begin(), history.end(), 0.0) / history.size();
+		return {minVal, maxVal, avgVal};
+	};
+
+	auto [engineWorkMin, engineWorkMax, engineWorkAvg] = calcStats(m_OverviewStats.engineWorkHistory);
+	auto [engineWaitMin, engineWaitMax, engineWaitAvg] = calcStats(m_OverviewStats.engineWaitHistory);
+	auto [editorWorkMin, editorWorkMax, editorWorkAvg] = calcStats(m_OverviewStats.editorWorkHistory);
+	auto [editorWaitMin, editorWaitMax, editorWaitAvg] = calcStats(m_OverviewStats.editorWaitHistory);
+	auto [totalFrameMin, totalFrameMax, totalFrameAvg] = calcStats(m_OverviewStats.totalFrameHistory);
+	auto [engineFrameMin, engineFrameMax, engineFrameAvg] = calcStats(m_OverviewStats.engineFrameHistory);
+	auto [editorFrameMin, editorFrameMax, editorFrameAvg] = calcStats(m_OverviewStats.editorFrameHistory);
+
+	// Calculate combined total for percentage calculations
+	double combinedTotal = std::max(engineWork + engineWait + engineWriteback, editorWork + editorWait);
+
+	// ===================================================================
+	// STEP 5: RENDER UI
+	// ===================================================================
+
+	// === FRAME SUMMARY ===
+	ImGui::Text("Frame Time (last %zu frames):", STAT_WINDOW);
+
+	// Create a compact stats table
+	if (ImGui::BeginTable("FrameStats", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable)) {
+		ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+		ImGui::TableSetupColumn("Current", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+		ImGui::TableSetupColumn("Min", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableSetupColumn("Max", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableSetupColumn("Avg", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableHeadersRow();
+
+		// Engine frame time row
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::Text("Engine");
+		ImGui::TableNextColumn();
+		ImVec4 engineColor = (engineLast.frameMs > TARGET_60FPS) ? ImVec4(1.0f, 0.5f, 0.0f, 1.0f) : ImVec4(0.6f, 0.8f, 1.0f, 1.0f);
+		ImGui::TextColored(engineColor, "%.2f ms", engineLast.frameMs);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", engineFrameMin);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", engineFrameMax);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", engineFrameAvg);
+
+		// Editor frame time row
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::Text("Editor");
+		ImGui::TableNextColumn();
+		ImVec4 editorColor = (editorLast.frameMs > TARGET_60FPS) ? ImVec4(1.0f, 0.5f, 0.0f, 1.0f) : ImVec4(0.6f, 1.0f, 0.8f, 1.0f);
+		ImGui::TextColored(editorColor, "%.2f ms", editorLast.frameMs);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", editorFrameMin);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", editorFrameMax);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", editorFrameAvg);
+
+		// Total frame time row
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::Text("Total");
+		ImGui::TableNextColumn();
+		ImVec4 currentColor = (totalFrameTime > TARGET_60FPS) ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f) : ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+		ImGui::TextColored(currentColor, "%.2f ms", totalFrameTime);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", totalFrameMin);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", totalFrameMax);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.2f", totalFrameAvg);
+
+		// FPS row
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::Text("FPS");
+		ImGui::TableNextColumn();
+		ImGui::TextColored(currentColor, "%.0f", fps);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.0f", (totalFrameMax > 0.0) ? 1000.0 / totalFrameMax : 0.0);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.0f", (totalFrameMin > 0.0) ? 1000.0 / totalFrameMin : 0.0);
+		ImGui::TableNextColumn();
+		ImGui::Text("%.0f", (totalFrameAvg > 0.0) ? 1000.0 / totalFrameAvg : 0.0);
+
+		ImGui::EndTable();
+	}
+
+	ImGui::Separator();
+
+	// === THREAD TIMELINE VISUALIZATION ===
+	ImGui::Text("Thread Timeline:");
+
+	// Draw timeline bars (Gantt-style)
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImVec2 barStart = ImGui::GetCursorScreenPos();
+	float barWidth = ImGui::GetContentRegionAvail().x;
+	float barHeight = 30.0f;
+	float spacing = 10.0f;
+
+	auto drawTimelineBar = [&](const char* label, double work, double wait, double other, ImVec4 workColor, ImVec4 waitColor, ImVec4 otherColor) {
+		ImVec2 currentPos = ImGui::GetCursorScreenPos();
+
+		// Draw label
+		ImGui::Text("%s:", label);
+		currentPos = ImGui::GetCursorScreenPos();
+
+		// Calculate widths based on time percentages
+		float totalTime = static_cast<float>(work + wait + other);
+		float workWidth = (totalTime > 0.0f) ? barWidth * (static_cast<float>(work) / static_cast<float>(combinedTotal)) : 0.0f;
+		float waitWidth = (totalTime > 0.0f) ? barWidth * (static_cast<float>(wait) / static_cast<float>(combinedTotal)) : 0.0f;
+		float otherWidth = (totalTime > 0.0f) ? barWidth * (static_cast<float>(other) / static_cast<float>(combinedTotal)) : 0.0f;
+
+		// Draw background
+		drawList->AddRectFilled(currentPos, ImVec2(currentPos.x + barWidth, currentPos.y + barHeight), IM_COL32(40, 40, 40, 255));
+
+		// Draw work segment
+		if (workWidth > 0.0f) {
+			drawList->AddRectFilled(
+				currentPos,
+				ImVec2(currentPos.x + workWidth, currentPos.y + barHeight),
+				ImGui::GetColorU32(workColor)
+			);
+		}
+
+		// Draw wait segment
+		if (waitWidth > 0.0f) {
+			drawList->AddRectFilled(
+				ImVec2(currentPos.x + workWidth, currentPos.y),
+				ImVec2(currentPos.x + workWidth + waitWidth, currentPos.y + barHeight),
+				ImGui::GetColorU32(waitColor)
+			);
+		}
+
+		// Draw other segment (writeback)
+		if (otherWidth > 0.0f) {
+			drawList->AddRectFilled(
+				ImVec2(currentPos.x + workWidth + waitWidth, currentPos.y),
+				ImVec2(currentPos.x + workWidth + waitWidth + otherWidth, currentPos.y + barHeight),
+				ImGui::GetColorU32(otherColor)
+			);
+		}
+
+		// Draw border
+		drawList->AddRect(currentPos, ImVec2(currentPos.x + barWidth, currentPos.y + barHeight), IM_COL32(255, 255, 255, 128));
+
+		// Draw text labels on bars
+		char workLabel[32], waitLabel[32], otherLabel[32];
+		sprintf_s(workLabel, "%.1fms", work);
+		sprintf_s(waitLabel, "%.1fms", wait);
+		if (other > 0.0) sprintf_s(otherLabel, "%.1fms", other);
+
+		if (workWidth > 30.0f) {
+			drawList->AddText(ImVec2(currentPos.x + 5, currentPos.y + 8), IM_COL32(255, 255, 255, 255), workLabel);
+		}
+		if (waitWidth > 30.0f) {
+			drawList->AddText(ImVec2(currentPos.x + workWidth + 5, currentPos.y + 8), IM_COL32(255, 255, 255, 255), waitLabel);
+		}
+		if (otherWidth > 30.0f && other > 0.0) {
+			drawList->AddText(ImVec2(currentPos.x + workWidth + waitWidth + 5, currentPos.y + 8), IM_COL32(255, 255, 255, 255), otherLabel);
+		}
+
+		ImGui::Dummy(ImVec2(barWidth, barHeight + spacing));
+	};
+
+	// Engine thread timeline (blue for work, gray for wait, green for writeback)
+	drawTimelineBar("Engine", engineWork, engineWait, engineWriteback,
+	                ImVec4(0.2f, 0.4f, 1.0f, 1.0f),  // Blue for work
+	                ImVec4(0.5f, 0.5f, 0.5f, 0.6f),  // Gray for wait
+	                ImVec4(0.2f, 0.8f, 0.2f, 1.0f)); // Green for writeback
+
+	// Editor thread timeline (orange for work, gray for wait)
+	drawTimelineBar("Editor", editorWork, editorWait, 0.0,
+	                ImVec4(1.0f, 0.6f, 0.2f, 1.0f),  // Orange for work
+	                ImVec4(0.5f, 0.5f, 0.5f, 0.6f),  // Gray for wait
+	                ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // No third segment
+
+	ImGui::Separator();
+
+	// === BOTTLENECK ANALYSIS ===
+	ImGui::Text("Bottleneck Analysis (based on avg of last %zu frames):", STAT_WINDOW);
+
+	const char* bottleneck = "";
+	double bottleneckTime = 0.0;
+	ImVec4 bottleneckColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// Use average values for stable bottleneck detection
+	if (engineWorkAvg > editorWorkAvg) {
+		bottleneck = "Engine Thread";
+		bottleneckTime = engineWorkAvg;
+		bottleneckColor = ImVec4(0.2f, 0.4f, 1.0f, 1.0f);
+	} else {
+		bottleneck = "Editor Thread";
+		bottleneckTime = editorWorkAvg;
+		bottleneckColor = ImVec4(1.0f, 0.6f, 0.2f, 1.0f);
+	}
+
+	ImGui::TextColored(bottleneckColor, "  Frame Bottleneck: %s (avg: %.2f ms, current: %.2f ms)",
+	                   bottleneck, bottleneckTime,
+	                   (bottleneck[0] == 'E' && bottleneck[1] == 'n') ? engineWork : editorWork);
+	ImGui::Text("  Wait Time Balance: Engine waits avg %.1f ms | Editor waits avg %.1f ms", engineWaitAvg, editorWaitAvg);
+
+	// Recommendation based on average wait times
+	if (engineWaitAvg > editorWaitAvg * 2.0) {
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  Recommendation: Optimize Editor UI - it's blocking the engine!");
+	} else if (editorWaitAvg > engineWaitAvg * 2.0) {
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  Recommendation: Optimize Engine systems - editor is waiting!");
+	} else {
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "  Wait times are balanced.");
+	}
+
+	ImGui::Separator();
+
+	// === SIDE-BY-SIDE COMPARISON TABLE ===
+	ImGui::Text("Side-by-Side Comparison (last %zu frames):", STAT_WINDOW);
+
+	if (ImGui::BeginTable("ComparisonTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+		ImGui::TableSetupColumn("Scope", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+		ImGui::TableSetupColumn("Current", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+		ImGui::TableSetupColumn("Min", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableSetupColumn("Max", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableSetupColumn("Avg", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableSetupColumn("% Frame", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+		ImGui::TableHeadersRow();
+
+		auto addRow = [&](const char* name, double current, double minVal, double maxVal, double avgVal, ImVec4 color) {
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::TextColored(color, "%s", name);
+			ImGui::TableNextColumn();
+			ImGui::Text("%.2f ms", current);
+			ImGui::TableNextColumn();
+			ImGui::Text("%.2f", minVal);
+			ImGui::TableNextColumn();
+			ImGui::Text("%.2f", maxVal);
+			ImGui::TableNextColumn();
+			ImGui::Text("%.2f", avgVal);
+			ImGui::TableNextColumn();
+			double pct = (combinedTotal > 0.0) ? (current / combinedTotal) * 100.0 : 0.0;
+			ImGui::TextColored(color, "%.1f%%", pct);
+		};
+
+		// Engine rows
+		addRow("EngineWork", engineWork, engineWorkMin, engineWorkMax, engineWorkAvg, ImVec4(0.2f, 0.4f, 1.0f, 1.0f));
+		addRow("WaitForEditor", engineWait, engineWaitMin, engineWaitMax, engineWaitAvg,
+		       (engineWait > editorWait * 2.0) ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+		if (engineWriteback > 0.0) {
+			addRow("Writeback", engineWriteback, 0.0, 0.0, 0.0, ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
+		}
+
+		// Editor rows
+		addRow("EditorUIWork", editorWork, editorWorkMin, editorWorkMax, editorWorkAvg, ImVec4(1.0f, 0.6f, 0.2f, 1.0f));
+		addRow("WaitForEngineSnapshot", editorWait, editorWaitMin, editorWaitMax, editorWaitAvg,
+		       (editorWait > engineWait * 2.0) ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+		ImGui::EndTable();
+	}
+
+	ImGui::Separator();
+
+	// === DETAILED SYSTEM BREAKDOWN (COMBINED) ===
+	ImGui::Text("All Systems (Combined):");
+
+	// Combine all systems from both profilers
+	std::map<std::string, std::pair<double, const char*>> allSystems;  // name -> (time, thread)
+
+	for (const auto& kv : engineLast.systemMs) {
+		allSystems[kv.first] = {kv.second, "Engine"};
+	}
+	for (const auto& kv : editorLast.systemMs) {
+		allSystems[kv.first] = {kv.second, "Editor"};
+	}
+
+	if (ImGui::BeginTable("AllSystemsTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Sortable | ImGuiTableFlags_Resizable)) {
+		ImGui::TableSetupColumn("System", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn("Thread", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+		ImGui::TableSetupColumn("Time (ms)", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("% of Total", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableHeadersRow();
+
+		// Calculate total time for percentages
+		double totalSystemTime = 0.0;
+		for (const auto& kv : allSystems) {
+			totalSystemTime += kv.second.first;
+		}
+
+		for (const auto& kv : allSystems) {
+			const std::string& systemName = kv.first;
+			double timeMs = kv.second.first;
+			const char* thread = kv.second.second;
+			double pct = (totalSystemTime > 0.0) ? (timeMs / totalSystemTime) * 100.0 : 0.0;
+
+			ImVec4 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+			if (pct > 30.0) {
+				color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);  // Red
+			} else if (pct > 15.0) {
+				color = ImVec4(1.0f, 0.5f, 0.0f, 1.0f);  // Orange
+			}
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::TextColored(color, "%s", systemName.c_str());
+			ImGui::TableNextColumn();
+			ImGui::Text("%s", thread);
+			ImGui::TableNextColumn();
+			ImGui::Text("%.2f", timeMs);
+			ImGui::TableNextColumn();
+			ImGui::TextColored(color, "%.1f%%", pct);
+		}
+
+		ImGui::EndTable();
+	}
 }
 
 void EditorProfiler::RenderEventTree(const std::vector<Event>& events)
 {
-	// Track depth for tree hierarchy
-	int currentDepth = -1;
+	// Stack to track open tree nodes (stores depth of each open node)
+	std::vector<uint32_t> openNodeStack;
 
 	// Track if we're inside a collapsed node (to skip children)
 	int skipUntilDepth = -1;
@@ -1071,10 +1500,11 @@ void EditorProfiler::RenderEventTree(const std::vector<Event>& events)
 			}
 		}
 
-		// Close any tree nodes we've exited (depth decreased)
-		while (currentDepth >= static_cast<int>(event.depth)) {
+		// Close tree nodes when we return to a shallower or equal depth
+		// Pop all nodes deeper than current event's depth
+		while (!openNodeStack.empty() && openNodeStack.back() >= event.depth) {
 			ImGui::TreePop();
-			currentDepth--;
+			openNodeStack.pop_back();
 		}
 
 		// Convert duration to milliseconds
@@ -1128,8 +1558,8 @@ void EditorProfiler::RenderEventTree(const std::vector<Event>& events)
 			ImGui::PopStyleColor();
 
 			if (isOpen) {
-				// Track that we opened this node
-				currentDepth = static_cast<int>(event.depth);
+				// TreeNode was opened - push to stack so we can pop it later
+				openNodeStack.push_back(event.depth);
 			} else {
 				// Node is collapsed - mark to skip all its children
 				skipUntilDepth = static_cast<int>(event.depth);
@@ -1143,8 +1573,8 @@ void EditorProfiler::RenderEventTree(const std::vector<Event>& events)
 	}
 
 	// Close any remaining open tree nodes
-	while (currentDepth >= 0) {
-		//ImGui::TreePop();
-		currentDepth--;
+	while (!openNodeStack.empty()) {
+		ImGui::TreePop();
+		openNodeStack.pop_back();
 	}
 }

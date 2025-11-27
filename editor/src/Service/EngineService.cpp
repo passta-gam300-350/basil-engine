@@ -41,12 +41,13 @@ void EngineContainerService::EngineContainer::engine_service() {
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
+			// Begin profiling frame at the start of the entire iteration
+			Engine::BeginFrame();
+
 			{
-				PF_SCOPE("EngineWork");
+				PF_SYSTEM("EngineWork");
 				engine_snapshot_callback();
-				Engine::BeginFrame();
 				Engine::CoreUpdate();
-				Engine::EndFrame();
 				Engine::UpdateDebug();
 			}
 
@@ -55,7 +56,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 			//glFinish();
 
 			{
-				PF_SCOPE("EntityPicking");
+				PF_SYSTEM("EntityPicking");
 				if (m_hasPickingQuery)
 				{
 					auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
@@ -102,14 +103,17 @@ void EngineContainerService::EngineContainer::engine_service() {
 			}
 
 			{
-				PF_SCOPE("WaitForEditor");
+				PF_SYSTEM("WaitForEditor");
 				m_container_is_presentable.acquire();
 			}
 
 			{
-				PF_SCOPE("Writeback");
+				PF_SYSTEM("Writeback");
 				engine_snapshot_writeback();
 			}
+
+			// End profiling frame at the end of the entire iteration
+			Engine::EndFrame();
 		}
 	}
 	Engine::Exit();

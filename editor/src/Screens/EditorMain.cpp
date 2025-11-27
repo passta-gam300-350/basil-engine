@@ -519,7 +519,7 @@ void EditorMain::init()
 void EditorMain::update()
 {
 	if (!active) return;
-	PF_EDITOR_SCOPE("WaitForEngineSnapshot");
+	PF_EDITOR_SYSTEM("WaitForEngineSnapshot");
 	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 }
 
@@ -531,7 +531,7 @@ void EditorMain::render()
 	PF_EDITOR_BEGIN_FRAME(editorFrameIndex++);
 
 	{
-		PF_EDITOR_SCOPE("EditorUIWork");
+		PF_EDITOR_SYSTEM("EditorUIWork");
 
 		ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -604,7 +604,7 @@ void EditorMain::render()
 	}
 
 	{
-		PF_EDITOR_SCOPE("ReleaseEngine");
+		PF_EDITOR_SYSTEM("ReleaseEngine");
 		engineService.m_cont->m_container_is_presentable.release();
 		engineService.start();
 	}
