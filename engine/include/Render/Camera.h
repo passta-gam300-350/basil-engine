@@ -20,6 +20,7 @@ Technology is prohibited.
 #include <glm/gtc/matrix_transform.hpp>
 #include "Ecs/ecs.h"
 #include "Component/Transform.hpp"
+#include "Profiler/profiler.hpp"
 
 struct CameraComponent {
     enum class CameraType : std::uint8_t {
@@ -40,18 +41,23 @@ struct CameraComponent {
 
 struct CameraSystem : public ecs::SystemBase {
 public:
-    struct Camera : public CameraComponent {
-        glm::vec3 m_Pos;
-    };
-    enum class CameraType : std::uint8_t {
-        MAIN_CAMERA_ENTITY,
-        AUX
-    };
+    // Camera struct and CameraType enum removed - game camera queried from ECS
 
 private:
-    std::shared_ptr<Camera> m_AuxCamera{nullptr};
-    Camera m_MainCamera{};
-    bool m_UseAux{false};
+    // Cached active game camera data (updated in FixedUpdate @ 60Hz for performance)
+    // Prevents ~180+ ECS queries per second from AudioSystem, C# bindings, and BVH
+    struct {
+        glm::vec3 position{0.f, 0.f, 0.f};
+        glm::vec3 front{0.f, 0.f, -1.f};
+        glm::vec3 up{0.f, 1.f, 0.f};
+        glm::vec3 right{1.f, 0.f, 0.f};
+        CameraComponent::CameraType type{CameraComponent::CameraType::PERSPECTIVE};
+        float fov{45.f};
+        float aspectRatio{16.f / 9.f};
+        float nearPlane{0.1f};
+        float farPlane{1000.f};
+        bool isActive{false};  // false if no active camera exists in scene
+    } m_CachedGameCamera;
     inline static glm::mat4 s_ViewMatrix{ 1.f };
     inline static glm::mat4 s_ProjMatrix{ 1.f };
     inline static bool s_HasCachedMatrices{ false };
@@ -70,22 +76,14 @@ public:
         return s_camera_sys;
     }
 
-    static Camera const& GetActiveCamera() {
-        CameraSystem& sys{ Instance() };
-        return sys.m_UseAux ? *sys.m_AuxCamera : sys.m_MainCamera;
+    // Returns cached game camera data (updated @ 60Hz in FixedUpdate)
+    // Editor camera uses separate snapshot pattern
+    // Returns struct with isActive=false if no active camera exists
+    static auto const& GetActiveCameraData() {
+        return Instance().m_CachedGameCamera;
     }
 
-    static void SetActiveCamera(CameraType ctype) {
-        Instance().m_UseAux = ctype == CameraType::AUX;
-    }
-
-    static CameraType GetActiveCameraType() {
-        return Instance().m_UseAux ? CameraType::AUX : CameraType::MAIN_CAMERA_ENTITY;
-    }
-
-    static void SetAuxCamera(std::shared_ptr<Camera> sptr) {
-        Instance().m_AuxCamera = sptr;
-    }
+    // Phase 4: Removed SetActiveCamera, GetActiveCameraType, SetAuxCamera methods
 
     static void SetCachedMatrices(glm::mat4 const& view, glm::mat4 const& proj) {
         s_ViewMatrix = view;
@@ -114,9 +112,9 @@ public:
     }
 
     static glm::vec3 GetWorldFromScreen(glm::vec2 screenPos, glm::vec2 screenSize, float depth) {
-        Camera const& cam{ GetActiveCamera() };
+        const auto& cam = GetActiveCameraData();
         if (!s_HasCachedMatrices) {
-            return cam.m_Pos;
+            return cam.position;  // Fallback to cached camera position
         }
 
         glm::mat4 invViewProj = glm::inverse(s_ProjMatrix * s_ViewMatrix);
@@ -133,10 +131,10 @@ public:
 	}
 
     static void GetRayFromScreen(glm::vec2 screenPos, glm::vec2 screenSize, glm::vec3& outOrigin, glm::vec3& outDir) {
-        Camera const& cam{ GetActiveCamera() };
+        const auto& cam = GetActiveCameraData();
         if (!s_HasCachedMatrices) {
-            outOrigin = cam.m_Pos;
-            outDir = cam.m_Front;
+            outOrigin = cam.position;  // Fallback to cached camera position
+            outDir = cam.front;        // Fallback to cached camera direction
             return;
         }
 
@@ -159,27 +157,40 @@ public:
         outDir = glm::normalize(glm::vec3(farP) - outOrigin);
     }
 
-    static std::shared_ptr<Camera> GetAuxCamera() {
-        return Instance().m_AuxCamera;
-    }
+    // Phase 4: Removed GetAuxCamera method - editor camera uses snapshot pattern
 
     void FixedUpdate(ecs::world& w) {
-        auto& [aux_cam, main_cam, is_aux] {Instance()};
-       
-        auto cmp_rng{w.query_components<CameraComponent, TransformComponent>()};
+        PF_SYSTEM("Camera System");
+        auto& cache = Instance().m_CachedGameCamera;
+
+        // Reset active flag - will be set to true if active camera found
+        cache.isActive = false;
+
+        auto cmp_rng = w.query_components<CameraComponent, TransformComponent>();
         for (auto [camera_comp, transform_comp] : cmp_rng) {
             if (!camera_comp.m_IsActive) {
                 continue;
             }
-            //update camera comp
+
+            // Calculate camera orientation vectors from rotation
             auto quat = glm::quat(glm::radians(transform_comp.m_Rotation));
-            camera_comp.m_Right = quat * glm::vec3(1.f, 0.f, 0.f);
-            camera_comp.m_Up = quat * glm::vec3(0.f, 1.f, 0.f);
-            camera_comp.m_Front = quat * glm::vec3(0.f, 0.f, 1.f);
-            //update Graphics camera
-            static_cast<CameraComponent&>(main_cam) = camera_comp;
-            main_cam.m_Pos = transform_comp.m_Translation;
-            break;
+            glm::vec3 right = quat * glm::vec3(1.f, 0.f, 0.f);
+            glm::vec3 up = quat * glm::vec3(0.f, 1.f, 0.f);
+            glm::vec3 front = quat * glm::vec3(0.f, 0.f, 1.f);
+
+            // Cache all game camera data for this frame
+            cache.position = transform_comp.m_Translation;
+            cache.front = front;
+            cache.up = up;
+            cache.right = right;
+            cache.type = camera_comp.m_Type;
+            cache.fov = camera_comp.m_Fov;
+            cache.aspectRatio = camera_comp.m_AspectRatio;
+            cache.nearPlane = camera_comp.m_Near;
+            cache.farPlane = camera_comp.m_Far;
+            cache.isActive = true;
+
+            break;  // Only use first active camera
         }
     }
 };

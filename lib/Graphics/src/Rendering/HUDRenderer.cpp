@@ -27,9 +27,9 @@ HUDRenderer::~HUDRenderer()
 
 void HUDRenderer::BeginFrame()
 {
-    // Clear all batches for new frame
+    // Clear all batches for new frame (use resize(0) to preserve capacity)
     for (auto& [textureID, batch] : m_TextureBatches) {
-        batch.instances.clear();
+        batch.instances.resize(0);  // Clear without deallocating
         batch.dirty = true;
     }
     m_TotalElements = 0;
@@ -56,9 +56,13 @@ void HUDRenderer::SubmitElement(const HUDElementData& element)
     instanceData.padding[0] = 0.0f;
     instanceData.padding[1] = 0.0f;
 
-    // Add to appropriate texture batch
-    auto& batch = m_TextureBatches[element.textureID];
-    batch.textureID = element.textureID;
+    // Add to appropriate texture batch (use try_emplace to avoid unnecessary allocations)
+    auto [it, inserted] = m_TextureBatches.try_emplace(element.textureID);
+    auto& batch = it->second;
+    if (inserted) {
+        batch.textureID = element.textureID;
+        batch.instances.reserve(64);  // Pre-allocate capacity for typical batch size
+    }
     batch.instances.push_back(instanceData);
     batch.dirty = true;
 
@@ -98,6 +102,28 @@ void HUDRenderer::RenderToPass(RenderPass& renderPass, const FrameData& frameDat
 
     //spdlog::info("HUDRenderer::RenderToPass() - shader OK, rendering {} batches", m_TextureBatches.size());
 
+    // ========== SHARED STATE SETUP (ONCE FOR ALL BATCHES) ==========
+    // Bind shader once for all batches
+    RenderCommands::BindShaderData bindShaderCmd{ m_HUDShader };
+    renderPass.Submit(bindShaderCmd);
+
+    // Set viewport uniforms once (same for all batches)
+    RenderCommands::SetUniformVec2Data viewportCmd{
+        m_HUDShader,
+        "u_ViewportSize",
+        glm::vec2(frameData.viewportWidth, frameData.viewportHeight)
+    };
+    renderPass.Submit(viewportCmd);
+
+    // Set reference resolution uniform once (same for all batches)
+    RenderCommands::SetUniformVec2Data referenceResolutionCmd{
+        m_HUDShader,
+        "u_ReferenceResolution",
+        m_ReferenceResolution
+    };
+    renderPass.Submit(referenceResolutionCmd);
+
+    // ========== PER-BATCH RENDERING ==========
     // Sort batches by layer (stored in first instance of each batch)
     // For simplicity, we'll render in texture ID order
     // TODO: Implement proper layer-based sorting across batches
@@ -186,27 +212,8 @@ void HUDRenderer::RenderBatch(RenderPass& renderPass, const TextureBatch& batch,
     /*spdlog::info("HUDRenderer::RenderBatch() - rendering textureID={}, instances={}, VAO={}",
         batch.textureID, batch.instances.size(), m_QuadVAO);*/
 
-    // Bind shader
-    RenderCommands::BindShaderData bindShaderCmd{ m_HUDShader };
-    renderPass.Submit(bindShaderCmd);
-
-    //spdlog::info("HUDRenderer::RenderBatch() - shader bound");
-
-    // Set viewport uniforms (for screen-space calculations)
-    RenderCommands::SetUniformVec2Data viewportCmd{
-        m_HUDShader,
-        "u_ViewportSize",
-        glm::vec2(frameData.viewportWidth, frameData.viewportHeight)
-    };
-    renderPass.Submit(viewportCmd);
-
-    // Set reference resolution uniform (for fixed-size HUD layout)
-    RenderCommands::SetUniformVec2Data referenceResolutionCmd{
-        m_HUDShader,
-        "u_ReferenceResolution",
-        m_ReferenceResolution
-    };
-    renderPass.Submit(referenceResolutionCmd);
+    // NOTE: Shader and viewport/resolution uniforms are set once in RenderToPass()
+    // This function only handles per-batch state: SSBO, texture, and draw call
 
     // Bind instance data SSBO via command buffer (so it's bound at the right time during execution)
     uint32_t ssboHandle = batch.ssbo->GetSSBOHandle();

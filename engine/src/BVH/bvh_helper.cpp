@@ -20,20 +20,21 @@ Technology is prohibited.
 #include <glm/gtc/matrix_transform.hpp>
 #include <cfloat>
 
-Frustum CameraToFrustum(CameraSystem::Camera const& camera)
+Frustum CameraToFrustum(glm::vec3 const& position, glm::vec3 const& front, glm::vec3 const& up,
+                        float fov, float aspectRatio, float nearPlane, float farPlane)
 {
     glm::mat4 projection = glm::perspective
     (
-        glm::radians(camera.m_Fov),
-        camera.m_AspectRatio,
-        camera.m_Near,
-        camera.m_Far
+        glm::radians(fov),
+        aspectRatio,
+        nearPlane,
+        farPlane
     );
     glm::mat4 view = glm::lookAt
     (
-        camera.m_Pos,
-        camera.m_Pos + camera.m_Front,
-        camera.m_Up
+        position,
+        position + front,
+        up
     );
     return Frustum(projection * view);
 }

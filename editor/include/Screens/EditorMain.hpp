@@ -28,6 +28,8 @@ Technology is prohibited.
 #include "Camera/EditorCamera.hpp"
 #include "ecs/fwd.h"
 #include "Manager/AssetManager.hpp"
+#include "Console/ENGINE_CONSOLE.hpp"
+#include "Profiler/EDITOR_PROFILER.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <components/behaviour.hpp>
@@ -53,28 +55,61 @@ struct PrefabOverrideContext {
 
 class EditorMain : public Screen
 {
+	// ========================================================================
+	// SERVICES
+	// ========================================================================
 	FileService fileService;
 	EngineContainerService engineService;
+
 public:
+	// ========================================================================
+	// PANEL VISIBILITY FLAGS
+	// ========================================================================
 	bool showAboutModal = false;
 	bool showInspector = true;
 	bool showSceneExplorer = true;
 	bool showProfiler = true;
 	bool showConsole = true;
+	bool showEngineConsole = true;
 	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
+	bool showAssetBrowser = true;  // Asset browser panel
+	bool showResources = true;      // Imported resources panel
+
+	// ========================================================================
+	// ENGINE CONSOLE STATE
+	// ========================================================================
+	unsigned char m_EngineConsoleFilterType = 0x7F;  // All message types enabled by default
+	std::vector<std::pair<int, EngineConsole::Message>> m_EngineConsoleLocalMessages;  // Editor-local message storage with counts
+
+	// ========================================================================
+	// PROFILER STATE
+	// ========================================================================
+	EditorProfiler m_Profiler;
+
+	// ========================================================================
+	// PLAY MODE STATE
+	// ========================================================================
+	bool isPlaying = false; // Gameplay is enabled (not paused)
+	bool isPaused = false;  // Gameplay is paused
+
+	// ========================================================================
+	// GIZMO STATE
+	// ========================================================================
+	ImGuizmo::OPERATION mode = (ImGuizmo::OPERATION)0;
 	bool showViewCube = true;  // Toggle for Unity-style view cube in Scene viewport
-	bool isPlaying = false; // To check if the gameplay is enabled, not to beconfused with paused as you can be paused but resume the gameplay
-	bool isPaused = false; // To check if game play is paused, should only be false when the gameplay is enabled
-	
-	ImGuizmo::OPERATION mode = (ImGuizmo::OPERATION)0; //Variables for Gizmos
 	glm::mat4 GuizmoViewMec4;
 	glm::mat4 GuizmoprojectionMat4;
 	TransformComponent* GuizmoEntityTransform;
 	TransformMtxComponent* GuizmoEntityTransformMTX;
 	TransformMtxComponent* GuizmoEntityParentTransformMTX;
 
+	// ========================================================================
+	// LIFECYCLE
+	// ========================================================================
 	EditorMain(GLFWwindow* window);
+	~EditorMain() override = default;
+
 	void init() override;
 	void update() override;
 	void render() override;
@@ -84,88 +119,97 @@ public:
 	virtual bool isWindowClosed() override;
 	bool Activate() override;
 
-
-
-
-
-	~EditorMain() override = default;
-
-
-
+	// ========================================================================
+	// EDITOR UI SETUP
+	// ========================================================================
 	void Setup_Dockspace(unsigned id);
-
-	// For starting and stopping the engine
-	void Render_StartStop();
-
-	// For setting the menu bar
-	void Render_MenuBar();
-
-	// For setting up the style
 	void SetupUnityStyle();
 
+	// ========================================================================
+	// MENU AND TOOLBAR RENDERING
+	// ========================================================================
+	void Render_MenuBar();
+	void Render_StartStop();
 	void Render_AboutUI();
 
-	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
+	// ========================================================================
+	// PANEL RENDERING
+	// ========================================================================
+	void Render_SceneExplorer();    // Hierarchy panel
+	void Render_Inspector();         // Inspector panel
+	void Render_Console();           // Console panel (C# scripts)
+	void Render_EngineConsole();     // Engine Console panel (spdlog)
+	void Render_Profiler();          // Profiler panel
+	void Render_PhysicsDebugPanel(); // Physics debug panel
 
-	void Render_SceneExplorer();
-
-	void Render_Profiler();
-
-	void Render_Inspector();
-
-	void Render_Console();
-
-	void Render_PhysicsDebugPanel();
-
+	// ========================================================================
+	// ASSET BROWSER
+	// ========================================================================
 	void Render_AssetBrowser();
+	void Render_Resources();         // Imported resources window
 	void Render_AssetBrowser_Old();
 	void Render_ImporterSettings();
 
-	void Render_Scene();
-	void Render_Game();
-	void Render_CameraControls();
+	// ========================================================================
+	// VIEWPORT RENDERING
+	// ========================================================================
+	void Render_Scene();           // Scene viewport
+	void Render_Game();            // Game viewport
+	void Render_CameraControls();  // Camera control overlay
+	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
 
 	void Render_SkyboxSettings();
 
+	// ========================================================================
+	// INSPECTOR COMPONENT RENDERING
+	// ========================================================================
 	void Render_Components();
 	void Render_Component_Member(auto&, bool& is_dirty);
-    void Render_Behaviour_Component(behaviour& component);
+	void Render_Behaviour_Component(behaviour& component);
 	void Add_Script_Menu();
+	void Render_Add_Component_Menu();
+
+	// Physics component rendering
 	bool Render_RigidBody_Component(RigidBodyComponent& component);
 	bool Render_BoxCollider_Component(BoxCollider& component);
 	bool Render_SphereCollider_Component(SphereCollider& component);
 	bool Render_CapsuleCollider_Component(CapsuleCollider& component);
-	void Render_Add_Component_Menu();
 
-	// Accessor for custom material inspector
+	// ========================================================================
+	// ENTITY CREATION
+	// ========================================================================
+	void CreateObjectHelper(); // Helper menu for creating objects
+
+	// ========================================================================
+	// ACCESSORS
+	// ========================================================================
 	AssetManager* GetAssetManager() { return m_AssetManager.get(); }
 
 private:
-	// Entity management
-	void CreateObjectHelper();
+	// ========================================================================
+	// ENTITY CREATION (PRIVATE)
+	// ========================================================================
 	void CreateDefaultEntity();
 	void CreatePlaneEntity();
 	void CreateLightEntity();
 	void CreateCameraEntity();
 	void CreateDemoScene();
-
-	// Demo scene creation utilities
-	void CreateCube(const glm::vec3& position = glm::vec3(0.0f),
-	               const glm::vec3& scale = glm::vec3(1.0f),
-	               const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f));
-	void CreateCubeGrid(int gridSize = 3, float spacing = 3.0f);
-
 	void CreatePhysicsDemoScene();
 	void CreatePhysicsCube();
+	void CreateParticleSystem();
+	void CreateAudioSource();
 
-	// Editor Camera
-	std::shared_ptr<EditorCamera> m_EditorCamera;
+	// Demo scene utilities
+	void CreateCube(const glm::vec3& position = glm::vec3(0.0f),
+	                const glm::vec3& scale = glm::vec3(1.0f),
+	                const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f));
+	void CreateCubeGrid(int gridSize = 3, float spacing = 3.0f);
 
-	// Asset Manager
-	std::unique_ptr<AssetManager> m_AssetManager;
+	// ========================================================================
+	// CAMERA AND VIEWPORT
+	// ========================================================================
+	std::unique_ptr<EditorCamera> m_EditorCamera;  // Phase 3: Exclusive ownership
 
-	// Play mode state
-	bool m_IsPlayMode = false;
 
 	// Physics debug rendering state
 	bool m_PhysicsDebugRenderingEnabled = true;
@@ -174,34 +218,78 @@ private:
 	float m_ViewportWidth = 1280.0f;
 	float m_ViewportHeight = 720.0f;
 
-	// Entity selection management
-	uint32_t m_SelectedEntityID = 0;         // Currently selected entity's object ID (0 = none)
-	std::unordered_set<uint32_t> m_EntitiesIDSelection; //all selected entities
-	bool m_ShowSelectionInfo = true;         // Show selection info in inspector
-	uint32_t m_SelectedNodeID = 0;
+	// ========================================================================
+	// ASSET MANAGEMENT
+	// ========================================================================
+	std::unique_ptr<AssetManager> m_AssetManager;
 
 	// Prefab override detection
 	PrefabOverrideContext m_PrefabContext;
 	std::unique_ptr<PrefabData> m_LoadedPrefabData;  // Currently loaded prefab for comparison
 
-	// Material creation dialog state
-	bool m_ShowCreateMaterialDialog = false;
-	char m_NewMaterialNameBuffer[256] = "NewMaterial";
+	// ========================================================================
+	// PLAY MODE
+	// ========================================================================
+	bool m_IsPlayMode = false;
 
-	// Asset browser state
+	// ========================================================================
+	// ENTITY SELECTION
+	// ========================================================================
+	uint32_t m_SelectedEntityID = 0;  // Currently selected entity's object ID (0 = none)
+	uint32_t m_SelectedNodeID = 0;    // Selected scene graph node ID
+	bool m_ShowSelectionInfo = true;  // Show selection info in inspector
+	std::unordered_set<uint32_t> m_EntitiesIDSelection; //all selected entities
+
+	// Selection functions
+	void HandleViewportPicking();
+	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
+	void SelectEntity(uint32_t objectID);
+	void ClearEntitySelection();
+	void FrameSelectedEntity();
+
+	// ========================================================================
+	// DEBUG RENDERING
+	// ========================================================================
+	bool m_ShowAABBs = false;
+	void SetDebugVisualization(bool showAABBs);
+
+	// ========================================================================
+	// HIERARCHY PANEL STATE
+	// ========================================================================
+	char m_HierarchySearchBuffer[256] = "";
+
+	// Inline rename state
+	uint32_t m_RenamingEntityUID = UINT32_MAX;  // UINT32_MAX means not renaming
+	char m_RenameBuffer[256] = "";
+	bool m_RenameJustActivated = false;    // For auto-focus and select-all
+
+	// ========================================================================
+	// ASSET BROWSER STATE
+	// ========================================================================
 	enum class AssetViewMode { Grid, List };
 	AssetViewMode m_AssetViewMode = AssetViewMode::Grid;
 	char m_AssetSearchBuffer[256] = "";
 	std::string m_SelectedAssetPath = "";
 	float m_FolderTreeWidth = 200.0f;
 
-	// Hierarchy panel state
-	char m_HierarchySearchBuffer[256] = "";
+	// Filesystem caching to avoid expensive directory scans every frame
+	struct AssetBrowserCache {
+		std::string cachedPath;
+		std::vector<std::string> cachedSubdirs;
+		std::vector<std::pair<std::string, std::string>> cachedFiles;
+		bool needsRefresh = true;
+	} m_AssetBrowserCache;
+
+	// ========================================================================
+	// RESOURCES PANEL STATE
+	// ========================================================================
+	std::string m_SelectedResourceName = "";  // Currently selected resource in Resources panel
 
 	// Asset browser icon textures
 	struct AssetIcons {
 		unsigned int folderIcon = 0;
 		unsigned int fileIcon = 0;
+		unsigned int defaultIcon = 0;   // Universal fallback icon
 		unsigned int imageIcon = 0;
 		unsigned int modelIcon = 0;
 		unsigned int audioIcon = 0;
@@ -213,7 +301,15 @@ private:
 	void LoadAssetIcons();
 	unsigned int GetIconForFile(const std::string& extension);
 
-	// Physics debug data
+	// ========================================================================
+	// MATERIAL CREATION
+	// ========================================================================
+	bool m_ShowCreateMaterialDialog = false;
+	char m_NewMaterialNameBuffer[256] = "NewMaterial";
+
+	// ========================================================================
+	// PHYSICS DEBUG DATA
+	// ========================================================================
 	struct PhysicsDebugData {
 		bool hasPhysicsBody = false;
 		bool hasRigidBody = false;
@@ -235,7 +331,7 @@ private:
 		glm::vec3 linearVelocity = glm::vec3(0.0f);
 		glm::vec3 angularVelocity = glm::vec3(0.0f);
 
-		// Jolt BodyInfo
+		// Jolt Body Info
 		float joltGravFactor = 0.0f;
 
 		// RigidBody properties
@@ -253,12 +349,9 @@ private:
 		float colliderHeight = 0.0f;
 	} m_PhysicsDebugData;
 
-	// Viewport picking implementation
-	void HandleViewportPicking();
-	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
-	void SelectEntity(uint32_t objectID);
-	void ClearEntitySelection();
-
+	// ========================================================================
+	// SCENE MANAGEMENT
+	// ========================================================================
 	void SaveScene(const char* path);
 	void LoadScene(const char* name);
 	void NewScene();

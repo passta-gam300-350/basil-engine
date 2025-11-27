@@ -510,7 +510,6 @@ public:
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
-    std::unique_ptr<Camera> m_Camera;                ///< Fallback camera (used if no CameraComponent exists)
 
 private:
     // ========== Internal Methods ==========
@@ -586,6 +585,33 @@ private:
     /// Game viewport dimensions for framebuffer sizing
     uint32_t m_gameViewportWidth{ 0 };
     uint32_t m_gameViewportHeight{ 0 };
+
+    // ========== Editor Camera Snapshot (Phase 2: Thread-safe camera data) ==========
+
+public:
+    /// Editor camera snapshot data (set by EngineService, read by Update)
+    struct EditorCameraSnapshot {
+        glm::vec3 position{ 0.0f, 5.0f, 10.0f };
+        glm::vec3 front{ 0.0f, 0.0f, -1.0f };
+        glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+        glm::vec3 right{ 1.0f, 0.0f, 0.0f };
+        float fov{ 45.0f };
+        float aspectRatio{ 16.0f / 9.0f };
+        float nearPlane{ 0.1f };
+        float farPlane{ 1000.0f };
+        bool isPerspective{ true };
+    };
+
+    /**
+     * @brief Set editor camera snapshot (called by EngineService on engine thread)
+     * @param snapshot Camera data from EditorMain (synchronized via mutex)
+     */
+    void SetEditorCameraSnapshot(const EditorCameraSnapshot& snapshot) {
+        m_editorCameraSnapshot = snapshot;
+    }
+
+private:
+    EditorCameraSnapshot m_editorCameraSnapshot;
 };
 
 #endif

@@ -43,15 +43,15 @@ const uint ANCHOR_BOTTOM_RIGHT = 8u;
 // Calculate anchor offset (normalized 0-1 range within quad)
 vec2 CalculateAnchorOffset(uint anchor)
 {
-    if (anchor == ANCHOR_TOP_LEFT)      return vec2(0.0, 0.0);
-    if (anchor == ANCHOR_TOP_CENTER)    return vec2(0.5, 0.0);
-    if (anchor == ANCHOR_TOP_RIGHT)     return vec2(1.0, 0.0);
+    if (anchor == ANCHOR_TOP_LEFT)      return vec2(0.0, 1.0);
+    if (anchor == ANCHOR_TOP_CENTER)    return vec2(0.5, 1.0);
+    if (anchor == ANCHOR_TOP_RIGHT)     return vec2(1.0, 1.0);
     if (anchor == ANCHOR_CENTER_LEFT)   return vec2(0.0, 0.5);
     if (anchor == ANCHOR_CENTER)        return vec2(0.5, 0.5);
     if (anchor == ANCHOR_CENTER_RIGHT)  return vec2(1.0, 0.5);
-    if (anchor == ANCHOR_BOTTOM_LEFT)   return vec2(0.0, 1.0);
-    if (anchor == ANCHOR_BOTTOM_CENTER) return vec2(0.5, 1.0);
-    if (anchor == ANCHOR_BOTTOM_RIGHT)  return vec2(1.0, 1.0);
+    if (anchor == ANCHOR_BOTTOM_LEFT)   return vec2(0.0, 0.0);
+    if (anchor == ANCHOR_BOTTOM_CENTER) return vec2(0.5, 0.0);
+    if (anchor == ANCHOR_BOTTOM_RIGHT)  return vec2(1.0, 0.0);
     return vec2(0.0, 0.0);  // Default
 }
 

@@ -8,6 +8,9 @@
 RenderCommandBuffer::RenderCommandBuffer() {
     // Texture binding system will be set via SetTextureSlotManager()
     m_TextureBindingSystem = nullptr;
+
+    // Pre-allocate command buffer to avoid reallocations during rendering
+    m_Commands.reserve(256);
 }
 
 void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
@@ -19,6 +22,7 @@ void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
 void RenderCommandBuffer::Clear()
 {
     m_Commands.clear();
+    m_CurrentShaderID = 0;  // Reset shader tracking
 }
 
 void RenderCommandBuffer::Execute()
@@ -65,7 +69,9 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindShaderData& c
     assert(cmd.shader && "BindShaderData command must have a valid shader");
     assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
 
+    // Update current shader tracking
     cmd.shader->use();
+    m_CurrentShaderID = cmd.shader->ID;
 }
 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformsData& cmd)
@@ -217,8 +223,11 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformBoolDat
     assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
     assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
 
-    // Ensure shader is active
-    cmd.shader->use();
+    // Only bind shader if it's not already current (avoid redundant state changes)
+    if (cmd.shader->ID != m_CurrentShaderID) {
+        cmd.shader->use();
+        m_CurrentShaderID = cmd.shader->ID;
+    }
 
     // Set the Bool uniform
     cmd.shader->setBool(cmd.uniformName, cmd.value);
@@ -274,7 +283,11 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetViewportData& 
 void RenderCommandBuffer::ExecuteCommand(const RenderCommands::SetUniformVec2Data& cmd)
 {
     if (cmd.shader) {
-        cmd.shader->use();
+        // Only bind shader if it's not already current (avoid redundant state changes)
+        if (cmd.shader->ID != m_CurrentShaderID) {
+            cmd.shader->use();
+            m_CurrentShaderID = cmd.shader->ID;
+        }
         cmd.shader->setVec2(cmd.uniformName, cmd.value);
     }
 }

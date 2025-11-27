@@ -10,6 +10,7 @@
 #include <Scene/Scene.hpp>
 
 #include "System/BehaviourSystem.hpp"
+#include "Profiler/profiler.hpp"
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -40,62 +41,84 @@ void EngineContainerService::EngineContainer::engine_service() {
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
 		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
-			engine_snapshot_callback();
+			// Begin profiling frame at the start of the entire iteration
 			Engine::BeginFrame();
-			Engine::CoreUpdate();
-			Engine::EndFrame();
-			Engine::UpdateDebug();
+
+			{
+				{
+					PF_SCOPE("EngineWork");
+					{
+						PF_SYSTEM("Snapshot callback");
+						engine_snapshot_callback();
+					}
+					Engine::CoreUpdate();
+					Engine::UpdateDebug();
+				}
+			}
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
 			// This prevents screen tearing when editor reads the framebuffer texture
 			//glFinish();
 
-			if (m_hasPickingQuery)
 			{
-				auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-				if (sceneRenderer)
+				PF_SYSTEM("EntityPicking");
+				if (m_hasPickingQuery)
 				{
-					// Create picking query
-					MousePickingQuery query;
-					query.screenX = static_cast<int>(m_pickingMouseX);
-					query.screenY = static_cast<int>(m_pickingMouseY);
-					query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
-					query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
-
-					// Query the picking buffer (picking pass already rendered)
-					PickingResult result = sceneRenderer->QueryObjectPicking(query);
-
-					// Disable picking pass for subsequent frames
-					sceneRenderer->EnablePicking(false);
-
-					// Handle result immediately (we're on engine thread)
-					if (result.hasHit && result.objectID != 0)
+					auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+					if (sceneRenderer)
 					{
-						spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-							result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+						// Create picking query
+						MousePickingQuery query;
+						query.screenX = static_cast<int>(m_pickingMouseX);
+						query.screenY = static_cast<int>(m_pickingMouseY);
+						query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
+						query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
 
-						// Set outline immediately
-						sceneRenderer->ClearOutlinedObjects();
-						sceneRenderer->AddOutlinedObject(result.objectID);
+						// Query the picking buffer (picking pass already rendered)
+						PickingResult result = sceneRenderer->QueryObjectPicking(query);
 
-						// Notify editor via callback
-						if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+						// Disable picking pass for subsequent frames
+						sceneRenderer->EnablePicking(false);
+
+						// Handle result immediately (we're on engine thread)
+						if (result.hasHit && result.objectID != 0)
+						{
+							spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+								result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+
+							// Set outline immediately
+							sceneRenderer->ClearOutlinedObjects();
+							sceneRenderer->AddOutlinedObject(result.objectID);
+
+							// Notify editor via callback
+							if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+						}
+						else
+						{
+							spdlog::info("EngineService: No entity picked");
+							sceneRenderer->ClearOutlinedObjects();
+							if (m_pickingCallback) m_pickingCallback(false, 0);
+						}
 					}
-					else
-					{
-						spdlog::info("EngineService: No entity picked");
-						sceneRenderer->ClearOutlinedObjects();
-						if (m_pickingCallback) m_pickingCallback(false, 0);
-					}
+
+					// Clear picking query flag
+					m_hasPickingQuery = false;
+					m_pickingCallback = nullptr;
 				}
-
-				// Clear picking query flag
-				m_hasPickingQuery = false;
-				m_pickingCallback = nullptr;
 			}
 
-			m_container_is_presentable.acquire();
-			engine_snapshot_writeback();
+			{
+				PF_SYSTEM("WaitForEditor");
+				m_container_is_presentable.acquire();
+			}
+
+			{
+				PF_SYSTEM("Writeback");
+				engine_snapshot_writeback();
+			}
+
+			// End profiling frame at the end of the entire iteration
+			Engine::EndFrame();
 		}
 	}
 	Engine::Exit();
@@ -105,6 +128,21 @@ void EngineContainerService::EngineContainer::engine_service() {
 void EngineContainerService::EngineContainer::engine_snapshot_callback()
 {
 	std::lock_guard lg{ m_mtx };
+
+	// Phase 2: Update editor camera snapshot for RenderSystem
+	// Copy camera data from EditorMain (protected by m_mtx)
+	RenderSystem::EditorCameraSnapshot renderSnapshot;
+	renderSnapshot.position = m_editorCameraSnapshot.position;
+	renderSnapshot.front = m_editorCameraSnapshot.front;
+	renderSnapshot.up = m_editorCameraSnapshot.up;
+	renderSnapshot.right = m_editorCameraSnapshot.right;
+	renderSnapshot.fov = m_editorCameraSnapshot.fov;
+	renderSnapshot.aspectRatio = m_editorCameraSnapshot.aspectRatio;
+	renderSnapshot.nearPlane = m_editorCameraSnapshot.nearPlane;
+	renderSnapshot.farPlane = m_editorCameraSnapshot.farPlane;
+	renderSnapshot.isPerspective = m_editorCameraSnapshot.isPerspective;
+	Engine::GetRenderSystem().SetEditorCameraSnapshot(renderSnapshot);
+
 	ecs::world w{ Engine::GetWorld() };
 	auto entities_rng{ w.get_all_entities() };
 	m_entities_snapshot.resize(entities_rng.size_hint());
