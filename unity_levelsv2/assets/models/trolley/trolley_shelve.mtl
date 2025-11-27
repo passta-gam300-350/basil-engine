@@ -1,0 +1,33 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl trolley_mat
+
+# Base color / diffuse map
+map_Kd trolley_mat_BaseColor.png
+
+# Normal map
+map_Bump trolley_mat_Normal.png
+bump trolley_mat_Normal.png
+
+# Metallic map
+map_Ks trolley_mat_Metallic.png
+
+# Roughness map
+map_Ns trolley_mat_Roughness.png
+
+# Emissive map
+map_Ke trolley_mat_Emissive.png
+
+# Height / displacement map
+map_d trolley_mat_Height.png
+disp trolley_mat_Height.png
+
+kd 0.5 0.5 0.5
+ka 1 1 1
+ks 0.5 0.5 0.5
+ke 0 0 0
+d 1
+Ns 72
+illum 2
+

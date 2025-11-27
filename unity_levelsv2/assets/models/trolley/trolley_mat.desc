@@ -1,19 +1,19 @@
 base:
-  m_guid: 8aff197a56b909aa7431e0dc75
+  m_guid: b0d11751e9cb83b664d92a2d0
   m_importer: material
   m_source: ""
-  m_name: trolley
+  m_name: trolley_mat
   m_importer_type: 12248969845253211364
 material:
   vert_name: main_pbr.vert
   frag_name: main_pbr.frag
-  material_name: trolley
+  material_name: trolley_mat
   albedo:
     x: 0.5
     y: 0.5
     z: 0.5
   metallic: 0.699999988
-  roughness: 1
+  roughness: 0.4375
   blend_mode: 0
   float_properties: ~
   vec3_properties: ~

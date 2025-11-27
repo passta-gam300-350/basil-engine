@@ -1,0 +1,7 @@
+base:
+  m_guid: a046770b7bbe551060612d739
+  m_importer: .texture
+  m_source: materials\trolley\trolley_mat_Metallic.png
+  m_name: trolley_mat_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

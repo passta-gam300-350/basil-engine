@@ -1,7 +1,0 @@
-base:
-  m_guid: 89918a70ebba7709e886565aae
-  m_importer: .texture
-  m_source: materials\trolley\trolley_Metallic.png
-  m_name: trolley_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

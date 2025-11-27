@@ -1447,6 +1447,12 @@
 "m_tree9":
   "m_guid": "214d210f77e383c472a2071571bb"
   "m_typeindex": "175488002581160416"
+"m_trolley":
+  "m_guid": "bfbf07f8abf5272b872c84afa"
+  "m_typeindex": "175488002581160416"
+"m_trolley_1":
+  "m_guid": "ecb547574846129ae9fc21fa3"
+  "m_typeindex": "175488002581160416"
 "m_wall":
   "m_guid": "9de16a172969186227c8f591621"
   "m_typeindex": "175488002581160416"
@@ -1993,6 +1999,27 @@
 "trolley_Roughness.png":
   "m_guid": "7cd4b5a78ff8f1fa70fd01c137c"
   "m_typeindex": "126269861530532084"
+"trolley_mat_BaseColor.png":
+  "m_guid": "a045079b9a76a654b0330e7ce"
+  "m_typeindex": "126269861530532084"
+"trolley_mat_Emissive.png":
+  "m_guid": "a045875e4a87fbfc5f62d4da2"
+  "m_typeindex": "126269861530532084"
+"trolley_mat_Height.png":
+  "m_guid": "a0460733eb2245fa9d3e7a7c9"
+  "m_typeindex": "126269861530532084"
+"trolley_mat_Metallic.png":
+  "m_guid": "a046770b7bbe551060612d739"
+  "m_typeindex": "126269861530532084"
+"trolley_mat_Normal.png":
+  "m_guid": "a046e76f39c6d745672843ac7"
+  "m_typeindex": "126269861530532084"
+"trolley_mat_Roughness.png":
+  "m_guid": "a04757093b98f2298f453bb41"
+  "m_typeindex": "126269861530532084"
+"trolley_shelve.obj":
+  "m_guid": "a048875438b77c9c5690ce14d"
+  "m_typeindex": "4838001395392124604"
 "wall.obj":
   "m_guid": "98e46cd7735859afaf829532dd8"
   "m_typeindex": "4838001395392124604"
