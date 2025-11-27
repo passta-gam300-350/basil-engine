@@ -32,7 +32,12 @@ EditorProfiler::EditorProfiler()
 
 void EditorProfiler::Render(EngineContainerService& engineService)
 {
-	ImGui::Begin("Profiler");
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	bool isOpen = true;
+	if (!ImGui::Begin("Profiler", &isOpen)) {
+		ImGui::End();
+		return;
+	}
 
 	auto info = engineService.GetEngineInfo();
 

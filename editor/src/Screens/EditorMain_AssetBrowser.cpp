@@ -15,7 +15,11 @@ void EditorMain::Render_AssetBrowser()
 		initialized = true;
 	}
 
-	ImGui::Begin("Asset Browser", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+	// CRITICAL OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Asset Browser", &showAssetBrowser, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+		ImGui::End();
+		return;  // Window collapsed/hidden - skip all filesystem operations
+	}
 
 	// Calculate heights for all sections to ensure everything fits
 	float toolbarHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2;
@@ -104,6 +108,7 @@ void EditorMain::Render_AssetBrowser()
 					{
 						m_AssetManager->SetCurrentPath(path);
 						m_SelectedAssetPath = "";
+						m_AssetBrowserCache.needsRefresh = true;  // Invalidate cache
 					}
 
 					if (nodeOpen && !subdirs.empty())
@@ -139,12 +144,12 @@ void EditorMain::Render_AssetBrowser()
 		{
 
 			// === BREADCRUMB NAVIGATION ===
-			std::filesystem::path currentPath = m_AssetManager->GetCurrentPath();
+			std::filesystem::path breadcrumbCurrentPath = m_AssetManager->GetCurrentPath();
 			std::filesystem::path rootPath = m_AssetManager->GetRootPath();
 
 			// Build path segments
 			std::vector<std::filesystem::path> pathSegments;
-			std::filesystem::path tempPath = currentPath;
+			std::filesystem::path tempPath = breadcrumbCurrentPath;
 
 			while (tempPath != rootPath && !tempPath.empty())
 			{
@@ -169,11 +174,26 @@ void EditorMain::Render_AssetBrowser()
 				{
 					// Navigate to this path
 					m_AssetManager->SetCurrentPath(pathSegments[i].string());
+					m_AssetBrowserCache.needsRefresh = true;  // Invalidate cache
 				}
 			}
 
-			std::vector<std::string> subdirs = m_AssetManager->GetSubDirectories();
-			auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
+			// OPTIMIZATION: Use cached filesystem data instead of scanning every frame
+			const std::string& currentPath = m_AssetManager->GetCurrentPath();
+			if (m_AssetBrowserCache.cachedPath != currentPath || m_AssetBrowserCache.needsRefresh) {
+				// Only scan filesystem when path changes or refresh requested
+				m_AssetBrowserCache.cachedSubdirs = m_AssetManager->GetSubDirectories();
+				auto filesRange = m_AssetManager->GetFiles(currentPath);
+				m_AssetBrowserCache.cachedFiles.clear();
+				for (auto it = filesRange.first; it != filesRange.second; ++it) {
+					m_AssetBrowserCache.cachedFiles.push_back(*it);
+				}
+				m_AssetBrowserCache.cachedPath = currentPath;
+				m_AssetBrowserCache.needsRefresh = false;
+			}
+
+			const std::vector<std::string>& subdirs = m_AssetBrowserCache.cachedSubdirs;
+			const auto& cachedFilesVec = m_AssetBrowserCache.cachedFiles;
 
 			// Filter by search
 			std::string searchFilter = m_AssetSearchBuffer;
@@ -259,6 +279,7 @@ void EditorMain::Render_AssetBrowser()
 					{
 						m_AssetManager->GoToSubDirectory(subd);
 						m_SelectedAssetPath = "";
+						m_AssetBrowserCache.needsRefresh = true;  // Invalidate cache
 					}
 
 					// Right-click context menu
@@ -284,9 +305,9 @@ void EditorMain::Render_AssetBrowser()
 
 				// Render files
 				static bool ShowImportSettingsMenu = false;
-				for (auto it = files.first; it != files.second; ++it)
+				for (const auto& filePair : cachedFilesVec)
 				{
-					std::filesystem::path filepath{ it->second };
+					std::filesystem::path filepath{ filePair.second };
 					std::string filename = filepath.filename().string();
 
 					if (filename.empty()) continue;
@@ -305,7 +326,7 @@ void EditorMain::Render_AssetBrowser()
 					// Skip descriptor files (.Desc extension)
 					std::string ext = filepath.extension().string();
 
-					bool isSelected = (m_SelectedAssetPath == it->second);
+					bool isSelected = (m_SelectedAssetPath == filePair.second);
 
 					// Draw selection border if selected
 					if (isSelected)
@@ -328,7 +349,7 @@ void EditorMain::Render_AssetBrowser()
 						if (ImGui::ImageButton(filename.c_str(), (ImTextureID)(uintptr_t)fileIcon,
 							ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 0), ImVec2(1, 1)))
 						{
-							m_SelectedAssetPath = it->second;
+							m_SelectedAssetPath = filePair.second;
 						}
 
 						ImGui::PopStyleColor(3);
@@ -343,7 +364,7 @@ void EditorMain::Render_AssetBrowser()
 						std::string buttonLabel = ext.empty() ? "[ FILE ]" : ext;
 						if (ImGui::Button(buttonLabel.c_str(), { thumbnailSize, thumbnailSize }))
 						{
-							m_SelectedAssetPath = it->second;
+							m_SelectedAssetPath = filePair.second;
 						}
 
 						ImGui::PopStyleColor(3);
@@ -360,14 +381,14 @@ void EditorMain::Render_AssetBrowser()
 					{
 						if (ImGui::MenuItem("Import Asset"))
 						{
-							rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(it->second) };
+							rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(filePair.second) };
 							engineService.ExecuteOnEngineThread([biguid] {
 								ResourceRegistry::Instance().Unload(biguid);
 								});
 						}
 						if (ImGui::MenuItem("Import Settings"))
 						{
-							m_AssetManager->LoadImportSettings(it->second);
+							m_AssetManager->LoadImportSettings(filePair.second);
 							ShowImportSettingsMenu = true;
 						}
 						ImGui::EndPopup();
@@ -458,9 +479,9 @@ void EditorMain::Render_AssetBrowser()
 
 				// Files
 				static bool ShowImportSettingsMenu = false;
-				for (auto it = files.first; it != files.second; ++it)
+				for (const auto& filePair : cachedFilesVec)
 				{
-					std::filesystem::path filepath{ it->second };
+					std::filesystem::path filepath{ filePair.second };
 					std::string filename = filepath.filename().string();
 
 					if (filename.empty()) continue;
@@ -475,24 +496,24 @@ void EditorMain::Render_AssetBrowser()
 
 					ImGui::PushID(filename.c_str());
 
-					bool isSelected = (m_SelectedAssetPath == it->second);
+					bool isSelected = (m_SelectedAssetPath == filePair.second);
 					if (ImGui::Selectable(filename.c_str(), isSelected, ImGuiSelectableFlags_SpanAllColumns))
 					{
-						m_SelectedAssetPath = it->second;
+						m_SelectedAssetPath = filePair.second;
 					}
 
 					if (ImGui::BeginPopupContextItem())
 					{
 						if (ImGui::MenuItem("Import Asset"))
 						{
-							rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(it->second) };
+							rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(filePair.second) };
 							engineService.ExecuteOnEngineThread([biguid] {
 								ResourceRegistry::Instance().Unload(biguid);
 								});
 						}
 						if (ImGui::MenuItem("Import Settings"))
 						{
-							m_AssetManager->LoadImportSettings(it->second);
+							m_AssetManager->LoadImportSettings(filePair.second);
 							ShowImportSettingsMenu = true;
 						}
 						ImGui::EndPopup();
@@ -553,9 +574,9 @@ void EditorMain::Render_AssetBrowser()
 		}
 		else
 		{
-			auto files = m_AssetManager->GetFiles(m_AssetManager->GetCurrentPath());
-			int fileCount = static_cast<int>(std::distance(files.first, files.second));
-			int folderCount = static_cast<int>(m_AssetManager->GetSubDirectories().size());
+			// Use cached data for item count
+			int fileCount = static_cast<int>(m_AssetBrowserCache.cachedFiles.size());
+			int folderCount = static_cast<int>(m_AssetBrowserCache.cachedSubdirs.size());
 			ImGui::Text("%d items (%d folders, %d files)", fileCount + folderCount, folderCount, fileCount);
 		}
 
@@ -615,13 +636,43 @@ void EditorMain::Render_AssetBrowser()
 	}
 
 	ImGui::End();
+}
+
+void EditorMain::Render_Resources()
+{
+	PF_EDITOR_SCOPE("Render_Resources");
 
 	// === RESOURCES WINDOW (Imported Assets) ===
-	ImGui::Begin("Resources");
+	// OPTIMIZATION: Check if window is visible before iterating assets
+	if (!ImGui::Begin("Resources", &showResources)) {
+		ImGui::End();
+		return;
+	}
+
+	// Clear selection when switching away from Resources panel
+	static bool wasFocused = false;
+	bool isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
+	if (wasFocused && !isFocused) {
+		m_SelectedResourceName = "";
+	}
+	wasFocused = isFocused;
+
+	// Clear selection when clicking on empty space in the window
+	if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+		m_SelectedResourceName = "";
+	}
+
+	static float resPadding = 8.0f;
+	static float resThumbnailSize = 72.0f;
+	float resCellSize = resThumbnailSize + resPadding;
+
+	// Reserve space for the status bar at the bottom
+	float statusBarHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2;
+
+	// Grid area
+	ImGui::BeginChild("ResourcesGrid", ImVec2(0, -statusBarHeight), false);
 	{
-		static float resPadding = 8.0f;
-		static float resThumbnailSize = 72.0f;
-		float resCellSize = resThumbnailSize + resPadding;
 		float resPanelWidth = ImGui::GetContentRegionAvail().x;
 		int resColumns = static_cast<int>(resPanelWidth / resCellSize);
 		if (resColumns <= 0) resColumns = 1;
@@ -631,13 +682,89 @@ void EditorMain::Render_AssetBrowser()
 		for (auto [assetname, guid] : m_AssetManager->m_AssetNameGuid)
 		{
 			ImGui::PushID(assetname.c_str());
-			ImGui::Button(assetname.c_str(), { resThumbnailSize, resThumbnailSize });
-			ImGui::TextWrapped("%s", assetname.c_str());
+
+			bool isSelected = (m_SelectedResourceName == assetname);
+
+			// Extract file extension from asset name
+			std::string ext;
+			size_t dotPos = assetname.find_last_of('.');
+			if (dotPos != std::string::npos) {
+				ext = assetname.substr(dotPos);
+			}
+
+			// Get appropriate icon for file type
+			unsigned int fileIcon = GetIconForFile(ext);
+
+			// Draw selection border if selected
+			if (isSelected) {
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.7f, 1.0f, 1.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.0f);
+			}
+
+			// Use icon if available, otherwise fallback to button with text
+			bool clicked = false;
+			if (fileIcon != 0)
+			{
+				// Draw icon as button (same style as Asset Browser)
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0)); // Transparent button
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.3f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.5f));
+
+				clicked = ImGui::ImageButton(assetname.c_str(), (ImTextureID)(uintptr_t)fileIcon,
+					ImVec2(resThumbnailSize, resThumbnailSize), ImVec2(0, 0), ImVec2(1, 1));
+
+				ImGui::PopStyleColor(3);
+			}
+			else
+			{
+				// Fallback: colored button with file extension or generic label
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.6f, 0.6f, 0.8f));
+
+				std::string buttonLabel = ext.empty() ? "[ ASSET ]" : ext;
+				clicked = ImGui::Button(buttonLabel.c_str(), { resThumbnailSize, resThumbnailSize });
+
+				ImGui::PopStyleColor(3);
+			}
+
+			if (isSelected) {
+				ImGui::PopStyleVar();
+				ImGui::PopStyleColor();
+			}
+
+			// Handle selection
+			if (clicked) {
+				m_SelectedResourceName = assetname;
+			}
+
+			// Display asset name below icon
+			ImGui::Text("%s", assetname.c_str());
 			ImGui::NextColumn();
 			ImGui::PopID();
 		}
 
 		ImGui::Columns(1);
+
+		// Detect click on empty space to deselect
+		if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+			m_SelectedResourceName = "";
+		}
 	}
+	ImGui::EndChild();
+
+	// === STATUS BAR ===
+	ImGui::Separator();
+	ImGui::BeginChild("ResourcesStatusBar", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+	{
+		if (!m_SelectedResourceName.empty()) {
+			ImGui::Text("Selected: %s", m_SelectedResourceName.c_str());
+		} else {
+			int resourceCount = static_cast<int>(m_AssetManager->m_AssetNameGuid.size());
+			ImGui::Text("%d resource(s)", resourceCount);
+		}
+	}
+	ImGui::EndChild();
+
 	ImGui::End();
 }

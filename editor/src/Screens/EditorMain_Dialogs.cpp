@@ -21,7 +21,11 @@ void EditorMain::Render_Console()
 {
 	PF_EDITOR_SCOPE("Render_Console");
 
-	ImGui::Begin("Console");
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Console", &showConsole)) {
+		ImGui::End();
+		return;
+	}
 	
 	ImGui::PushID("ConsoleClearBtn");
 	bool clearConsole = ImGui::Button("Clear Console");
@@ -140,7 +144,11 @@ void EditorMain::Render_EngineConsole()
 	// Initialize the engine console sink on first call
 	InitializeEngineConsoleSink();
 
-	ImGui::Begin("Engine Console");
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Engine Console", &showEngineConsole)) {
+		ImGui::End();
+		return;
+	}
 
 	ImGui::PushID("EngineConsoleClearBtn");
 	bool clearConsole = ImGui::Button("Clear Console");
@@ -395,7 +403,12 @@ void EditorMain::Render_EngineConsole()
 void EditorMain::Render_SkyboxSettings()
 {
 	PF_EDITOR_SCOPE("Render_SkyboxSettings");
-	ImGui::Begin("Skybox Settings", &showSkyboxSettings);
+
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Skybox Settings", &showSkyboxSettings)) {
+		ImGui::End();
+		return;
+	}
 
 	// Get active scene
 	auto activeSceneOpt = Engine::GetSceneRegistry().GetActiveScene();
@@ -566,7 +579,12 @@ void EditorMain::Render_SkyboxSettings()
 void EditorMain::Render_PhysicsDebugPanel()
 {
 	PF_EDITOR_SCOPE("Render_PhysicsDebugPanel");
-	ImGui::Begin("Physics Debug", &showPhysicsDebug);
+
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Physics Debug", &showPhysicsDebug)) {
+		ImGui::End();
+		return;
+	}
 
 	// First-time initialization: sync physics debug rendering state with engine
 	static bool initialized = false;

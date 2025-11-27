@@ -12,7 +12,11 @@ void EditorMain::Render_SceneExplorer()
 {
 	PF_EDITOR_SCOPE("Render_SceneExplorer");
 
-	ImGui::Begin("Hierarchy", &showSceneExplorer);
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Hierarchy", &showSceneExplorer)) {
+		ImGui::End();
+		return;
+	}
 
 	// === TOOLBAR (Unity-style) ===
 	float toolbarHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2;

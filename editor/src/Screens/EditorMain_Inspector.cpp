@@ -19,7 +19,12 @@ void assign_enum_helper(void* dest, const void* src) {
 void EditorMain::Render_Inspector()
 {
 	PF_EDITOR_SCOPE("Render_Inspector");
-	ImGui::Begin("Inspector", nullptr);
+
+	// OPTIMIZATION: Check if window is visible before doing expensive work
+	if (!ImGui::Begin("Inspector", &showInspector)) {
+		ImGui::End();
+		return;
+	}
 
 	// Show selected entity information
 	if (m_SelectedEntityID == 0u) {

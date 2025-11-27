@@ -606,11 +606,15 @@ void EditorMain::render()
 			Render_Inspector();
 		if (showSkyboxSettings)
 			Render_SkyboxSettings();
-		Render_PhysicsDebugPanel();
+		if (showPhysicsDebug)
+			Render_PhysicsDebugPanel();
+		if (showAssetBrowser)
+			Render_AssetBrowser();
+		if (showResources)
+			Render_Resources();
 		Render_Scene();
 		Render_Game();
 		Render_CameraControls();
-		Render_AssetBrowser();
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar();
@@ -1176,6 +1180,12 @@ void EditorMain::LoadAssetIcons()
 	}
 
 	try {
+		m_AssetIcons.defaultIcon = TextureLoader::TextureFromFile("default.png", iconPath.c_str(), false);
+	} catch (...) {
+		spdlog::warn("Failed to load default icon");
+	}
+
+	try {
 		m_AssetIcons.imageIcon = TextureLoader::TextureFromFile("image.png", iconPath.c_str(), false);
 	} catch (...) {
 		spdlog::warn("Failed to load image icon");
@@ -1220,40 +1230,49 @@ unsigned int EditorMain::GetIconForFile(const std::string& extension)
 	std::string ext = extension;
 	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
+	unsigned int icon = 0;
+
 	// Image files
 	if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" ||
 		ext == ".tga" || ext == ".dds" || ext == ".hdr") {
-		return m_AssetIcons.imageIcon;
+		icon = m_AssetIcons.imageIcon;
 	}
 	// Model files
 	else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb" || ext == ".dae") {
-		return m_AssetIcons.modelIcon;
+		icon = m_AssetIcons.modelIcon;
 	}
 	// Audio files
 	else if (ext == ".wav" || ext == ".mp3" || ext == ".ogg" || ext == ".flac") {
-		return m_AssetIcons.audioIcon;
+		icon = m_AssetIcons.audioIcon;
 	}
 	// Script files
 	else if (ext == ".cs" || ext == ".lua" || ext == ".py" || ext == ".js") {
-		return m_AssetIcons.scriptIcon;
+		icon = m_AssetIcons.scriptIcon;
 	}
 	// Material files
 	else if (ext == ".mat" || ext == ".material") {
-		return m_AssetIcons.materialIcon;
+		icon = m_AssetIcons.materialIcon;
 	}
 	// Shader files
 	else if (ext == ".shader" || ext == ".vert" || ext == ".frag" || ext == ".glsl" ||
 			 ext == ".vs" || ext == ".fs" || ext == ".comp") {
-		return m_AssetIcons.shaderIcon;
+		icon = m_AssetIcons.shaderIcon;
 	}
 	// Prefab files (Unity-style prefab assets)
 	else if (ext == ".prefab") {
-		// Use script icon for now (could add custom prefab icon in the future)
-		// Prefabs are data/template files, similar to scripts in nature
-		return m_AssetIcons.scriptIcon != 0 ? m_AssetIcons.scriptIcon : m_AssetIcons.fileIcon;
+		icon = m_AssetIcons.scriptIcon;
 	}
-	// Default file icon
-	return m_AssetIcons.fileIcon;
+	// Generic file extension
+	else {
+		icon = m_AssetIcons.fileIcon;
+	}
+
+	// Fallback chain: specific icon → default icon → 0 (text fallback)
+	if (icon == 0) {
+		icon = m_AssetIcons.defaultIcon;
+	}
+
+	return icon;
 }
 
 

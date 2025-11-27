@@ -73,6 +73,8 @@ public:
 	bool showEngineConsole = true;
 	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
+	bool showAssetBrowser = true;  // Asset browser panel
+	bool showResources = true;      // Imported resources panel
 
 	// ========================================================================
 	// ENGINE CONSOLE STATE
@@ -144,6 +146,7 @@ public:
 	// ASSET BROWSER
 	// ========================================================================
 	void Render_AssetBrowser();
+	void Render_Resources();         // Imported resources window
 	void Render_AssetBrowser_Old();
 	void Render_ImporterSettings();
 
@@ -269,10 +272,24 @@ private:
 	std::string m_SelectedAssetPath = "";
 	float m_FolderTreeWidth = 200.0f;
 
+	// Filesystem caching to avoid expensive directory scans every frame
+	struct AssetBrowserCache {
+		std::string cachedPath;
+		std::vector<std::string> cachedSubdirs;
+		std::vector<std::pair<std::string, std::string>> cachedFiles;
+		bool needsRefresh = true;
+	} m_AssetBrowserCache;
+
+	// ========================================================================
+	// RESOURCES PANEL STATE
+	// ========================================================================
+	std::string m_SelectedResourceName = "";  // Currently selected resource in Resources panel
+
 	// Asset browser icon textures
 	struct AssetIcons {
 		unsigned int folderIcon = 0;
 		unsigned int fileIcon = 0;
+		unsigned int defaultIcon = 0;   // Universal fallback icon
 		unsigned int imageIcon = 0;
 		unsigned int modelIcon = 0;
 		unsigned int audioIcon = 0;
