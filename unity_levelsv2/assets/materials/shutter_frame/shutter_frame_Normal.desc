@@ -1,0 +1,7 @@
+base:
+  m_guid: 536f77db09fe2572d7ec7b7a4
+  m_importer: .texture
+  m_source: materials\shutter_frame\shutter_frame_Normal.png
+  m_name: shutter_frame_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

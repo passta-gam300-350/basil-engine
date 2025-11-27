@@ -1363,6 +1363,9 @@
 "m_shutter":
   "m_guid": "8144da472f4b64292154c18ff5a"
   "m_typeindex": "175488002581160416"
+"m_shutter_frame":
+  "m_guid": "660287b51aa05a227da8031a8"
+  "m_typeindex": "175488002581160416"
 "m_spool":
   "m_guid": "810fa4373069cab3f750d101a1d"
   "m_typeindex": "175488002581160416"
@@ -1495,6 +1498,27 @@
 "shutter.obj":
   "m_guid": "7cd4bbe74019b3999dacf91e41a"
   "m_typeindex": "4838001395392124604"
+"shutter_frame":
+  "m_guid": "53735705085384fbda93101ec"
+  "m_typeindex": "4838001395392124604"
+"shutter_frame_BaseColor.png":
+  "m_guid": "536d8729999d8fe859f5f5ab1"
+  "m_typeindex": "126269861530532084"
+"shutter_frame_Emissive.png":
+  "m_guid": "536e1732b96a1e3502102c6c2"
+  "m_typeindex": "126269861530532084"
+"shutter_frame_Height.png":
+  "m_guid": "536e873e09ad8eaf222636ca8"
+  "m_typeindex": "126269861530532084"
+"shutter_frame_Metallic.png":
+  "m_guid": "536ef7a18803d32d4b6e8ad54"
+  "m_typeindex": "126269861530532084"
+"shutter_frame_Normal.png":
+  "m_guid": "536f77db09fe2572d7ec7b7a4"
+  "m_typeindex": "126269861530532084"
+"shutter_frame_Roughness.png":
+  "m_guid": "536ff7bd5ace428b7d6e9e73d"
+  "m_typeindex": "126269861530532084"
 "shutter_mat":
   "m_guid": "7e917a97f439d27ad839cc80d0c"
   "m_typeindex": "175488002581160416"
