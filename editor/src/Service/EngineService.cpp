@@ -105,6 +105,21 @@ void EngineContainerService::EngineContainer::engine_service() {
 void EngineContainerService::EngineContainer::engine_snapshot_callback()
 {
 	std::lock_guard lg{ m_mtx };
+
+	// Phase 2: Update editor camera snapshot for RenderSystem
+	// Copy camera data from EditorMain (protected by m_mtx)
+	RenderSystem::EditorCameraSnapshot renderSnapshot;
+	renderSnapshot.position = m_editorCameraSnapshot.position;
+	renderSnapshot.front = m_editorCameraSnapshot.front;
+	renderSnapshot.up = m_editorCameraSnapshot.up;
+	renderSnapshot.right = m_editorCameraSnapshot.right;
+	renderSnapshot.fov = m_editorCameraSnapshot.fov;
+	renderSnapshot.aspectRatio = m_editorCameraSnapshot.aspectRatio;
+	renderSnapshot.nearPlane = m_editorCameraSnapshot.nearPlane;
+	renderSnapshot.farPlane = m_editorCameraSnapshot.farPlane;
+	renderSnapshot.isPerspective = m_editorCameraSnapshot.isPerspective;
+	Engine::GetRenderSystem().SetEditorCameraSnapshot(renderSnapshot);
+
 	ecs::world w{ Engine::GetWorld() };
 	auto entities_rng{ w.get_all_entities() };
 	m_entities_snapshot.resize(entities_rng.size_hint());

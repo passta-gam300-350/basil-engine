@@ -59,10 +59,6 @@ Technology is prohibited.
 RenderSystem::RenderSystem() {
 	// Initialize graphics rendering
 	m_SceneRenderer = std::make_unique<SceneRenderer>();
-	m_Camera = std::make_unique<Camera>(CameraType::Perspective);
-	m_Camera->SetPerspective(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-	m_Camera->SetPosition(glm::vec3(0.0f, 2.0f, 8.0f));
-	m_Camera->SetRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
 
 	// Initialize shader library
 	m_ShaderLibrary = std::make_unique<ShaderLibrary>(
@@ -143,7 +139,6 @@ RenderSystem::~RenderSystem() {
 	m_PrimitiveManager.reset();
 	m_ShaderLibrary.reset();
 	m_SceneRenderer.reset();
-	m_Camera.reset();
 }
 
 void RenderSystem::Init() {
@@ -190,25 +185,34 @@ void RenderSystem::Update(ecs::world& world) {
 	// ========== DUAL CAMERA SETUP (Unity-style) ==========
 	// Get both editor and game cameras
 
-	// 1. Editor camera (for Scene viewport) - always from aux camera
-	auto editorCamera = CameraSystem::GetAuxCamera();
+	// 1. Editor camera (for Scene viewport) - from snapshot (Phase 2: Thread-safe)
+	const auto& editorCameraSnapshot = m_editorCameraSnapshot;
 
 	// 2. Game camera (for Game viewport) - query from ECS for active camera
-	CameraSystem::Camera gameCamera;
+	// Store camera data directly without CameraSystem::Camera struct
+	glm::vec3 gameCameraPos{0.f};
+	glm::vec3 gameCameraFront{0.f, 0.f, -1.f};
+	glm::vec3 gameCameraUp{0.f, 1.f, 0.f};
+	glm::vec3 gameCameraRight{1.f, 0.f, 0.f};
+	CameraComponent::CameraType gameCameraType = CameraComponent::CameraType::PERSPECTIVE;
+	float gameCameraFov = 45.f;
+	float gameCameraAspectRatio = 16.f / 9.f;
+	float gameCameraNear = 0.1f;
+	float gameCameraFar = 1000.f;
 	bool hasGameCamera = false;
 
 	auto cameraQuery = world.query_components<CameraComponent, TransformComponent>();
 	for (auto [cam, trans] : cameraQuery) {
 		if (cam.m_IsActive) {
-			gameCamera.m_Pos = trans.m_Translation;
-			gameCamera.m_Front = cam.m_Front;
-			gameCamera.m_Up = cam.m_Up;
-			gameCamera.m_Right = cam.m_Right;
-			gameCamera.m_Type = cam.m_Type;
-			gameCamera.m_Fov = cam.m_Fov;
-			gameCamera.m_AspectRatio = cam.m_AspectRatio;
-			gameCamera.m_Near = cam.m_Near;
-			gameCamera.m_Far = cam.m_Far;
+			gameCameraPos = trans.m_Translation;
+			gameCameraFront = cam.m_Front;
+			gameCameraUp = cam.m_Up;
+			gameCameraRight = cam.m_Right;
+			gameCameraType = cam.m_Type;
+			gameCameraFov = cam.m_Fov;
+			gameCameraAspectRatio = cam.m_AspectRatio;
+			gameCameraNear = cam.m_Near;
+			gameCameraFar = cam.m_Far;
 			hasGameCamera = true;
 			break;
 		}
@@ -452,27 +456,32 @@ void RenderSystem::Update(ecs::world& world) {
 			frameData.viewportHeight = m_editorViewportHeight;
 		}
 
-		// Set editor camera data
-		m_Camera->SetPosition(editorCamera->m_Pos);
+		// Set editor camera data (Phase 2: Using snapshot)
 		glm::mat4 view = glm::lookAt(
-			editorCamera->m_Pos,
-			editorCamera->m_Pos + editorCamera->m_Front,
-			editorCamera->m_Up
+			editorCameraSnapshot.position,
+			editorCameraSnapshot.position + editorCameraSnapshot.front,
+			editorCameraSnapshot.up
 		);
 
-		if (editorCamera->m_Type == CameraComponent::CameraType::PERSPECTIVE) {
-			m_Camera->SetPerspective(editorCamera->m_Fov, editorCamera->m_AspectRatio, editorCamera->m_Near, editorCamera->m_Far);
-			frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+		// Calculate projection matrix directly
+		glm::mat4 projection;
+		if (editorCameraSnapshot.isPerspective) {
+			projection = glm::perspective(
+				glm::radians(editorCameraSnapshot.fov),
+				editorCameraSnapshot.aspectRatio,
+				editorCameraSnapshot.nearPlane,
+				editorCameraSnapshot.farPlane
+			);
 			messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE,
-				std::make_unique<Camera_Calculation_Update>(view, m_Camera->GetProjectionMatrix()));
+				std::make_unique<Camera_Calculation_Update>(view, projection));
 		}
-		CameraSystem::SetCachedMatrices(view, m_Camera->GetProjectionMatrix());
+		CameraSystem::SetCachedMatrices(view, projection);
 		CameraSystem::SetViewportSize(glm::vec2{ static_cast<float>(frameData.viewportWidth), static_cast<float>(frameData.viewportHeight) });
 
 		// Store editor camera matrices (for picking system)
 		frameData.viewMatrix = frameData.editorViewMatrix = view;
-		frameData.projectionMatrix = frameData.editorProjectionMatrix = m_Camera->GetProjectionMatrix();
-		frameData.cameraPosition = frameData.editorCameraPosition = editorCamera->m_Pos;
+		frameData.projectionMatrix = frameData.editorProjectionMatrix = projection;
+		frameData.cameraPosition = frameData.editorCameraPosition = editorCameraSnapshot.position;
 
 		// Enable editor resolve, disable game resolve for this pass
 		m_SceneRenderer->EnablePass("GameResolvePass", false);
@@ -495,23 +504,29 @@ void RenderSystem::Update(ecs::world& world) {
 			frameData.viewportHeight = m_gameViewportHeight;
 		}
 
-		// Set game camera data
-		m_Camera->SetPosition(gameCamera.m_Pos);
+		// Set game camera data (using separate variables instead of Camera struct)
 		glm::mat4 view = glm::lookAt(
-			gameCamera.m_Pos,
-			gameCamera.m_Pos + gameCamera.m_Front,
-			gameCamera.m_Up
+			gameCameraPos,
+			gameCameraPos + gameCameraFront,
+			gameCameraUp
 		);
 
-		if (gameCamera.m_Type == CameraComponent::CameraType::PERSPECTIVE) {
-			m_Camera->SetPerspective(gameCamera.m_Fov, gameCamera.m_AspectRatio, gameCamera.m_Near, gameCamera.m_Far);
-			frameData.projectionMatrix = m_Camera->GetProjectionMatrix();
+		// Calculate projection matrix directly
+		glm::mat4 projection;
+		if (gameCameraType == CameraComponent::CameraType::PERSPECTIVE) {
+			projection = glm::perspective(
+				glm::radians(gameCameraFov),
+				gameCameraAspectRatio,
+				gameCameraNear,
+				gameCameraFar
+			);
+			frameData.projectionMatrix = projection;
 		}
-		CameraSystem::SetCachedMatrices(view, m_Camera->GetProjectionMatrix());
+		CameraSystem::SetCachedMatrices(view, projection);
 		CameraSystem::SetViewportSize(glm::vec2{ static_cast<float>(frameData.viewportWidth), static_cast<float>(frameData.viewportHeight) });
 
 		frameData.viewMatrix = view;
-		frameData.cameraPosition = gameCamera.m_Pos;
+		frameData.cameraPosition = gameCameraPos;
 
 		// Enable game resolve, disable editor resolve for this pass
 		m_SceneRenderer->EnablePass("EditorResolvePass", false);

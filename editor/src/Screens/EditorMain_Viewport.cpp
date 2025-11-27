@@ -21,13 +21,42 @@ void EditorMain::Render_Game()
 	// Get frame data from engine thread
 	auto& frameData = engineService.GetFrameData();
 
+	// Get available viewport size
+	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+	// Update game viewport dimensions and camera aspect ratio (Unity-style auto-sync)
+	// Checks every frame to ensure aspect ratio always matches viewport, preventing FOV stretching
+	if (viewportSize.x > 0 && viewportSize.y > 0) {
+		static uint32_t lastGameWidth = 0, lastGameHeight = 0;
+		uint32_t currentWidth = static_cast<uint32_t>(viewportSize.x);
+		uint32_t currentHeight = static_cast<uint32_t>(viewportSize.y);
+
+		// Update if size changed (handles initial load, resize, and window state changes)
+		if (lastGameWidth != currentWidth || lastGameHeight != currentHeight) {
+			lastGameWidth = currentWidth;
+			lastGameHeight = currentHeight;
+
+			engineService.ExecuteOnEngineThread([width = currentWidth, height = currentHeight]() {
+				// Update RenderSystem viewport dimensions
+				Engine::GetRenderSystem().SetGameViewportSize(width, height);
+
+				// Update game camera aspect ratio to match viewport (Unity-style)
+				ecs::world world = Engine::GetWorld();
+				auto cameraQuery = world.query_components<CameraComponent, TransformComponent>();
+				for (auto [cam, trans] : cameraQuery) {
+					if (cam.m_IsActive) {
+						cam.m_AspectRatio = static_cast<float>(width) / static_cast<float>(height);
+						break;  // Only update first active camera
+					}
+				}
+			});
+		}
+	}
+
 	if (frameData.gameResolvedBuffer)
 	{
 		// Get texture from game framebuffer
 		GLuint textureID = frameData.gameResolvedBuffer->GetColorAttachmentRendererID(0);
-
-		// Get available viewport size
-		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
 		// Display game camera view (flip Y-axis with ImVec2(0,1) to ImVec2(1,0))
 		ImGui::Image(
@@ -133,18 +162,22 @@ void EditorMain::Render_Scene()
 	// Get viewport size for aspect ratio
 	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 	if (viewportSize.x > 0 && viewportSize.y > 0) {
-		m_ViewportWidth = viewportSize.x;
-		m_ViewportHeight = viewportSize.y;
-
-		// Update aspect ratio if viewport size changed
-		if (m_EditorCamera) {
-			m_EditorCamera->SetAspectRatio(m_ViewportWidth / m_ViewportHeight);
-		}
-
-		// Debug viewport size
+		// Check if viewport size changed (only update when necessary)
 		static float lastWidth = 0, lastHeight = 0;
 		if (std::abs(lastWidth - viewportSize.x) > 1.0f || std::abs(lastHeight - viewportSize.y) > 1.0f) {
-			spdlog::info("Editor: Viewport size changed to ({:.0f}x{:.0f})", viewportSize.x, viewportSize.y);
+			m_ViewportWidth = viewportSize.x;
+			m_ViewportHeight = viewportSize.y;
+
+			// Update aspect ratio if viewport size changed
+			if (m_EditorCamera) {
+				m_EditorCamera->SetAspectRatio(m_ViewportWidth / m_ViewportHeight);
+			}
+
+			// Update RenderSystem viewport dimensions (fixes distortion on resize)
+			engineService.ExecuteOnEngineThread([width = (uint32_t)viewportSize.x, height = (uint32_t)viewportSize.y]() {
+				Engine::GetRenderSystem().SetEditorViewportSize(width, height);
+			});
+
 			lastWidth = viewportSize.x;
 			lastHeight = viewportSize.y;
 		}
@@ -236,11 +269,11 @@ void EditorMain::Render_Scene()
 		}
 
 		// Debug: Log mouse states
-		static bool lastHovered = false;
+		/*static bool lastHovered = false;
 		if (viewportHovered != lastHovered) {
 			spdlog::info("Editor: Viewport hover state changed: {}", viewportHovered ? "entered" : "exited");
 			lastHovered = viewportHovered;
-		}
+		}*/
 
 		// Handle camera input only when viewport is hovered and not clicking
 		if (!m_IsPlayMode && m_EditorCamera && viewportHovered && !viewportClicked) {
@@ -505,7 +538,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 		ImGuizmo::SetDrawlist();
 		ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
-		auto current_camera = CameraSystem::GetActiveCamera();
+		// Phase 3: Removed unused GetActiveCamera() call (dead code)
 
 		// Grabbing the transform we want to edit
 		/*const auto& entityHandles = engineService.GetEntitiesSnapshot();
