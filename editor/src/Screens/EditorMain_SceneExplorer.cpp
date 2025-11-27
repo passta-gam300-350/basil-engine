@@ -170,9 +170,17 @@ void EditorMain::Render_SceneExplorer()
 					m_RenamingEntityUID = UINT32_MAX;
 				}
 
-				// Click outside - also exit rename mode
+				// Click outside - commit rename with current buffer contents
 				if (!ImGui::IsItemActive() && !ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-					m_RenamingEntityUID = UINT32_MAX;
+					if (strlen(m_RenameBuffer) > 0) {
+						engineService.ExecuteOnEngineThread([handle = node.m_entity_handle, newName = std::string(m_RenameBuffer)]() {
+							ecs::entity entity(handle);
+							if (entity) {
+								entity.name() = newName;
+							}
+						});
+					}
+					m_RenamingEntityUID = UINT32_MAX;  // Exit rename mode
 				}
 			} else {
 				// Normal mode - TreeNodeEx with label
@@ -539,7 +547,14 @@ void EditorMain::Render_SceneExplorer()
 	}
 
 	ImGui::End();
+
+	// Keyboard shortcuts
 	if ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) && ImGui::IsKeyPressed(ImGuiKey_G)) {
 		engineService.create_parent_entity(m_EntitiesIDSelection);
+	}
+
+	// F key - Frame selected entity in viewport
+	if (ImGui::IsKeyPressed(ImGuiKey_F) && !ImGui::IsAnyItemActive()) {
+		//FrameSelectedEntity();
 	}
 }

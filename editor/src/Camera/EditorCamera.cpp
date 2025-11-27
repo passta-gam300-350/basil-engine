@@ -292,6 +292,7 @@ void EditorCamera::FocusOn(const glm::vec3& target, float distance)
 
 void EditorCamera::Reset()
 {
+    m_Pos = glm::vec3(0.0f, 5.0f, 10.0f);
     m_Position = glm::vec3(0.0f, 5.0f, 10.0f);
     m_Rotation = glm::vec3(-25.0f, -90.0f, 0.0f);
     m_Target = glm::vec3(0.0f, 0.0f, 0.0f);

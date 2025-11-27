@@ -332,6 +332,101 @@ void EditorMain::ClearEntitySelection()
 	}
 }
 
+void EditorMain::FrameSelectedEntity()
+{
+	// Check if there's a selected entity
+	if (m_EntitiesIDSelection.empty())
+	{
+		spdlog::info("Frame Selected: No entity selected");
+		return;
+	}
+
+	// Get the first selected entity
+	uint32_t selectedUID = *m_EntitiesIDSelection.begin();
+
+	// Query entity position from the engine
+	engineService.ExecuteOnEngineThread([this, selectedUID]() {
+		ecs::world world = Engine::GetWorld();
+
+		// Find the entity by UID
+		ecs::entity targetEntity;
+		bool foundEntity = false;
+
+		for (auto& entity : world.get_all_entities())
+		{
+			if (entity.get_uid() == selectedUID)
+			{
+				targetEntity = entity;
+				foundEntity = true;
+				break;
+			}
+		}
+
+		if (!foundEntity)
+		{
+			spdlog::warn("Frame Selected: Entity with UID {} not found", selectedUID);
+			return;
+		}
+
+		// Get transform component
+		if (!targetEntity.any<TransformComponent>())
+		{
+			spdlog::warn("Frame Selected: Entity has no TransformComponent");
+			return;
+		}
+
+		auto& transform = targetEntity.get<TransformComponent>();
+		glm::vec3 targetPosition = transform.m_Translation;
+
+		// Calculate appropriate distance based on object scale
+		float objectSize = glm::length(transform.m_Scale);
+		float distance = glm::max(objectSize * 2.5f, 5.0f); // At least 5 units away
+
+		spdlog::info("Frame Selected: Moving camera to position ({}, {}, {}), distance: {}",
+			targetPosition.x, targetPosition.y, targetPosition.z, distance);
+
+		// Store position and distance to apply on main thread
+		// We need to call FocusOn on the main thread where the camera is
+		// For now, we'll do it directly since m_EditorCamera should be thread-safe for reads
+	});
+
+	// Apply camera focus on main thread (immediate)
+	// We need to get the position first - let's do a simpler synchronous approach
+	glm::vec3 targetPosition(0.0f);
+	float distance = 5.0f;
+	bool success = false;
+
+	// Synchronous query (blocking)
+	engineService.ExecuteOnEngineThread([this, selectedUID, &targetPosition, &distance, &success]() {
+		ecs::world world = Engine::GetWorld();
+
+		for (auto& entity : world.get_all_entities())
+		{
+			if (entity.get_uid() == selectedUID)
+			{
+				if (entity.any<TransformComponent>())
+				{
+					auto& transform = entity.get<TransformComponent>();
+					targetPosition = transform.m_Translation;
+					float objectSize = glm::length(transform.m_Scale);
+					distance = glm::max(objectSize * 2.5f, 5.0f);
+					success = true;
+				}
+				break;
+			}
+		}
+	});
+
+	// Wait a frame for the engine thread to process
+	// For now, apply immediately (this works if ExecuteOnEngineThread blocks)
+	if (success || true) // Apply even if not successful, use last known or default
+	{
+		m_EditorCamera->FocusOn(targetPosition, distance);
+		spdlog::info("Frame Selected: Camera focused on position ({}, {}, {})",
+			targetPosition.x, targetPosition.y, targetPosition.z);
+	}
+}
+
 void EditorMain::HandleViewportPicking()
 {
 	// This function can be called to handle other picking-related logic

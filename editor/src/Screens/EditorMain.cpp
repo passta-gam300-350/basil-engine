@@ -884,7 +884,14 @@ void EditorMain::CreateObjectHelper() {
 		ImGui::EndMenu();
 	}
 
-	if (ImGui::BeginMenu("Lights")) {
+	if (ImGui::BeginMenu("Effects")) {
+		if (ImGui::MenuItem("Particle System")) {
+			CreateParticleSystem();
+		}
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("Light")) {
 		if (ImGui::MenuItem("Directional Light")) {
 			CreateLightEntity();
 		}
@@ -897,7 +904,15 @@ void EditorMain::CreateObjectHelper() {
 
 		ImGui::EndMenu();
 	}
-	if (ImGui::MenuItem("Create Camera")) {
+
+	if (ImGui::BeginMenu("Audio")) {
+		if (ImGui::MenuItem("Audio Source")) {
+			CreateAudioSource();
+		}
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::MenuItem("Camera")) {
 		CreateCameraEntity();
 	}
 }

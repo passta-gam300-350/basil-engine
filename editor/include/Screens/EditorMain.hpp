@@ -178,6 +178,8 @@ private:
 	void CreateDemoScene();
 	void CreatePhysicsDemoScene();
 	void CreatePhysicsCube();
+	void CreateParticleSystem();
+	void CreateAudioSource();
 
 	// Demo scene utilities
 	void CreateCube(const glm::vec3& position = glm::vec3(0.0f),
@@ -225,6 +227,7 @@ private:
 	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight);
 	void SelectEntity(uint32_t objectID);
 	void ClearEntitySelection();
+	void FrameSelectedEntity();
 
 	// ========================================================================
 	// DEBUG RENDERING

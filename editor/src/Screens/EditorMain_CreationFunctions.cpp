@@ -4,6 +4,8 @@
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Physics/Physics_System.h"
 #include "Render/Render.h"
+#include "Particles/ParticleComponent.h"
+#include "System/Audio.hpp"
 
 void EditorMain::CreateDefaultEntity()
 {
@@ -259,4 +261,48 @@ void EditorMain::CreateCubeGrid(int gridSize, float spacing)
 			CreateCube(position, glm::vec3(1.0f), color);
 		}
 	}
+}
+
+void EditorMain::CreateParticleSystem()
+{
+	engineService.ExecuteOnEngineThread([]() {
+		auto world = Engine::GetWorld();
+		auto entity = world.add_entity();
+
+		// Add basic transform and visibility
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{1,1,1}, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+		// Add particle component
+		ParticleComponent particleComponent;
+	//	// Set reasonable defaults if needed
+	//	// particleComponent.maxParticles = 100;
+	//	// particleComponent.emissionRate = 10.0f;
+		world.add_component_to_entity<ParticleComponent>(entity, particleComponent);
+
+	//	// Set entity name
+		entity.name() = "Particle System";
+	});
+}
+
+void EditorMain::CreateAudioSource()
+{
+	engineService.ExecuteOnEngineThread([]() {
+		auto world = Engine::GetWorld();
+		auto entity = world.add_entity();
+
+		// Add basic transform and visibility
+		world.add_component_to_entity<TransformComponent>(entity, TransformComponent{ glm::vec3{1,1,1}, glm::vec3{}, glm::vec3(0.0f, 0.0f, 0.0f) });
+		world.add_component_to_entity<VisibilityComponent>(entity, true);
+
+		// Add audio component
+		AudioComponent audioComponent;
+		// Set reasonable defaults if needed
+		// audioComponent.volume = 1.0f;
+		// audioComponent.loop = false;
+		world.add_component_to_entity<AudioComponent>(entity, audioComponent);
+
+		// Set entity name
+		entity.name() = "Audio Source";
+	});
 }
