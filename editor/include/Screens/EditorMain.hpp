@@ -237,6 +237,11 @@ private:
 	// ========================================================================
 	char m_HierarchySearchBuffer[256] = "";
 
+	// Inline rename state
+	uint32_t m_RenamingEntityUID = UINT32_MAX;  // UINT32_MAX means not renaming
+	char m_RenameBuffer[256] = "";
+	bool m_RenameJustActivated = false;    // For auto-focus and select-all
+
 	// ========================================================================
 	// ASSET BROWSER STATE
 	// ========================================================================

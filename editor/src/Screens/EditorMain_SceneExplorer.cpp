@@ -37,11 +37,6 @@ void EditorMain::Render_SceneExplorer()
 	}
 	ImGui::EndChild();
 
-	// Scene tree
-	/*const auto& entityHandles = engineService.GetEntitiesSnapshot();
-	const auto& entityNames = engineService.GetEntityNamesSnapshot();*/
-	//ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 16.0f);
-
 	if (!engineService.m_cont) {
 		ImGui::TextUnformatted("Scene data unavailable");
 		ImGui::End();
@@ -112,7 +107,10 @@ void EditorMain::Render_SceneExplorer()
 
 			int(*current_style)() { nullptr };
 
-			static const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_OpenOnArrow;
+			if (isSelected) {
+				flags |= ImGuiTreeNodeFlags_Selected;
+			}
 
 			// Highlight selected entity with different color
 			if (isSelected && node.m_entity_handle) { //root node handle is null
@@ -135,23 +133,87 @@ void EditorMain::Render_SceneExplorer()
 				displayName = "[P] " + displayName;  // [P] indicates prefab instance
 			}
 
-			if (ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", displayName.c_str())) {
-				// Display entity info with selection highlighting
-				std::string entityName = node.m_entity_name;
+			// Render tree node - use label format for normal mode, empty for rename mode
+			bool nodeOpen;
+			bool labelClicked = false;
+			bool labelRightClicked = false;
 
-				//bool nodeOpen = ImGui::TreeNode(entityName.c_str());
-				if (ImGui::IsItemClicked())
-				{
-					spdlog::info("DEBUG: Entity clicked - entityUID = {}, entityName = {}", entityUID, entityName);
-					SelectEntity(entityUID);
-					m_SelectedNodeID = node.m_entity_sid;
+			if (m_RenamingEntityUID == entityUID) {
+				// Rename mode - empty TreeNodeEx + input field
+				nodeOpen = ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "");
+				ImGui::SameLine();
+
+				if (m_RenameJustActivated) {
+					ImGui::SetKeyboardFocusHere();
+					m_RenameJustActivated = false;
 				}
 
-				ImGui::PopStyleColor(stylect);
-				stylect = 0;
+				ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue |
+				                                  ImGuiInputTextFlags_AutoSelectAll;
 
-				if (ImGui::BeginPopupContextItem())
+				std::string renameID = "##rename_" + std::to_string(entityUID);
+				if (ImGui::InputText(renameID.c_str(), m_RenameBuffer, sizeof(m_RenameBuffer), inputFlags)) {
+					// Enter pressed - confirm rename
+					if (strlen(m_RenameBuffer) > 0) {
+						engineService.ExecuteOnEngineThread([handle = node.m_entity_handle, newName = std::string(m_RenameBuffer)]() {
+							ecs::entity entity(handle);
+							if (entity) {
+								entity.name() = newName;
+							}
+						});
+					}
+					m_RenamingEntityUID = UINT32_MAX;  // Exit rename mode
+				}
+
+				// Escape pressed - cancel rename
+				if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+					m_RenamingEntityUID = UINT32_MAX;
+				}
+
+				// Click outside - also exit rename mode
+				if (!ImGui::IsItemActive() && !ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+					m_RenamingEntityUID = UINT32_MAX;
+				}
+			} else {
+				// Normal mode - TreeNodeEx with label
+				nodeOpen = ImGui::TreeNodeEx((void*)(intptr_t)entityUID, flags, "%s", displayName.c_str());
+
+				// Check if the TreeNodeEx was clicked (works because of SpanAvailWidth)
+				labelClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+			}
+
+			// Pop style colors immediately after TreeNodeEx to prevent context menu from inheriting them
+			ImGui::PopStyleColor(stylect);
+			stylect = 0;
+
+			// Handle left-click selection
+			if (labelClicked)
+			{
+				std::string entityName = node.m_entity_name;
+				spdlog::info("DEBUG: Entity clicked - entityUID = {}, entityName = {}", entityUID, entityName);
+				SelectEntity(entityUID);
+				m_SelectedNodeID = node.m_entity_sid;
+			}
+
+			// F2 key to rename selected entity
+			if (isSelected && ImGui::IsKeyPressed(ImGuiKey_F2) && !ImGui::IsAnyItemActive()) {
+				m_RenamingEntityUID = entityUID;
+				strncpy(m_RenameBuffer, node.m_entity_name.c_str(), sizeof(m_RenameBuffer) - 1);
+				m_RenameBuffer[sizeof(m_RenameBuffer) - 1] = '\0';
+				m_RenameJustActivated = true;
+			}
+
+			// Context menu - works whether node is open or closed
+			// BeginPopupContextItem handles right-click detection internally
+			std::string contextMenuID = "##context_" + std::to_string(entityUID);
+			if (ImGui::BeginPopupContextItem(contextMenuID.c_str()))
 				{
+					// Select entity when context menu opens
+					if (ImGui::IsWindowAppearing())
+					{
+						SelectEntity(entityUID);
+						m_SelectedNodeID = node.m_entity_sid;
+					}
 					if (node.m_entity_handle && ImGui::MenuItem("Duplicate"))
 					{
 						auto dupfn = [this, node]()
@@ -364,10 +426,18 @@ void EditorMain::Render_SceneExplorer()
 						engineService.clear_parent_entity(node.m_entity_handle);
 					}
 					ImGui::Separator();
-					if (ImGui::MenuItem("Rename")) {}
+					if (ImGui::MenuItem("Rename", "F2")) {
+						// Enter rename mode
+						m_RenamingEntityUID = entityUID;
+						strncpy(m_RenameBuffer, node.m_entity_name.c_str(), sizeof(m_RenameBuffer) - 1);
+						m_RenameBuffer[sizeof(m_RenameBuffer) - 1] = '\0';
+						m_RenameJustActivated = true;
+					}
 					ImGui::EndPopup();
 				}
 
+			if (nodeOpen) {
+				// Push style colors back for rendering children
 				if (current_style) {
 					stylect = current_style();
 				}
@@ -380,10 +450,11 @@ void EditorMain::Render_SceneExplorer()
 					ImGui::PopID();
 				}
 				ImGui::TreePop();
+
+				// Pop the selection highlight color if it was applied (for children)
+				ImGui::PopStyleColor(stylect);
+				stylect = 0;
 			}
-			// Pop the selection highlight color if it was applied
-			ImGui::PopStyleColor(stylect);
-			stylect = 0;
 
 			if (ImGui::BeginDragDropSource()) {
 				// Payload can be any data type (e.g., pointer, ID, struct)
@@ -413,36 +484,29 @@ void EditorMain::Render_SceneExplorer()
 
 	ImGui::PopStyleVar();
 
-	// Right-click in empty space to create new objects
-	if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-	{
-		if (ImGui::BeginMenu("Create"))
-		{
-			if (ImGui::MenuItem("Empty GameObject"))
-			{
-				CreateDefaultEntity();
-			}
-			ImGui::Separator();
-			if (ImGui::MenuItem("Cube"))
-			{
-				CreateCube(glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
-			}
-			if (ImGui::MenuItem("Sphere")) {}
-			if (ImGui::MenuItem("Plane")) { CreatePlaneEntity(); }
-			ImGui::Separator();
-			if (ImGui::MenuItem("Camera")) { CreateCameraEntity(); }
-			if (ImGui::MenuItem("Light")) { CreateLightEntity(); }
-			ImGui::EndMenu();
-		}
-		ImGui::EndPopup();
-	}
-
 	// Drag-and-drop target for prefab instantiation
 	// Create invisible button to act as drop zone for remaining space
 	ImVec2 dropZoneSize = ImGui::GetContentRegionAvail();
 	if (dropZoneSize.y > 0)
 	{
 		ImGui::InvisibleButton("##HierarchyDropZone", dropZoneSize);
+
+		// Clear selection when clicking on empty space
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		{
+			ClearEntitySelection();
+		}
+
+		// Right-click in empty space to create new objects
+		if (ImGui::BeginPopupContextItem("HierarchyEmptySpaceContext"))
+		{
+			if (ImGui::BeginMenu("Create"))
+			{
+				CreateObjectHelper();
+				ImGui::EndMenu();
+			}
+			ImGui::EndPopup();
+		}
 
 		if (ImGui::BeginDragDropTarget())
 		{

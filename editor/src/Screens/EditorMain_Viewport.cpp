@@ -322,9 +322,10 @@ void EditorMain::SelectEntity(uint32_t objectID)
 
 void EditorMain::ClearEntitySelection()
 {
-	if (m_SelectedEntityID != 0) {
-		spdlog::info("Editor: Cleared entity selection (was Object ID: {})", m_SelectedEntityID);
+	if (m_SelectedEntityID != 0 || !m_EntitiesIDSelection.empty()) {
+		spdlog::info("Editor: Cleared entity selection (was Object ID: {}, Number of Cleared Selections {})", m_SelectedEntityID, m_EntitiesIDSelection.size());
 		m_SelectedEntityID = 0;
+		m_EntitiesIDSelection.clear(); // Clear the selection set for hierarchy display
 
 		// Clear visual feedback
 		engineService.ClearOutlinedObjects();
