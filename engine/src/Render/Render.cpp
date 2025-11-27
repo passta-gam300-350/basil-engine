@@ -379,6 +379,7 @@ void RenderSystem::Update(ecs::world& world) {
 	// ========== HUD ELEMENT SUBMISSION ==========
 	// Submit HUD elements to renderer (rendered in screen space after 3D scene)
 	bool hasHUDElements = false;
+	auto& registry = ResourceRegistry::Instance();
 	for (auto hudEntity : sceneHUDElements) {
 		auto& hud = hudEntity.get<HUDComponent>();
 
@@ -387,9 +388,6 @@ void RenderSystem::Update(ecs::world& world) {
 		hasHUDElements = true;
 
 		HUDElementData hudData;
-
-		// Load texture from GUID via ResourceRegistry
-		auto& registry = ResourceRegistry::Instance();
 
 		// Check for null GUID (0 = solid color quad, no texture)
 		if (hud.m_TextureGuid.m_guid != rp::null_guid) {
@@ -400,11 +398,11 @@ void RenderSystem::Update(ecs::world& world) {
 				hudData.textureID = (*texturePtr)->id;
 			} else {
 				// Texture not found - fallback to solid color
-				static std::unordered_set<std::string> warnedTextureGuids;
-				std::string guidStr = hud.m_TextureGuid.m_guid.to_hex();
-				if (warnedTextureGuids.find(guidStr) == warnedTextureGuids.end()) {
-					spdlog::warn("HUD: Texture GUID {} not found - falling back to solid color", guidStr.substr(0, 16));
-					warnedTextureGuids.insert(guidStr);
+				static std::unordered_set<rp::Guid> warnedTextureGuids;
+				if (warnedTextureGuids.find(hud.m_TextureGuid.m_guid) == warnedTextureGuids.end()) {
+					spdlog::warn("HUD: Texture GUID {} not found - falling back to solid color",
+					             hud.m_TextureGuid.m_guid.to_hex().substr(0, 16));
+					warnedTextureGuids.insert(hud.m_TextureGuid.m_guid);
 				}
 				hudData.textureID = 0;  // Fallback to solid color
 			}
@@ -427,12 +425,9 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	// Enable/disable HUD pass based on presence of HUD elements
+	// Note: EndFrame() is called by SceneRenderer::Render() before rendering
 	if (hasHUDElements) {
 		m_SceneRenderer->EnablePass("HUDPass", true);
-		// Signal end of HUD frame to trigger batching
-		if (m_SceneRenderer->GetHUDRenderer()) {
-			m_SceneRenderer->GetHUDRenderer()->EndFrame();
-		}
 	} else {
 		m_SceneRenderer->EnablePass("HUDPass", false);
 	}

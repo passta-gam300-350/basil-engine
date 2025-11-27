@@ -366,6 +366,9 @@ private:
     std::vector<VariantRenderCommand> m_Commands;
     TextureSlotManager* m_TextureBindingSystem;
 
+    // Shader state tracking for optimization (avoid redundant binds)
+    mutable GLuint m_CurrentShaderID = 0;
+
     // Command execution visitors
     void ExecuteCommand(const RenderCommands::ClearData& cmd);
     void ExecuteCommand(const RenderCommands::BindShaderData& cmd);

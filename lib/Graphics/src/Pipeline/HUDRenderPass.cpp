@@ -69,6 +69,9 @@ void HUDRenderPass::Execute(RenderContext& context)
         }
     }
 
+    // Clear command buffer from previous frame (CRITICAL!)
+    Begin();
+
     // Setup command buffer
     SetupCommandBuffer(context);
 
@@ -82,6 +85,7 @@ void HUDRenderPass::Execute(RenderContext& context)
     // Execute commands
     ExecuteCommands();
 
+    End();
     //spdlog::info("HUDRenderPass::Execute() - commands executed");
 
     // Restore GL state
