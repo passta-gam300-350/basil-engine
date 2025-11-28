@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 1
+  slot: 2
   guid: 00
   dependencies: ~
 render_settings:
@@ -28,13 +28,29 @@ entities:
       Scene ID: 0
     entity name:
       name: mainmenu
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - MainMenu
     HUDComponent:
       m_TextureGuid:
-        guid: 276196b17e2da9feda4147f14d77
+        guid: 518484793984f8f17f242cc860
         type: 126269861530532084
       position:
         x: 0
-        y: 0
+        y: 1083
       size:
         x: 1920
         y: 1080
@@ -46,3 +62,41 @@ entities:
         w: 1
       rotation: 0
       visible: true
+  - Scene ID:
+      Scene ID: 1
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 2.29323316
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: 0
+      m_Pitch: 0

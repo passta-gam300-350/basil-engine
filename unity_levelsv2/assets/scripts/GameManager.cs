@@ -3,8 +3,7 @@ using BasilEngine;
 using BasilEngine.Components;
 using BasilEngine.Mathematics;
 using BasilEngine.Debug;
-
-
+using BasilEngine.SceneManagement;
 
 
 public class GameManager : Behavior
@@ -45,6 +44,7 @@ public class GameManager : Behavior
         if (isCleaned && KitePuzzleCompleted && TrainPuzzleCompleted)
         {
             Logger.Log("Congratz: Move to Kite Level!");
+            Scene.LoadScene(2);
             return;
         }
     }

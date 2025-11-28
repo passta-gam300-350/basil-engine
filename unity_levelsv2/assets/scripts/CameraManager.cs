@@ -22,6 +22,7 @@ public class CameraManager : Behavior
     private Camera cameraComponent;
     public void Init()
     {
+        Logger.Log("Camera manager is loaded");
         instance = this;
 
 

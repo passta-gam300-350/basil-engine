@@ -213,6 +213,7 @@ void EditorMain::Render_MenuBar()
 	if (ImGui::BeginMenu("View")) {
 		ImGui::MenuItem("Inspector", nullptr, &showInspector);
 		ImGui::MenuItem("Scene Explorer", nullptr, &showSceneExplorer);
+		ImGui::MenuItem("Scene Settings", nullptr, &showSceneManifestSetting);
 		ImGui::MenuItem("Profiler", nullptr, &showProfiler);
 		ImGui::MenuItem("Console", nullptr, &showConsole);
 		ImGui::MenuItem("Engine Console", nullptr, &showEngineConsole);

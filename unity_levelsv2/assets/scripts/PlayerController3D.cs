@@ -11,7 +11,7 @@ public class PlayerController3D : Behavior
     private Rigidbody rb;
 
     public float mouseSensitivity = 0.075f;
-    public float moveSpeed = 2.5f;
+    public float moveSpeed = 0.7f;
 
     public bool disabled = false;
 
@@ -27,6 +27,7 @@ public class PlayerController3D : Behavior
 
     public void Init()
     {
+       // throw new Exception("This is a test for init");
        PlayerHead = GameObject.Find("Camera");
        rb = gameObject.transform.GetComponent<Rigidbody>();
     }
@@ -50,7 +51,7 @@ public class PlayerController3D : Behavior
 		if (Input.GetKey(KeyCode.D)) vel -= right; // move right
 
         if (vel.MagnitudeSqr() > 0.001f)
-            vel = vel.Normalize() * moveSpeed * 0.016f; // Assuming ~60 FPS, so deltaTime ~0.016s
+            vel = vel.Normalize() * moveSpeed * Time.deltaTime; // Assuming ~60 FPS, so deltaTime ~0.016s
 
         rb.MovePosition(transform.position + vel);
     }

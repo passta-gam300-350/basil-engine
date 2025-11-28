@@ -86,13 +86,22 @@ void BehaviourSystem::Update(ecs::world& world, float)
 {
 	if (!isActive) return;
 	PF_SYSTEM("Behaviour System");
-	for (auto entity : world.filter_entities<behaviour>()) {
+
+	auto entites = world.filter_entities<behaviour>();
+
+	if (entites.empty()) return;
+	
+	for (auto entity : entites) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
 				MonoObject* exception = nullptr;
-				if (firstRun) instance->Invoke("Init", nullptr, &exception, 0);
+				if (firstRun)
+				{
+					instance->Invoke("Init", nullptr, &exception, 0);
+					spdlog::info("First run is executed for script {}", scriptID.to_hex());
+				}
 				else instance->Invoke("Update", nullptr, &exception, 0);
 
 
@@ -109,10 +118,19 @@ void BehaviourSystem::Update(ecs::world& world, float)
 					
 					
 				}
+
+				/*if (unloaded)
+				{
+					unloaded = false;
+					return;
+				}*/
 			}
 		}
+
 	}
+
 	firstRun = false;
+	
 }
 void BehaviourSystem::FixedUpdate(ecs::world& world)
 {

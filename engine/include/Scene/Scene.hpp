@@ -201,12 +201,25 @@ private:
 	std::vector<rp::Guid> m_scene_dependencies;
 	bool m_is_dirty;
 	SceneRenderSettings m_renderSettings;
+
+
+	
 };
 
 struct SceneRegistry{
 private:
 	std::unordered_map<rp::Guid, Scene> m_loaded_scenes;
 	rp::Guid m_active_scene_guid; // Currently active scene for rendering/editing
+	std::string m_SceneWorkingDir;
+	std::vector<std::string> m_scene_order;
+
+	bool scene_change_by_index = false;
+	bool scene_change_by_file = false;
+
+	uint32_t requested_index = -1;
+	std::string requested_file = "";
+
+
 
 public:
 	SceneRegistry() = default;
@@ -217,8 +230,32 @@ public:
 	inline bool IsLoaded(rp::Guid scn_guid) {
 		return m_loaded_scenes.find(scn_guid) != m_loaded_scenes.end();
 	}
+
+
+	void RequestSceneChange(uint32_t index)
+	{
+		scene_change_by_index = true;
+		requested_index = index;
+
+		
+		
+	}
+
+	void RequestSceneChange(std::string const& path)
+	{
+		scene_change_by_file = true;
+		requested_file = path;
+		
+	}
+
+	void PollRequestSceneChange();
 	std::optional<std::reference_wrapper<Scene>> LoadScene(rp::Guid scn_guid);
 	std::optional<std::reference_wrapper<Scene>> LoadSceneFromPath(std::string const& path);
+	std::optional<std::reference_wrapper<Scene>> LoadSceneByIndex(unsigned index);
+
+	void GenerateManifest(std::vector<std::string>& scene_order);
+	void ReadManifest(std::string path);
+	void GetManifest(std::vector<std::string>& manifest);
 	void UnloadScene(rp::Guid scn_guid);
 	inline std::optional<std::reference_wrapper<Scene>> GetScene(rp::Guid scn_guid) {
 		auto it{ m_loaded_scenes.find(scn_guid) };
@@ -246,6 +283,13 @@ public:
 			return std::nullopt;
 		}
 		return GetScene(m_active_scene_guid);
+	}
+
+	inline void SetSceneWorkingDir(const std::string& path) {
+		m_SceneWorkingDir = path;
+	}
+	inline std::string_view GetSceneWorkingDir() const {
+		return m_SceneWorkingDir;
 	}
 	void onCreateAssignToDefault(ecs::entity e);
 	void onCreateAssignSceneIDToDefault(ecs::entity e);

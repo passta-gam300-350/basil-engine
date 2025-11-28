@@ -9,7 +9,7 @@ public class PuzzleManager : Behavior
 {
     public static PuzzleManager manager;
     public int gameMode = 0;
-    public float holdDistance = 0.65f;
+    public float holdDistance = 0.54f;
     public float moveSpeed = 10f;
 
     public float snapDist = 0.002f;
