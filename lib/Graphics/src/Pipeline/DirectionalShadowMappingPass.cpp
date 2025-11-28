@@ -60,8 +60,8 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
     // Update cached scene bounds (only recalculates if scene changed)
     UpdateSceneBounds(context.renderables);
 
-    spdlog::debug("DirectionalShadow: Scene bounds - Center=({:.1f},{:.1f},{:.1f}), Radius={:.1f}",
-                 m_CachedSceneCenter.x, m_CachedSceneCenter.y, m_CachedSceneCenter.z, m_CachedSceneRadius);
+    /*spdlog::debug("DirectionalShadow: Scene bounds - Center=({:.1f},{:.1f},{:.1f}), Radius={:.1f}",
+                 m_CachedSceneCenter.x, m_CachedSceneCenter.y, m_CachedSceneCenter.z, m_CachedSceneRadius);*/
 
     // Calculate light-space matrices using cached scene bounds
     glm::mat4 lightView = CalculateLightViewMatrix(directionalLight->direction, m_CachedSceneCenter);
@@ -165,8 +165,8 @@ glm::mat4 DirectionalShadowMappingPass::CalculateLightProjectionMatrix(const glm
     float farPlane = sceneRadius * 4.0f;  // Far enough to cover scene depth
     farPlane = glm::max(farPlane, 50.0f);  // Minimum 50 units
 
-    spdlog::debug("DirectionalShadow: orthoSize={}, near={}, far={}, sceneRadius={}",
-                 orthoSize, nearPlane, farPlane, sceneRadius);
+    /*spdlog::debug("DirectionalShadow: orthoSize={}, near={}, far={}, sceneRadius={}",
+                 orthoSize, nearPlane, farPlane, sceneRadius);*/
 
     return glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
 }

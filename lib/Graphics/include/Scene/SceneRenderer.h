@@ -21,6 +21,7 @@ Technology is prohibited.
 #include "../Utility/RenderData.h"
 #include "../Utility/FrameData.h"
 #include "../utility/Particle.h"
+#include "../Utility/HUDData.h"
 #include "../Resources/ResourceManager.h"
 #include "../Resources/TextureSlotManager.h"
 #include <memory>
@@ -34,6 +35,7 @@ class PickingRenderPass;
 class ParticleRenderer;
 class OutlineRenderPass;
 class ParticleRenderer;
+class HUDRenderer;
 
 class SceneRenderer {
 public:
@@ -48,6 +50,7 @@ public:
     void SubmitRenderable(const RenderableData& renderable);
     void SubmitLight(const SubmittedLightData& light);
     void SubmitParticles(const ParticleRenderData& particleData);
+    void SubmitHUDElement(const HUDElementData& hudElement);
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -71,6 +74,7 @@ public:
     ResourceManager* GetResourceManager() const { return m_ResourceManager.get(); }
     TextureSlotManager* GetTextureSlotManager() const { return m_TextureSlotManager.get(); }
     ParticleRenderer* GetParticleRenderer() const { return m_ParticleRenderer.get(); }
+    HUDRenderer* GetHUDRenderer() const { return m_HUDRenderer.get(); }
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
     void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
@@ -80,6 +84,8 @@ public:
     void SetDebugLightCubeMesh(const std::shared_ptr<Mesh>& mesh) const;
     void SetPickingShader(const std::shared_ptr<Shader>& shader) const;
     void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;
+    void SetHUDShader(const std::shared_ptr<Shader>& shader) const;
+
     void SetParticleShader(const std::shared_ptr<Shader>& shader) const;
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
@@ -164,4 +170,5 @@ private:
     std::unique_ptr<InstancedRenderer> m_InstancedRenderer;
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;
     std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
+    std::unique_ptr<HUDRenderer> m_HUDRenderer;
 };

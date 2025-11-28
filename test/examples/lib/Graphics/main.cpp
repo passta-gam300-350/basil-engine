@@ -57,6 +57,7 @@
 #include <Resources/Texture.h>
 #include <Utility/Light.h>
 #include <Utility/AABB.h>
+#include <Utility/HUDData.h>
 #include <Pipeline/DebugRenderPass.h>
 
 #include <spdlog/spdlog.h>
@@ -250,6 +251,27 @@ void GraphicsTestDriver::Run()
             m_SceneRenderer->SubmitRenderable(renderable);
         }
 
+        // Submit HUD test elements (using pre-loaded textures)
+        // Test with pause menu background
+        HUDElementData pauseBg;
+        pauseBg.textureID = m_PauseMenuTexture;
+        pauseBg.position = glm::vec2(1280.0f / 2.0f, 720.0f / 2.0f);  // Center of screen
+        pauseBg.size = glm::vec2(512.0f, 384.0f);
+        pauseBg.anchor = HUDAnchor::Center;
+        pauseBg.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);  // Slightly transparent
+        pauseBg.layer = 0;
+        m_SceneRenderer->SubmitHUDElement(pauseBg);
+
+        // Add resume button
+        HUDElementData resumeBtn;
+        resumeBtn.textureID = m_ResumeButtonTexture;
+        resumeBtn.position = glm::vec2(1280.0f / 2.0f, 300.0f);
+        resumeBtn.size = glm::vec2(256.0f, 64.0f);
+        resumeBtn.anchor = HUDAnchor::Center;
+        resumeBtn.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        resumeBtn.layer = 1;
+        m_SceneRenderer->SubmitHUDElement(resumeBtn);
+
         // Update camera data manually
         if (m_Camera) {
             m_SceneRenderer->SetCameraData(
@@ -435,6 +457,21 @@ bool GraphicsTestDriver::LoadTestResources()
             m_SceneRenderer->SetOutlineShader(outlineShader);
         } else {
             spdlog::warn("Could not load outline shader");
+        }
+
+        // Load HUD shader for screen-space UI rendering
+        auto hudShader = m_ResourceManager->LoadShader("hud",
+            "assets/shaders/hud.vert",
+            "assets/shaders/hud.frag");
+
+        if (hudShader) {
+            spdlog::info("HUD shader loaded successfully!");
+            // Configure the HUD pass with the loaded shader
+            m_SceneRenderer->SetHUDShader(hudShader);
+            // Enable HUD rendering
+            m_SceneRenderer->EnablePass("HUDPass", true);
+        } else {
+            spdlog::warn("Could not load HUD shader");
         }
 
         // ===== Load HDR Compute Shader =====
