@@ -15,4 +15,22 @@ struct AnimationComponent
 	animationState state;
 };
 
+// Register animationState first 
+RegisterReflectionTypeBegin(animationState, "animationState")
+MemberRegistrationV<&animationState::isPlaying, "IsPlaying">,
+MemberRegistrationV<&animationState::loop, "Loop">,
+MemberRegistrationV<&animationState::playbackSpeed, "PlaybackSpeed">,
+MemberRegistrationV<&animationState::startTime, "StartTime">,
+MemberRegistrationV<&animationState::endTime, "EndTime">
+RegisterReflectionTypeEnd
+
+// Register AnimationComponent
+RegisterReflectionTypeBegin(AnimationComponent, "AnimationComponent")
+MemberRegistrationV<&AnimationComponent::duration, "Duration">,
+MemberRegistrationV<&AnimationComponent::currentTime, "CurrentTime">,
+MemberRegistrationV<&AnimationComponent::ticksPerSecond, "TicksPerSecond">,
+MemberRegistrationV<&AnimationComponent::state, "State">
+// Note: channel is NOT registered (runtime pointer, not serializable)
+RegisterReflectionTypeEnd
+
 #endif
