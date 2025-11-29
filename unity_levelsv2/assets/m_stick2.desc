@@ -1,0 +1,29 @@
+base:
+  m_guid: 153d61c7c2694c60792dfdd21aa
+  m_importer: .material
+  m_source: ""
+  m_name: m_stick2
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_stick2
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 14e4f9679268d53d3c07e898bbb
+    u_DiffuseMap: 14e4f68718e928d21c7a6d72f20
+    u_EmissiveMap: 14e4f727fada5055e0db0785f1f
+    u_NormalMap: 14e4f8c7f39b2cc8baa3fb393e3
+    u_HeightMap: 14e4f7b7a73a806077677e6e940
+    u_SpecularMap: 00
+    u_MetallicMap: 14e4f847ed0a29a9c7ef8cb68d2

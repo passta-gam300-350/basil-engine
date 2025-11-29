@@ -919,6 +919,93 @@
 "cloud_2_mat_Roughness.png":
   "m_guid": "53f197572b5b8ae99c890beeef2"
   "m_typeindex": "126269861530532084"
+"flag_left_mat":
+  "m_guid": "151844273d39ddf3cd5af32bfb9"
+  "m_typeindex": "175488002581160416"
+"flap_btm":
+  "m_guid": "14e5000758a99d0f7f23923f672"
+  "m_typeindex": "4838001395392124604"
+"flap_btm_BaseColor.png":
+  "m_guid": "14e4e7778318cfe38c621b2f714"
+  "m_typeindex": "126269861530532084"
+"flap_btm_Emissive.png":
+  "m_guid": "14e4e83766494304b00fe5bed16"
+  "m_typeindex": "126269861530532084"
+"flap_btm_Height.png":
+  "m_guid": "14e4e8f7c02b1b349fd537dfb96"
+  "m_typeindex": "126269861530532084"
+"flap_btm_Metallic.png":
+  "m_guid": "14e4e987712ac8a3eeef5518b97"
+  "m_typeindex": "126269861530532084"
+"flap_btm_Normal.png":
+  "m_guid": "14e4ea178b1a44dc86f6ea2aec2"
+  "m_typeindex": "126269861530532084"
+"flap_btm_Roughness.png":
+  "m_guid": "14e4eaa7972a530639a2ee47566"
+  "m_typeindex": "126269861530532084"
+"flap_left.obj":
+  "m_guid": "14e500a7f55b999812e84bb4607"
+  "m_typeindex": "4838001395392124604"
+"flap_left_mat_BaseColor.png":
+  "m_guid": "14e4eb876a49f8c938bd82b942f"
+  "m_typeindex": "126269861530532084"
+"flap_left_mat_Emissive.png":
+  "m_guid": "14e4ec47ae29d314b08e41538c7"
+  "m_typeindex": "126269861530532084"
+"flap_left_mat_Height.png":
+  "m_guid": "14e4ecc7cd79117692330e94aec"
+  "m_typeindex": "126269861530532084"
+"flap_left_mat_Metallic.png":
+  "m_guid": "14e4ed67819a7f62503d3129584"
+  "m_typeindex": "126269861530532084"
+"flap_left_mat_Normal.png":
+  "m_guid": "14e4edf79eda388ccce1667b30d"
+  "m_typeindex": "126269861530532084"
+"flap_left_mat_Roughness.png":
+  "m_guid": "14e4ee87a889d4f27875e30b4e8"
+  "m_typeindex": "126269861530532084"
+"flap_right":
+  "m_guid": "14e501877558ec1ffd7acbf1bbe"
+  "m_typeindex": "4838001395392124604"
+"flap_right_BaseColor.png":
+  "m_guid": "14e4ef170298398fdf0ca0dffce"
+  "m_typeindex": "126269861530532084"
+"flap_right_Emissive.png":
+  "m_guid": "14e4efc76e58833b9d64b259c13"
+  "m_typeindex": "126269861530532084"
+"flap_right_Height.png":
+  "m_guid": "14e4f077cffa7dabd7358a0bd23"
+  "m_typeindex": "126269861530532084"
+"flap_right_Metallic.png":
+  "m_guid": "14e4f127503952bfa0aa5671c70"
+  "m_typeindex": "126269861530532084"
+"flap_right_Normal.png":
+  "m_guid": "14e4f1d7122a8b915f150354bdb"
+  "m_typeindex": "126269861530532084"
+"flap_right_Roughness.png":
+  "m_guid": "14e4f277739bd5ea359b4232ce6"
+  "m_typeindex": "126269861530532084"
+"flap_top":
+  "m_guid": "14e50257f3a93e79fb3cfcf7fa3"
+  "m_typeindex": "4838001395392124604"
+"flap_top_BaseColor.png":
+  "m_guid": "14e4fa070aa995761ba7b896f76"
+  "m_typeindex": "126269861530532084"
+"flap_top_Emissive.png":
+  "m_guid": "14e4fa978da953fd4a0f7e57b28"
+  "m_typeindex": "126269861530532084"
+"flap_top_Height.png":
+  "m_guid": "14e4fb27517816fae40eb733d1a"
+  "m_typeindex": "126269861530532084"
+"flap_top_Metallic.png":
+  "m_guid": "14e4fbd7d708d3f49b93a7357e7"
+  "m_typeindex": "126269861530532084"
+"flap_top_Normal.png":
+  "m_guid": "14e4fc874d9aa0b94945afab56d"
+  "m_typeindex": "126269861530532084"
+"flap_top_Roughness.png":
+  "m_guid": "14e4fd27ac68818d52f39362bb9"
+  "m_typeindex": "126269861530532084"
 "hdb_01":
   "m_guid": "7e10c2f7ab78320cc8af2c84e5a"
   "m_typeindex": "175488002581160416"
@@ -1107,6 +1194,27 @@
   "m_typeindex": "126269861530532084"
 "kite_Roughness.png":
   "m_guid": "122770e778ea346edeb167a7760"
+  "m_typeindex": "126269861530532084"
+"kite_base.obj":
+  "m_guid": "14e4ff37b4cb05009d4fe00b707"
+  "m_typeindex": "4838001395392124604"
+"kite_base_mat_BaseColor.png":
+  "m_guid": "14e4e337f16b57ca5ddbbac5a92"
+  "m_typeindex": "126269861530532084"
+"kite_base_mat_Emissive.png":
+  "m_guid": "14e4e407324bbbb878a1630efa6"
+  "m_typeindex": "126269861530532084"
+"kite_base_mat_Height.png":
+  "m_guid": "14e4e4c7b04840d0e6ab210aed5"
+  "m_typeindex": "126269861530532084"
+"kite_base_mat_Metallic.png":
+  "m_guid": "14e4e577ce398cbc3af2a1f6338"
+  "m_typeindex": "126269861530532084"
+"kite_base_mat_Normal.png":
+  "m_guid": "14e4e61748b84bdc37064fef65b"
+  "m_typeindex": "126269861530532084"
+"kite_base_mat_Roughness.png":
+  "m_guid": "14e4e6c74899c32d2b96a68c3e1"
   "m_typeindex": "126269861530532084"
 "kite_enemy1.obj":
   "m_guid": "546d71f73608b858a14be1bdbf0"
@@ -1339,6 +1447,9 @@
 "kite_scene_kite_scene_mat_Roughness.png":
   "m_guid": "36fd7b1781ba8f62eddc741118a"
   "m_typeindex": "126269861530532084"
+"m_bottomflag":
+  "m_guid": "153863870378ba6c1b686e25a36"
+  "m_typeindex": "175488002581160416"
 "m_cardboard_closed":
   "m_guid": "9aa554375ad821f18fca50a025e"
   "m_typeindex": "175488002581160416"
@@ -1414,6 +1525,9 @@
 "m_kite_player":
   "m_guid": "549be077d859642e725a0913676"
   "m_typeindex": "175488002581160416"
+"m_leftflag":
+  "m_guid": "153163f759d852f1d83537d1078"
+  "m_typeindex": "175488002581160416"
 "m_metal_rack":
   "m_guid": "806c1727ecb8f259ffa0a021a01"
   "m_typeindex": "175488002581160416"
@@ -1429,6 +1543,9 @@
 "m_plain_wall":
   "m_guid": "12888e77d30a7559556f11e04c4"
   "m_typeindex": "175488002581160416"
+"m_rightflag":
+  "m_guid": "1534c7578ffa9e20a1ee56fd74a"
+  "m_typeindex": "175488002581160416"
 "m_shutter":
   "m_guid": "8144da472f4b64292154c18ff5a"
   "m_typeindex": "175488002581160416"
@@ -1440,6 +1557,12 @@
   "m_typeindex": "175488002581160416"
 "m_stairs":
   "m_guid": "150d7217426b6e22c30de98767f"
+  "m_typeindex": "175488002581160416"
+"m_stick1":
+  "m_guid": "153b70b72508ef06e092fbad5fb"
+  "m_typeindex": "175488002581160416"
+"m_stick2":
+  "m_guid": "153d61c7c2694c60792dfdd21aa"
   "m_typeindex": "175488002581160416"
 "m_table_glass":
   "m_guid": "96572477bd5bd75d01c1066c288"
@@ -1455,6 +1578,9 @@
   "m_typeindex": "175488002581160416"
 "m_tin_empty_top":
   "m_guid": "1a070777bafad0d466ac7f3bc60"
+  "m_typeindex": "175488002581160416"
+"m_topflag":
+  "m_guid": "153663a78dc87efb4fd53406a9c"
   "m_typeindex": "175488002581160416"
 "m_train_body":
   "m_guid": "564b72f7fee86a8dd492cec2123"
@@ -1672,6 +1798,48 @@
 "standardSurface7":
   "m_guid": "998645475fd80f9c023f5e655d6"
   "m_typeindex": "175488002581160416"
+"stick_1.obj":
+  "m_guid": "14e50307b7aac9ca142f4953925"
+  "m_typeindex": "4838001395392124604"
+"stick_1_mat_BaseColor.png":
+  "m_guid": "14e4f3077a7b911ea3972648768"
+  "m_typeindex": "126269861530532084"
+"stick_1_mat_Emissive.png":
+  "m_guid": "14e4f3975dd962fe5de9775d15e"
+  "m_typeindex": "126269861530532084"
+"stick_1_mat_Height.png":
+  "m_guid": "14e4f44736e9a00f6946fd85be9"
+  "m_typeindex": "126269861530532084"
+"stick_1_mat_Metallic.png":
+  "m_guid": "14e4f4d7f028fe4467f48c6cf6f"
+  "m_typeindex": "126269861530532084"
+"stick_1_mat_Normal.png":
+  "m_guid": "14e4f557b35b527c10cd9e22505"
+  "m_typeindex": "126269861530532084"
+"stick_1_mat_Roughness.png":
+  "m_guid": "14e4f5f77e2a45385c46fb51389"
+  "m_typeindex": "126269861530532084"
+"stick_2.obj":
+  "m_guid": "14e503d79df8a9f31a3ec24a305"
+  "m_typeindex": "4838001395392124604"
+"stick_2_mat_BaseColor.png":
+  "m_guid": "14e4f68718e928d21c7a6d72f20"
+  "m_typeindex": "126269861530532084"
+"stick_2_mat_Emissive.png":
+  "m_guid": "14e4f727fada5055e0db0785f1f"
+  "m_typeindex": "126269861530532084"
+"stick_2_mat_Height.png":
+  "m_guid": "14e4f7b7a73a806077677e6e940"
+  "m_typeindex": "126269861530532084"
+"stick_2_mat_Metallic.png":
+  "m_guid": "14e4f847ed0a29a9c7ef8cb68d2"
+  "m_typeindex": "126269861530532084"
+"stick_2_mat_Normal.png":
+  "m_guid": "14e4f8c7f39b2cc8baa3fb393e3"
+  "m_typeindex": "126269861530532084"
+"stick_2_mat_Roughness.png":
+  "m_guid": "14e4f9679268d53d3c07e898bbb"
+  "m_typeindex": "126269861530532084"
 "tableTop_glass":
   "m_guid": "6d98bf17b8ab87edf1bfa8e986c"
   "m_typeindex": "175488002581160416"

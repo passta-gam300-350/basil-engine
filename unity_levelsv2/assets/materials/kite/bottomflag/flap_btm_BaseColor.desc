@@ -1,0 +1,7 @@
+base:
+  m_guid: 14e4e7778318cfe38c621b2f714
+  m_importer: .texture
+  m_source: materials\kite\bottomflag\flap_btm_BaseColor.png
+  m_name: flap_btm_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

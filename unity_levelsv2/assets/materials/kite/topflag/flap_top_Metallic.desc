@@ -1,0 +1,7 @@
+base:
+  m_guid: 14e4fbd7d708d3f49b93a7357e7
+  m_importer: .texture
+  m_source: materials\kite\topflag\flap_top_Metallic.png
+  m_name: flap_top_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

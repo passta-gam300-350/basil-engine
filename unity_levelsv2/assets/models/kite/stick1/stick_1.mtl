@@ -1,0 +1,32 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl stick_1_mat
+
+# Base color / diffuse map
+map_Kd stick_1_mat_BaseColor.png
+
+# Normal map
+map_Bump stick_1_mat_Normal.png
+bump stick_1_mat_Normal.png
+
+# Metallic map
+map_Ks stick_1_mat_Metallic.png
+
+# Roughness map
+map_Ns stick_1_mat_Roughness.png
+
+# Emissive map
+map_Ke stick_1_mat_Emissive.png
+
+# Height / displacement map
+map_d stick_1_mat_Height.png
+disp stick_1_mat_Height.png
+
+kd 0.6 0.6 0.6
+ka 1 1 1
+ks 0 0 0
+ke 0 0 0
+d 1
+illum 1
+

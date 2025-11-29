@@ -1,0 +1,7 @@
+base:
+  m_guid: 14e4f7b7a73a806077677e6e940
+  m_importer: .texture
+  m_source: materials\kite\stick2\stick_2_mat_Height.png
+  m_name: stick_2_mat_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

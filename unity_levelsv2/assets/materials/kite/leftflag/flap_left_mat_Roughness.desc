@@ -1,0 +1,7 @@
+base:
+  m_guid: 14e4ee87a889d4f27875e30b4e8
+  m_importer: .texture
+  m_source: materials\kite\leftflag\flap_left_mat_Roughness.png
+  m_name: flap_left_mat_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
