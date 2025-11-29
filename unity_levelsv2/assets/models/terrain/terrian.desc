@@ -1,21 +1,26 @@
 base:
-  m_guid: e0362de7a68af121fabc91dcd46
+  m_guid: 20e5927bd1995db0b74e50152b
   m_importer: material
   m_source: ""
-  m_name: 01_-_Default
+  m_name: terrian
   m_importer_type: 12248969845253211364
 material:
   vert_name: main_pbr.vert
   frag_name: main_pbr.frag
-  material_name: 01_-_Default
+  material_name: terrian
   albedo:
-    x: 0.600000024
-    y: 0.600000024
-    z: 0.600000024
+    x: 0.5
+    y: 0.5
+    z: 0.5
   metallic: 0.699999988
   roughness: 1
   blend_mode: 0
   float_properties: ~
   vec3_properties: ~
   vec4_properties: ~
-  texture_properties: ~
+  texture_properties:
+    u_DiffuseMap: 00
+    u_HeightMap: 00
+    u_NormalMap: 00
+    u_EmissiveMap: 00
+    u_SpecularMap: 00

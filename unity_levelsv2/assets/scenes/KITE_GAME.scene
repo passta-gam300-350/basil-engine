@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 20
+  slot: 27
   guid: 00
   dependencies: ~
 render_settings:
@@ -34,7 +34,7 @@ entities:
         y: 0.99999994
         z: 0.99999994
       m_Rotate:
-        x: -15.9999857
+        x: -19
         y: -0
         z: 0
       m_Trans:
@@ -44,22 +44,22 @@ entities:
     CameraComponent:
       m_Type: "\x01"
       m_IsActive: true
-      m_Fov: 45
+      m_Fov: 60
       m_AspectRatio: 1.77777779
       m_Near: 0.100000001
       m_Far: 100
       m_Up:
         x: 0
-        y: 0.961261749
-        z: -0.27563715
+        y: 0.945518553
+        z: -0.32556814
       m_Right:
         x: 1
         y: 0
         z: 0
       m_Front:
         x: 0
-        y: 0.27563715
-        z: 0.961261749
+        y: 0.32556814
+        z: 0.945518553
       m_Yaw: -90
       m_Pitch: 0
   - MeshRendererComponent:
@@ -67,11 +67,11 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 12279737ce4956276de22f3c339
+        guid: 546d73b7ac39cca8ce2f4074fa5
         type: 4838001395392124604
       m_MaterialGuid:
-        kite:
-          guid: 18fd078774191e9b6c2f602246d
+        kite_player_mat:
+          guid: 549be077d859642e725a0913676
           type: 175488002581160416
     RigidBodyComponent:
       motionType: "\x01"
@@ -86,9 +86,9 @@ entities:
       freezePositionX: false
       freezePositionY: false
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -111,12 +111,12 @@ entities:
       isDirty: false
     BoxCollider:
       size:
-        x: 1
-        y: 1
+        x: 2.70000005
+        y: 4.69999981
         z: 1
       CenterOffset:
         x: 0
-        y: 0
+        y: 2.27999997
         z: 0
       isTrigger: false
       friction: 0.5
@@ -130,17 +130,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 2
-        y: 2
-        z: 2
+        x: 0.0250000004
+        y: 0.0299999993
+        z: 0.0299999993
       m_Rotate:
-        x: 0
+        x: -179.999893
         y: -0
-        z: 0
+        z: -179.999893
       m_Trans:
-        x: 4.57885456
-        y: 8.2639904
-        z: 11.335
+        x: 7.6428442
+        y: 9.51221466
+        z: 12.2189999
     Behaviour:
       classesName:
         - KiteController
@@ -156,9 +156,9 @@ entities:
       Cast Shadows: true
       Intensity: 1
       "[Dir/Spot] Direction":
-        x: 0
-        y: -1
-        z: 0
+        x: 0.0599999987
+        y: -8.15999985
+        z: 9.43000031
       "[Point/Spot] Range": 10
       "[Spot] Inner Cone Angle": 30
       "[Spot] Outer Cone Angle": 45
@@ -182,41 +182,11 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: e02f8fa7eb18c1cafa05087c973
+        guid: 546d71f73608b858a14be1bdbf0
         type: 4838001395392124604
       m_MaterialGuid:
-        01_-_Default:
-          guid: e04ed7e7cbd8b1ebe195259c9f7
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 0
-    entity name:
-      name: Terrain
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 12279737ce4956276de22f3c339
-        type: 4838001395392124604
-      m_MaterialGuid:
-        kite:
-          guid: 18fd078774191e9b6c2f602246d
+        kite_enemy1_mat:
+          guid: 54f94557151b6536992ee587232
           type: 175488002581160416
     RigidBodyComponent:
       motionType: "\x01"
@@ -231,9 +201,9 @@ entities:
       freezePositionX: false
       freezePositionY: false
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -256,12 +226,12 @@ entities:
       isDirty: false
     BoxCollider:
       size:
-        x: 1
-        y: 1
+        x: 2.70000005
+        y: 4.69999981
         z: 1
       CenterOffset:
         x: 0
-        y: 0
+        y: 2.20000005
         z: 0
       isTrigger: false
       friction: 0.5
@@ -270,22 +240,22 @@ entities:
     Scene ID:
       Scene ID: 11
     entity name:
-      name: KiteTarget
+      name: kite_enemy1
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 2
-        y: 2
-        z: 2
+        x: 0.0250000004
+        y: 0.0299999993
+        z: 0.0299999993
       m_Rotate:
-        x: 0
+        x: 179.999893
         y: -0
-        z: 0
+        z: 179.999893
       m_Trans:
-        x: 8.45353413
-        y: 12.0380468
-        z: 11.335
+        x: 0.479814827
+        y: 8.86226273
+        z: 12.2193937
     Behaviour:
       classesName:
         - KiteTarget
@@ -294,11 +264,11 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 12279737ce4956276de22f3c339
+        guid: 546d7267279b6d12a182207c6f8
         type: 4838001395392124604
       m_MaterialGuid:
-        kite:
-          guid: 18fd078774191e9b6c2f602246d
+        kite_enemy2_mat:
+          guid: f7c7b7b9faa6d59a22499a68e
           type: 175488002581160416
     RigidBodyComponent:
       motionType: "\x01"
@@ -313,9 +283,9 @@ entities:
       freezePositionX: false
       freezePositionY: false
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -338,12 +308,12 @@ entities:
       isDirty: false
     BoxCollider:
       size:
-        x: 1
-        y: 1
+        x: 2.70000005
+        y: 4.69999981
         z: 1
       CenterOffset:
         x: 0
-        y: 0
+        y: 2.20000005
         z: 0
       isTrigger: false
       friction: 0.5
@@ -352,22 +322,22 @@ entities:
     Scene ID:
       Scene ID: 12
     entity name:
-      name: KiteTarget_Copy
+      name: kite_enemy2
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 2
-        y: 2
-        z: 2
+        x: 0.0250000004
+        y: 0.0299999993
+        z: 0.0299999993
       m_Rotate:
-        x: 0
+        x: 179.999893
         y: -0
-        z: 0
+        z: 179.999893
       m_Trans:
-        x: -4.76093769
-        y: 5.57775402
-        z: 11.335
+        x: -8.63570786
+        y: 7.91100931
+        z: 12.2189999
     Behaviour:
       classesName:
         - KiteTarget
@@ -376,11 +346,11 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 12279737ce4956276de22f3c339
+        guid: 546d72d7f81a9262afa8ae6c176
         type: 4838001395392124604
       m_MaterialGuid:
-        kite:
-          guid: 18fd078774191e9b6c2f602246d
+        kite_enemy3_mat:
+          guid: ff24879238a247f72c21bf69b
           type: 175488002581160416
     RigidBodyComponent:
       motionType: "\x01"
@@ -395,9 +365,9 @@ entities:
       freezePositionX: false
       freezePositionY: false
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -420,12 +390,12 @@ entities:
       isDirty: false
     BoxCollider:
       size:
-        x: 1
-        y: 1
+        x: 2.70000005
+        y: 4.69999981
         z: 1
       CenterOffset:
         x: 0
-        y: 0
+        y: 2.20000005
         z: 0
       isTrigger: false
       friction: 0.5
@@ -434,104 +404,22 @@ entities:
     Scene ID:
       Scene ID: 13
     entity name:
-      name: KiteTarget_Copy_Copy
+      name: kite_enemy3
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 2
-        y: 2
-        z: 2
+        x: 0.0250000004
+        y: 0.0299999993
+        z: 0.0299999993
       m_Rotate:
-        x: 0
+        x: -179.999893
         y: -0
-        z: 0
+        z: -179.999893
       m_Trans:
-        x: -2.37692213
-        y: 12.0700569
-        z: 11.335
-    Behaviour:
-      classesName:
-        - KiteTarget
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 12279737ce4956276de22f3c339
-        type: 4838001395392124604
-      m_MaterialGuid:
-        kite:
-          guid: 18fd078774191e9b6c2f602246d
-          type: 175488002581160416
-    RigidBodyComponent:
-      motionType: "\x01"
-      mass: 1
-      drag: 0
-      angularDrag: 0.0500000007
-      friction: 0
-      linearDamping: 0
-      gravityFactor: -9.81000042
-      useGravity: false
-      isKinematic: false
-      freezePositionX: false
-      freezePositionY: false
-      freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
-      freezeLinearVelocityX: false
-      freezeLinearVelocityY: false
-      freezeLinearVelocityZ: false
-      freezeAngularVelocityX: false
-      freezeAngularVelocityY: false
-      freezeAngularVelocityZ: false
-      centerOfMass:
-        x: 0
-        y: 0
-        z: 0
-      linearVelocity:
-        x: 0
-        y: 0
-        z: 0
-      angularVelocity:
-        x: 0
-        y: 0
-        z: 0
-      isActive: true
-      isDirty: false
-    BoxCollider:
-      size:
-        x: 1
-        y: 1
-        z: 1
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 14
-    entity name:
-      name: KiteTarget_Copy_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 2
-        y: 2
-        z: 2
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -11.2578535
-        y: 8.98912621
-        z: 11.335
+        x: 3.66886997
+        y: 5.91869211
+        z: 12.2189388
     Behaviour:
       classesName:
         - KiteTarget
@@ -566,6 +454,88 @@ entities:
         y: 0.00843691826
         z: 12.434885
     MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 546d7347c899d035f806ce3c242
+        type: 4838001395392124604
+      m_MaterialGuid:
+        kite_enemy4_mat:
+          guid: 1068517593915484292e0c8089
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: -9.81000042
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 2.70000005
+        y: 4.69999981
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 2.20000005
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 14
+    entity name:
+      name: kite_enemy4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0250000339
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: -179.999893
+        y: 0
+        z: -179.999893
+      m_Trans:
+        x: -3.38483715
+        y: 5.39333344
+        z: 12.2189999
+    Behaviour:
+      classesName:
+        - KiteTarget
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -637,7 +607,7 @@ entities:
         type: 4838001395392124604
       m_MaterialGuid:
         hdb_2:
-          guid: 7e1100c7137b1ed9de886b5e106
+          guid: 172e8c76c6a3a70b7a4f4e6c68
           type: 175488002581160416
     Scene ID:
       Scene ID: 16
@@ -726,16 +696,55 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 136ed17a7ebfa469010ff3b90f
+        guid: 20422d7a94a069c5b7d335b6fd
         type: 4838001395392124604
       m_MaterialGuid:
-        hdb_1:
+        terrian:
           guid: 00
           type: 175488002581160416
     Scene ID:
       Scene ID: 19
     entity name:
-      name: Building1_Copy
+      name: terrain
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0167851988
+        y: 0.00908319652
+        z: 0.0170437787
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.31342316
+        y: -0.305849075
+        z: 7.26460457
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0.699999988
+        u_RoughnessValue: 0.300000012
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.684626818
+          y: 0.823008835
+          z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 14c66b7c1d98726db576722310
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 21
+    entity name:
+      name: Building1_Copy_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
@@ -752,3 +761,72 @@ entities:
         y: -0.305849314
         z: 16.8237152
     MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 25
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 110.03125
+        y: 110.03125
+        z: 110.03125
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 90.0290604
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.331388533
+          y: 0.709774494
+          z: 0.960177004
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bc477e6a83e1f58692fb5e0
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 810fa4373069cab3f750d101a1d
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 26
+    entity name:
+      name: spool
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0130000003
+        y: 0.0130000003
+        z: 0.0130000003
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.953000009
+        z: -5.59299994

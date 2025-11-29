@@ -1,0 +1,7 @@
+base:
+  m_guid: 20421e71bf94ee7294288cff91
+  m_importer: .texture
+  m_source: materials\terrain\terrian_Roughness.png
+  m_name: terrian_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

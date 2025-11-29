@@ -1522,6 +1522,15 @@
 "m_kite_enemy1":
   "m_guid": "54f94557151b6536992ee587232"
   "m_typeindex": "175488002581160416"
+"m_kite_enemy2":
+  "m_guid": "f7c7b7b9faa6d59a22499a68e"
+  "m_typeindex": "175488002581160416"
+"m_kite_enemy3":
+  "m_guid": "ff24879238a247f72c21bf69b"
+  "m_typeindex": "175488002581160416"
+"m_kite_enemy4":
+  "m_guid": "1068517593915484292e0c8089"
+  "m_typeindex": "175488002581160416"
 "m_kite_player":
   "m_guid": "549be077d859642e725a0913676"
   "m_typeindex": "175488002581160416"
@@ -1921,6 +1930,27 @@
 "table_top":
   "m_guid": "998b553738391801b1a8ca31ab1"
   "m_typeindex": "175488002581160416"
+"terrain.obj":
+  "m_guid": "20422d7a94a069c5b7d335b6fd"
+  "m_typeindex": "4838001395392124604"
+"terrian_BaseColor.png":
+  "m_guid": "2041eb749fbc4f7f435531491a"
+  "m_typeindex": "126269861530532084"
+"terrian_Emissive.png":
+  "m_guid": "2041f87dc58c473c2c235b81c4"
+  "m_typeindex": "126269861530532084"
+"terrian_Height.png":
+  "m_guid": "20420378fb9e1af9cf0f8e0da6"
+  "m_typeindex": "126269861530532084"
+"terrian_Metallic.png":
+  "m_guid": "20420c766f83afeb74b1604f28"
+  "m_typeindex": "126269861530532084"
+"terrian_Normal.png":
+  "m_guid": "2042167aa6890d5e5e100d6dfb"
+  "m_typeindex": "126269861530532084"
+"terrian_Roughness.png":
+  "m_guid": "20421e71bf94ee7294288cff91"
+  "m_typeindex": "126269861530532084"
 "test":
   "m_guid": "965e0fb70238211d166da357ff0"
   "m_typeindex": "175488002581160416"

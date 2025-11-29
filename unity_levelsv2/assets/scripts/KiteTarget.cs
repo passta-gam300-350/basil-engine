@@ -8,8 +8,8 @@ public class KiteTarget : Behavior
 {
     private Rigidbody rb;
 
-    public float windSpeed = 15f;
-    public float collectDist = 2f;
+    public float windSpeed = 30f;
+    public float collectDist = 10f;
     private GameObject player;
     private KiteController kiteController;
 
