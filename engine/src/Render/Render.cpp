@@ -651,7 +651,21 @@ Aabb RenderSystem::ComputeWorldAABB(ecs::entity entity) const
 	}*/
 	auto& meshComp = entity.get<MeshRendererComponent>();
 	auto& transformMatrixComponent = entity.get<TransformMtxComponent>();
-	std::shared_ptr<Mesh> meshResource = LoadMeshResource(meshComp);
+	auto meshResourceVariant = LoadMeshResource(meshComp);
+
+	// Extract the first mesh from the variant
+	std::shared_ptr<Mesh> meshResource;
+	std::visit([&meshResource](auto&& var) {
+		using Type = std::remove_pointer_t<std::remove_cvref_t<decltype(var)>>;
+		if constexpr (std::is_same_v<Type, std::shared_ptr<Mesh>>) {
+			meshResource = var;
+		}
+		else if (var && !var->empty()) {
+			// Multi-mesh model - use the first mesh for AABB calculation
+			meshResource = var->front().second;
+		}
+	}, meshResourceVariant);
+
 	if (!meshResource)
 	{
 		spdlog::warn("ComputeWorldAABB: Entity {} has no valid mesh", entity.get_uid());
@@ -903,7 +917,7 @@ void RenderSystem::BuildInteractableBVH(ecs::world& world)
 	spdlog::info("========== BuildInteractableBVH() END ==========");
 }
 
-std::vector<std::shared_ptr<Mesh>> loadmesh(const char* data) {
+std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(const char* data) {
 	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
 	std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> meshes;
 	for (const auto& mesh : dat.meshes) {
