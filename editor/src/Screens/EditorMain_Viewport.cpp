@@ -565,7 +565,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 			glm::mat4 deltas{};
 			//glm::mat4 transmtx{ GuizmoEntityTransformMTX->m_Mtx }; 
 			// Create and display Gizmos
-			ImGuizmo::Manipulate(glm::value_ptr(GuizmoViewMec4), glm::value_ptr(GuizmoprojectionMat4), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx));
+			ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera->GetViewMatrix()), glm::value_ptr(m_EditorCamera->GetProjectionMatrix()), mode, ImGuizmo::LOCAL, glm::value_ptr(GuizmoEntityTransformMTX->m_Mtx));
 
 
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
