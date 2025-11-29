@@ -492,10 +492,14 @@ void EditorMain::init()
 	engineService.block();
 	glfwMakeContextCurrent(Editor::GetInstance().GetWindowPtr());
 	engineService.ExecuteOnEngineThread([&]() {
+<<<<<<< HEAD
+		
 		messagingSystem.Subscribe(CAMERA_CALCULATION_UPDATE, nullptr, [&](std::unique_ptr<Message> GuizmoMessage) {
 			GuizmoViewMec4 = static_cast<Camera_Calculation_Update*>(GuizmoMessage.get())->viewMat4;
 			GuizmoprojectionMat4 = static_cast<Camera_Calculation_Update*>(GuizmoMessage.get())->projectionMat4;
 			});
+=======
+>>>>>>> main
 		PhysicsSystem::Instance().isActive = false;
 		spdlog::info("Physics Active");
 		});
@@ -614,6 +618,8 @@ void EditorMain::render()
 			Render_AssetBrowser();
 		if (showResources)
 			Render_Resources();
+		if (showSceneManifestSetting)
+			Render_SceneManifest();
 		Render_Scene();
 		Render_Game();
 		Render_CameraControls();
@@ -1262,197 +1268,7 @@ unsigned int EditorMain::GetIconForFile(const std::string& extension)
 	}
 	// Prefab files (Unity-style prefab assets)
 	else if (ext == ".prefab") {
-<<<<<<< HEAD
-		// Use script icon for now (could add custom prefab icon in the future)
-		// Prefabs are data/template files, similar to scripts in nature
-		return m_AssetIcons.scriptIcon != 0 ? m_AssetIcons.scriptIcon : m_AssetIcons.fileIcon;
-	}
-	// Default file icon
-	return m_AssetIcons.fileIcon;
-}
-
-void EditorMain::Render_Scene()
-{
-	// Get delta time for camera updates
-	float deltaTime = static_cast<float>(engineService.GetDeltaTime());
-
-	ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-	 
-	// Get viewport size for aspect ratio
-	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-	if (viewportSize.x > 0 && viewportSize.y > 0) {
-		m_ViewportWidth = viewportSize.x;
-		m_ViewportHeight = viewportSize.y;
-
-		// Update aspect ratio if viewport size changed
-		if (m_EditorCamera) {
-			m_EditorCamera->SetAspectRatio(m_ViewportWidth / m_ViewportHeight);
-		}
-
-		// Debug viewport size
-		static float lastWidth = 0, lastHeight = 0;
-		if (std::abs(lastWidth - viewportSize.x) > 1.0f || std::abs(lastHeight - viewportSize.y) > 1.0f) {
-			spdlog::info("Editor: Viewport size changed to ({:.0f}x{:.0f})", viewportSize.x, viewportSize.y);
-			lastWidth = viewportSize.x;
-			lastHeight = viewportSize.y;
-		}
-	}
-
-	// Check if editor framebuffer is available before trying to access it
-	auto& frameData = engineService.GetFrameData();
-	if (frameData.editorResolvedBuffer && frameData.editorResolvedBuffer->GetFBOHandle() != 0) {
-		// Store viewport position for picking calculations.
-		// Use screen-space cursor and convert to the owning viewport's window space; no scaling (we'll feed ImGui mouse directly to managed).
-		ImVec2 cursorScreen = ImGui::GetCursorScreenPos();
-		ImVec2 viewportPos = cursorScreen; // logical/screen-space top-left of the viewport image (for ImGuizmo/picking)
-		const ImGuiViewport* sceneViewport = ImGui::GetWindowViewport();
-		ImVec2 windowScreenOrigin = sceneViewport ? sceneViewport->Pos : ImVec2(0.f, 0.f);
-		ImVec2 localWindowPos = ImVec2(cursorScreen.x - windowScreenOrigin.x, cursorScreen.y - windowScreenOrigin.y);
-		glm::vec2 viewportOffset{
-			viewportPos.x, // use image top-left in screen space (same as picking)
-			viewportPos.y
-		};
-		glm::vec2 viewportSizePixels{
-			viewportSize.x,
-			viewportSize.y
-		};
-
-		// Push viewport rect to camera system so ScreenPointToRay/World use the correct offset
-		engineService.ExecuteOnEngineThread([viewportOffset, viewportSizePixels]() {
-			CameraSystem::SetViewportOffset(viewportOffset);
-			CameraSystem::SetViewportSize(viewportSizePixels);
-		});
-		// Also set managed camera override so ScreenPointToRay uses the same rect
-		ManagedCamera::SetViewportOverride(viewportOffset.x, viewportOffset.y, viewportSizePixels.x, viewportSizePixels.y, true);
-
-
-		// Draw a square on mouse pos
-		ImVec2 mousePos = ImGui::GetMousePos();
-			// Debug : Draw a small rectangle at mouse position
-
-			ImDrawList* draw_list = ImGui::GetWindowDrawList();
-			float rectSize = 5.0f;
-			mousePos.x -= viewportPos.x;
-			mousePos.y -= viewportPos.y;
-			spdlog::info("Mouse position screen space in scene: ({:.0f}, {:.0f})", mousePos.x, mousePos.y);
-
-
-
-		// Get the color attachment texture ID (not the FBO handle)
-		uint32_t textureID = frameData.editorResolvedBuffer->GetColorAttachmentRendererID(0);
-
-		// Render the scene viewport using the texture ID
-			ImGui::Image((ImTextureID)(uintptr_t)textureID,
-				viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-
-			// Feed ImGui mouse position to managed input override so ScreenPointToRay uses matching space
-			if (frameData.editorResolvedBuffer) {
-				ImVec2 mouseScreen = ImGui::GetMousePos();
-				ManagedInput::SetMouseOverride(mouseScreen.x, mouseScreen.y, true);
-			}
-
-		// CRITICAL: Query click state IMMEDIATELY after Image (while it's the "last item")
-		// IsItemClicked() doesn't "consume" clicks - it just queries if this item was clicked
-		bool imageClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
-		bool viewportHovered = ImGui::IsItemHovered();
-
-		// Drag-and-drop target for viewport (instantiate prefabs by dropping into 3D view)
-		if (ImGui::BeginDragDropTarget())
-		{
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetDrop"))
-			{
-				const char* droppedPath = static_cast<const char*>(payload->Data);
-				std::string assetPath(droppedPath);
-				std::filesystem::path filepath(assetPath);
-
-				// Check if dropped asset is a prefab
-				if (filepath.extension().string() == ".prefab")
-				{
-					// TODO: Calculate 3D world position from mouse position using camera ray
-					// For now, instantiate at origin
-					engineService.ExecuteOnEngineThread([assetPath]() {
-						auto world = Engine::GetWorld();
-						PrefabData prefabData = PrefabSystem::LoadAndCachePrefab(assetPath.c_str());
-						if (prefabData.IsValid()) {
-							ecs::entity instantiated = PrefabSystem::InstantiatePrefab(world, prefabData.guid, glm::vec3(0.0f));
-							if (instantiated) {
-								spdlog::info("Prefab instantiated from viewport drag-and-drop: {}", prefabData.name);
-							} else {
-								spdlog::error("Failed to instantiate prefab from viewport: {}", prefabData.name);
-							}
-						}
-					});
-				}
-			}
-			ImGui::EndDragDropTarget();
-		}
-
-		// Now render the gizmo with proper viewport coordinates
-		Gizmos(viewportPos, viewportSize);
-
-		// Check if ImGuizmo wants input priority
-		bool gizmoWantsInput = ImGuizmo::IsUsing() || ImGuizmo::IsOver();
-
-		// Only perform viewport picking if image was clicked AND gizmo doesn't want input
-		bool viewportClicked = imageClicked && !gizmoWantsInput;
-
-		if (viewportClicked) {
-			spdlog::info("Editor: Viewport clicked detected by ImGui");
-
-			// Get mouse position relative to viewport
-			ImVec2 mousePos = ImGui::GetMousePos();
-			float relativeX = mousePos.x - viewportPos.x;
-			float relativeY = mousePos.y - viewportPos.y;
-
-			spdlog::info("Editor: Mouse pos ({:.0f}, {:.0f}), viewport pos ({:.0f}, {:.0f}), relative ({:.0f}, {:.0f})",
-				mousePos.x, mousePos.y, viewportPos.x, viewportPos.y, relativeX, relativeY);
-
-			// Ensure click is within viewport bounds
-			if (relativeX >= 0 && relativeY >= 0 && relativeX < viewportSize.x && relativeY < viewportSize.y) {
-				spdlog::info("Editor: Click is within viewport bounds - performing picking");
-				PerformEntityPicking(relativeX, relativeY, viewportSize.x, viewportSize.y);
-			}
-			else {
-				spdlog::warn("Editor: Click is outside viewport bounds");
-			}
-		}
-
-		// Debug: Log mouse states
-		static bool lastHovered = false;
-		if (viewportHovered != lastHovered) {
-			spdlog::info("Editor: Viewport hover state changed: {}", viewportHovered ? "entered" : "exited");
-			lastHovered = viewportHovered;
-		}
-
-		// Handle camera input only when viewport is hovered and not clicking
-		if (!m_IsPlayMode && m_EditorCamera && viewportHovered && !viewportClicked) {
-			// Temporarily disable ImGui input capture for camera control
-			ImGuiIO& io = ImGui::GetIO();
-			bool originalWantCaptureMouse = io.WantCaptureMouse;
-			bool originalWantCaptureKeyboard = io.WantCaptureKeyboard;
-
-			//// Disable ImGui input capture only when doing camera control
-			io.WantCaptureMouse = false;
-			io.WantCaptureKeyboard = false;
-
-			// Update camera based on input
-			m_EditorCamera->Update(deltaTime);
-
-			// Handle scroll for zoom
-			double scrollX, scrollY;
-			auto* input = InputManager::Get_Instance();
-			input->Get_ScrollOffset(scrollX, scrollY);
-			if (scrollY != 0) {
-				m_EditorCamera->OnMouseScroll(static_cast<float>(scrollY));
-			}
-
-			// Restore original ImGui input capture state
-			io.WantCaptureMouse = originalWantCaptureMouse;
-			io.WantCaptureKeyboard = originalWantCaptureKeyboard;
-		}
-=======
 		icon = m_AssetIcons.scriptIcon;
->>>>>>> origin/main
 	}
 	// Generic file extension
 	else {

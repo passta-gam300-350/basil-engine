@@ -492,11 +492,6 @@ void EditorMain::init()
 	engineService.block();
 	glfwMakeContextCurrent(Editor::GetInstance().GetWindowPtr());
 	engineService.ExecuteOnEngineThread([&]() {
-		
-		messagingSystem.Subscribe(CAMERA_CALCULATION_UPDATE, nullptr, [&](std::unique_ptr<Message> GuizmoMessage) {
-			GuizmoViewMec4 = static_cast<Camera_Calculation_Update*>(GuizmoMessage.get())->viewMat4;
-			GuizmoprojectionMat4 = static_cast<Camera_Calculation_Update*>(GuizmoMessage.get())->projectionMat4;
-			});
 		PhysicsSystem::Instance().isActive = false;
 		spdlog::info("Physics Active");
 		});
