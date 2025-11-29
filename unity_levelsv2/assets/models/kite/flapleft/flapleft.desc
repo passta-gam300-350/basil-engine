@@ -1,8 +1,8 @@
 base:
-  m_guid: 3f901a77b7294658ef4967ed88f
+  m_guid: 549617d7801a7763d2a7ac15c64
   m_importer: .mesh
-  m_source: models\kite\flapbottom\flap_btm.obj
-  m_name: flap_btm.obj
+  m_source: models\kite\flapleft\flapleft.obj
+  m_name: flapleft.obj
   m_importer_type: 3262350505779219304
 merge_mesh: true
 extract_material: true

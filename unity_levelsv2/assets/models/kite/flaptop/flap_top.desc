@@ -1,5 +1,5 @@
 base:
-  m_guid: 14f49af7ab28c9b83a6f3fa7048
+  m_guid: 58ea5d37b79889af63bbd37c545
   m_importer: material
   m_source: ""
   m_name: flap_top
@@ -13,7 +13,7 @@ material:
     y: 0.600000024
     z: 0.600000024
   metallic: 0.699999988
-  roughness: 1
+  roughness: 0
   blend_mode: 0
   float_properties: ~
   vec3_properties: ~

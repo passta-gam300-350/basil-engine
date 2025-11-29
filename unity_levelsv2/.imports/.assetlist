@@ -925,6 +925,9 @@
 "flap_btm":
   "m_guid": "14e5000758a99d0f7f23923f672"
   "m_typeindex": "4838001395392124604"
+"flap_btm.obj":
+  "m_guid": "3f901a77b7294658ef4967ed88f"
+  "m_typeindex": "4838001395392124604"
 "flap_btm_BaseColor.png":
   "m_guid": "14e4e7778318cfe38c621b2f714"
   "m_typeindex": "126269861530532084"
@@ -943,6 +946,12 @@
 "flap_btm_Roughness.png":
   "m_guid": "14e4eaa7972a530639a2ee47566"
   "m_typeindex": "126269861530532084"
+"flap_btm_mat":
+  "m_guid": "58ebb12705b9ac685d85a6f53ab"
+  "m_typeindex": "175488002581160416"
+"flap_left":
+  "m_guid": "54ea1437d3f9925f09a3525fb0e"
+  "m_typeindex": "175488002581160416"
 "flap_left.obj":
   "m_guid": "14e500a7f55b999812e84bb4607"
   "m_typeindex": "4838001395392124604"
@@ -1006,6 +1015,15 @@
 "flap_top_Roughness.png":
   "m_guid": "14e4fd27ac68818d52f39362bb9"
   "m_typeindex": "126269861530532084"
+"flapleft.obj":
+  "m_guid": "549617d7801a7763d2a7ac15c64"
+  "m_typeindex": "4838001395392124604"
+"flapright.obj":
+  "m_guid": "549618777aba204ee2115ded48c"
+  "m_typeindex": "4838001395392124604"
+"flaptop.obj":
+  "m_guid": "54961927c9399122be7b0cbb392"
+  "m_typeindex": "4838001395392124604"
 "hdb_01":
   "m_guid": "7e10c2f7ab78320cc8af2c84e5a"
   "m_typeindex": "175488002581160416"
@@ -1515,6 +1533,12 @@
   "m_typeindex": "175488002581160416"
 "m_kite":
   "m_guid": "18fd078774191e9b6c2f602246d"
+  "m_typeindex": "175488002581160416"
+"m_kite_base":
+  "m_guid": "556280f74a781ac8527a6c15a30"
+  "m_typeindex": "175488002581160416"
+"m_kite_base_2":
+  "m_guid": "57638ab7cee9009151d9fa7a3d6"
   "m_typeindex": "175488002581160416"
 "m_kite_enemy":
   "m_guid": "37277ea7f1b9ef64e01fb8c0f5e"
