@@ -12,8 +12,9 @@ public class GameManager : Behavior
 
     public static GameManager instance;
     public bool TrainPuzzleCompleted = false;
-    public bool KitePuzzleCompleted = true;
+    public bool KitePuzzleCompleted = false;
     public bool isCleaned = false;
+
 
 
     private GameObject player;
@@ -85,5 +86,10 @@ public class GameManager : Behavior
     public void CompleteTrainPuzzle()
     {
         TrainPuzzleCompleted = true;
+    }
+
+    public void CompleteKitePuzzle()
+    {
+                KitePuzzleCompleted = true;
     }
 }

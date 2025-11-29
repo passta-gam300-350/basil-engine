@@ -1,4 +1,5 @@
-﻿using BasilEngine;
+﻿using System.Collections.Concurrent;
+using BasilEngine;
 using BasilEngine.Components;
 using BasilEngine.Mathematics;
 using BasilEngine.Debug;
@@ -28,10 +29,17 @@ public class KiteInteractablePoint : Behavior
                 return;
             }
 
+            if (PuzzleManager.manager.stickUnlocked != true || PuzzleManager.manager.flapUnlocked != true)
+            {
+                Logger.Log("You have not found all the required part to build the kite!");
+                return;
+            }
+
             if (!interacted)
             {
                 interacted = true;
                 CameraManager.instance.ActivateKiteCamera();
+                PuzzleManager.manager.KitePuzzle();
                 GameManager.instance.DisableControls();
             }
             else
@@ -39,6 +47,7 @@ public class KiteInteractablePoint : Behavior
                 interacted = false;
                 CameraManager.instance.ActivatePlayerCamera();
                 GameManager.instance.EnableControls();
+                PuzzleManager.manager.Explore();
             }
 
 

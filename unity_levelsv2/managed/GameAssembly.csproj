@@ -15,6 +15,8 @@
         <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\BoxInteractablePoint.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CameraManager.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CameraTest.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CollectFlap.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CollectSticks.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\Dustbin.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GameManager.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GetStuff.cs" />

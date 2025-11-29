@@ -7,11 +7,12 @@ using BasilEngine.SceneManagement;
 
 public class MainMenu : Behavior
 {
-  
+
+    private Audio audio;
 
     public void Init()
     {
-
+      
     }
     public void Update()
     {
