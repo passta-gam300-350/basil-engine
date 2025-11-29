@@ -62,6 +62,10 @@ private:
     // HDR state tracking
     bool m_HDREnabled;
 
+    // HUD test textures (loaded once, reused each frame)
+    uint32_t m_PauseMenuTexture;
+    uint32_t m_ResumeButtonTexture;
+
     // Input handling
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);

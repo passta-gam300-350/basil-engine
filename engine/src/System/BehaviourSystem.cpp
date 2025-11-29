@@ -5,6 +5,8 @@
 #include "Engine.hpp"
 #include "ABI/ABI.h"
 #include "spdlog/spdlog.h"
+#include "Profiler/profiler.hpp"
+
 const char* defSearchDirs[] = {
 	"Scripts/Bin/",
 	"Scripts/Bin/Debug/",
@@ -80,6 +82,7 @@ void BehaviourSystem::Reload()
 void BehaviourSystem::Update(ecs::world& world, float)
 {
 	if (!isActive) return;
+	PF_SYSTEM("Behaviour System");
 	for (auto entity : world.filter_entities<behaviour>()) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		for (auto scriptID : component.scriptIDs) {

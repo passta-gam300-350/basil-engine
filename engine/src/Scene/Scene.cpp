@@ -133,12 +133,16 @@ std::optional<std::reference_wrapper<Scene>> SceneRegistry::LoadSceneFromPath(st
 	spdlog::info("SceneRegistry: Scene loaded from {} with GUID {}, skybox enabled: {}",
 		path, sceneGuid.to_hex(), GetActiveScene().value().get().GetRenderSettings().skybox.enabled);
 
+
+	Engine::OnLoad();
+
 	return GetScene(sceneGuid);
 }
 
 void SceneRegistry::UnloadScene(rp::Guid scn_guid)
 {
 	auto scnres{ GetScene(scn_guid) };
+	Engine::OnUnload();
 	if (scnres) {
 		scnres.value().get().Clear();
 		m_loaded_scenes.erase(scn_guid);

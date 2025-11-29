@@ -22,7 +22,7 @@ Technology is prohibited.
 #include <cstdint>
 
 // Forward declaration
-class Texture;
+struct Texture;
 
 /**
  * @brief Anchor point for HUD element positioning
@@ -68,7 +68,7 @@ struct HUDElementData {
     float rotation = 0.0f;
 
     // Layer for depth sorting (higher values render on top)
-    uint32_t layer = 0;
+    uint8_t layer = 0;
 
     // Visibility toggle
     bool visible = true;

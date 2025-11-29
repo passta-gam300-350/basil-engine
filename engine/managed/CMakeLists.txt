@@ -13,17 +13,18 @@ file(GLOB_RECURSE MANAGED_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/*.cs
 )
 
-set(DOTNET_BUILDCONFIG Debug)
+set(DOTNET_BUILDCONFIG RELEASE)
 
 execute_process(
     COMMAND ${TOOL_DOTNET} msbuild ${CSPROJPath}
-    -nologo -getProperty:TargetPath
-    -p:Configuration=${DOTNET_BUILDCONFIG}
+            /t:PrintTargetPath           # <-- call our print target
+            /p:Configuration=${DOTNET_BUILDCONFIG}
+            /nologo
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE DOTNET_OUTPUT
-
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
 
 message(STATUS "Managed output: ${DOTNET_OUTPUT}")
 

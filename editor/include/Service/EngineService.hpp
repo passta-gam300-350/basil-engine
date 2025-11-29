@@ -150,6 +150,20 @@ public:
 		float m_pickingViewportHeight{ 0.0f };
 		std::function<void(bool, uint32_t)> m_pickingCallback;
 
+		// Editor camera snapshot (thread-safe: protected by m_mtx)
+		// Main thread (EditorMain) writes, Engine thread (RenderSystem) reads
+		struct EditorCameraSnapshot {
+			glm::vec3 position{ 0.0f, 5.0f, 10.0f };
+			glm::vec3 front{ 0.0f, 0.0f, -1.0f };
+			glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+			glm::vec3 right{ 1.0f, 0.0f, 0.0f };
+			float fov{ 45.0f };
+			float aspectRatio{ 16.0f / 9.0f };
+			float nearPlane{ 0.1f };
+			float farPlane{ 1000.0f };
+			bool isPerspective{ true };
+		} m_editorCameraSnapshot;
+
 		//make this shared ptr and called it a day. dont waste time on this
 		std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> m_loaded_scenes_scenegraph_snapshot;
 
@@ -174,7 +188,6 @@ public:
 	void run();
 	void init();
 	void pause();
-	void create_cube();
 
 	void end();
 	void inspect_entity(entity_handle ehdl) { if (m_cont) m_cont->m_snapshot_entity_handle = ehdl; else spdlog::info("engine container is empty."); }
@@ -188,6 +201,10 @@ public:
 	void delete_entity(entity_handle);
 	void add_component(entity_handle, std::uint32_t);
 	void delete_component(entity_handle, std::uint32_t);
+
+
+	void set_on_load();
+	void set_on_unload();
 	
 	//safe to return reference, registration is done during startup with its data determined during compile time and reflection registry is not expected to change, unless reset is called.
 	std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& get_reflectible_component_id_name_list();

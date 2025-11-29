@@ -167,8 +167,11 @@ bool GraphicsTestDriver::Initialize()
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
-    
-    
+
+    // Load HUD test textures (once during initialization)
+    m_PauseMenuTexture = TextureLoader::TextureFromFile("PauseMenu.png", "assets/hud/Pause", false);
+    m_ResumeButtonTexture = TextureLoader::TextureFromFile("RESUME_NEW.png", "assets/hud/Pause", false);
+    spdlog::info("HUD test textures loaded: pause={}, resume={}", m_PauseMenuTexture, m_ResumeButtonTexture);
 
     // Print system info
     PrintSystemInfo();

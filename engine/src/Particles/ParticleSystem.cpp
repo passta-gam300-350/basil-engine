@@ -24,7 +24,7 @@ Technology is prohibited.
 #include "Ecs/ecs.h"
 #include "Manager/ResourceSystem.hpp"
 #include "Resources/Texture.h"
-
+#include "Profiler/profiler.hpp"
 
 void ParticleSystem::Init()
 {
@@ -33,6 +33,7 @@ void ParticleSystem::Init()
 
 void ParticleSystem::Update(ecs::world& world, float dt)
 {
+	PF_SYSTEM("ParticleSystem");
 	if (m_SceneRenderer == nullptr)
 	{
 		return;

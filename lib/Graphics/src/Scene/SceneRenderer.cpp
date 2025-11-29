@@ -157,21 +157,20 @@ void SceneRenderer::InitializeDefaultPipeline()
     mainPipeline->AddPass(hudPass);
     mainPipeline->EnablePass("HUDPass", true);  // Disabled by default, enable when needed
 
-    // 12. Add picking pass (executes when needed, disabled by default)
+    // 11. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();
     mainPipeline->AddPass(pickingPass);
     mainPipeline->EnablePass("PickingPass", false);  // Disabled by default
 
-    // 11. Add editor resolve pass (resolve MSAA editor buffer for ImGui Scene viewport)
-    // 13. Add editor resolve pass (resolve MSAA editor buffer for ImGui)
+    // 12. Add editor resolve pass (resolve MSAA editor buffer for ImGui Scene viewport)
     auto editorResolvePass = std::make_shared<EditorResolvePass>();
     mainPipeline->AddPass(editorResolvePass);
 
-    // 12. Add game resolve pass (resolve MSAA game buffer for ImGui Game viewport - always enabled)
+    // 13. Add game resolve pass (resolve MSAA game buffer for ImGui Game viewport - always enabled)
     auto gameResolvePass = std::make_shared<GameResolvePass>();
     mainPipeline->AddPass(gameResolvePass);
 
-    // 13. Add present pass (executes last)
+    // 14. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 

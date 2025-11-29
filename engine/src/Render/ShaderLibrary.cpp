@@ -54,10 +54,8 @@ bool ShaderLibrary::Initialize() {
     {
         spdlog::warn("ShaderLibrary: Particle Shader not loaded - Particle will be disabled");
     }
-
-    if (!LoadHUDShader())
-    {
-        spdlog::warn("ShaderLibrary: HUD Shader not loaded - HuD will be disabled");
+    if (!LoadHUDShader()) {
+        spdlog::warn("ShaderLibrary: HUD shader not loaded - HUD rendering will be disabled");
     }
 
     if (success) {
@@ -160,6 +158,7 @@ void ShaderLibrary::Clear() {
     m_SkyboxShader.reset();
     m_HDRComputeShader.reset();
     m_ToneMappingShader.reset();
+    m_HUDShader.reset();
     spdlog::info("ShaderLibrary: Cleared all shaders");
 }
 
@@ -320,13 +319,15 @@ bool ShaderLibrary::LoadParticleShader()
     return true;
 }
 
-bool ShaderLibrary::LoadHUDShader()
-{
-    m_HUDShader = Load("hud", "assets/shaders/hud.vert", "assets/shaders/hud.frag");
-    if (!m_HUDShader)
-    {
+bool ShaderLibrary::LoadHUDShader() {
+    m_HUDShader = Load("hud",
+        "assets/shaders/hud.vert",
+        "assets/shaders/hud.frag");
+
+    if (!m_HUDShader) {
         return false;
     }
+
     spdlog::info("ShaderLibrary: HUD shader loaded successfully");
     return true;
 }

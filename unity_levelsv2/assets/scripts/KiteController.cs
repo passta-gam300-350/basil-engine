@@ -50,6 +50,15 @@ public class KiteController : Behavior
             movement.x = moveSpeed;
         }
 
+        if (Input.GetKey(KeyCode.Q))
+        {
+            movement.z += moveSpeed;
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            movement.z -= moveSpeed;
+        }
+
 
         movement.x -= windSpeed;
         rb.velocity = movement;

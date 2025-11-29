@@ -23,6 +23,7 @@ Technology is prohibited.
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
 
 class Shader
 {
@@ -55,4 +56,10 @@ public:
 private:
     // Utility function for checking shader compilation/linking errors
     static void checkCompileErrors(GLuint shader, std::string type);
+
+    // Uniform location cache for performance optimization
+    mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
+
+    // Helper method to get uniform location with caching
+    GLint GetUniformLocation(const std::string& name) const;
 };

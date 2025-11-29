@@ -17,8 +17,10 @@ Technology is prohibited.
 
 #include "Bindings/ManagedCamera.hpp"
 
+#include "Bindings/ManagedScreen.hpp"
 #include "ecs/internal/entity.h"
 #include "Render/Camera.h"
+#include "Input/InputGraphics_Helper.h"
 
 
 int ManagedCamera::GetCameraType(uint64_t handle)
@@ -87,3 +89,39 @@ void ManagedCamera::setFar(uint64_t handle, float farClip)
 	cameraComponent.m_Far = farClip;
 }
 
+void ManagedCamera::ScreenToWorldPoint(uint64_t handle, float x, float y, float depth, float* p_x, float* p_y, float* p_z)
+{
+	ecs::entity target{ handle };
+	auto& cameraComponent = target.get<CameraComponent>();
+	glm::vec2 screenPos = glm::vec2{ x, y };
+	(void)cameraComponent; // parameters unused currently; kept for parity with other methods
+	glm::vec2 screenSize{ static_cast<float>(ManagedScreen::GetWidth()), static_cast<float>(ManagedScreen::GetHeight()) };
+	glm::vec2 offset = CameraSystem::GetCachedViewportOffset();
+	glm::vec2 localPos = screenPos - offset;
+	glm::vec3 world = CameraSystem::GetWorldFromScreen(localPos, screenSize, depth);
+	if (p_x) *p_x = world.x;
+	if (p_y) *p_y = world.y;
+	if (p_z) *p_z = world.z;
+}
+
+void ManagedCamera::ScreenPointToRay(uint64_t handle, float x, float y, float /*depth*/,
+	float* o_x, float* o_y, float* o_z,
+	float* d_x, float* d_y, float* d_z)
+{
+	ecs::entity target{ handle };
+	auto& cameraComponent = target.get<CameraComponent>();
+	(void)cameraComponent;
+	glm::vec2 screenPos{ x, y };
+	glm::vec2 screenSize{ static_cast<float>(ManagedScreen::GetWidth()), static_cast<float>(ManagedScreen::GetHeight()) };
+	glm::vec2 offset = CameraSystem::GetCachedViewportOffset();
+	glm::vec2 localPos = screenPos - offset;
+	glm::vec3 origin{}, dir{};
+	CameraSystem::GetRayFromScreen(localPos, screenSize, origin, dir);
+
+	if (o_x) *o_x = origin.x;
+	if (o_y) *o_y = origin.y;
+	if (o_z) *o_z = origin.z;
+	if (d_x) *d_x = dir.x;
+	if (d_y) *d_y = dir.y;
+	if (d_z) *d_z = dir.z;
+}

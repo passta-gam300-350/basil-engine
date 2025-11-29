@@ -18,6 +18,7 @@ Technology is prohibited.
 #include "Engine.hpp"
 #include <Resources/MaterialPropertyBlock.h>
 #include <spdlog/spdlog.h>
+#include "Profiler/profiler.hpp"
 
 void MaterialOverridesSystem::Init() {
     spdlog::info("MaterialOverridesSystem: Initializing");
@@ -35,6 +36,7 @@ void MaterialOverridesSystem::Init() {
 }
 
 void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
+    PF_SYSTEM("MaterialOverrides System");
     auto& renderSystem = Engine::GetRenderSystem();
 
     // Query all entities with both MeshRendererComponent and MaterialOverridesComponent
