@@ -37,3 +37,16 @@ C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\Basi
 C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\obj\Debug\net48\BasilEng.9239FF00.Up2Date
 C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.dll
 C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.pdb
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\bin\Debug\net48\BasilEngine.dll
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\bin\Debug\net48\BasilEngine.pdb
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\bin\Debug\net48\Engine.Bindings.dll
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\bin\Debug\net48\Engine.Bindings.pdb
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.csproj.AssemblyReference.cache
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.AssemblyInfoInputs.cache
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.AssemblyInfo.cs
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.csproj.CoreCompileInputs.cache
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.sourcelink.json
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEng.9239FF00.Up2Date
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.dll
+C:\Users\Steven\source\repos\academic\gam300\gam300\engine\managed\BasilEngine\obj\Debug\net48\BasilEngine.pdb
