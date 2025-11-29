@@ -312,11 +312,8 @@ void AssetManager::FileIndexingWorkerLoop() {
 				}
 
 				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
-				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio") {
+				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio" || ext_name == ".video") {
 					continue;
-				}
-				if (ext_name == ".mpg") {
-					std::cout << "vidfound\n";
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
 				if (!std::filesystem::exists(desc_name)) {
@@ -340,7 +337,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				bool has_source_file = false;
 
 				// Check common source file extensions
-				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac"};
+				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac", ".mpeg", ".mpg"};
 				for (auto const& src_ext : source_exts) {
 					if (std::filesystem::exists(base_name + src_ext)) {
 						has_source_file = true;

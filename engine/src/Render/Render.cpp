@@ -382,7 +382,7 @@ void RenderSystem::Update(ecs::world& world) {
 
 	// ========== HUD ELEMENT SUBMISSION ==========
 	// Submit HUD elements to renderer (rendered in screen space after 3D scene)
-	bool hasHUDElements = false;
+	bool hasHUDElements = m_SceneRenderer->GetHUDRenderer()->GetElementCount() ? true : false;
 	auto& registry = ResourceRegistry::Instance();
 	for (auto hudEntity : sceneHUDElements) {
 		auto& hud = hudEntity.get<HUDComponent>();

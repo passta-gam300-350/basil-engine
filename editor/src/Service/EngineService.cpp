@@ -228,11 +228,11 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				entt::meta_any dest_any = meta_type.from_void(dest);
 				entt::meta_any src_any = meta_type.from_void(src);
 
-				VideoComponent* dest_vid = static_cast<VideoComponent*>(dest);
-				VideoComponent* src_vid = static_cast<VideoComponent*>(src);
-
 				if (meta_type.info().hash() == entt::type_hash<VideoComponent>::value()) {
+					VideoComponent* dest_vid = static_cast<VideoComponent*>(dest);
+					VideoComponent* src_vid = static_cast<VideoComponent*>(src);
 					dest_vid->fullscreenMode = src_vid->fullscreenMode;
+					dest_vid->backgroundColor = src_vid->backgroundColor;
 				}
 
 				// Assign using meta system (properly handles copy constructors)

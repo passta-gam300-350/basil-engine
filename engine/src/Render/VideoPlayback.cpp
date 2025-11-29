@@ -1,11 +1,15 @@
 #include "Manager/ResourceSystem.hpp"
 #include "Render/VideoComponent.hpp"
 #include "Render/VideoPlayback.hpp"
-#include "Render/Render.h"
 #include "Render/Camera.h"
 #include "Render/ShaderLibrary.hpp"
+#include <Rendering/HUDRenderer.h>
 #include "Engine.hpp"
 #include "Component/MaterialOverridesComponent.hpp"
+#include "System/Audio.hpp"
+
+#include <fmod.h>
+#include <fmod.hpp>
 
 //#include <cstdio>
 #define PL_MPEG_IMPLEMENTATION
@@ -23,9 +27,16 @@ std::unordered_map<std::uint64_t, GeneratedTextureData>& generatedEntityVideoTex
     return textures;
 }
 
+struct RuntimeVideoResourceData{
+    plm_t* m_Ptr;
+    FMOD::Channel* m_Chl;
+    FMOD::Sound* m_Sound;
+    std::binary_semaphore m_StreamSync{1};
+};
+
 struct RuntimeVideoData {
     VideoResourceData m_VidData;
-    plm_t* m_Ptr;
+    std::unique_ptr<RuntimeVideoResourceData> m_VidResource{};
 };
 
 void removeStaleGeneratedTextures() {
@@ -91,121 +102,178 @@ bool videoPlaybackUpdate(VideoComponent& vc, plm_t* ptr) {
     return true;
 }
 
-// Decode the next frame and update the VideoComponent
-std::optional<std::vector<uint8_t>> getNextFrame(VideoComponent& vc, plm_t* ptr) {
-    if (!ptr || (!vc.isPlaying && !vc.loop) || vc.isPaused) {
-        return std::nullopt;
-    }
+// Utility: convert YCbCr frame to RGB and write bottom-to-top (unflipped for OpenGL)
+static inline uint8_t clamp_int(int v) {
+    return v < 0 ? 0 : (v > 255) ? 255 :(uint8_t)v;
+}
 
+void plm_frame_to_rgb_unflipped(plm_frame_t* frame, uint8_t* dest, int stride) {
+    int width = frame->width;
+    int height = frame->height;
+
+    // Start writing at the *last* row in dest
+    for (int y = 0; y < height; ++y) {
+        // Compute source row (normal order)
+        int src_row = y * frame->y.width;
+        // Compute destination row (flipped vertically)
+        int dst_row = (height - 1 - y) * stride;
+
+        for (int x = 0; x < width; ++x) {
+            int Y = frame->y.data[src_row + x];
+            int Cb = frame->cb.data[(y / 2) * frame->cb.width + (x / 2)];
+            int Cr = frame->cr.data[(y / 2) * frame->cr.width + (x / 2)];
+
+            int y_adj = (Y - 16) * 76309 >> 16;
+            int cb_adj = Cb - 128;
+            int cr_adj = Cr - 128;
+
+            int r = y_adj + ((cr_adj * 104597) >> 16);
+            int g = y_adj - ((cb_adj * 25674 + cr_adj * 53278) >> 16);
+            int b = y_adj + ((cb_adj * 132201) >> 16);
+
+            dest[dst_row + x * 3 + 0] = clamp_int(r);
+            dest[dst_row + x * 3 + 1] = clamp_int(g);
+            dest[dst_row + x * 3 + 2] = clamp_int(b);
+        }
+    }
+}
+void LogVideoAudioStreamError(FMOD_RESULT res, std::string_view flavor_text = {}, bool fatal = false) {
+    if (res == FMOD_OK) return;
+    if (fatal) {
+        flavor_text.empty() ? spdlog::error("Video: {}", FMOD_ErrorString(res)) : spdlog::error("Video: @{} {}", flavor_text, FMOD_ErrorString(res));
+        assert(res == FMOD_RESULT::FMOD_OK && "fatal error");
+    }
+    flavor_text.empty() ? spdlog::warn("Video: {}", FMOD_ErrorString(res)) : spdlog::warn("Video: @{} {}", flavor_text, FMOD_ErrorString(res));
+}
+
+// Decode the next frame and update the VideoComponent
+std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
+    plm_t* ptr = rvd.m_VidResource->m_Ptr;
+    if (!ptr || (!vc.isPlaying && !vc.loop) || vc.isPaused) {
+        return std::vector<uint8_t>{};
+    }
+    else if (!rvd.m_VidResource->m_Chl) {
+        LogVideoAudioStreamError(AudioSystem::GetInstance().GetSystem()->playSound(rvd.m_VidResource->m_Sound, 0, false, &rvd.m_VidResource->m_Chl), "PlaySound");
+    }
+ 
     vc.isPlaying = true;
 
     // Advance playback time
-    vc.currentTime += static_cast<float>(Engine::GetDeltaTime()) * vc.playbackSpeed;
+    LogVideoAudioStreamError(rvd.m_VidResource->m_Chl->setFrequency(plm_get_samplerate(ptr) * vc.playbackSpeed), "SetFrequency");
 
-    // Seek decoder to current time (skip frames if needed)
-    plm_seek(ptr, vc.currentTime, /*seek_exact=*/0);
+    unsigned int ms = 0;
+    LogVideoAudioStreamError(rvd.m_VidResource->m_Chl->getPosition(&ms, FMOD_TIMEUNIT_MS), "GetPosition");
+    double audio_time = (ms / 1000.0) * vc.playbackSpeed;
 
-    // Decode frame
-    plm_frame_t* frame = plm_decode_video(ptr);
+    double video_time = vc.currentTime;
+    double drift = audio_time - video_time;
+
+    rvd.m_VidResource->m_StreamSync.acquire();
+    //decode frames
+    plm_frame_t* frame{};
+    if (fabs(drift) > 2.0) {
+        plm_seek(ptr, audio_time, 0);
+        frame = plm_decode_video(ptr);
+        video_time = plm_get_time(ptr);
+    }
+    else {
+        while (video_time < audio_time) {
+            frame = plm_decode_video(ptr);
+            video_time = plm_get_time(ptr);
+            if (!frame) break;
+        }
+    }
+    vc.currentTime = video_time;
+
+    rvd.m_VidResource->m_StreamSync.release();
     if (!frame) {
-        if (vc.loop&&false) {
+        return std::vector<uint8_t>{};
+    }
+    else if (plm_has_ended(ptr)) {
+        if (vc.loop) {
             plm_rewind(ptr);
             vc.currentTime = 0;
-            return getNextFrame(vc, ptr);
+            rvd.m_VidResource->m_Chl->stop();
+            rvd.m_VidResource->m_Chl = nullptr;
+            return getNextFrame(vc, rvd);
         }
-        else {
-            vc.isPlaying = false;
-            vc.currentTime = 0;
-            return std::nullopt;
-        }
+        vc.isPlaying = false;
+        vc.currentTime = 0;
+        return std::vector<uint8_t>{};
     }
 
     vc.width = frame->width;
     vc.height = frame->height;
 
     std::vector<uint8_t> rgb(vc.width * vc.height * 3);
-    plm_frame_to_rgb(frame, rgb.data(), frame->width * 3);
-
-    // Upload YCbCr planes to OpenGL texture
-    // Simplest approach: convert to RGB and upload
-    /*std::vector<uint8_t> rgb(vc.width * vc.height * 3);
-
-    for (int y = 0; y < vc.height; ++y) {
-        for (int x = 0; x < vc.width; ++x) {
-            int Y = frame->y.data[y * frame->width + x];
-            int Cb = frame->cb.data[(y / 2) * (frame->width / 2) + (x / 2)];
-            int Cr = frame->cr.data[(y / 2) * (frame->width / 2) + (x / 2)];
-
-            int R = (int)(Y + 1.402f * (Cr - 128));
-            int G = (int)(Y - 0.344136f * (Cb - 128) - 0.714136f * (Cr - 128));
-            int B = (int)(Y + 1.772f * (Cb - 128));
-
-            // Clamp
-            R = std::max(0, std::min(255, R));
-            G = std::max(0, std::min(255, G));
-            B = std::max(0, std::min(255, B));
-
-            int idx = (y * vc.width + x) * 3;
-            rgb[idx + 0] = (uint8_t)R;
-            rgb[idx + 1] = (uint8_t)G;
-            rgb[idx + 2] = (uint8_t)B;
-        }
-    }*/
-
-    //vc.currentTime += static_cast<float>(Engine::GetDeltaTime()) * vc.playbackSpeed;
-
-    return std::make_optional(rgb);
+    plm_frame_to_rgb_unflipped(frame, rgb.data(), frame->width * 3);
+    
+    return rgb;
 }
 
 void VideoSystem::Update(ecs::world& wrld) {
 	auto view = wrld.filter_entities<VideoComponent>();
-    if (!Engine::GetRenderSystem().GetSceneRenderer()->GetFrameData().mainColorBuffer)
+    if (!Engine::GetRenderSystem().GetSceneRenderer()->GetHUDRenderer())
         return;
-    glm::vec2 maincolorfbdims 
-    { Engine::GetRenderSystem().GetSceneRenderer()->GetFrameData().mainColorBuffer->GetSpecification().Width,
-     Engine::GetRenderSystem().GetSceneRenderer()->GetFrameData().mainColorBuffer->GetSpecification().Height };
-    float fbaspect = /*maincolorfbdims.x / maincolorfbdims.y;*/ CameraSystem::GetCachedViewport().x / CameraSystem::GetCachedViewport().y;
-
+    glm::vec2 screenresdims { Engine::GetRenderSystem().GetSceneRenderer()->GetHUDRenderer()->GetReferenceResolution()};
+    glm::vec2 halfdims{ screenresdims * 0.5f };
+    float fbaspect = CameraSystem::GetCachedViewport().x / CameraSystem::GetCachedViewport().y;
+    
     for (auto& ent : view)
     {
         VideoComponent& vidc = ent.get<VideoComponent>();
         if (vidc.videoGuid.m_guid == rp::null_guid) {
             continue;
         }
-        plm_t* ptr = ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid)->m_Ptr;
+        RuntimeVideoData& ptr = *ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
         auto rgbres{getNextFrame(vidc, ptr)};
-        if (!rgbres)
+        if (rgbres.empty())
             continue;
         auto texguid = getGeneratedTextures(ent, vidc);
         auto& texptr = *ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(texguid);
-        glTexSubImage2D(texptr->target, 0, 0, 0, vidc.width, vidc.height, GL_RGB, GL_UNSIGNED_BYTE, rgbres->data());
+        glTexSubImage2D(texptr->target, 0, 0, 0, vidc.width, vidc.height, GL_RGB, GL_UNSIGNED_BYTE, rgbres.data());
         if (vidc.renderFullscreen) {
             HUDElementData vidhud{};
-            vidhud.anchor = HUDAnchor::TopLeft;
+            vidhud.anchor = HUDAnchor::BottomLeft;
             vidhud.textureID = texptr->id;
-            vidhud.size = maincolorfbdims;
+            vidhud.size = screenresdims;
+            vidhud.layer = vidc.renderLayer; //bump this ahead of bg
+            float aspectdiv{ vidc.aspectratio / fbaspect };
+            HUDElementData bghud{};
+            bghud.anchor = HUDAnchor::BottomLeft;
+            //bghud.textureID = vidc.backgroundTexture.m_guid == rp::null_guid ? 0 : (*ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(texguid))->id;
+            bghud.color = vidc.backgroundColor;
+            bghud.layer = vidc.renderLayer + 2;
+            bghud.size = screenresdims;
             switch (vidc.fullscreenMode) {
             case VideoResizeMode::Stretch: break;
             case VideoResizeMode::Fit:
-                if (vidc.aspectratio > fbaspect) { 
-                    vidhud.size.y = vidhud.size.x / vidc.aspectratio;
+                if (vidc.aspectratio > fbaspect) { //16:9 -> 4:3, reoresent 16:9 in 4:3 in 16:9
+                    vidhud.size.y /= aspectdiv;
                 }
                 else { 
-                    vidhud.size.x = vidhud.size.y * vidc.aspectratio; }
+                    vidhud.size.x *= aspectdiv; }
+                vidhud.anchor = HUDAnchor::Center;
+                vidhud.position = halfdims;
                 break;
             case VideoResizeMode::Fill:
                 if (vidc.aspectratio > fbaspect) { 
-                    vidhud.size.x = vidhud.size.y * vidc.aspectratio; 
+                    vidhud.size.x *= aspectdiv;
                 }
                 else { 
-                    vidhud.size.y = vidhud.size.x / vidc.aspectratio;
+                    vidhud.size.y /= aspectdiv;
                 }
+                vidhud.anchor = HUDAnchor::Center;
+                vidhud.position = halfdims;
                 break;
             case VideoResizeMode::Original:
-                vidhud.size = { vidc.width, vidc.height };
+                vidhud.size = { vidc.width * aspectdiv, vidc.height/ aspectdiv };
                 break;
             }
             Engine::GetRenderSystem().GetSceneRenderer()->SubmitHUDElement(vidhud);
+            if (vidc.bgvisible && vidc.fullscreenMode != VideoResizeMode::Stretch) {
+                //Engine::GetRenderSystem().GetSceneRenderer()->SubmitHUDElement(bghud);
+            }
         }
         else if (ent.all<MeshRendererComponent>()) { //wip
             MeshRendererComponent& meshc = ent.get<MeshRendererComponent>();
@@ -230,21 +298,89 @@ void VideoSystem::FixedUpdate(ecs::world&) {
 //    return ptr;
 //    }
 
+FMOD_RESULT F_CALLBACK pcmsetpos_callback(
+    FMOD_SOUND* sound,
+    int subsound,
+    unsigned int position,
+    FMOD_TIMEUNIT postype
+) {
+    // Non-seekable stream: just accept and do nothing
+    std::cout << "Seeking to position: " << position << " (ignoring as stream is non-seekable)" << std::endl;
+
+    return FMOD_OK;
+}
+
+// Custom PCM read callback for FMOD
+extern "C" FMOD_RESULT F_CALLBACK pcmReadCallback(FMOD_SOUND* sound, void* data, unsigned int datalen) {
+    short* buffer = (short*)data;
+    unsigned int samplesNeeded = datalen / sizeof(short);
+
+    // Retrieve plm instance from userData
+    void* ud;
+    reinterpret_cast<FMOD::Sound*>(sound)->getUserData(&ud);
+    RuntimeVideoResourceData* rsc = (RuntimeVideoResourceData*)ud;
+    plm_t* ptr = rsc->m_Ptr;
+
+    rsc->m_StreamSync.acquire();
+    unsigned int samplesDecoded = 0;
+    while (samplesDecoded < samplesNeeded) {
+        plm_samples_t* samples = plm_decode_audio(ptr);
+        if (!samples || samples->count <= 0) {
+            // End of stream, fill rest with silence
+            for (unsigned int i = samplesDecoded; i < samplesNeeded; i++) {
+                buffer[i] = 0;
+            }
+            break;
+        }
+
+        // Convert float [-1.0, 1.0] to PCM16
+        for (int i = 0; i < samples->count * 2 && samplesDecoded < samplesNeeded; i++) {
+            float s = samples->interleaved[i];
+            if (s > 1.0f) s = 1.0f;
+            if (s < -1.0f) s = -1.0f;
+            buffer[samplesDecoded++] = static_cast<short>(s * 32767.0f);
+        }
+    }
+    rsc->m_StreamSync.release();
+
+    return FMOD_OK;
+}
+
 RuntimeVideoData LoadVideoData(const char* data) {
     RuntimeVideoData runtime_vd{};
     runtime_vd.m_VidData = rp::serialization::serializer<"bin">::deserialize<VideoResourceData>(
         reinterpret_cast<const std::byte*>(data)
     );
-    runtime_vd.m_Ptr = plm_create_with_memory(reinterpret_cast<std::uint8_t*>(runtime_vd.m_VidData.m_VidData.Raw()), runtime_vd.m_VidData.m_VidData.Size(), FALSE);
-    plm_set_audio_enabled(runtime_vd.m_Ptr, TRUE);
-    plm_set_video_enabled(runtime_vd.m_Ptr, TRUE);
+    runtime_vd.m_VidResource = std::make_unique<RuntimeVideoResourceData>();
+    runtime_vd.m_VidResource->m_Ptr = plm_create_with_memory(reinterpret_cast<std::uint8_t*>(runtime_vd.m_VidData.m_VidData.Raw()), runtime_vd.m_VidData.m_VidData.Size(), FALSE);
+    plm_set_audio_enabled(runtime_vd.m_VidResource->m_Ptr, TRUE);
+    plm_set_video_enabled(runtime_vd.m_VidResource->m_Ptr, TRUE);
+
+    FMOD_CREATESOUNDEXINFO exinfo = { 0 };
+    exinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
+    exinfo.numchannels = 2;
+    exinfo.defaultfrequency = plm_get_samplerate(runtime_vd.m_VidResource->m_Ptr);
+    exinfo.length = static_cast<uint32_t>(std::ceil(exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * plm_get_duration(runtime_vd.m_VidResource->m_Ptr)));
+    exinfo.format = FMOD_SOUND_FORMAT_PCM16;
+    exinfo.decodebuffersize = 8192;
+    exinfo.userdata = runtime_vd.m_VidResource.get();
+    exinfo.pcmreadcallback = pcmReadCallback;
+    exinfo.pcmsetposcallback = pcmsetpos_callback;
+
+    assert(AudioSystem::GetInstance().GetSystem()->createSound(0, FMOD_OPENUSER | FMOD_CREATESTREAM, &exinfo, &runtime_vd.m_VidResource->m_Sound) == FMOD_RESULT::FMOD_OK);
+
     return runtime_vd;
     }
 
 REGISTER_RESOURCE_TYPE_ALIASE(RuntimeVideoData, video,
     LoadVideoData,
     [](RuntimeVideoData& rvd) {
-        if (rvd.m_Ptr) {
-            plm_destroy(rvd.m_Ptr);
+        if (!rvd.m_VidResource)
+            return;
+        if (rvd.m_VidResource->m_Ptr) {
+            plm_destroy(rvd.m_VidResource->m_Ptr);
+        }
+        if (rvd.m_VidResource->m_Sound) {
+            rvd.m_VidResource->m_Sound->release();
         }
     })

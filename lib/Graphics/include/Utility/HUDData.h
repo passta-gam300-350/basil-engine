@@ -52,7 +52,7 @@ struct HUDElementData {
     // Texture to display (nullptr = colored quad)
     uint32_t textureID = 0;
 
-    // Position in screen space (pixels from top-left corner of viewport)
+    // Position in screen space (pixels from bottom-left corner of viewport)
     glm::vec2 position = glm::vec2(0.0f);
 
     // Size in pixels

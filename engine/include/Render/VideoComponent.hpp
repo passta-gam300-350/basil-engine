@@ -19,6 +19,7 @@ Technology is prohibited.
 
 #include "ecs/internal/reflection.h"
 #include <native/video.h>
+#include "Render/Render.h"
 
 // Forward declare video resource type for ResourceRegistry
 // This will be defined when your teammate implements the video resource compiler
@@ -59,7 +60,10 @@ enum class VideoResizeMode {
     // Rendering settings
     bool renderFullscreen = true;   ///< Render fullscreen (true) or in-world (false - future feature)
     VideoResizeMode fullscreenMode;
-    uint32_t renderLayer = 100;     ///< High render layer to draw on top
+    uint8_t renderLayer = 5;     ///< High render layer to draw on top
+    rp::BasicIndexedGuid backgroundTexture{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };  ///< GUID of the texture asset (0 = solid color quad)
+    glm::vec4 backgroundColor = glm::vec4(1.0f);///< Tint color (multiplied with texture) or solid color
+    bool bgvisible = true;                ///< Visibility toggle
 
     // GPU resources (runtime only, managed by VideoSystem)
     unsigned int width = 0;         ///< Video width in pixels
@@ -92,8 +96,12 @@ enum class VideoResizeMode {
             playbackSpeed = other.playbackSpeed;
             renderFullscreen = other.renderFullscreen;
             renderLayer = other.renderLayer;
+            fullscreenMode = other.fullscreenMode;
+            backgroundTexture = other.backgroundTexture;
+            backgroundColor = other.backgroundColor;
+            bgvisible = other.bgvisible;
             // Don't copy runtime state
-            isPlaying = false;
+            //isPlaying = false;
             isPaused = false;
             currentTime = 0.0f;
             duration = 0.0f;
@@ -116,5 +124,8 @@ MemberRegistrationV<&VideoComponent::loop, "Loop">,
 MemberRegistrationV<&VideoComponent::playbackSpeed, "Playback Speed">,
 MemberRegistrationV<&VideoComponent::renderFullscreen, "Render Fullscreen">,
 MemberRegistrationV<&VideoComponent::fullscreenMode, "Render Fullscreen Mode">,
+MemberRegistrationV<&VideoComponent::backgroundTexture, "Background Texture">,
+MemberRegistrationV<&VideoComponent::backgroundColor, "Background Color">,
+MemberRegistrationV<&VideoComponent::bgvisible, "Background Visible">,
 MemberRegistrationV<&VideoComponent::renderLayer, "Render Layer">
 RegisterReflectionTypeEnd
