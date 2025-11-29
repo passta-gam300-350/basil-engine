@@ -119,12 +119,12 @@ void EditorMain::Render_SceneManifest()
 			auto& Engine = Engine::Instance();
 
 			std::vector<std::string> sceneOrder(sceneManifests.size());
-
+			std::string basePath = std::string{ Engine.getWorkingDir() } + "/";
 			for (const auto& manifest : sceneManifests)
 			{
 				if (manifest.index >= 0 && manifest.index < static_cast<int>(sceneOrder.size()))
 				{
-					sceneOrder[manifest.index] = manifest.path;
+					sceneOrder[manifest.index] = std::filesystem::relative(manifest.path, basePath).string();
 				}
 			}
 			if (sceneOrder.empty()) return;

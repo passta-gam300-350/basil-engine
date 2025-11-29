@@ -284,13 +284,13 @@ void SceneRegistry::ReadManifest(std::string path)
 
 
 
-		std::filesystem::path{ scene_path };
+		//std::filesystem::path fp{ std::string{Engine::getWorkingDir()} + "/" + scene_path };
 
-		std::string relative = std::filesystem::relative(scene_path, Engine::getWorkingDir()).string();
+		//std::string relative = std::filesystem::relative(scene_path, Engine::getWorkingDir()).string();
 
 		//std::getline(manifest_file, scene_path, '\0'); // Read until null terminator
 		if (index >= 0 && static_cast<size_t>(index) < m_scene_order.size()) {
-			m_scene_order[index] = relative;
+			m_scene_order[index] = scene_path;
 		}
 	}
 	manifest_file.close();
