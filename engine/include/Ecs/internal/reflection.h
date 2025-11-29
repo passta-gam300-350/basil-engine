@@ -630,6 +630,17 @@ void RegisterEnum(auto& factory) {
 	factory.template func<[](std::uint32_t val) -> const std::string_view {return rp::reflection::map_enum_name<T>(static_cast<T>(val)); }, entt::as_is_t> ("to_enum_name"_tn);
 }
 
+template <typename T>
+struct member_pointer_traits;
+
+// Specialization for data members
+template <typename Class, typename Member>
+struct member_pointer_traits<Member Class::*> {
+	using member_type = Member;
+	using class_type = Class;
+};
+
+
 template<typename T>
 void RegisterDataMember(auto& factory) {
 	if constexpr (std::is_base_of_v<InterfaceRegistrationBasic, T>) {
@@ -637,12 +648,12 @@ void RegisterDataMember(auto& factory) {
 		//implement next time for enum registration
 	}
 	else {
-		factory.template data<T::ptr, entt::as_ref_t>(T::hash); 
+		factory.template data<T::ptr, entt::as_ref_t>(T::hash);
+		/*using underlying_type = typename member_pointer_traits<T::ptr>::member_type;
+		if constexpr (std::is_enum_v<underlying_type>) {
+			RegisterEnum<underlying_type>(entt::meta_factory<underlying_type>());
+		}*/
 	}
-	/*using underlying_type = decltype(T::ptr);
-	if constexpr (std::is_enum_v<underlying_type>) {
-		RegisterEnum<underlying_type>(entt::meta_factory<underlying_type>());
-	}*/
 }
 
 
@@ -681,6 +692,11 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 		} });
 }
 
+#define RegisterReflectionTypeEnum(TYPE, TYPENAME)	\
+namespace {											\
+	inline int TYPE##_reflection_register = []() {	\
+		RegisterReflectionComponent<TYPE>(TYPENAME);\
+		return 1;}();}	
 #define RegisterReflectionTypeBegin(TYPE, TYPENAME) \
 namespace {											\
 	inline int TYPE##_reflection_register = []() {	\

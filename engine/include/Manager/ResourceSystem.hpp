@@ -1,6 +1,12 @@
 #ifndef ENGINE_RESOURCE_SYSTEM_HPP
 #define ENGINE_RESOURCE_SYSTEM_HPP
 
+#define WIN32_LEAN_AND_MEAN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
 #include <memory>
 #include <jobsystem.hpp>
 #include <hashtable.hpp>
@@ -15,7 +21,6 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
-#include <windows.h>
 
 // Renamed from Handle to ResourceHandle to avoid conflict with Windows HANDLE
 struct ResourceHandle {

@@ -155,7 +155,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 10. Add HUD rendering pass (renders on top of final tone-mapped image)
     auto hudPass = std::make_shared<HUDRenderPass>();
     mainPipeline->AddPass(hudPass);
-    mainPipeline->EnablePass("HUDPass", false);  // Disabled by default, enable when needed
+    mainPipeline->EnablePass("HUDPass", true);  // Disabled by default, enable when needed
 
     // 12. Add picking pass (executes when needed, disabled by default)
     auto pickingPass = std::make_shared<PickingRenderPass>();

@@ -19,6 +19,7 @@
 #include "Resources/Texture.h"
 #include <array>
 #include <glad/glad.h>
+#include "Render/VideoPlayback.hpp"
 #include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
@@ -166,6 +167,7 @@ void Engine::CoreUpdate() {
 
 	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
 	Engine::SyncActiveSceneRenderSettings();
+	VideoSystem().Update(instance.m_World);
 
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);

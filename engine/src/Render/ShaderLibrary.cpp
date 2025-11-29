@@ -54,6 +54,12 @@ bool ShaderLibrary::Initialize() {
     {
         spdlog::warn("ShaderLibrary: Particle Shader not loaded - Particle will be disabled");
     }
+
+    if (!LoadHUDShader())
+    {
+        spdlog::warn("ShaderLibrary: HUD Shader not loaded - HuD will be disabled");
+    }
+
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
     } else {
@@ -311,5 +317,16 @@ bool ShaderLibrary::LoadParticleShader()
         return false;
     }
     spdlog::info("ShaderLibrary: Particle shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadHUDShader()
+{
+    m_HUDShader = Load("hud", "assets/shaders/hud.vert", "assets/shaders/hud.frag");
+    if (!m_HUDShader)
+    {
+        return false;
+    }
+    spdlog::info("ShaderLibrary: HUD shader loaded successfully");
     return true;
 }

@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include "Render/Render.h"
+#include <Render/VideoComponent.hpp>
 #include "System/Audio.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
@@ -186,6 +187,13 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				// Use entt meta assignment for proper copy (handles non-trivial types like unordered_map)
 				entt::meta_any dest_any = meta_type.from_void(dest);
 				entt::meta_any src_any = meta_type.from_void(src);
+
+				VideoComponent* dest_vid = static_cast<VideoComponent*>(dest);
+				VideoComponent* src_vid = static_cast<VideoComponent*>(src);
+
+				if (meta_type.info().hash() == entt::type_hash<VideoComponent>::value()) {
+					dest_vid->fullscreenMode = src_vid->fullscreenMode;
+				}
 
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);

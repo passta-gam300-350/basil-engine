@@ -105,6 +105,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetParticleShader()) {
 		m_SceneRenderer->SetParticleShader(m_ShaderLibrary->GetParticleShader());
 	}
+	if (m_ShaderLibrary->GetHUDShader()) {
+		m_SceneRenderer->SetHUDShader(m_ShaderLibrary->GetHUDShader());
+	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
 	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());

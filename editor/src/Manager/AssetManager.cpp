@@ -7,6 +7,7 @@
 
 #include <importer/importer.hpp>
 #include <descriptors/material.hpp>
+#include <descriptors/descriptors.hpp>
 #include <descriptors/audio.hpp>
 #include <glm/glm.hpp>
 #include "Screens/EditorMain.hpp"
@@ -313,6 +314,9 @@ void AssetManager::FileIndexingWorkerLoop() {
 				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
 				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio") {
 					continue;
+				}
+				if (ext_name == ".mpg") {
+					std::cout << "vidfound\n";
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
 				if (!std::filesystem::exists(desc_name)) {
