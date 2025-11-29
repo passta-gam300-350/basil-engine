@@ -70,9 +70,6 @@ private:
     void UpdateView();
     void UpdateProjection();
 
-    void HandleKeyboardInput(float deltaTime);
-    void HandleMouseInput(float deltaTime);
-
     // Fly mode controls
     void UpdateFlyMode(float deltaTime);
 
