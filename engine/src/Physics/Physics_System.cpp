@@ -248,12 +248,14 @@ void PhysicsSystem::FixedUpdate(ecs::world& world) {
         }
     }
 
-    if (!isActive) return;
     // 1. Sync transforms from ECS to physics (for kinematic bodies)
     {
         PF_SCOPE("SyncIntoJolt");
         SyncTransformsToPhysics(world);
     }
+
+    if (!isActive) return;
+
 
     // 2. Step the physics simulation
     {
@@ -1063,7 +1065,7 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
     if (world.has_all_components_in_entity<BoxCollider>(entity)) {
         auto& box = entity.get<BoxCollider>();
         JPH::Vec3 halfExtents = PhysicsUtils::ToJolt(box.size * 0.5f);
-        JPH::RefConst<JPH::Shape> baseShape = new JPH::BoxShape(halfExtents);
+        JPH::RefConst<JPH::Shape> baseShape = new JPH::BoxShape(halfExtents, 0.0001f);
 
         // Apply center offset if non-zero
         JPH::Vec3 centerOffset = PhysicsUtils::ToJolt(box.center);
