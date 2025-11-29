@@ -609,6 +609,9 @@ public:
     void SetEditorCameraSnapshot(const EditorCameraSnapshot& snapshot) {
         m_editorCameraSnapshot = snapshot;
     }
+    EditorCameraSnapshot GetEditorCameraSnapshot() const {
+        return m_editorCameraSnapshot;
+    }
 
 private:
     EditorCameraSnapshot m_editorCameraSnapshot;

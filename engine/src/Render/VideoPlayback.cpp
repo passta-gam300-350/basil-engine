@@ -164,7 +164,7 @@ void VideoSystem::Update(ecs::world& wrld) {
     glm::vec2 maincolorfbdims 
     { Engine::GetRenderSystem().GetSceneRenderer()->GetFrameData().mainColorBuffer->GetSpecification().Width,
      Engine::GetRenderSystem().GetSceneRenderer()->GetFrameData().mainColorBuffer->GetSpecification().Height };
-    float fbaspect = maincolorfbdims.x / maincolorfbdims.y;
+    float fbaspect = /*maincolorfbdims.x / maincolorfbdims.y;*/ CameraSystem::GetCachedViewport().x / CameraSystem::GetCachedViewport().y;
 
     for (auto& ent : view)
     {
