@@ -1045,12 +1045,18 @@
 "cardboard_open.obj":
   "m_guid": "98e467b7b89871731e2713d6ddc"
   "m_typeindex": "4838001395392124604"
+"ceilingFan1_animation":
+  "m_guid": "716a9de75e9b5cc4cf3346c689f"
+  "m_typeindex": "10466365863016233885"
 "ceilingfan.obj":
   "m_guid": "98e46817f8fa0aa495a51c2a535"
   "m_typeindex": "4838001395392124604"
 "ceilingfan_Holder":
   "m_guid": "998681971d3b68c3e7a002281fe"
   "m_typeindex": "175488002581160416"
+"ceilingfan_anim.gltf":
+  "m_guid": "71257d7781c95d84db92404a56a"
+  "m_typeindex": "4838001395392124604"
 "chair_top":
   "m_guid": "9987cdf71459d97703d4b1bcd92"
   "m_typeindex": "175488002581160416"

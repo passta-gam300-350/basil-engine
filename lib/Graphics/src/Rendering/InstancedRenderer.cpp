@@ -553,10 +553,12 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
 
     for (size_t i = 0; i < renderables.size(); ++i)
     {
-        // Hash transform matrix (sum diagonal + translation)
+        // Hash transform matrix (all 16 elements for rotation-sensitive detection)
         const glm::mat4& t = renderables[i].transform;
-        float currentHash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
-                           t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+        float currentHash = t[0][0] + t[0][1] + t[0][2] + t[0][3] +
+                           t[1][0] + t[1][1] + t[1][2] + t[1][3] +
+                           t[2][0] + t[2][1] + t[2][2] + t[2][3] +
+                           t[3][0] + t[3][1] + t[3][2] + t[3][3];
         if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
         {
             UpdateAllTrackingData(renderables);
@@ -616,12 +618,12 @@ void InstancedRenderer::UpdateTransformHashes(const std::vector<RenderableData>&
     m_LastTransformHashes.reserve(renderables.size());
     for (const auto& r : renderables)
     {
-        // Hash transform matrix (sum diagonal + translation)
-        // GLM uses column-major: t[col][row]
-        // Translation is in column 3: t[3][0], t[3][1], t[3][2]
+        // Hash transform matrix (all 16 elements for rotation-sensitive detection)
         const glm::mat4& t = r.transform;
-        float hash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +  // Diagonal (scale + perspective)
-                    t[3][0] + t[3][1] + t[3][2];              // Translation (column 3)
+        float hash = t[0][0] + t[0][1] + t[0][2] + t[0][3] +
+                    t[1][0] + t[1][1] + t[1][2] + t[1][3] +
+                    t[2][0] + t[2][1] + t[2][2] + t[2][3] +
+                    t[3][0] + t[3][1] + t[3][2] + t[3][3];
         m_LastTransformHashes.push_back(hash);
     }
 }
@@ -715,9 +717,12 @@ void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>&
     m_LastTransformHashes.reserve(renderables.size());
     for (const auto& r : renderables)
     {
+        // Hash transform matrix (all 16 elements for rotation-sensitive detection)
         const glm::mat4& t = r.transform;
-        float hash = t[0][0] + t[1][1] + t[2][2] + t[3][3] +
-                    t[3][0] + t[3][1] + t[3][2];
+        float hash = t[0][0] + t[0][1] + t[0][2] + t[0][3] +
+                    t[1][0] + t[1][1] + t[1][2] + t[1][3] +
+                    t[2][0] + t[2][1] + t[2][2] + t[2][3] +
+                    t[3][0] + t[3][1] + t[3][2] + t[3][3];
         m_LastTransformHashes.push_back(hash);
     }
 
