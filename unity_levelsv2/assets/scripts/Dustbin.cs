@@ -9,7 +9,8 @@ public class Dustbin : Behavior
     public float tossDistance = .9f;
     public int thrashRemaining = 3;
     private GameObject player;
-
+    private GameObject[] garbage;
+    private System.Random random = new System.Random();
 
     
 
@@ -19,7 +20,16 @@ public class Dustbin : Behavior
     public void Init()
     {
         player = GameObject.Find("PlayerGroup");
-
+        garbage = new GameObject[3];
+        for (int i = 0; i < garbage.Length; i++)
+        {
+            string objectName = "garbage_bin_" + (i + 1);
+            garbage[i] = GameObject.Find(objectName);
+            if (garbage[i] == null)
+            {
+                Logger.Warn("Cannot find game object: " + objectName);
+            }
+        }
     }
     public void Update()
     {
@@ -34,8 +44,8 @@ public class Dustbin : Behavior
                 {
                     Logger.Log("Tossing trash!");
                     GameManager.instance.ShowFree();
+                    PlayGarbageSound();
                     thrashRemaining--;
-
 
                     if (thrashRemaining == 0)
                     {
@@ -47,6 +57,22 @@ public class Dustbin : Behavior
            
         }
 
+    }
+
+    private void PlayGarbageSound()
+    {
+        if (garbage == null || garbage.Length == 0)
+            return;
+            
+        int randomIndex = random.Next(0, garbage.Length);
+        if (garbage[randomIndex] != null)
+        {
+            Audio audio = garbage[randomIndex].transform.GetComponent<Audio>();
+            if (audio != null)
+            {
+                audio.Play();
+            }
+        }
     }
 
     public void FixedUpdate()

@@ -24,6 +24,80 @@ render_settings:
       - 00
       - 00
 entities:
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -19
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 60
+      m_AspectRatio: 1.914469
+      m_Near: 0.100000001
+      m_Far: 10000
+      m_Up:
+        x: 0
+        y: 0.945518553
+        z: -0.32556814
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0.32556814
+        z: 0.945518553
+      m_Yaw: -90
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 66
+    entity name:
+      name: kite_hit4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd7479a0b33693485c8d229c
+        type: 17099568057112876377
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -126,9 +200,25 @@ entities:
         y: 0
         z: 0
   - Scene ID:
-      Scene ID: 66
+      Scene ID: 1
+    LightComponent:
+      Type: 0
+      Color:
+        x: 0.950177908
+        y: 0.608726978
+        z: 0.182596445
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: -0.200000003
+        y: -1.94000006
+        z: 2.00999999
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
     entity name:
-      name: kite_hit4
+      name: Light
     TransformComponent:
       m_Scale:
         x: 1
@@ -136,69 +226,12 @@ entities:
         z: 1
       m_Rotate:
         x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 39dfd7479a0b33693485c8d229c
-        type: 17099568057112876377
-      volume: 0.400000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
-  - Scene ID:
-      Scene ID: 2
-    entity name:
-      name: Camera
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 0.99999994
-        z: 0.99999994
-      m_Rotate:
-        x: -19
         y: -0
         z: 0
       m_Trans:
         x: 0
-        y: 1.18654835
-        z: -6.32290268
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 60
-      m_AspectRatio: 1.914469
-      m_Near: 0.100000001
-      m_Far: 10000
-      m_Up:
-        x: 0
-        y: 0.945518553
-        z: -0.32556814
-      m_Right:
-        x: 1
-        y: 0
+        y: 16.6807728
         z: 0
-      m_Front:
-        x: 0
-        y: 0.32556814
-        z: 0.945518553
-      m_Yaw: -90
-      m_Pitch: 0
   - Scene ID:
       Scene ID: 65
     entity name:
@@ -234,39 +267,6 @@ entities:
       velocity:
         x: 0
         y: 0
-        z: 0
-  - Scene ID:
-      Scene ID: 1
-    LightComponent:
-      Type: 0
-      Color:
-        x: 0.950177908
-        y: 0.608726978
-        z: 0.182596445
-      Enabled: true
-      Cast Shadows: true
-      Intensity: 1
-      "[Dir/Spot] Direction":
-        x: -0.200000003
-        y: -1.94000006
-        z: 2.00999999
-      "[Point/Spot] Range": 10
-      "[Spot] Inner Cone Angle": 30
-      "[Spot] Outer Cone Angle": 45
-    entity name:
-      name: Light
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 16.6807728
         z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"

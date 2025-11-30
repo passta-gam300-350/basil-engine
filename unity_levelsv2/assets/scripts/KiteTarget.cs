@@ -15,10 +15,10 @@ public class KiteTarget : Behavior
     private GameObject[] kiteHit;
     private System.Random random = new System.Random();
 
-    public float minX = -10f;
-    public float maxX = 10f;
+    public float minX = -21f;
+    public float maxX = 21f;
     public float minY = 0f;
-    public float maxY = 10f;
+    public float maxY = 22f;
 
     // persistent velocity for bouncing
     private Vector3 movement;
