@@ -237,6 +237,9 @@ void EditorMain::init()
 	// Set maximized
 	glfwMaximizeWindow(window);
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
+	m_AssetManager->InitWorkerLoop();
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	// Register custom audio inspector with import settings
 	{

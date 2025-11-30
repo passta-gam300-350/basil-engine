@@ -20,8 +20,8 @@ struct AssetManager {
 	std::string m_RootPath;
 	std::string m_CurrentPath;
 	std::string m_ImportedAssetPath;
-	std::thread m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 	std::mutex m_DescriptorListMtx;
+	std::unique_ptr<std::thread> m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 
 	std::unique_ptr<rp::DescriptorWrapper> m_InspectedDescriptor;
 	std::string m_InspectedDescriptorPath;
@@ -40,9 +40,12 @@ struct AssetManager {
 	AssetManager(AssetManager const&) = default;
 	~AssetManager() {
 		m_ShouldClose = true;
-		m_IndexingWorker.join();
+		if (m_IndexingWorker)
+			m_IndexingWorker->join();
 		ExportAssetList();
 	}
+
+	void InitWorkerLoop();
 		
 	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);
 	std::string ResolveAssetName(rp::BasicIndexedGuid);

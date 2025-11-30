@@ -94,7 +94,7 @@ std::vector<std::string> AssetManager::GetSubDirectories() {
 }
 
 AssetManager::AssetManager(std::string const& root_dir, std::string const& import_dir)
-	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_IndexingWorker{ &AssetManager::FileIndexingWorkerLoop, std::ref(*this) } {
+	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_DescriptorListMtx{}, m_IndexingWorker {} {
 	m_LastNotificationTime = std::chrono::steady_clock::now();
 	m_NeedsRescan = false;
 	if (!std::filesystem::exists(m_ImportedAssetPath)) {
@@ -104,6 +104,11 @@ AssetManager::AssetManager(std::string const& root_dir, std::string const& impor
 		std::filesystem::create_directories(m_RootPath);
 	}
 	hideFolder(string_to_wstring(m_ImportedAssetPath));
+}
+
+void AssetManager::InitWorkerLoop()
+{
+	m_IndexingWorker = std::make_unique<std::thread>(&AssetManager::FileIndexingWorkerLoop, std::ref(*this));
 }
 
 rp::BasicIndexedGuid AssetManager::ResolveAssetGuid(std::string const& name) {
