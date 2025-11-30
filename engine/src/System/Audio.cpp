@@ -473,6 +473,14 @@ bool AudioComponent::Stop() {
     return false;
 }
 
+void AudioComponent::SetLoop(bool loop) {
+    isLooping = loop;
+    FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
+    if (channel) {
+        FMOD_ErrorCheck(channel->setLoopCount(loop ? -1 : 0));
+    }
+}
+
 void AudioComponent::SetVolume(float vol) {
     volume = vol;
     FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
