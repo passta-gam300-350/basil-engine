@@ -1,0 +1,14 @@
+base:
+  m_guid: 347fbb9793bb29b34951e050c00
+  m_importer: .audio
+  m_source: audio\sfx_kite_hit_1.ogg
+  m_name: sfx_kite_hit_1.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

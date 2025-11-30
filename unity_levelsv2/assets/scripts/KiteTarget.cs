@@ -12,6 +12,8 @@ public class KiteTarget : Behavior
     public float collectDist = 5.5f;
     private GameObject player;
     private KiteController kiteController;
+    private GameObject[] kiteHit;
+    private System.Random random = new System.Random();
 
     public float minX = -10f;
     public float maxX = 10f;
@@ -23,9 +25,16 @@ public class KiteTarget : Behavior
 
     public void Init()
     {
-        
-        // kites' initial velocity
-        movement = new Vector3(-windSpeed, 0f, 0f);
+        kiteHit = new GameObject[4];
+        for (int i = 0; i < 4; i++) 
+        {
+            string objectName = "kite_hit" + (i + 1);
+            kiteHit[i] = GameObject.Find(objectName);
+            if (kiteHit[i] == null)
+            {
+                Logger.Warn("Cannot find game object: " + objectName);
+            }
+        }
     }
 
     public void Update()
@@ -76,8 +85,8 @@ public class KiteTarget : Behavior
             movement.y = -Math.Abs(movement.y);  // bounce down
         }
 
-        // apply new pos and velocity
-        transform.position = pos;
+        movement.x -= windSpeed * Time.deltaTime;
+        movement.y -= windSpeed * Time.deltaTime;
         rb.velocity = movement;
 
 
@@ -87,10 +96,13 @@ public class KiteTarget : Behavior
         if (d < collectDist)
         {
             // Collect the kite
-
+            int randomIndex = random.Next(0, kiteHit.Length);
+            if (kiteHit[randomIndex] != null)
+            {
+                kiteHit[randomIndex].transform.GetComponent<Audio>().Play();
+            }
             GameObject.Destroy(gameObject);
             kiteController.totalKite -= 1;
-
         }   
         Logger.Log(d);
     }
