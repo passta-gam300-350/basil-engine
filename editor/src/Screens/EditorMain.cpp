@@ -50,6 +50,8 @@ Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
 #include "Bindings/MANAGED_CONSOLE.hpp"
+#include "Bindings/ManagedInput.hpp"
+#include "Bindings/ManagedCamera.hpp"
 #include "rsc-core/rp.hpp"
 #include <descriptors/audio.hpp>
 #include <serialization/serializer.h>
@@ -603,6 +605,8 @@ void EditorMain::render()
 			Render_AssetBrowser();
 		if (showResources)
 			Render_Resources();
+		if (showSceneManifestSetting)
+			Render_SceneManifest();
 		Render_Scene();
 		Render_Game();
 		Render_CameraControls();

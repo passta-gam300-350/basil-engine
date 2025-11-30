@@ -118,6 +118,16 @@ public:
 	{
 		Instance().m_OnWorldUnloadCallback = cb;
 	}
+
+	static void setWorkingDir(const char* path)
+	{
+		Instance().m_WorkingDirectory = path;
+	}
+
+	static std::string_view getWorkingDir()
+	{
+		return Instance().m_WorkingDirectory;
+	}
 };
 
 

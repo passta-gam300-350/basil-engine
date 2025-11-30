@@ -1,0 +1,28 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl Grass_02
+
+# Base color / diffuse map
+map_Kd Grass_02_BaseColor.png
+
+# Normal map
+map_Bump Grass_02_Normal.png
+bump Grass_02_Normal.png
+
+# Metallic map
+map_Ks Grass_02_Metallic.png
+
+# Roughness map
+map_Ns Grass_02_Roughness.png
+
+# Emissive map
+map_Ke Grass_02_Emissive.png
+
+# Height / displacement map
+map_d Grass_02_Height.png
+disp Grass_02_Height.png
+
+kd 0.478431 0.615686 0.105882
+illum 1
+

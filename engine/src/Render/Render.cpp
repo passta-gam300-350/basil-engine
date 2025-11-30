@@ -210,6 +210,9 @@ void RenderSystem::Update(ecs::world& world) {
 	auto cameraQuery = world.query_components<CameraComponent, TransformComponent>();
 	for (auto [cam, trans] : cameraQuery) {
 		if (cam.m_IsActive) {
+
+
+
 			gameCameraPos = trans.m_Translation;
 			gameCameraFront = cam.m_Front;
 			gameCameraUp = cam.m_Up;

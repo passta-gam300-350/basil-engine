@@ -1,0 +1,29 @@
+base:
+  m_guid: 556280f74a781ac8527a6c15a30
+  m_importer: .material
+  m_source: ""
+  m_name: m_kite_base
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_kite_base
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 14e4e6c74899c32d2b96a68c3e1
+    u_DiffuseMap: 14e4e337f16b57ca5ddbbac5a92
+    u_EmissiveMap: 14e4e407324bbbb878a1630efa6
+    u_NormalMap: 14e4e61748b84bdc37064fef65b
+    u_HeightMap: 14e4e4c7b04840d0e6ab210aed5
+    u_SpecularMap: 00
+    u_MetallicMap: 14e4e577ce398cbc3af2a1f6338

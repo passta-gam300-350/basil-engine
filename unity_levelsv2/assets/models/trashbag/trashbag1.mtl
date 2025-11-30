@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for trashbag1
+# Generated for GAM300 Graphics Engine
+
+newmtl trashbag1
+
+# Base color / diffuse map
+map_Kd trashbag1_trashbag1_BaseColor.png
+
+# Normal map
+map_Bump trashbag1_trashbag1_Normal.png
+bump trashbag1_trashbag1_Normal.png
+
+# Metallic map
+map_Ks trashbag1_trashbag1_Metallic.png
+
+# Roughness map
+map_Ns trashbag1_trashbag1_Roughness.png
+
+# Emissive map
+map_Ke trashbag1_trashbag1_Emissive.png
+
+# Height / displacement map
+map_d trashbag1_trashbag1_Height.png
+disp trashbag1_trashbag1_Height.png
+
+kd 0.8 0.8 0.8
+illum 1
+

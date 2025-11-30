@@ -12,6 +12,9 @@ namespace BasilEngine.Components
     [NativeHeader("Bindings/ManagedCamera.hpp")]
     [NativeClass("ManagedCamera")]
 
+    /// <summary>
+    /// Camera component that exposes projection and utility methods.
+    /// </summary>
     public class Camera : Component
     {
    
@@ -65,34 +68,58 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedCamera", StaticAccessorType.DoubleColon)]
         public static extern float Internal_GetFarPlane(UInt64 handle);
 
+        /// <summary>
+        /// Projection type used by the camera.
+        /// </summary>
         public enum CameraType
         {
+            /// <summary>
+            /// Orthographic projection.
+            /// </summary>
             ORTHOGRAPHIC = 0,
+            /// <summary>
+            /// Perspective projection.
+            /// </summary>
             PERSPECTIVE = 1
         }
 
+        /// <summary>
+        /// Indicates whether the camera is active (not yet wired).
+        /// </summary>
         public bool active
         {
             get => false;
         }
 
+        /// <summary>
+        /// Projection type of the camera.
+        /// </summary>
         public CameraType type
         {
             get => (CameraType)Internal_GetType(NativeID);
             set => Internal_SetType(NativeID, (int)value);
         }
 
+        /// <summary>
+        /// Field of view in degrees for perspective cameras.
+        /// </summary>
         public float fov
         {
             get => Internal_GetFOV(NativeID);
             set => Internal_SetFOV(NativeID, value);
         }
+        /// <summary>
+        /// Aspect ratio of the camera's projection.
+        /// </summary>
         public float AspectRatio
         {
             get => Internal_GetAspectRatio(NativeID);
             set => Internal_SetAspectRatio(NativeID, value);
         }
 
+        /// <summary>
+        /// Near clipping plane distance.
+        /// </summary>
         public float near
         {
             get => Internal_GetNearPlane(NativeID);
@@ -100,6 +127,9 @@ namespace BasilEngine.Components
 
         }
 
+        /// <summary>
+        /// Far clipping plane distance.
+        /// </summary>
         public float far
         {
             get => Internal_GetFarPlane(NativeID);
@@ -118,6 +148,12 @@ namespace BasilEngine.Components
                                                              out float ox, out float oy, out float oz,
                                                              out float dx, out float dy, out float dz);
 
+        /// <summary>
+        /// Converts a screen point to a world-space position at a given depth.
+        /// </summary>
+        /// <param name="screenPoint">Screen coordinates.</param>
+        /// <param name="depth">Distance from the near plane in world units.</param>
+        /// <returns>Point in world space.</returns>
         public Vector3 ScreenToWorldPoint(Vector2 screenPoint, float depth=0)
         {
             // Treat depth as world-space distance from the near plane (depth=0 => near plane)
@@ -128,6 +164,11 @@ namespace BasilEngine.Components
             return new Vector3(wx, wy, wz);
         }
 
+        /// <summary>
+        /// Creates a world-space ray from a screen position.
+        /// </summary>
+        /// <param name="screenPoint">Screen coordinates.</param>
+        /// <returns>Ray originating from the camera through the screen point.</returns>
         public Ray ScreenPointToRay(Vector2 screenPoint)
         {
             Internal_ScreenPointToRay(NativeID, screenPoint.x, screenPoint.y, 0f,

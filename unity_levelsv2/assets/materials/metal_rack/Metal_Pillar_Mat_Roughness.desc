@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd48b97fd6be4b0ab2773ac5f7
+  m_importer: .texture
+  m_source: materials\metal_rack\Metal_Pillar_Mat_Roughness.png
+  m_name: Metal_Pillar_Mat_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,6 +1,6 @@
 is_global = true
 build_property.RootNamespace = GameAssembly
-build_property.ProjectDir = C:\Users\Steven\source\repos\academic\gam300\gam300\unity_levelsv2\assets\scripts\
+build_property.ProjectDir = M:\gam300\unity_levelsv2\assets\scripts\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false

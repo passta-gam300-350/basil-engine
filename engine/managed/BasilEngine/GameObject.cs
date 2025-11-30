@@ -27,7 +27,32 @@ namespace BasilEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("DeleteGameObject")]
         [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Removes a native game object instance by handle.
+        /// </summary>
+        /// <param name="handle">Handle of the game object to delete.</param>
         public extern static void DeleteGameObjectInternal(UInt64 handle);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetVisible")]
+        [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Sets the visibility flag for the game object.
+        /// </summary>
+        /// <param name="handle">Handle of the game object.</param>
+        /// <param name="visible">True to render the object, false to hide it.</param>
+        public extern static void SetVisibleInternal(UInt64 handle, bool visible);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetVisible")]
+        [StaticAccessor("ManagedGameObjects", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Gets the current visibility state of the game object.
+        /// </summary>
+        /// <param name="handle">Handle of the game object.</param>
+        /// <returns>True if the object is visible.</returns>
+        public extern static bool GetVisibleInternal(UInt64 handle);
+
 
 
 
@@ -35,6 +60,9 @@ namespace BasilEngine
 
         private Transform transformComponent = null;
 
+        /// <summary>
+        /// Cached <see cref="Components.Transform"/> for this game object.
+        /// </summary>
         public Transform transform
         {
             get
@@ -48,6 +76,18 @@ namespace BasilEngine
             }
         }
 
+        /// <summary>
+        /// Controls whether the object is rendered.
+        /// </summary>
+        public bool visibility
+        {
+            get => GetVisibleInternal(NativeID);
+            set => SetVisibleInternal(NativeID, value);
+        }
+
+        /// <summary>
+        /// Indicates whether the object is marked active in the engine.
+        /// </summary>
         public bool activeSelf
         {
             //TODO: Implement activeSelf getter
@@ -55,11 +95,17 @@ namespace BasilEngine
         }
 
         //TODO: Implement activeInHierarchy getter
+        /// <summary>
+        /// Indicates whether the object is active considering its parent hierarchy.
+        /// </summary>
         public bool activeInHierarchy
         {
             get => false;
         }
 
+        /// <summary>
+        /// Indicates whether the object is treated as static by the engine.
+        /// </summary>
         public bool isStatic
         {
             get => false;
@@ -67,6 +113,9 @@ namespace BasilEngine
         }
 
         //TODO: Implement layer getter and setter
+        /// <summary>
+        /// Rendering or collision layer assigned to this object.
+        /// </summary>
         public int layer
         {
             get => 0;
@@ -78,6 +127,10 @@ namespace BasilEngine
 
 
 
+        /// <summary>
+        /// Creates a managed wrapper for an existing native game object.
+        /// </summary>
+        /// <param name="handle">Native handle supplied by the engine.</param>
         public GameObject(UInt64 handle)
         {
             this.NativeID = handle;
@@ -85,6 +138,11 @@ namespace BasilEngine
             transformComponent = new Transform(handle);
         }
 
+        /// <summary>
+        /// Finds a game object by name.
+        /// </summary>
+        /// <param name="name">Name of the game object to locate.</param>
+        /// <returns>A managed <see cref="GameObject"/> wrapper or null if no match is found.</returns>
         public static GameObject Find(string name)
         {
             UInt64 handle = internal_Find(name);
@@ -98,6 +156,10 @@ namespace BasilEngine
 
         }
 
+        /// <summary>
+        /// Destroys a game object instance.
+        /// </summary>
+        /// <param name="obj">Object to delete.</param>
         public static void Destroy(GameObject obj)
         {
             if (obj != null)

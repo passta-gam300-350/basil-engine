@@ -30,12 +30,22 @@ void EngineContainerService::EngineContainer::engine_service() {
 		MonoEntityManager::GetInstance().SetOutputDirectory(managed_dir.string().c_str());
 	}
 
+
+	
+	Engine::Instance().setWorkingDir(working_dir.c_str());
+	
+
+
+
 	//Mono Configuration here
 	
 
 
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
+	Engine::Instance().GetSceneRegistry().SetSceneWorkingDir(asset_dir + "scenes/");
+	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	Engine::Instance().GetSceneRegistry().ReadManifest(manifest_path);
 
 	// Enable HDR pipeline (disabled by default in SceneRenderer)
 	Engine::GetRenderSystem().m_SceneRenderer->ToggleHDRPipeline(true);
@@ -779,6 +789,7 @@ void EngineContainerService::set_on_load()
 		Engine::SetOnLoadCallBack([](ecs::world& w)
 		{
 			BehaviourSystem::Instance().Reload();
+			
 		});
 	});
 }
@@ -789,6 +800,9 @@ void EngineContainerService::set_on_unload()
 	{
 		Engine::SetOnUnloadCallBack([](ecs::world& w)
 		{
+			
+			BehaviourSystem::Instance().firstRun = true;
+			BehaviourSystem::Instance().unloaded = true;
 		});
 	});
 }

@@ -11,6 +11,9 @@ namespace BasilEngine
 {
     [NativeHeader("Bindings/ManagedPhysics.hpp")]
     [NativeClass("ManagedPhysics")]
+    /// <summary>
+    /// Provides access to physics queries exposed by the native engine.
+    /// </summary>
     public class Physics
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -25,6 +28,15 @@ namespace BasilEngine
                                                     out float distance,
                                                     out byte isTrigger);
 
+        /// <summary>
+        /// Casts a ray in the physics world.
+        /// </summary>
+        /// <param name="origin">World-space origin of the ray.</param>
+        /// <param name="direction">Normalized direction to cast along.</param>
+        /// <param name="hit">Information about the hit if one occurred.</param>
+        /// <param name="maxDistance">Maximum distance the ray should travel.</param>
+        /// <param name="ignoreTriggers">True to ignore trigger colliders.</param>
+        /// <returns>True if the ray intersected a collider.</returns>
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit hit, float maxDistance = 1000f, bool ignoreTriggers = true)
         {
             var hasHit = Internal_Raycast(origin.x, origin.y, origin.z,

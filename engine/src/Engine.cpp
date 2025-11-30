@@ -68,6 +68,9 @@ using namespace ecs; //lazy
 void Engine::Init(std::string const& cfg ) {
 
 	Engine::SetState(Info::State::Init);
+	std::string playerDir = std::filesystem::absolute(std::filesystem::path{"."}).string();
+	Engine::setWorkingDir(playerDir.c_str());
+
 
 	Instance().m_Info.m_FrameLogRate = 165;
 
@@ -140,6 +143,9 @@ void Engine::Init(std::string const& cfg ) {
 
 	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
+	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	Instance().GetSceneRegistry().ReadManifest(manifest_path);
+
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	MonoEntityManager::GetInstance().SetPreCompiled(true);
 	MonoEntityManager::GetInstance().initialize();
@@ -179,6 +185,10 @@ void Engine::CoreUpdate() {
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetDeltaTime()));
 	messagingSystem.Update();
+
+
+	instance.m_SceneRegistry->PollRequestSceneChange();
+	
 }
 
 void Engine::Update() {
@@ -197,6 +207,8 @@ void Engine::Update() {
 				Engine::GetWindowInstance().SwapBuffers();
 
 				UpdateDebug();
+
+				
 			}
 		}
 		ReportLastError();					//this is the intended error handler

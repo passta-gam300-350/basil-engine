@@ -134,10 +134,39 @@ std::optional<std::reference_wrapper<Scene>> SceneRegistry::LoadSceneFromPath(st
 		path, sceneGuid.to_hex(), GetActiveScene().value().get().GetRenderSettings().skybox.enabled);
 
 
+	auto scene = GetScene(sceneGuid);
+
+
 	Engine::OnLoad();
 
-	return GetScene(sceneGuid);
+	return scene;
 }
+
+std::optional<std::reference_wrapper<Scene>> SceneRegistry::LoadSceneByIndex(unsigned index)
+{
+	if (index >= m_scene_order.size()) {
+		spdlog::warn("SceneRegistry: Scene index {} out of bounds (max {})", index, m_scene_order.size() - 1);
+		return std::nullopt;
+	}
+
+	std::string const& scene_path = std::string{ Engine::getWorkingDir() } + "/" + m_scene_order[index];
+	return LoadSceneFromPath(scene_path);
+
+}
+
+void SceneRegistry::PollRequestSceneChange()
+{
+	if (scene_change_by_index) {
+		LoadSceneByIndex(requested_index);
+		scene_change_by_index = false;
+	}
+
+	if (scene_change_by_file) {
+		LoadSceneFromPath(requested_file);
+		scene_change_by_file = false;
+	}
+}
+
 
 void SceneRegistry::UnloadScene(rp::Guid scn_guid)
 {
@@ -209,6 +238,74 @@ void SceneRegistry::onDestroySceneComponent(ecs::entity e)
 	}
 }
 
+//void SceneRegistry::AddSceneOrder(rp::Guid resource)
+//{
+//	if (std::find(m_scene_order.begin(), m_scene_order.end(), resource) == m_scene_order.end())
+//	{
+//		m_scene_order.push_back(resource);
+//	}
+//}
+
+void SceneRegistry::GenerateManifest(std::vector<std::string>& scene_order)
+{
+	std::string path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	std::ofstream manifest_file(path, std::ios::out | std::ios::binary);
+	if (!manifest_file) return;
+	int index = 0;
+	unsigned scenecount = static_cast<unsigned>(scene_order.size());
+	manifest_file.write(reinterpret_cast<const char*>(&scenecount), sizeof(unsigned));
+
+	for (const auto& scene_path : scene_order) {
+		manifest_file.write(reinterpret_cast<const char*>(&index), sizeof(int));
+		manifest_file.write(scene_path.c_str(), scene_path.size() + 1); // +1 for null terminator
+		index++;
+	}
+	manifest_file.close();
+
+	spdlog::info("Generated Manifest file: {}", path);
+	ReadManifest(path);
+}
+
+void SceneRegistry::ReadManifest(std::string path)
+{
+	std::ifstream manifest_file(path, std::ios::in | std::ios::binary);
+	if (!manifest_file) return;
+	m_scene_order.clear();
+	unsigned count = 0;
+	manifest_file.read(reinterpret_cast<char*>(&count), sizeof(unsigned));
+
+	m_scene_order.resize(count);
+	for (unsigned i = 0; i < count; ++i) {
+		int index = 0;
+		manifest_file.read(reinterpret_cast<char*>(&index), sizeof(int));
+		std::string scene_path;
+		// read until null terminator
+		std::getline(manifest_file, scene_path, '\0');
+
+
+
+		//std::filesystem::path fp{ std::string{Engine::getWorkingDir()} + "/" + scene_path };
+
+		//std::string relative = std::filesystem::relative(scene_path, Engine::getWorkingDir()).string();
+
+		//std::getline(manifest_file, scene_path, '\0'); // Read until null terminator
+		if (index >= 0 && static_cast<size_t>(index) < m_scene_order.size()) {
+			m_scene_order[index] = scene_path;
+		}
+	}
+	manifest_file.close();
+	spdlog::info("Read Manifest file: {}", path);
+}
+
+void SceneRegistry::GetManifest(std::vector<std::string>& manifest)
+{
+	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	ReadManifest(manifest_path);
+	manifest = m_scene_order;
+
+}
+
+
 REGISTER_RESOURCE_TYPE_ALIASE(std::optional<Scene>, scene, [](const char* data) -> std::optional<Scene> {
 	SceneResourceData scnData = rp::serialization::binary_serializer::deserialize<SceneResourceData>(
 		reinterpret_cast<const std::byte*>(data)
@@ -216,3 +313,4 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::optional<Scene>, scene, [](const char* data) 
 	YAML::Node nd{ YAML::Load(reinterpret_cast<const char*>(scnData.scene_data.Raw())) };
 	return Scene::LoadYAMLNode(nd);
 	}, [](std::optional<Scene>) {})
+

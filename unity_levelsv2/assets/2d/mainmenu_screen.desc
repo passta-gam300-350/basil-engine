@@ -1,0 +1,7 @@
+base:
+  m_guid: 518484793984f8f17f242cc860
+  m_importer: .texture
+  m_source: 2d\mainmenu_screen.jpg
+  m_name: mainmenu_screen.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

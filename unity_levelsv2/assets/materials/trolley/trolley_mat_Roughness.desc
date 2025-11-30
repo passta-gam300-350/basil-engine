@@ -1,0 +1,7 @@
+base:
+  m_guid: a04757093b98f2298f453bb41
+  m_importer: .texture
+  m_source: materials\trolley\trolley_mat_Roughness.png
+  m_name: trolley_mat_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

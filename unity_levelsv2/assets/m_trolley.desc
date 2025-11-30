@@ -1,0 +1,29 @@
+base:
+  m_guid: bfbf07f8abf5272b872c84afa
+  m_importer: .material
+  m_source: ""
+  m_name: m_trolley
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_trolley
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_DiffuseMap: a045079b9a76a654b0330e7ce
+    u_RoughnessMap: a04757093b98f2298f453bb41
+    u_EmissiveMap: a045875e4a87fbfc5f62d4da2
+    u_HeightMap: a0460733eb2245fa9d3e7a7c9
+    u_NormalMap: a046e76f39c6d745672843ac7
+    u_MetallicMap: a046770b7bbe551060612d739
+    u_SpecularMap: 00

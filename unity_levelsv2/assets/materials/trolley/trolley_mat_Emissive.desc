@@ -1,0 +1,7 @@
+base:
+  m_guid: a045875e4a87fbfc5f62d4da2
+  m_importer: .texture
+  m_source: materials\trolley\trolley_mat_Emissive.png
+  m_name: trolley_mat_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

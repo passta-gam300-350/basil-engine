@@ -1,0 +1,7 @@
+base:
+  m_guid: 14e4f077cffa7dabd7358a0bd23
+  m_importer: .texture
+  m_source: materials\kite\rightflag\flap_right_Height.png
+  m_name: flap_right_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

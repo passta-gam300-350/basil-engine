@@ -3,6 +3,7 @@
 #include <mono/metadata/object.h>
 
 #include "Engine.hpp"
+#include "Render/Render.h"
 
 uint64_t ManagedGameObjects::FindByName(MonoString* name)
 {
@@ -27,5 +28,22 @@ void ManagedGameObjects::DeleteGameObject(uint64_t handle)
 	world.remove_entity(ecs::entity{ handle });
 
 }
+
+void ManagedGameObjects::SetVisible(uint64_t handle, mono_bool val)
+{
+	ecs::entity ent{ handle };
+	VisibilityComponent& visibility = ent.get<VisibilityComponent>();
+	visibility.m_IsVisible = (val != 0);
+
+}
+
+bool ManagedGameObjects::GetVisible(uint64_t handle)
+{
+	ecs::entity ent{ handle };
+	VisibilityComponent& visibility = ent.get<VisibilityComponent>();
+	return visibility.m_IsVisible;
+}
+
+
 
 

@@ -18,6 +18,13 @@ Technology is prohibited.
 /******************************************************************************/
 #include "Bindings/ManagedInput.hpp"
 #include "Input/InputManager.h"
+#include <atomic>
+
+namespace {
+	std::atomic<bool> s_MouseOverrideEnabled{ false };
+	std::atomic<float> s_MouseOverrideX{ 0.0f };
+	std::atomic<float> s_MouseOverrideY{ 0.0f };
+}
 
 bool ManagedInput::GetKey(int keycode)
 {
@@ -25,6 +32,11 @@ bool ManagedInput::GetKey(int keycode)
 }
 bool ManagedInput::GetKeyDown(int keycode)
 {
+	if (keycode <= 3)
+	{
+		return GetMouse(keycode);
+	}
+
 	return InputManager::Get_Instance()->Is_KeyPressed(keycode);
 }
 
@@ -36,6 +48,12 @@ bool ManagedInput::GetKeyUp(int keycode)
 
 bool ManagedInput::GetKeyPress(int keycode)
 {
+
+	if (keycode <= 3)
+	{
+		return GetMousePress(keycode);
+	}
+
 	static bool pressed = false;
 	if (InputManager::Get_Instance()->Is_KeyPressed(keycode))
 	{
@@ -55,12 +73,50 @@ bool ManagedInput::GetKeyPress(int keycode)
 
 void ManagedInput::GetMousePosition(float* xp, float* yp)
 {
+	if (s_MouseOverrideEnabled.load())
+	{
+		if (xp) *xp = s_MouseOverrideX.load();
+		if (yp) *yp = s_MouseOverrideY.load();
+		return;
+	}
+
 	double x, y;
 	InputManager::Get_Instance()->Get_MousePosition(x,y);
-	*xp = static_cast<float>(x);
-	*yp = static_cast<float>(y);
+	if (xp) *xp = static_cast<float>(x);
+	if (yp) *yp = static_cast<float>(y);
+}
+
+void ManagedInput::SetMouseOverride(float x, float y, bool enabled)
+{
+	s_MouseOverrideEnabled.store(enabled);
+	if (enabled) {
+		s_MouseOverrideX.store(x);
+		s_MouseOverrideY.store(y);
+	}
 }
 
 
+bool ManagedInput::GetMouse(int mousecode)
+{
+	return InputManager::Get_Instance()->Is_MousePressed(mousecode);
+}
+bool ManagedInput::GetMousePress(int mousecode)
+{
+	static bool pressed = false;
+	if (InputManager::Get_Instance()->Is_MousePressed(mousecode))
+	{
+		if (!pressed)
+		{
+			pressed = true;
+			return true;
+		}
+	}
+	else
+	{
+		pressed = false;
+	}
+
+	return false;
+}
 
 

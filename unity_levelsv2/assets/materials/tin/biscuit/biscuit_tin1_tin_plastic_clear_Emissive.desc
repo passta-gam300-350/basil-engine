@@ -1,0 +1,7 @@
+base:
+  m_guid: 36fd800775bb4a45dfb87c68c46
+  m_importer: .texture
+  m_source: materials\tin\biscuit\biscuit_tin1_tin_plastic_clear_Emissive.png
+  m_name: biscuit_tin1_tin_plastic_clear_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

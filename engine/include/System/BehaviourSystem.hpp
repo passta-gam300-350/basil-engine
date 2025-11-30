@@ -13,6 +13,8 @@ class BehaviourSystem : public ecs::SystemBase
 
 public:
 	bool isActive = false;
+	bool firstRun = true;
+	bool unloaded = false;
 	enum struct CollisionCallback
 	{
 		OnCollisionEnter,

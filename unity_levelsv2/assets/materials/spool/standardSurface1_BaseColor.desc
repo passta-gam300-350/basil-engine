@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd49967d698289ffc23a9a4473
+  m_importer: .texture
+  m_source: materials\spool\standardSurface1_BaseColor.png
+  m_name: standardSurface1_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

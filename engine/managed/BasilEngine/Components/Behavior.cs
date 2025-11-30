@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 namespace BasilEngine.Components
 {
     [Disabled]
+    /// <summary>
+    /// Base type for user-authored behaviour scripts.
+    /// </summary>
     public class Behavior : Component
     {
     }

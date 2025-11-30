@@ -1,5 +1,5 @@
 scene:
-  name: Scene
+  name: shop_house_movement_collectable_collider2
   version: v0.0.1
   slot: 53
   guid: 00

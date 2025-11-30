@@ -15,7 +15,13 @@ namespace BasilEngine.Mathematics
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Vector2
     {
+        /// <summary>
+        /// X component of the vector.
+        /// </summary>
         public float x;
+        /// <summary>
+        /// Y component of the vector.
+        /// </summary>
         public float y;
 
         //Vector2()
@@ -67,36 +73,57 @@ namespace BasilEngine.Mathematics
             this.y = y;
         }
 
+        /// <summary>
+        /// Adds two vectors component-wise.
+        /// </summary>
         public static Vector2 operator +(Vector2 a, Vector2 b)
         {
             return new Vector2(a.x + b.x, a.y + b.y);
         }
 
+        /// <summary>
+        /// Subtracts two vectors component-wise.
+        /// </summary>
         public static Vector2 operator -(Vector2 a, Vector2 b)
         {
             return new Vector2(a.x - b.x, a.y - b.y);
         }
 
+        /// <summary>
+        /// Multiplies a vector by a scalar.
+        /// </summary>
         public static Vector2 operator *(Vector2 a, float b)
         {
             return new Vector2(a.x * b, a.y * b);
         }
 
+        /// <summary>
+        /// Multiplies a vector by a scalar.
+        /// </summary>
         public static Vector2 operator *(float a, Vector2 b)
         {
             return new Vector2(a * b.x, a * b.y);
         }
 
 
+        /// <summary>
+        /// Divides a vector by a scalar.
+        /// </summary>
         public static Vector2 operator /(Vector2 a, float b)
         {
             return new Vector2(a.x / b, a.y / b);
         }
 
+        /// <summary>
+        /// Dot product of two vectors.
+        /// </summary>
         public static float operator *(Vector2 a, Vector2 b)
         {
             return Dot(a, b);
         }
+        /// <summary>
+        /// Dot product between two vectors.
+        /// </summary>
         public static float Dot(Vector2 a, Vector2 b)
         {
             return a.x * b.x + a.y * b.y;
@@ -138,13 +165,29 @@ namespace BasilEngine.Mathematics
 
 
 
-
+        /// <summary>
+        /// Linearly interpolates between two vectors.
+        /// </summary>
+        /// <param name="a">Start vector.</param>
+        /// <param name="b">End vector.</param>
+        /// <param name="t">Interpolation factor.</param>
+        /// <returns>Interpolated vector.</returns>
         public static Vector2 Lerp(Vector2 a, Vector2 b, float t)
         {
             return a + (b - a) * t;
         }
 
 
+        /// <summary>
+        /// Gradually changes a vector towards a desired goal.
+        /// </summary>
+        /// <param name="current">Current value.</param>
+        /// <param name="target">Target value.</param>
+        /// <param name="currentVelocity">Current velocity, modified by the function.</param>
+        /// <param name="smoothTime">Approximate time to reach the target.</param>
+        /// <param name="maxSpeed">Maximum speed allowed.</param>
+        /// <param name="deltaTime">Time since last update.</param>
+        /// <returns>New vector after damping.</returns>
         public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime, float maxSpeed, float deltaTime)
         {
             float num = 0f;

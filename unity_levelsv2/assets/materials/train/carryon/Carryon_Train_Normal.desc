@@ -1,0 +1,7 @@
+base:
+  m_guid: 560ddc8723a9a008a97d82ace01
+  m_importer: .texture
+  m_source: materials\train\carryon\Carryon_Train_Normal.png
+  m_name: Carryon_Train_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -25,6 +25,7 @@ Technology is prohibited.
 #include "Manager/MonoEntityManager.hpp"
 #include "Physics/Physics_Components.h"
 #include "Render/Camera.h"
+#include "System/Audio.hpp"
 #include "System/BehaviourSystem.hpp"
 
 std::unordered_map<uint32_t, ManagedComponents::ComponentChecker> ManagedComponents::componentTypeMap{};
@@ -79,6 +80,30 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		{
 			// Placeholder for Rigidbody component check
 			bool result = entity.any<RigidBodyComponent>(); // Replace with actual Rigidbody component
+			return result;
+		});
+		return id;
+	}
+	if (strName == "Audio")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Audio component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Audio component check
+			bool result = entity.any<AudioComponent>(); // Replace with actual Audio component
+			return result;
+		});
+	}
+
+	if (strName == "Audio")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Rigidbody component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Audio component check
+			bool result = entity.any<AudioComponent>(); // Replace with actual Audio component
 			return result;
 		});
 		return id;

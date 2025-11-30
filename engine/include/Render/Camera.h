@@ -178,7 +178,13 @@ public:
             glm::vec3 up = quat * glm::vec3(0.f, 1.f, 0.f);
             glm::vec3 front = quat * glm::vec3(0.f, 0.f, 1.f);
 
-            // Cache all game camera data for this frame
+			//Update the camera direction vectors in the component
+            camera_comp.m_Front = front;
+            camera_comp.m_Up = up;
+			camera_comp.m_Right = right;
+
+
+        	// Cache all game camera data for this frame
             cache.position = transform_comp.m_Translation;
             cache.front = front;
             cache.up = up;
@@ -189,6 +195,10 @@ public:
             cache.nearPlane = camera_comp.m_Near;
             cache.farPlane = camera_comp.m_Far;
             cache.isActive = true;
+
+
+            
+            
 
             break;  // Only use first active camera
         }

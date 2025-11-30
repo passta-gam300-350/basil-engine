@@ -1,0 +1,7 @@
+base:
+  m_guid: 20420378fb9e1af9cf0f8e0da6
+  m_importer: .texture
+  m_source: materials\terrain\terrian_Height.png
+  m_name: terrian_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

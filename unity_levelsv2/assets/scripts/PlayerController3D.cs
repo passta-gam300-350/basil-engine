@@ -6,15 +6,24 @@ using System;
 
 public class PlayerController3D : Behavior
 {
+    private GameObject PlayerHead;
     private Camera cam;
     private Rigidbody rb;
+    private GameObject[] footsteps;
+    private System.Random random = new System.Random();
+    private float footstepTimer = 0f;
+    public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
-    public float moveSpeed = 2.5f;
+    public float moveSpeed = 0.7f;
+
+    public bool disabled = false;
 
     private Vector2 lastMouse;
     private float pitch = 0f; // X rotation
     private float yaw = 0f;   // Y rotation
+
+    
 
 
 
@@ -22,60 +31,31 @@ public class PlayerController3D : Behavior
 
     public void Init()
     {
-       
+        // throw new Exception("This is a test for init");
+        PlayerHead = GameObject.Find("Camera");
+        rb = gameObject.transform.GetComponent<Rigidbody>();
+
+        footsteps = new GameObject[9];
+        for (int i = 0; i < footsteps.Length; i++)
+        {
+            string objectName = "footstep_" + (i + 1);
+            footsteps[i] = GameObject.Find(objectName);
+            if (footsteps[i] == null)
+            {
+                Logger.Warn("Cannot find game object: " + objectName);
+            }
+        }
     }
 
     public void Update()
     {
-        // Lazy init camera reference and align our yaw/pitch with current transform once
-        if (cam == null)
-        {
-            cam = GetComponent<Camera>();
-            if (cam == null)
-            {
-                Logger.Warn("Camera is NULL!");
-                return;
-            }
-
-            lastMouse = Input.mousePosition;
-            Vector3 currentRot = transform.rotation;
-            pitch = currentRot.x;
-            yaw = currentRot.y;
-        }
-
-        if (rb == null)
-        {
-            rb = GetComponent<Rigidbody>();
-            if (rb == null)
-            {
-                Logger.Warn("Rigidbody is NULL!");
-                return;
-            }
-
-        }
-        //-------------------------------------------------------
-        // 1. Mouse Look (delta from last frame)
-        //-------------------------------------------------------
-        Vector2 mouse = Input.mousePosition;
-        Vector2 delta = mouse - lastMouse;
-        lastMouse = mouse;
-
-		// Invert yaw so mouse left rotates left (match engine handedness)
-		yaw -= delta.x * mouseSensitivity;
-		// Invert pitch direction so moving mouse up looks up
-		pitch += delta.y * mouseSensitivity;
-
-        pitch = Mathf.Clamp(pitch, -89f, 89f);
-
-        // Apply camera rotation
-        transform.rotation = new Vector3(pitch, yaw, 0f);
-        // (Optional) add debug logging here if needed
-
+        if (disabled) return;
+        
 		//-------------------------------------------------------
 		// 2. Movement (WASD) - FPS style on ground plane
 		//-------------------------------------------------------
-		Vector3 forward = transform.forward; forward.y = 0f;
-		Vector3 right = transform.right;     right.y = 0f;
+		Vector3 forward = PlayerHead.transform.forward; forward.y = 0f;
+		Vector3 right = PlayerHead.transform.right;     right.y = 0f;
 
         Vector3 vel = Vector3.Zero;
 
@@ -85,13 +65,53 @@ public class PlayerController3D : Behavior
 		if (Input.GetKey(KeyCode.A)) vel += right; // move left
 		if (Input.GetKey(KeyCode.D)) vel -= right; // move right
 
-        if (vel.MagnitudeSqr() > 0.001f)
-            vel = vel.Normalize() * moveSpeed * 0.016f; // Assuming ~60 FPS, so deltaTime ~0.016s
+        bool isMoving = vel.MagnitudeSqr() > 0.001f;
+        
+        // Play footstep sounds at intervals while moving
+        if (isMoving)
+        {
+            footstepTimer += Time.deltaTime;
+            if (footstepTimer >= footstepInterval)
+            {
+                PlayFootstep();
+                footstepTimer = 0f; // Reset timer
+            }
+        }
+        else
+        {
+            // Reset timer when not moving
+            footstepTimer = 0f;
+        }
+
+        if (isMoving)
+            vel = vel.Normalize() * moveSpeed * Time.deltaTime; // Assuming ~60 FPS, so deltaTime ~0.016s
 
         rb.MovePosition(transform.position + vel);
     }
 
+    private void PlayFootstep()
+    {
+        if (footsteps == null || footsteps.Length == 0)
+            return;
+            
+        // Get a random footstep sound
+        int randomIndex = random.Next(0, footsteps.Length);
+        if (footsteps[randomIndex] != null)
+        {
+            Audio audio = footsteps[randomIndex].transform.GetComponent<Audio>();
+            if (audio != null)
+            {
+                audio.Play();
+            }
+        }
+    }
+
     public void FixedUpdate()
     {
+    }
+
+    public void OnCollisionEnter(GameObject other)
+    {
+        Logger.Log("Entered collision with " + other.NativeID);
     }
 }

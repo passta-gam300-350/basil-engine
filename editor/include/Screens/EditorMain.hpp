@@ -75,6 +75,7 @@ public:
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
 	bool showAssetBrowser = true;  // Asset browser panel
 	bool showResources = true;      // Imported resources panel
+	bool showSceneManifestSetting = false; // Scene manifest settings panel
 
 	// ========================================================================
 	// ENGINE CONSOLE STATE
@@ -172,6 +173,11 @@ public:
 	bool Render_BoxCollider_Component(BoxCollider& component);
 	bool Render_SphereCollider_Component(SphereCollider& component);
 	bool Render_CapsuleCollider_Component(CapsuleCollider& component);
+
+	// ========================================================================
+	// SCENE SETTINGS
+	// ========================================================================
+	void Render_SceneManifest();
 
 	// ========================================================================
 	// ENTITY CREATION
