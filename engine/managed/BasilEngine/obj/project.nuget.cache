@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "HIMbF4mb7+o=",
+  "dgSpecHash": "JoqBBvF1ygc=",
   "success": true,
-  "projectFilePath": "/mnt/c/Users/yeo_j/Documents/Digipen Repo/Year 3/Project/Project/engine/managed/BasilEngine/BasilEngine.csproj",
-  "expectedPackageFiles": [
-    "/home/silver/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.3/microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
-    "/home/silver/.nuget/packages/microsoft.netframework.referenceassemblies.net48/1.0.3/microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg.sha512"
-  ],
+  "projectFilePath": "C:\\Users\\yeo_j\\Documents\\Digipen Repo\\Year 3\\Project\\Project\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }
