@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 138
+  slot: 153
   guid: 00
   dependencies: ~
 render_settings:
@@ -2403,7 +2403,7 @@ entities:
       m_Type: "\x01"
       m_IsActive: true
       m_Fov: 45
-      m_AspectRatio: 1.8279953
+      m_AspectRatio: 1.54226196
       m_Near: 0.100000001
       m_Far: 1000
       m_Up:
@@ -4284,3 +4284,546 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
+  - Scene ID:
+      Scene ID: 138
+    entity name:
+      name: footstep_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87d9f77cba090c4d50000925b
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 139
+    entity name:
+      name: footstep_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87daf7882b91bd917cc59ff20
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 140
+    entity name:
+      name: footstep_3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dbb7de9aac1ef1f1102f778
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 141
+    entity name:
+      name: footstep_4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dc675f5beb502e8823e8a41
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 142
+    entity name:
+      name: footstep_5
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dcf78cea2f96732a3732cf7
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 143
+    entity name:
+      name: footstep_6
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dd9731eb51cc72a38ccca74
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 144
+    entity name:
+      name: footstep_7
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87de27659b4ccc0494f5f9313
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 145
+    entity name:
+      name: footstep_8
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87df67f919e1d9beefb0dcb95
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 146
+    entity name:
+      name: footstep_9
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87df67f919e1d9beefb0dcb95
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 147
+    entity name:
+      name: garbage_bin_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267a07094be3ddc131aefe43e
+        type: 17099568057112876377
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 148
+    entity name:
+      name: garbage_bin_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267a87c778239bab1d38a94a2
+        type: 17099568057112876377
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 149
+    entity name:
+      name: garbage_bin_3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267b07a7583af560e542e4caf
+        type: 17099568057112876377
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 150
+    entity name:
+      name: trash_bag_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267b977ffad9b36b8bd00d6ca
+        type: 17099568057112876377
+      volume: 0.300000012
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 151
+    entity name:
+      name: trash_bag_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267c171f0aa5c48a49a198a98
+        type: 17099568057112876377
+      volume: 0.300000012
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 152
+    entity name:
+      name: ambience_traffic
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2f075dbacc951c03bdff7a6
+        type: 17099568057112876377
+      volume: 0.519999981
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0

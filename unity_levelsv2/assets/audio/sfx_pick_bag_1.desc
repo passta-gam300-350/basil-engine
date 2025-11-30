@@ -1,0 +1,14 @@
+base:
+  m_guid: 3b267b977ffad9b36b8bd00d6ca
+  m_importer: .audio
+  m_source: audio\sfx_pick_bag_1.ogg
+  m_name: sfx_pick_bag_1.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0
