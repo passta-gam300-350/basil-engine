@@ -39,7 +39,7 @@ struct RuntimeVideoData {
 	std::unique_ptr<RuntimeVideoResourceData> m_VidResource{};
 };
 
-void removeStaleGeneratedTextures() {
+__declspec(noinline) void removeStaleGeneratedTextures() {
 	auto& reg = generatedEntityVideoTextures();
 	for (auto it = reg.begin(); it != reg.end(); ) {
 		if (!it->second.markActive) {
@@ -52,14 +52,14 @@ void removeStaleGeneratedTextures() {
 	}
 }
 
-void removeGeneratedTextures(std::unordered_map<std::uint64_t, GeneratedTextureData>::const_iterator it) {
+__declspec(noinline) void removeGeneratedTextures(std::unordered_map<std::uint64_t, GeneratedTextureData>::const_iterator it) {
 	auto& reg = generatedEntityVideoTextures();
 	if (it->second.guid != rp::null_guid)
 		ResourceRegistry::Instance().UnregisterInMemory<std::shared_ptr<Texture>>(it->second.guid);
 	reg.erase(it);
 }
 
-void removeGeneratedTextures(ecs::entity ent) {
+__declspec(noinline) void removeGeneratedTextures(ecs::entity ent) {
 	auto& reg = generatedEntityVideoTextures();
 	if (auto it = reg.find(ent.get_uuid()); it != reg.end()) {
 		removeGeneratedTextures(it);
@@ -71,6 +71,7 @@ rp::Guid getGeneratedTextures(ecs::entity ent, VideoComponent& vc) {
 	auto it = reg.find(ent.get_uuid());
 	if (it != reg.end() && (it->second.width != vc.width || it->second.height != vc.height)) {
 		removeGeneratedTextures(it);
+		it = reg.end();
 	}
 	if (it == reg.end()) {
 		GeneratedTextureData texdata{};
@@ -148,6 +149,7 @@ void LogVideoAudioStreamError(FMOD_RESULT res, std::string_view flavor_text = {}
 
 // Decode the next frame and update the VideoComponent
 std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
+	
 	plm_t* ptr = rvd.m_VidResource->m_Ptr;
 	if (!ptr || (!vc.isPlaying && !vc.loop) || vc.isPaused) {
 		return std::vector<uint8_t>{};
@@ -167,11 +169,12 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 
 	double video_time = vc.currentTime;
 	double drift = audio_time - video_time;
-
+	std::cout << drift << '\n';
 	rvd.m_VidResource->m_StreamSync.acquire();
 	//decode frames
 	plm_frame_t* frame{};
 	if (fabs(drift) > 2.0) {
+		
 		plm_seek(ptr, audio_time, 0);
 		frame = plm_decode_video(ptr);
 		video_time = plm_get_time(ptr);
@@ -184,11 +187,13 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 		}
 	}
 	vc.currentTime = video_time;
-
+	vc.duration = plm_get_duration(ptr);
 	rvd.m_VidResource->m_StreamSync.release();
 	static bool entered = false;
-	if (plm_has_ended(ptr)) {
-		entered = true;
+	spdlog::info("{}, {}, {}", static_cast<float>(audio_time), vc.duration, vc.duration - audio_time);
+	if (bool isplaying{}; rvd.m_VidResource->m_Chl->isPlaying(&isplaying) != FMOD_OK || !isplaying){
+		spdlog::info("Audio end");
+		//entered = true;
 		plm_rewind(ptr);
 		rvd.m_VidResource->m_Chl->stop();
 		rvd.m_VidResource->m_Chl = nullptr;
@@ -198,13 +203,18 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 			return getNextFrame(vc, rvd);
 		}
 		vc.isPlaying = false;
+		vc.isActive = false;
 		vc.currentTime = 0;
+		vc.renderLayer = 0;
 		return std::vector<uint8_t>{};
 	}
 	else if (!frame) {
-		if (entered) 
+		/*if (entered) {
 			vc.isPlaying = false;
-		entered = true;
+			rvd.m_VidResource->m_Chl->stop();
+			rvd.m_VidResource->m_Chl = nullptr;
+		}
+		entered = true;*/
 		return std::vector<uint8_t>{};
 	}
 
@@ -228,16 +238,18 @@ void VideoSystem::Update(ecs::world& wrld) {
 	for (auto& ent : view)
 	{
 		VideoComponent& vidc = ent.get<VideoComponent>();
-		if (vidc.videoGuid.m_guid == rp::null_guid) {
+		if (vidc.videoGuid.m_guid == rp::null_guid || (!vidc.isPlaying && !vidc.loop) || vidc.isPaused) {
 			continue;
 		}
 		RuntimeVideoData& ptr = *ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
 		auto rgbres{ getNextFrame(vidc, ptr) };
-		if (rgbres.empty())
-			continue;
 		auto texguid = getGeneratedTextures(ent, vidc);
 		auto& texptr = *ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(texguid);
-		glTexSubImage2D(texptr->target, 0, 0, 0, vidc.width, vidc.height, GL_RGB, GL_UNSIGNED_BYTE, rgbres.data());
+		if (!rgbres.empty()) {
+			glBindTexture(texptr->target, texptr->id);
+			glTexSubImage2D(texptr->target, 0, 0, 0, vidc.width, vidc.height, GL_RGB, GL_UNSIGNED_BYTE, rgbres.data());
+			glBindTexture(texptr->target, 0);
+		}
 		if (vidc.renderFullscreen) {
 			HUDElementData vidhud{};
 			vidhud.anchor = HUDAnchor::BottomLeft;
@@ -374,8 +386,8 @@ RuntimeVideoData LoadVideoData(const char* data) {
 	exinfo.pcmreadcallback = pcmReadCallback;
 	exinfo.pcmsetposcallback = pcmsetpos_callback;
 
-	assert(AudioSystem::GetInstance().GetSystem()->createSound(0, FMOD_OPENUSER, &exinfo, &runtime_vd.m_VidResource->m_Sound) == FMOD_RESULT::FMOD_OK);
-
+	LogVideoAudioStreamError(AudioSystem::GetInstance().GetSystem()->createSound(0, FMOD_OPENUSER, &exinfo, &runtime_vd.m_VidResource->m_Sound));
+	std::cout << runtime_vd.m_VidResource->m_Sound << '\n';
 	return runtime_vd;
 }
 

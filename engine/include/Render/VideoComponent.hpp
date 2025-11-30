@@ -45,7 +45,7 @@ enum class VideoResizeMode {
 {
     // Resource reference
     rp::BasicIndexedGuid videoGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"video">{}) };
-
+    bool isActive = true;
     // Playback control
     bool autoPlay = false;          ///< Start playing automatically on scene load
     bool loop = false;              ///< Loop video when it reaches the end

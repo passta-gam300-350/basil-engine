@@ -9,6 +9,8 @@ using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 public class Cutscene : Behavior
 {
+    public float waitsec = 3f;
+    private bool passA;
     private Video video;
 
     public void Init()
@@ -19,8 +21,29 @@ public class Cutscene : Behavior
 
     public void Update()
     {
-        if (!video.isPlaying)
+        if (video != null && !video.isPlaying)
+        {
+            waitsec -= Time.deltaTime;
+
+        } else if (passA)
+        {
+            waitsec -= Time.deltaTime;
+        }
+
+        if (waitsec <= 2f && !passA)
+        {
+            passA = true;
+            gameObject.transform.DeleteComponent<Video>();
+            video = null;
+        }
+
+
+        if (waitsec <= 0f)
+        {
+
             Scene.LoadSceneByIndex(2);
+
+        }
     }
 
     public void FixedUpdate()

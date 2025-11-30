@@ -119,7 +119,7 @@ public:
      * @param resource Already-constructed resource to insert
      * @return true if inserted, false if GUID already exists
      */
-    bool InsertPreloaded(rp::Guid guid, T resource) {
+    __declspec(noinline) bool InsertPreloaded(rp::Guid guid, T resource) {
         // Check if GUID already exists
         auto it = m_GuidSlots.find(guid);
         if (it != m_GuidSlots.end()) {
@@ -353,7 +353,8 @@ struct ResourceRegistry {
      */
     template <typename T>
     bool RegisterInMemory(rp::Guid guid, T resource) {
-        auto* pool = Pool<T>();
+
+    	auto* pool = Pool<T>();
         if (!pool) {
             spdlog::error("ResourceRegistry: Cannot register in-memory resource - type not registered");
             return false;

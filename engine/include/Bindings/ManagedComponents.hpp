@@ -32,15 +32,19 @@ Technology is prohibited.
 class ManagedComponents
 {
 	using ComponentChecker = std::function<bool (ecs::entity& handle)>;
+	using ComponentDeletor = std::function<void(ecs::entity& handle)>;
+	
 public:
 
 
 
 	static std::unordered_map<uint32_t, ComponentChecker> componentTypeMap;
+	static std::unordered_map<uint32_t, ComponentDeletor> componentDeletorMap;
 	static std::unordered_map<std::string, uint32_t> componentMapped;
 
 	
 	static bool HasComponent(uint64_t handle, uint32_t typeHandle);
+	static void DeleteComponent(uint64_t handle, uint32_t typeHandle);
 
 
 	static uint32_t ManagedRegisterComponent(MonoString* name);
@@ -50,7 +54,7 @@ public:
 
 
 	// Native Side: Registers a component type with its corresponding getter function.
-	static void RegisterComponentType(uint32_t componentTypeId, ComponentChecker getComponentFn);
+	static void RegisterComponentType(uint32_t componentTypeId, ComponentChecker getComponentFn, ComponentDeletor deleteComponentFn);
 };
 
 

@@ -30,11 +30,14 @@ Technology is prohibited.
 #include "System/BehaviourSystem.hpp"
 
 std::unordered_map<uint32_t, ManagedComponents::ComponentChecker> ManagedComponents::componentTypeMap{};
+std::unordered_map<uint32_t, ManagedComponents::ComponentDeletor> ManagedComponents::componentDeletorMap{};
+
 std::unordered_map<std::string, uint32_t> ManagedComponents::componentMapped{};
 
-void ManagedComponents::RegisterComponentType(uint32_t componentTypeId, ComponentChecker getComponentFn)
+void ManagedComponents::RegisterComponentType(uint32_t componentTypeId, ComponentChecker getComponentFn, ComponentDeletor deleteComponentFn)
 {
 	componentTypeMap[componentTypeId] = getComponentFn;
+	componentDeletorMap[componentTypeId] = deleteComponentFn;
 }
 
 uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
@@ -56,6 +59,11 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		{
 			bool result = entity.any<PositionComponent>();
 			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<PositionComponent>();
+			entity.remove<RotationComponent>();
+			entity.remove<ScaleComponent>();
 		});
 
 		return id;
@@ -70,6 +78,9 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 			// Placeholder for Camera component check
 			bool result = entity.any<CameraComponent>(); // Replace with actual CameraComponent
 			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<CameraComponent>();
 		});
 		return id;
 	}
@@ -82,6 +93,9 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 			// Placeholder for Rigidbody component check
 			bool result = entity.any<RigidBodyComponent>(); // Replace with actual Rigidbody component
 			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<RigidBodyComponent>();
 		});
 		return id;
 	}
@@ -94,18 +108,9 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 			// Placeholder for Audio component check
 			bool result = entity.any<AudioComponent>(); // Replace with actual Audio component
 			return result;
-		});
-	}
-
-	if (strName == "Audio")
-	{
-		componentMapped[strName] = 1000000 + registerCount++; // ID for Rigidbody component
-		unsigned id = componentMapped[strName];
-		RegisterComponentType(id, [](ecs::entity const& entity)
+		}, [](ecs::entity& entity)
 		{
-			// Placeholder for Audio component check
-			bool result = entity.any<AudioComponent>(); // Replace with actual Audio component
-			return result;
+			entity.remove<AudioComponent>();
 		});
 		return id;
 	}
@@ -118,6 +123,9 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 			// Placeholder for Video component check
 			bool result = entity.any<VideoComponent>(); // Replace with actual Video component
 			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<VideoComponent>();
 		});
 		return id;
 	}
@@ -146,6 +154,24 @@ bool ManagedComponents::HasComponent(uint64_t handle, uint32_t typeHandle)
 		return checker(ent);
 	}
 	return false;
+}
+
+void ManagedComponents::DeleteComponent(uint64_t handle, uint32_t typeHandle)
+{
+	ecs::entity ent{ handle };
+	
+	if (typeHandle == 1079998) // Behavior component
+	{
+		return;
+	}
+
+
+	if (componentTypeMap.find(typeHandle) != componentTypeMap.end())
+	{
+		auto deletor = componentDeletorMap[typeHandle];
+		deletor(ent);
+	}
+	
 }
 
 
