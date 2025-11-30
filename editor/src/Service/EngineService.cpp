@@ -1,4 +1,5 @@
 #include "Service/EngineService.hpp"
+#include "System/TransformSystem.hpp"
 #include "Editor.hpp"
 #include "Manager/MonoEntityManager.hpp"
 
@@ -764,6 +765,9 @@ void EngineContainerService::NewScene() {
 		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].first = std::make_shared<SceneGraphNode>(root);
 		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].second = true;
 		spdlog::info("EngineService: New Scene created");
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 		});
 }
 

@@ -46,6 +46,8 @@ Technology is prohibited.
 #include <tinyddsloader.h>
 #include "Input/InputManager.h"
 #include <Resources/PrimitiveGenerator.h>
+#include <fstream>     
+#include <filesystem> 
 #include <Resources/Material.h>
 #include <Utility/AABB.h>
 #include <spdlog/spdlog.h>
@@ -123,6 +125,10 @@ RenderSystem::RenderSystem() {
 
 	// Note: JoltDebugRenderer initialization deferred to InitJoltDebugRenderer()
 	// (must be called after PhysicsSystem::Init() because Jolt needs to be initialized first)
+
+	m_BvhConfig.maxDepth = std::numeric_limits<unsigned>::max();
+	m_BvhConfig.minObjects = 1;
+	m_BvhConfig.minVolume = 0.1f;
 }
 
 RenderSystem::~RenderSystem() {
@@ -219,26 +225,47 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
+	// ========== Frustum Culling: Get visible entities ==========
+	std::vector<unsigned> visibleEntityIDs = GetVisibleEntities(world, world_camera);
+
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
 
 	// Debug: Log entity counts
-	int objectCount = 0;
+	int objectCount = visibleEntityIDs.size();
 	int lightCount = 0;
-	for (auto obj : sceneObjects) { objectCount++; }
-	for (auto light : sceneLights) { lightCount++; }
+	for (auto light : sceneLights)
+	{ 
+		lightCount++;
+	}
 
 	static int lastObjectCount = -1;
 	static int lastLightCount = -1;
-	if (objectCount != lastObjectCount || lightCount != lastLightCount) {
-		spdlog::info("RenderSystem: Processing {} renderable objects, {} lights", objectCount, lightCount);
+	if (objectCount != lastObjectCount || lightCount != lastLightCount)
+	{
+		spdlog::info("RenderSystem: Processing {} visible objects (after culling), {} lights", objectCount, lightCount);
 		lastObjectCount = objectCount;
 		lastLightCount = lightCount;
 	}
 
-	for (auto obj : sceneObjects) {
-		auto [mesh, transform, visible] {obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>()};
-		const uint64_t entityUID = obj.get_uid();
+	// ========== Interaction Detection (Testing) ==========
+	auto interaction = QueryInteraction(world, world_camera);
+	if (interaction.hasHit) {
+		static uint32_t lastInteractableUID = 0;
+		//if (interaction.entityUID != lastInteractableUID) {
+			spdlog::info("RayTest: Looking at Entity {} (distance: {:.2f}m)",
+			             interaction.entityUID, interaction.distance);
+			lastInteractableUID = interaction.entityUID;
+		//}
+	}
+
+	// ========== Process only visible entities ==========
+	for (unsigned entityUID : visibleEntityIDs) {
+		// Get entity from world by UID
+		ecs::entity obj = world.impl.entity_cast(static_cast<entt::entity>(entityUID));
+		
+		// Get components as references using .get()
+		auto [mesh, transform, visible] = obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
@@ -819,6 +846,281 @@ std::shared_ptr<Material> RenderSystem::LoadMaterialResource(
 		return nullptr;
 	}
 	return std::make_shared<Material>(pbrShader, "FallbackMaterial_" + guidStr);
+}
+
+Aabb RenderSystem::ComputeWorldAABB(ecs::entity entity) const
+{
+	/*if (entity.has<MeshRendererComponent>() == false || entity.has<TransformMtxComponent>() == false)
+	{
+		spdlog::warn("ComputeWorldAABB: Entity {} missing components", entity.get_uid());
+		return Aabb(glm::vec3(0.0f), glm::vec3(0.0f));
+	}*/
+	auto& meshComp = entity.get<MeshRendererComponent>();
+	auto& transformMatrixComponent = entity.get<TransformMtxComponent>();
+	auto meshResourceVariant = LoadMeshResource(meshComp);
+
+	// Extract the first mesh from the variant
+	std::shared_ptr<Mesh> meshResource;
+	std::visit([&meshResource](auto&& var) {
+		using Type = std::remove_pointer_t<std::remove_cvref_t<decltype(var)>>;
+		if constexpr (std::is_same_v<Type, std::shared_ptr<Mesh>>) {
+			meshResource = var;
+		}
+		else if (var && !var->empty()) {
+			// Multi-mesh model - use the first mesh for AABB calculation
+			meshResource = var->front().second;
+		}
+	}, meshResourceVariant);
+
+	if (!meshResource)
+	{
+		spdlog::warn("ComputeWorldAABB: Entity {} has no valid mesh", entity.get_uid());
+		return Aabb{glm::vec3(0.0f), glm::vec3(0.0f)};
+	}
+	AABB graphicAabb = meshResource->GetAABB();
+
+	//// Debug: Check if mesh AABB is valid
+	//static int debugCount = 0;
+	//if (debugCount < 3) {
+	//	spdlog::info("ComputeWorldAABB: Entity {} - Mesh AABB min({:.2f}, {:.2f}, {:.2f}) max({:.2f}, {:.2f}, {:.2f})",
+	//		entity.get_uid(),
+	//		graphicAabb.min.x, graphicAabb.min.y, graphicAabb.min.z,
+	//		graphicAabb.max.x, graphicAabb.max.y, graphicAabb.max.z);
+	//	debugCount++;
+	//}
+
+	Aabb shapesLocalAabb(graphicAabb.min, graphicAabb.max);
+
+	// Debug: Check transform matrix
+	/*static int debugMatrix = 0;
+	if (debugMatrix < 1) {
+		spdlog::info("ComputeWorldAABB: Transform Matrix for Entity {}:\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n"
+			"  [{:.2f}, {:.2f}, {:.2f}, {:.2f}]",
+			entity.get_uid(),
+			transformMatrixComponent.m_Mtx[0][0], transformMatrixComponent.m_Mtx[0][1], transformMatrixComponent.m_Mtx[0][2], transformMatrixComponent.m_Mtx[0][3],
+			transformMatrixComponent.m_Mtx[1][0], transformMatrixComponent.m_Mtx[1][1], transformMatrixComponent.m_Mtx[1][2], transformMatrixComponent.m_Mtx[1][3],
+			transformMatrixComponent.m_Mtx[2][0], transformMatrixComponent.m_Mtx[2][1], transformMatrixComponent.m_Mtx[2][2], transformMatrixComponent.m_Mtx[2][3],
+			transformMatrixComponent.m_Mtx[3][0], transformMatrixComponent.m_Mtx[3][1], transformMatrixComponent.m_Mtx[3][2], transformMatrixComponent.m_Mtx[3][3]);
+		debugMatrix++;
+	}*/
+
+	Aabb worldAABB = TransformAABB(shapesLocalAabb, transformMatrixComponent.m_Mtx);
+
+	//// Debug: Check transformed AABB
+	//static int debugCount2 = 0;
+	//if (debugCount2 < 3) {
+	//	spdlog::info("ComputeWorldAABB: Entity {} - World AABB min({:.2f}, {:.2f}, {:.2f}) max({:.2f}, {:.2f}, {:.2f})",
+	//		entity.get_uid(),
+	//		worldAABB.min.x, worldAABB.min.y, worldAABB.min.z,
+	//		worldAABB.max.x, worldAABB.max.y, worldAABB.max.z);
+	//	debugCount2++;
+	//}
+
+	return worldAABB;
+}
+
+std::vector<unsigned> RenderSystem::GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera)
+{
+	std::vector<unsigned> visibleEntityID;
+	if (m_frustumCullingEnabled == true && m_BvhRenderables.empty() == false)
+	{
+		Frustum viewCameraFrustum = CameraToFrustum(camera);
+		visibleEntityID = m_bvh.Query(viewCameraFrustum);
+		static int frameCount = 0;
+		if (frameCount++ % 60 == 0) 
+		{	// Log once per second at 60fps
+			spdlog::info("Frustum culling: {}/{} entities visible", visibleEntityID.size(), m_BvhRenderables.size());
+		}
+	}
+	else 
+	{
+		// Fallback: Return all renderable entities
+		auto allObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent>();
+		for (auto obj : allObjects) 
+		{
+			visibleEntityID.push_back(static_cast<unsigned>(obj.get_uid()));
+		}
+
+		static bool loggedFallback = false;
+		if (loggedFallback == false) 
+		{
+			spdlog::warn("Frustum culling disabled or BVH empty - rendering all entities");
+			loggedFallback = true;
+		}
+	}
+	return visibleEntityID;
+}
+
+InteractionResult RenderSystem::QueryInteraction(ecs::world& world, const CameraSystem::Camera& camera)
+{
+	InteractionResult result;
+
+	// check if BVH is built
+	if (m_BvhInteractables.empty() || m_bvhInteractables.Empty())
+	{
+		return result; // No objects to query
+	}
+
+	// create ray from camera forward direction
+	Ray ray = CameraToRay(camera);
+
+	// query BVH for closest hit
+	std::vector<unsigned> allHits;
+	std::vector<Bvh<BvhRenderable*>::Node const*> debugNodes;
+	auto closestHit = m_bvhInteractables.QueryDebug(ray, true, allHits, debugNodes);
+
+	if (!closestHit.has_value()) 
+	{
+		return result; // no hit detected
+	}
+
+	// get the hit entity
+	uint32_t entityUID = closestHit.value();
+	ecs::entity entity = world.impl.entity_cast(static_cast<entt::entity>(entityUID));
+
+	// calculate distance from camera to entity
+	// get tuple
+	auto [interactable, transform] = entity.get<InteractableComponent, TransformComponent>();
+	if (interactable.m_IsEnabled == false)
+	{
+		return result; //disabled
+	}
+	result.distance = glm::distance(camera.m_Pos, transform.m_Translation);
+	if (result.distance > interactable.m_InteractionDistance) 
+	{
+		return result;
+	}
+	// fill result
+	result.hasHit = true;
+	result.entityUID = entityUID;
+	return result;
+}
+
+void RenderSystem::BuildBVH(ecs::world& world)
+{
+	spdlog::info("========== BuildBVH() START ==========");
+
+	m_bvh.Clear();
+	m_BvhRenderables.clear();
+
+	// check for both
+	auto allSceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent>();
+	int entityCount = 0;
+	for (auto eachObject : allSceneObjects)
+	{
+		uint64_t entityID = eachObject.get_uid();
+		auto renderable = std::make_unique<BvhRenderable>();
+		renderable->id = static_cast<unsigned>(entityID);
+		renderable->bv = ComputeWorldAABB(eachObject);
+		if (renderable->bv.min == renderable->bv.max)
+		{
+			continue;
+		}
+		m_BvhRenderables[entityID] = std::move(renderable);
+		entityCount++;
+	}
+	if (!m_BvhRenderables.empty()) 
+	{
+		std::vector<BvhRenderable*> allRenderables;
+		allRenderables.reserve(m_BvhRenderables.size());
+		for (auto& [uid, renderable] : m_BvhRenderables) 
+		{
+			allRenderables.push_back(renderable.get());
+		}
+
+		m_bvh.BuildTopDown(allRenderables.begin(), allRenderables.end(), m_BvhConfig);
+		/*spdlog::info("RenderSystem: Built BVH spatial index with {} entities", entityCount);
+		std::ostringstream oss;
+		m_bvh.DumpInfo(oss);
+		spdlog::info("BVH Info:\n{}", oss.str());*/
+
+		// Generate DOT graph file for visualization
+		std::ofstream dotFile("bvh_tree.dot");
+		if (dotFile.is_open())
+		{
+			m_bvh.DumpGraph(dotFile);
+			dotFile.close();
+			// get absolute path of the saved file
+			std::filesystem::path absolutePath = std::filesystem::absolute("bvh_tree.dot");
+			spdlog::info("BVH: Graph saved to: {}", absolutePath.string());
+			spdlog::info("BVH: To visualize, run: dot -Tpng \"{}\" -o bvh_tree.png", absolutePath.string());
+		}
+		else 
+		{
+			spdlog::error("BVH: Failed to create bvh_tree.dot");
+		}
+	}
+	else
+	{
+		spdlog::warn("RenderSystem: No entities to build BVH");
+	}
+
+	spdlog::info("========== BuildBVH() END ==========");
+}
+
+void RenderSystem::BuildInteractableBVH(ecs::world& world)
+{
+	spdlog::info("========== BuildInteractableBVH() START ==========");
+
+	m_bvhInteractables.Clear();
+	m_BvhInteractables.clear();
+
+	// check for both
+	auto allSceneObjects = world.filter_entities<InteractableComponent, MeshRendererComponent, TransformMtxComponent>();
+	int entityCount = 0;
+	for (auto eachObject : allSceneObjects)
+	{
+		uint64_t entityID = eachObject.get_uid();
+		auto renderable = std::make_unique<BvhRenderable>();
+		renderable->id = static_cast<unsigned>(entityID);
+		renderable->bv = ComputeWorldAABB(eachObject);
+		if (renderable->bv.min == renderable->bv.max)
+		{
+			continue;
+		}
+		m_BvhInteractables[entityID] = std::move(renderable);
+		entityCount++;
+	}
+	if (!m_BvhInteractables.empty())
+	{
+		std::vector<BvhRenderable*> allRenderables;
+		allRenderables.reserve(m_BvhInteractables.size());
+		for (auto& [uid, interactables] : m_BvhInteractables)
+		{
+			allRenderables.push_back(interactables.get());
+		}
+
+		m_bvhInteractables.BuildTopDown(allRenderables.begin(), allRenderables.end(), m_BvhConfig);
+		/*spdlog::info("RenderSystem: Built BVH spatial index with {} entities", entityCount);
+		std::ostringstream oss;
+		m_bvh.DumpInfo(oss);
+		spdlog::info("BVH Info:\n{}", oss.str());*/
+
+		// Generate DOT graph file for visualization
+		std::ofstream dotFile("bvhinteractable_tree.dot");
+		if (dotFile.is_open())
+		{
+			m_bvhInteractables.DumpGraph(dotFile);
+			dotFile.close();
+			// get absolute path of the saved file
+			std::filesystem::path absolutePath = std::filesystem::absolute("bvhinteractable_tree.dot");
+			spdlog::info("BVH: Graph saved to: {}", absolutePath.string());
+			spdlog::info("BVH: To visualize, run: dot -Tpng \"{}\" -o bvhinteractable_tree.png", absolutePath.string());
+		}
+		else
+		{
+			spdlog::error("BVH: Failed to create bvh_tree.dot");
+		}
+	}
+	else
+	{
+		spdlog::warn("RenderSystem: No entities to build BVH");
+	}
+
+	spdlog::info("========== BuildInteractableBVH() END ==========");
 }
 
 std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(const char* data) {

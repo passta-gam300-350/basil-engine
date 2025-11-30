@@ -240,7 +240,10 @@ void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 
 
 	Instance().m_Window = std::make_unique<Window>(wptr);
-
+	if (!std::filesystem::exists(cfg))
+	{
+		GenerateDefaultConfig();
+	}
 	InitWithoutWindow(cfg);
 }
 

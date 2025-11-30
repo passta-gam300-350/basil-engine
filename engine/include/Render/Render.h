@@ -22,9 +22,11 @@
 #include <rsc-core/rp.hpp>
 #include "Manager/ResourceSystem.hpp"
 #include <native/native.h>
-
 #include "Ecs/ecs.h"
 #include "Messaging/Message.h"
+#include "BVH/bvh.h"
+#include "BVH/bvh_renderable.h"
+#include "BVH/bvh_helper.h"
 
 // Forward declarations
 class ShaderLibrary;
@@ -147,6 +149,31 @@ public:
     Camera_Calculation_Update(glm::mat4 view, glm::mat4 proj) : viewMat4(view), projectionMat4(proj) {};
 
     ~Camera_Calculation_Update() = default;
+};
+
+/**
+ * @brief Component marking an entity as interactable for proximity-based interaction
+ *
+ * Used for gameplay mechanics where players can interact with objects when looking at them.
+ * Detection uses ray casting from camera forward direction.
+ * Only entities with this component will be detected by QueryInteraction().
+ */
+struct InteractableComponent {
+    bool m_IsEnabled = true;                     ///< Can be toggled on/off at runtime
+    float m_InteractionDistance = 5.0f;          ///< Maximum distance for interaction (meters)
+    std::string m_InteractionPrompt = "Press E to interact";  ///< UI text to display
+};
+
+/**
+ * @brief Result from interaction detection query
+ *
+ * Used for proximity-based interaction detection (e.g., "Press E to interact" prompts).
+ * Returned by QueryInteraction() to indicate if player is looking at an interactable object.
+ */
+struct InteractionResult {
+    bool hasHit = false;              ///< Was an object detected?
+    uint32_t entityUID = 0;           ///< ID of the detected entity
+    float distance = 0.0f;            ///< Distance from camera to object (meters)
 };
 
 struct RenderSystem : public ecs::SystemBase {
@@ -507,9 +534,35 @@ public:
      */
     void DestroyPropertyBlock(uint64_t entityUID);
 
+    /**
+     * @brief Build spatial index for all renderable entities
+     * Clears existing BVH and rebuilds from scratch.
+     * Should be called automatically during InitializeExistingEntities().
+     * @param world The ECS world containing entities
+     */
+    void BuildBVH(ecs::world& world);
+
+    /**
+     * @brief Build spatial index for interactable entities only
+     * Filters for entities with InteractableComponent.
+     * Should be called after scene load.
+     * @param world The ECS world containing entities
+     */
+    void BuildInteractableBVH(ecs::world& world);
+
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
+
+    // ========== BVH for Frustum Culling ==========
+    std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhRenderables;
+    Bvh<BvhRenderable*> m_bvh;
+    BvhBuildConfig m_BvhConfig;
+    bool m_frustumCullingEnabled = true;
+
+    // ========== BVH for Interactables (Gameplay) ==========
+    std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhInteractables;
+    Bvh<BvhRenderable*> m_bvhInteractables;
 
 private:
     // ========== Internal Methods ==========
@@ -554,6 +607,35 @@ private:
         const rp::TypeNameGuid<"material">& materialGuid,
         bool hasAttachedMaterial,
         uint64_t entityUID) const;
+
+    /**
+     * @brief Compute world-space AABB for an entity
+     * @param entity Entity with MeshRendererComponent and TransformMtxComponent
+     * @return World-space AABB
+     */
+    Aabb ComputeWorldAABB(ecs::entity entity) const;
+
+    /**
+     * @brief Perform frustum culling to get visible entity IDs
+     * Uses the BVH spatial index to query which entities are within the camera frustum.
+     * Falls back to returning all entities if culling is disabled or BVH is empty.
+     * @param world The ECS world containing entities
+     * @param camera The camera to build frustum from (editor or entity camera)
+     * @return Vector of entity UIDs that are potentially visible
+     */
+    std::vector<unsigned> GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera);
+
+    /**
+     * @brief Query for object in front of camera using ray casting
+     *
+     * Uses BVH ray casting to detect which entity the camera is looking at.
+     * Useful for proximity-based interaction detection (e.g., "Press E to interact").
+     *
+     * @param world The ECS world containing entities
+     * @param camera The camera to cast ray from (typically game entity camera)
+     * @return InteractionResult with detected entity info (hasHit=false if nothing detected)
+     */
+    InteractionResult QueryInteraction(ecs::world& world, const CameraSystem::Camera& camera);
 
     // ========== Render Subsystems ==========
 
