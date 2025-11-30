@@ -16,6 +16,7 @@ Technology is prohibited.
 
 #include "System/Audio.hpp"
 #include "Component/Transform.hpp"
+#include "Engine.hpp"
 #include <rsc-core/serialization/serializer.hpp>
 #include "Manager/ResourceSystem.hpp"
 #include "Render/Camera.h"
@@ -201,9 +202,9 @@ void AudioSystem::SetListenerOrientation(const glm::vec3& forward, const glm::ve
 }
 
 int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, bool isLooping) {
-    auto it = m_pathToHandle.find(dir);
-    if (it != m_pathToHandle.end()) {
-        m_refCounts[it->second]++;
+	auto it = m_pathToHandle.find(dir);
+	if (it != m_pathToHandle.end()) {
+		m_refCounts[it->second]++;
         spdlog::warn("Audio: Duplicate load detected for '{}', reusing handle {}", dir, it->second);
         return it->second;
     }
@@ -211,23 +212,32 @@ int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, boo
     if (!m_initialized || !m_system) {
         spdlog::warn("Audio: System not initialized.");
         return -1;
-    }
+	}
 
-    spdlog::info("Audio: Loading audio: {}", dir);
+	spdlog::info("Audio: Loading audio: {}", dir);
 
-    FMOD::Sound* sound = nullptr;
+	// Normalize and resolve path against engine working directory so imports work per-project
+	std::string normalizedPath = dir;
+	std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+	if (normalizedPath.rfind("audio/", 0) == 0) {
+		normalizedPath = "assets/" + normalizedPath;
+	}
+	std::filesystem::path resolvedPath = std::filesystem::path(Engine::getWorkingDir()) / normalizedPath;
+	resolvedPath = resolvedPath.lexically_normal();
 
-    // Sets audio characteristics
-    FMOD_MODE mode = FMOD_DEFAULT;
+	FMOD::Sound* sound = nullptr;
+
+	// Sets audio characteristics
+	FMOD_MODE mode = FMOD_DEFAULT;
 	mode |= is3D ? FMOD_3D : FMOD_2D;
 	mode |= isStream ? FMOD_CREATESTREAM : FMOD_CREATESAMPLE;
 	mode |= isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
 
-    m_result = m_system->createSound(dir.c_str(), mode, 0, &sound);
-    if (sound == nullptr && m_result != FMOD_OK) {
-        spdlog::warn("Audio: Failed to load sound at {}, {}", dir, FMOD_ErrorString(m_result));
-        return -1;
-    }
+	m_result = m_system->createSound(resolvedPath.string().c_str(), mode, 0, &sound);
+	if (sound == nullptr && m_result != FMOD_OK) {
+		spdlog::warn("Audio: Failed to load sound at {}, {}", resolvedPath.string(), FMOD_ErrorString(m_result));
+		return -1;
+	}
 
     m_result = sound->set3DMinMaxDistance(MINDISTANCE * DISTANCEFACTOR, MAXDISTANCE * DISTANCEFACTOR);
     if (is3D && m_result != FMOD_OK)
