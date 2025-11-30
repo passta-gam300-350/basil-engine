@@ -190,15 +190,14 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
         return std::vector<uint8_t>{};
     }
     else if (plm_has_ended(ptr)) {
+        plm_rewind(ptr);
+        vc.currentTime = 0;
         if (vc.loop) {
-            plm_rewind(ptr);
-            vc.currentTime = 0;
             rvd.m_VidResource->m_Chl->stop();
             rvd.m_VidResource->m_Chl = nullptr;
             return getNextFrame(vc, rvd);
         }
         vc.isPlaying = false;
-        vc.currentTime = 0;
         return std::vector<uint8_t>{};
     }
 
@@ -367,7 +366,7 @@ RuntimeVideoData LoadVideoData(const char* data) {
     exinfo.pcmreadcallback = pcmReadCallback;
     exinfo.pcmsetposcallback = pcmsetpos_callback;
 
-    assert(AudioSystem::GetInstance().GetSystem()->createSound(0, FMOD_OPENUSER | FMOD_CREATESTREAM, &exinfo, &runtime_vd.m_VidResource->m_Sound) == FMOD_RESULT::FMOD_OK);
+    assert(AudioSystem::GetInstance().GetSystem()->createSound(0, FMOD_OPENUSER, &exinfo, &runtime_vd.m_VidResource->m_Sound) == FMOD_RESULT::FMOD_OK);
 
     return runtime_vd;
     }
