@@ -558,7 +558,7 @@ public:
     std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhRenderables;
     Bvh<BvhRenderable*> m_bvh;
     BvhBuildConfig m_BvhConfig;
-    bool m_frustumCullingEnabled = true;
+    bool m_frustumCullingEnabled = false;
 
     // ========== BVH for Interactables (Gameplay) ==========
     std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhInteractables;
