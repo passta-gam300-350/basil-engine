@@ -127,7 +127,7 @@ public:
 		std::vector<std::string> m_names_snapshot;
 		std::queue<std::uint32_t> m_write_back_queue;
 		std::queue<entity_handle> m_entity_delete_queue;
-		int m_entity_create_count;
+		int m_entity_create_count{ 0 };
 		std::queue<std::tuple<entity_handle, std::uint32_t, bool>> m_entity_component_update_queue;
 		std::vector<std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>> m_component_list_snapshot;
 		entity_handle m_snapshot_entity_handle{ ~0ull };
