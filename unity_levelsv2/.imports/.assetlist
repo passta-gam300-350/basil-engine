@@ -877,6 +877,21 @@
 "Wheel4_Train_Roughness.png":
   "m_guid": "55e500377b9a45f33a39bc67ea3"
   "m_typeindex": "126269861530532084"
+"ambience_koi.ogg":
+  "m_guid": "3ace2db7c809ca2f573f49919e7"
+  "m_typeindex": "17099568057112876377"
+"ambience_mrt.ogg":
+  "m_guid": "3ace2e672429801f986e0123334"
+  "m_typeindex": "17099568057112876377"
+"ambience_nature.ogg":
+  "m_guid": "3af26e971a8b72477a977084a0c"
+  "m_typeindex": "17099568057112876377"
+"ambience_traffic.ogg":
+  "m_guid": "3ace2f075dbacc951c03bdff7a6"
+  "m_typeindex": "17099568057112876377"
+"ambience_wind.ogg":
+  "m_guid": "3af26f475eabcfc74d93948fe85"
+  "m_typeindex": "17099568057112876377"
 "bg_BaseColor.png":
   "m_guid": "5328f7774591d42aac22b9b777"
   "m_typeindex": "126269861530532084"
@@ -895,6 +910,12 @@
 "bg_Roughness.png":
   "m_guid": "53292e783a9b72f0a484cc7979"
   "m_typeindex": "126269861530532084"
+"bgm_happy_jingle.ogg":
+  "m_guid": "3ace2f97d9dad0293bbb279c491"
+  "m_typeindex": "17099568057112876377"
+"bgm_sad_jingle.ogg":
+  "m_guid": "3ace3017ca7a25afbc7b2c6fb33"
+  "m_typeindex": "17099568057112876377"
 "biscuit_tin1.obj":
   "m_guid": "36fd872715aa00c70870415f7f2"
   "m_typeindex": "4838001395392124604"
@@ -1980,6 +2001,9 @@
   "m_typeindex": "17099568057112876377"
 "sfx_kite_hit_1.ogg":
   "m_guid": "347fbb9793bb29b34951e050c00"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_spool_loop.ogg":
+  "m_guid": "3ace30a7eeea433ebd0ffc881e5"
   "m_typeindex": "17099568057112876377"
 "shutter.obj":
   "m_guid": "7cd4bbe74019b3999dacf91e41a"

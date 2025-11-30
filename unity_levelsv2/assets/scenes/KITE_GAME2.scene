@@ -24,80 +24,6 @@ render_settings:
       - 00
       - 00
 entities:
-  - Scene ID:
-      Scene ID: 2
-    entity name:
-      name: Camera
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 0.99999994
-        z: 0.99999994
-      m_Rotate:
-        x: -19
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 1.18654835
-        z: -6.32290268
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 60
-      m_AspectRatio: 1.914469
-      m_Near: 0.100000001
-      m_Far: 10000
-      m_Up:
-        x: 0
-        y: 0.945518553
-        z: -0.32556814
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0.32556814
-        z: 0.945518553
-      m_Yaw: -90
-      m_Pitch: 0
-  - Scene ID:
-      Scene ID: 66
-    entity name:
-      name: kite_hit4
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 39dfd7479a0b33693485c8d229c
-        type: 17099568057112876377
-      volume: 0.200000003
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -200,6 +126,116 @@ entities:
         y: 0
         z: 0
   - Scene ID:
+      Scene ID: 66
+    entity name:
+      name: kite_hit4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd7479a0b33693485c8d229c
+        type: 17099568057112876377
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -19
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 60
+      m_AspectRatio: 1.914469
+      m_Near: 0.100000001
+      m_Far: 10000
+      m_Up:
+        x: 0
+        y: 0.945518553
+        z: -0.32556814
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0.32556814
+        z: 0.945518553
+      m_Yaw: -90
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 65
+    entity name:
+      name: kite_hit3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd6973f38158a377d5aecfb5
+        type: 17099568057112876377
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
       Scene ID: 1
     LightComponent:
       Type: 0
@@ -231,42 +267,6 @@ entities:
       m_Trans:
         x: 0
         y: 16.6807728
-        z: 0
-  - Scene ID:
-      Scene ID: 65
-    entity name:
-      name: kite_hit3
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 39dfd6973f38158a377d5aecfb5
-        type: 17099568057112876377
-      volume: 0.200000003
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
         z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
@@ -926,7 +926,7 @@ entities:
         - Spool
     AudioComponent:
       audioAssetGuid:
-        guid: 469fc30754b84adbf4bf9cbc7e3
+        guid: 3ace30a7eeea433ebd0ffc881e5
         type: 17099568057112876377
       volume: 0.00999999978
       isLooping: true
@@ -1783,7 +1783,7 @@ entities:
         - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
-        guid: 469fc0b776e9bb6bd4dc6b3494c
+        guid: 3ace2f97d9dad0293bbb279c491
         type: 17099568057112876377
       volume: 1
       isLooping: true
@@ -1824,7 +1824,7 @@ entities:
         - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
-        guid: 469fb4b72e3b016fbaf4537dc57
+        guid: 3af26f475eabcfc74d93948fe85
         type: 17099568057112876377
       volume: 2
       isLooping: true
@@ -1865,7 +1865,7 @@ entities:
         - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
-        guid: 469fcf3705599a35e3062779325
+        guid: 3ace2db7c809ca2f573f49919e7
         type: 17099568057112876377
       volume: 0.540000021
       isLooping: true
@@ -2027,7 +2027,7 @@ entities:
       audioAssetGuid:
         guid: 39dfd5d7bcb947c8429f9d6d9a8
         type: 17099568057112876377
-      volume: 0.200000003
+      volume: 0.400000006
       isLooping: false
       is3D: true
       isStreaming: false
@@ -2063,7 +2063,7 @@ entities:
       audioAssetGuid:
         guid: 84494f270c8ad7e98595586124b
         type: 17099568057112876377
-      volume: 0.200000003
+      volume: 0.400000006
       isLooping: false
       is3D: true
       isStreaming: false

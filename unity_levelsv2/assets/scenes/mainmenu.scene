@@ -46,7 +46,7 @@ entities:
         - MainMenu
     AudioComponent:
       audioAssetGuid:
-        guid: 469fc0b776e9bb6bd4dc6b3494c
+        guid: 3ace2f97d9dad0293bbb279c491
         type: 17099568057112876377
       volume: 0.25
       isLooping: true
