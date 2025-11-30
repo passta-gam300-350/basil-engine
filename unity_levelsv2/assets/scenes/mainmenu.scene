@@ -44,6 +44,25 @@ entities:
     Behaviour:
       classesName:
         - MainMenu
+    AudioComponent:
+      audioAssetGuid:
+        guid: 469fc0b776e9bb6bd4dc6b3494c
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
     HUDComponent:
       m_TextureGuid:
         guid: 518484793984f8f17f242cc860

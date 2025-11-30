@@ -7,14 +7,17 @@ using BasilEngine.SceneManagement;
 
 public class MainMenu : Behavior
 {
-  
+
+    private Audio audio;
 
     public void Init()
     {
-
+        audio = transform.GetComponent<Audio>();
+        audio.Play();
     }
     public void Update()
     {
+        
         if (Input.GetKey(KeyCode.ENTER))
         {
             // Load the main game scene

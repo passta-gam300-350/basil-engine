@@ -23,6 +23,46 @@ Technology is prohibited.
 #include <algorithm>
 #include "Profiler/profiler.hpp"
 
+namespace {
+
+// Attempts to load the FMOD sound handle from the serialized audio GUID.
+// Needed because scenes only serialize the GUID, not the runtime soundHandle.
+bool EnsureSoundLoaded(AudioComponent& audio) {
+    if (audio.isInitialized) {
+        return true;
+    }
+
+    if (audio.soundHandle < 0) {
+        // No sound loaded yet – fetch it from the resource registry using the GUID.
+        if (audio.audioAssetGuid.m_guid == rp::null_guid) {
+            spdlog::warn("AudioComponent: Cannot initialize without an audio GUID");
+            return false;
+        }
+
+        ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audio.audioAssetGuid);
+        if (!entry) {
+            spdlog::warn("AudioComponent: No resource pool found for audio type {}", audio.audioAssetGuid.m_typeindex);
+            return false;
+        }
+
+        ResourceHandle handle = entry->m_Vt.m_Get(entry->m_Pool, audio.audioAssetGuid.m_guid);
+        int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
+
+        if (!soundHandlePtr || *soundHandlePtr < 0) {
+            spdlog::warn("AudioComponent: Failed to resolve sound handle for GUID {}", audio.audioAssetGuid.m_guid.to_hex());
+            return false;
+        }
+
+        audio.soundHandle = *soundHandlePtr;
+        audio.isInitialized = false;
+    }
+
+    audio.RefreshSoundInfo();
+    return audio.isInitialized;
+}
+
+} // namespace
+
 AudioSystem& AudioSystem::GetInstance() {
     static AudioSystem instance;
     return instance;
@@ -330,8 +370,10 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
 
 bool AudioComponent::Play() {
     if (!isInitialized) {
-        //spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
-        return false;
+        if (!EnsureSoundLoaded(*this)) {
+            //spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
+            return false;
+        }
     }
 
     AudioSystem& audioSys = AudioSystem::GetInstance();
