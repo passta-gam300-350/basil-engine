@@ -1,3 +1,18 @@
+/******************************************************************************/
+/*!
+\file   AnimationComponent.hpp
+\author Team PASSTA
+		Cheong Jia Zen (jiazen.c@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/28
+\brief    Declares Animation Component
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef ANIMATION_COMPONENT_HPP
 #define ANIMATION_COMPONENT_HPP
 
