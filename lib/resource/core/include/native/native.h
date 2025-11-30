@@ -6,5 +6,6 @@
 #include "native/texture.h"
 #include "native/audio.h"
 #include "native/scene.h"
+#include "native/video.h"
 
 #endif

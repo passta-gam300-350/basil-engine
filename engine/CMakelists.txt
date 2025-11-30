@@ -64,6 +64,7 @@ set(ALL_LIBS
     PUBLIC tinyddsloader
     PUBLIC resource_lib_core
     PUBLIC resource-pipeline-core
+    PUBLIC plmpeg
     PUBLIC mono_interface
     PUBLIC job_system_lib
     PUBLIC data_structure_lib

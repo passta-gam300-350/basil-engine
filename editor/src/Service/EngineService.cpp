@@ -1,10 +1,12 @@
 #include "Service/EngineService.hpp"
+#include "System/TransformSystem.hpp"
 #include "Editor.hpp"
 #include "Manager/MonoEntityManager.hpp"
 
 #include <filesystem>
 
 #include "Render/Render.h"
+#include <Render/VideoComponent.hpp>
 #include "System/Audio.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
@@ -236,6 +238,13 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				// Use entt meta assignment for proper copy (handles non-trivial types like unordered_map)
 				entt::meta_any dest_any = meta_type.from_void(dest);
 				entt::meta_any src_any = meta_type.from_void(src);
+
+				if (meta_type.info().hash() == entt::type_hash<VideoComponent>::value()) {
+					VideoComponent* dest_vid = static_cast<VideoComponent*>(dest);
+					VideoComponent* src_vid = static_cast<VideoComponent*>(src);
+					dest_vid->fullscreenMode = src_vid->fullscreenMode;
+					dest_vid->backgroundColor = src_vid->backgroundColor;
+				}
 
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
@@ -752,7 +761,8 @@ void EngineContainerService::LoadScene(const char* path) {
 		} else {
 			spdlog::error("EngineService: Failed to load scene from {}", path);
 		}
-
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
 	});
 }
 
@@ -766,6 +776,9 @@ void EngineContainerService::NewScene() {
 		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].first = std::make_shared<SceneGraphNode>(root);
 		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].second = true;
 		spdlog::info("EngineService: New Scene created");
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 		});
 }
 

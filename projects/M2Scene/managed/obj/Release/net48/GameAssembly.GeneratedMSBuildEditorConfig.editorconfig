@@ -1,6 +1,6 @@
 is_global = true
 build_property.RootNamespace = GameAssembly
-build_property.ProjectDir = C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\M2Scene\managed\
+build_property.ProjectDir = C:\Users\Steven\source\repos\academic\gam300\gam300\projects\M2Scene\managed\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false

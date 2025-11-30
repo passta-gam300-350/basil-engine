@@ -101,6 +101,10 @@ bool AudioSystem::Init(void* extraDriverData) {
     m_listenerLastPosition = m_listenerPosition;
     m_listenerMoved = false;
 
+    auto e = Engine::GetWorld().add_entity();
+    e.add<AudioComponent>();
+    e.destroy();
+
     m_initialized = true;
     return true;
 }
@@ -114,6 +118,7 @@ void AudioSystem::Update(ecs::world& world) {
     const auto& camera = CameraSystem::GetActiveCameraData();
     if (!camera.isActive) {
         // No active camera in scene - skip audio update this frame
+        FMOD_ErrorCheck(m_system->update());
         return;
     }
     SetListenerPosition(camera.position);

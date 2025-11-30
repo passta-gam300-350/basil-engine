@@ -236,9 +236,7 @@ void EditorMain::init()
 	UNREF_PARAM(v_mode);
 	// Set maximized
 	glfwMaximizeWindow(window);
-
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
-	
 
 	// Register custom audio inspector with import settings
 	{
@@ -471,10 +469,8 @@ void EditorMain::init()
 				}
 			});
 	}
-
 	// Set decoration on
 	glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
-
 	// Initialize Editor Camera (Phase 3: unique_ptr, no CameraSystem coupling)
 	m_EditorCamera = std::make_unique<EditorCamera>();
 	m_EditorCamera->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
@@ -484,7 +480,6 @@ void EditorMain::init()
 	m_EditorCamera->SetTarget(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Phase 3: Removed SetAuxCamera and SetActiveCamera calls - camera data flows via snapshot
-
 	glfwMakeContextCurrent(nullptr);
 	// init engine
 	engineService.init();
@@ -496,7 +491,7 @@ void EditorMain::init()
 		spdlog::info("Physics Active");
 		});
 	CreateDemoScene();
-
+	
 	SetupUnityStyle();
 	//std::jthread jth(&Engine::Update);
 	// Note: ImGui callbacks are already set up in main.cpp

@@ -14,6 +14,7 @@
 #include "descriptors/mesh.hpp"
 #include "descriptors/material.hpp"
 #include "descriptors/texture.hpp"
+#include "descriptors/animation.hpp"
 #include <native/mesh.h>
 
 // --- helper: build transform matrix ---
@@ -32,6 +33,16 @@ inline glm::mat4 BuildTransform(ModelDescriptor const& desc) {
 // --- helper: convert aiColor3D to glm::vec3 ---
 inline glm::vec3 ToVec3(const aiColor3D& c) {
     return glm::vec3(c.r, c.g, c.b);
+}
+
+// --- helper: convert aiVector3D to glm::vec3 ---
+inline glm::vec3 ToVec3(const aiVector3D& c) {
+    return glm::vec3(c.x, c.y, c.z);
+}
+
+// --- helper: convert aiquat to glm::vec3 ---
+inline glm::quat ToQuat(const aiQuaternion& q) {
+    return glm::quat(q.x, q.y, q.z, q.w);
 }
 
 // --- helper: extract material into MaterialDescriptor ---
@@ -105,10 +116,36 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();
     matDesc.base.m_importer = "material";
-    matDesc.base.m_name = name.C_Str();
+    matDesc.base.m_name = name.C_Str() + std::string("_material");
     matDesc.base.m_importer_type = rp::utility::type_hash<MaterialDescriptor>::value();
 
     return matDesc;
+}
+
+//just assume 1 animation is 1 channel. //assume same interpolation, change this in the future
+inline AnimationDescriptor ExtractAnimation(aiNodeAnim* aianimnd) {
+    AnimationDescriptor anidesc;
+    aiString const& name = aianimnd->mNodeName;
+    
+    for (std::uint32_t i{}; i < aianimnd->mNumPositionKeys; i++) {
+        auto poskey = aianimnd->mPositionKeys[i];
+        anidesc.anim.m_positions.emplace(poskey.mTime, ToVec3(poskey.mValue));
+    }
+    for (std::uint32_t i{}; i < aianimnd->mNumRotationKeys; i++) {
+        auto rotkey = aianimnd->mRotationKeys[i];
+        anidesc.anim.m_rotations.emplace(rotkey.mTime, ToQuat(rotkey.mValue));
+    }
+    for (std::uint32_t i{}; i < aianimnd->mNumScalingKeys; i++) {
+        auto sclkey = aianimnd->mScalingKeys[i];
+        anidesc.anim.m_scales.emplace(sclkey.mTime, ToVec3(sclkey.mValue));
+    }
+
+    // Assign a new Guid for this material
+    anidesc.base.m_guid = rp::Guid::generate();
+    anidesc.base.m_importer = "animation";
+    anidesc.anim.m_name = anidesc.base.m_name = name.C_Str() + std::string("_animation");
+    anidesc.base.m_importer_type = rp::utility::type_hash<AnimationDescriptor>::value();
+    return anidesc;
 }
 
 // --- helper: process one aiMesh ---
@@ -257,6 +294,17 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
     for (auto const& matDesc : extractedMaterials) {
         //CreateMaterial(matDesc, rp::utility::output_path(), parent + matDesc.material.material_name + ".desc");
         rp::serialization::yaml_serializer::serialize(matDesc, parent + matDesc.material.material_name + ".desc");
+    }
+
+
+    //change this in the future, this is only single channel
+    for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
+        auto anim = scene->mAnimations[a];
+        for (unsigned int c = 0; c < anim->mNumChannels; c++) {
+            auto chl = anim->mChannels[c];
+            auto anidesc = ExtractAnimation(chl);
+            rp::serialization::yaml_serializer::serialize(anidesc, parent + anidesc.anim.m_name + ".desc");
+        }
     }
 
     return result;

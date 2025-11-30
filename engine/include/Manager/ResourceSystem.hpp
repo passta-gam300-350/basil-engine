@@ -1,6 +1,12 @@
 #ifndef ENGINE_RESOURCE_SYSTEM_HPP
 #define ENGINE_RESOURCE_SYSTEM_HPP
 
+#define WIN32_LEAN_AND_MEAN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
 #include <memory>
 #include <jobsystem.hpp>
 #include <hashtable.hpp>
@@ -15,7 +21,6 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
-#include <windows.h>
 
 // Renamed from Handle to ResourceHandle to avoid conflict with Windows HANDLE
 struct ResourceHandle {
@@ -206,6 +211,7 @@ struct ResourceRegistry {
         std::function<void* (void*, ResourceHandle)> m_Ptr;
         std::function<const void* (const void*, ResourceHandle)> m_ConstPtr;
         std::function<bool (void*, rp::Guid)> m_Unload;
+        std::function<void(void*)> m_Clear;
     };
 
     using TypeNameHash = std::uint64_t;
@@ -264,6 +270,10 @@ struct ResourceRegistry {
             //unload
             [](void* p, rp::Guid g) -> bool {
                 return static_cast<PoolType<T>*>(p)->Unload(g);
+            },
+            //clear all
+            [](void* p) -> void {
+                static_cast<PoolType<T>*>(p)->Clear();
             }
         };
 
@@ -369,6 +379,12 @@ struct ResourceRegistry {
     template <typename T>
     bool UnregisterInMemory(rp::Guid guid) {
         return Unload<T>(guid);  // Unload handles cleanup
+    }
+
+    void ReleaseAll() {
+        for (auto entry : m_Entries) {
+            entry.second.m_Vt.m_Clear(entry.second.m_Pool);
+        }
     }
 
 private:
@@ -479,6 +495,7 @@ struct ResourceSystem {
     }
 
     static void Release() {
+        ResourceRegistry::Instance().ReleaseAll();
         InstancePtr().reset();
     }
 

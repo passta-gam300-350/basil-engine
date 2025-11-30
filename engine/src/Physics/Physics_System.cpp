@@ -15,7 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <algorithm> // for std::sort in RaycastAll
 
 // Jolt DebugRenderer for accessing sInstance singleton
-#include <Jolt/Renderer/DebugRenderer.h>
+//#include <Jolt/Renderer/DebugRenderer.h>
 
 // For applying center offset to shapes
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>

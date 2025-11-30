@@ -8,6 +8,8 @@
 #include "Engine.hpp"
 #include "Scene/SceneGraph.hpp"
 
+#include "Render/Render.h"
+
 #include <yaml-cpp/yaml.h>
 
 namespace ecs {
@@ -164,6 +166,7 @@ namespace ecs {
 		reg.emplace<entity::entity_name_t>(new_entity, default_name);
 		reg.emplace<entity::active_t>(new_entity);
 		Engine::GetSceneRegistry().onCreateAssignToDefault(entity{ impl.handle, static_cast<std::uint32_t>(new_entity) }); //use proper observers next time
+		Engine::GetRenderSystem().BuildBVH(*this);
 		return entity{ impl.handle, static_cast<std::uint32_t>(new_entity) };
 	}
 
@@ -181,6 +184,7 @@ namespace ecs {
 			}
 			Engine::GetSceneRegistry().onDestroySceneComponent(enty); //use proper observers next time
 			impl.get_registry().destroy(detail::entt_entity_cast(enty));
+			Engine::GetRenderSystem().BuildBVH(*this);
 		}
 	}
 

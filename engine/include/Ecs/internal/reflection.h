@@ -614,8 +614,7 @@ constexpr auto InterfaceRegistrationV = InterfaceRegistration<SetPtr, GetPtr, Na
 template<typename T>
 void RegisterEnum(auto& factory) {
 	constexpr auto get_enum_val{ []() -> std::span<const std::pair<std::string_view, std::uint32_t>> {
-		static constexpr auto enum_list{
-		[]() {
+		static constexpr auto enum_list{ []() {
 			constexpr auto elist{ rp::reflection::get_enum_list<T>() };
 			std::array<std::pair<std::string_view, std::uint32_t>, elist.size()> emlist{};
 			for (int i{}; i < elist.size(); i++) {
@@ -623,14 +622,24 @@ void RegisterEnum(auto& factory) {
 				emlist[i].second = static_cast<std::uint32_t>(elist[i].m_enum_value);
 			}
 			return emlist;
-			}()
-		};
+			}()};
 		return std::span<const std::pair<std::string_view, std::uint32_t>>(enum_list);
 		} };
 	factory.template func<get_enum_val, entt::as_is_t> ("enum_values"_tn);
 	factory.template func<[](std::string const& str) {return rp::reflection::map_enum_value<T>(str); }, entt::as_is_t> ("to_enum_value"_tn);
 	factory.template func<[](std::uint32_t val) -> const std::string_view {return rp::reflection::map_enum_name<T>(static_cast<T>(val)); }, entt::as_is_t> ("to_enum_name"_tn);
 }
+
+template <typename T>
+struct member_pointer_traits;
+
+// Specialization for data members
+template <typename Class, typename Member>
+struct member_pointer_traits<Member Class::*> {
+	using member_type = Member;
+	using class_type = Class;
+};
+
 
 template<typename T>
 void RegisterDataMember(auto& factory) {
@@ -640,11 +649,11 @@ void RegisterDataMember(auto& factory) {
 	}
 	else {
 		factory.template data<T::ptr, entt::as_ref_t>(T::hash);
+		/*using underlying_type = typename member_pointer_traits<T::ptr>::member_type;
+		if constexpr (std::is_enum_v<underlying_type>) {
+			RegisterEnum<underlying_type>(entt::meta_factory<underlying_type>());
+		}*/
 	}
-	/*using underlying_type = decltype(T::ptr);
-	if constexpr (std::is_enum_v<underlying_type>) {
-		RegisterEnum<underlying_type>(entt::meta_factory<underlying_type>());
-	}*/
 }
 
 
@@ -683,6 +692,11 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 		} });
 }
 
+#define RegisterReflectionTypeEnum(TYPE, TYPENAME)	\
+namespace {											\
+	inline int TYPE##_reflection_register = []() {	\
+		RegisterReflectionComponent<TYPE>(TYPENAME);\
+		return 1;}();}	
 #define RegisterReflectionTypeBegin(TYPE, TYPENAME) \
 namespace {											\
 	inline int TYPE##_reflection_register = []() {	\

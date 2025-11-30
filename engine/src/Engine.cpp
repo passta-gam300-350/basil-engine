@@ -19,6 +19,8 @@
 #include "Resources/Texture.h"
 #include <array>
 #include <glad/glad.h>
+#include "Render/VideoPlayback.hpp"
+#include "System/AnimationSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
@@ -168,11 +170,13 @@ void Engine::CoreUpdate() {
 	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
+	animationSystem().FixedUpdate(instance.m_World);
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
 	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetDeltaTime()));
 
 	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
 	Engine::SyncActiveSceneRenderSettings();
+	VideoSystem().Update(instance.m_World);
 
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
@@ -251,7 +255,10 @@ void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 
 
 	Instance().m_Window = std::make_unique<Window>(wptr);
-
+	if (!std::filesystem::exists(cfg))
+	{
+		GenerateDefaultConfig();
+	}
 	InitWithoutWindow(cfg);
 }
 
