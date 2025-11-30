@@ -28,6 +28,7 @@
 <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
 <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs" />
 <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayAudio.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayAudioLoop.cs" />
 <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayerCameraController.cs" />
 <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayerController3D.cs" />
 <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PuzzleManager.cs" />

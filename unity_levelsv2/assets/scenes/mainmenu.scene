@@ -49,7 +49,7 @@ entities:
         guid: 469fc0b776e9bb6bd4dc6b3494c
         type: 17099568057112876377
       volume: 0.25
-      isLooping: false
+      isLooping: true
       is3D: true
       isStreaming: false
       playOnAwake: false

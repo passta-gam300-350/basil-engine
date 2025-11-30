@@ -5,11 +5,11 @@ using BasilEngine.Debug;
 using BasilEngine.SceneManagement;
 
 
-public class MainMenu : Behavior
+public class PlayAudioLoop : Behavior
 {
 
     private Audio audio;
-    private float fadeSpeed = 100.0f;
+    private float fadeSpeed = 100.0f; // 100 = 1 second, 50 = 2 second...
     private bool isFadingIn = false;
     private float targetVolume;
 
@@ -27,21 +27,13 @@ public class MainMenu : Behavior
         if (isFadingIn)
         {
             audio.Volume += (targetVolume * fadeSpeed / 100.0f) * Time.deltaTime;
-            
+
             if (audio.Volume >= targetVolume)
             {
                 audio.Volume = targetVolume;
                 isFadingIn = false;
             }
         }
-        
-        if (Input.GetKey(KeyCode.ENTER))
-        {
-            // Load the main game scene
-            Logger.Warn("TODO: Scene loading");
-            Scene.LoadScene(1);
-        }
-
     }
 
     public void FixedUpdate()

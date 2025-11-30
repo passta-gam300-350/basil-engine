@@ -57,6 +57,7 @@ public class Spool : Behavior
         // Play audio while any key (A, D, W, or S) is pressed
         if (isKeyPressed && !wasPlaying)
         {
+            audio.Looping = true;
             audio.Play();
             wasPlaying = true;
         }

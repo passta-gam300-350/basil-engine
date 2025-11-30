@@ -24,44 +24,6 @@ render_settings:
       - 00
       - 00
 entities:
-  - Scene ID:
-      Scene ID: 2
-    entity name:
-      name: Camera
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 0.99999994
-        z: 0.99999994
-      m_Rotate:
-        x: -19
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 1.18654835
-        z: -6.32290268
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 60
-      m_AspectRatio: 1.914469
-      m_Near: 0.100000001
-      m_Far: 10000
-      m_Up:
-        x: 0
-        y: 0.945518553
-        z: -0.32556814
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0.32556814
-        z: 0.945518553
-      m_Yaw: -90
-      m_Pitch: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -163,6 +125,44 @@ entities:
         x: 0
         y: 0
         z: 0
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -19
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 60
+      m_AspectRatio: 1.914469
+      m_Near: 0.100000001
+      m_Far: 10000
+      m_Up:
+        x: 0
+        y: 0.945518553
+        z: -0.32556814
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0.32556814
+        z: 0.945518553
+      m_Yaw: -90
+      m_Pitch: 0
   - Scene ID:
       Scene ID: 1
     LightComponent:
@@ -365,6 +365,37 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 5
+    entity name:
+      name: building_short3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: 19.1220589
+        z: 0
+      m_Trans:
+        x: 4.85509777
+        y: -0.515945673
+        z: 35.9822273
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
         guid: 546d72d7f81a9262afa8ae6c176
         type: 4838001395392124604
       m_MaterialGuid:
@@ -442,37 +473,6 @@ entities:
     Behaviour:
       classesName:
         - KiteTarget
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 136ed17a7ebfa469010ff3b90f
-        type: 4838001395392124604
-      m_MaterialGuid:
-        hdb_1:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 5
-    entity name:
-      name: building_short3
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0300000012
-        y: 0.0299999993
-        z: 0.0300000012
-      m_Rotate:
-        x: 0
-        y: 19.1220589
-        z: 0
-      m_Trans:
-        x: 4.85509777
-        y: -0.515945673
-        z: 35.9822273
-    MaterialOverridesComponent: ~
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -856,7 +856,7 @@ entities:
       audioAssetGuid:
         guid: 469fc30754b84adbf4bf9cbc7e3
         type: 17099568057112876377
-      volume: 0.0599999987
+      volume: 0.00999999978
       isLooping: true
       is3D: true
       isStreaming: true
@@ -1708,15 +1708,15 @@ entities:
         z: 0
     Behaviour:
       classesName:
-        - PlayAudio
+        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
         guid: 469fc0b776e9bb6bd4dc6b3494c
         type: 17099568057112876377
       volume: 1
-      isLooping: false
+      isLooping: true
       is3D: true
-      isStreaming: false
+      isStreaming: true
       playOnAwake: false
       minDistance: 1
       maxDistance: 1000
@@ -1749,13 +1749,13 @@ entities:
         z: 0
     Behaviour:
       classesName:
-        - PlayAudio
+        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
         guid: 469fb4b72e3b016fbaf4537dc57
         type: 17099568057112876377
       volume: 2
-      isLooping: false
+      isLooping: true
       is3D: true
       isStreaming: false
       playOnAwake: false
@@ -1790,13 +1790,13 @@ entities:
         z: 0
     Behaviour:
       classesName:
-        - PlayAudio
+        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
         guid: 469fcf3705599a35e3062779325
         type: 17099568057112876377
       volume: 0.540000021
-      isLooping: false
+      isLooping: true
       is3D: true
       isStreaming: false
       playOnAwake: false

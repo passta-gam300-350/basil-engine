@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 135
+  slot: 138
   guid: 00
   dependencies: ~
 render_settings:
@@ -65,39 +65,6 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 98e46a174c696692318e374794b
-        type: 4838001395392124604
-      m_MaterialGuid:
-        PandaMat1:
-          guid: 9bca0c57316b6f3576d16ac2fd1
-          type: 175488002581160416
-        standardSurface2:
-          guid: 9be3fc8740f8a5f8a62d75ec69a
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 30
-    entity name:
-      name: kitchen_shelf_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00600021705
-        y: 0.00499999942
-        z: 0.00500010699
-      m_Rotate:
-        x: 89.9993896
-        y: -88.7030716
-        z: -89.9993896
-      m_Trans:
-        x: 0.0367141403
-        y: 0.690294325
-        z: -1.39697111
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
         guid: 1227985796f81e4d5c327308919
         type: 4838001395392124604
       m_MaterialGuid:
@@ -144,24 +111,24 @@ entities:
           guid: 9be3fc8740f8a5f8a62d75ec69a
           type: 175488002581160416
     Scene ID:
-      Scene ID: 29
+      Scene ID: 30
     entity name:
       name: kitchen_shelf_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00606634421
-        y: 0.00500000408
-        z: 0.00500006229
+        x: 0.00600021705
+        y: 0.00499999942
+        z: 0.00500010699
       m_Rotate:
-        x: 89.9991074
-        y: -87.1214905
-        z: -89.9991074
+        x: 89.9993896
+        y: -88.7030716
+        z: -89.9993896
       m_Trans:
-        x: 0.0367146172
-        y: 0.686894774
-        z: -0.0771824718
+        x: 0.0367141403
+        y: 0.690294325
+        z: -1.39697111
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -198,6 +165,39 @@ entities:
         x: -1.67562032
         y: 0.0301287249
         z: -0.733406961
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46a174c696692318e374794b
+        type: 4838001395392124604
+      m_MaterialGuid:
+        PandaMat1:
+          guid: 9bca0c57316b6f3576d16ac2fd1
+          type: 175488002581160416
+        standardSurface2:
+          guid: 9be3fc8740f8a5f8a62d75ec69a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 29
+    entity name:
+      name: kitchen_shelf_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00606634421
+        y: 0.00500000408
+        z: 0.00500006229
+      m_Rotate:
+        x: 89.9991074
+        y: -87.1214905
+        z: -89.9991074
+      m_Trans:
+        x: 0.0367146172
+        y: 0.686894774
+        z: -0.0771824718
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -772,6 +772,45 @@ entities:
           y: 0.951241732
           z: 0.608540893
   - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 65
+    entity name:
+      name: ToyPart_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.033000011
+        y: 0.033000011
+        z: 0.033000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.21873689
+        y: 0.385498196
+        z: 1.7373395
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
       isPrimitive: false
@@ -816,7 +855,7 @@ entities:
           guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 65
+      Scene ID: 64
     entity name:
       name: ToyPart_Copy
     VisibilityComponent:
@@ -831,7 +870,7 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -2.21873689
+        x: -2.18246603
         y: 0.385498196
         z: 1.7373395
     MaterialOverridesComponent:
@@ -885,7 +924,7 @@ entities:
           guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 64
+      Scene ID: 66
     entity name:
       name: ToyPart_Copy
     VisibilityComponent:
@@ -900,8 +939,8 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -2.18246603
-        y: 0.385498196
+        x: -2.2024436
+        y: 0.419999301
         z: 1.7373395
     MaterialOverridesComponent:
       floatOverrides:
@@ -945,75 +984,6 @@ entities:
         x: 0.036714375
         y: 0.695945621
         z: -0.736877501
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 66
-    entity name:
-      name: ToyPart_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.033000011
-        y: 0.033000011
-        z: 0.033000011
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -2.2024436
-        y: 0.419999301
-        z: 1.7373395
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 0.5
-          y: 0.5
-          z: 1
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 469fe547dfcbead1a21fbd420ad
-        type: 4838001395392124604
-      m_MaterialGuid:
-        Metal:
-          guid: 9b10bb37872925796aa10feb2ae
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 3
-    entity name:
-      name: metal_shelf
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0060488251
-        y: 0.00304519036
-        z: 0.00185140292
-      m_Rotate:
-        x: -1.03548336e-06
-        y: 2.86443615
-        z: 1.30771434e-06
-      m_Trans:
-        x: -2.39668703
-        y: -6.50805014e-05
-        z: -0.476697505
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -1074,6 +1044,36 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 469fe547dfcbead1a21fbd420ad
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Metal:
+          guid: 9b10bb37872925796aa10feb2ae
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 3
+    entity name:
+      name: metal_shelf
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0060488251
+        y: 0.00304519036
+        z: 0.00185140292
+      m_Rotate:
+        x: -1.03548336e-06
+        y: 2.86443615
+        z: 1.30771434e-06
+      m_Trans:
+        x: -2.39668703
+        y: -6.50805014e-05
+        z: -0.476697505
   - Scene ID:
       Scene ID: 4
     LightComponent:
@@ -2639,11 +2639,11 @@ entities:
       useGravity: false
       isKinematic: false
       freezePositionX: false
-      freezePositionY: false
+      freezePositionY: true
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -2719,11 +2719,11 @@ entities:
       useGravity: false
       isKinematic: false
       freezePositionX: false
-      freezePositionY: false
+      freezePositionY: true
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -2799,11 +2799,11 @@ entities:
       useGravity: false
       isKinematic: false
       freezePositionX: false
-      freezePositionY: false
+      freezePositionY: true
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -2879,11 +2879,11 @@ entities:
       useGravity: false
       isKinematic: false
       freezePositionX: false
-      freezePositionY: false
+      freezePositionY: true
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -3103,11 +3103,11 @@ entities:
       useGravity: false
       isKinematic: false
       freezePositionX: false
-      freezePositionY: false
+      freezePositionY: true
       freezePositionZ: false
-      freezeRotationX: false
-      freezeRotationY: false
-      freezeRotationZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
       freezeLinearVelocityX: false
       freezeLinearVelocityY: false
       freezeLinearVelocityZ: false
@@ -3157,9 +3157,9 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -2.04086089
-        y: 0.154503465
-        z: -0.101959839
+        x: -1.99948204
+        y: 0.154503495
+        z: -0.114343204
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -3201,6 +3201,42 @@ entities:
         unnamed slot:
           guid: 00
           type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: false
+      freezeRotationY: false
+      freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
     BoxCollider:
       size:
         x: 0.00100000005
@@ -3217,22 +3253,22 @@ entities:
     Scene ID:
       Scene ID: 104
     entity name:
-      name: unnamed
+      name: box_wall1
     VisibilityComponent:
       m_IsVisible: false
     TransformComponent:
       m_Scale:
-        x: 0.00100000005
+        x: 0.0010000004
         y: 0.267321885
         z: 0.354714602
       m_Rotate:
         x: 0
-        y: 11.6050615
+        y: 7.84306288
         z: 0
       m_Trans:
-        x: -2.14144468
-        y: 0.177567378
-        z: -0.140902787
+        x: -2.0664289
+        y: 0.143218949
+        z: -0.151295945
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -3984,3 +4020,267 @@ entities:
         x: 3.1434114
         y: -0.201573208
         z: -21.6105938
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: false
+      freezeRotationY: false
+      freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.00100000005
+        y: 0.286000013
+        z: 0.337000012
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 135
+    entity name:
+      name: box_wall2
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.000999993761
+        y: 0.267321885
+        z: 0.354714453
+      m_Rotate:
+        x: -179.997803
+        y: 82.5046539
+        z: -179.997803
+      m_Trans:
+        x: -1.95736897
+        y: 0.140888155
+        z: -0.329604298
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: false
+      freezeRotationY: false
+      freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.00100000005
+        y: 0.284999996
+        z: 0.335000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 136
+    entity name:
+      name: box_wall3
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 9.99993858e-07
+        y: 0.267321885
+        z: 0.354714453
+      m_Rotate:
+        x: -179.997803
+        y: 82.5046539
+        z: -179.997803
+      m_Trans:
+        x: -1.91350484
+        y: 0.148077101
+        z: -0.0259754434
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: false
+      freezeRotationY: false
+      freezeRotationZ: false
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.00100000005
+        y: 0.284000009
+        z: 0.335000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 137
+    entity name:
+      name: box_wall4
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.0010000004
+        y: 0.267321885
+        z: 0.354714602
+      m_Rotate:
+        x: 0
+        y: 7.84306288
+        z: 0
+      m_Trans:
+        x: -1.77703631
+        y: 0.140078545
+        z: -0.19785139
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
