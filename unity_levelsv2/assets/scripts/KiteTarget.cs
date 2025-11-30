@@ -8,8 +8,8 @@ public class KiteTarget : Behavior
 {
     private Rigidbody rb;
 
-    public float windSpeed = 15f;
-    public float collectDist = 2f;
+    public float windSpeed = 20f;
+    public float collectDist = 5.5f;
     private GameObject player;
     private KiteController kiteController;
 
@@ -42,6 +42,7 @@ public class KiteTarget : Behavior
 
 
         movement.x -= windSpeed * Time.deltaTime;
+        movement.y -= windSpeed * Time.deltaTime;
         rb.velocity = movement;
         float d = Vector3.DistanceSqr(player.transform.position, transform.position);
         if (d < collectDist)

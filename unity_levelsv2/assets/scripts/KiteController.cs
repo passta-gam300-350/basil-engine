@@ -9,7 +9,7 @@ public class KiteController : Behavior
 {
     private Rigidbody rb;
 
-    public float windSpeed = 50f;
+    public float windSpeed = 30f;
     public float moveSpeed = 250f;
 
     public int totalKite = 4;
@@ -71,6 +71,7 @@ public class KiteController : Behavior
 
 
         movement.x -= windSpeed * time;
+        movement.y -= windSpeed * time;
         rb.velocity = movement;
     }
 

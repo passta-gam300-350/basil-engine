@@ -96,6 +96,19 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		});
 	}
 
+	if (strName == "Audio")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Rigidbody component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Audio component check
+			bool result = entity.any<AudioComponent>(); // Replace with actual Audio component
+			return result;
+		});
+		return id;
+	}
+
 
 
 

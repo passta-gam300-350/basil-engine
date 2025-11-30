@@ -694,6 +694,24 @@
 "Wheel4_Train_Roughness.png":
   "m_guid": "55e500377b9a45f33a39bc67ea3"
   "m_typeindex": "126269861530532084"
+"bg_BaseColor.png":
+  "m_guid": "5328f7774591d42aac22b9b777"
+  "m_typeindex": "126269861530532084"
+"bg_Emissive.png":
+  "m_guid": "53290576209feab27f7ed5c83a"
+  "m_typeindex": "126269861530532084"
+"bg_Height.png":
+  "m_guid": "5329107e0cb01021d6e497f19a"
+  "m_typeindex": "126269861530532084"
+"bg_Metallic.png":
+  "m_guid": "53291a7fae88b9fcfa759d209c"
+  "m_typeindex": "126269861530532084"
+"bg_Normal.png":
+  "m_guid": "53292477b0b4d22f49886da143"
+  "m_typeindex": "126269861530532084"
+"bg_Roughness.png":
+  "m_guid": "53292e783a9b72f0a484cc7979"
+  "m_typeindex": "126269861530532084"
 "biscuit_tin1.obj":
   "m_guid": "36fd872715aa00c70870415f7f2"
   "m_typeindex": "4838001395392124604"
@@ -1234,6 +1252,9 @@
 "kite_base_mat_Roughness.png":
   "m_guid": "14e4e6c74899c32d2b96a68c3e1"
   "m_typeindex": "126269861530532084"
+"kite_bg.obj":
+  "m_guid": "8aabd17ae59cbd05045a9fcce1"
+  "m_typeindex": "4838001395392124604"
 "kite_enemy1.obj":
   "m_guid": "546d71f73608b858a14be1bdbf0"
   "m_typeindex": "4838001395392124604"
@@ -1540,11 +1561,23 @@
 "m_kite_base_2":
   "m_guid": "57638ab7cee9009151d9fa7a3d6"
   "m_typeindex": "175488002581160416"
+"m_kite_bg":
+  "m_guid": "79570f78f69b239620b9e69397"
+  "m_typeindex": "175488002581160416"
 "m_kite_enemy":
   "m_guid": "37277ea7f1b9ef64e01fb8c0f5e"
   "m_typeindex": "175488002581160416"
 "m_kite_enemy1":
   "m_guid": "54f94557151b6536992ee587232"
+  "m_typeindex": "175488002581160416"
+"m_kite_enemy2":
+  "m_guid": "f7c7b7b9faa6d59a22499a68e"
+  "m_typeindex": "175488002581160416"
+"m_kite_enemy3":
+  "m_guid": "ff24879238a247f72c21bf69b"
+  "m_typeindex": "175488002581160416"
+"m_kite_enemy4":
+  "m_guid": "1068517593915484292e0c8089"
   "m_typeindex": "175488002581160416"
 "m_kite_player":
   "m_guid": "549be077d859642e725a0913676"
@@ -1945,6 +1978,27 @@
 "table_top":
   "m_guid": "998b553738391801b1a8ca31ab1"
   "m_typeindex": "175488002581160416"
+"terrain.obj":
+  "m_guid": "20422d7a94a069c5b7d335b6fd"
+  "m_typeindex": "4838001395392124604"
+"terrian_BaseColor.png":
+  "m_guid": "2041eb749fbc4f7f435531491a"
+  "m_typeindex": "126269861530532084"
+"terrian_Emissive.png":
+  "m_guid": "2041f87dc58c473c2c235b81c4"
+  "m_typeindex": "126269861530532084"
+"terrian_Height.png":
+  "m_guid": "20420378fb9e1af9cf0f8e0da6"
+  "m_typeindex": "126269861530532084"
+"terrian_Metallic.png":
+  "m_guid": "20420c766f83afeb74b1604f28"
+  "m_typeindex": "126269861530532084"
+"terrian_Normal.png":
+  "m_guid": "2042167aa6890d5e5e100d6dfb"
+  "m_typeindex": "126269861530532084"
+"terrian_Roughness.png":
+  "m_guid": "20421e71bf94ee7294288cff91"
+  "m_typeindex": "126269861530532084"
 "test":
   "m_guid": "965e0fb70238211d166da357ff0"
   "m_typeindex": "175488002581160416"
