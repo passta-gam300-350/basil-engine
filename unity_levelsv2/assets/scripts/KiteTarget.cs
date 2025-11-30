@@ -29,7 +29,7 @@ public class KiteTarget : Behavior
         // kites' initial velocity
         movement = new Vector3(-windSpeed, 0f, 0f);
         kiteHit = new GameObject[4];
-        for (int i = 0; i < 4; i++) 
+        for (int i = 0; i < kiteHit.Length; i++) 
         {
             string objectName = "kite_hit" + (i + 1);
             kiteHit[i] = GameObject.Find(objectName);

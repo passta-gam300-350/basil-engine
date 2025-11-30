@@ -2005,6 +2005,33 @@
 "sfx_kite_spool_loop.ogg":
   "m_guid": "3ace30a7eeea433ebd0ffc881e5"
   "m_typeindex": "17099568057112876377"
+"sfx_kite_stick_1.ogg":
+  "m_guid": "3b2677a74b79947ce5e39888767"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_stick_2.ogg":
+  "m_guid": "3b2678674c69d4feacd0c030159"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_stick_3.ogg":
+  "m_guid": "3b2678e75dba20c543b2c927005"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_stick_4.ogg":
+  "m_guid": "3b267977d8f8ba748e42bbec225"
+  "m_typeindex": "17099568057112876377"
+"sfx_open_garbage1.ogg":
+  "m_guid": "3b267a07094be3ddc131aefe43e"
+  "m_typeindex": "17099568057112876377"
+"sfx_open_garbage2.ogg":
+  "m_guid": "3b267a87c778239bab1d38a94a2"
+  "m_typeindex": "17099568057112876377"
+"sfx_open_garbage3.ogg":
+  "m_guid": "3b267b07a7583af560e542e4caf"
+  "m_typeindex": "17099568057112876377"
+"sfx_pick_bag_1.ogg":
+  "m_guid": "3b267b977ffad9b36b8bd00d6ca"
+  "m_typeindex": "17099568057112876377"
+"sfx_pick_bag_2.ogg":
+  "m_guid": "3b267c171f0aa5c48a49a198a98"
+  "m_typeindex": "17099568057112876377"
 "shutter.obj":
   "m_guid": "7cd4bbe74019b3999dacf91e41a"
   "m_typeindex": "4838001395392124604"
