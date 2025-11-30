@@ -1939,8 +1939,44 @@
 "rubbish":
   "m_guid": "9989f8776c9b5029caa508fd79f"
   "m_typeindex": "175488002581160416"
+"sfx_footstep_concrete_1.ogg":
+  "m_guid": "3a87d9f77cba090c4d50000925b"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_2.ogg":
+  "m_guid": "3a87daf7882b91bd917cc59ff20"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_3.ogg":
+  "m_guid": "3a87dbb7de9aac1ef1f1102f778"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_4.ogg":
+  "m_guid": "3a87dc675f5beb502e8823e8a41"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_5.ogg":
+  "m_guid": "3a87dcf78cea2f96732a3732cf7"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_6.ogg":
+  "m_guid": "3a87dd9731eb51cc72a38ccca74"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_7.ogg":
+  "m_guid": "3a87de27659b4ccc0494f5f9313"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_8.ogg":
+  "m_guid": "3a87dec7b9580e58322f0c923e7"
+  "m_typeindex": "17099568057112876377"
+"sfx_footstep_concrete_9.ogg":
+  "m_guid": "3a87df67f919e1d9beefb0dcb95"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_hit1.ogg":
+  "m_guid": "39dfd5d7bcb947c8429f9d6d9a8"
+  "m_typeindex": "17099568057112876377"
 "sfx_kite_hit2.ogg":
   "m_guid": "84494f270c8ad7e98595586124b"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_hit3.ogg":
+  "m_guid": "39dfd6973f38158a377d5aecfb5"
+  "m_typeindex": "17099568057112876377"
+"sfx_kite_hit4.ogg":
+  "m_guid": "39dfd7479a0b33693485c8d229c"
   "m_typeindex": "17099568057112876377"
 "sfx_kite_hit_1.ogg":
   "m_guid": "347fbb9793bb29b34951e050c00"

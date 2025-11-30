@@ -81,7 +81,7 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 469fb81757b9f1e2b64abde5908
+        guid: 39dfd7479a0b33693485c8d229c
         type: 17099568057112876377
       volume: 0.200000003
       isLooping: false
@@ -251,7 +251,7 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 469fb767b92b6856c2716382f89
+        guid: 39dfd6973f38158a377d5aecfb5
         type: 17099568057112876377
       volume: 0.200000003
       isLooping: false
@@ -2025,7 +2025,7 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 469fb6c73a0b901c58ca434e7f7
+        guid: 39dfd5d7bcb947c8429f9d6d9a8
         type: 17099568057112876377
       volume: 0.200000003
       isLooping: false
@@ -2061,7 +2061,7 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 469fb6079638903140335e2db84
+        guid: 84494f270c8ad7e98595586124b
         type: 17099568057112876377
       volume: 0.200000003
       isLooping: false
