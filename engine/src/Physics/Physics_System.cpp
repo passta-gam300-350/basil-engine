@@ -519,9 +519,10 @@ void PhysicsSystem::OnRigidbodyDestroyed(entt::registry& registry, entt::entity 
     // Find and destroy associated Jolt body
     auto it = m_entityToBodyID.find(ecsEntity);
     if (it != m_entityToBodyID.end()) {
-        DestroyRigidBody(it->second);
-        m_entityToBodyID.erase(it);
+       DestroyRigidBody(it->second);
+
         m_bodyIDToEntity.erase(it->second.GetIndexAndSequenceNumber());
+        m_entityToBodyID.erase(it);
     }
 
     // If entity still has a collider, recreate as trigger-only/static body

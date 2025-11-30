@@ -186,20 +186,24 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 	vc.currentTime = video_time;
 
 	rvd.m_VidResource->m_StreamSync.release();
-	if (!frame) {
-		return std::vector<uint8_t>{};
-	}
-	else if (plm_has_ended(ptr)) {
+	static bool entered = false;
+	if (plm_has_ended(ptr)) {
+		entered = true;
 		plm_rewind(ptr);
 		rvd.m_VidResource->m_Chl->stop();
 		rvd.m_VidResource->m_Chl = nullptr;
 		if (vc.loop) {
 			vc.currentTime = 0;
-			
+
 			return getNextFrame(vc, rvd);
 		}
 		vc.isPlaying = false;
 		vc.currentTime = 0;
+		return std::vector<uint8_t>{};
+	}
+	else if (!frame) {
+		if (entered) 
+			vc.isPlaying = false;
 		return std::vector<uint8_t>{};
 	}
 
