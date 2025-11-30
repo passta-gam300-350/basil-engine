@@ -99,16 +99,16 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
 	if (klass) {
-		//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
-		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klass, args);
+		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
+		//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klass, args);
 
 	} else
 	{
 		AddNamedKlass(klassName, klassNamespace, isBackend);
 	}
 	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
-	//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
-	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klassPtr, args);
+	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
+	//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klassPtr, args);
 
 	if (klass->IsDerivedFrom("BasilEngine.Components.Behavior"))
 	{

@@ -71,6 +71,7 @@ void Engine::Init(std::string const& cfg ) {
 	std::string playerDir = std::filesystem::absolute(std::filesystem::path{"."}).string();
 	Engine::setWorkingDir(playerDir.c_str());
 
+	Instance().m_Info.m_FrameLogRate = 165;
 
 	if (!std::filesystem::exists(cfg))
 	{
@@ -171,6 +172,7 @@ void Engine::Init(std::string const& cfg ) {
 }
 
 void Engine::CoreUpdate() {
+	Engine::Instance().m_Info.m_StartTime.reset();
 	//thread_local auto physic_system{PhysicsSystem()};
 	Engine& instance{ Instance() };
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
@@ -202,7 +204,7 @@ void Engine::CoreUpdate() {
 
 
 	instance.m_SceneRegistry->PollRequestSceneChange();
-	
+	instance.m_Info.m_ActualDeltaTime = instance.m_Info.m_StartTime.elapsed().count();
 }
 
 void Engine::Update() {
@@ -215,13 +217,11 @@ void Engine::Update() {
 					instance.m_Info.m_State = Info::State::Exit;
 					break;
 				}
-				
-				CoreUpdate();
-
-				Engine::GetWindowInstance().SwapBuffers();
-
-				UpdateDebug();
-
+				{
+					CoreUpdate();
+					UpdateDebug();
+					Engine::GetWindowInstance().SwapBuffers();
+				}
 				
 			}
 		}
@@ -391,6 +391,10 @@ world Engine::GetWorld() {
 
 double Engine::GetDeltaTime() {
 	return Instance().m_Info.m_DeltaTime;
+}
+
+double Engine::GetLastDeltaTime() {
+	return Instance().m_Info.m_ActualDeltaTime;
 }
 
 void Engine::GenerateDefaultConfig() {
