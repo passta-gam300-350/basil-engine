@@ -9,7 +9,7 @@ public class PlayAudio : Behavior
 {
 
     private Audio audio;
-    private float fadeSpeed = 100.0f;
+    private float fadeSpeed = 100.0f; // 100 = 1 second, 50 = 2 second...
     private bool isFadingIn = false;
     private float targetVolume;
 
