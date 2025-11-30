@@ -2636,7 +2636,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: 1
-      useGravity: false
+      useGravity: true
       isKinematic: false
       freezePositionX: false
       freezePositionY: true
@@ -2716,7 +2716,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: 1
-      useGravity: false
+      useGravity: true
       isKinematic: false
       freezePositionX: false
       freezePositionY: true
@@ -2796,7 +2796,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: 1
-      useGravity: false
+      useGravity: true
       isKinematic: false
       freezePositionX: false
       freezePositionY: true
@@ -2876,7 +2876,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: 1
-      useGravity: false
+      useGravity: true
       isKinematic: false
       freezePositionX: false
       freezePositionY: true
@@ -3100,7 +3100,7 @@ entities:
       friction: 0
       linearDamping: 0
       gravityFactor: 1
-      useGravity: false
+      useGravity: true
       isKinematic: false
       freezePositionX: false
       freezePositionY: true
@@ -3158,7 +3158,7 @@ entities:
         z: 0
       m_Trans:
         x: -1.99948204
-        y: 0.154503495
+        y: 0.132755354
         z: -0.114343204
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"

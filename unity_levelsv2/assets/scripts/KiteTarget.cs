@@ -12,10 +12,16 @@ public class KiteTarget : Behavior
     public float collectDist = 5.5f;
     private GameObject player;
     private KiteController kiteController;
+    private GameObject[] kiteHit;
+    private System.Random random = new System.Random();
 
     public void Init()
     {
-        
+        kiteHit = new GameObject[4];
+        for (int i = 0; i < 4; i++) 
+        {
+            kiteHit[i] = GameObject.Find("kite_hit" + i);
+        }
     }
 
     public void Update()
@@ -51,7 +57,8 @@ public class KiteTarget : Behavior
 
             GameObject.Destroy(gameObject);
             kiteController.totalKite -= 1;
-
+            int randomIndex = random.Next(0, kiteHit.Length);
+            kiteHit[randomIndex].transform.GetComponent<Audio>().Play();
         }   
         Logger.Log(d);
     }
