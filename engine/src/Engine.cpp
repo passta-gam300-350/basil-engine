@@ -143,6 +143,7 @@ void Engine::Init(std::string const& cfg ) {
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
+	Instance().GetSceneRegistry().RequestSceneChange(0);
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	MonoEntityManager::GetInstance().SetPreCompiled(true);

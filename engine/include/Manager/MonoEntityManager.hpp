@@ -97,9 +97,7 @@ public:
 	void VisitAssembly(ManagedAssembly* assembly, const ClassVisitor& visitor);
 	void AddKlassFromAssembly(ScriptID assemblyID);
 
-	void SetPreCompiled(bool val) {
-		preCompiled = val;
-	}
+	void SetPreCompiled(bool val);
 
 	MonoTypeRegistry& GetTypeRegistry() {
 		return m_TypeRegistry;
