@@ -25,6 +25,9 @@ public class KiteTarget : Behavior
 
     public void Init()
     {
+        
+        // kites' initial velocity
+        movement = new Vector3(-windSpeed, 0f, 0f);
         kiteHit = new GameObject[4];
         for (int i = 0; i < 4; i++) 
         {
@@ -85,8 +88,8 @@ public class KiteTarget : Behavior
             movement.y = -Math.Abs(movement.y);  // bounce down
         }
 
-        movement.x -= windSpeed * Time.deltaTime;
-        movement.y -= windSpeed * Time.deltaTime;
+        // apply new pos and velocity
+        transform.position = pos;
         rb.velocity = movement;
 
 

@@ -43,6 +43,15 @@
 "Blue_Sky_Top.png":
   "m_guid": "d8b17877ce5ba3b286f5789acd0"
   "m_typeindex": "126269861530532084"
+"CamInspect_1.ogg":
+  "m_guid": "30b4162739595e3e6ffec26f98e"
+  "m_typeindex": "17099568057112876377"
+"CamInspect_2.ogg":
+  "m_guid": "30b416e7a8d982fc85795ff1f2c"
+  "m_typeindex": "17099568057112876377"
+"CamInspect_3.ogg":
+  "m_guid": "30b417677e69dd8f7fb130245ad"
+  "m_typeindex": "17099568057112876377"
 "CardboardBoxOpen_standardSurface7_BaseColor.png":
   "m_guid": "98e4294763590b1d5701ac2ee9b"
   "m_typeindex": "126269861530532084"
@@ -169,9 +178,51 @@
 "Ceilingfan_openPBR_shader5_Roughness.png":
   "m_guid": "98e430979be8845f690a44df734"
   "m_typeindex": "126269861530532084"
+"Drop_TrashBag.ogg":
+  "m_guid": "30b417f741dad45b3b45d2cb127"
+  "m_typeindex": "17099568057112876377"
+"Drop_TrashBag2.ogg":
+  "m_guid": "30b41887b48b506492c7ec29ce6"
+  "m_typeindex": "17099568057112876377"
 "Dustbin.obj":
   "m_guid": "98e46877d2caea1c5491392d609"
   "m_typeindex": "4838001395392124604"
+"Father_Intro1.ogg":
+  "m_guid": "30b41a376e394135cd42a8bd182"
+  "m_typeindex": "17099568057112876377"
+"Father_Intro2.ogg":
+  "m_guid": "30b41ab7915ae563019ef2649f4"
+  "m_typeindex": "17099568057112876377"
+"Father_Intro3.ogg":
+  "m_guid": "30b41b470298e3f6c0d5396a974"
+  "m_typeindex": "17099568057112876377"
+"Father_KiteHit1.ogg":
+  "m_guid": "30b41bd7ad9b1cffe044fd09aed"
+  "m_typeindex": "17099568057112876377"
+"Father_KiteHit2.ogg":
+  "m_guid": "30b41c67ab99e03637687a32222"
+  "m_typeindex": "17099568057112876377"
+"Father_KiteHit3.ogg":
+  "m_guid": "30b41cf7d4abfcd3fed7716fa3f"
+  "m_typeindex": "17099568057112876377"
+"Father_Lose1.ogg":
+  "m_guid": "30b41d87cb9ac5cf8f40684eea5"
+  "m_typeindex": "17099568057112876377"
+"Father_Lose2.ogg":
+  "m_guid": "30b41e17526998242ed5a9aa077"
+  "m_typeindex": "17099568057112876377"
+"Father_Lose3.ogg":
+  "m_guid": "30b41ec7002b7d24d75894852d1"
+  "m_typeindex": "17099568057112876377"
+"Father_Win1.ogg":
+  "m_guid": "30b41f573599d43a43bb324fe22"
+  "m_typeindex": "17099568057112876377"
+"Father_Win2.ogg":
+  "m_guid": "30b41fe7d7fa170197eecaf359e"
+  "m_typeindex": "17099568057112876377"
+"Father_Win3.ogg":
+  "m_guid": "30b4207786aa074930e94919f0e"
+  "m_typeindex": "17099568057112876377"
 "Floor.obj":
   "m_guid": "98e468d7500b81165d791634200"
   "m_typeindex": "4838001395392124604"
@@ -216,6 +267,15 @@
   "m_typeindex": "17099568057112876377"
 "Footsteps-Barefoot-Concrete-Marble_9.ogg":
   "m_guid": "469fbff7d86b3c00453d2b07001"
+  "m_typeindex": "17099568057112876377"
+"GarbageBin_Open.ogg":
+  "m_guid": "30b421078f59da424ebdd15a116"
+  "m_typeindex": "17099568057112876377"
+"GarbageBin_Open2.ogg":
+  "m_guid": "30b421978f8843a1f9580878969"
+  "m_typeindex": "17099568057112876377"
+"GarbageBin_Open3.ogg":
+  "m_guid": "30b42227666aa39ae12806ef9aa"
   "m_typeindex": "17099568057112876377"
 "Grass_01":
   "m_guid": "2120c9a6767f873e79654f47d80c"
@@ -262,6 +322,21 @@
 "Happy Memory Jingle_Linear.ogg":
   "m_guid": "469fc0b776e9bb6bd4dc6b3494c"
   "m_typeindex": "17099568057112876377"
+"Hover_GlueBottle.ogg":
+  "m_guid": "30b422a7832949450e4d9f6c730"
+  "m_typeindex": "17099568057112876377"
+"Hover_GlueBottle2.ogg":
+  "m_guid": "30b423371049332bf936a73ccf0"
+  "m_typeindex": "17099568057112876377"
+"ItemPlaced_1.ogg":
+  "m_guid": "30b423a7c81a782d3ff50d09fc0"
+  "m_typeindex": "17099568057112876377"
+"ItemPlaced_2.ogg":
+  "m_guid": "30b424470c4b76bede756d6afb9"
+  "m_typeindex": "17099568057112876377"
+"ItemPlaced_3.ogg":
+  "m_guid": "30b424d7128b2e25cdfb019e5f8"
+  "m_typeindex": "17099568057112876377"
 "Kite-Spool-Start.ogg":
   "m_guid": "469fc177af4911d47cafb43e953"
   "m_typeindex": "17099568057112876377"
@@ -270,6 +345,51 @@
   "m_typeindex": "17099568057112876377"
 "Kite-Spool_Loop.ogg":
   "m_guid": "469fc30754b84adbf4bf9cbc7e3"
+  "m_typeindex": "17099568057112876377"
+"KiteHit_1.ogg":
+  "m_guid": "30b4256709d9a0fe357e103df62"
+  "m_typeindex": "17099568057112876377"
+"KiteHit_2.ogg":
+  "m_guid": "30b425f7e73b5a059510ab08db9"
+  "m_typeindex": "17099568057112876377"
+"KiteHit_3.ogg":
+  "m_guid": "30b426872babae48293ad1485ba"
+  "m_typeindex": "17099568057112876377"
+"KiteHit_4.ogg":
+  "m_guid": "30b4271736b8e036f6127ec237a"
+  "m_typeindex": "17099568057112876377"
+"KiteTurnCrumple_1.ogg":
+  "m_guid": "30b42797ebb9ce2873d1c2ed1e3"
+  "m_typeindex": "17099568057112876377"
+"KiteTurnCrumple_2.ogg":
+  "m_guid": "30b4282705ebe47e90dd73c6ffc"
+  "m_typeindex": "17099568057112876377"
+"KiteTurnCrumple_3.ogg":
+  "m_guid": "30b428b76d8b2a84f71d6f2df01"
+  "m_typeindex": "17099568057112876377"
+"Kite_Hit_1.ogg":
+  "m_guid": "337da4976df83c09972a1b01e69"
+  "m_typeindex": "17099568057112876377"
+"Kite_Hit_2.ogg":
+  "m_guid": "337da557a9d844afe61d9da8cb2"
+  "m_typeindex": "17099568057112876377"
+"Kite_Hit_3.ogg":
+  "m_guid": "337da70745181a69d8ac6cf2f92"
+  "m_typeindex": "17099568057112876377"
+"Kite_Hit_4.ogg":
+  "m_guid": "337da787955bb191dfecb70b570"
+  "m_typeindex": "17099568057112876377"
+"Kite_Stick1.ogg":
+  "m_guid": "30b4293744ab0571c3ec1819dca"
+  "m_typeindex": "17099568057112876377"
+"Kite_Stick2.ogg":
+  "m_guid": "30b429b7ea98f6dc6235d32c478"
+  "m_typeindex": "17099568057112876377"
+"Kite_Stick3.ogg":
+  "m_guid": "30b42a378b1b284adaa1375c488"
+  "m_typeindex": "17099568057112876377"
+"Kite_Stick4.ogg":
+  "m_guid": "30b42ac7d96b54e05176392a544"
   "m_typeindex": "17099568057112876377"
 "Main Menu.png":
   "m_guid": "276196b17e2da9feda4147f14d77"
@@ -415,6 +535,9 @@
 "NewMaterialTableTop":
   "m_guid": "6ab6d0c716da672d67e53ffb1d7"
   "m_typeindex": "175488002581160416"
+"OpeningCutscene BGM.ogg":
+  "m_guid": "30b42b476ad8c7fb300b598bedc"
+  "m_typeindex": "17099568057112876377"
 "PandaMat":
   "m_guid": "99876a277d69f9cfbb7410ca045"
   "m_typeindex": "175488002581160416"
@@ -444,6 +567,21 @@
   "m_typeindex": "17099568057112876377"
 "Paper-Shufle_6.ogg":
   "m_guid": "469fcda737c9c1c67f6f941c52b"
+  "m_typeindex": "17099568057112876377"
+"PickUpItem_1.ogg":
+  "m_guid": "30b42bd73438ca72c7d1304b892"
+  "m_typeindex": "17099568057112876377"
+"PickUpItem_2.ogg":
+  "m_guid": "30b42c576b1b713047a2bffe204"
+  "m_typeindex": "17099568057112876377"
+"PickUpItem_3.ogg":
+  "m_guid": "30b42ce74a29e43785fe53b84e0"
+  "m_typeindex": "17099568057112876377"
+"PickUp_TrashBag.ogg":
+  "m_guid": "30b42d7795093988bf5a76fb819"
+  "m_typeindex": "17099568057112876377"
+"PickUp_TrashBag2.ogg":
+  "m_guid": "30b42df77afae6b179cff8ce007"
   "m_typeindex": "17099568057112876377"
 "Prop_Desk_03_table_bottom_BaseColor.png":
   "m_guid": "98e45f77c0aa26b2d6d76749d69"
@@ -547,6 +685,24 @@
 "Singapore Morning Distant Trafic Outdoor Ambience_Loop.ogg":
   "m_guid": "469fd007c18a3be9fe09c9f964a"
   "m_typeindex": "17099568057112876377"
+"SnapSuccess_1.ogg":
+  "m_guid": "30b42e972fe876c02b688a70a80"
+  "m_typeindex": "17099568057112876377"
+"SnapSuccess_2.ogg":
+  "m_guid": "30b42f276588f7f5d6ca6d14b24"
+  "m_typeindex": "17099568057112876377"
+"SnapSuccess_3.ogg":
+  "m_guid": "30b42fc71528d32f7386f48da1b"
+  "m_typeindex": "17099568057112876377"
+"Squeeze_GlueBottle.ogg":
+  "m_guid": "30b43077b81ba81773af1909e0a"
+  "m_typeindex": "17099568057112876377"
+"Squeeze_GlueBottle2.ogg":
+  "m_guid": "30b431174e69b636d07edc0f54f"
+  "m_typeindex": "17099568057112876377"
+"Squeeze_GlueBottle3.ogg":
+  "m_guid": "30b431b7e409a8e59f0bfd49258"
+  "m_typeindex": "17099568057112876377"
 "Table.obj":
   "m_guid": "469fe62783e94020d815147dca7"
   "m_typeindex": "4838001395392124604"
@@ -619,6 +775,33 @@
 "Train_Combine_Train_Roughness.png":
   "m_guid": "55e4f8070058b703514244e9a0f"
   "m_typeindex": "126269861530532084"
+"UI_PaperCrumple1.ogg":
+  "m_guid": "30b43247c508454492a989daea9"
+  "m_typeindex": "17099568057112876377"
+"UI_PaperCrumple2.ogg":
+  "m_guid": "30b432e78eb86614b60d85924cd"
+  "m_typeindex": "17099568057112876377"
+"UI_PaperCrumple3.ogg":
+  "m_guid": "30b4338792891b9dd15f2cbf0f5"
+  "m_typeindex": "17099568057112876377"
+"UI_PaperCrumple4.ogg":
+  "m_guid": "30b4341720495d2194a905cc894"
+  "m_typeindex": "17099568057112876377"
+"UI_PaperCrumple5.ogg":
+  "m_guid": "30b434b74e9aa39c37af615aed4"
+  "m_typeindex": "17099568057112876377"
+"UI_TapeRip1.ogg":
+  "m_guid": "30b4354777391faae8d9b6f011d"
+  "m_typeindex": "17099568057112876377"
+"UI_TapeRip2.ogg":
+  "m_guid": "30b435e73e99d7706b500ff68cb"
+  "m_typeindex": "17099568057112876377"
+"UI_TapeRip3.ogg":
+  "m_guid": "30b43687e998e3175fe800bb574"
+  "m_typeindex": "17099568057112876377"
+"UI_TapeRip4.ogg":
+  "m_guid": "30b437377b8b197aede6e2dd264"
+  "m_typeindex": "17099568057112876377"
 "WallMaterial":
   "m_guid": "489d4ad7b7b9365c19ecc3b5151"
   "m_typeindex": "175488002581160416"
@@ -1555,16 +1738,14 @@
 "m_kite":
   "m_guid": "18fd078774191e9b6c2f602246d"
   "m_typeindex": "175488002581160416"
-<<<<<<< HEAD
 "m_kite_base":
   "m_guid": "556280f74a781ac8527a6c15a30"
   "m_typeindex": "175488002581160416"
 "m_kite_base_2":
   "m_guid": "57638ab7cee9009151d9fa7a3d6"
-=======
+  "m_typeindex": "175488002581160416"
 "m_kite_bg":
   "m_guid": "79570f78f69b239620b9e69397"
->>>>>>> gameplay
   "m_typeindex": "175488002581160416"
 "m_kite_enemy":
   "m_guid": "37277ea7f1b9ef64e01fb8c0f5e"
@@ -1758,6 +1939,14 @@
 "rubbish":
   "m_guid": "9989f8776c9b5029caa508fd79f"
   "m_typeindex": "175488002581160416"
+<<<<<<< HEAD
+"sfx_kite_hit2.ogg":
+  "m_guid": "84494f270c8ad7e98595586124b"
+=======
+"sfx_kite_hit_1.ogg":
+  "m_guid": "347fbb9793bb29b34951e050c00"
+>>>>>>> gameplay
+  "m_typeindex": "17099568057112876377"
 "shutter.obj":
   "m_guid": "7cd4bbe74019b3999dacf91e41a"
   "m_typeindex": "4838001395392124604"
