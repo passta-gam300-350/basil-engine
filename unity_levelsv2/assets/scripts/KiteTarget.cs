@@ -20,7 +20,12 @@ public class KiteTarget : Behavior
         kiteHit = new GameObject[4];
         for (int i = 0; i < 4; i++) 
         {
-            kiteHit[i] = GameObject.Find("kite_hit" + i);
+            string objectName = "kite_hit" + (i + 1);
+            kiteHit[i] = GameObject.Find(objectName);
+            if (kiteHit[i] == null)
+            {
+                Logger.Warn("Cannot find game object: " + objectName);
+            }
         }
     }
 
@@ -54,11 +59,13 @@ public class KiteTarget : Behavior
         if (d < collectDist)
         {
             // Collect the kite
-
+            int randomIndex = random.Next(0, kiteHit.Length);
+            if (kiteHit[randomIndex] != null)
+            {
+                kiteHit[randomIndex].transform.GetComponent<Audio>().Play();
+            }
             GameObject.Destroy(gameObject);
             kiteController.totalKite -= 1;
-            int randomIndex = random.Next(0, kiteHit.Length);
-            kiteHit[randomIndex].transform.GetComponent<Audio>().Play();
         }   
         Logger.Log(d);
     }
