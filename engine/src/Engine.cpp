@@ -20,6 +20,7 @@
 #include <array>
 #include <glad/glad.h>
 #include "Render/VideoPlayback.hpp"
+#include "System/AnimationSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
@@ -162,6 +163,7 @@ void Engine::CoreUpdate() {
 	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
+	animationSystem().FixedUpdate(instance.m_World);
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
 	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetDeltaTime()));
 

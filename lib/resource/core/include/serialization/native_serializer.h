@@ -3,6 +3,7 @@
 
 #include <rsc-core/serialization/serializer.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 template <>
 struct rp::reflection::ExternalTypeMetadata<glm::vec2> {
@@ -32,6 +33,11 @@ struct rp::reflection::ExternalTypeMetadata<glm::ivec3> {
 template <>
 struct rp::reflection::ExternalTypeMetadata<glm::ivec4> {
 	using ExternalTypeBinder = ExternalTypeBinderMetadata<glm::ivec4, &glm::ivec4::x, &glm::ivec4::y, &glm::ivec4::z, &glm::ivec4::w>;
+};
+
+template <>
+struct rp::reflection::ExternalTypeMetadata<glm::quat> {
+	using ExternalTypeBinder = ExternalTypeBinderMetadata<glm::quat, &glm::quat::x, &glm::quat::y, &glm::quat::z, &glm::quat::w>;
 };
 
 template <typename NativeType>

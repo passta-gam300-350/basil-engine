@@ -18,6 +18,7 @@ Technology is prohibited.
 #include <glm/gtc/matrix_transform.hpp>
 #include "Engine.hpp"
 #include "Component/AnimationComponent.hpp"
+#include "Manager/ResourceSystem.hpp"
 void animationSystem::FixedUpdate(ecs::world& world)
 {
 	float dt = Engine::GetDeltaTime();
@@ -30,7 +31,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		{
 			continue;
 		}
-		if (!animationComponent.channel)
+		if (!animationComponent.animationdata.m_guid)
 		{
 			continue;
 		}
@@ -51,8 +52,9 @@ void animationSystem::FixedUpdate(ecs::world& world)
 				animationComponent.state.isPlaying = false;
 			}
 		}
-		animationComponent.channel->update(animationComponent.currentTime);
-		glm::mat4 localMatrix = animationComponent.channel->getLocalTransform();
+		boneChannel* bchannel = ResourceRegistry::Instance().Get<boneChannel>(animationComponent.animationdata.m_guid);
+		bchannel->update(animationComponent.currentTime);
+		glm::mat4 localMatrix = bchannel->getLocalTransform();
 		glm::vec3 scale;
 		glm::quat rotation;
 		glm::vec3 translation;
@@ -65,3 +67,22 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		transformComponent.isDirty = true;
 	}
 }
+
+boneChannel LoadBoneChannel(const char* data) {
+	AnimationResourceData animData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	boneChannel bc{ animData.m_name, animData.m_id };
+	for (auto const& poskey : animData.m_positions) {
+		bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
+	}
+	for (auto const& rotkey : animData.m_rotations) {
+		bc.addRotationKeyframe(rotkey.first / 1000, rotkey.second);
+	}
+	for (auto const& sclkey : animData.m_scales) {
+		bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
+	}
+	return bc;
+}
+
+REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel& bc) {return; })

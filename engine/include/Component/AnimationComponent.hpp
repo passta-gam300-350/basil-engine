@@ -20,10 +20,15 @@ Technology is prohibited.
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "Animation/Animation.h"
+#include <native/animation.h>
+
+#include <rsc-core/rp.hpp>
+
+RegisterResourceTypeForward(AnimationResourceData, "animation", unusedanimationstuff)
 
 struct AnimationComponent
 {
-	boneChannel* channel = nullptr;
+	rp::BasicIndexedGuid animationdata{static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"animation">())};
 	float duration = 0.0f;
 	float currentTime = 0.0f;
 	float ticksPerSecond = 60.0f;
@@ -44,7 +49,8 @@ RegisterReflectionTypeBegin(AnimationComponent, "AnimationComponent")
 MemberRegistrationV<&AnimationComponent::duration, "Duration">,
 MemberRegistrationV<&AnimationComponent::currentTime, "CurrentTime">,
 MemberRegistrationV<&AnimationComponent::ticksPerSecond, "TicksPerSecond">,
-MemberRegistrationV<&AnimationComponent::state, "State">
+MemberRegistrationV<&AnimationComponent::state, "State">,
+MemberRegistrationV<&AnimationComponent::animationdata, "Animation">
 // Note: channel is NOT registered (runtime pointer, not serializable)
 RegisterReflectionTypeEnd
 

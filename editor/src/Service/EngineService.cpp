@@ -751,7 +751,8 @@ void EngineContainerService::LoadScene(const char* path) {
 		} else {
 			spdlog::error("EngineService: Failed to load scene from {}", path);
 		}
-
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
 	});
 }
 

@@ -623,7 +623,7 @@ private:
      * @param camera The camera to build frustum from (editor or entity camera)
      * @return Vector of entity UIDs that are potentially visible
      */
-    std::vector<unsigned> GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera);
+    std::vector<unsigned> GetVisibleEntities(ecs::world& world, auto const& camera) const;
 
     /**
      * @brief Query for object in front of camera using ray casting
@@ -635,7 +635,7 @@ private:
      * @param camera The camera to cast ray from (typically game entity camera)
      * @return InteractionResult with detected entity info (hasHit=false if nothing detected)
      */
-    InteractionResult QueryInteraction(ecs::world& world, const CameraSystem::Camera& camera);
+    //InteractionResult QueryInteraction(ecs::world& world, auto const& camera) const;
 
     // ========== Render Subsystems ==========
 

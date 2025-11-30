@@ -6,5 +6,6 @@
 #include "descriptors/audio.hpp"
 #include "descriptors/video.hpp"
 #include "descriptors/texture.hpp"
+#include "descriptors/animation.hpp"
 
 #endif

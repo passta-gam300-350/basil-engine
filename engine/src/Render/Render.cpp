@@ -226,7 +226,7 @@ void RenderSystem::Update(ecs::world& world) {
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 	// ========== Frustum Culling: Get visible entities ==========
-	std::vector<unsigned> visibleEntityIDs = GetVisibleEntities(world, CameraSystem::Instance().GetActiveCameraData());
+	std::vector<unsigned> visibleEntityIDs = hasGameCamera ? GetVisibleEntities(world, CameraSystem::Instance().GetActiveCameraData()) : GetVisibleEntities(world, editorCameraSnapshot);
 
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
