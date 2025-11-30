@@ -226,7 +226,7 @@ void RenderSystem::Update(ecs::world& world) {
 
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 	// ========== Frustum Culling: Get visible entities ==========
-	std::vector<unsigned> visibleEntityIDs = GetVisibleEntities(world, world_camera);
+	std::vector<unsigned> visibleEntityIDs = GetVisibleEntities(world, CameraSystem::Instance().GetActiveCameraData());
 
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
@@ -249,15 +249,15 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	// ========== Interaction Detection (Testing) ==========
-	auto interaction = QueryInteraction(world, world_camera);
-	if (interaction.hasHit) {
-		static uint32_t lastInteractableUID = 0;
-		//if (interaction.entityUID != lastInteractableUID) {
-			spdlog::info("RayTest: Looking at Entity {} (distance: {:.2f}m)",
-			             interaction.entityUID, interaction.distance);
-			lastInteractableUID = interaction.entityUID;
-		//}
-	}
+	//auto interaction = QueryInteraction(world, world_camera);
+	//if (interaction.hasHit) {
+	//	static uint32_t lastInteractableUID = 0;
+	//	//if (interaction.entityUID != lastInteractableUID) {
+	//		spdlog::info("RayTest: Looking at Entity {} (distance: {:.2f}m)",
+	//		             interaction.entityUID, interaction.distance);
+	//		lastInteractableUID = interaction.entityUID;
+	//	//}
+	//}
 
 	// ========== Process only visible entities ==========
 	for (unsigned entityUID : visibleEntityIDs) {
@@ -922,12 +922,12 @@ Aabb RenderSystem::ComputeWorldAABB(ecs::entity entity) const
 	return worldAABB;
 }
 
-std::vector<unsigned> RenderSystem::GetVisibleEntities(ecs::world& world, const CameraSystem::Camera& camera)
+std::vector<unsigned> RenderSystem::GetVisibleEntities(ecs::world& world, auto const& camera) const
 {
 	std::vector<unsigned> visibleEntityID;
 	if (m_frustumCullingEnabled == true && m_BvhRenderables.empty() == false)
 	{
-		Frustum viewCameraFrustum = CameraToFrustum(camera);
+		Frustum viewCameraFrustum = CameraToFrustum(camera.position, camera.front, camera.up, camera.fov, camera.aspectRatio, camera.nearPlane, camera.farPlane);
 		visibleEntityID = m_bvh.Query(viewCameraFrustum);
 		static int frameCount = 0;
 		if (frameCount++ % 60 == 0) 
@@ -954,7 +954,7 @@ std::vector<unsigned> RenderSystem::GetVisibleEntities(ecs::world& world, const 
 	return visibleEntityID;
 }
 
-InteractionResult RenderSystem::QueryInteraction(ecs::world& world, const CameraSystem::Camera& camera)
+/*InteractionResult RenderSystem::QueryInteraction(ecs::world& world, auto const& camera) const
 {
 	InteractionResult result;
 
@@ -997,7 +997,7 @@ InteractionResult RenderSystem::QueryInteraction(ecs::world& world, const Camera
 	result.hasHit = true;
 	result.entityUID = entityUID;
 	return result;
-}
+}*/
 
 void RenderSystem::BuildBVH(ecs::world& world)
 {
