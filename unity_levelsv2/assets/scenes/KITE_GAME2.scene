@@ -849,12 +849,15 @@ entities:
         x: 0
         y: 0.953000009
         z: -5.59299994
+    Behaviour:
+      classesName:
+        - Spool
     AudioComponent:
       audioAssetGuid:
         guid: 469fc30754b84adbf4bf9cbc7e3
         type: 17099568057112876377
-      volume: 1
-      isLooping: false
+      volume: 0.00999999978
+      isLooping: true
       is3D: true
       isStreaming: true
       playOnAwake: false
@@ -1705,15 +1708,15 @@ entities:
         z: 0
     Behaviour:
       classesName:
-        - PlayAudio
+        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
         guid: 469fc0b776e9bb6bd4dc6b3494c
         type: 17099568057112876377
       volume: 1
-      isLooping: false
+      isLooping: true
       is3D: true
-      isStreaming: false
+      isStreaming: true
       playOnAwake: false
       minDistance: 1
       maxDistance: 1000
@@ -1746,13 +1749,13 @@ entities:
         z: 0
     Behaviour:
       classesName:
-        - PlayAudio
+        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
         guid: 469fb4b72e3b016fbaf4537dc57
         type: 17099568057112876377
       volume: 2
-      isLooping: false
+      isLooping: true
       is3D: true
       isStreaming: false
       playOnAwake: false
@@ -1787,13 +1790,13 @@ entities:
         z: 0
     Behaviour:
       classesName:
-        - PlayAudio
+        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
         guid: 469fcf3705599a35e3062779325
         type: 17099568057112876377
       volume: 0.540000021
-      isLooping: false
+      isLooping: true
       is3D: true
       isStreaming: false
       playOnAwake: false

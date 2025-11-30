@@ -18,6 +18,7 @@ public class MainMenu : Behavior
         audio = transform.GetComponent<Audio>();
         targetVolume = audio.Volume;
         audio.Volume = 0;
+        audio.Looping = true;
         audio.Play();
         isFadingIn = true;
     }

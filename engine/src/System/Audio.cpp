@@ -407,6 +407,7 @@ bool AudioComponent::Play() {
         FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
         FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
         FMOD_ErrorCheck(newChannel->setVolume(volume));
+        FMOD_ErrorCheck(newChannel->setLoopCount(isLooping ? -1 : 0));
         FMOD_ErrorCheck(newChannel->setPaused(false));
 
         // Store channel in AudioSystem
@@ -471,6 +472,31 @@ bool AudioComponent::Stop() {
     }
 
     return false;
+}
+
+void AudioComponent::SetLoop(bool loop) {
+    isLooping = loop;
+    
+    // Update the sound's loop mode (affects future playbacks)
+    AudioSystem& audioSys = AudioSystem::GetInstance();
+    FMOD::Sound* sound = audioSys.GetSound(soundHandle);
+    if (sound) {
+        FMOD_MODE mode;
+        FMOD_RESULT result = sound->getMode(&mode);
+        if (result == FMOD_OK) {
+            // Clear existing loop flags
+            mode &= ~(FMOD_LOOP_OFF | FMOD_LOOP_NORMAL | FMOD_LOOP_BIDI);
+            // Set new loop mode
+            mode |= loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+            FMOD_ErrorCheck(sound->setMode(mode));
+        }
+    }
+    
+    // Update the channel's loop count (affects current playback)
+    FMOD::Channel* channel = audioSys.GetChannel(this);
+    if (channel) {
+        FMOD_ErrorCheck(channel->setLoopCount(loop ? -1 : 0));
+    }
 }
 
 void AudioComponent::SetVolume(float vol) {

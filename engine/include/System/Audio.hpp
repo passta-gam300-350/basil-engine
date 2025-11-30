@@ -171,6 +171,7 @@ struct AudioComponent
 
     // Sets audio parameters
     void SetVolume(float vol);
+    void SetLoop(bool loop);
     void SetDistanceRange(float minDist, float maxDist);
     void RefreshSoundInfo();
 
