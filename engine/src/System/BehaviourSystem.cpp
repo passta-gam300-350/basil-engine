@@ -105,7 +105,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 				else instance->Invoke("Update", nullptr, &exception, 0);
 
 
-				if (exception) {
+					if (exception) {
 					MonoString* excStr = mono_object_to_string(exception, nullptr);
 					ManagedConsole::LogError(excStr);
 					// Unload the script instance to prevent further errors
