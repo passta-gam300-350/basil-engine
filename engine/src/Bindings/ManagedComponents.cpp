@@ -20,6 +20,7 @@ Technology is prohibited.
 #include <iostream>
 
 #include "ABI/CSKlass.hpp"
+#include "Component/VideoComponent.hpp"
 #include "components/behaviour.hpp"
 #include "components/transform.h"
 #include "Manager/MonoEntityManager.hpp"
@@ -108,7 +109,18 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		});
 		return id;
 	}
-
+	if (strName == "Video")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Video component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Video component check
+			bool result = entity.any<VideoComponent>(); // Replace with actual Video component
+			return result;
+		});
+		return id;
+	}
 
 
 

@@ -45,7 +45,7 @@ public class GameManager : Behavior
         if (isCleaned && KitePuzzleCompleted && TrainPuzzleCompleted)
         {
             Logger.Log("Congratz: Move to Kite Level!");
-            Scene.LoadScene(2);
+            Scene.LoadScene(3);
             return;
         }
     }
