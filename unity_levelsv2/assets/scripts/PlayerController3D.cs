@@ -11,7 +11,8 @@ public class PlayerController3D : Behavior
     private Rigidbody rb;
     private GameObject[] footsteps;
     private System.Random random = new System.Random();
-    private bool wasMoving = false;
+    private float footstepTimer = 0f;
+    public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
     public float moveSpeed = 0.7f;
@@ -37,7 +38,7 @@ public class PlayerController3D : Behavior
         footsteps = new GameObject[9];
         for (int i = 0; i < footsteps.Length; i++)
         {
-            string objectName = "footsteps_" + (i + 1);
+            string objectName = "footstep_" + (i + 1);
             footsteps[i] = GameObject.Find(objectName);
             if (footsteps[i] == null)
             {
@@ -66,13 +67,21 @@ public class PlayerController3D : Behavior
 
         bool isMoving = vel.MagnitudeSqr() > 0.001f;
         
-        // Play footstep sound when movement starts
-        if (isMoving && !wasMoving)
+        // Play footstep sounds at intervals while moving
+        if (isMoving)
         {
-            PlayFootstep();
+            footstepTimer += Time.deltaTime;
+            if (footstepTimer >= footstepInterval)
+            {
+                PlayFootstep();
+                footstepTimer = 0f; // Reset timer
+            }
         }
-        
-        wasMoving = isMoving;
+        else
+        {
+            // Reset timer when not moving
+            footstepTimer = 0f;
+        }
 
         if (isMoving)
             vel = vel.Normalize() * moveSpeed * Time.deltaTime; // Assuming ~60 FPS, so deltaTime ~0.016s
