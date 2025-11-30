@@ -8,14 +8,24 @@ public class KiteTarget : Behavior
 {
     private Rigidbody rb;
 
-    public float windSpeed = 20f;
+    public float windSpeed = 1f;
     public float collectDist = 5.5f;
     private GameObject player;
     private KiteController kiteController;
 
+    public float minX = -10f;
+    public float maxX = 10f;
+    public float minY = 0f;
+    public float maxY = 10f;
+
+    // persistent velocity for bouncing
+    private Vector3 movement;
+
     public void Init()
     {
         
+        // kites' initial velocity
+        movement = new Vector3(-windSpeed, 0f, 0f);
     }
 
     public void Update()
@@ -38,12 +48,41 @@ public class KiteTarget : Behavior
             return;
         }
 
-        Vector3 movement = new Vector3();
+        // move kite
+        Vector3 pos = transform.position;
+        pos += movement * Time.deltaTime;
 
+        // Bounce on X axis
+        if (pos.x <= minX)
+        {
+            pos.x = minX;
+            movement.x = Math.Abs(movement.x);   // bounce right
+        }
+        else if (pos.x >= maxX)
+        {
+            pos.x = maxX;
+            movement.x = -Math.Abs(movement.x);  // bounce left
+        }
 
-        movement.x -= windSpeed * Time.deltaTime;
-        movement.y -= windSpeed * Time.deltaTime;
+        // Bounce on Y axis
+        if (pos.y <= minY)
+        {
+            pos.y = minY;
+            movement.y = Math.Abs(movement.y);   // bounce up
+        }
+        else if (pos.y >= maxY)
+        {
+            pos.y = maxY;
+            movement.y = -Math.Abs(movement.y);  // bounce down
+        }
+
+        // apply new pos and velocity
+        transform.position = pos;
         rb.velocity = movement;
+
+
+
+
         float d = Vector3.DistanceSqr(player.transform.position, transform.position);
         if (d < collectDist)
         {
