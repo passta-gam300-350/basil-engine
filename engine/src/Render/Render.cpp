@@ -475,8 +475,6 @@ void RenderSystem::Update(ecs::world& world) {
 				editorCameraSnapshot.nearPlane,
 				editorCameraSnapshot.farPlane
 			);
-			messagingSystem.Publish(MessageID::CAMERA_CALCULATION_UPDATE,
-				std::make_unique<Camera_Calculation_Update>(view, projection));
 		}
 		CameraSystem::SetCachedMatrices(view, projection);
 		CameraSystem::SetViewportSize(glm::vec2{ static_cast<float>(frameData.viewportWidth), static_cast<float>(frameData.viewportHeight) });
