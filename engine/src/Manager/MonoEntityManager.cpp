@@ -99,15 +99,16 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
 	if (klass) {
-		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
-		
+		//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
+		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klass, args);
 
 	} else
 	{
 		AddNamedKlass(klassName, klassNamespace, isBackend);
 	}
 	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
-	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
+	//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
+	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klassPtr, args);
 
 	if (klass->IsDerivedFrom("BasilEngine.Components.Behavior"))
 	{
@@ -389,6 +390,7 @@ void MonoEntityManager::StartCompilation() {
 		backendPath = R"(.\data\managed\BasilEngine.dll)";
 	}
 
+	std::string asmAbs = std::filesystem::absolute(asmPath).string();
 	std::string backendAbs = std::filesystem::absolute(backendPath).string();
 
 	if (preCompiled) {
@@ -402,7 +404,7 @@ void MonoEntityManager::StartCompilation() {
 
 	if (preCompiled)
 	{
-		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
+		PRIMARY_ASSEMBLY_ID = AddAssembly(asmAbs.c_str());
 		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
 
 		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);

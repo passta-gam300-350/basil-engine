@@ -183,6 +183,8 @@ void RenderSystem::SetupComponentObservers(ecs::world& world) {
 	spdlog::info("RenderSystem: MeshRendererComponent update observer registered");
 }
 
+#include "Scene/Scene.hpp"
+
 void RenderSystem::Update(ecs::world& world) {
 	PF_SYSTEM("GraphicSystem");
 
