@@ -16,7 +16,7 @@ Technology is prohibited.
 */
 /******************************************************************************/
 #pragma once
-
+#include <native/video.h>
 #include <rsc-core/guid.hpp>
 #include "ecs/internal/reflection.h"
 

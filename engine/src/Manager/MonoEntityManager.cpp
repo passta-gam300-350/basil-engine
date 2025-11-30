@@ -324,6 +324,12 @@ void MonoEntityManager::AddKlassFromAssembly(const ScriptID assemblyID) {
 	}
 }
 
+void MonoEntityManager::SetPreCompiled(bool val)
+{
+	preCompiled = val;
+	MonoManager::disableCompile(val);
+}
+
 
 // Invalidate all script id and clear all maps and vectors
 void MonoEntityManager::ClearAll() {
@@ -362,7 +368,7 @@ void MonoEntityManager::initialize() {
 }
 
 void MonoEntityManager::StartCompilation() {
-	if (useDefault) {
+	if (useDefault && !preCompiled) {
 		for (const char* bucket : scriptBuckets) {
 			MonoManager::AddSearchDirectories(bucket);
 		}
@@ -370,11 +376,18 @@ void MonoEntityManager::StartCompilation() {
 	}
 
 
-	std::filesystem::path asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
+	std::filesystem::path asmPath{};
+	if (!preCompiled)
+		asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
 
 
 	//TODO: Move it to cmake build
 	std::filesystem::path backendPath = R"(..\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll)";
+
+	if (preCompiled) {
+		asmPath = R"(.\data\managed\GameAssembly.dll)";
+		backendPath = R"(.\data\managed\BasilEngine.dll)";
+	}
 
 	std::string backendAbs = std::filesystem::absolute(backendPath).string();
 
@@ -386,7 +399,21 @@ void MonoEntityManager::StartCompilation() {
 
 
 	}
+
+	if (preCompiled)
+	{
+		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
+		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
+
+		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
+		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
+		
+		return;
+	}
+
+
 	auto& logs = MonoManager::GetCompiler()->GetLogs();
+	
 
 	if (logs.empty()) {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());

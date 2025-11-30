@@ -14,3 +14,4 @@
 #include "BasilEngine_Components_Particle_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Rigidbody_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Transform_GLUE_GEN.hpp"
+#include "BasilEngine_Components_Video_GLUE_GEN.hpp"

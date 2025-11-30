@@ -355,7 +355,8 @@ struct ResourceRegistry {
      */
     template <typename T>
     bool RegisterInMemory(rp::Guid guid, T resource) {
-        auto* pool = Pool<T>();
+
+    	auto* pool = Pool<T>();
         if (!pool) {
             spdlog::error("ResourceRegistry: Cannot register in-memory resource - type not registered");
             return false;

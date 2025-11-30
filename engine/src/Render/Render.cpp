@@ -268,6 +268,9 @@ void RenderSystem::Update(ecs::world& world) {
 		ecs::entity obj = world.impl.entity_cast(static_cast<entt::entity>(entityUID));
 		
 		// Get components as references using .get()
+		if (!obj.all< MeshRendererComponent, TransformMtxComponent, VisibilityComponent>()) {
+			continue; // Skip if any component is missing
+		}
 		auto [mesh, transform, visible] = obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===

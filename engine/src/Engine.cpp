@@ -76,26 +76,98 @@ void Engine::Init(std::string const& cfg ) {
 	{
 		GenerateDefaultConfig();
 	}
-	if (cfg.empty()) {
+	YAML::Node root{ YAML::LoadFile(cfg.empty() ? DEFAULT_CONFIG_NAME.data() : cfg) };
+	if (YAML::Node window{ root["window"] }; window) {
+		std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
+		std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
+		//bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
+		std::string win_name{ window["title"] ? window["title"].as<std::string>() : std::string(DEFAULT_NAME.begin(), DEFAULT_NAME.end()) };
+		bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
+		Instance().m_Window = std::make_unique<Window>(win_name, win_width, win_height);
+		Instance().m_Window->SetVSync(win_vsync);
+	}
+	else {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
 	}
-	else{
-		YAML::Node root{ YAML::LoadFile(cfg) };
-		if (YAML::Node window{ root["window"] }; window) {
-			std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
-			std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
-			//bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
-			std::string win_name{ window["title"] ? window["title"].as<std::string>() : std::string(DEFAULT_NAME.begin(), DEFAULT_NAME.end()) };
-			bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
-			Instance().m_Window = std::make_unique<Window>(win_name, win_width, win_height);
-			Instance().m_Window->SetVSync(win_vsync);
-		}
-		else {
-			Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
+	if (YAML::Node resource{ root["resource"] }; resource) {
+		ResourceSystem::LoadConfig(resource);
+	}
+	if (root["world"]) {
+		if (YAML::Node world_file{ root["world"]["file"] }; world_file) {
+			Instance().m_World.LoadYAML(world_file.as<std::string>());
 		}
 	}
+	if (YAML::Node logger{ root["logger"] }; logger) {
+		std::string sink_name{ logger["name"] ? logger["name"].as<std::string>() : DEFAULT_SINK_NAME };
+		std::string sink_file{ logger["output file"] ? logger["output file"].as<std::string>() : std::string{} };
+		spdlog::level::level_enum sink_severity{ logger["severity"] ? static_cast<spdlog::level::level_enum>(logger["severity"].as<int>()) : spdlog::level::info };
+		Instance().m_Sink.reset(new Logger::Sink{ sink_name, sink_file, sink_severity });
+	}
+	else {
+		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{} });
+	}
+	ReflectionRegistry::SetupNativeTypes();
+	ReflectionRegistry::SetupEngineTypes();
+
+	Instance().m_World = WorldRegistry::NewWorld();
+
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
+
+	// Create and initialize RenderSystem
+	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
+	Instance().m_RenderSystem->Init();
+
+	// Set up RenderSystem observers
+	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
+
+	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
+	MaterialOverridesSystem::Instance().Init();
+
+	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
+
+	PhysicsSystem::Instance().Init();
+	PhysicsSystem::Instance().SetupObservers();
+
+	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
+	Instance().m_RenderSystem->InitJoltDebugRenderer();
+
+	// [TEMP]
+	AudioSystem::GetInstance().Init();
+
+	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	Instance().GetSceneRegistry().ReadManifest(manifest_path);
+	Instance().GetSceneRegistry().RequestSceneChange(0);
+
+	//InputManager::Get_Instance()->Setup_Callbacks();
+	MonoEntityManager::GetInstance().SetPreCompiled(true);
 	MonoEntityManager::GetInstance().initialize();
-	InitWithoutWindow(cfg.empty() ? DEFAULT_CONFIG_NAME.data() : cfg, true);	
+	MonoEntityManager::GetInstance().StartCompilation();
+
+	BehaviourSystem::Instance().isActive = true;
+	BehaviourSystem::Instance().Init();
+
+	BindingSystem::RegisterBindings();
+	Scheduler::CompileJobSchedule();
+
+	InputManager::Setup_Callbacks();
+
+	Engine::SetOnLoadCallBack([](ecs::world& w)
+		{
+			BehaviourSystem::Instance().Reload();
+
+		});
+
+	Engine::SetOnUnloadCallBack([](ecs::world& w)
+		{
+
+			BehaviourSystem::Instance().firstRun = true;
+			BehaviourSystem::Instance().unloaded = true;
+		});
+
+	auto e = Engine::GetWorld().add_entity();
+	e.destroy();
+
+	Engine::Instance().m_Info.m_State = Info::State::Running;
 }
 
 void Engine::CoreUpdate() {

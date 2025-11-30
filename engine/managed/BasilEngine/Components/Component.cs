@@ -22,8 +22,8 @@ namespace BasilEngine.Components
         /// </summary>
         protected Component()
         {
-           string typeName = this.GetType().Name;
-           typeID = Internal_RegisterComponent(typeName);
+            string typeName = this.GetType().Name;
+            typeID = Internal_RegisterComponent(typeName);
         }
 
         /// <summary>
@@ -33,14 +33,14 @@ namespace BasilEngine.Components
         protected Component(UInt64 handle)
         {
             NativeID = handle; // GameObject Handle
-            
+
         }
 
 
         /// <summary>
         /// Identifies a component type in the native engine.
         /// </summary>
-        protected  UInt32 typeID; // Identifies a component type in the native side.
+        protected UInt32 typeID; // Identifies a component type in the native side.
 
         private Transform _transform = null;
 
@@ -76,7 +76,16 @@ namespace BasilEngine.Components
         /// <param name="handle">Game object handle.</param>
         /// <param name="fullName">Fully qualified managed type name.</param>
         /// <returns>Component instance or null if not found.</returns>
+        ///
         public extern static Object Internal_GetScriptableComponent(UInt64 handle, string fullName);
+
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("DeleteComponent")]
+        [StaticAccessor("ManagedComponents", StaticAccessorType.DoubleColon)]
+        public extern static void Internal_DeleteComponent(UInt64 handle, UInt32 typeHandle);
+
+
 
         /// <summary>
         /// The <see cref="GameObject"/> this component is attached to.
@@ -89,10 +98,12 @@ namespace BasilEngine.Components
                 {
                     _gameObject = new GameObject(NativeID);
                 }
+
                 return _gameObject;
 
             }
         }
+
         /// <summary>
         /// Cached transform for the owning game object.
         /// </summary>
@@ -104,6 +115,7 @@ namespace BasilEngine.Components
                 {
                     _transform = new Transform(NativeID);
                 }
+
                 return _transform;
             }
         }
@@ -118,10 +130,7 @@ namespace BasilEngine.Components
         /// <summary>
         /// Indicates if the component is enabled and should execute in the engine.
         /// </summary>
-        public bool Enabled
-        {
-            get; set;
-        } = true;
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// Retrieves a component of the specified type from the same game object.
@@ -133,7 +142,7 @@ namespace BasilEngine.Components
             // Check if we getting a behavior component
             // Check if T derived from Behavior
 
-          
+
             if (typeof(Behavior).IsAssignableFrom(typeof(T)))
             {
                 // Type is a Behavior
@@ -147,9 +156,26 @@ namespace BasilEngine.Components
             {
                 return new T { NativeID = NativeID };
             }
+
             return null;
         }
 
+        public void DeleteComponent<T>() where T : Component, new()
+        {
+            T obj = new T();
+            bool res = Internal_HasComponent(NativeID, obj.typeID);
+            if (res)
+            {
+                Internal_DeleteComponent(NativeID, obj.typeID);
 
+            }
+            else throw new NullReferenceException("Component not found on Gameobject");
+
+
+
+
+
+
+        }
     }
 }
