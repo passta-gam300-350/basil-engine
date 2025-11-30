@@ -204,6 +204,7 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 	else if (!frame) {
 		if (entered) 
 			vc.isPlaying = false;
+		entered = true;
 		return std::vector<uint8_t>{};
 	}
 

@@ -1,0 +1,52 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 1
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+entities:
+  - Scene ID:
+      Scene ID: 0
+    VideoComponent:
+      Video GUID:
+        guid: 2546d1df7cbb9a76ce7586150f0d
+        type: 14081220367743959884
+      Auto Play: false
+      Loop: false
+      Playback Speed: 1
+      Render Fullscreen: true
+      Render Fullscreen Mode: 0
+      Background Texture:
+        guid: 00
+        type: 126269861530532084
+      Background Color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      Background Visible: true
+      Render Layer: 0
+    entity name:
+      name: Video
+    Behaviour:
+      classesName:
+        - Cutscene
