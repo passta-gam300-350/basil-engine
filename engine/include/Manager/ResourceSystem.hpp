@@ -121,7 +121,7 @@ public:
      * @param resource Already-constructed resource to insert
      * @return true if inserted, false if GUID already exists
      */
-    bool InsertPreloaded(rp::Guid guid, T resource) {
+    __declspec(noinline) bool InsertPreloaded(rp::Guid guid, T resource) {
         // Check if GUID already exists
         auto it = m_GuidSlots.find(guid);
         if (it != m_GuidSlots.end()) {
@@ -522,7 +522,7 @@ struct ResourceSystem {
         for (auto [name, typed] : assetlist) {
             ResourceSystem::FileEntry fentry{};
             fentry.m_Guid = typed.m_guid;
-            fentry.m_Path = imported_path + "/" + typed.m_guid.to_hex() + rp::ResourceTypeRegistry::GetResourceTypeName(typed).value();
+            fentry.m_Path = imported_path + "/" + typed.m_guid.to_hex() + "." + rp::ResourceTypeRegistry::GetResourceTypeName(typed).value();
             fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
             ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
         }

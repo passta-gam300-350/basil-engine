@@ -72,88 +72,30 @@ void Engine::Init(std::string const& cfg ) {
 	Engine::setWorkingDir(playerDir.c_str());
 
 
-	Instance().m_Info.m_FrameLogRate = 165;
-
-	ReflectionRegistry::SetupNativeTypes();
-	ReflectionRegistry::SetupEngineTypes();
-	Instance().m_World = WorldRegistry::NewWorld();
-
-	// Initialize messaging system before any systems that might publish messages
-	messagingSystem.Init();
-
+	if (!std::filesystem::exists(cfg))
+	{
+		GenerateDefaultConfig();
+	}
 	if (cfg.empty()) {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
-
-		// Create and initialize RenderSystem
-		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
-		Instance().m_RenderSystem->Init();
-		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-
-		// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
-		MaterialOverridesSystem::Instance().Init();
-
-		Scheduler::CompileJobSchedule();
-		//InputManager::Get_Instance()->Setup_Callbacks();
-		//ObjectManager::GetInstance().CreateGameObject();
-		return;
 	}
-	YAML::Node root{YAML::LoadFile(cfg)};
-	if (YAML::Node window{ root["window"] }; window) {
-		std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
-		std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
-		//bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
-		std::string win_name{ window["title"] ? window["title"].as<std::string>() : std::string(DEFAULT_NAME.begin(), DEFAULT_NAME.end()) };
-		bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
-		Instance().m_Window = std::make_unique<Window>(win_name, win_width, win_height);
-		Instance().m_Window->SetVSync(win_vsync);
-	}
-	else {
-		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
-	}
-	if (YAML::Node system{ root["system"] }; system) {
-		SystemRegistry::LoadConfig(system);
-	}
-	if (YAML::Node resource{ root["resource"] }; resource) {
-		ResourceSystem::LoadConfig(resource);
-	}
-	if (root["world"]) {
-		if (YAML::Node world_file{ root["world"]["file"] }; world_file) {
-			Instance().m_World.LoadYAML(world_file.as<std::string>());
+	else{
+		YAML::Node root{ YAML::LoadFile(cfg) };
+		if (YAML::Node window{ root["window"] }; window) {
+			std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
+			std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
+			//bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
+			std::string win_name{ window["title"] ? window["title"].as<std::string>() : std::string(DEFAULT_NAME.begin(), DEFAULT_NAME.end()) };
+			bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
+			Instance().m_Window = std::make_unique<Window>(win_name, win_width, win_height);
+			Instance().m_Window->SetVSync(win_vsync);
+		}
+		else {
+			Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
 		}
 	}
-	if (YAML::Node logger{ root["logger"] }; logger) {
-		std::string sink_name{ logger["name"] ? logger["name"].as<std::string>() : DEFAULT_SINK_NAME};
-		std::string sink_file{ logger["output file"] ? logger["output file"].as<std::string>() : std::string{} };
-		spdlog::level::level_enum sink_severity{ logger["severity"] ? static_cast<spdlog::level::level_enum>(logger["severity"].as<int>()) : spdlog::level::info };
-		Instance().m_Sink.reset(new Logger::Sink{sink_name, sink_file, sink_severity});
-	}
-	else {
-		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
-	}
-
-	// Create and initialize RenderSystem
-	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
-	Instance().m_RenderSystem->Init();
-
-	// Set up RenderSystem observers
-	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-
-	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
-	MaterialOverridesSystem::Instance().Init();
-
-	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
-
-	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
-	Instance().GetSceneRegistry().ReadManifest(manifest_path);
-
-	//InputManager::Get_Instance()->Setup_Callbacks();
-	MonoEntityManager::GetInstance().SetPreCompiled(true);
 	MonoEntityManager::GetInstance().initialize();
-	MonoEntityManager::GetInstance().StartCompilation();
-	BindingSystem::RegisterBindings();
-	Scheduler::CompileJobSchedule();
-	Engine::Instance().m_Info.m_State = Info::State::Running;
-	
+	InitWithoutWindow(cfg.empty() ? DEFAULT_CONFIG_NAME.data() : cfg, true);	
 }
 
 void Engine::CoreUpdate() {
@@ -261,7 +203,7 @@ void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 	InitWithoutWindow(cfg);
 }
 
-void Engine::InitWithoutWindow(std::string const& cfg) {
+void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 	Engine::SetState(Info::State::Init);
 	Engine::SetOnLoadCallBack([](ecs::world& world) {
 		spdlog::info("World loaded with {} entities", world.get_all_entities().size());
@@ -275,7 +217,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	ReflectionRegistry::SetupNativeTypes();
 	ReflectionRegistry::SetupEngineTypes();
 
-	MonoEntityManager::GetInstance().SetPreCompiled(false);
+	MonoEntityManager::GetInstance().SetPreCompiled(is_precompiled);
 	MonoEntityManager::GetInstance().StartCompilation();
 
 	Instance().m_Info.m_FrameLogRate = 165;

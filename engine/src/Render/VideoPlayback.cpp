@@ -39,7 +39,7 @@ struct RuntimeVideoData {
     std::unique_ptr<RuntimeVideoResourceData> m_VidResource{};
 };
 
-void removeStaleGeneratedTextures() {
+__declspec(noinline) void removeStaleGeneratedTextures() {
     auto& reg = generatedEntityVideoTextures();
     for (auto it = reg.begin(); it != reg.end(); ) {
         if (!it->second.markActive) {
@@ -52,25 +52,26 @@ void removeStaleGeneratedTextures() {
     }
 }
 
-void removeGeneratedTextures(std::unordered_map<std::uint64_t, GeneratedTextureData>::const_iterator it) {
+__declspec(noinline) void removeGeneratedTextures(std::unordered_map<std::uint64_t, GeneratedTextureData>::const_iterator it) {
     auto& reg = generatedEntityVideoTextures();
     if (it->second.guid != rp::null_guid)
         ResourceRegistry::Instance().UnregisterInMemory<std::shared_ptr<Texture>>(it->second.guid);
     reg.erase(it);
 }
 
-void removeGeneratedTextures(ecs::entity ent) {
+__declspec(noinline) void removeGeneratedTextures(ecs::entity ent) {
     auto& reg = generatedEntityVideoTextures();
     if (auto it = reg.find(ent.get_uuid()); it != reg.end()) {
         removeGeneratedTextures(it);
     }
 }
 
-rp::Guid getGeneratedTextures(ecs::entity ent, VideoComponent& vc) {
+__declspec(noinline) rp::Guid getGeneratedTextures(ecs::entity ent, VideoComponent& vc) {
     auto& reg = generatedEntityVideoTextures();
     auto it = reg.find(ent.get_uuid());
     if (it != reg.end() && (it->second.width != vc.width || it->second.height != vc.height)) {
         removeGeneratedTextures(it);
+        it = reg.end();
     }
     if (it == reg.end()){
         GeneratedTextureData texdata{};
@@ -157,7 +158,8 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
     }
  
     vc.isPlaying = true;
-
+    vc.duration = plm_get_duration(ptr);
+    
     // Advance playback time
     LogVideoAudioStreamError(rvd.m_VidResource->m_Chl->setFrequency(plm_get_samplerate(ptr) * vc.playbackSpeed), "SetFrequency");
 
@@ -186,10 +188,7 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
     vc.currentTime = video_time;
 
     rvd.m_VidResource->m_StreamSync.release();
-    if (!frame) {
-        return std::vector<uint8_t>{};
-    }
-    else if (plm_has_ended(ptr)) {
+    if (bool isplaying{}; rvd.m_VidResource->m_Chl->isPlaying(&isplaying) != FMOD_OK || !isplaying) {
         plm_rewind(ptr);
         vc.currentTime = 0;
         if (vc.loop) {
@@ -198,6 +197,9 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
             return getNextFrame(vc, rvd);
         }
         vc.isPlaying = false;
+        return std::vector<uint8_t>{};
+    }
+    else if (!frame) {
         return std::vector<uint8_t>{};
     }
 
@@ -221,16 +223,18 @@ void VideoSystem::Update(ecs::world& wrld) {
     for (auto& ent : view)
     {
         VideoComponent& vidc = ent.get<VideoComponent>();
-        if (vidc.videoGuid.m_guid == rp::null_guid) {
+        if (vidc.videoGuid.m_guid == rp::null_guid || (!vidc.isPlaying && !vidc.loop) || vidc.isPaused) {
             continue;
         }
         RuntimeVideoData& ptr = *ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
         auto rgbres{getNextFrame(vidc, ptr)};
-        if (rgbres.empty())
-            continue;
         auto texguid = getGeneratedTextures(ent, vidc);
         auto& texptr = *ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(texguid);
-        glTexSubImage2D(texptr->target, 0, 0, 0, vidc.width, vidc.height, GL_RGB, GL_UNSIGNED_BYTE, rgbres.data());
+        if (!rgbres.empty()) {
+            glBindTexture(texptr->target, texptr->id);
+            glTexSubImage2D(texptr->target, 0, 0, 0, vidc.width, vidc.height, GL_RGB, GL_UNSIGNED_BYTE, rgbres.data());
+            glBindTexture(texptr->target, 0);
+        }
         if (vidc.renderFullscreen) {
             HUDElementData vidhud{};
             vidhud.anchor = HUDAnchor::BottomLeft;
