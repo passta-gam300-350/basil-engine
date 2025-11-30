@@ -12,6 +12,9 @@ namespace BasilEngine
     [NativeClass("ManagedTime")]
 
 
+    /// <summary>
+    /// Exposes time-related values sourced from the engine runtime.
+    /// </summary>
     public class Time
     {
         [NativeMethod("GetDeltaTime")]
@@ -21,6 +24,9 @@ namespace BasilEngine
 
 
 
+        /// <summary>
+        /// Time in seconds it took to complete the last frame.
+        /// </summary>
         public static float deltaTime
         {
             get { return GetDeltaTimeInternal(); }

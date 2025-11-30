@@ -6,11 +6,20 @@ using Engine.Bindings;
 namespace BasilEngine.Components
 {
     [NativeHeader("Bindings/ManagedLight.hpp")]
+    /// <summary>
+    /// Light component wrapper exposing color, intensity, and shape controls.
+    /// </summary>
     public class Light : Component
     {
+        /// <summary>
+        /// Types of lights supported by the engine.
+        /// </summary>
         public enum LightType { Directional = 0, Point = 1, Spot = 2 }
 
         // -------- Type --------
+        /// <summary>
+        /// Gets or sets the light type.
+        /// </summary>
         public LightType type
         {
             get => (LightType)Internal_GetType(NativeID);
@@ -18,6 +27,9 @@ namespace BasilEngine.Components
         }
 
         // -------- Enabled --------
+        /// <summary>
+        /// Enables or disables light contribution.
+        /// </summary>
         public bool enabled
         {
             get => Internal_GetEnabled(NativeID);
@@ -25,16 +37,31 @@ namespace BasilEngine.Components
         }
 
         // -------- Color --------
+        /// <summary>
+        /// Light color as a vector.
+        /// </summary>
         public Vector3 color
         {
             get => new Vector3(colorR, colorG, colorB);
             set => Internal_SetColor(NativeID, value.X, value.Y, value.Z);
         }
+        /// <summary>
+        /// Red component of the light color.
+        /// </summary>
         public float colorR { get => Internal_GetColorR(NativeID); set => Internal_SetColorR(NativeID, value); }
+        /// <summary>
+        /// Green component of the light color.
+        /// </summary>
         public float colorG { get => Internal_GetColorG(NativeID); set => Internal_SetColorG(NativeID, value); }
+        /// <summary>
+        /// Blue component of the light color.
+        /// </summary>
         public float colorB { get => Internal_GetColorB(NativeID); set => Internal_SetColorB(NativeID, value); }
 
         // -------- Intensity --------
+        /// <summary>
+        /// Brightness multiplier of the light.
+        /// </summary>
         public float intensity
         {
             get => Internal_GetIntensity(NativeID);
@@ -42,16 +69,31 @@ namespace BasilEngine.Components
         }
 
         // -------- Direction --------
+        /// <summary>
+        /// Direction of the light (used for directional and spot lights).
+        /// </summary>
         public Vector3 direction
         {
             get => new Vector3(dirX, dirY, dirZ);
             set => Internal_SetDirection(NativeID, value.X, value.Y, value.Z);
         }
+        /// <summary>
+        /// X component of the light direction.
+        /// </summary>
         public float dirX => Internal_GetDirectionX(NativeID);
+        /// <summary>
+        /// Y component of the light direction.
+        /// </summary>
         public float dirY => Internal_GetDirectionY(NativeID);
+        /// <summary>
+        /// Z component of the light direction.
+        /// </summary>
         public float dirZ => Internal_GetDirectionZ(NativeID);
 
         // -------- Range --------
+        /// <summary>
+        /// Effective range of the light.
+        /// </summary>
         public float range
         {
             get => Internal_GetRange(NativeID);
@@ -59,16 +101,25 @@ namespace BasilEngine.Components
         }
 
         // -------- Spot cones (degrees) --------
+        /// <summary>
+        /// Inner cone angle in degrees for spot lights.
+        /// </summary>
         public float innerConeDeg
         {
             get => Internal_GetInnerConeDeg(NativeID);
             set => Internal_SetCones(NativeID, value, outerConeDeg);
         }
+        /// <summary>
+        /// Outer cone angle in degrees for spot lights.
+        /// </summary>
         public float outerConeDeg
         {
             get => Internal_GetOuterConeDeg(NativeID);
             set => Internal_SetCones(NativeID, innerConeDeg, value);
         }
+        /// <summary>
+        /// Sets both inner and outer cone angles at once.
+        /// </summary>
         public void SetCones(float innerDeg, float outerDeg) => Internal_SetCones(NativeID, innerDeg, outerDeg);
 
         // ===== Native bindings =====

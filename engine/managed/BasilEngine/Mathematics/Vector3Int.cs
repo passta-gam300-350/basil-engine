@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 namespace EngineAPI.Mathematics
 {
     [Disabled]
+    /// <summary>
+    /// Placeholder 3D integer vector type for future expansion.
+    /// </summary>
     class Vector3Int
     {
     }
