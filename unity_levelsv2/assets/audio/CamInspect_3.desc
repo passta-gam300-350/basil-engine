@@ -1,0 +1,14 @@
+base:
+  m_guid: 80c52487892a920016c811deb0c
+  m_importer: .audio
+  m_source: audio\CamInspect_3.ogg
+  m_name: CamInspect_3.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

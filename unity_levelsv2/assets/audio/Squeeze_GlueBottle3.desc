@@ -1,0 +1,14 @@
+base:
+  m_guid: 80c54797b39abdf15d3ec0bedaa
+  m_importer: .audio
+  m_source: audio\Squeeze_GlueBottle3.ogg
+  m_name: Squeeze_GlueBottle3.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

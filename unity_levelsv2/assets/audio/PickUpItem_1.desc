@@ -1,0 +1,14 @@
+base:
+  m_guid: 80c53fb7f0da5a7760446f0fb05
+  m_importer: .audio
+  m_source: audio\PickUpItem_1.ogg
+  m_name: PickUpItem_1.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0
