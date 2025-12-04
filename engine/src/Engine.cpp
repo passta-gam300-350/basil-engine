@@ -187,7 +187,7 @@ void Engine::CoreUpdate() {
 	//JobID last_job{ instance.m_World.update_async()};
 	animationSystem().FixedUpdate(instance.m_World);
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
-	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetDeltaTime()));
+	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 
 	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
 	Engine::SyncActiveSceneRenderSettings();
@@ -199,7 +199,7 @@ void Engine::CoreUpdate() {
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
-	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetDeltaTime()));
+	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	messagingSystem.Update();
 
 

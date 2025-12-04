@@ -21,7 +21,7 @@ Technology is prohibited.
 #include "Manager/ResourceSystem.hpp"
 void animationSystem::FixedUpdate(ecs::world& world)
 {
-	float dt = Engine::GetDeltaTime();
+	float dt = Engine::GetLastDeltaTime();
 	auto animated = world.filter_entities<AnimationComponent, TransformComponent>();
 	for (auto eachAEntity : animated)
 	{

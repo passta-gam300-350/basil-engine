@@ -1,6 +1,8 @@
 #include "Physics/Physics_System.h"
 #include "Physics/Physics_Components.h"
 
+#include "spdlog/spdlog.h"
+
 void RigidBodyComponent::AddForce(const glm::vec3& force) {
     JPH::BodyID bodyID = PhysicsSystem::Instance().GetBodyID(ecs::entity(m_entity));
     if (bodyID.IsInvalid()) { return; }
@@ -57,7 +59,11 @@ void RigidBodyComponent::SetPositionRotationAndVelocity(glm::vec3& inPosition, g
 
 void RigidBodyComponent::MoveKinematic(const glm::vec3& targetPos, const glm::vec3& targetRot, const float duration) {
     JPH::BodyID bodyID = PhysicsSystem::Instance().GetBodyID(ecs::entity(m_entity));
-    if (bodyID.IsInvalid()) return;
+    if (bodyID.IsInvalid())
+    {
+        spdlog::warn("Attempt to move an invalid body");
+        return;
+    }
     PhysicsSystem::Instance().GetBodyInterface().MoveKinematic(bodyID, PhysicsUtils::ToJolt(targetPos), PhysicsUtils::ToQuatJolt(targetRot), duration);
 }
 

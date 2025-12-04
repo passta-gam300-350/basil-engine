@@ -2303,9 +2303,9 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -0.997274101
+        x: -1.60656929
         y: 0.415434897
-        z: 0.710635602
+        z: 1.36173308
     Behaviour:
       classesName:
         - PlayerController3D
@@ -2335,12 +2335,12 @@ entities:
         z: 1
       m_Rotate:
         x: 0
-        y: 0
+        y: -0
         z: 0
       m_Trans:
         x: 0
         y: 0
-        z: 0
+        z: 0.00570702553
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -2403,7 +2403,7 @@ entities:
       m_Type: "\x01"
       m_IsActive: true
       m_Fov: 45
-      m_AspectRatio: 1.54226196
+      m_AspectRatio: 1.75568664
       m_Near: 0.100000001
       m_Far: 1000
       m_Up:
@@ -2456,7 +2456,7 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: 0.27852428
+        x: 0.184497237
         y: -0.256961942
         z: 0.5971753
   - MeshRendererComponent:

@@ -24,6 +24,8 @@ Technology is prohibited.
 #include "Physics/Physics_System.h"
 #include <glm/glm.hpp>
 
+#include "spdlog/spdlog.h"
+
 
 int ManagedPhysics::GetMotionType(uint64_t handle)
 {
@@ -349,8 +351,8 @@ void ManagedPhysics::MovePosition(uint64_t handle, float x, float y, float z)
 
 	RigidBodyComponent& body = entity.get<RigidBodyComponent>();
 
-
-	body.MoveKinematic(pos, current_rot, static_cast<float>(Engine::Instance().GetDeltaTime()));
+	spdlog::info("Physics is called from managed");
+	body.MoveKinematic(pos, current_rot, static_cast<float>(Engine::Instance().GetLastDeltaTime()));
 }
 
 bool ManagedPhysics::Raycast(float ox, float oy, float oz,

@@ -15,7 +15,7 @@ public class PlayerController3D : Behavior
     public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
-    public float moveSpeed = 0.7f;
+    public float moveSpeed =4f;
 
     public bool disabled = false;
 
