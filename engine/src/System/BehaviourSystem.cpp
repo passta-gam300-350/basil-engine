@@ -8,6 +8,12 @@
 #include "spdlog/spdlog.h"
 #include "Profiler/profiler.hpp"
 
+#include <algorithm>
+#include <mono/jit/jit.h>
+#include <mono/metadata/object.h>
+#include <sstream>
+#include <string_view>
+
 const char* defSearchDirs[] = {
 	"Scripts/Bin/",
 	"Scripts/Bin/Debug/",
@@ -181,6 +187,152 @@ bool BehaviourSystem::AddScriptToEntityComponent(ecs::entity& /*entity*/, ecs::w
 
 }
 
+namespace
+{
+	bool ParseBool(std::string_view value, bool& outValue)
+	{
+		if (value == "true" || value == "1")
+		{
+			outValue = true;
+			return true;
+		}
+		if (value == "false" || value == "0")
+		{
+			outValue = false;
+			return true;
+		}
+		return false;
+	}
+
+	bool ParseVec2(std::string_view value, float& x, float& y)
+	{
+		std::string tmp(value);
+		std::stringstream stream(tmp);
+		char comma = '\0';
+		if (stream >> x >> comma >> y)
+		{
+			return comma == ',';
+		}
+		return false;
+	}
+
+	bool ParseVec3(std::string_view value, float& x, float& y, float& z)
+	{
+		std::string tmp(value);
+		std::stringstream stream(tmp);
+		char comma1 = '\0';
+		char comma2 = '\0';
+		if (stream >> x >> comma1 >> y >> comma2 >> z)
+		{
+			return comma1 == ',' && comma2 == ',';
+		}
+		return false;
+	}
+
+	bool SetFieldFromString(MonoObject* scriptObject,
+		const CSKlass* klass,
+		std::string_view fieldName,
+		std::string_view typeName,
+		std::string_view value)
+	{
+		if (!scriptObject || !klass)
+		{
+			return false;
+		}
+
+		const std::string fieldNameStr(fieldName);
+		CSKlass::FieldInfo* fieldInfo = const_cast<CSKlass*>(klass)->ResolveField(fieldNameStr.c_str());
+		if (!fieldInfo)
+		{
+			return false;
+		}
+
+		if (typeName == "System.Boolean")
+		{
+			bool parsed = false;
+			if (!ParseBool(value, parsed))
+			{
+				return false;
+			}
+			mono_bool rawValue = parsed ? 1 : 0;
+			mono_field_set_value(scriptObject, fieldInfo->field, &rawValue);
+			return true;
+		}
+		if (typeName == "System.Int32")
+		{
+			try
+			{
+				int parsed = std::stoi(std::string(value));
+				mono_field_set_value(scriptObject, fieldInfo->field, &parsed);
+				return true;
+			}
+			catch (...)
+			{
+				return false;
+			}
+		}
+		if (typeName == "System.Single")
+		{
+			try
+			{
+				float parsed = std::stof(std::string(value));
+				mono_field_set_value(scriptObject, fieldInfo->field, &parsed);
+				return true;
+			}
+			catch (...)
+			{
+				return false;
+			}
+		}
+		if (typeName == "System.Double")
+		{
+			try
+			{
+				double parsed = std::stod(std::string(value));
+				mono_field_set_value(scriptObject, fieldInfo->field, &parsed);
+				return true;
+			}
+			catch (...)
+			{
+				return false;
+			}
+		}
+		if (typeName == "System.String")
+		{
+			MonoString* monoStr = mono_string_new(mono_domain_get(), std::string(value).c_str());
+			mono_field_set_value(scriptObject, fieldInfo->field, monoStr);
+			return true;
+		}
+		if (typeName == "BasilEngine.Mathematics.Vector2")
+		{
+			float x = 0.0f;
+			float y = 0.0f;
+			if (!ParseVec2(value, x, y))
+			{
+				return false;
+			}
+			struct { float x, y; } vec{ x, y };
+			mono_field_set_value(scriptObject, fieldInfo->field, &vec);
+			return true;
+		}
+		if (typeName == "BasilEngine.Mathematics.Vector3")
+		{
+			float x = 0.0f;
+			float y = 0.0f;
+			float z = 0.0f;
+			if (!ParseVec3(value, x, y, z))
+			{
+				return false;
+			}
+			struct { float x, y, z; } vec{ x, y, z };
+			mono_field_set_value(scriptObject, fieldInfo->field, &vec);
+			return true;
+		}
+
+		return false;
+	}
+}
+
 void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns) 
 {
 	CSKlass* klass = MonoEntityManager::GetInstance().GetNamedKlass(klassname, klass_ns);
@@ -204,6 +356,8 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 	{
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		component.scriptIDs.push_back(scriptID);
+		std::string managedName = (klass_ns && *klass_ns) ? (std::string(klass_ns) + "." + klassname) : std::string(klassname);
+		ApplyScriptProperties(component, managedName, scriptID);
 	}
 
 }
@@ -222,6 +376,45 @@ void BehaviourSystem::RegisterComponent(ecs::entity& entity) {
 		else {
 			AddScriptToEntityComponent(entity, world, className.c_str(), namespaceName.c_str());
 		}
+	}
+}
+
+void BehaviourSystem::ApplyScriptProperties(behaviour& component, const std::string& managedName, rp::Guid scriptID)
+{
+	if (!scriptID)
+	{
+		return;
+	}
+
+	CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
+	if (!instance || !instance->IsValid())
+	{
+		return;
+	}
+
+	const CSKlass* klass = instance->Klass();
+	if (!klass || !klass->IsValid())
+	{
+		return;
+	}
+
+	instance->UpdateManaged();
+	MonoObject* scriptObject = instance->Object();
+	if (!scriptObject)
+	{
+		return;
+	}
+
+	const std::string prefix = managedName + ".";
+	for (const auto& prop : component.scriptProperties)
+	{
+		if (prop.name.rfind(prefix, 0) != 0)
+		{
+			continue;
+		}
+
+		const std::string fieldName = prop.name.substr(prefix.size());
+		SetFieldFromString(scriptObject, klass, fieldName, prop.typeName, prop.value);
 	}
 }
 

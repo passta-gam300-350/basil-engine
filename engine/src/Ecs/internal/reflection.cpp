@@ -215,7 +215,15 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	RegisterReflectionComponent<behaviour>(
 		"Behaviour",
-		MemberRegistrationV<&behaviour::classesName, "classesName">
+		MemberRegistrationV<&behaviour::classesName, "classesName">,
+		MemberRegistrationV<&behaviour::scriptProperties, "scriptProperties">
+	);
+
+	RegisterReflectionComponent<ScriptProperty>(
+		"ScriptProperty",
+		MemberRegistrationV<&ScriptProperty::name, "name">,
+		MemberRegistrationV<&ScriptProperty::typeName, "type">,
+		MemberRegistrationV<&ScriptProperty::value, "value">
 	);
 
 	RegisterReflectionComponent<AudioComponent>(

@@ -1,8 +1,10 @@
 #pragma once
 #include <mono/metadata/object-forward.h>
+#include <string>
 
 #include "ecs/system/system.h"
 #include "rsc-core/rp.hpp"
+#include <components/behaviour.hpp>
 
 
 
@@ -36,6 +38,7 @@ public:
 
 
 	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns="");
+	void ApplyScriptProperties(behaviour& component, const std::string& managedName, rp::Guid scriptID);
 
 
 	void RegisterComponent(ecs::entity& entity);

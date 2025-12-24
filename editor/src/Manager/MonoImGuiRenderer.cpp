@@ -18,10 +18,13 @@ Technology is prohibited.
 
 #include "imgui.h"
 
+#include <iomanip>
 #include <Manager/MonoReflectionRegistry.hpp>
 #include <Manager/MonoEntityManager.hpp>
 #include "MonoResolver/MonoTypeDescriptor.hpp"
 #include "ABI/CSKlass.hpp"
+
+#include <sstream>
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/metadata.h>
@@ -239,20 +242,149 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 	return modified;
 }
 
-void MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName, rp::Guid scriptGuid)
+bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
+	CSKlass* klass,
+	CSKlassInstance* instance,
+	std::string& outValue)
+{
+	if (!fieldNode.descriptor)
+	{
+		return false;
+	}
+
+	if (fieldNode.isStatic)
+	{
+		return false;
+	}
+
+	if (!klass || !klass->IsValid())
+	{
+		return false;
+	}
+
+	if (!instance || !instance->IsValid())
+	{
+		return false;
+	}
+
+	CSKlass::FieldInfo* fieldInfo = klass->ResolveField(fieldNode.name.c_str());
+	if (!fieldInfo)
+	{
+		return false;
+	}
+
+	MonoObject* scriptObject = instance->Object();
+	if (!scriptObject)
+	{
+		instance->UpdateManaged();
+		scriptObject = instance->Object();
+	}
+	if (!scriptObject)
+	{
+		return false;
+	}
+
+	switch (fieldNode.descriptor->managedKind)
+	{
+	case ManagedKind::System_Boolean:
+	{
+		mono_bool rawValue = 0;
+		mono_field_get_value(scriptObject, fieldInfo->field, &rawValue);
+		outValue = (rawValue != 0) ? "true" : "false";
+		return true;
+	}
+	case ManagedKind::System_Int32:
+	{
+		int value = 0;
+		mono_field_get_value(scriptObject, fieldInfo->field, &value);
+		outValue = std::to_string(value);
+		return true;
+	}
+	case ManagedKind::System_Single:
+	{
+		float value = 0.0f;
+		mono_field_get_value(scriptObject, fieldInfo->field, &value);
+		std::ostringstream stream;
+		stream << std::setprecision(7) << value;
+		outValue = stream.str();
+		return true;
+	}
+	case ManagedKind::System_Double:
+	{
+		double value = 0.0;
+		mono_field_get_value(scriptObject, fieldInfo->field, &value);
+		std::ostringstream stream;
+		stream << std::setprecision(15) << value;
+		outValue = stream.str();
+		return true;
+	}
+	case ManagedKind::System_String:
+	{
+		MonoString* monoStr = nullptr;
+		mono_field_get_value(scriptObject, fieldInfo->field, &monoStr);
+
+		if (!monoStr)
+		{
+			outValue.clear();
+			return true;
+		}
+
+		char* utf8 = mono_string_to_utf8(monoStr);
+		if (utf8)
+		{
+			outValue = utf8;
+			mono_free(utf8);
+			return true;
+		}
+		return false;
+	}
+	case ManagedKind::System_List:
+		return false;
+	default:
+		if (fieldNode.descriptor->managedKind == ManagedKind::Custom)
+		{
+			auto managed_name = fieldNode.descriptor->managed_name;
+			if (managed_name == "BasilEngine.Mathematics.Vector3")
+			{
+				struct { float x, y, z; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				std::ostringstream stream;
+				stream << std::setprecision(7) << value.x << "," << value.y << "," << value.z;
+				outValue = stream.str();
+				return true;
+			}
+			else if (managed_name == "BasilEngine.Mathematics.Vector2")
+			{
+				struct { float x, y; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				std::ostringstream stream;
+				stream << std::setprecision(7) << value.x << "," << value.y;
+				outValue = stream.str();
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
+bool MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName,
+	rp::Guid scriptGuid,
+	std::vector<ScriptProperty>& outProperties)
 {
 	const auto* classNode = MonoReflectionRegistry::Instance().FindClassByManagedName(managedName);
 	if (!classNode)
 	{
 		ImGui::TextDisabled("Reflection data not available for %s", managedName.c_str());
-		return;
+		return false;
 	}
 
 	CSKlass* klass = ResolveManagedClass(managedName);
 	if (!klass || !klass->IsValid())
 	{
 		ImGui::TextDisabled("Class %s is not loaded", managedName.c_str());
-		return;
+		return false;
 	}
 
 	CSKlassInstance* instance = nullptr;
@@ -268,6 +400,9 @@ void MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName, rp
 	const std::string guidLabel = instance ? scriptGuid.to_hex() : std::string("<unassigned>");
 	ImGui::TextDisabled("Script GUID: %s", guidLabel.c_str());
 
+	bool modified = false;
+	const std::string namePrefix = managedName + ".";
+
 	for (const auto& [fieldName, fieldNodePtr] : classNode->fields)
 	{
 		if (!fieldNodePtr)
@@ -281,7 +416,17 @@ void MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName, rp
 			continue;
 		}
 
-		RenderField(fieldNode, klass, instance);
+		modified |= RenderField(fieldNode, klass, instance);
+
+		std::string valueStr;
+		if (TryGetFieldValueString(fieldNode, klass, instance, valueStr))
+		{
+			ScriptProperty prop{};
+			prop.name = namePrefix + fieldNode.name;
+			prop.typeName = fieldNode.descriptor ? fieldNode.descriptor->managed_name : fieldNode.type;
+			prop.value = std::move(valueStr);
+			outProperties.push_back(std::move(prop));
+		}
 
 		if (const MonoTypeDescriptor* elementDescriptor = GetElementDescriptor(fieldNode))
 		{
@@ -290,4 +435,6 @@ void MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName, rp
 			ImGui::Unindent();
 		}
 	}
+
+	return modified;
 }
