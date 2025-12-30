@@ -7,6 +7,7 @@
 #include "Bindings/MANAGED_CONSOLE.hpp"
 #include "spdlog/spdlog.h"
 #include "Profiler/profiler.hpp"
+#include "Scene/Scene.hpp"
 
 #include <algorithm>
 #include <mono/jit/jit.h>
@@ -229,6 +230,42 @@ namespace
 		return false;
 	}
 
+	bool ParseSceneEntityReference(std::string_view value, SceneEntityReference& outRef)
+	{
+		constexpr std::string_view guidKey = "scene_guid:";
+		constexpr std::string_view idKey = "scene_id:";
+
+		const size_t guidPos = value.find(guidKey);
+		const size_t idPos = value.find(idKey);
+		if (guidPos == std::string_view::npos || idPos == std::string_view::npos)
+		{
+			return false;
+		}
+
+		const size_t guidStart = guidPos + guidKey.size();
+		const size_t guidEnd = value.find(';', guidStart);
+		if (guidEnd == std::string_view::npos)
+		{
+			return false;
+		}
+
+		const std::string guidStr(value.substr(guidStart, guidEnd - guidStart));
+		const std::string idStr(value.substr(idPos + idKey.size()));
+
+		try
+		{
+			const rp::Guid guid = rp::Guid::to_guid(guidStr);
+			const uint32_t sceneId = static_cast<uint32_t>(std::stoul(idStr));
+			outRef.m_scene_guid = { guid, rp::utility::compute_string_hash("scene") };
+			outRef.m_scene_id = sceneId;
+			return true;
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+
 	bool SetFieldFromString(MonoObject* scriptObject,
 		const CSKlass* klass,
 		std::string_view fieldName,
@@ -326,6 +363,50 @@ namespace
 			}
 			struct { float x, y, z; } vec{ x, y, z };
 			mono_field_set_value(scriptObject, fieldInfo->field, &vec);
+			return true;
+		}
+		if (typeName == "BasilEngine.GameObject")
+		{
+			if (value.empty() || value.find("None") == 0)
+			{
+				mono_field_set_value(scriptObject, fieldInfo->field, nullptr);
+				return true;
+			}
+
+			SceneEntityReference ref{};
+			if (!ParseSceneEntityReference(value, ref))
+			{
+				return false;
+			}
+
+			auto entityOpt = Engine::GetSceneRegistry().GetReferencedEntity(ref);
+			if (!entityOpt.has_value())
+			{
+				mono_field_set_value(scriptObject, fieldInfo->field, nullptr);
+				return true;
+			}
+
+			uint64_t nativeID = entityOpt.value().get_uuid();
+			CSKlass* gameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+			if (!gameObjectKlass)
+			{
+				MonoEntityManager::GetInstance().AddNamedKlass("GameObject", "BasilEngine", true);
+				gameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+			}
+			if (!gameObjectKlass)
+			{
+				return false;
+			}
+
+			void* args[1] = { &nativeID };
+			CSKlassInstance goInstance = gameObjectKlass->CreateInstance(nullptr, args);
+			MonoObject* goObject = goInstance.Object();
+			if (!goObject)
+			{
+				return false;
+			}
+
+			mono_field_set_value(scriptObject, fieldInfo->field, goObject);
 			return true;
 		}
 

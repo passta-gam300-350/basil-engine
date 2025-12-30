@@ -22,6 +22,7 @@ Technology is prohibited.
 
 #include <components/behaviour.hpp>
 
+#include "ABI/CSKlass.hpp"
 #include "Screens/EditorMain.hpp"
 
 struct FieldNode;
@@ -38,6 +39,9 @@ public:
 
 private:
 	static bool RenderField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance);
+	static void RenderGameObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info);
+
+
 	static bool TryGetFieldValueString(const FieldNode& fieldNode,
 		CSKlass* klass,
 		CSKlassInstance* instance,

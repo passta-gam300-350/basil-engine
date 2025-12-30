@@ -29,6 +29,8 @@ Technology is prohibited.
 #include <mono/metadata/object.h>
 #include <mono/metadata/metadata.h>
 
+#include "Scene/Scene.hpp"
+
 namespace
 {
 	const MonoTypeDescriptor* GetElementDescriptor(const FieldNode& node)
@@ -211,7 +213,6 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 					modified = true;
 				}
 
-				break;
 			} else if (managed_name == "BasilEngine.Mathematics.Vector2")
 			{
 
@@ -231,15 +232,141 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 
 				break;
 			}
+			else if (fieldNode.descriptor->managed_name == "BasilEngine.GameObject")
+			{
+				RenderGameObjectField(fieldNode, klass, instance, fieldInfo);
+			}
+			else if (fieldNode.descriptor->isUserType)
+			{
+				ImGui::TextDisabled("%s (user-defined type not yet supported)", label);
+			}
 		}
-		else {
-			ImGui::TextDisabled("%s (type %s not supported)", label, fieldNode.descriptor->managed_name.c_str());
+		
+		else
+		{
+			ImGui::TextDisabled("%s (type unknown)", label);
 		}
+
 		break;
 	}
 
 	ImGui::PopID();
 	return modified;
+}
+
+void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info)
+{
+
+	MonoObject* gameObjRef = nullptr;
+	MonoObject* inst = instance->Object();
+
+
+	CSKlass* nativeClass = MonoEntityManager::GetInstance().GetNamedKlass("NativeObject", "BasilEngine");
+
+	mono_field_get_value(inst, info->field, &gameObjRef);
+
+	//Get Native Object csharp class
+	//CSKlass* NativeClass = MonoEntityManager::GetInstance().GetNamedKlass("NativeObject", "BasilEngine");
+
+	uint64_t nativeID = 0;
+	//Get NativeID field
+	CSKlass::FieldInfo* nativeIDField = nativeClass->ResolveField("NativeID");
+	SceneEntityReference goReference{};
+	if (gameObjRef)
+	{
+		mono_field_get_value(gameObjRef, nativeIDField->field, &nativeID);
+	}
+
+
+
+	
+	std::string selected = "None (GameObject)";
+
+	
+
+	std::vector<std::pair<const char*, SceneEntityReference>> entities_ref{};
+
+	auto get_all_entities_ref = [&entities_ref]()
+	{
+		auto world = Engine::GetWorld();
+		auto entities = world.get_all_entities();
+		for (auto& entity : entities)
+		{
+			SceneEntityReference entityRef{};
+			entityRef.m_scene_guid = { Engine::GetSceneRegistry().GetActiveSceneGuid(), rp::utility::compute_string_hash("scene") };
+			entityRef.m_scene_id = entity.get_scene_uid();
+			entities_ref.push_back({ entity.name().c_str(), entityRef });
+		}
+	};
+
+
+	if (ImGui::BeginPopup("MENU_ENTITY_LIST")) {
+		// List all entities
+	
+		get_all_entities_ref();
+		int counter = 0;
+		for (auto& entity : entities_ref)
+		{
+			// Get entity name
+			
+			std::string const& entityName = entity.first;
+
+			std::string uuid = std::to_string(counter++) + "_ENTITY_LIST";
+			// Display entity as selectable
+			ImGui::PushID(uuid.c_str());
+			if (ImGui::Selectable(entityName.c_str()))
+			{
+				// Do some C# operations to set the GameObject reference
+				CSKlass* gameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+				const SceneEntityReference ref = entity.second;
+				auto selected_entity = Engine::GetSceneRegistry().GetReferencedEntity(ref);
+				if (selected_entity.has_value())
+				{
+					ecs::entity e = selected_entity.value();
+					uint64_t nativeIDValue = e.get_uuid();
+					void* data[1] = { &nativeIDValue };
+
+					rp::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", data);
+					CSKlassInstance* goInstance = MonoEntityManager::GetInstance().GetInstance(id);
+					//Set NativeID field
+					CSKlass::FieldInfo* nativeIDField = gameObjectKlass->ResolveField("NativeID");
+					mono_field_set_value(goInstance->Object(), nativeIDField->field, &nativeIDValue);
+					//Set GameObject field in the script instance
+					mono_field_set_value(inst, info->field, (goInstance->Object()));
+					nativeID = nativeIDValue;
+				}
+
+
+
+
+				ImGui::PopID();
+				break;
+				
+			}
+			ImGui::PopID();
+		}
+
+		ImGui::EndPopup();
+	}
+
+	if (nativeID != 0)
+
+	{
+		ecs::entity native{ nativeID };
+		selected = native.name() + " (GameObject)";
+	}
+	ImGui::Text("%s : %s ", fieldNode.name.c_str(), selected.c_str());
+	ImGui::SameLine();
+	bool button = ImGui::Button("Select Entity");
+	if (button)
+	{
+		ImGui::OpenPopup("MENU_ENTITY_LIST");
+	}
+
+
+
+
+
 }
 
 bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
@@ -363,6 +490,37 @@ bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
 				stream << std::setprecision(7) << value.x << "," << value.y;
 				outValue = stream.str();
 				return true;
+			}
+			else if (managed_name == "BasilEngine.GameObject")
+			{
+				auto sceneRefString = [](SceneEntityReference const& ref)
+				{
+					return "scene_guid:" + ref.m_scene_guid.m_guid.to_hex() +
+						";scene_id:" + std::to_string(ref.m_scene_id);
+				};
+
+
+				MonoObject* obj = nullptr;
+				mono_field_get_value(scriptObject, fieldInfo->field, &obj);
+
+				if (!obj)
+				{
+					outValue = "None (GameObject)";
+					return false;
+				} else
+				{
+					SceneEntityReference goRef{};
+					CSKlass* goKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+					CSKlass::FieldInfo* nativeIDField = goKlass->ResolveField("NativeID");
+					uint64_t nativeID = 0;
+					mono_field_get_value(obj, nativeIDField->field, &nativeID);
+					ecs::entity native{ nativeID };
+					goRef.m_scene_guid = { Engine::GetSceneRegistry().GetActiveSceneGuid(), rp::utility::compute_string_hash("scene") };
+					goRef.m_scene_id = native.get_scene_uid();
+
+					outValue = sceneRefString(goRef);
+					return true;
+				}
 			}
 		}
 		return false;

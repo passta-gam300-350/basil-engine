@@ -115,7 +115,7 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 		CSKlass* NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
 		if (!NativeClass)
 		{
-			AddNamedKlass("NativeObject", "BasilEngine");
+			AddNamedKlass("NativeObject", "BasilEngine", true);
 			NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
 
 		}
