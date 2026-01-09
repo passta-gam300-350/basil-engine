@@ -51,7 +51,7 @@ struct SceneRenderSettings {
 		mutable bool needsReload = true; // Flag to trigger cubemap reload when GUIDs change
 	} skybox;
 
-	glm::vec3 ambientLight = glm::vec3(0.1f);     // Ambient light color
+	glm::vec3 ambientLight = glm::vec3(0.03f);     // Ambient light color
 	glm::vec4 backgroundColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f); // Background clear color
 };
 

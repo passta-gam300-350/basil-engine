@@ -134,7 +134,7 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 6. Add HDR resolve pass (resolve MSAA HDR buffer for tone mapping)
     auto hdrResolvePass = std::make_shared<HDRResolvePass>();
     mainPipeline->AddPass(hdrResolvePass);
-    //mainPipeline->EnablePass("HDRResolvePass", true);  // Disabled by default
+    //mainPipeline->EnablePass("HDRResolvePass", false);  // Disabled by default
 
     // 7. Add HDR luminance pass (auto-exposure calculation via compute shader)
     auto hdrLuminancePass = std::make_shared<HDRLuminancePass>();
@@ -144,13 +144,14 @@ void SceneRenderer::InitializeDefaultPipeline()
     // 8. Add physically based bloom pass (multi-scale blur with Karis average)
     auto bloomPass = std::make_shared<BloomRenderPass>();
     mainPipeline->AddPass(bloomPass);
+    //mainPipeline->EnablePass("BloomPass", false);
     //spdlog::info("SceneRenderer: Added BloomRenderPass to pipeline");
 
     // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
     toneMapPass->EnableGammaCorrection(true);  // Enable manual gamma - outputs RGB8 to avoid ImGui brightness issues
     mainPipeline->AddPass(toneMapPass);
-    //mainPipeline->EnablePass("ToneMapPass", false);  // Disabled by default
+    //mainPipeline->EnablePass("ToneMapPass", true);  // Disabled by default
 
     // 10. Add HUD rendering pass (renders on top of final tone-mapped image)
     auto hudPass = std::make_shared<HUDRenderPass>();

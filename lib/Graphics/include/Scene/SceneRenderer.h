@@ -153,7 +153,7 @@ private:
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
     std::vector<SubmittedLightData> m_SubmittedLights;
-    glm::vec3 m_AmbientLight = glm::vec3(0.1f);
+    glm::vec3 m_AmbientLight = glm::vec3(0.03f);
 
     // Single render pipeline
     std::unique_ptr<RenderPipeline> m_Pipeline;
