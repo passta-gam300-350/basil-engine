@@ -5,7 +5,7 @@
 #include "ecs/internal/world.h"
 #include "Prefab/PrefabData.hpp"
 #include "Component/PrefabComponent.hpp"
-#include "uuid/uuid.hpp"
+#include "rsc-core/guid.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -26,7 +26,7 @@
  * # Usage Example
  * @code
  * // Instantiate a prefab
- * UUID<128> prefabId = LoadPrefabId("assets/prefabs/enemy.prefab");
+ * rp::BasicIndexedGuid prefabId = LoadPrefabId("assets/prefabs/enemy.prefab");
  * ecs::entity instance = PrefabSystem::InstantiatePrefab(world, prefabId, glm::vec3(0, 0, 0));
  *
  * // Sync all instances of a prefab after editing
@@ -71,7 +71,7 @@ public:
      * @param position World position for the root entity
      * @return The root entity of the created instance (invalid if failed)
      */
-    static ecs::entity InstantiatePrefab(ecs::world& world, const UUID<128>& prefabId, const glm::vec3& position = glm::vec3(0));
+    static ecs::entity InstantiatePrefab(ecs::world& world, const rp::BasicIndexedGuid& prefabId, const glm::vec3& position = glm::vec3(0));
 
     /**
      * @brief Instantiate a prefab with a specific entity ID (for loading from disk)
@@ -85,7 +85,7 @@ public:
      * @param position World position for the root entity
      * @return The root entity of the created instance (invalid if failed)
      */
-    static ecs::entity InstantiatePrefabWithId(ecs::world& world, const UUID<128>& prefabId, ecs::entity rootEntityId, const glm::vec3& position = glm::vec3(0));
+    static ecs::entity InstantiatePrefabWithId(ecs::world& world, const rp::BasicIndexedGuid& prefabId, ecs::entity rootEntityId, const glm::vec3& position = glm::vec3(0));
 
     /**
      * @brief Sync all instances of a specific prefab
@@ -105,7 +105,7 @@ public:
      * @param prefabId UUID of the prefab that changed
      * @return Number of instances successfully synced
      */
-    static int SyncPrefab(ecs::world& world, const UUID<128>& prefabId);
+    static int SyncPrefab(ecs::world& world, const rp::BasicIndexedGuid& prefabId);
 
     /**
      * @brief Sync a single prefab instance
@@ -189,7 +189,7 @@ public:
      * @param prefabId UUID of the prefab
      * @return Vector of entity handles
      */
-    static std::vector<ecs::entity> GetAllInstances(ecs::world& world, const UUID<128>& prefabId);
+    static std::vector<ecs::entity> GetAllInstances(ecs::world& world, const rp::BasicIndexedGuid& prefabId);
 
     /**
      * @brief Check if an entity is an instance of a specific prefab
@@ -199,7 +199,7 @@ public:
      * @param prefabId UUID of the prefab
      * @return True if the entity is an instance of the prefab
      */
-    static bool IsInstanceOf(ecs::world& world, ecs::entity entity, const UUID<128>& prefabId);
+    static bool IsInstanceOf(ecs::world& world, ecs::entity entity, const rp::BasicIndexedGuid& prefabId);
 
     /**
      * @brief Check if an entity is any prefab instance
@@ -223,6 +223,18 @@ public:
     static PrefabData LoadPrefabFromFile(const std::string& prefabPath);
 
     /**
+     * @brief Load a prefab from disk and cache it for instantiation
+     *
+     * This is the preferred method for loading prefabs in the editor workflow.
+     * It loads the prefab data and adds it to the internal cache, allowing
+     * InstantiatePrefab() to find it.
+     *
+     * @param prefabPath Path to the .prefab file
+     * @return PrefabData structure (check IsValid())
+     */
+    static PrefabData LoadAndCachePrefab(const std::string& prefabPath);
+
+    /**
      * @brief Save a prefab to disk
      *
      * @param data The prefab data to save
@@ -242,9 +254,53 @@ public:
      * @param prefabPath Path to save the prefab file
      * @return UUID of the created prefab (invalid if failed)
      */
-    static UUID<128> CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
+    static rp::BasicIndexedGuid CreatePrefabFromEntity(ecs::world& world, ecs::entity rootEntity,
                                             const std::string& prefabName,
                                             const std::string& prefabPath);
+
+    // ========================
+    // Nested Prefab Support
+    // ========================
+
+    /**
+     * @brief Detect circular dependencies in nested prefab hierarchy
+     *
+     * Unity-style nested prefabs require checking for circular references:
+     * - Prefab A cannot contain Prefab B if Prefab B contains Prefab A
+     * - Deeper circular chains are also invalid (A→B→C→A)
+     *
+     * This function recursively traverses the nested prefab hierarchy and
+     * detects any circular dependencies.
+     *
+     * Example circular dependency:
+     *   Tank.prefab contains Turret.prefab (nested)
+     *   Turret.prefab contains Tank.prefab (nested) ❌ CIRCULAR!
+     *
+     * @param prefabId GUID of the prefab to check
+     * @param visitedPrefabs Set of prefab GUIDs already visited (for recursion)
+     * @return True if a circular dependency is detected
+     */
+    static bool DetectCircularDependency(const rp::BasicIndexedGuid& prefabId,
+                                         std::vector<rp::BasicIndexedGuid>& visitedPrefabs);
+
+    /**
+     * @brief Detect circular dependencies (convenience overload)
+     *
+     * @param prefabId GUID of the prefab to check
+     * @return True if a circular dependency is detected
+     */
+    static bool DetectCircularDependency(const rp::BasicIndexedGuid& prefabId);
+
+    /**
+     * @brief Get all nested prefab dependencies for a prefab
+     *
+     * Returns all nested prefabs referenced by this prefab (recursively).
+     * Useful for asset management and dependency tracking.
+     *
+     * @param prefabId GUID of the prefab
+     * @return Vector of nested prefab GUIDs (may contain duplicates if referenced multiple times)
+     */
+    static std::vector<rp::BasicIndexedGuid> GetNestedPrefabDependencies(const rp::BasicIndexedGuid& prefabId);
 
 private:
     // Internal helper methods
@@ -253,7 +309,7 @@ private:
      * @brief Recursively create entities from prefab data
      */
     static ecs::entity InstantiateEntity(ecs::world& world, const PrefabEntity& prefabEntity,
-                                         ecs::entity parent, const UUID<128>& prefabId);
+                                         ecs::entity parent, const rp::BasicIndexedGuid& prefabId);
 
     /**
      * @brief Apply prefab data to an existing entity (for syncing)
@@ -279,6 +335,17 @@ private:
     static bool IsPropertyOverridden(const PrefabComponent* prefabComp,
                                      std::uint32_t componentTypeHash,
                                      const std::string& propertyPath);
+
+    /**
+     * @brief Recursively collect all nested prefab references from a PrefabEntity
+     *
+     * Traverses the entity hierarchy and collects all nested prefab GUIDs.
+     *
+     * @param prefabEntity The prefab entity to traverse
+     * @param outNestedPrefabs Output vector to collect nested prefab GUIDs
+     */
+    static void CollectNestedPrefabReferences(const PrefabEntity& prefabEntity,
+                                              std::vector<rp::BasicIndexedGuid>& outNestedPrefabs);
 
     // Prefab cache (UUID -> PrefabData)
     static std::unordered_map<std::string, PrefabData> s_PrefabCache;

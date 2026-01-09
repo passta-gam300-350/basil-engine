@@ -62,12 +62,22 @@ inline SceneGraphNode BuildSceneGraph(std::vector<ecs::entity> const& vec_e) {
 	return root;
 }
 
-inline SceneGraphNode BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::entity> const& map_guid_e) {
+inline std::shared_ptr<SceneGraphNode> BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::entity> const& map_guid_e) {
 	std::unordered_map<ecs::entity, bool> visited{};
 	std::unordered_map<ecs::entity, SceneGraphNode> orphan{}; //waiting to get picked up by parents
-	SceneGraphNode root{};
+	std::shared_ptr<SceneGraphNode> root{std::make_shared<SceneGraphNode>()};
 	bool is_scene_active{};
 
+	auto linkscenegraphnode{ [](SceneGraphNode& rootnd) {
+		auto visit_node{ [](SceneGraphNode& parent, auto&& fn) -> void {
+		for (auto& child : parent.m_children) {
+			child.m_parent = &parent;
+			fn(child, fn);
+		}
+		} }; 
+		visit_node(rootnd, visit_node);
+		}
+	};
 	auto buildscenegraphnode{ [&visited, &orphan, &is_scene_active](ecs::entity sentity) {
 		auto visit_entity{ [&visited, &orphan, &is_scene_active](ecs::entity se, auto&& fn) -> SceneGraphNode {
 			visited[se] = true;
@@ -94,12 +104,12 @@ inline SceneGraphNode BuildSceneGraph(std::unordered_map<std::uint32_t, ecs::ent
 			continue;
 		auto sgraph = buildscenegraphnode(e);
 		if (!SceneGraph::HasParent(e)) {
-			sgraph.m_parent = &root; //dangling pointer
-			root.m_children.emplace_back(sgraph);
+			root->m_children.emplace_back(sgraph);
 		}
 	}
+	linkscenegraphnode(*root);
 
-	root.is_active = is_scene_active;
+	root->is_active = is_scene_active;
 
 	return root;
 }
@@ -117,7 +127,7 @@ public:
 		std::vector<std::string> m_names_snapshot;
 		std::queue<std::uint32_t> m_write_back_queue;
 		std::queue<entity_handle> m_entity_delete_queue;
-		int m_entity_create_count;
+		int m_entity_create_count{ 0 };
 		std::queue<std::tuple<entity_handle, std::uint32_t, bool>> m_entity_component_update_queue;
 		std::vector<std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>> m_component_list_snapshot;
 		entity_handle m_snapshot_entity_handle{ ~0ull };
@@ -140,7 +150,22 @@ public:
 		float m_pickingViewportHeight{ 0.0f };
 		std::function<void(bool, uint32_t)> m_pickingCallback;
 
-		std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> m_loaded_scenes_scenegraph_snapshot;
+		// Editor camera snapshot (thread-safe: protected by m_mtx)
+		// Main thread (EditorMain) writes, Engine thread (RenderSystem) reads
+		struct EditorCameraSnapshot {
+			glm::vec3 position{ 0.0f, 5.0f, 10.0f };
+			glm::vec3 front{ 0.0f, 0.0f, -1.0f };
+			glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+			glm::vec3 right{ 1.0f, 0.0f, 0.0f };
+			float fov{ 45.0f };
+			float aspectRatio{ 16.0f / 9.0f };
+			float nearPlane{ 0.1f };
+			float farPlane{ 1000.0f };
+			bool isPerspective{ true };
+		} m_editorCameraSnapshot;
+
+		//make this shared ptr and called it a day. dont waste time on this
+		std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> m_loaded_scenes_scenegraph_snapshot;
 
 	private:
 		void engine_service();
@@ -163,17 +188,24 @@ public:
 	void run();
 	void init();
 	void pause();
-	void create_cube();
 
 	void end();
 	void inspect_entity(entity_handle ehdl) { if (m_cont) m_cont->m_snapshot_entity_handle = ehdl; else spdlog::info("engine container is empty."); }
 	void create_entity();
 	void create_child_entity(entity_handle parent);
+	void orphan_children_entities(entity_handle parent);
+	void create_parent_entity(entity_handle child);
+	void create_parent_entity(std::unordered_set<std::uint32_t> const& children);
+	void clear_parent_entity(entity_handle child);
+	void make_parent_entity(entity_handle parent, entity_handle child);
 	void delete_entity(entity_handle);
 	void add_component(entity_handle, std::uint32_t);
 	void delete_component(entity_handle, std::uint32_t);
-	
 
+
+	void set_on_load();
+	void set_on_unload();
+	
 	//safe to return reference, registration is done during startup with its data determined during compile time and reflection registry is not expected to change, unless reset is called.
 	std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& get_reflectible_component_id_name_list();
 
@@ -220,7 +252,7 @@ public:
 	 * @brief Get snapshot of all entity names (updated each frame)
 	 * Thread-safe: Returns const reference to main thread snapshot
 	 */
-	const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& GetSceneGraphSnapshot() const;
+	const std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>>& GetSceneGraphSnapshot() const;
 
 	/**
 	 * @brief Check if an entity has a specific component (from snapshot)
@@ -272,12 +304,6 @@ public:
 	 */
 	void PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight,
 	                          std::function<void(bool hasHit, uint32_t objectID)> resultCallback);
-
-	/**
-	 * @brief Enable or disable AABB wireframe visualization for debugging
-	 * @param enable True to show AABBs, false to hide
-	 */
-	void EnableAABBVisualization(bool enable);
 
 	/**
 	 * @brief Add object outline for visual selection feedback

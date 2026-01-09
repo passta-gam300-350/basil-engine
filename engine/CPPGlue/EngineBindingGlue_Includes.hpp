@@ -2,6 +2,10 @@
 
 #include "BasilEngine_GameObject_GLUE_GEN.hpp"
 #include "BasilEngine_Input_GLUE_GEN.hpp"
+#include "BasilEngine_Physics_GLUE_GEN.hpp"
+#include "BasilEngine_Screen_GLUE_GEN.hpp"
+#include "BasilEngine_Time_GLUE_GEN.hpp"
+#include "BasilEngine_SceneManagement_Scene_GLUE_GEN.hpp"
 #include "BasilEngine_Debug_Logger_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Audio_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Camera_GLUE_GEN.hpp"
@@ -10,3 +14,4 @@
 #include "BasilEngine_Components_Particle_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Rigidbody_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Transform_GLUE_GEN.hpp"
+#include "BasilEngine_Components_Video_GLUE_GEN.hpp"

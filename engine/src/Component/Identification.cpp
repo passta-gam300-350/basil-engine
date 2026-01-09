@@ -4,7 +4,7 @@
 
 Identifier::Identifier()
 {
-	handle = Handle{ "Identifier" };
+	handle = ComponentHandle{ "Identifier" };
 }
 
 bool Identifier::inEditor()
@@ -21,15 +21,15 @@ Component::ComponentType Identifier::getType() const
 
 Identifier::Identifier(std::string&& name)
 {
-	handle = Handle{ "Identifier" };
+	handle = ComponentHandle{ "Identifier" };
 	identifier = StringManager::GetInstance().Intern_String(std::move(name));
-	uuid = UUID<128>::Generate();
+	uuid = uuid::UUID<128>::Generate();
 }
 
 void Identifier::setName(std::string&& name)
 {
 	identifier = StringManager::GetInstance().Intern_String(std::move(name));
-	uuid = UUID<128>::Generate();
+	uuid = uuid::UUID<128>::Generate();
 }
 
 std::string Identifier::getName()

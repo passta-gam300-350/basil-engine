@@ -6,8 +6,8 @@ ecs::entity RelationshipComponent::getParent(rp::Guid guid) const
 {
 	rp::BasicIndexedGuid fullguid{guid, rp::utility::compute_string_hash("scene")};
 	auto res{ Engine::GetSceneRegistry().GetReferencedEntity(SceneEntityReference{ fullguid, parentHandle }) };
-	assert(res && "entity not found in scene!");
-	return res.value();
+	//assert(res && "entity not found in scene!");
+	return res ? res.value() : ecs::entity{};
 }
 
 Component::ComponentType RelationshipComponent::getType() const
@@ -19,6 +19,9 @@ void RelationshipComponent::setParent(ecs::entity newParent)
 {
 	if (newParent && newParent.get_uid()) {
 		parentHandle = newParent.get<SceneIDComponent>().m_scene_id;
+	}
+	else {
+		parentHandle = 0;
 	}
 }
 

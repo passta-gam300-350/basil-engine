@@ -16,12 +16,53 @@ Technology is prohibited.
 
 #include "System/Audio.hpp"
 #include "Component/Transform.hpp"
+#include "Engine.hpp"
 #include <rsc-core/serialization/serializer.hpp>
 #include "Manager/ResourceSystem.hpp"
 #include "Render/Camera.h"
 #include <filesystem>
 #include <algorithm>
+#include "Profiler/profiler.hpp"
 
+namespace {
+
+// Attempts to load the FMOD sound handle from the serialized audio GUID.
+// Needed because scenes only serialize the GUID, not the runtime soundHandle.
+bool EnsureSoundLoaded(AudioComponent& audio) {
+    if (audio.isInitialized) {
+        return true;
+    }
+
+    if (audio.soundHandle < 0) {
+        // No sound loaded yet – fetch it from the resource registry using the GUID.
+        if (audio.audioAssetGuid.m_guid == rp::null_guid) {
+            spdlog::warn("AudioComponent: Cannot initialize without an audio GUID");
+            return false;
+        }
+
+        ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audio.audioAssetGuid);
+        if (!entry) {
+            spdlog::warn("AudioComponent: No resource pool found for audio type {}", audio.audioAssetGuid.m_typeindex);
+            return false;
+        }
+
+        ResourceHandle handle = entry->m_Vt.m_Get(entry->m_Pool, audio.audioAssetGuid.m_guid);
+        int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
+
+        if (!soundHandlePtr || *soundHandlePtr < 0) {
+            spdlog::warn("AudioComponent: Failed to resolve sound handle for GUID {}", audio.audioAssetGuid.m_guid.to_hex());
+            return false;
+        }
+
+        audio.soundHandle = *soundHandlePtr;
+        audio.isInitialized = false;
+    }
+
+    audio.RefreshSoundInfo();
+    return audio.isInitialized;
+}
+
+} // namespace
 
 AudioSystem& AudioSystem::GetInstance() {
     static AudioSystem instance;
@@ -60,6 +101,10 @@ bool AudioSystem::Init(void* extraDriverData) {
     m_listenerLastPosition = m_listenerPosition;
     m_listenerMoved = false;
 
+    auto e = Engine::GetWorld().add_entity();
+    e.add<AudioComponent>();
+    e.destroy();
+
     m_initialized = true;
     return true;
 }
@@ -67,11 +112,17 @@ bool AudioSystem::Init(void* extraDriverData) {
 void AudioSystem::Update(ecs::world& world) {
     if (!m_initialized || !m_system)
         return;
-
-    // Update listener from active camera
-    const CameraSystem::Camera& camera = CameraSystem::GetActiveCamera();
-    SetListenerPosition(camera.m_Pos);
-    SetListenerOrientation(camera.m_Front, camera.m_Up);
+    PF_SYSTEM("Audio System");
+    // Update listener from active game camera (cached @ 60Hz in CameraSystem::FixedUpdate)
+    // Editor camera is separate and not used for audio positioning
+    const auto& camera = CameraSystem::GetActiveCameraData();
+    if (!camera.isActive) {
+        // No active camera in scene - skip audio update this frame
+        FMOD_ErrorCheck(m_system->update());
+        return;
+    }
+    SetListenerPosition(camera.position);
+    SetListenerOrientation(camera.front, camera.up);
 
     // Update listener velocity and position
     if (m_listenerMoved) {
@@ -156,9 +207,9 @@ void AudioSystem::SetListenerOrientation(const glm::vec3& forward, const glm::ve
 }
 
 int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, bool isLooping) {
-    auto it = m_pathToHandle.find(dir);
-    if (it != m_pathToHandle.end()) {
-        m_refCounts[it->second]++;
+	auto it = m_pathToHandle.find(dir);
+	if (it != m_pathToHandle.end()) {
+		m_refCounts[it->second]++;
         spdlog::warn("Audio: Duplicate load detected for '{}', reusing handle {}", dir, it->second);
         return it->second;
     }
@@ -166,23 +217,32 @@ int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, boo
     if (!m_initialized || !m_system) {
         spdlog::warn("Audio: System not initialized.");
         return -1;
-    }
+	}
 
-    spdlog::info("Audio: Loading audio: {}", dir);
+	spdlog::info("Audio: Loading audio: {}", dir);
 
-    FMOD::Sound* sound = nullptr;
+	// Normalize and resolve path against engine working directory so imports work per-project
+	std::string normalizedPath = dir;
+	std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+	if (normalizedPath.rfind("audio/", 0) == 0) {
+		normalizedPath = "assets/" + normalizedPath;
+	}
+	std::filesystem::path resolvedPath = std::filesystem::path(Engine::getWorkingDir()) / normalizedPath;
+	resolvedPath = resolvedPath.lexically_normal();
 
-    // Sets audio characteristics
-    FMOD_MODE mode = FMOD_DEFAULT;
+	FMOD::Sound* sound = nullptr;
+
+	// Sets audio characteristics
+	FMOD_MODE mode = FMOD_DEFAULT;
 	mode |= is3D ? FMOD_3D : FMOD_2D;
 	mode |= isStream ? FMOD_CREATESTREAM : FMOD_CREATESAMPLE;
 	mode |= isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
 
-    m_result = m_system->createSound(dir.c_str(), mode, 0, &sound);
-    if (sound == nullptr && m_result != FMOD_OK) {
-        spdlog::warn("Audio: Failed to load sound at {}, {}", dir, FMOD_ErrorString(m_result));
-        return -1;
-    }
+	m_result = m_system->createSound(resolvedPath.string().c_str(), mode, 0, &sound);
+	if (sound == nullptr && m_result != FMOD_OK) {
+		spdlog::warn("Audio: Failed to load sound at {}, {}", resolvedPath.string(), FMOD_ErrorString(m_result));
+		return -1;
+	}
 
     m_result = sound->set3DMinMaxDistance(MINDISTANCE * DISTANCEFACTOR, MAXDISTANCE * DISTANCEFACTOR);
     if (is3D && m_result != FMOD_OK)
@@ -325,8 +385,10 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
 
 bool AudioComponent::Play() {
     if (!isInitialized) {
-        //spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
-        return false;
+        if (!EnsureSoundLoaded(*this)) {
+            //spdlog::warn("AudioComponent: Cannot play, component not initialized (soundHandle={})", soundHandle);
+            return false;
+        }
     }
 
     AudioSystem& audioSys = AudioSystem::GetInstance();
@@ -360,6 +422,7 @@ bool AudioComponent::Play() {
         FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
         FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
         FMOD_ErrorCheck(newChannel->setVolume(volume));
+        FMOD_ErrorCheck(newChannel->setLoopCount(isLooping ? -1 : 0));
         FMOD_ErrorCheck(newChannel->setPaused(false));
 
         // Store channel in AudioSystem
@@ -424,6 +487,31 @@ bool AudioComponent::Stop() {
     }
 
     return false;
+}
+
+void AudioComponent::SetLoop(bool loop) {
+    isLooping = loop;
+    
+    // Update the sound's loop mode (affects future playbacks)
+    AudioSystem& audioSys = AudioSystem::GetInstance();
+    FMOD::Sound* sound = audioSys.GetSound(soundHandle);
+    if (sound) {
+        FMOD_MODE mode;
+        FMOD_RESULT result = sound->getMode(&mode);
+        if (result == FMOD_OK) {
+            // Clear existing loop flags
+            mode &= ~(FMOD_LOOP_OFF | FMOD_LOOP_NORMAL | FMOD_LOOP_BIDI);
+            // Set new loop mode
+            mode |= loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+            FMOD_ErrorCheck(sound->setMode(mode));
+        }
+    }
+    
+    // Update the channel's loop count (affects current playback)
+    FMOD::Channel* channel = audioSys.GetChannel(this);
+    if (channel) {
+        FMOD_ErrorCheck(channel->setLoopCount(loop ? -1 : 0));
+    }
 }
 
 void AudioComponent::SetVolume(float vol) {

@@ -57,6 +57,7 @@
 #include <Resources/Texture.h>
 #include <Utility/Light.h>
 #include <Utility/AABB.h>
+#include <Utility/HUDData.h>
 #include <Pipeline/DebugRenderPass.h>
 
 #include <spdlog/spdlog.h>
@@ -95,7 +96,6 @@ GraphicsTestDriver::GraphicsTestDriver()
     , m_LastY(360.0f)
     , m_RotationEnabled(false)
     , m_HDREnabled(false)  // HDR starts disabled
-    , m_AABBsCached(false)
 {
     s_Instance = this;
 }
@@ -167,8 +167,11 @@ bool GraphicsTestDriver::Initialize()
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
-    
-    
+
+    // Load HUD test textures (once during initialization)
+    m_PauseMenuTexture = TextureLoader::TextureFromFile("PauseMenu.png", "assets/hud/Pause", false);
+    m_ResumeButtonTexture = TextureLoader::TextureFromFile("RESUME_NEW.png", "assets/hud/Pause", false);
+    spdlog::info("HUD test textures loaded: pause={}, resume={}", m_PauseMenuTexture, m_ResumeButtonTexture);
 
     // Print system info
     PrintSystemInfo();
@@ -251,6 +254,27 @@ void GraphicsTestDriver::Run()
             m_SceneRenderer->SubmitRenderable(renderable);
         }
 
+        // Submit HUD test elements (using pre-loaded textures)
+        // Test with pause menu background
+        HUDElementData pauseBg;
+        pauseBg.textureID = m_PauseMenuTexture;
+        pauseBg.position = glm::vec2(1280.0f / 2.0f, 720.0f / 2.0f);  // Center of screen
+        pauseBg.size = glm::vec2(512.0f, 384.0f);
+        pauseBg.anchor = HUDAnchor::Center;
+        pauseBg.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);  // Slightly transparent
+        pauseBg.layer = 0;
+        m_SceneRenderer->SubmitHUDElement(pauseBg);
+
+        // Add resume button
+        HUDElementData resumeBtn;
+        resumeBtn.textureID = m_ResumeButtonTexture;
+        resumeBtn.position = glm::vec2(1280.0f / 2.0f, 300.0f);
+        resumeBtn.size = glm::vec2(256.0f, 64.0f);
+        resumeBtn.anchor = HUDAnchor::Center;
+        resumeBtn.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        resumeBtn.layer = 1;
+        m_SceneRenderer->SubmitHUDElement(resumeBtn);
+
         // Update camera data manually
         if (m_Camera) {
             m_SceneRenderer->SetCameraData(
@@ -266,11 +290,7 @@ void GraphicsTestDriver::Run()
         // Clear instance cache when transforms change (enables animation)
         if (m_RotationEnabled) {
             m_SceneRenderer->ClearInstanceCache();
-            m_AABBsCached = false;  // Also invalidate AABB cache for rotating objects
         }
-
-        // Calculate and submit debug AABBs for visualization (cached)
-        CalculateAndSubmitAABBs();
 
         // ===== OUTLINE UPDATE =====
         // Outline selection is now CLICK-BASED via HandleObjectPicking()
@@ -335,8 +355,6 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Configure debug meshes
         m_SceneRenderer->SetDebugLightCubeMesh(lightCube);
-        m_SceneRenderer->SetDebugDirectionalRayMesh(lightRay);
-        m_SceneRenderer->SetDebugAABBWireframeMesh(wireframeCube);
 
         // Load advanced traditional texture binding shaders for maximum visual quality
         auto instancedShader = m_ResourceManager->LoadShader("main_pbr",
@@ -442,6 +460,21 @@ bool GraphicsTestDriver::LoadTestResources()
             m_SceneRenderer->SetOutlineShader(outlineShader);
         } else {
             spdlog::warn("Could not load outline shader");
+        }
+
+        // Load HUD shader for screen-space UI rendering
+        auto hudShader = m_ResourceManager->LoadShader("hud",
+            "assets/shaders/hud.vert",
+            "assets/shaders/hud.frag");
+
+        if (hudShader) {
+            spdlog::info("HUD shader loaded successfully!");
+            // Configure the HUD pass with the loaded shader
+            m_SceneRenderer->SetHUDShader(hudShader);
+            // Enable HUD rendering
+            m_SceneRenderer->EnablePass("HUDPass", true);
+        } else {
+            spdlog::warn("Could not load HUD shader");
         }
 
         // ===== Load HDR Compute Shader =====
@@ -1152,63 +1185,6 @@ SubmittedLightData GraphicsTestDriver::CreateSpotLight(const glm::vec3& position
     return light;
 }
 
-void GraphicsTestDriver::CalculateAndSubmitAABBs()
-{
-    // Cache AABBs on first frame (avoids iterating through 2.6M vertices every frame)
-    if (!m_AABBsCached) {
-        m_CachedAABBs.clear();
-
-        // Group meshes by model instance (based on position)
-        struct Vec3Compare {
-            bool operator()(const glm::vec3& a, const glm::vec3& b) const {
-                const float epsilon = 0.01f;
-                if (std::abs(a.x - b.x) > epsilon) return a.x < b.x;
-                if (std::abs(a.y - b.y) > epsilon) return a.y < b.y;
-                return a.z < b.z;
-            }
-        };
-
-        std::map<glm::vec3, std::vector<const RenderableData*>, Vec3Compare> modelInstances;
-
-        // Group all meshes by their position (model instance)
-        for (const auto& renderable : m_SceneObjects) {
-            if (!renderable.visible || !renderable.mesh) {
-                continue;
-            }
-
-            // Extract position from transform matrix
-            glm::vec3 position = glm::vec3(renderable.transform[3]);
-            modelInstances[position].push_back(&renderable);
-        }
-
-        // Calculate AABB per model instance (EXPENSIVE - only done once!)
-        for (auto it = modelInstances.begin(); it != modelInstances.end(); ++it) {
-            const glm::vec3& instancePosition = it->first;
-            const std::vector<const RenderableData*>& meshes = it->second;
-
-            AABB modelAABB; // Start with invalid AABB
-            glm::mat4 instanceTransform = meshes[0]->transform;
-
-            // Combine all mesh AABBs to create model AABB
-            for (const auto* renderable : meshes) {
-                AABB meshAABB = AABB::CreateFromMesh(renderable->mesh);
-                modelAABB.ExpandToInclude(meshAABB);
-            }
-
-            // Create debug color
-            glm::vec3 debugColor = glm::vec3(1.0f, 0.0f, 0.0f);
-
-            // Cache the AABB with local space bounds
-            m_CachedAABBs.emplace_back(modelAABB, instanceTransform, debugColor);
-        }
-
-        m_AABBsCached = true;
-    }
-
-    // Submit cached AABBs to scene renderer (fast - just copies data)
-    m_SceneRenderer->SetDebugAABBs(m_CachedAABBs);
-}
-
 void GraphicsTestDriver::UpdateInstanceTransforms()
 {
     // Only rotate if rotation is enabled
@@ -1338,10 +1314,6 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
 
             case GLFW_KEY_3:
                 s_Instance->m_SceneRenderer->ToggleRenderPass("DebugPass");
-                break;
-
-            case GLFW_KEY_4:
-                s_Instance->m_SceneRenderer->ToggleAABBVisualization();
                 break;
 
             case GLFW_KEY_5:

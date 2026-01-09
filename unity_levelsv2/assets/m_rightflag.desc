@@ -1,0 +1,29 @@
+base:
+  m_guid: 1534c7578ffa9e20a1ee56fd74a
+  m_importer: .material
+  m_source: ""
+  m_name: m_rightflag
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_rightflag
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 14e4f277739bd5ea359b4232ce6
+    u_DiffuseMap: 14e4ef170298398fdf0ca0dffce
+    u_EmissiveMap: 14e4efc76e58833b9d64b259c13
+    u_NormalMap: 14e4f1d7122a8b915f150354bdb
+    u_HeightMap: 14e4f077cffa7dabd7358a0bd23
+    u_SpecularMap: 00
+    u_MetallicMap: 14e4f127503952bfa0aa5671c70

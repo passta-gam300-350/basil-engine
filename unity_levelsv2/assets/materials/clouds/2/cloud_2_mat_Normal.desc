@@ -1,0 +1,7 @@
+base:
+  m_guid: 53f196d7114a3779bd9567bf850
+  m_importer: .texture
+  m_source: materials\clouds\2\cloud_2_mat_Normal.png
+  m_name: cloud_2_mat_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

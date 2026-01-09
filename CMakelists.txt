@@ -31,6 +31,16 @@ import_dependencies()
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-DNOMINMAX) 
 
+if(MSVC)
+add_compile_options($<$<CONFIG:Release>:/Zi>)
+add_link_options($<$<CONFIG:Release>:/DEBUG>)
+add_link_options($<$<CONFIG:Release>:/OPT:REF>)
+add_link_options($<$<CONFIG:Release>:/OPT:ICF>)
+endif()
+
+#add this after add_definitions(-DNOMINMAX) in root CMakeLists.txt
+#To enable debug symbols for release mode
+
 # Enable exceptions for static analysis
 add_compile_options($<$<OR:$<CONFIG:Debug_Static_Analysis>,$<BOOL:${ENABLE_STATIC_ANALYSIS}>>:/EHsc>)
 

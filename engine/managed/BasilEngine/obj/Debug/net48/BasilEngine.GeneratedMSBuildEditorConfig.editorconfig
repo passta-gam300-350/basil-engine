@@ -1,6 +1,6 @@
 is_global = true
 build_property.RootNamespace = BasilEngine
-build_property.ProjectDir = C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\engine\managed\BasilEngine\
+build_property.ProjectDir = /mnt/c/Users/yeo_j/Documents/Digipen Repo/Year 3/Project/Project/engine/managed/BasilEngine/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false

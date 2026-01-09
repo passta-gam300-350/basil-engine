@@ -10,26 +10,56 @@ using Engine.Bindings;
 namespace BasilEngine.Components
 {
     [Disabled]
+    /// <summary>
+    /// Modes describing how a force is applied to a rigidbody.
+    /// </summary>
     public enum ForceMode
     {
+        /// <summary>
+        /// Continuous force considering mass and timestep.
+        /// </summary>
         Force,
+        /// <summary>
+        /// Instant impulse applied at once.
+        /// </summary>
         Impulse,
+        /// <summary>
+        /// Continuous acceleration ignoring mass.
+        /// </summary>
         Acceleration,
+        /// <summary>
+        /// Instant velocity change ignoring mass.
+        /// </summary>
         VelocityChange
     }
 
     [NativeHeader("Bindings/ManagedPhysics.hpp")]
     [NativeClass("ManagedPhysics")]
+    /// <summary>
+    /// Physics component providing rigid body controls.
+    /// </summary>
     public class Rigidbody : Component
     {
+        /// <summary>
+        /// Describes how the rigidbody is simulated.
+        /// </summary>
         public enum MotionType
         {
+            /// <summary>
+            /// Body does not move.
+            /// </summary>
             Static = 0,
+            /// <summary>
+            /// Body is fully simulated by physics.
+            /// </summary>
             Dynamic = 1,
+            /// <summary>
+            /// Body is moved kinematically by user code.
+            /// </summary>
             Kinematic = 2
         }
 
-     
+
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         [StaticAccessor("ManagedPhysics", StaticAccessorType.DoubleColon)]
@@ -152,12 +182,23 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedPhysics", StaticAccessorType.DoubleColon)]
         public static extern void AddImpulseInternal(UInt64 handle, float x, float y, float z);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [StaticAccessor("ManagedPhysics", StaticAccessorType.DoubleColon)]
+        [NativeMethod("MovePosition")]
+        public static extern void MovePositionInternal(UInt64 handle, float x, float y, float z);
+
+        /// <summary>
+        /// Gets or sets the motion type.
+        /// </summary>
         public MotionType motionType
         {
             get => (MotionType)GetMotionType(NativeID);
             set => SetMotionType(NativeID, (int)value);
         }
 
+        /// <summary>
+        /// Linear velocity of the rigidbody.
+        /// </summary>
         public Vector3 velocity
         {
             get
@@ -171,17 +212,26 @@ namespace BasilEngine.Components
             }
         }
 
+        /// <summary>
+        /// Gravity multiplier applied to this body.
+        /// </summary>
         public float Gravity
         {
             set => SetGravityFactor(NativeID, value);
             get => GetGravityFactor(NativeID);
         }
 
+        /// <summary>
+        /// Whether the body is kinematic.
+        /// </summary>
         public bool IsKinematic
         {
             get => GetIsKinematic(NativeID);
             set => SetIsKinematic(NativeID, value);
         }
+        /// <summary>
+        /// Whether gravity affects the body.
+        /// </summary>
         public bool UseGravity
         {
             get => GetUseGravity(NativeID);
@@ -189,24 +239,36 @@ namespace BasilEngine.Components
         }
 
 
-            
+
+        /// <summary>
+        /// Mass of the rigidbody.
+        /// </summary>
         public float Mass
         {
             get => GetMass(NativeID);
             set => SetMass(NativeID, value);
         }
+        /// <summary>
+        /// Linear drag coefficient.
+        /// </summary>
         public float Drag
         {
             get => GetDrag(NativeID);
             set => SetDrag(NativeID, value);
         }
 
+        /// <summary>
+        /// Angular drag coefficient.
+        /// </summary>
         public float AngularDrag
         {
             get => GetAngularDrag(NativeID);
             set => SetAngularDrag(NativeID, value);
         }
 
+        /// <summary>
+        /// Surface friction coefficient.
+        /// </summary>
         public float Friction
         {
             get => GetFriction(NativeID);
@@ -214,48 +276,72 @@ namespace BasilEngine.Components
         }
 
 
+        /// <summary>
+        /// Locks translation on the X axis.
+        /// </summary>
         public bool FreezeX
         {
             set => SetFreezeX(NativeID, value);
             get => GetFreezeX(NativeID);
         }
 
+        /// <summary>
+        /// Locks translation on the Y axis.
+        /// </summary>
         public bool FreezeY
         {
             set => SetFreezeY(NativeID, value);
             get => GetFreezeY(NativeID);
         }
 
+        /// <summary>
+        /// Locks translation on the Z axis.
+        /// </summary>
         public bool FreezeZ
         {
             set => SetFreezeZ(NativeID, value);
             get => GetFreezeZ(NativeID);
         }
 
+        /// <summary>
+        /// Locks rotation around the X axis.
+        /// </summary>
         public bool FreezeRotX
         {
             get => GetFreezeRotationX(NativeID);
             set => SetFreezeRotationX(NativeID, value);
         }
 
+        /// <summary>
+        /// Locks rotation around the Y axis.
+        /// </summary>
         public bool FreezeRotY
         {
             get => GetFreezeRotationY(NativeID);
             set => SetFreezeRotationY(NativeID, value);
         }
 
+        /// <summary>
+        /// Locks rotation around the Z axis.
+        /// </summary>
         public bool FreezeRotZ
         {
             get => GetFreezeRotationZ(NativeID);
             set => SetFreezeRotationZ(NativeID, value);
         }
 
+        /// <summary>
+        /// Linear damping applied each update.
+        /// </summary>
         public float LinearDamping
         {
             get => GetLinearDamping(NativeID);
             set => SetLinearDamping(NativeID, value);
         }
 
+        /// <summary>
+        /// Angular velocity of the rigidbody.
+        /// </summary>
         public Vector3 AngularVelocity
         {
             get
@@ -266,23 +352,37 @@ namespace BasilEngine.Components
             set => SetAngularVelocity(NativeID, value.x, value.y, value.z);
         }
 
+        /// <summary>
+        /// Moves the rigidbody to a position using interpolation.
+        /// </summary>
+        /// <param name="position">Target world position.</param>
+        public void MovePosition(Vector3 position)
+        {
+            MovePositionInternal(NativeID, position.x, position.y, position.z);
+        }
 
 
+        /// <summary>
+        /// Applies a force to the rigidbody.
+        /// </summary>
+        /// <param name="force">Force vector.</param>
+        /// <param name="mode">Force application mode.</param>
         public void AddForce(Vector3 force, ForceMode mode)
         {
             switch (mode)
             {
                 case ForceMode.Force:
-                    AddForceInternal(NativeID, force.x,force.y,force.z);
+                    AddForceInternal(NativeID, force.x, force.y, force.z);
                     break;
                 case ForceMode.Impulse:
-                    AddImpulseInternal(NativeID, force.x,force.y,force.z);
+                    AddImpulseInternal(NativeID, force.x, force.y, force.z);
                     break;
                 default:
                     break;
             }
 
         }
+
         
 
 

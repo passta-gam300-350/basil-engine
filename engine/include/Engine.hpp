@@ -33,7 +33,8 @@ public:
 	struct Info {
 
 		double m_FPS{};
-		double m_DeltaTime{};          // Time elapsed since last frame (seconds)
+		double m_DeltaTime{};          // Time elapsed since last profiling update (seconds)
+		double m_ActualDeltaTime{};	   // Actual Time since last frame (seconds)
 		double m_LastFrameTime{};      // Time of last frame (for delta calculation)
 		std::uint64_t m_TotalFrameCt{};
 		std::uint64_t m_FrameLogCounter{};	//basically total (mod) rate
@@ -58,7 +59,7 @@ public:
 
 	static void Init(std::string const& cfg = {});
 	static void InitInheritWindow(std::string const& cfg, GLFWwindow*);
-	static void InitWithoutWindow(std::string const& cfg = {});
+	static void InitWithoutWindow(std::string const& cfg = {}, bool is_precompiled = false);
 	static void Update();
 	static void CoreUpdate();
 	static void UpdateDebug();
@@ -82,6 +83,10 @@ public:
 	static void ReportLastError();
 	static ecs::world GetWorld();
 	static double GetDeltaTime();
+	static double GetLastDeltaTime();
+
+	// Unity-style skybox system - sync active scene's render settings to renderer
+	static void SyncActiveSceneRenderSettings();
 
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
@@ -114,6 +119,16 @@ public:
 	static void SetOnUnloadCallBack(on_world_unload_cb cb)
 	{
 		Instance().m_OnWorldUnloadCallback = cb;
+	}
+
+	static void setWorkingDir(const char* path)
+	{
+		Instance().m_WorkingDirectory = path;
+	}
+
+	static std::string_view getWorkingDir()
+	{
+		return Instance().m_WorkingDirectory;
 	}
 };
 

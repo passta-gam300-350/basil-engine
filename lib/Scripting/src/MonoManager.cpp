@@ -45,10 +45,12 @@ std::unique_ptr<ScriptCompiler> MonoManager::m_Compiler = nullptr;
 std::unique_ptr<MonoLoader> MonoManager::m_Loader = nullptr;
 std::vector<std::string> MonoManager::m_ScriptBins{};
 bool MonoManager::m_Verbose = false;
-
+bool MonoManager::m_PreCompiled = false;
 
 void MonoManager::Initialize()
 {
+
+	
 
 	//const char* options[] = {// Enable debugging
 	//"--debugger-agent=transport=dt_socket,address=127.0.0.1:55555,server=y,suspend=n", // Debugger agent
@@ -57,11 +59,20 @@ void MonoManager::Initialize()
 
 	//mono_debug_init(MONO_DEBUG_FORMAT_MONO);
 	m_Loader = std::make_unique<MonoLoader>();
-	m_Loader->Initialize(assembly_dir, config_dir);
+	if (m_PreCompiled)
+	{
+		m_Loader->Initialize("./mono/lib", "./mono/etc");
+	}
+	else
+		m_Loader->Initialize(assembly_dir, config_dir);
 
+
+	if (m_PreCompiled) return; // Skip compiler init if precompiled
 
 	m_Compiler = std::make_unique<ScriptCompiler>();
 	m_Compiler->Init(m_Loader.get(), csc_path);
+
+
 	std::filesystem::path enginePath = R"(..\engine\managed\BasilEngine\bin\Release\net48\)";
 	std::string abs = std::filesystem::absolute(enginePath).string();
 
@@ -113,8 +124,16 @@ bool MonoManager::GetVerbose()
 
 }
 
+bool MonoManager::disableCompile(bool v)
+{
+	m_PreCompiled = v;
+	return m_PreCompiled;
+}
+
+
 void MonoManager::StartCompilation()
 {
+	if (m_PreCompiled) return; // Skip compilation if precompiled
 	m_Compiler->CollectScripts();
 	m_Compiler->CompileAllScripts();
 	m_Compiler->WaitAll();

@@ -1,0 +1,32 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl hdb_2
+
+# Base color / diffuse map
+map_Kd hdb_2_BaseColor.png
+
+# Normal map
+map_Bump hdb_2_Normal.png
+bump hdb_2_Normal.png
+
+# Metallic map
+map_Ks hdb_2_Metallic.png
+
+# Roughness map
+map_Ns hdb_2_Roughness.png
+
+# Emissive map
+map_Ke hdb_2_Emissive.png
+
+# Height / displacement map
+map_d hdb_2_Height.png
+disp hdb_2_Height.png
+
+kd 0 0 0
+ka 0.4 0.4 0.4
+ks 0 0 0
+ke 0 0 0
+d 1
+illum 1
+

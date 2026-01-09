@@ -1,3 +1,23 @@
+
+/******************************************************************************/
+/*!
+\file   MonoEntityManager.cpp
+\author Team PASSTA
+		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3401 / UXG3400
+\date   2025/11/05
+\brief This file contains the implementation for the MonoEntityManager class, which
+manages the lifecycle of managed entities, classes, and assemblies within the Mono runtime
+in the engine. It provides functionality to add, retrieve, and manage
+managed assemblies, classes, and instances, as well as type registration and lookup.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+
 #include "Manager/MonoEntityManager.hpp"
 #include "ABI/ABI.h"
 #include "MonoManager.hpp"
@@ -80,7 +100,7 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 	auto klass = GetNamedKlass(klassName, klassNamespace);
 	if (klass) {
 		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
-		
+		//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klass, args);
 
 	} else
 	{
@@ -88,6 +108,7 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 	}
 	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
 	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
+	//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klassPtr, args);
 
 	if (klass->IsDerivedFrom("BasilEngine.Components.Behavior"))
 	{
@@ -120,6 +141,7 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 rp::Guid MonoEntityManager::AddInstance(std::unique_ptr<CSKlassInstance> instance, uint64_t /*ID*/) {
 	const rp::Guid id = rp::Guid::generate();
 	m_EntityInstanceMap[id] = m_Instances.size();
+
 	m_Instances.push_back(std::move(instance));
 	return id;
 }
@@ -303,6 +325,12 @@ void MonoEntityManager::AddKlassFromAssembly(const ScriptID assemblyID) {
 	}
 }
 
+void MonoEntityManager::SetPreCompiled(bool val)
+{
+	preCompiled = val;
+	MonoManager::disableCompile(val);
+}
+
 
 // Invalidate all script id and clear all maps and vectors
 void MonoEntityManager::ClearAll() {
@@ -341,7 +369,7 @@ void MonoEntityManager::initialize() {
 }
 
 void MonoEntityManager::StartCompilation() {
-	if (useDefault) {
+	if (useDefault && !preCompiled) {
 		for (const char* bucket : scriptBuckets) {
 			MonoManager::AddSearchDirectories(bucket);
 		}
@@ -349,12 +377,20 @@ void MonoEntityManager::StartCompilation() {
 	}
 
 
-	std::filesystem::path asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
+	std::filesystem::path asmPath{};
+	if (!preCompiled)
+		asmPath = std::filesystem::absolute(MonoManager::GetCompiler()->GetCompileOutputDirectory()) / (MonoManager::GetCompiler()->GetCompileOutputName() + ".dll");
 
 
 	//TODO: Move it to cmake build
 	std::filesystem::path backendPath = R"(..\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll)";
 
+	if (preCompiled) {
+		asmPath = R"(.\data\managed\GameAssembly.dll)";
+		backendPath = R"(.\data\managed\BasilEngine.dll)";
+	}
+
+	std::string asmAbs = std::filesystem::absolute(asmPath).string();
 	std::string backendAbs = std::filesystem::absolute(backendPath).string();
 
 	if (preCompiled) {
@@ -365,7 +401,21 @@ void MonoEntityManager::StartCompilation() {
 
 
 	}
+
+	if (preCompiled)
+	{
+		PRIMARY_ASSEMBLY_ID = AddAssembly(asmAbs.c_str());
+		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
+
+		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
+		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
+		
+		return;
+	}
+
+
 	auto& logs = MonoManager::GetCompiler()->GetLogs();
+	
 
 	if (logs.empty()) {
 		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
@@ -386,24 +436,6 @@ void MonoEntityManager::StartCompilation() {
 	}
 }
 
-/******************************************************************************/
-/*!
-\file   MonoEntityManager.cpp
-\author Team PASSTA
-		Yeo Jia Hao (jiahao.yeo\@digipen.edu)
-\par    Course : CSD3401 / UXG3400
-\date   2025/11/05
-\brief This file contains the implementation for the MonoEntityManager class, which
-manages the lifecycle of managed entities, classes, and assemblies within the Mono runtime
-in the engine. It provides functionality to add, retrieve, and manage
-managed assemblies, classes, and instances, as well as type registration and lookup.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/******************************************************************************/
 
 void MonoEntityManager::AddSearchDirectory(const char* path) {
 	std::filesystem::path file_path = path;

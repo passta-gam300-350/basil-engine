@@ -66,6 +66,12 @@ public:
     std::shared_ptr<Shader> GetPrimitiveShader() const { return m_PrimitiveShader; }
 
     /**
+     * @brief Get shader for debug line rendering (physics debug visualization)
+     * @return Debug line shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetDebugLineShader() const { return m_DebugLineShader; }
+
+    /**
      * @brief Get shader for point shadow mapping (with geometry shader)
      * @return Point shadow shader, or nullptr if not loaded
      */
@@ -102,6 +108,13 @@ public:
     std::shared_ptr<Shader> GetEditorResolveShader() const { return m_EditorResolveShader; }
 
     std::shared_ptr<Shader> GetParticleShader() const { return m_ParticleShader; }
+
+    /**
+     * @brief Get shader for HUD/UI rendering in screen space
+     * @return HUD shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetHUDShader() const { return m_HUDShader; }
+
     /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
@@ -168,6 +181,7 @@ private:
     std::shared_ptr<Shader> m_ShadowShader;
     std::shared_ptr<Shader> m_PickingShader;
     std::shared_ptr<Shader> m_PrimitiveShader;
+    std::shared_ptr<Shader> m_DebugLineShader;       // Debug line shader for physics visualization
     std::shared_ptr<Shader> m_PointShadowShader;     // Point shadow with geometry shader
     std::shared_ptr<Shader> m_OutlineShader;
     std::shared_ptr<Shader> m_SkyboxShader;
@@ -175,6 +189,7 @@ private:
     std::shared_ptr<Shader> m_ToneMappingShader;
     std::shared_ptr<Shader> m_EditorResolveShader;   // Editor resolve with gamma correction
     std::shared_ptr<Shader> m_ParticleShader;
+    std::shared_ptr<Shader> m_HUDShader;             // HUD/UI screen-space rendering
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
 
@@ -183,6 +198,7 @@ private:
     bool LoadShadowShader();
     bool LoadPickingShader();
     bool LoadPrimitiveShader();
+    bool LoadDebugLineShader();
     bool LoadPointShadowShader();
     bool LoadOutlineShader();
     bool LoadSkyboxShader();
@@ -190,6 +206,7 @@ private:
     bool LoadToneMappingShader();
     bool LoadEditorResolveShader();
     bool LoadParticleShader();
+    bool LoadHUDShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP

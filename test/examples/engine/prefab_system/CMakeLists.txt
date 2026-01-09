@@ -48,6 +48,7 @@ target_link_libraries(prefab_example PRIVATE
     EnTT
     glm
     yaml-cpp
+    resource-pipeline-core
     # engine  # Uncomment if you have a compiled engine library
     # Add other required libraries
 )

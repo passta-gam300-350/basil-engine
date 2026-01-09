@@ -38,6 +38,7 @@ class MonoManager {
 	static std::vector<std::string> m_ScriptBins;
 
 	static bool m_Verbose;
+	static bool m_PreCompiled;
 
 
 
@@ -50,6 +51,10 @@ public:
 
 	static void SetVerbose(bool v);
 	static bool GetVerbose();
+
+
+	static bool disableCompile(bool v);
+
 
 
 	static void StartCompilation();

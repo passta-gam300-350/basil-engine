@@ -1,10 +1,18 @@
 #ifndef ENGINE_RESOURCE_SYSTEM_HPP
 #define ENGINE_RESOURCE_SYSTEM_HPP
 
+#define WIN32_LEAN_AND_MEAN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
 #include <memory>
 #include <jobsystem.hpp>
 #include <hashtable.hpp>
-#include <rsc-core/guid.hpp>
+
+#define RP_REFLECTION_IGNORE_ENUM_DEDUCTION_RESTRICTION
+#include <rsc-core/rp.hpp>
 #include <cstdint>
 #include <cstddef>
 #include <unordered_map>
@@ -15,9 +23,9 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
-#include <windows.h>
 
-struct Handle {
+// Renamed from Handle to ResourceHandle to avoid conflict with Windows HANDLE
+struct ResourceHandle {
     std::uint32_t m_Index{};
     std::uint32_t m_Generation{};
     explicit operator bool() const noexcept { return m_Generation != 0; }
@@ -68,29 +76,29 @@ public:
     }
 
     //get async, check handle, functionally equivalent of std::future but unlimited gets
-    Handle GetHandle(rp::Guid id);
+    ResourceHandle GetHandle(rp::Guid id);
 
-    Pointer Ptr(Handle h) noexcept {
+    Pointer Ptr(ResourceHandle h) noexcept {
         if (h.m_Index >= m_Slots.size()) return nullptr;
         auto& s = m_Slots[h.m_Index];
         if (!s.m_Alive || s.m_Generation != h.m_Generation) return nullptr;
         return &s.value();
     }
 
-    ConstPointer Ptr(Handle h) const noexcept {
+    ConstPointer Ptr(ResourceHandle h) const noexcept {
         if (h.m_Index >= m_Slots.size()) return nullptr;
         auto& s = m_Slots[h.m_Index];
         if (!s.m_Alive || s.m_Generation != h.m_Generation) return nullptr;
         return &s.value();
     }
 
-    Handle Find(rp::Guid guid) const noexcept {
+    ResourceHandle Find(rp::Guid guid) const noexcept {
         auto it = m_GuidSlots.find(guid);
         if (it == m_GuidSlots.end()) return {};
         return MakeHandle(it->second);
     }
 
-    rp::Guid GetGuid(Handle h) const noexcept {
+    rp::Guid GetGuid(ResourceHandle h) const noexcept {
         if (h.m_Index >= m_Slots.size()) return rp::null_guid;
         auto& s = m_Slots[h.m_Index];
         if (!s.m_Alive || s.m_Generation != h.m_Generation) return rp::null_guid;
@@ -113,7 +121,7 @@ public:
      * @param resource Already-constructed resource to insert
      * @return true if inserted, false if GUID already exists
      */
-    bool InsertPreloaded(rp::Guid guid, T resource) {
+    __declspec(noinline) bool InsertPreloaded(rp::Guid guid, T resource) {
         // Check if GUID already exists
         auto it = m_GuidSlots.find(guid);
         if (it != m_GuidSlots.end()) {
@@ -151,9 +159,9 @@ public:
     }
 
 private:
-    Handle MakeHandle(std::uint32_t idx) const noexcept {
+    ResourceHandle MakeHandle(std::uint32_t idx) const noexcept {
         const auto& s = m_Slots[idx];
-        return Handle{ idx, s.m_Generation };
+        return ResourceHandle{ idx, s.m_Generation };
     }
 
     std::uint32_t AllocateSlot() {
@@ -198,13 +206,14 @@ private:
 struct ResourceRegistry {
     //type-erased vtable mapping for resource type
     struct VTable {
-        std::function<Handle(void*, rp::Guid)> m_Get;
+        std::function<ResourceHandle(void*, rp::Guid)> m_Get;
         std::function<void*()> m_GetPool;
-        std::function<Handle(void*, rp::Guid)> m_Find;
-        std::function<rp::Guid(void*, Handle)> m_GetGuid;
-        std::function<void* (void*, Handle)> m_Ptr;
-        std::function<const void* (const void*, Handle)> m_ConstPtr;
+        std::function<ResourceHandle(void*, rp::Guid)> m_Find;
+        std::function<rp::Guid(void*, ResourceHandle)> m_GetGuid;
+        std::function<void* (void*, ResourceHandle)> m_Ptr;
+        std::function<const void* (const void*, ResourceHandle)> m_ConstPtr;
         std::function<bool (void*, rp::Guid)> m_Unload;
+        std::function<void(void*)> m_Clear;
     };
 
     using TypeNameHash = std::uint64_t;
@@ -239,30 +248,34 @@ struct ResourceRegistry {
 
         e.m_Vt = {
             //get
-            [](void* p, rp::Guid g) -> Handle {
+            [](void* p, rp::Guid g) -> ResourceHandle {
                 return static_cast<PoolType<T>*>(p)->GetHandle(g);
             },
             //get_pool
             []() -> void* { return static_cast<void*>(&pool); },
             //find
-            [](void* p, rp::Guid g) -> Handle {
+            [](void* p, rp::Guid g) -> ResourceHandle {
                 return static_cast<PoolType<T>*>(p)->Find(g);
             },
             //guid
-            [](void* p, Handle h) -> rp::Guid {
+            [](void* p, ResourceHandle h) -> rp::Guid {
                 return static_cast<PoolType<T>*>(p)->GetGuid(h);
             },
             //ptr
-            [](void* p, Handle h) -> void* {
+            [](void* p, ResourceHandle h) -> void* {
                 return static_cast<void*>(static_cast<PoolType<T>*>(p)->Ptr(h));
             },
             //const ptr
-            [](const void* p, Handle h) -> const void* {
+            [](const void* p, ResourceHandle h) -> const void* {
                 return static_cast<const void*>(static_cast<const PoolType<T>*>(p)->Ptr(h));
             },
             //unload
             [](void* p, rp::Guid g) -> bool {
                 return static_cast<PoolType<T>*>(p)->Unload(g);
+            },
+            //clear all
+            [](void* p) -> void {
+                static_cast<PoolType<T>*>(p)->Clear();
             }
         };
 
@@ -284,10 +297,10 @@ struct ResourceRegistry {
     }
 
     template <typename T>
-    T* Get(rp::Guid guid, Handle* out_handle = nullptr) {
+    T* Get(rp::Guid guid, ResourceHandle* out_handle = nullptr) {
         auto* pool = Pool<T>();
         if (!pool) return nullptr;
-        Handle h = pool->GetHandle(guid);
+        ResourceHandle h = pool->GetHandle(guid);
         if (out_handle) *out_handle = h;
         return pool->Ptr(h);
     }
@@ -303,13 +316,13 @@ struct ResourceRegistry {
     }
 
     template <typename T>
-    Handle Find(rp::Guid id) {
+    ResourceHandle Find(rp::Guid id) {
         auto* pool = Pool<T>();
-        return pool ? pool->Find(id) : Handle{};
+        return pool ? pool->Find(id) : ResourceHandle{};
     }
 
     template <typename T>
-    rp::Guid GetGuid(Handle h) {
+    rp::Guid GetGuid(ResourceHandle h) {
         auto* pool = Pool<T>();
         return pool ? pool->GetGuid(h) : rp::null_guid;
     }
@@ -342,7 +355,8 @@ struct ResourceRegistry {
      */
     template <typename T>
     bool RegisterInMemory(rp::Guid guid, T resource) {
-        auto* pool = Pool<T>();
+
+    	auto* pool = Pool<T>();
         if (!pool) {
             spdlog::error("ResourceRegistry: Cannot register in-memory resource - type not registered");
             return false;
@@ -368,6 +382,12 @@ struct ResourceRegistry {
     template <typename T>
     bool UnregisterInMemory(rp::Guid guid) {
         return Unload<T>(guid);  // Unload handles cleanup
+    }
+
+    void ReleaseAll() {
+        for (auto entry : m_Entries) {
+            entry.second.m_Vt.m_Clear(entry.second.m_Pool);
+        }
     }
 
 private:
@@ -478,6 +498,7 @@ struct ResourceSystem {
     }
 
     static void Release() {
+        ResourceRegistry::Instance().ReleaseAll();
         InstancePtr().reset();
     }
 
@@ -493,6 +514,19 @@ struct ResourceSystem {
         inst.m_JobSystem.~JobSystem();
         new (&inst.m_JobSystem) JobSystem{ thread_count };
         return inst;
+    }
+
+    void ImportAssetList(std::string const& assetfilename, std::string const& imported_path) {
+        if (!std::filesystem::exists(assetfilename))
+            return;
+        auto assetlist = rp::serialization::yaml_serializer::deserialize<std::map<std::string, rp::BasicIndexedGuid>>(assetfilename);
+        for (auto [name, typed] : assetlist) {
+            ResourceSystem::FileEntry fentry{};
+            fentry.m_Guid = typed.m_guid;
+            fentry.m_Path = imported_path + "/" + typed.m_guid.to_hex() + "." + rp::ResourceTypeRegistry::GetResourceTypeName(typed).value();
+            fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
+            ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
+        }
     }
 
     const char* GetMappedFilePtr(rp::Guid);
@@ -553,7 +587,7 @@ private:
 
 
 template <typename T, stl_allocator_t<T> A>
-Handle ResourcePool<T, A>::GetHandle(rp::Guid guid) {
+ResourceHandle ResourcePool<T, A>::GetHandle(rp::Guid guid) {
     auto it = m_GuidSlots.find(guid);
     if (it != m_GuidSlots.end()) {
         return MakeHandle(it->second);

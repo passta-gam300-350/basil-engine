@@ -1,0 +1,7 @@
+base:
+  m_guid: 14e4fb27517816fae40eb733d1a
+  m_importer: .texture
+  m_source: materials\kite\topflag\flap_top_Height.png
+  m_name: flap_top_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

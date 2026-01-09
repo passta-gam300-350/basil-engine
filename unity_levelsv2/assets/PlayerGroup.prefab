@@ -1,0 +1,31 @@
+metadata:
+  guid: 7fd565c74a697893b75f4745e3b
+  typeIndex: 0
+  name: PlayerGroup_Prefab
+  version: 1
+  created: 2025-11-26T16:28:26Z
+root:
+  components:
+    - typeHash: 2841974188
+      typeName: Scene ID
+      properties:
+        Scene ID: 0
+    - typeHash: 2310838253
+      typeName: entity name
+      properties:
+        name: PlayerGroup
+    - typeHash: 3400599862
+      typeName: TransformComponent
+      properties:
+        m_Rotate:
+          - 0
+          - -0
+          - 0
+        m_Scale:
+          - 0.200000003
+          - 0.800000012
+          - 0.200000003
+        m_Trans:
+          - -1.06027758
+          - 0.415434897
+          - 0.54468596

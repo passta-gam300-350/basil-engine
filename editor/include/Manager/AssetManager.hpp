@@ -20,8 +20,8 @@ struct AssetManager {
 	std::string m_RootPath;
 	std::string m_CurrentPath;
 	std::string m_ImportedAssetPath;
-	std::thread m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 	std::mutex m_DescriptorListMtx;
+	std::unique_ptr<std::thread> m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 
 	std::unique_ptr<rp::DescriptorWrapper> m_InspectedDescriptor;
 	std::string m_InspectedDescriptorPath;
@@ -30,15 +30,22 @@ struct AssetManager {
 	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
 	std::atomic<bool> m_NeedsRescan;
 
+	// Prefab synchronization tracking
+	std::vector<std::string> m_ChangedPrefabs;  ///< List of prefab file paths that have changed
+	std::mutex m_ChangedPrefabsMtx;              ///< Mutex for thread-safe access to changed prefabs list
+
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
 	AssetManager(std::string const& root_dir, std::string const& import_dir = {});
 	AssetManager(AssetManager const&) = default;
 	~AssetManager() {
 		m_ShouldClose = true;
-		m_IndexingWorker.join();
+		if (m_IndexingWorker)
+			m_IndexingWorker->join();
 		ExportAssetList();
 	}
+
+	void InitWorkerLoop();
 		
 	rp::BasicIndexedGuid ResolveAssetGuid(std::string const&);
 	std::string ResolveAssetName(rp::BasicIndexedGuid);
@@ -78,11 +85,17 @@ struct AssetManager {
 	std::string const& GetRootPath() const {
 		return m_RootPath;
 	}
+	void SetCurrentPath(std::string const& path) {
+		m_CurrentPath = path;
+	}
 	std::string const& GoToParentDirectory();
 	static std::string getFileExtension(std::string const&);
 	static std::string getParentPath(std::string const&);
 	std::string const& GoToSubDirectory(std::string const&);
 	static std::string normalizePath(const std::string& Path);
+
+	// Prefab synchronization methods
+	std::vector<std::string> GetAndClearChangedPrefabs();
 };
 
 #endif

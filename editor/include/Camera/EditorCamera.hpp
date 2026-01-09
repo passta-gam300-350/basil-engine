@@ -4,9 +4,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <Render/Camera.h>
 
-class EditorCamera : public CameraSystem::Camera
+// Phase 3: EditorCamera is now standalone (no inheritance from CameraSystem::Camera)
+class EditorCamera
 {
 public:
     enum class Mode
@@ -23,7 +23,7 @@ public:
     void Update(float deltaTime);
 
     // Camera manipulation
-    void SetPosition(const glm::vec3& position) { m_Pos = position; }
+    void SetPosition(const glm::vec3& position) { m_Position = position; }
     void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; }
     void SetTarget(const glm::vec3& target) { m_Target = target; }
     void SetMode(Mode mode) { m_Mode = mode; }
@@ -35,7 +35,7 @@ public:
     void SetFarPlane(float farPlane) { m_Far = farPlane; UpdateProjection(); }
 
     // Getters
-    glm::vec3 GetPosition() const { return m_Pos; }
+    glm::vec3 GetPosition() const { return m_Position; }
     glm::vec3 GetRotation() const { return m_Rotation; }
     glm::vec3 GetTarget() const { return m_Target; }
     glm::vec3 GetForward() const { return m_Front; }
@@ -70,9 +70,6 @@ private:
     void UpdateView();
     void UpdateProjection();
 
-    void HandleKeyboardInput(float deltaTime);
-    void HandleMouseInput(float deltaTime);
-
     // Fly mode controls
     void UpdateFlyMode(float deltaTime);
 
@@ -82,13 +79,30 @@ private:
     // Pan mode controls
     void UpdatePanMode(float deltaTime);
 
+public:
+    // Camera type enum (previously from CameraComponent)
+    enum class CameraType : uint8_t {
+        ORTHO,
+        PERSPECTIVE
+    };
+
+    // Camera properties (previously inherited from CameraComponent)
+    CameraType m_Type{ CameraType::PERSPECTIVE };
+    float m_Fov{ 45.0f };
+    float m_AspectRatio{ 16.0f / 9.0f };
+    float m_Near{ 0.1f };
+    float m_Far{ 1000.0f };
+    glm::vec3 m_Front{ 0.0f, 0.0f, -1.0f };
+    glm::vec3 m_Up{ 0.0f, 1.0f, 0.0f };
+    glm::vec3 m_Right{ 1.0f, 0.0f, 0.0f };
+
 private:
     // Camera mode
     Mode m_Mode = Mode::Fly;
 
     // Transform
     glm::vec3 m_Position{0.0f, 5.0f, 10.0f};
-    glm::vec3 m_Rotation{0.0f, 0.0f, 0.0f}; // Pitch, Yaw, Roll
+    glm::vec3 m_Rotation{0.0f, 0.0f, 0.0f};     // Pitch, Yaw, Roll
     glm::vec3 m_Target{0.0f, 0.0f, 0.0f};
 
     // Matrices

@@ -7,7 +7,7 @@ class Behaviour : public Component
 {
 	struct ScriptInstance
 	{
-		UUID<128> scriptClassID;
+		uuid::UUID<128> scriptClassID;
 		uint32_t scriptName;
 	};
 	std::vector<ScriptInstance> scripts;
@@ -17,8 +17,8 @@ class Behaviour : public Component
 	ComponentType getType() const override;
 	bool inEditor() override;
 
-	void AddScript(UUID<128> id, char const* name);
-	void RemoveScript(UUID<128> id);
+	void AddScript(uuid::UUID<128> id, char const* name);
+	void RemoveScript(uuid::UUID<128> id);
 };
 
 #endif // !BEHAVIOUR_HPP

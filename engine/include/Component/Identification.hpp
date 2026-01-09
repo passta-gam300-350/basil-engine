@@ -6,7 +6,7 @@ class Identifier : Component
 {
 
 	uint32_t identifier;
-	UUID<128> uuid;
+	uuid::UUID<128> uuid;
 
 public:
 

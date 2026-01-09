@@ -1,0 +1,14 @@
+base:
+  m_guid: 3ace3017ca7a25afbc7b2c6fb33
+  m_importer: .audio
+  m_source: audio\bgm_sad_jingle.ogg
+  m_name: bgm_sad_jingle.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

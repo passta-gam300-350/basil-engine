@@ -1,0 +1,29 @@
+base:
+  m_guid: 2456c072e5b8c823b5ce3fb5b5
+  m_importer: .material
+  m_source: ""
+  m_name: m_terrain
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_terrain
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 20421e71bf94ee7294288cff91
+    u_DiffuseMap: 2041eb749fbc4f7f435531491a
+    u_EmissiveMap: 2041f87dc58c473c2c235b81c4
+    u_NormalMap: 2042167aa6890d5e5e100d6dfb
+    u_HeightMap: 20420378fb9e1af9cf0f8e0da6
+    u_SpecularMap: 00
+    u_MetallicMap: 20420c766f83afeb74b1604f28

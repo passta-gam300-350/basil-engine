@@ -1,0 +1,24 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+mtllib kite_bg.mtl
+
+# vertex positions
+v -960.000000 1080.000000 -0.000082
+v -960.000000 0.000000 0.000000
+v 960.000000 0.000000 0.000000
+v 960.000000 1080.000000 -0.000082
+
+# UV coordinates
+vt 0.000000 0.000000
+vt 1.000000 0.000000
+vt 1.000000 1.000000
+vt 0.000000 1.000000
+
+# vertex normals
+vn 0.000000 0.000000 1.000000
+
+# Mesh
+g Kite_background
+usemtl bg
+f 3/3/1 4/4/1 1/1/1 2/2/1

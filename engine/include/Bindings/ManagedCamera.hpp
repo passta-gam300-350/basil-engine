@@ -38,6 +38,14 @@ public:
 	static float getFar(uint64_t handle);
 	static void setFar(uint64_t handle, float farClip);
 
+	// Editor override for viewport rect (e.g., ImGui scene viewport)
+	static void SetViewportOverride(float offsetX, float offsetY, float width, float height, bool enabled);
+
+	static void ScreenToWorldPoint(uint64_t handle, float x, float y, float depth, float* p_x, float* p_y, float* p_z);
+	static void ScreenPointToRay(uint64_t handle, float x, float y, [[maybe_unused]]float distance,
+		float* o_x, float* o_y, float* o_z,
+		float* d_x, float* d_y, float* d_z);
+
 
 
 

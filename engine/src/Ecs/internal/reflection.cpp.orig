@@ -5,15 +5,16 @@
 #include "Component/Transform.hpp"
 #include "Component/MaterialOverridesComponent.hpp"
 #include "Render/Render.h"
-#include "Render/Camera.h"
-<<<<<<< HEAD
-#include <components/behaviour.hpp>
-=======
 #include "Particles/ParticleComponent.h"
-#include "Rendering/ParticleEmitter.h"
+
+#include "Render/Camera.h"
 #include "Utility/Particle.h"
 
->>>>>>> resource_pipeline_v2_final_i_think
+#include <components/behaviour.hpp>
+
+#include <Jolt/Jolt.h>
+
+#include "System/Audio.hpp"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
 }
@@ -54,6 +55,13 @@ void ReflectionRegistry::SetupNativeTypes() {
 		MemberRegistrationV<&glm::vec3::y, "y">,
 		MemberRegistrationV<&glm::vec3::z, "z">
 	);	
+
+	RegisterReflectionComponent<JPH::Vec3>(
+		"JPHvec3",
+		InterfaceRegistrationV < &JPH::Vec3::SetX , &JPH::Vec3::GetX, "x" >,
+		InterfaceRegistrationV < &JPH::Vec3::SetY, &JPH::Vec3::GetY, "y" >,
+		InterfaceRegistrationV < &JPH::Vec3::SetZ, &JPH::Vec3::GetZ, "z" >
+	);
 
 	RegisterReflectionComponent<glm::vec4>(
 		"vec4",
@@ -148,6 +156,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&rp::BasicIndexedGuid::m_typeindex, "Type Index">
 	);*/
 
+	RegisterReflectionComponent<MeshRendererComponent::PrimitiveType>("PrimitiveType");
+
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
 		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
@@ -157,28 +167,27 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
 
-
-	//RegisterReflectionComponent<RigidBodyComponent>(
-	//			"RigidBodyComponent",
-	//	MemberRegistrationV<&RigidBodyComponent::bodyID, "bodyID">,
-	//	MemberRegistrationV<&RigidBodyComponent::motionType, "motionType">,
-	//	MemberRegistrationV<&RigidBodyComponent::velocity, "velocity">,
-	//	MemberRegistrationV<&RigidBodyComponent::angularVelocity, "angularVelocity">,
-	//	MemberRegistrationV<&RigidBodyComponent::mass, "mass">,
-	//	MemberRegistrationV<&RigidBodyComponent::isActive, "isActive">
-	//);
+	RegisterReflectionComponent<Light::Type>("Light Type");
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",
 		MemberRegistrationV<&LightComponent::m_Type, "Type">,
 		MemberRegistrationV<&LightComponent::m_Color, "Color">,
 		MemberRegistrationV<&LightComponent::m_IsEnabled, "Enabled">,
+		MemberRegistrationV<&LightComponent::m_CastShadows, "Cast Shadows">,
 		MemberRegistrationV<&LightComponent::m_Intensity, "Intensity">,
 		MemberRegistrationV<&LightComponent::m_Direction, "[Dir/Spot] Direction">,
 		MemberRegistrationV<&LightComponent::m_Range, "[Point/Spot] Range">,
 		MemberRegistrationV<&LightComponent::m_InnerCone, "[Spot] Inner Cone Angle">,
 		MemberRegistrationV<&LightComponent::m_OuterCone, "[Spot] Outer Cone Angle">
 	);
+
+<<<<<<< HEAD
+	RegisterReflectionComponent<CameraComponent::CameraType>("Camera Type");
+=======
+	// Register CameraComponent enum type
+	RegisterReflectionComponent<CameraComponent::CameraType>("CameraComponent::CameraType");
+>>>>>>> origin/main
 
 	RegisterReflectionComponent<CameraComponent>(
 		"CameraComponent",
@@ -195,64 +204,50 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&CameraComponent::m_Pitch, "m_Pitch">
 	);
 
-<<<<<<< HEAD
-	RegisterReflectionComponent<behaviour>(
-		"Behaviour",
-		MemberRegistrationV<&behaviour::classesName, "classesName">
-	);
-	
-=======
 	RegisterReflectionComponent<MaterialOverridesComponent>(
 		"MaterialOverridesComponent",
 		MemberRegistrationV<&MaterialOverridesComponent::floatOverrides, "floatOverrides">,
 		MemberRegistrationV<&MaterialOverridesComponent::vec3Overrides, "vec3Overrides">,
 		MemberRegistrationV<&MaterialOverridesComponent::vec4Overrides, "vec4Overrides">,
-		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">,
-		MemberRegistrationV<&MaterialOverridesComponent::textureOverrides, "textureOverrides">
+		MemberRegistrationV<&MaterialOverridesComponent::mat4Overrides, "mat4Overrides">
 	);
 
 	// Register particle enums
 	RegisterReflectionComponent<EmissionType>("EmissionType");
 	RegisterReflectionComponent<BlendMode>("BlendMode");
 
-	// Register ParticleEmitterConfiguration (nested config struct)
-	RegisterReflectionComponent<ParticleEmitterConfiguration>(
-		"ParticleEmitterConfiguration",
-		// Emitter transform
-		MemberRegistrationV<&ParticleEmitterConfiguration::position, "Position">,
-		// Emission shape
-		MemberRegistrationV<&ParticleEmitterConfiguration::emissionType, "Emission Type">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::emitterSize, "Emitter Size (Box)">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::sphereRadius, "Sphere Radius">,
-		// Emission settings
-		MemberRegistrationV<&ParticleEmitterConfiguration::emissionRate, "Emission Rate">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::maxParticles, "Max Particles">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::looping, "Looping">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::duration, "Duration">,
-		// Particle lifetime
-		MemberRegistrationV<&ParticleEmitterConfiguration::minLifeTime, "Min Lifetime">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::maxLifeTime, "Max Lifetime">,
-		// Visual properties
-		MemberRegistrationV<&ParticleEmitterConfiguration::startColor, "Start Color">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::endColor, "End Color">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::startSize, "Start Size">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::endSize, "End Size">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::startRotation, "Start Rotation">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::rotationSpeed, "Rotation Speed">,
-		// Physics
-		MemberRegistrationV<&ParticleEmitterConfiguration::startVelocity, "Start Velocity">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::velocityRandomness, "Velocity Randomness">,
-		MemberRegistrationV<&ParticleEmitterConfiguration::acceleration, "Acceleration">
+
+	RegisterReflectionComponent<behaviour>(
+		"Behaviour",
+		MemberRegistrationV<&behaviour::classesName, "classesName">
 	);
 
-	RegisterReflectionComponent<ParticleComponent>(
-		"ParticleComponent",
-		MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
-		MemberRegistrationV<&ParticleComponent::texture, "Texture">,
-		MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
-		MemberRegistrationV<&ParticleComponent::autoPlay, "AutoPlay">,
-		MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">,
-		MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
-		);
->>>>>>> resource_pipeline_v2_final_i_think
+	RegisterReflectionComponent<AudioComponent>(
+		"AudioComponent",
+		MemberRegistrationV<&AudioComponent::audioAssetGuid, "audioAssetGuid">,
+		MemberRegistrationV<&AudioComponent::volume, "volume">,
+		MemberRegistrationV<&AudioComponent::isLooping, "isLooping">,
+		MemberRegistrationV<&AudioComponent::is3D, "is3D">,
+		MemberRegistrationV<&AudioComponent::isStreaming, "isStreaming">,
+		MemberRegistrationV<&AudioComponent::playOnAwake, "playOnAwake">,
+		MemberRegistrationV<&AudioComponent::minDistance, "minDistance">,
+		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
+		MemberRegistrationV<&AudioComponent::position, "position">,
+		MemberRegistrationV<&AudioComponent::velocity, "velocity">
+	);
+
+	// Register HUDComponent anchor enum
+	RegisterReflectionComponent<HUDComponent::Anchor>("HUDComponent::Anchor");
+
+	RegisterReflectionComponent<HUDComponent>(
+		"HUDComponent",
+		MemberRegistrationV<&HUDComponent::m_TextureGuid, "m_TextureGuid">,
+		MemberRegistrationV<&HUDComponent::position, "position">,
+		MemberRegistrationV<&HUDComponent::size, "size">,
+		MemberRegistrationV<&HUDComponent::anchor, "anchor">,
+		MemberRegistrationV<&HUDComponent::color, "color">,
+		MemberRegistrationV<&HUDComponent::rotation, "rotation">,
+		MemberRegistrationV<&HUDComponent::layer, "layer">,
+		MemberRegistrationV<&HUDComponent::visible, "visible">
+	);
 }

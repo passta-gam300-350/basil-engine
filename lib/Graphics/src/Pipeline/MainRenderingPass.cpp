@@ -10,6 +10,7 @@
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <spdlog/spdlog.h>
 
 MainRenderingPass::MainRenderingPass()
@@ -244,6 +245,35 @@ void MainRenderingPass::RenderSkybox(RenderContext& context)
     };
     Submit(uniformCmd);
 
+    // Set skybox exposure (HDR intensity control)
+    RenderCommands::SetUniformFloatData exposureCmd{
+        m_SkyboxShader,
+        "u_Exposure",
+        m_SkyboxExposure
+    };
+    Submit(exposureCmd);
+
+    // Set skybox rotation (convert Euler angles to rotation matrix)
+    glm::mat4 rotationMatrix = glm::eulerAngleXYZ(
+        glm::radians(m_SkyboxRotation.x),
+        glm::radians(m_SkyboxRotation.y),
+        glm::radians(m_SkyboxRotation.z)
+    );
+    RenderCommands::SetUniformMat4Data rotationCmd{
+        m_SkyboxShader,
+        "u_RotationMatrix",
+        rotationMatrix
+    };
+    Submit(rotationCmd);
+
+    // Set skybox tint color
+    RenderCommands::SetUniformVec3Data tintCmd{
+        m_SkyboxShader,
+        "u_Tint",
+        m_SkyboxTint
+    };
+    Submit(tintCmd);
+
     // Draw skybox geometry
     RenderCommands::DrawElementsData drawCmd{
         m_SkyboxMesh->GetVertexArray()->GetVAOHandle(),
@@ -286,14 +316,13 @@ void MainRenderingPass::RenderLightCubes(RenderContext& context)
 
     // Render each light as a cube (all light types: Directional, Point, Spot)
     for (const auto& light : context.lights) {
-        // Calculate cube size based on light intensity
-        float intensityBasedSize = m_BaseLightCubeSize + (light.diffuseIntensity * m_IntensityScaleFactor);
-        intensityBasedSize = glm::clamp(intensityBasedSize, m_MinCubeSize, m_MaxCubeSize);
+        // Use fixed cube size (intensity-based scaling disabled)
+        float cubeSize = m_BaseLightCubeSize;
 
-        // Calculate transform matrix for light position with intensity-based scaling
+        // Calculate transform matrix for light position with fixed scaling
         glm::mat4 modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, light.position);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(intensityBasedSize));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(cubeSize));
 
         // Set uniforms using the available SetUniformsData command
         RenderCommands::SetUniformsData uniformsCmd{

@@ -31,6 +31,9 @@ bool ShaderLibrary::Initialize() {
     if (!LoadPrimitiveShader()) {
         spdlog::warn("ShaderLibrary: Primitive shader not loaded - debug visualization will be disabled");
     }
+    if (!LoadDebugLineShader()) {
+        spdlog::warn("ShaderLibrary: Debug line shader not loaded - physics debug visualization will be disabled");
+    }
     if (!LoadOutlineShader()) {
         spdlog::warn("ShaderLibrary: Outline shader not loaded - object outlines will be disabled");
     }
@@ -51,6 +54,10 @@ bool ShaderLibrary::Initialize() {
     {
         spdlog::warn("ShaderLibrary: Particle Shader not loaded - Particle will be disabled");
     }
+    if (!LoadHUDShader()) {
+        spdlog::warn("ShaderLibrary: HUD shader not loaded - HUD rendering will be disabled");
+    }
+
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
     } else {
@@ -151,6 +158,7 @@ void ShaderLibrary::Clear() {
     m_SkyboxShader.reset();
     m_HDRComputeShader.reset();
     m_ToneMappingShader.reset();
+    m_HUDShader.reset();
     spdlog::info("ShaderLibrary: Cleared all shaders");
 }
 
@@ -205,6 +213,19 @@ bool ShaderLibrary::LoadPrimitiveShader() {
     }
 
     spdlog::info("ShaderLibrary: Primitive shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadDebugLineShader() {
+    m_DebugLineShader = Load("debug_line",
+        "assets/shaders/debug_line.vert",
+        "assets/shaders/debug_line.frag");
+
+    if (!m_DebugLineShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: Debug line shader loaded successfully");
     return true;
 }
 
@@ -295,5 +316,18 @@ bool ShaderLibrary::LoadParticleShader()
         return false;
     }
     spdlog::info("ShaderLibrary: Particle shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadHUDShader() {
+    m_HUDShader = Load("hud",
+        "assets/shaders/hud.vert",
+        "assets/shaders/hud.frag");
+
+    if (!m_HUDShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: HUD shader loaded successfully");
     return true;
 }

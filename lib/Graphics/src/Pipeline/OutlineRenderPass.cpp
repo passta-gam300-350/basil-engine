@@ -77,6 +77,9 @@ void OutlineRenderPass::Execute(RenderContext& context)
     // Re-enable depth testing and depth writes
     Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
 
+    // FIX: Restore color mask to default (first pass disables it at line 99)
+    Submit(RenderCommands::SetColorMaskData{ true, true, true, true });
+
     // Ensure face culling is properly set (should already be enabled)
     Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
 
@@ -184,7 +187,6 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
     // Render each outlined object with scaled transform
     // (Must be done individually since each has a unique scaled transform)
     for (const auto* renderable : outlinedPtrs) {
-        // Calculate scaled transform
         glm::mat4 scaledTransform = glm::scale(renderable->transform, glm::vec3(m_OutlineScale));
 
         // Set uniforms

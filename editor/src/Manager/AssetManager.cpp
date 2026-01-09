@@ -7,6 +7,7 @@
 
 #include <importer/importer.hpp>
 #include <descriptors/material.hpp>
+#include <descriptors/descriptors.hpp>
 #include <descriptors/audio.hpp>
 #include <glm/glm.hpp>
 #include "Screens/EditorMain.hpp"
@@ -93,7 +94,7 @@ std::vector<std::string> AssetManager::GetSubDirectories() {
 }
 
 AssetManager::AssetManager(std::string const& root_dir, std::string const& import_dir)
-	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_IndexingWorker{ &AssetManager::FileIndexingWorkerLoop, std::ref(*this) } {
+	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_DescriptorListMtx{}, m_IndexingWorker {} {
 	m_LastNotificationTime = std::chrono::steady_clock::now();
 	m_NeedsRescan = false;
 	if (!std::filesystem::exists(m_ImportedAssetPath)) {
@@ -103,6 +104,11 @@ AssetManager::AssetManager(std::string const& root_dir, std::string const& impor
 		std::filesystem::create_directories(m_RootPath);
 	}
 	hideFolder(string_to_wstring(m_ImportedAssetPath));
+}
+
+void AssetManager::InitWorkerLoop()
+{
+	m_IndexingWorker = std::make_unique<std::thread>(&AssetManager::FileIndexingWorkerLoop, std::ref(*this));
 }
 
 rp::BasicIndexedGuid AssetManager::ResolveAssetGuid(std::string const& name) {
@@ -302,8 +308,16 @@ void AssetManager::FileIndexingWorkerLoop() {
 				std::string desc_name = entry.path().string();
 				std::string dir_path = getParentPath(desc_name);
 				std::string ext_name = getFileExtension(desc_name);
+
+				// Handle .prefab files separately - they're self-contained assets
+				if (ext_name == ".prefab") {
+					std::lock_guard lg{ m_DescriptorListMtx };
+					m_FileList.emplace(dir_path, desc_name);
+					continue;
+				}
+
 				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
-				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio") {
+				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio" || ext_name == ".video") {
 					continue;
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
@@ -328,7 +342,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				bool has_source_file = false;
 
 				// Check common source file extensions
-				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac"};
+				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac", ".mpeg", ".mpg"};
 				for (auto const& src_ext : source_exts) {
 					if (std::filesystem::exists(base_name + src_ext)) {
 						has_source_file = true;
@@ -414,12 +428,29 @@ void AssetManager::FileIndexingWorkerLoop() {
 					if (file_ext.empty()) {
 						break;
 					}
+
+					// Handle .prefab file modifications
+					if (file_ext == ".prefab") {
+						std::wcout << L"Prefab changed: " << filename << "\n";
+						std::lock_guard lg{ m_ChangedPrefabsMtx };
+						// Check if not already in the list
+						if (std::find(m_ChangedPrefabs.begin(), m_ChangedPrefabs.end(), nfile) == m_ChangedPrefabs.end()) {
+							m_ChangedPrefabs.push_back(nfile);
+						}
+						dir_path = getParentPath(nfile);
+						{
+							std::lock_guard lg_file{ m_DescriptorListMtx };
+							m_FileList.emplace(dir_path, nfile);
+						}
+						break;
+					}
+
 					// Mark that we need a rescan after quiet period
 					m_NeedsRescan = true;
 					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
 					dir_path = getParentPath(nfile);
 					if (!std::filesystem::exists(descriptor_filepath)) {
-						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile);
+						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile, m_RootPath);
 						{
 							std::lock_guard lg{ m_DescriptorListMtx };
 							m_FileList.emplace(dir_path, descriptor_filepath);
@@ -500,7 +531,7 @@ void AssetManager::RescanDirectory() {
 
 			// This file is missing a descriptor - create one
 			std::string dir_path = getParentPath(file_path);
-			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path);
+			rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(file_path, m_RootPath);
 			{
 				std::lock_guard lg{ m_DescriptorListMtx };
 				m_FileList.emplace(dir_path, file_path);
@@ -513,4 +544,11 @@ void AssetManager::RescanDirectory() {
 	catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Rescan error: " << e.what() << "\n";
 	}
+}
+
+std::vector<std::string> AssetManager::GetAndClearChangedPrefabs() {
+	std::lock_guard lg{ m_ChangedPrefabsMtx };
+	std::vector<std::string> changed = std::move(m_ChangedPrefabs);
+	m_ChangedPrefabs.clear();
+	return changed;
 }

@@ -2,6 +2,7 @@
 #include "Component/Transform.hpp"
 #include "Component/RelationshipComponent.hpp"
 #include <glm/glm.hpp>
+#include "Profiler/profiler.hpp"
 
 void HierarchySystem::Init()
 {
@@ -16,6 +17,7 @@ void HierarchySystem::Update(ecs::world& world, float /*dt*/)
 
 void HierarchySystem::FixedUpdate(ecs::world& world)
 {
+	PF_SYSTEM("HierachySystem");
 	Update(world, 1 / 60.f);
 }
 

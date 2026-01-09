@@ -86,20 +86,5 @@ struct BvhRenderable
         Bvh<BvhRenderable*>::Node* node;  ///< Leaf node containing this object
     } bvhInfo;
 
-    // ========== Helper Data (Not Required by BVH) ==========
-
-    /**
-     * @brief Reference back to original ECS entity
-     *
-     * After BVH query returns an ID, we use this to quickly
-     * access the entity without searching the ECS world.
-     *
-     * Flow:
-     * 1. BVH.Query(frustum) ? returns [42, 57, 103]
-     * 2. wrapper = m_BvhObjects[42]
-     * 3. entity = wrapper->entity  ? This field
-     * 4. components = world.get_components(entity)
-     */
-    ecs::entity entity;
 };
 #endif // !__BVH_RENDERABLE_H__

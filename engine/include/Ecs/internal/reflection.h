@@ -15,6 +15,9 @@ Technology is prohibited.
 /******************************************************************************/
 #ifndef LIB_REFLECTION_REGISTRATION_H
 #define LIB_REFLECTION_REGISTRATION_H
+
+#define RP_REFLECTION_IGNORE_ENUM_DEDUCTION_RESTRICTION
+
 #include <rsc-core/rp.hpp>
 #include <entt/entt.hpp>
 #include <entt/meta/meta.hpp>
@@ -24,6 +27,7 @@ Technology is prohibited.
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <glm/glm.hpp>
 using TypeName = entt::hashed_string;
 constexpr TypeName ToTypeName(std::string_view name) { return entt::hashed_string(name.data(), name.length()); };
 
@@ -564,6 +568,9 @@ void DeserializeEntity(entt::registry& reg, const Node& entity_node, entt::entit
 	//const auto& components = entity_node["Entity"];
 	const auto& components = entity_node;
 
+	auto types = ReflectionRegistry::types();
+	auto& tn = ReflectionRegistry::TypeNames();
+
 	for (auto& [type_id, meta_type] : ReflectionRegistry::types()) {
 		std::string comp_name = ReflectionRegistry::GetTypeName(meta_type.id());
 		if (components[comp_name]) {
@@ -608,12 +615,47 @@ template<auto SetPtr, auto GetPtr, static_string Name>
 constexpr auto InterfaceRegistrationV = InterfaceRegistration<SetPtr, GetPtr, Name>{};
 
 template<typename T>
+void RegisterEnum(auto& factory) {
+	constexpr auto get_enum_val{ []() -> std::span<const std::pair<std::string_view, std::uint32_t>> {
+		static constexpr auto enum_list{ []() {
+			constexpr auto elist{ rp::reflection::get_enum_list<T>() };
+			std::array<std::pair<std::string_view, std::uint32_t>, elist.size()> emlist{};
+			for (int i{}; i < elist.size(); i++) {
+				emlist[i].first = elist[i].m_enum_name;
+				emlist[i].second = static_cast<std::uint32_t>(elist[i].m_enum_value);
+			}
+			return emlist;
+			}()};
+		return std::span<const std::pair<std::string_view, std::uint32_t>>(enum_list);
+		} };
+	factory.template func<get_enum_val, entt::as_is_t> ("enum_values"_tn);
+	factory.template func<[](std::string const& str) {return rp::reflection::map_enum_value<T>(str); }, entt::as_is_t> ("to_enum_value"_tn);
+	factory.template func<[](std::uint32_t val) -> const std::string_view {return rp::reflection::map_enum_name<T>(static_cast<T>(val)); }, entt::as_is_t> ("to_enum_name"_tn);
+}
+
+template <typename T>
+struct member_pointer_traits;
+
+// Specialization for data members
+template <typename Class, typename Member>
+struct member_pointer_traits<Member Class::*> {
+	using member_type = Member;
+	using class_type = Class;
+};
+
+
+template<typename T>
 void RegisterDataMember(auto& factory) {
 	if constexpr (std::is_base_of_v<InterfaceRegistrationBasic, T>) {
 		factory.template data<T::setptr, T::getptr>(T::hash);
+		//implement next time for enum registration
 	}
 	else {
 		factory.template data<T::ptr, entt::as_ref_t>(T::hash);
+		/*using underlying_type = typename member_pointer_traits<T::ptr>::member_type;
+		if constexpr (std::is_enum_v<underlying_type>) {
+			RegisterEnum<underlying_type>(entt::meta_factory<underlying_type>());
+		}*/
 	}
 }
 
@@ -628,9 +670,15 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
     (field_table.try_emplace(Refs::hash, std::string(Refs::name)), ...);
    
     (RegisterDataMember<Refs>(factory), ...);
-
+	if constexpr (std::is_enum_v<T>) {
+		RegisterEnum<T>(factory);
+	}
 	factory.template func<&entt::registry::emplace<T>, entt::as_ref_t>("emplace"_tn);
 	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {r.emplace<T>(e, meta_any.cast<T>()); } > ("emplace_meta_any"_tn);
+	factory.template func< [](entt::registry& r, entt::entity e, entt::meta_any meta_any) {
+		if (r.all_of<T>(e)) { r.remove<T>(e); }
+		r.emplace<T>(e, meta_any.cast<T>());
+	} > ("emplace_or_replace_meta_any"_tn);
 	ReflectionRegistry::types()[entt::type_hash<T>::value()] = entt::resolve(hashtypename);
 	ReflectionRegistry::InternalID()[entt::type_index<T>::value()] = entt::type_hash<T>::value();
 	ReflectionRegistry::BinSerializerRegistryInstance().push_back({
@@ -647,6 +695,11 @@ void RegisterReflectionComponent(std::string_view type_name, Refs...) {
 		} });
 }
 
+#define RegisterReflectionTypeEnum(TYPE, TYPENAME)	\
+namespace {											\
+	inline int TYPE##_reflection_register = []() {	\
+		RegisterReflectionComponent<TYPE>(TYPENAME);\
+		return 1;}();}	
 #define RegisterReflectionTypeBegin(TYPE, TYPENAME) \
 namespace {											\
 	inline int TYPE##_reflection_register = []() {	\

@@ -1,4 +1,95 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 0
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: true
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 12190f067851825f167159db0546
+      - 12190f0571ab895720731f05d294
+      - 12190f077aebb24152e9d558d6bd
+      - 12190f037a318892a50c33a91930
+      - 12190efc7895a2a842808f64c69b
+      - 12190f047ebc86c2b138480b340b
 entities:
+  - ParticleComponent:
+      EmitterConfig:
+        Position:
+          x: 0
+          y: 0
+          z: 0
+        Emission Type: 0
+        Emitter Size (Box):
+          x: 0
+          y: 0
+          z: 0
+        Sphere Radius: 0
+        Emission Rate: 200
+        Max Particles: 50000
+        Looping: true
+        Duration: 5
+        Min Lifetime: 1
+        Max Lifetime: 3
+        Start Color:
+          x: 0
+          y: 1
+          z: 1
+          w: 1
+        End Color:
+          x: 1
+          y: 1
+          z: 1
+          w: 0
+        Start Size: 0.00999999978
+        End Size: 0.100000001
+        Start Rotation: 0
+        Rotation Speed: 0
+        Start Velocity:
+          x: 1
+          y: 1
+          z: 1
+        Velocity Randomness: 0.5
+        Acceleration:
+          x: 0
+          y: -9.80000019
+          z: 0
+      Texture: 00
+      DepthWrite: false
+      AutoPlay: true
+      BlendSetting: 0
+      RenderLayer: 10
+    Scene ID:
+      Scene ID: 16
+    entity name:
+      name: Emitter
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.376658916
+        y: 0.152297482
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.10990906
+        y: 2
+        z: -7.03963947
+    MaterialOverridesComponent: ~
   - Scene ID:
       Scene ID: 24
     entity name:
@@ -93,72 +184,6 @@ entities:
         x: 2.76219821
         y: 0.0402550399
         z: -6.56913805
-    MaterialOverridesComponent: ~
-  - ParticleComponent:
-      EmitterConfig:
-        Position:
-          x: 0
-          y: 0
-          z: 0
-        Emission Type: 0
-        Emitter Size (Box):
-          x: 0
-          y: 0
-          z: 0
-        Sphere Radius: 0
-        Emission Rate: 200
-        Max Particles: 50000
-        Looping: true
-        Duration: 5
-        Min Lifetime: 1
-        Max Lifetime: 3
-        Start Color:
-          x: 0
-          y: 1
-          z: 1
-          w: 1
-        End Color:
-          x: 1
-          y: 1
-          z: 1
-          w: 0
-        Start Size: 0.00999999978
-        End Size: 0.100000001
-        Start Rotation: 0
-        Rotation Speed: 0
-        Start Velocity:
-          x: 1
-          y: 1
-          z: 1
-        Velocity Randomness: 0.5
-        Acceleration:
-          x: 0
-          y: -9.80000019
-          z: 0
-      Texture: 00
-      DepthWrite: false
-      AutoPlay: true
-      BlendSetting: 0
-      RenderLayer: 10
-    Scene ID:
-      Scene ID: 16
-    entity name:
-      name: Emitter
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.376658916
-        y: 0.152297482
-        z: 1
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 2.10990906
-        y: 2
-        z: -7.03963947
     MaterialOverridesComponent: ~
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"

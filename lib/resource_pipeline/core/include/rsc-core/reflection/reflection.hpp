@@ -255,13 +255,13 @@ namespace rp {
 			refl_seq_view() = delete;
 			refl_seq_view(SeqType& v) : m_seqcont{v} {}
 
-			iterator begin() {
+			auto begin() {
 				return m_seqcont.begin();
 			}
 			const_iterator begin() const {
 				return m_seqcont.begin();
 			}
-			iterator end() {
+			auto end() {
 				return m_seqcont.end();
 			}
 			const_iterator end() const {
@@ -283,8 +283,40 @@ namespace rp {
 				return m_seqcont.emplace(pos, cargs...);
 			}
 
-			void reserve(std::size_t sz) {
-				return m_seqcont.reserve(sz);
+			struct cont_traits {
+				static constexpr bool is_contiguous_v{ std::contiguous_iterator<iterator> };
+				static constexpr bool is_random_access_v{ std::random_access_iterator<iterator> };
+			};
+
+			static consteval cont_traits get_cont_traits() {
+				return cont_traits{};
+			}
+
+			//does something on supported types (not all seq containers have this), if not silence by default, #DEFINE NO_SILENCE if u want static error
+			void reserve([[maybe_unused]] std::size_t sz) {
+				if constexpr (requires {m_seqcont.reserve(sz); })
+					m_seqcont.reserve(sz);
+#ifdef NO_SILENCE
+				else static_assert(std::false_type, "sequence container does not support reserve(std::size_t)! this assertion is triggered when NO_SILENCE is defined, disable for silence failure");
+#endif
+			}
+
+			//does something on supported types (not all seq containers have this), if not silence by default, #DEFINE NO_SILENCE if u want static error
+			void resize([[maybe_unused]] std::size_t sz) {
+				if constexpr (requires {m_seqcont.resize(sz); })
+					m_seqcont.resize(sz);
+#ifdef NO_SILENCE
+				else static_assert(std::false_type, "sequence container does not support reserve(std::size_t)! this assertion is triggered when NO_SILENCE is defined, disable for silence failure");
+#endif
+			}
+
+			//does something on supported types (not all seq containers have this), if not silence by default, #DEFINE NO_SILENCE if u want static error
+			void resize([[maybe_unused]] std::size_t sz, underlying_type const& val) {
+				if constexpr (requires {m_seqcont.resize(sz, val); })
+					m_seqcont.resize(sz, val);
+#ifdef NO_SILENCE
+				else static_assert(std::false_type, "sequence container does not support reserve(std::size_t)! this assertion is triggered when NO_SILENCE is defined, disable for silence failure");
+#endif
 			}
 
 			template <typename InvokableEach>

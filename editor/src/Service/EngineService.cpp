@@ -1,13 +1,18 @@
 #include "Service/EngineService.hpp"
+#include "System/TransformSystem.hpp"
 #include "Editor.hpp"
 #include "Manager/MonoEntityManager.hpp"
 
 #include <filesystem>
 
 #include "Render/Render.h"
+#include <Render/VideoComponent.hpp>
 #include "System/Audio.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
+
+#include "System/BehaviourSystem.hpp"
+#include "Profiler/profiler.hpp"
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -25,75 +30,107 @@ void EngineContainerService::EngineContainer::engine_service() {
 		MonoEntityManager::GetInstance().SetOutputDirectory(managed_dir.string().c_str());
 	}
 
+
+	
+	Engine::Instance().setWorkingDir(working_dir.c_str());
+	
+
+
+
 	//Mono Configuration here
 	
 
 
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
 	Engine::InitInheritWindow("Default.yaml", Editor::GetInstance().GetWindowPtr());
+	Engine::Instance().GetSceneRegistry().SetSceneWorkingDir(asset_dir + "scenes/");
+	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	Engine::Instance().GetSceneRegistry().ReadManifest(manifest_path);
 
 	// Enable HDR pipeline (disabled by default in SceneRenderer)
 	Engine::GetRenderSystem().m_SceneRenderer->ToggleHDRPipeline(true);
 
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
-		while (!Engine::ShouldClose() && ((Engine::GetState() != Engine::Info::State::Wait) || Engine::GetState() != Engine::Info::State::Pause)) { //wait completely suspends the engine
-			engine_snapshot_callback();
+		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
+			// Begin profiling frame at the start of the entire iteration
 			Engine::BeginFrame();
-			Engine::CoreUpdate();
-			Engine::EndFrame();
-			Engine::UpdateDebug();
+
+			{
+				{
+					PF_SCOPE("EngineWork");
+					{
+						PF_SYSTEM("Snapshot callback");
+						engine_snapshot_callback();
+					}
+					Engine::CoreUpdate();
+					Engine::UpdateDebug();
+				}
+			}
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
 			// This prevents screen tearing when editor reads the framebuffer texture
 			//glFinish();
 
-			if (m_hasPickingQuery)
 			{
-				auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-				if (sceneRenderer)
+				PF_SYSTEM("EntityPicking");
+				if (m_hasPickingQuery)
 				{
-					// Create picking query
-					MousePickingQuery query;
-					query.screenX = static_cast<int>(m_pickingMouseX);
-					query.screenY = static_cast<int>(m_pickingMouseY);
-					query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
-					query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
-
-					// Query the picking buffer (picking pass already rendered)
-					PickingResult result = sceneRenderer->QueryObjectPicking(query);
-
-					// Disable picking pass for subsequent frames
-					sceneRenderer->EnablePicking(false);
-
-					// Handle result immediately (we're on engine thread)
-					if (result.hasHit && result.objectID != 0)
+					auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+					if (sceneRenderer)
 					{
-						spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
-							result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+						// Create picking query
+						MousePickingQuery query;
+						query.screenX = static_cast<int>(m_pickingMouseX);
+						query.screenY = static_cast<int>(m_pickingMouseY);
+						query.viewportWidth = static_cast<int>(m_pickingViewportWidth);
+						query.viewportHeight = static_cast<int>(m_pickingViewportHeight);
 
-						// Set outline immediately
-						sceneRenderer->ClearOutlinedObjects();
-						sceneRenderer->AddOutlinedObject(result.objectID);
+						// Query the picking buffer (picking pass already rendered)
+						PickingResult result = sceneRenderer->QueryObjectPicking(query);
 
-						// Notify editor via callback
-						if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+						// Disable picking pass for subsequent frames
+						sceneRenderer->EnablePicking(false);
+
+						// Handle result immediately (we're on engine thread)
+						if (result.hasHit && result.objectID != 0)
+						{
+							spdlog::info("EngineService: Entity picked! Object ID: {}, World Position: ({:.2f}, {:.2f}, {:.2f})",
+								result.objectID, result.worldPosition.x, result.worldPosition.y, result.worldPosition.z);
+
+							// Set outline immediately
+							sceneRenderer->ClearOutlinedObjects();
+							sceneRenderer->AddOutlinedObject(result.objectID);
+
+							// Notify editor via callback
+							if (m_pickingCallback) m_pickingCallback(true, result.objectID);
+						}
+						else
+						{
+							spdlog::info("EngineService: No entity picked");
+							sceneRenderer->ClearOutlinedObjects();
+							if (m_pickingCallback) m_pickingCallback(false, 0);
+						}
 					}
-					else
-					{
-						spdlog::info("EngineService: No entity picked");
-						sceneRenderer->ClearOutlinedObjects();
-						if (m_pickingCallback) m_pickingCallback(false, 0);
-					}
+
+					// Clear picking query flag
+					m_hasPickingQuery = false;
+					m_pickingCallback = nullptr;
 				}
-
-				// Clear picking query flag
-				m_hasPickingQuery = false;
-				m_pickingCallback = nullptr;
 			}
 
-			m_container_is_presentable.acquire();
-			engine_snapshot_writeback();
+			{
+				PF_SYSTEM("WaitForEditor");
+				m_container_is_presentable.acquire();
+			}
+
+			{
+				PF_SYSTEM("Writeback");
+				engine_snapshot_writeback();
+			}
+
+			// End profiling frame at the end of the entire iteration
+			Engine::EndFrame();
 		}
 	}
 	Engine::Exit();
@@ -103,6 +140,21 @@ void EngineContainerService::EngineContainer::engine_service() {
 void EngineContainerService::EngineContainer::engine_snapshot_callback()
 {
 	std::lock_guard lg{ m_mtx };
+
+	// Phase 2: Update editor camera snapshot for RenderSystem
+	// Copy camera data from EditorMain (protected by m_mtx)
+	RenderSystem::EditorCameraSnapshot renderSnapshot;
+	renderSnapshot.position = m_editorCameraSnapshot.position;
+	renderSnapshot.front = m_editorCameraSnapshot.front;
+	renderSnapshot.up = m_editorCameraSnapshot.up;
+	renderSnapshot.right = m_editorCameraSnapshot.right;
+	renderSnapshot.fov = m_editorCameraSnapshot.fov;
+	renderSnapshot.aspectRatio = m_editorCameraSnapshot.aspectRatio;
+	renderSnapshot.nearPlane = m_editorCameraSnapshot.nearPlane;
+	renderSnapshot.farPlane = m_editorCameraSnapshot.farPlane;
+	renderSnapshot.isPerspective = m_editorCameraSnapshot.isPerspective;
+	Engine::GetRenderSystem().SetEditorCameraSnapshot(renderSnapshot);
+
 	ecs::world w{ Engine::GetWorld() };
 	auto entities_rng{ w.get_all_entities() };
 	m_entities_snapshot.resize(entities_rng.size_hint());
@@ -126,7 +178,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 		m_loaded_scenes_scenegraph_snapshot[guid].second = true;
 		if (!scn.IsStale()) {
 			m_loaded_scenes_scenegraph_snapshot[guid].first = BuildSceneGraph(scn.GetSceneEntitites());
-			m_loaded_scenes_scenegraph_snapshot[guid].first.m_entity_name = scn.SceneName();
+			m_loaded_scenes_scenegraph_snapshot[guid].first->m_entity_name = scn.SceneName();
 		}
 	}
 	rp::Guid deletion_arr[16]{}; //no point create queue, scene deletions are rare
@@ -187,6 +239,13 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				entt::meta_any dest_any = meta_type.from_void(dest);
 				entt::meta_any src_any = meta_type.from_void(src);
 
+				if (meta_type.info().hash() == entt::type_hash<VideoComponent>::value()) {
+					VideoComponent* dest_vid = static_cast<VideoComponent*>(dest);
+					VideoComponent* src_vid = static_cast<VideoComponent*>(src);
+					dest_vid->fullscreenMode = src_vid->fullscreenMode;
+					dest_vid->backgroundColor = src_vid->backgroundColor;
+				}
+
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
 
@@ -201,7 +260,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 						// Query ResourceRegistry to find what soundHandle SHOULD be loaded for this GUID
 						ResourceRegistry::Entry* entry = ResourceRegistry::Instance().Pool(audioComp->audioAssetGuid);
 						if (entry) {
-							Handle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
+							ResourceHandle handle = entry->m_Vt.m_Get(entry->m_Pool, audioComp->audioAssetGuid.m_guid);
 							int* soundHandlePtr = static_cast<int*>(entry->m_Vt.m_Ptr(entry->m_Pool, handle));
 
 							if (soundHandlePtr && *soundHandlePtr >= 0) {
@@ -409,6 +468,58 @@ void EngineContainerService::create_child_entity(entity_handle parent)
 		});
 }
 
+void EngineContainerService::orphan_children_entities(entity_handle parent)
+{
+	ecs::entity parentent = ecs::entity(parent);
+	ExecuteOnEngineThread([parentent]() {
+		auto children{ SceneGraph::GetChildren(parentent) };
+		for (auto child : children) {
+			SceneGraph::RemoveParent(child, true);
+		}
+		});
+}
+
+void EngineContainerService::create_parent_entity(entity_handle child)
+{
+	ecs::entity childent = ecs::entity(child);
+	ExecuteOnEngineThread([childent]() {
+		ecs::entity parent = ecs::world(childent.get_world_handle()).add_entity();
+		SceneGraph::SetParent(childent, parent, true);
+		parent.add<TransformComponent>();
+		});
+}
+
+void EngineContainerService::create_parent_entity(std::unordered_set<std::uint32_t> const& children)
+{
+	ExecuteOnEngineThread([children]() {
+		ecs::entity parent = ecs::world(Engine::GetWorld().impl.handle).add_entity();
+		for (auto const& child : children) {
+			ecs::entity childent = ecs::entity(parent.get_world_handle(), child);
+			if (!childent)
+				continue;
+			SceneGraph::SetParent(childent, parent, true);
+		}
+		parent.add<TransformComponent>();
+		});
+}
+
+void EngineContainerService::clear_parent_entity(entity_handle child)
+{
+	ecs::entity childent = ecs::entity(child);
+	ExecuteOnEngineThread([childent]() {
+		SceneGraph::RemoveParent(childent, true);
+		});
+}
+
+void EngineContainerService::make_parent_entity(entity_handle parent, entity_handle child)
+{
+	ecs::entity parentent = ecs::entity(parent);
+	ecs::entity childent = ecs::entity(child);
+	ExecuteOnEngineThread([parentent, childent]() {
+		SceneGraph::SetParent(childent, parentent, true);
+		});
+}
+
 void EngineContainerService::delete_entity(entity_handle ehdl) {
 	if (!m_cont) {
 		spdlog::warn("EngineService: Cannot delete entity, engine container not initialized");
@@ -490,9 +601,9 @@ const std::vector<std::string>& EngineContainerService::GetEntityNamesSnapshot()
 	return m_cont->m_names_snapshot;
 }
 
-const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
+const std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>>& EngineContainerService::GetSceneGraphSnapshot() const
 {
-	static const std::unordered_map<rp::Guid, std::pair<SceneGraphNode, bool>> empty{};
+	static const std::unordered_map<rp::Guid, std::pair<std::shared_ptr<SceneGraphNode>, bool>> empty{};
 	return m_cont ? m_cont->m_loaded_scenes_scenegraph_snapshot : empty;
 }
 
@@ -578,15 +689,6 @@ void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, fl
 	});
 }
 
-void EngineContainerService::EnableAABBVisualization(bool enable) {
-	ExecuteOnEngineThread([enable]() {
-		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
-		if (sceneRenderer) {
-			sceneRenderer->EnableAABBVisualization(enable);
-		}
-	});
-}
-
 void EngineContainerService::AddOutlinedObject(uint32_t objectID) {
 	ExecuteOnEngineThread([objectID]() {
 		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
@@ -631,9 +733,13 @@ void EngineContainerService::SaveScene(const char* path) {
 	}
 
 	ExecuteOnEngineThread([path = std::string(path)]() {
-		ecs::world world = Engine::GetWorld();
-		world.SaveYAML(path.c_str());
-		spdlog::info("EngineService: Scene saved to {}", path);
+		auto activeSceneOpt = Engine::GetSceneRegistry().GetActiveScene();
+		if (activeSceneOpt.has_value()) {
+			activeSceneOpt.value().get().SerializeYaml(path);
+			spdlog::info("EngineService: Scene saved to {}", path);
+		} else {
+			spdlog::error("EngineService: No active scene to save!");
+		}
 	});
 }
 
@@ -644,10 +750,19 @@ void EngineContainerService::LoadScene(const char* path) {
 	}
 
 	ExecuteOnEngineThread([path = std::string(path)]() {
+		// Clear existing scenes
 		ecs::world world = Engine::GetWorld();
 		world.UnloadAll();
-		world.LoadYAML(path.c_str());
-		spdlog::info("EngineService: Scene loaded from {}", path);
+
+		// Load scene using SceneRegistry::LoadSceneFromPath which includes render settings (skybox, etc.)
+		auto sceneRefOpt = Engine::GetSceneRegistry().LoadSceneFromPath(path);
+		if (sceneRefOpt.has_value()) {
+			spdlog::info("EngineService: Scene loaded from {}", path);
+		} else {
+			spdlog::error("EngineService: Failed to load scene from {}", path);
+		}
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
 	});
 }
 
@@ -658,7 +773,36 @@ void EngineContainerService::NewScene() {
 		m_cont->m_loaded_scenes_scenegraph_snapshot.clear();
 		SceneGraphNode root{};
 		root.m_entity_name = "Scene";
-		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid] = std::pair<SceneGraphNode, bool>(root, true);
+		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].first = std::make_shared<SceneGraphNode>(root);
+		m_cont->m_loaded_scenes_scenegraph_snapshot[rp::null_guid].second = true;
 		spdlog::info("EngineService: New Scene created");
+		TransformSystem().FixedUpdate(world);
+		Engine::GetRenderSystem().BuildBVH(world);
+		Engine::GetRenderSystem().BuildInteractableBVH(world);
 		});
+}
+
+void EngineContainerService::set_on_load()
+{
+	ExecuteOnEngineThread([]
+	{
+		Engine::SetOnLoadCallBack([](ecs::world& w)
+		{
+			BehaviourSystem::Instance().Reload();
+			
+		});
+	});
+}
+
+void EngineContainerService::set_on_unload()
+{
+	ExecuteOnEngineThread([]
+	{
+		Engine::SetOnUnloadCallBack([](ecs::world& w)
+		{
+			
+			BehaviourSystem::Instance().firstRun = true;
+			BehaviourSystem::Instance().unloaded = true;
+		});
+	});
 }

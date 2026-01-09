@@ -53,9 +53,18 @@ namespace rp{
 					Type v{};
 					std::size_t cont_sz{ read<std::size_t>() };
 					auto cont_view{ reflection::reflect(v) };
-					//no reserve because not all containers supports reserve
-					while (cont_sz--) {
-						cont_view.emplace(cont_view.cend(), read<decltype(cont_view)::underlying_type>());
+					using underlying_type = decltype(cont_view)::underlying_type;
+					//fast deserialization if trivial
+					if constexpr (cont_view.get_cont_traits().is_contiguous_v && std::is_trivially_copyable_v<underlying_type>) {
+						cont_view.resize(cont_sz);
+						m_ifs.read(reinterpret_cast<char*>(&(*cont_view.begin())), sizeof(underlying_type)*cont_sz);
+					}
+					else {
+						//this does not guarantees reserve mem, because not all containers supports reserve
+						cont_view.reserve(cont_sz);
+						while (cont_sz--) {
+							cont_view.emplace(cont_view.cend(), read<underlying_type>());
+						}
 					}
 					return v;
 				}
@@ -101,9 +110,18 @@ namespace rp{
 					Type v{};
 					std::size_t cont_sz{ read_blob<std::size_t>() };
 					auto cont_view{ reflection::reflect(v) };
-					//no reserve because not all containers supports reserve
-					while (cont_sz--) {
-						cont_view.emplace(cont_view.cend(), read_blob<decltype(cont_view)::underlying_type>());
+					using underlying_type = decltype(cont_view)::underlying_type;
+					//fast deserialization if trivial
+					if constexpr (cont_view.get_cont_traits().is_contiguous_v && std::is_trivially_copyable_v<underlying_type>) {
+						cont_view.resize(cont_sz);
+						blob_read_bytes(reinterpret_cast<char*>(&(*cont_view.begin())), sizeof(underlying_type) * cont_sz);
+					}
+					else {
+						//this does not guarantees reserve mem, because not all containers supports reserve
+						cont_view.reserve(cont_sz);
+						while (cont_sz--) {
+							cont_view.emplace(cont_view.cend(), read_blob<underlying_type>());
+						}
 					}
 					return v;
 				}
@@ -145,9 +163,16 @@ namespace rp{
 				else if constexpr (reflection::is_sequence_container_v<Type>) {
 					auto cont{ reflection::reflect(v) };
 					write(cont.size());
-					cont.each([&](auto const& field) {
-						write(field);
-						});
+					using underlying_type = decltype(cont)::underlying_type;
+					//fast serialization if trivial
+					if constexpr (cont.get_cont_traits().is_contiguous_v && std::is_trivially_copyable_v<underlying_type>){
+						m_ofs.write(reinterpret_cast<const char*>(&(*cont.begin())), sizeof(underlying_type)*cont.size());
+					}
+					else {
+						cont.each([&](auto const& field) {
+							write(field);
+							});
+					}
 				}
 				else if constexpr (std::is_class_v<Type>) {
 					reflection::reflect(v).each([&](auto const& field) {

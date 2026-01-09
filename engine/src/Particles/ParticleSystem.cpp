@@ -24,7 +24,7 @@ Technology is prohibited.
 #include "Ecs/ecs.h"
 #include "Manager/ResourceSystem.hpp"
 #include "Resources/Texture.h"
-
+#include "Profiler/profiler.hpp"
 
 void ParticleSystem::Init()
 {
@@ -33,18 +33,20 @@ void ParticleSystem::Init()
 
 void ParticleSystem::Update(ecs::world& world, float dt)
 {
+	PF_SYSTEM("ParticleSystem");
 	if (m_SceneRenderer == nullptr)
 	{
 		return;
 	}
 	//auto& registry = world.impl.get_registry();
 	//auto view = registry.view<ParticleComponent, TransformComponent>();
-	auto view = world.filter_entities<ParticleComponent, TransformComponent>();
+	auto view = world.filter_entities<ParticleComponent, TransformMtxComponent>();
 
 	for (auto& eachEntity : view)
 	{
 		ParticleComponent& particleComponent = eachEntity.get<ParticleComponent>();
-		TransformComponent& transformComponent = eachEntity.get<TransformComponent>();
+		TransformComponent transformComponent{};
+		eachEntity.get<TransformMtxComponent>().Decompose(&transformComponent.m_Scale, &transformComponent.m_Rotation, &transformComponent.m_Translation);
 		if (particleComponent.emitter == nullptr)
 		{
 			particleComponent.emitter = std::make_unique<ParticleEmitter>(particleComponent.config);

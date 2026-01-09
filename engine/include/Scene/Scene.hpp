@@ -31,6 +31,30 @@ struct SceneIDComponent {
 	std::uint32_t m_scene_id;
 };
 
+// Scene-level rendering settings
+struct SceneRenderSettings {
+	struct SkyboxSettings {
+		// Unity-style: Skybox uses 6 texture assets loaded through resource pipeline
+		// Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (back), -Z (front)
+		std::array<rp::Guid, 6> faceTextures = {
+			rp::null_guid, rp::null_guid, rp::null_guid,
+			rp::null_guid, rp::null_guid, rp::null_guid
+		};
+
+		bool enabled = false;                 // Enable/disable skybox
+		float exposure = 1.0f;                // HDR exposure multiplier (0.0 - 10.0)
+		glm::vec3 rotation = glm::vec3(0.0f); // Euler angles (XYZ rotation in degrees)
+		glm::vec3 tint = glm::vec3(1.0f);     // Color tint (RGB, 0.0 - 1.0)
+
+		// Runtime cache (not serialized) - generated cubemap texture ID
+		mutable unsigned int cachedCubemapID = 0;
+		mutable bool needsReload = true; // Flag to trigger cubemap reload when GUIDs change
+	} skybox;
+
+	glm::vec3 ambientLight = glm::vec3(0.1f);     // Ambient light color
+	glm::vec4 backgroundColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f); // Background clear color
+};
+
 struct SceneComponent {
 	rp::BasicIndexedGuid m_scene_guid{};
 };
@@ -109,6 +133,31 @@ struct Scene
 			deps.push_back(guid.to_hex());
 		}
 		root["scene"]["dependencies"] = deps;
+
+		// Serialize render settings (Unity-style skybox, etc.)
+		YAML::Node renderSettings;
+		YAML::Node skybox;
+		skybox["enabled"] = m_renderSettings.skybox.enabled;
+		skybox["exposure"] = m_renderSettings.skybox.exposure;
+		YAML::Node rotation;
+		rotation.push_back(m_renderSettings.skybox.rotation.x);
+		rotation.push_back(m_renderSettings.skybox.rotation.y);
+		rotation.push_back(m_renderSettings.skybox.rotation.z);
+		skybox["rotation"] = rotation;
+		YAML::Node tint;
+		tint.push_back(m_renderSettings.skybox.tint.x);
+		tint.push_back(m_renderSettings.skybox.tint.y);
+		tint.push_back(m_renderSettings.skybox.tint.z);
+		skybox["tint"] = tint;
+		// Serialize face texture GUIDs (resource pipeline)
+		YAML::Node faceTextures;
+		for (const auto& guid : m_renderSettings.skybox.faceTextures) {
+			faceTextures.push_back(guid.to_hex());
+		}
+		skybox["face_textures"] = faceTextures;
+		renderSettings["skybox"] = skybox;
+		root["render_settings"] = renderSettings;
+
 		entt::registry& reg{ ecs::world(m_scene_entities.begin()->second.get_world_handle()).impl.get_registry() };
 		for (auto const& [scn_uid, entity] : m_scene_entities) {
 			root["entities"].push_back(SerializeEntity<YAML::Node>(reg, static_cast<entt::entity>(entity.get_uid())));
@@ -132,6 +181,18 @@ struct Scene
 		return m_is_dirty;
 	}
 
+	inline SceneRenderSettings& GetRenderSettings() {
+		return m_renderSettings;
+	}
+
+	inline const SceneRenderSettings& GetRenderSettings() const {
+		return m_renderSettings;
+	}
+
+	inline rp::Guid GetGuid() const {
+		return m_guid;
+	}
+
 private:
 	rp::Guid m_guid{};
 	std::string m_name;
@@ -139,12 +200,27 @@ private:
 	std::uint32_t m_slot_ct{};
 	std::vector<rp::Guid> m_scene_dependencies;
 	bool m_is_dirty;
+	SceneRenderSettings m_renderSettings;
+
+
+	
 };
 
 struct SceneRegistry{
 private:
 	std::unordered_map<rp::Guid, Scene> m_loaded_scenes;
-	
+	rp::Guid m_active_scene_guid; // Currently active scene for rendering/editing
+	std::string m_SceneWorkingDir;
+	std::vector<std::string> m_scene_order;
+
+	bool scene_change_by_index = false;
+	bool scene_change_by_file = false;
+
+	uint32_t requested_index = -1;
+	std::string requested_file = "";
+
+
+
 public:
 	SceneRegistry() = default;
 	~SceneRegistry() {
@@ -154,7 +230,32 @@ public:
 	inline bool IsLoaded(rp::Guid scn_guid) {
 		return m_loaded_scenes.find(scn_guid) != m_loaded_scenes.end();
 	}
+
+
+	void RequestSceneChange(uint32_t index)
+	{
+		scene_change_by_index = true;
+		requested_index = index;
+
+		
+		
+	}
+
+	void RequestSceneChange(std::string const& path)
+	{
+		scene_change_by_file = true;
+		requested_file = path;
+		
+	}
+
+	void PollRequestSceneChange();
 	std::optional<std::reference_wrapper<Scene>> LoadScene(rp::Guid scn_guid);
+	std::optional<std::reference_wrapper<Scene>> LoadSceneFromPath(std::string const& path);
+	std::optional<std::reference_wrapper<Scene>> LoadSceneByIndex(unsigned index);
+
+	void GenerateManifest(std::vector<std::string>& scene_order);
+	void ReadManifest(std::string path);
+	void GetManifest(std::vector<std::string>& manifest);
 	void UnloadScene(rp::Guid scn_guid);
 	inline std::optional<std::reference_wrapper<Scene>> GetScene(rp::Guid scn_guid) {
 		auto it{ m_loaded_scenes.find(scn_guid) };
@@ -162,6 +263,33 @@ public:
 	}
 	inline std::unordered_map<rp::Guid, Scene> GetAllScenes() {
 		return m_loaded_scenes;
+	}
+
+	// Active scene management (Unity-style)
+	inline void SetActiveScene(rp::Guid scn_guid) {
+		if (IsLoaded(scn_guid)) {
+			m_active_scene_guid = scn_guid;
+		}
+	}
+	inline rp::Guid GetActiveSceneGuid() const {
+		return m_active_scene_guid;
+	}
+	inline std::optional<std::reference_wrapper<Scene>> GetActiveScene() {
+		if (m_active_scene_guid == rp::null_guid) {
+			// Return first loaded scene if no active scene set
+			if (!m_loaded_scenes.empty()) {
+				return std::make_optional(std::ref(m_loaded_scenes.begin()->second));
+			}
+			return std::nullopt;
+		}
+		return GetScene(m_active_scene_guid);
+	}
+
+	inline void SetSceneWorkingDir(const std::string& path) {
+		m_SceneWorkingDir = path;
+	}
+	inline std::string_view GetSceneWorkingDir() const {
+		return m_SceneWorkingDir;
 	}
 	void onCreateAssignToDefault(ecs::entity e);
 	void onCreateAssignSceneIDToDefault(ecs::entity e);

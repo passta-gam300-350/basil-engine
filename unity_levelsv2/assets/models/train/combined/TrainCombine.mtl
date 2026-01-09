@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.151885474)
+
+# Material file for TrainCombine
+# Generated for GAM300 Graphics Engine
+
+newmtl Train
+
+# Base color / diffuse map
+map_Kd Train_Combine_Train_BaseColor.png
+
+# Normal map
+map_Bump Train_Combine_Train_Normal.png
+bump Train_Combine_Train_Normal.png
+
+# Metallic map
+map_Ks Train_Combine_Train_Metallic.png
+
+# Roughness map
+map_Ns Train_Combine_Train_Roughness.png
+
+# Emissive map
+map_Ke Train_Combine_Train_Emissive.png
+
+# Height / displacement map
+map_d Train_Combine_Train_Height.png
+disp Train_Combine_Train_Height.png
+
+kd 0.5 0.5 0.5
+illum 1
+

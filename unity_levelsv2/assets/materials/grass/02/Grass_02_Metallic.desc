@@ -1,0 +1,7 @@
+base:
+  m_guid: 2120c98573f6b5986a28f24485ad
+  m_importer: .texture
+  m_source: materials\grass\02\Grass_02_Metallic.png
+  m_name: Grass_02_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

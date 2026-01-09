@@ -156,6 +156,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&rp::BasicIndexedGuid::m_typeindex, "Type Index">
 	);*/
 
+	RegisterReflectionComponent<MeshRendererComponent::PrimitiveType>("PrimitiveType");
+
 	RegisterReflectionComponent<MeshRendererComponent>(
 		"MeshRendererComponent",
 		MemberRegistrationV<&MeshRendererComponent::m_PrimitiveType, "m_PrimitiveType">,
@@ -164,6 +166,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&MeshRendererComponent::m_MeshGuid, "m_MeshGuid">,
 		MemberRegistrationV<&MeshRendererComponent::m_MaterialGuid, "m_MaterialGuid">
 	);
+
+	RegisterReflectionComponent<Light::Type>("Light Type");
 
 	RegisterReflectionComponent<LightComponent>(
 		"LightComponent",
@@ -177,6 +181,9 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&LightComponent::m_InnerCone, "[Spot] Inner Cone Angle">,
 		MemberRegistrationV<&LightComponent::m_OuterCone, "[Spot] Outer Cone Angle">
 	);
+
+	// Register CameraComponent enum type
+	RegisterReflectionComponent<CameraComponent::CameraType>("CameraComponent::CameraType");
 
 	RegisterReflectionComponent<CameraComponent>(
 		"CameraComponent",
@@ -223,5 +230,20 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
 		MemberRegistrationV<&AudioComponent::position, "position">,
 		MemberRegistrationV<&AudioComponent::velocity, "velocity">
+	);
+
+	// Register HUDComponent anchor enum
+	RegisterReflectionComponent<HUDComponent::Anchor>("HUDComponent::Anchor");
+
+	RegisterReflectionComponent<HUDComponent>(
+		"HUDComponent",
+		MemberRegistrationV<&HUDComponent::m_TextureGuid, "m_TextureGuid">,
+		MemberRegistrationV<&HUDComponent::position, "position">,
+		MemberRegistrationV<&HUDComponent::size, "size">,
+		MemberRegistrationV<&HUDComponent::anchor, "anchor">,
+		MemberRegistrationV<&HUDComponent::color, "color">,
+		MemberRegistrationV<&HUDComponent::rotation, "rotation">,
+		MemberRegistrationV<&HUDComponent::layer, "layer">,
+		MemberRegistrationV<&HUDComponent::visible, "visible">
 	);
 }

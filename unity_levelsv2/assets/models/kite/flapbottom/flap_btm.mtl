@@ -1,0 +1,33 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+newmtl flap_btm_mat
+
+# Base color / diffuse map
+map_Kd flap_btm_mat_BaseColor.png
+
+# Normal map
+map_Bump flap_btm_mat_Normal.png
+bump flap_btm_mat_Normal.png
+
+# Metallic map
+map_Ks flap_btm_mat_Metallic.png
+
+# Roughness map
+map_Ns flap_btm_mat_Roughness.png
+
+# Emissive map
+map_Ke flap_btm_mat_Emissive.png
+
+# Height / displacement map
+map_d flap_btm_mat_Height.png
+disp flap_btm_mat_Height.png
+
+kd 0.6 0.6 0.6
+ka 1 1 1
+ks 0.5 0.5 0.5
+ke 0 0 0
+d 1
+Ns 800
+illum 2
+

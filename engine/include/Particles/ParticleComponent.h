@@ -28,7 +28,7 @@ struct ParticleComponent
 {
 	ParticleEmitterConfiguration config; // serializable
 	//std::shared_ptr<Texture> texture = nullptr;
-	rp::Guid texture;
+	rp::Guid texture{};
 	BlendMode blendSettings = BlendMode::Alpha;
 	bool depthWrite = false;
 	uint32_t renderLayer = 10;
@@ -96,8 +96,8 @@ RegisterReflectionTypeEnd
 RegisterReflectionTypeBegin(ParticleComponent, "ParticleComponent")
 	MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
 	MemberRegistrationV<&ParticleComponent::texture, "Texture">,
-	MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
 	MemberRegistrationV<&ParticleComponent::autoPlay, "AutoPlay">,
-	MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">,
-	MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
+	MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">
+	//MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
+	//MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
 RegisterReflectionTypeEnd

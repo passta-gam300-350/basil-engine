@@ -13,6 +13,10 @@ namespace BasilEngine
     [Disabled]
     public enum KeyCode
     {
+        LEFT_MOUSE = 0,
+        RIGHT_MOUSE = 1,
+        MIDDLE_MOUSE = 2,
+
         SPACE = 32,
         APOSTROPHE = 39,
         COMMA = 44,
@@ -139,6 +143,9 @@ namespace BasilEngine
 
     [NativeClass("Input")]
     [NativeHeader("Bindings/ManagedInput.hpp")]
+    /// <summary>
+    /// Provides access to keyboard and mouse state from the native input system.
+    /// </summary>
     public static class Input
     {
         
@@ -164,6 +171,11 @@ namespace BasilEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("GetMousePosition")]
         [StaticAccessor("ManagedInput", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Retrieves the current mouse position from the native input system.
+        /// </summary>
+        /// <param name="x">Receives the X coordinate.</param>
+        /// <param name="y">Receives the Y coordinate.</param>
         public static extern void GetMouseScreenPosInternal(out float x, out float y);
 
         /// <summary>
@@ -185,7 +197,29 @@ namespace BasilEngine
             return GetKeyOnce((int)key);
         }
 
+        /// <summary>
+        /// Checks whether a mouse button is currently held.
+        /// </summary>
+        /// <param name="key">Mouse button index.</param>
+        /// <returns>True if the button is down.</returns>
+        public static bool GetMouse(int key)
+        {
+            return GetKeyInternal(key);
+        }
 
+        /// <summary>
+        /// Checks whether a mouse button was pressed this frame.
+        /// </summary>
+        /// <param name="key">Mouse button index.</param>
+        /// <returns>True if the button was pressed this frame.</returns>
+        public static bool GetMouseDown(int key)
+        {
+            return GetKeyOnce(key);
+        }
+
+        /// <summary>
+        /// Current mouse position in screen coordinates.
+        /// </summary>
         public static Vector2 mousePosition
         {
             get

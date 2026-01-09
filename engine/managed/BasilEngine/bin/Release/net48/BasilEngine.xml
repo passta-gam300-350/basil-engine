@@ -1,0 +1,1520 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BasilEngine</name>
+    </assembly>
+    <members>
+        <member name="M:BasilEngine.Class1.Add(System.Int32,System.Int32)">
+            <summary>
+            Adds two integers using a native implementation.
+            </summary>
+            <param name="a">First operand.</param>
+            <param name="b">Second operand.</param>
+            <returns>Sum of <paramref name="a"/> and <paramref name="b"/>.</returns>
+        </member>
+        <member name="M:BasilEngine.Class1.AddNat(System.Int32,System.Int32)">
+            <summary>
+            Adds two integers using a managed stub implementation.
+            </summary>
+            <param name="a">First operand.</param>
+            <param name="b">Second operand.</param>
+            <returns>Sum of the inputs.</returns>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.Volume">
+            <summary>
+            Volume multiplier for this audio source.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.Looping">
+            <summary>
+            Whether the audio should loop when it reaches the end.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Audio.Play">
+            <summary>
+            Starts playback.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Audio.Pause">
+            <summary>
+            Pauses playback.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Audio.Stop">
+            <summary>
+            Stops playback and resets the cursor to the start.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Camera.CameraType">
+            <summary>
+            Projection type used by the camera.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.Camera.CameraType.ORTHOGRAPHIC">
+            <summary>
+            Orthographic projection.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.Camera.CameraType.PERSPECTIVE">
+            <summary>
+            Perspective projection.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Camera.active">
+            <summary>
+            Indicates whether the camera is active (not yet wired).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Camera.type">
+            <summary>
+            Projection type of the camera.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Camera.fov">
+            <summary>
+            Field of view in degrees for perspective cameras.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Camera.AspectRatio">
+            <summary>
+            Aspect ratio of the camera's projection.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Camera.near">
+            <summary>
+            Near clipping plane distance.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Camera.far">
+            <summary>
+            Far clipping plane distance.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Camera.ScreenToWorldPoint(BasilEngine.Mathematics.Vector2,System.Single)">
+            <summary>
+            Converts a screen point to a world-space position at a given depth.
+            </summary>
+            <param name="screenPoint">Screen coordinates.</param>
+            <param name="depth">Distance from the near plane in world units.</param>
+            <returns>Point in world space.</returns>
+        </member>
+        <member name="M:BasilEngine.Components.Camera.ScreenPointToRay(BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Creates a world-space ray from a screen position.
+            </summary>
+            <param name="screenPoint">Screen coordinates.</param>
+            <returns>Ray originating from the camera through the screen point.</returns>
+        </member>
+        <member name="M:BasilEngine.Components.Component.#ctor">
+            <summary>
+            Creates a component wrapper and registers the component type with the native engine.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Component.#ctor(System.UInt64)">
+            <summary>
+            Creates a component wrapper bound to an existing native object.
+            </summary>
+            <param name="handle">Native object handle.</param>
+        </member>
+        <member name="F:BasilEngine.Components.Component.typeID">
+            <summary>
+            Identifies a component type in the native engine.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Component.gameObject">
+            <summary>
+            The <see cref="T:BasilEngine.GameObject"/> this component is attached to.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Component.transform">
+            <summary>
+            Cached transform for the owning game object.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Component.tag">
+            <summary>
+            User-defined tag string.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Component.Enabled">
+            <summary>
+            Indicates if the component is enabled and should execute in the engine.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Component.GetComponent``1">
+            <summary>
+            Retrieves a component of the specified type from the same game object.
+            </summary>
+            <typeparam name="T">Component type to query.</typeparam>
+            <returns>An instance of <typeparamref name="T"/> if found; otherwise null.</returns>
+        </member>
+        <member name="T:BasilEngine.Components.Light.LightType">
+            <summary>
+            Types of lights supported by the engine.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.type">
+            <summary>
+            Gets or sets the light type.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.enabled">
+            <summary>
+            Enables or disables light contribution.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.color">
+            <summary>
+            Light color as a vector.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.colorR">
+            <summary>
+            Red component of the light color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.colorG">
+            <summary>
+            Green component of the light color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.colorB">
+            <summary>
+            Blue component of the light color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.intensity">
+            <summary>
+            Brightness multiplier of the light.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.direction">
+            <summary>
+            Direction of the light (used for directional and spot lights).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.dirX">
+            <summary>
+            X component of the light direction.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.dirY">
+            <summary>
+            Y component of the light direction.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.dirZ">
+            <summary>
+            Z component of the light direction.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.range">
+            <summary>
+            Effective range of the light.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.innerConeDeg">
+            <summary>
+            Inner cone angle in degrees for spot lights.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Light.outerConeDeg">
+            <summary>
+            Outer cone angle in degrees for spot lights.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Light.SetCones(System.Single,System.Single)">
+            <summary>
+            Sets both inner and outer cone angles at once.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Particle.EmissionType">
+            <summary>
+            Shapes supported for particle emission.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Particle.BlendMode">
+            <summary>
+            Blending modes for rendered particles.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Particle.Play">
+            <summary>
+            Starts the particle simulation.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Particle.Stop">
+            <summary>
+            Stops emission but keeps existing particles alive.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Particle.Reset">
+            <summary>
+            Stops and clears all particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.isPlaying">
+            <summary>
+            Indicates whether the system is currently emitting.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.isAlive">
+            <summary>
+            Indicates whether any particles are alive.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.activeCount">
+            <summary>
+            Number of currently active particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.autoPlay">
+            <summary>
+            Automatically starts playback when the component is enabled.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.blend">
+            <summary>
+            Blending mode used when rendering particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.depthWrite">
+            <summary>
+            Whether particles write to the depth buffer.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.renderLayer">
+            <summary>
+            Render layer mask applied to particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.emissionType">
+            <summary>
+            Shape from which particles are emitted.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.emitterSize">
+            <summary>
+            Size of the emitter when using box emission.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.sphereRadius">
+            <summary>
+            Radius when using spherical emission.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.emissionRate">
+            <summary>
+            Number of particles emitted per second.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.maxParticles">
+            <summary>
+            Maximum number of particles alive at once.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.looping">
+            <summary>
+            Whether the system restarts automatically after finishing.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.duration">
+            <summary>
+            Duration in seconds before the system stops emitting.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.minLifetime">
+            <summary>
+            Minimum lifetime of spawned particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.maxLifetime">
+            <summary>
+            Maximum lifetime of spawned particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.startColor">
+            <summary>
+            Initial color of spawned particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.endColor">
+            <summary>
+            Color particles transition to over their lifetime.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.startSize">
+            <summary>
+            Initial particle size.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.endSize">
+            <summary>
+            Final particle size at the end of its lifetime.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.startRotation">
+            <summary>
+            Initial rotation of spawned particles in degrees.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.rotationSpeed">
+            <summary>
+            Rotation speed applied over the particle's lifetime.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.startVelocity">
+            <summary>
+            Initial velocity assigned to new particles.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.velocityRandomness">
+            <summary>
+            Randomness applied to the starting velocity magnitude.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Particle.acceleration">
+            <summary>
+            Constant acceleration applied to particles.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.ForceMode.Force">
+            <summary>
+            Continuous force considering mass and timestep.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.ForceMode.Impulse">
+            <summary>
+            Instant impulse applied at once.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.ForceMode.Acceleration">
+            <summary>
+            Continuous acceleration ignoring mass.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.ForceMode.VelocityChange">
+            <summary>
+            Instant velocity change ignoring mass.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Rigidbody.MotionType">
+            <summary>
+            Describes how the rigidbody is simulated.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.Rigidbody.MotionType.Static">
+            <summary>
+            Body does not move.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.Rigidbody.MotionType.Dynamic">
+            <summary>
+            Body is fully simulated by physics.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Components.Rigidbody.MotionType.Kinematic">
+            <summary>
+            Body is moved kinematically by user code.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.motionType">
+            <summary>
+            Gets or sets the motion type.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.velocity">
+            <summary>
+            Linear velocity of the rigidbody.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.Gravity">
+            <summary>
+            Gravity multiplier applied to this body.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.IsKinematic">
+            <summary>
+            Whether the body is kinematic.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.UseGravity">
+            <summary>
+            Whether gravity affects the body.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.Mass">
+            <summary>
+            Mass of the rigidbody.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.Drag">
+            <summary>
+            Linear drag coefficient.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.AngularDrag">
+            <summary>
+            Angular drag coefficient.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.Friction">
+            <summary>
+            Surface friction coefficient.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.FreezeX">
+            <summary>
+            Locks translation on the X axis.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.FreezeY">
+            <summary>
+            Locks translation on the Y axis.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.FreezeZ">
+            <summary>
+            Locks translation on the Z axis.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.FreezeRotX">
+            <summary>
+            Locks rotation around the X axis.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.FreezeRotY">
+            <summary>
+            Locks rotation around the Y axis.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.FreezeRotZ">
+            <summary>
+            Locks rotation around the Z axis.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.LinearDamping">
+            <summary>
+            Linear damping applied each update.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Rigidbody.AngularVelocity">
+            <summary>
+            Angular velocity of the rigidbody.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Rigidbody.MovePosition(BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Moves the rigidbody to a position using interpolation.
+            </summary>
+            <param name="position">Target world position.</param>
+        </member>
+        <member name="M:BasilEngine.Components.Rigidbody.AddForce(BasilEngine.Mathematics.Vector3,BasilEngine.Components.ForceMode)">
+            <summary>
+            Applies a force to the rigidbody.
+            </summary>
+            <param name="force">Force vector.</param>
+            <param name="mode">Force application mode.</param>
+        </member>
+        <member name="P:BasilEngine.Components.Transform.position">
+            <summary>
+            World position of the transform.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Transform.rotation">
+            <summary>
+            Euler rotation of the transform in degrees.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Transform.scale">
+            <summary>
+            Local scale of the transform.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Transform.#ctor(System.UInt64)">
+            <summary>
+            Creates a managed transform bound to an existing native object.
+            </summary>
+            <param name="handle">Native game object handle.</param>
+        </member>
+        <member name="P:BasilEngine.Components.Transform.forward">
+            <summary>
+            Forward direction of the transform in world space.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Transform.right">
+            <summary>
+            Right direction of the transform in world space.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Transform.up">
+            <summary>
+            Up direction of the transform in world space.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Debug.Logger.Log(System.Object)">
+            <summary>
+            Logs an informational message.
+            </summary>
+            <param name="message">Message to record.</param>
+        </member>
+        <member name="M:BasilEngine.Debug.Logger.Warn(System.Object)">
+            <summary>
+            Logs a warning message.
+            </summary>
+            <param name="message">Message to record.</param>
+        </member>
+        <member name="M:BasilEngine.Debug.Logger.Error(System.Object)">
+            <summary>
+            Logs an error message.
+            </summary>
+            <param name="message">Message to record.</param>
+        </member>
+        <member name="T:BasilEngine.GameObject">
+            <summary>
+            Represents a game object in the Basil Engine.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.GameObject.transform">
+            <summary>
+            Cached <see cref="T:BasilEngine.Components.Transform"/> for this game object.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.GameObject.visibility">
+            <summary>
+            Controls whether the object is rendered.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.GameObject.activeSelf">
+            <summary>
+            Indicates whether the object is marked active in the engine.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.GameObject.activeInHierarchy">
+            <summary>
+            Indicates whether the object is active considering its parent hierarchy.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.GameObject.isStatic">
+            <summary>
+            Indicates whether the object is treated as static by the engine.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.GameObject.layer">
+            <summary>
+            Rendering or collision layer assigned to this object.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.GameObject.#ctor(System.UInt64)">
+            <summary>
+            Creates a managed wrapper for an existing native game object.
+            </summary>
+            <param name="handle">Native handle supplied by the engine.</param>
+        </member>
+        <member name="M:BasilEngine.GameObject.Find(System.String)">
+            <summary>
+            Finds a game object by name.
+            </summary>
+            <param name="name">Name of the game object to locate.</param>
+            <returns>A managed <see cref="T:BasilEngine.GameObject"/> wrapper or null if no match is found.</returns>
+        </member>
+        <member name="M:BasilEngine.GameObject.Destroy(BasilEngine.GameObject)">
+            <summary>
+            Destroys a game object instance.
+            </summary>
+            <param name="obj">Object to delete.</param>
+        </member>
+        <member name="T:BasilEngine.KeyCode">
+            <summary>
+            The keycodes for the input class.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Input.GetKeyInternal(System.Int32)">
+            <summary>
+             Check for key press or held.
+            </summary>
+            <param name="key"> The keycode to check </param>
+            <returns>A bool to represent if the key is held down </returns>
+        </member>
+        <member name="M:BasilEngine.Input.GetKeyOnce(System.Int32)">
+            <summary>
+            Check for key press.
+            </summary>
+            <param name="key"> The keycode to check  </param>
+            <returns>A bool to represent if the key is held down </returns>
+        </member>
+        <member name="M:BasilEngine.Input.GetKey(BasilEngine.KeyCode)">
+            <summary>
+            Get key held down.
+            </summary>
+            <param name="key">The keycode to get </param>
+            <returns> If the key is held or not.</returns>
+        </member>
+        <member name="M:BasilEngine.Input.GetKeyPress(BasilEngine.KeyCode)">
+            <summary>
+            The key press.
+            </summary>
+            <param name="key">The key to check if it is pressed.</param>
+            <returns>true if pressed else false</returns>
+        </member>
+        <member name="M:BasilEngine.Input.GetMouse(System.Int32)">
+            <summary>
+            Checks whether a mouse button is currently held.
+            </summary>
+            <param name="key">Mouse button index.</param>
+            <returns>True if the button is down.</returns>
+        </member>
+        <member name="M:BasilEngine.Input.GetMouseDown(System.Int32)">
+            <summary>
+            Checks whether a mouse button was pressed this frame.
+            </summary>
+            <param name="key">Mouse button index.</param>
+            <returns>True if the button was pressed this frame.</returns>
+        </member>
+        <member name="P:BasilEngine.Input.mousePosition">
+            <summary>
+            Current mouse position in screen coordinates.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Mathf.PI">
+            <summary>
+            The constant value of pi.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Mathf.Deg2Rad">
+            <summary>
+            Conversion multiplier from degrees to radians.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Mathf.Rad2Deg">
+            <summary>
+            Conversion multiplier from radians to degrees.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Mathf.Epsilon">
+            <summary>
+            Smallest positive non-zero value greater than zero.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Mathf.Infinity">
+            <summary>
+            Represents positive infinity.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Mathf.NegativeInfinity">
+            <summary>
+            Represents negative infinity.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Abs(System.Single)">
+            <summary>
+            Gets the absolute value of a float.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Absolute value of the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Sin(System.Single)">
+            <summary>
+            Calculates the sine of an angle in radians.
+            </summary>
+            <param name="radians">Angle in radians.</param>
+            <returns>Sine of the input angle.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Cos(System.Single)">
+            <summary>
+            Calculates the cosine of an angle in radians.
+            </summary>
+            <param name="radians">Angle in radians.</param>
+            <returns>Cosine of the input angle.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.DeltaAngle(System.Single,System.Single)">
+            <summary>
+            Calculates the shortest delta between two angles in degrees.
+            </summary>
+            <param name="current">Current angle.</param>
+            <param name="target">Target angle.</param>
+            <returns>Signed minimal angle difference.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Acos(System.Single)">
+            <summary>
+            Calculates the arccosine of a value.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Angle in radians whose cosine is the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Asin(System.Single)">
+            <summary>
+            Calculates the arcsine of a value.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Angle in radians whose sine is the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Atan(System.Single)">
+            <summary>
+            Calculates the arctangent of a value.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Angle in radians whose tangent is the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Atan2(System.Single,System.Single)">
+            <summary>
+            Calculates the angle whose tangent is the quotient of two numbers.
+            </summary>
+            <param name="y">Y component.</param>
+            <param name="x">X component.</param>
+            <returns>Angle in radians between the positive X-axis and the point.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Approximately(System.Single,System.Single)">
+            <summary>
+            Determines whether two floats are approximately equal.
+            </summary>
+            <param name="a">First value.</param>
+            <param name="b">Second value.</param>
+            <returns>True if the values are within a small epsilon.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Ceil(System.Single)">
+            <summary>
+            Returns the smallest integral value greater than or equal to the specified number.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Ceiling of the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.CeilToInt(System.Single)">
+            <summary>
+            Returns the smallest integral value greater than or equal to the specified number as an int.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Ceiling of the input as an int.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Clamp(System.Single,System.Single,System.Single)">
+            <summary>
+            Clamps a float between a minimum and maximum value.
+            </summary>
+            <param name="value">Input value.</param>
+            <param name="min">Minimum allowed value.</param>
+            <param name="max">Maximum allowed value.</param>
+            <returns>Clamped value.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Clamp(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Clamps an int between a minimum and maximum value.
+            </summary>
+            <param name="value">Input value.</param>
+            <param name="min">Minimum allowed value.</param>
+            <param name="max">Maximum allowed value.</param>
+            <returns>Clamped value.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Clamp01(System.Single)">
+            <summary>
+            Clamps a value between 0 and 1.
+            </summary>
+            <param name="result">Input value.</param>
+            <returns>Value clamped to the [0,1] range.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.ClosestPowerOfTwo(System.Int32)">
+            <summary>
+            Finds the closest power of two that is greater than or equal to the specified value.
+            </summary>
+            <param name="value">Input value.</param>
+            <returns>Next power of two.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.CorrelatedColorTemperatureToRGB(System.Single)">
+            <summary>
+            Converts a correlated color temperature in Kelvin to an RGB color.
+            </summary>
+            <param name="kelvin">Temperature in Kelvin.</param>
+            <returns>RGB color approximating the temperature.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Exp(System.Single)">
+            <summary>
+            Returns e raised to the specified power.
+            </summary>
+            <param name="power">Exponent to raise e to.</param>
+            <returns>Result of e^power.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.FloatToHalf(System.Single)">
+            <summary>
+            Converts a float into an unsigned 16-bit value representing the high 16 bits.
+            </summary>
+            <param name="f">Float to convert.</param>
+            <returns>High 16 bits of the float.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Floor(System.Single)">
+            <summary>
+            Returns the largest integer less than or equal to the specified value.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Floor of the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.FloorToInt(System.Single)">
+            <summary>
+            Returns the largest integer less than or equal to the specified value as an int.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Floor of the input as an int.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.GammaToLinearSpace(System.Single)">
+            <summary>
+            Converts a value from gamma (sRGB) to linear space.
+            </summary>
+            <param name="f">Gamma-space value.</param>
+            <returns>Linear-space value.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.HalfToFloat(System.UInt16)">
+            <summary>
+            Converts the high 16 bits of an integer into a float.
+            </summary>
+            <param name="val">Half value.</param>
+            <returns>Converted float.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.InverseLerp(System.Single,System.Single,System.Single)">
+            <summary>
+            Calculates the linear parameter that produces the interpolant value within the range [a, b].
+            </summary>
+            <param name="a">Range start.</param>
+            <param name="b">Range end.</param>
+            <param name="value">Value within the range.</param>
+            <returns>Normalized position between 0 and 1.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.IsPowerOfTwo(System.Int32)">
+            <summary>
+            Determines if a value is a power of two.
+            </summary>
+            <param name="value">Input value.</param>
+            <returns>True if the value is a power of two.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Lerp(System.Single,System.Single,System.Single)">
+            <summary>
+            Linearly interpolates between two values with clamping.
+            </summary>
+            <param name="a">Start value.</param>
+            <param name="b">End value.</param>
+            <param name="t">Interpolation factor in [0,1].</param>
+            <returns>Interpolated value.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.LerpAngle(System.Single,System.Single,System.Single)">
+            <summary>
+            Interpolates between two angles taking the shortest path.
+            </summary>
+            <param name="a">Start angle in degrees.</param>
+            <param name="b">End angle in degrees.</param>
+            <param name="t">Interpolation factor in [0,1].</param>
+            <returns>Interpolated angle in degrees.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.LerpUnclamped(System.Single,System.Single,System.Single)">
+            <summary>
+            Linearly interpolates between two values without clamping the interpolation factor.
+            </summary>
+            <param name="a">Start value.</param>
+            <param name="b">End value.</param>
+            <param name="t">Interpolation factor.</param>
+            <returns>Interpolated value.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.LinearToGammaSpace(System.Single)">
+            <summary>
+            Converts a value from linear space to gamma (sRGB) space.
+            </summary>
+            <param name="f">Linear-space value.</param>
+            <returns>Gamma-space value.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Log(System.Single)">
+            <summary>
+            Natural logarithm of a specified value.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Natural log of the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Log10(System.Single)">
+            <summary>
+            Base-10 logarithm of a specified value.
+            </summary>
+            <param name="f">Input value.</param>
+            <returns>Log base 10 of the input.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Max(System.Single,System.Single)">
+            <summary>
+            Returns the larger of two floating-point numbers.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Min(System.Single,System.Single)">
+            <summary>
+            Returns the smaller of two floating-point numbers.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.MoveTowards(System.Single,System.Single,System.Single)">
+            <summary>
+            Moves a value towards a target by a maximum change.
+            </summary>
+            <param name="current">Current value.</param>
+            <param name="target">Target value.</param>
+            <param name="maxDelta">Maximum change allowed.</param>
+            <returns>New value after applying the move.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.MoveTowardsAngle(System.Single,System.Single,System.Single)">
+            <summary>
+            Moves an angle towards a target angle by a maximum change, accounting for wraparound.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.NextPowerOfTwo(System.Int32)">
+            <summary>
+            Returns the smallest power of two that is greater than or equal to the specified value.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.PingPong(System.Single,System.Single)">
+            <summary>
+            Ping-pongs a value between 0 and length.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Pow(System.Single,System.Single)">
+            <summary>
+            Raises a number to a specified power.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Repeat(System.Single,System.Single)">
+            <summary>
+            Repeats a value in the range [0, length).
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Round(System.Single)">
+            <summary>
+            Rounds a value to the nearest integer.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.RoundToInt(System.Single)">
+            <summary>
+            Rounds a value to the nearest integer and returns it as an int.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Sign(System.Single)">
+            <summary>
+            Gets the sign of a value.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.SmoothDamp(System.Single,System.Single,System.Single@,System.Single,System.Single,System.Single)">
+            <summary>
+            Smoothly damps a value towards a target using a critically damped spring function.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.SmoothDampAngle(System.Single,System.Single,System.Single@,System.Single,System.Single,System.Single)">
+            <summary>
+            Smoothly damps an angle towards a target angle using a critically damped spring function.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.SmoothStep(System.Single,System.Single,System.Single)">
+            <summary>
+            Interpolates between two values using a smooth cubic curve.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Sqrt(System.Single)">
+            <summary>
+            Returns the square root of a value.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Mathf.Tan(System.Single)">
+            <summary>
+            Returns the tangent of the specified angle in radians.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector2.x">
+            <summary>
+            X component of the vector.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector2.y">
+            <summary>
+            Y component of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.Distance(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Get the distance between two vectors.
+            </summary>
+            <param name="a">The lhs vector</param>
+            <param name="b">The rhs vector</param>
+            <returns>The distane between the two vector.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.ToString">
+            <summary>
+            Convert the vector to a string.
+            </summary>
+            <returns>A string representaiton of the vector.</returns>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector2.magnitude">
+            <summary>
+            The magnitude of the vector.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector2.magnitudeSqr">
+            <summary>
+            The magnitude of the vector squared.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.#ctor(System.Single,System.Single)">
+            <summary>
+            Create a vector with x and y.
+            </summary>
+            <param name="x">The x value</param>
+            <param name="y">The y value</param>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.op_Addition(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Adds two vectors component-wise.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.op_Subtraction(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Subtracts two vectors component-wise.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.op_Multiply(BasilEngine.Mathematics.Vector2,System.Single)">
+            <summary>
+            Multiplies a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.op_Multiply(System.Single,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Multiplies a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.op_Division(BasilEngine.Mathematics.Vector2,System.Single)">
+            <summary>
+            Divides a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.op_Multiply(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Dot product of two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.Dot(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Dot product between two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.Cross(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2)">
+            <summary>
+            Cross product of two vectors.
+            </summary>
+            <param name="a">LHS vector</param>
+            <param name="b">RHS vector</param>
+            <returns>A float value for 2d vector</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.Magnitude">
+            <summary>
+            Magnitude of the vector.
+            </summary>
+            <returns>The magnitude</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.MagnitudeSqr">
+            <summary>
+            Get the magnitude squared.
+            </summary>
+            <returns>Magnitude squared of the vector</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.Normalize">
+            <summary>
+            Normalize the vector.
+            </summary>
+            <returns>Get the normalized vector</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.Lerp(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2,System.Single)">
+            <summary>
+            Linearly interpolates between two vectors.
+            </summary>
+            <param name="a">Start vector.</param>
+            <param name="b">End vector.</param>
+            <param name="t">Interpolation factor.</param>
+            <returns>Interpolated vector.</returns>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector2.SmoothDamp(BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2,BasilEngine.Mathematics.Vector2@,System.Single,System.Single,System.Single)">
+            <summary>
+            Gradually changes a vector towards a desired goal.
+            </summary>
+            <param name="current">Current value.</param>
+            <param name="target">Target value.</param>
+            <param name="currentVelocity">Current velocity, modified by the function.</param>
+            <param name="smoothTime">Approximate time to reach the target.</param>
+            <param name="maxSpeed">Maximum speed allowed.</param>
+            <param name="deltaTime">Time since last update.</param>
+            <returns>New vector after damping.</returns>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector3.x">
+            <summary>
+            X component of the vector.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector3.y">
+            <summary>
+            Y component of the vector.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector3.z">
+            <summary>
+            Z component of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.#ctor(System.Single,System.Single,System.Single)">
+            <summary>
+            Initializes a new <see cref="T:BasilEngine.Mathematics.Vector3"/>.
+            </summary>
+            <param name="x">X component.</param>
+            <param name="y">Y component.</param>
+            <param name="z">Z component.</param>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector3.Zero">
+            <summary>
+            Vector representing (0,0,0).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector3.Up">
+            <summary>
+            Up vector (0,1,0).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector3.Right">
+            <summary>
+            Right vector (1,0,0).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector3.Forward">
+            <summary>
+            Forward vector (0,0,1).
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Addition(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Adds two vectors component-wise.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Subtraction(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Subtracts two vectors component-wise.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Multiply(BasilEngine.Mathematics.Vector3,System.Single)">
+            <summary>
+            Multiplies a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Division(BasilEngine.Mathematics.Vector3,System.Single)">
+            <summary>
+            Divides a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Multiply(System.Single,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Multiplies a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_UnaryNegation(BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Negates a vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Increment(BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Increments each component by 1.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.op_Decrement(BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Decrements each component by 1.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.Dot(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Calculates the dot product of two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.Cross(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Calculates the cross product of two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.Magnitude">
+            <summary>
+            Magnitude (length) of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.MagnitudeSqr">
+            <summary>
+            Squared magnitude of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.Normalize">
+            <summary>
+            Returns a normalized copy of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.Distance(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Distance between two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.DistanceSqr(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Squared distance between two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector3.Lerp(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3,System.Single)">
+            <summary>
+            Linearly interpolates between two vectors with clamping.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.NativeObject.NativeID">
+            <summary>
+            Unique identifier assigned by the native engine for this object instance.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Physics.Raycast(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3,BasilEngine.RaycastHit@,System.Single,System.Boolean)">
+            <summary>
+            Casts a ray in the physics world.
+            </summary>
+            <param name="origin">World-space origin of the ray.</param>
+            <param name="direction">Normalized direction to cast along.</param>
+            <param name="hit">Information about the hit if one occurred.</param>
+            <param name="maxDistance">Maximum distance the ray should travel.</param>
+            <param name="ignoreTriggers">True to ignore trigger colliders.</param>
+            <returns>True if the ray intersected a collider.</returns>
+        </member>
+        <member name="F:BasilEngine.Ray.origin">
+            <summary>
+            Starting point of the ray in world space.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Ray.direction">
+            <summary>
+            Direction vector of the ray (should be normalized).
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Ray.#ctor(BasilEngine.Mathematics.Vector3,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Initializes a new <see cref="T:BasilEngine.Ray"/>.
+            </summary>
+            <param name="origin">Ray origin.</param>
+            <param name="direction">Ray direction.</param>
+        </member>
+        <member name="F:BasilEngine.RaycastHit.entity">
+            <summary>
+            Game object hit by the ray.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.RaycastHit.point">
+            <summary>
+            Point of intersection in world space.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.RaycastHit.normal">
+            <summary>
+            Surface normal at the point of impact.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.RaycastHit.distance">
+            <summary>
+            Distance from the ray origin to the hit point.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.RaycastHit.hasHit">
+            <summary>
+            Non-zero if the ray registered a hit.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.RaycastHit.isTrigger">
+            <summary>
+            Non-zero if the collider hit was a trigger.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.RaycastHit.Hit">
+            <summary>
+            Gets a value indicating whether the ray intersected any collider.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.RaycastHit.Trigger">
+            <summary>
+            Gets a value indicating whether the hit collider was a trigger.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color.#ctor(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Initializes a new <see cref="T:BasilEngine.Rendering.Color"/>.
+            </summary>
+            <param name="r">Red component (0-1).</param>
+            <param name="g">Green component (0-1).</param>
+            <param name="b">Blue component (0-1).</param>
+            <param name="a">Alpha component (0-1).</param>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.R">
+            <summary>
+            Red component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.G">
+            <summary>
+            Green component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.B">
+            <summary>
+            Blue component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.A">
+            <summary>
+            Alpha component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.White">
+            <summary>
+            Solid white color (1,1,1,1).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Black">
+            <summary>
+            Solid black color (0,0,0,1).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Red">
+            <summary>
+            Solid red color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Green">
+            <summary>
+            Solid green color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Blue">
+            <summary>
+            Solid blue color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Magenta">
+            <summary>
+            Solid magenta color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Yellow">
+            <summary>
+            Solid yellow color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color.Gold">
+            <summary>
+            Gold color using normalized RGBA values.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color.op_Implicit(BasilEngine.Rendering.Color32)~BasilEngine.Rendering.Color">
+            <summary>
+            Converts a <see cref="T:BasilEngine.Rendering.Color32"/> to a normalized <see cref="T:BasilEngine.Rendering.Color"/>.
+            </summary>
+            <param name="color32">Color with 8-bit components.</param>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color32.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
+            <summary>
+            Initializes a new <see cref="T:BasilEngine.Rendering.Color32"/>.
+            </summary>
+            <param name="r">Red component (0-255).</param>
+            <param name="g">Green component (0-255).</param>
+            <param name="b">Blue component (0-255).</param>
+            <param name="a">Alpha component (0-255).</param>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.R">
+            <summary>
+            Red component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.G">
+            <summary>
+            Green component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.B">
+            <summary>
+            Blue component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.A">
+            <summary>
+            Alpha component of the color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.White">
+            <summary>
+            Solid white color (255,255,255,255).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Black">
+            <summary>
+            Solid black color (0,0,0,255).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Red">
+            <summary>
+            Solid red color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Green">
+            <summary>
+            Solid green color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Blue">
+            <summary>
+            Solid blue color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Magenta">
+            <summary>
+            Solid magenta color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Yellow">
+            <summary>
+            Solid yellow color.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Rendering.Color32.Gold">
+            <summary>
+            Gold color using 8-bit components.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color32.op_Implicit(BasilEngine.Rendering.Color)~BasilEngine.Rendering.Color32">
+            <summary>
+            Converts a normalized <see cref="T:BasilEngine.Rendering.Color"/> to a <see cref="T:BasilEngine.Rendering.Color32"/>.
+            </summary>
+            <param name="color">Color with normalized channels.</param>
+        </member>
+        <member name="M:BasilEngine.SceneManagement.Scene.LoadScene(System.Int32)">
+            <summary>
+            Loads a scene by build index.
+            </summary>
+            <param name="index">Scene index.</param>
+        </member>
+        <member name="M:BasilEngine.SceneManagement.Scene.LoadScene(System.String)">
+            <summary>
+            Loads a scene by name.
+            </summary>
+            <param name="name">Scene name.</param>
+        </member>
+        <member name="P:BasilEngine.Screen.width">
+            <summary>
+            Width of the current screen in pixels.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Screen.height">
+            <summary>
+            Height of the current screen in pixels.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Screen.size">
+            <summary>
+            Combined screen size as a <see cref="T:BasilEngine.Mathematics.Vector2"/>.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Time.deltaTime">
+            <summary>
+            Time in seconds it took to complete the last frame.
+            </summary>
+        </member>
+    </members>
+</doc>

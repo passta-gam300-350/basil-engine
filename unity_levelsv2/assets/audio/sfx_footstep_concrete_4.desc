@@ -1,0 +1,14 @@
+base:
+  m_guid: 3a87dc675f5beb502e8823e8a41
+  m_importer: .audio
+  m_source: audio\sfx_footstep_concrete_4.ogg
+  m_name: sfx_footstep_concrete_4.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

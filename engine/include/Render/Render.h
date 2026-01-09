@@ -15,7 +15,6 @@
 
 #ifndef ENGINE_RENDER_H
 #define ENGINE_RENDER_H
-#pragma once
 
 #include <memory>
 #include <Scene/SceneRenderer.h>
@@ -23,9 +22,11 @@
 #include <rsc-core/rp.hpp>
 #include "Manager/ResourceSystem.hpp"
 #include <native/native.h>
-
 #include "Ecs/ecs.h"
 #include "Messaging/Message.h"
+#include "BVH/bvh.h"
+#include "BVH/bvh_renderable.h"
+#include "BVH/bvh_helper.h"
 
 // Forward declarations
 class ShaderLibrary;
@@ -34,10 +35,12 @@ class ComponentInitializer;
 class MaterialInstanceManager;
 class MaterialInstance;
 class MaterialPropertyBlock;
+class JoltDebugRenderer;
 
 
 RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
 RegisterResourceTypeForward(MaterialResourceData, "material", materialdefine)
+RegisterResourceTypeForward(TextureResourceData, "texture", texturedefine)
 
 /**
  * @brief Component for rendering meshes on entities
@@ -49,7 +52,7 @@ struct MeshRendererComponent {
     bool isPrimitive;              ///< True if using a primitive mesh (cube/plane)
     bool hasAttachedMaterial;      ///< True if using an external material asset
 
-    /// Primitive mesh types available
+    // Primitive mesh types available
     enum struct PrimitiveType : std::uint8_t {
         NONE,
         CUBE,
@@ -58,7 +61,7 @@ struct MeshRendererComponent {
     rp::BasicIndexedGuid m_MeshGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"mesh">{}) };     ///< GUID of the mesh asset (or zero for primitives)
     std::unordered_map<std::string, rp::BasicIndexedGuid> m_MaterialGuid{ std::pair<std::string, rp::BasicIndexedGuid>("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}))}; ///< GUID of the material asset
 
-    /// Per-entity material properties (used when hasAttachedMaterial is false)
+    // Per-entity material properties (used when hasAttachedMaterial is false)
     struct Material
     {
         rp::BasicIndexedGuid m_MaterialGuid;
@@ -90,6 +93,43 @@ struct LightComponent {
     bool m_CastShadows = true;    ///< Enable/disable shadow casting for this light
 };
 
+/**
+ * @brief Component for rendering HUD/UI elements in screen space
+ *
+ * HUD elements are rendered in pixel coordinates after all 3D rendering and post-processing.
+ * Supports textured quads and solid color rectangles with rotation and layering.
+ */
+struct HUDComponent {
+    rp::BasicIndexedGuid m_TextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };  ///< GUID of the texture asset (0 = solid color quad)
+
+    // Screen-space positioning (pixels)
+    glm::vec2 position = glm::vec2(0.0f);  ///< Position in pixels from anchor point
+    glm::vec2 size = glm::vec2(100.0f);    ///< Size in pixels
+
+    /**
+     * @brief Anchor point for positioning
+     *
+     * Determines which point of the element corresponds to the specified position.
+     * For example, TopLeft means position=(0,0) places the top-left corner at screen origin.
+     */
+    enum class Anchor : uint8_t {
+        TopLeft,
+        TopCenter,
+        TopRight,
+        CenterLeft,
+        Center,
+        CenterRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight
+    } anchor = Anchor::TopLeft;
+
+    // Visual properties
+    glm::vec4 color = glm::vec4(1.0f);  ///< Tint color (multiplied with texture) or solid color
+    float rotation = 0.0f;              ///< Rotation in degrees (clockwise, around anchor point)
+    uint8_t layer = 0;                 ///< Layer for depth sorting (higher values render on top)
+    bool visible = true;                ///< Visibility toggle
+};
 
 
 struct Camera_Calculation_Update : Message {
@@ -109,6 +149,31 @@ public:
     Camera_Calculation_Update(glm::mat4 view, glm::mat4 proj) : viewMat4(view), projectionMat4(proj) {};
 
     ~Camera_Calculation_Update() = default;
+};
+
+/**
+ * @brief Component marking an entity as interactable for proximity-based interaction
+ *
+ * Used for gameplay mechanics where players can interact with objects when looking at them.
+ * Detection uses ray casting from camera forward direction.
+ * Only entities with this component will be detected by QueryInteraction().
+ */
+struct InteractableComponent {
+    bool m_IsEnabled = true;                     ///< Can be toggled on/off at runtime
+    float m_InteractionDistance = 5.0f;          ///< Maximum distance for interaction (meters)
+    std::string m_InteractionPrompt = "Press E to interact";  ///< UI text to display
+};
+
+/**
+ * @brief Result from interaction detection query
+ *
+ * Used for proximity-based interaction detection (e.g., "Press E to interact" prompts).
+ * Returned by QueryInteraction() to indicate if player is looking at an interactable object.
+ */
+struct InteractionResult {
+    bool hasHit = false;              ///< Was an object detected?
+    uint32_t entityUID = 0;           ///< ID of the detected entity
+    float distance = 0.0f;            ///< Distance from camera to object (meters)
 };
 
 struct RenderSystem : public ecs::SystemBase {
@@ -188,6 +253,36 @@ public:
 
     void DisableHDRForEditor();
 
+    // ========== Viewport Management ==========
+
+    /**
+     * @brief Set Editor (Scene) viewport dimensions
+     *
+     * Called by EngineService when the Scene viewport is resized.
+     * Used for correct HUD rendering and framebuffer sizing.
+     *
+     * @param width Scene viewport width in pixels
+     * @param height Scene viewport height in pixels
+     */
+    void SetEditorViewportSize(uint32_t width, uint32_t height) {
+        m_editorViewportWidth = width;
+        m_editorViewportHeight = height;
+    }
+
+    /**
+     * @brief Set Game viewport dimensions
+     *
+     * Called by EngineService when the Game viewport is resized.
+     * Used for correct HUD rendering and framebuffer sizing.
+     *
+     * @param width Game viewport width in pixels
+     * @param height Game viewport height in pixels
+     */
+    void SetGameViewportSize(uint32_t width, uint32_t height) {
+        m_gameViewportWidth = width;
+        m_gameViewportHeight = height;
+    }
+
     // ========== System Setup Methods ==========
 
     /**
@@ -195,8 +290,6 @@ public:
      *
      * Creates:
      * - Light visualization cube (5x5x5)
-     * - Directional light ray (3 units)
-     * - AABB wireframe cube (1x1x1)
      */
     void SetupDebugVisualization();
 
@@ -233,6 +326,73 @@ public:
      * @return Pointer to ShaderLibrary (may be nullptr if not initialized)
      */
     ShaderLibrary* GetShaderLibrary() const { return m_ShaderLibrary.get(); }
+
+    /**
+     * @brief Get the Jolt debug renderer instance
+     * @return Pointer to JoltDebugRenderer (may be nullptr if not initialized)
+     */
+    JoltDebugRenderer* GetJoltDebugRenderer() const { return m_JoltDebugRenderer.get(); }
+
+    /**
+     * @brief Enable or disable Jolt physics debug rendering
+     * @param enabled True to enable debug rendering, false to disable
+     */
+    void SetJoltDebugRenderingEnabled(bool enabled);
+
+    /**
+     * @brief Initialize Jolt debug renderer (must be called after PhysicsSystem::Init)
+     * @note This is called automatically during engine initialization
+     */
+    void InitJoltDebugRenderer();
+
+    // ========== Skybox Settings (Unity-style API) ==========
+
+    /**
+     * @brief Set skybox cubemap texture
+     * @param cubemapID OpenGL texture ID of the cubemap (load via TextureLoader::CubemapFromFiles)
+     */
+    void SetSkyboxCubemap(unsigned int cubemapID);
+
+    /**
+     * @brief Enable or disable skybox rendering
+     * @param enable True to enable, false to disable
+     */
+    void EnableSkybox(bool enable);
+
+    /**
+     * @brief Check if skybox is currently enabled
+     * @return True if enabled, false otherwise
+     */
+    bool IsSkyboxEnabled() const;
+
+    /**
+     * @brief Set skybox HDR exposure multiplier
+     * @param exposure Exposure value (0.0 - 10.0), default is 1.0
+     */
+    void SetSkyboxExposure(float exposure);
+
+    /**
+     * @brief Set skybox rotation (Euler angles in degrees)
+     * @param rotation XYZ rotation in degrees
+     */
+    void SetSkyboxRotation(const glm::vec3& rotation);
+
+    /**
+     * @brief Set skybox color tint
+     * @param tint RGB color multiplier (0.0 - 1.0), default is white (1, 1, 1)
+     */
+    void SetSkyboxTint(const glm::vec3& tint);
+
+    /**
+     * @brief Load a cubemap from 6 image files and return the OpenGL texture ID
+     * @param facePaths Array of 6 file paths in order: +X, -X, +Y, -Y, +Z, -Z (right, left, top, bottom, front, back)
+     * @param directory Base directory for the face paths (optional)
+     * @return OpenGL texture ID, or 0 on failure
+     */
+    static unsigned int LoadCubemapFromFiles(
+        const std::array<std::string, 6>& facePaths,
+        const std::string& directory = ""
+    );
 
     // ========== Static API for External Access ==========
 
@@ -374,10 +534,35 @@ public:
      */
     void DestroyPropertyBlock(uint64_t entityUID);
 
+    /**
+     * @brief Build spatial index for all renderable entities
+     * Clears existing BVH and rebuilds from scratch.
+     * Should be called automatically during InitializeExistingEntities().
+     * @param world The ECS world containing entities
+     */
+    void BuildBVH(ecs::world& world);
+
+    /**
+     * @brief Build spatial index for interactable entities only
+     * Filters for entities with InteractableComponent.
+     * Should be called after scene load.
+     * @param world The ECS world containing entities
+     */
+    void BuildInteractableBVH(ecs::world& world);
+
     // ========== Public Member Access ==========
 
     std::unique_ptr<SceneRenderer> m_SceneRenderer;  ///< Rendering pipeline interface
-    std::unique_ptr<Camera> m_Camera;                ///< Fallback camera (used if no CameraComponent exists)
+
+    // ========== BVH for Frustum Culling ==========
+    std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhRenderables;
+    Bvh<BvhRenderable*> m_bvh;
+    BvhBuildConfig m_BvhConfig;
+    bool m_frustumCullingEnabled = false;
+
+    // ========== BVH for Interactables (Gameplay) ==========
+    std::unordered_map<uint64_t, std::unique_ptr<BvhRenderable>> m_BvhInteractables;
+    Bvh<BvhRenderable*> m_bvhInteractables;
 
 private:
     // ========== Internal Methods ==========
@@ -423,12 +608,42 @@ private:
         bool hasAttachedMaterial,
         uint64_t entityUID) const;
 
+    /**
+     * @brief Compute world-space AABB for an entity
+     * @param entity Entity with MeshRendererComponent and TransformMtxComponent
+     * @return World-space AABB
+     */
+    Aabb ComputeWorldAABB(ecs::entity entity) const;
+
+    /**
+     * @brief Perform frustum culling to get visible entity IDs
+     * Uses the BVH spatial index to query which entities are within the camera frustum.
+     * Falls back to returning all entities if culling is disabled or BVH is empty.
+     * @param world The ECS world containing entities
+     * @param camera The camera to build frustum from (editor or entity camera)
+     * @return Vector of entity UIDs that are potentially visible
+     */
+    std::vector<unsigned> GetVisibleEntities(ecs::world& world, auto const& camera) const;
+
+    /**
+     * @brief Query for object in front of camera using ray casting
+     *
+     * Uses BVH ray casting to detect which entity the camera is looking at.
+     * Useful for proximity-based interaction detection (e.g., "Press E to interact").
+     *
+     * @param world The ECS world containing entities
+     * @param camera The camera to cast ray from (typically game entity camera)
+     * @return InteractionResult with detected entity info (hasHit=false if nothing detected)
+     */
+    //InteractionResult QueryInteraction(ecs::world& world, auto const& camera) const;
+
     // ========== Render Subsystems ==========
 
     std::unique_ptr<ShaderLibrary> m_ShaderLibrary;             ///< Shader loading and caching
     std::unique_ptr<PrimitiveManager> m_PrimitiveManager;       ///< Primitive mesh generation
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
+    std::unique_ptr<JoltDebugRenderer> m_JoltDebugRenderer;     ///< Jolt physics debug renderer
 
     // ========== Material Property Blocks ==========
 
@@ -442,6 +657,46 @@ private:
     /// Shared across all entities with hasAttachedMaterial=false
     /// Ensures stable memory address to prevent cache thrashing
     mutable std::shared_ptr<Material> m_DefaultMaterial;
+
+    // ========== Viewport Dimensions ==========
+
+    /// Editor (Scene) viewport dimensions for framebuffer sizing
+    uint32_t m_editorViewportWidth{ 0 };
+    uint32_t m_editorViewportHeight{ 0 };
+
+    /// Game viewport dimensions for framebuffer sizing
+    uint32_t m_gameViewportWidth{ 0 };
+    uint32_t m_gameViewportHeight{ 0 };
+
+    // ========== Editor Camera Snapshot (Phase 2: Thread-safe camera data) ==========
+
+public:
+    /// Editor camera snapshot data (set by EngineService, read by Update)
+    struct EditorCameraSnapshot {
+        glm::vec3 position{ 0.0f, 5.0f, 10.0f };
+        glm::vec3 front{ 0.0f, 0.0f, -1.0f };
+        glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+        glm::vec3 right{ 1.0f, 0.0f, 0.0f };
+        float fov{ 45.0f };
+        float aspectRatio{ 16.0f / 9.0f };
+        float nearPlane{ 0.1f };
+        float farPlane{ 1000.0f };
+        bool isPerspective{ true };
+    };
+
+    /**
+     * @brief Set editor camera snapshot (called by EngineService on engine thread)
+     * @param snapshot Camera data from EditorMain (synchronized via mutex)
+     */
+    void SetEditorCameraSnapshot(const EditorCameraSnapshot& snapshot) {
+        m_editorCameraSnapshot = snapshot;
+    }
+    EditorCameraSnapshot GetEditorCameraSnapshot() const {
+        return m_editorCameraSnapshot;
+    }
+
+private:
+    EditorCameraSnapshot m_editorCameraSnapshot;
 };
 
 #endif

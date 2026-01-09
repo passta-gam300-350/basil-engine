@@ -521,6 +521,17 @@ macro(import_xml)
     endif()
 endmacro()
 
+macro(import_plmpeg)
+    FETCHCONTENT_DECLARE(
+        plmpeg
+        GIT_REPOSITORY https://github.com/phoboslab/pl_mpeg.git
+        GIT_TAG 88fb66ff38849ba2de4ced8de7b545744e8887a7
+    )
+    FETCHCONTENT_MAKEAVAILABLE(plmpeg)
+    add_library(plmpeg INTERFACE ${plmpeg_SOURCE_DIR}/pl_mpeg.h)
+    target_include_directories(plmpeg INTERFACE ${plmpeg_SOURCE_DIR})
+endmacro()
+
 function(hide_dependencies)
     # hide external targets to folders
     set_target_properties(
@@ -615,6 +626,7 @@ macro(import_dependencies)
     import_mono()
     import_xml()
     import_jolt()
+    import_plmpeg()
 
     hide_dependencies()
 

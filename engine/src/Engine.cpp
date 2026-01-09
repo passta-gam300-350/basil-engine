@@ -16,6 +16,12 @@
 #include "System/HierarchySystem.hpp"
 
 #include "Scene/Scene.hpp"
+#include "Resources/Texture.h"
+#include <array>
+#include <glad/glad.h>
+#include "Render/VideoPlayback.hpp"
+#include "System/AnimationSystem.hpp"
+#include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -62,29 +68,16 @@ using namespace ecs; //lazy
 void Engine::Init(std::string const& cfg ) {
 
 	Engine::SetState(Info::State::Init);
+	std::string playerDir = std::filesystem::absolute(std::filesystem::path{"."}).string();
+	Engine::setWorkingDir(playerDir.c_str());
 
 	Instance().m_Info.m_FrameLogRate = 165;
 
-	ReflectionRegistry::SetupNativeTypes();
-	ReflectionRegistry::SetupEngineTypes();
-	Instance().m_World = WorldRegistry::NewWorld();
-	if (cfg.empty()) {
-		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
-
-		// Create and initialize RenderSystem
-		Instance().m_RenderSystem = std::make_unique<RenderSystem>();
-		Instance().m_RenderSystem->Init();
-		Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
-
-		// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
-		MaterialOverridesSystem::Instance().Init();
-
-		Scheduler::CompileJobSchedule();
-		//InputManager::Get_Instance()->Setup_Callbacks();
-		//ObjectManager::GetInstance().CreateGameObject();
-		return;
+	if (!std::filesystem::exists(cfg))
+	{
+		GenerateDefaultConfig();
 	}
-	YAML::Node root{YAML::LoadFile(cfg)};
+	YAML::Node root{ YAML::LoadFile(cfg.empty() ? DEFAULT_CONFIG_NAME.data() : cfg) };
 	if (YAML::Node window{ root["window"] }; window) {
 		std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
 		std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
@@ -97,9 +90,6 @@ void Engine::Init(std::string const& cfg ) {
 	else {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
 	}
-	if (YAML::Node system{ root["system"] }; system) {
-		SystemRegistry::LoadConfig(system);
-	}
 	if (YAML::Node resource{ root["resource"] }; resource) {
 		ResourceSystem::LoadConfig(resource);
 	}
@@ -109,14 +99,20 @@ void Engine::Init(std::string const& cfg ) {
 		}
 	}
 	if (YAML::Node logger{ root["logger"] }; logger) {
-		std::string sink_name{ logger["name"] ? logger["name"].as<std::string>() : DEFAULT_SINK_NAME};
+		std::string sink_name{ logger["name"] ? logger["name"].as<std::string>() : DEFAULT_SINK_NAME };
 		std::string sink_file{ logger["output file"] ? logger["output file"].as<std::string>() : std::string{} };
 		spdlog::level::level_enum sink_severity{ logger["severity"] ? static_cast<spdlog::level::level_enum>(logger["severity"].as<int>()) : spdlog::level::info };
-		Instance().m_Sink.reset(new Logger::Sink{sink_name, sink_file, sink_severity});
+		Instance().m_Sink.reset(new Logger::Sink{ sink_name, sink_file, sink_severity });
 	}
 	else {
-		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
+		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{} });
 	}
+	ReflectionRegistry::SetupNativeTypes();
+	ReflectionRegistry::SetupEngineTypes();
+
+	Instance().m_World = WorldRegistry::NewWorld();
+
+	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
 	// Create and initialize RenderSystem
 	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
@@ -127,20 +123,56 @@ void Engine::Init(std::string const& cfg ) {
 
 	// Initialize MaterialOverridesSystem (depends on RenderSystem being fully initialized)
 	MaterialOverridesSystem::Instance().Init();
-	
-	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
+
+	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
+
+	PhysicsSystem::Instance().Init();
+	PhysicsSystem::Instance().SetupObservers();
+
+	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
+	Instance().m_RenderSystem->InitJoltDebugRenderer();
+
+	// [TEMP]
+	AudioSystem::GetInstance().Init();
+
+	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
+	Instance().GetSceneRegistry().ReadManifest(manifest_path);
+	Instance().GetSceneRegistry().RequestSceneChange(0);
 
 	//InputManager::Get_Instance()->Setup_Callbacks();
 	MonoEntityManager::GetInstance().SetPreCompiled(true);
 	MonoEntityManager::GetInstance().initialize();
 	MonoEntityManager::GetInstance().StartCompilation();
+
+	BehaviourSystem::Instance().isActive = true;
+	BehaviourSystem::Instance().Init();
+
 	BindingSystem::RegisterBindings();
 	Scheduler::CompileJobSchedule();
+
+	InputManager::Setup_Callbacks();
+
+	Engine::SetOnLoadCallBack([](ecs::world& w)
+		{
+			BehaviourSystem::Instance().Reload();
+
+		});
+
+	Engine::SetOnUnloadCallBack([](ecs::world& w)
+		{
+
+			BehaviourSystem::Instance().firstRun = true;
+			BehaviourSystem::Instance().unloaded = true;
+		});
+
+	auto e = Engine::GetWorld().add_entity();
+	e.destroy();
+
 	Engine::Instance().m_Info.m_State = Info::State::Running;
-	
 }
 
 void Engine::CoreUpdate() {
+	Engine::Instance().m_Info.m_StartTime.reset();
 	//thread_local auto physic_system{PhysicsSystem()};
 	Engine& instance{ Instance() };
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
@@ -153,8 +185,14 @@ void Engine::CoreUpdate() {
 	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
+	animationSystem().FixedUpdate(instance.m_World);
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
 	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetDeltaTime()));
+
+	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
+	Engine::SyncActiveSceneRenderSettings();
+	VideoSystem().Update(instance.m_World);
+
 	Engine::GetRenderSystem().Update(instance.m_World);
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
@@ -163,6 +201,10 @@ void Engine::CoreUpdate() {
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetDeltaTime()));
 	messagingSystem.Update();
+
+
+	instance.m_SceneRegistry->PollRequestSceneChange();
+	instance.m_Info.m_ActualDeltaTime = instance.m_Info.m_StartTime.elapsed().count();
 }
 
 void Engine::Update() {
@@ -175,12 +217,12 @@ void Engine::Update() {
 					instance.m_Info.m_State = Info::State::Exit;
 					break;
 				}
+				{
+					CoreUpdate();
+					UpdateDebug();
+					Engine::GetWindowInstance().SwapBuffers();
+				}
 				
-				CoreUpdate();
-
-				Engine::GetWindowInstance().SwapBuffers();
-
-				UpdateDebug();
 			}
 		}
 		ReportLastError();					//this is the intended error handler
@@ -194,7 +236,7 @@ void Engine::Update() {
 }
 
 void Engine::UpdateDebug() {
-
+	PF_SYSTEM("Update Debug");
 	Engine& instance{ Instance() };
 	std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt };
 	std::uint64_t& frame_counter{ instance.m_Info.m_FrameLogCounter };
@@ -226,11 +268,14 @@ void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 
 
 	Instance().m_Window = std::make_unique<Window>(wptr);
-
+	if (!std::filesystem::exists(cfg))
+	{
+		GenerateDefaultConfig();
+	}
 	InitWithoutWindow(cfg);
 }
 
-void Engine::InitWithoutWindow(std::string const& cfg) {
+void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 	Engine::SetState(Info::State::Init);
 	Engine::SetOnLoadCallBack([](ecs::world& world) {
 		spdlog::info("World loaded with {} entities", world.get_all_entities().size());
@@ -244,7 +289,7 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 	ReflectionRegistry::SetupNativeTypes();
 	ReflectionRegistry::SetupEngineTypes();
 
-	MonoEntityManager::GetInstance().SetPreCompiled(false);
+	MonoEntityManager::GetInstance().SetPreCompiled(is_precompiled);
 	MonoEntityManager::GetInstance().StartCompilation();
 
 	Instance().m_Info.m_FrameLogRate = 165;
@@ -294,6 +339,10 @@ void Engine::InitWithoutWindow(std::string const& cfg) {
 
 	PhysicsSystem::Instance().Init();
 	PhysicsSystem::Instance().SetupObservers();
+
+	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
+	Instance().m_RenderSystem->InitJoltDebugRenderer();
+
 	Scheduler::CompileJobSchedule();
 
 	// [TEMP]
@@ -342,6 +391,10 @@ world Engine::GetWorld() {
 
 double Engine::GetDeltaTime() {
 	return Instance().m_Info.m_DeltaTime;
+}
+
+double Engine::GetLastDeltaTime() {
+	return Instance().m_Info.m_ActualDeltaTime;
 }
 
 void Engine::GenerateDefaultConfig() {
@@ -405,4 +458,90 @@ void Engine::BeginFrame()
 void Engine::EndFrame()
 {
 	PF_END_FRAME();
+}
+
+void Engine::SyncActiveSceneRenderSettings()
+{
+	PF_SYSTEM("SyncActiveSceneRenderSettings");
+	// Unity-style: Apply active scene's render settings to the renderer
+	if (!Instance().m_SceneRegistry || !Instance().m_RenderSystem) {
+		return; // Not yet initialized
+	}
+
+	auto activeSceneOpt = Instance().m_SceneRegistry->GetActiveScene();
+	if (!activeSceneOpt.has_value()) {
+		return; // No active scene
+	}
+
+	Scene& activeScene = activeSceneOpt.value().get();
+	auto& settings = activeScene.GetRenderSettings();
+	auto& renderSystem = *Instance().m_RenderSystem;
+
+	// Load/reload skybox cubemap if needed (resource pipeline integration)
+	if (settings.skybox.needsReload && settings.skybox.enabled) {
+		// Check if all face texture GUIDs are valid
+		bool allGuidsValid = true;
+		for (const auto& guid : settings.skybox.faceTextures) {
+			if (guid == rp::null_guid) {
+				allGuidsValid = false;
+				break;
+			}
+		}
+
+		if (allGuidsValid) {
+			try {
+				auto& registry = ResourceRegistry::Instance();
+				std::array<unsigned int, 6> textureIDs;
+				bool loadSuccess = true;
+
+				// Load all 6 texture resources by GUID
+				for (int i = 0; i < 6; ++i) {
+					auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(settings.skybox.faceTextures[i]);
+
+					if (texturePtr && *texturePtr) {
+						textureIDs[i] = (*texturePtr)->id;  // Get OpenGL texture ID
+						GetSink()->logger()->debug("Skybox face {} loaded (GUID: {}, GPU ID: {})",
+							i, settings.skybox.faceTextures[i].to_hex().substr(0, 8), textureIDs[i]);
+					} else {
+						GetSink()->logger()->error("Failed to load skybox face {} (GUID: {})",
+							i, settings.skybox.faceTextures[i].to_hex().substr(0, 8));
+						loadSuccess = false;
+						break;
+					}
+				}
+
+				if (loadSuccess) {
+					// Create cubemap from 6 loaded texture IDs
+					unsigned int cubemapID = TextureLoader::CubemapFromTextureIDs(textureIDs, true);
+
+					if (cubemapID != 0) {
+						// Delete old cubemap if it exists
+						if (settings.skybox.cachedCubemapID != 0) {
+							glDeleteTextures(1, &settings.skybox.cachedCubemapID);
+						}
+
+						settings.skybox.cachedCubemapID = cubemapID;
+						settings.skybox.needsReload = false;
+						GetSink()->logger()->info("Skybox cubemap created successfully (ID: {})", cubemapID);
+					} else {
+						GetSink()->logger()->error("Failed to create skybox cubemap from texture IDs");
+					}
+				}
+			}
+			catch (const std::exception& e) {
+				GetSink()->logger()->error("Exception loading skybox cubemap: {}", e.what());
+			}
+		} else {
+			GetSink()->logger()->debug("Skybox: Not all face textures assigned (skipping load)");
+		}
+	}
+
+	// Sync skybox settings to renderer
+	renderSystem.SetSkyboxCubemap(settings.skybox.cachedCubemapID);
+	renderSystem.EnableSkybox(settings.skybox.enabled);
+	renderSystem.SetSkyboxExposure(settings.skybox.exposure);
+	renderSystem.SetSkyboxRotation(settings.skybox.rotation);
+	renderSystem.SetSkyboxTint(settings.skybox.tint);
+
+	// Future: Could sync ambient light, background color, fog, etc.
 }

@@ -1,0 +1,7 @@
+base:
+  m_guid: 5329107e0cb01021d6e497f19a
+  m_importer: .texture
+  m_source: materials\kite_background\bg_Height.png
+  m_name: bg_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: 7cd4ae9799ba58a0e45339e9df1
+  m_importer: .texture
+  m_source: materials\tree\08\tree_08_BaseColor.png
+  m_name: tree_08_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -25,6 +25,24 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 
 /**
+ * DebugLine - Debug line primitive for physics visualization
+ *
+ * Represents a colored line segment for debug rendering (physics colliders,
+ * velocities, contact normals, etc.)
+ */
+struct DebugLine
+{
+    glm::vec3 from;     // Start point in world space
+    glm::vec3 to;       // End point in world space
+    glm::vec3 color;    // RGB color (0.0-1.0 range)
+    float width;        // Line width (for future use, currently defaults to 1.0)
+
+    // Constructor with default width
+    DebugLine(const glm::vec3& startPos, const glm::vec3& endPos, const glm::vec3& lineColor, float lineWidth = 1.0f)
+        : from(startPos), to(endPos), color(lineColor), width(lineWidth) {}
+};
+
+/**
  * FrameData - Shared frame information across all rendering systems
  *
  * Contains all data that needs to be shared between pipelines and passes
@@ -51,7 +69,8 @@ struct FrameData
     uint32_t bloomTexture = 0;
 
     // Editor display buffer (resolved from mainColorBuffer for ImGui sampling)
-    std::shared_ptr<FrameBuffer> editorResolvedBuffer;     // Non-MSAA resolved for ImGui
+    std::shared_ptr<FrameBuffer> editorResolvedBuffer;     // Non-MSAA resolved for ImGui (Scene viewport)
+    std::shared_ptr<FrameBuffer> gameResolvedBuffer;       // Non-MSAA resolved for ImGui (Game viewport)
 
     // Post-processing chain
     std::shared_ptr<FrameBuffer> postProcessBuffer;
@@ -61,12 +80,26 @@ struct FrameData
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
     glm::vec3 cameraPosition = glm::vec3(0.0f);
 
+    // Camera context tracking for dual viewport rendering
+    enum class CameraContext
+    {
+        EDITOR,  // Rendering for Scene viewport (editor camera)
+        GAME     // Rendering for Game viewport (game camera)
+    };
+    CameraContext currentCamera = CameraContext::EDITOR;
+
+    // Editor camera matrices (stored separately for picking system)
+    // These are preserved even when rendering with game camera
+    glm::mat4 editorViewMatrix = glm::mat4(1.0f);
+    glm::mat4 editorProjectionMatrix = glm::mat4(1.0f);
+    glm::vec3 editorCameraPosition = glm::vec3(0.0f);
+
     // Viewport dimensions (for HDR and post-processing)
     uint32_t viewportWidth = 1280;
     uint32_t viewportHeight = 720;
 
     // Debug rendering data
-    std::vector<DebugAABB> debugAABBs;
+    std::vector<DebugLine> debugLines;  // Physics debug lines (collision shapes, velocities, contacts)
 
     // Timing data
     float deltaTime = 0.0f;
