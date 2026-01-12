@@ -24,6 +24,9 @@ public class MainMenu : Behavior
     }
     public void Update()
     {
+
+        Logger.Log("Main Menu");
+
         if (isFadingIn)
         {
             audio.Volume += (targetVolume * fadeSpeed / 100.0f) * Time.deltaTime;

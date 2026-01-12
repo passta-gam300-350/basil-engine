@@ -32,7 +32,10 @@ public class TrashCollectable : Behavior
         if (player == null)
         {
             player =  GameObject.Find("PlayerGroup");
-            return;
+            if (player == null)
+            {
+                return;
+            }
         } 
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
