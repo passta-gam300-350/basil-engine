@@ -36,11 +36,12 @@ public class TrashCollectable : Behavior
         } 
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
+        
         if (distance <= collect_distance && Input.GetKey(KeyCode.E))
         {
-            if (GameManager.instance.isHoldingThrash)
+            if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
             {
-                Logger.Log("No hands to use!");
+                Logger.Log("Hands are full!");
                 return;
             }
 

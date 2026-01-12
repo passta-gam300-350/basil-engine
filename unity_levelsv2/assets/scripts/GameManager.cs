@@ -21,7 +21,9 @@ public class GameManager : Behavior
     private Rigidbody playerRigidbody;
     private GameObject ThrashCollect;
 
-    public bool isHoldingThrash = false;
+    //public bool isHoldingThrash = false;
+    public int trashInHand = 0;      // number of trash currently held
+    public int maxTrashInHand = 5;   // maximum the player can carry
 
     private PlayerController3D controller;
 
@@ -57,14 +59,29 @@ public class GameManager : Behavior
 
     public void ShowCollected()
     {
-        ThrashCollect.visibility = true;
-        isHoldingThrash = true;
+        trashInHand = Math.Min(trashInHand + 1, maxTrashInHand);
+        Logger.Log("Trash collected! Current number of trash: " + trashInHand);
+
+        // Show visual only if player has collected all 5 trash
+        if (trashInHand >= maxTrashInHand)
+        {
+            ThrashCollect.visibility = true;
+            Logger.Log("Trash bag ready!");
+        }
+        
+        //isHoldingThrash = true;
     }
 
     public void ShowFree()
     {
-        ThrashCollect.visibility = false;
-        isHoldingThrash = false;
+        if (trashInHand > 0)
+        {
+            Logger.Log("Tossing all trash");
+            trashInHand = 0; // toss all trash at once
+            ThrashCollect.visibility = false;
+        }
+
+        //isHoldingThrash = false;
     }
 
 
