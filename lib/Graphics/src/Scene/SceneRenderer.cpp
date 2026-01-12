@@ -887,3 +887,114 @@ void SceneRenderer::EnableOutlineRendering(bool enable) const
         }
     }
 }
+
+void SceneRenderer::SetBloomStrength(float strength)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting bloom strength");
+
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            toneMapPass->SetBloomStrength(strength);
+        }
+    }
+}
+
+float SceneRenderer::GetBloomStrength() const
+{
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            return toneMapPass->GetBloomStrength();
+        }
+    }
+    return 0.04f; // Default value
+}
+
+void SceneRenderer::EnableBloom(bool enable)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before enabling bloom");
+
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            toneMapPass->EnableBloom(enable);
+        }
+    }
+}
+
+bool SceneRenderer::IsBloomEnabled() const
+{
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            return toneMapPass->IsBloomEnabled();
+        }
+    }
+    return true; // Default value
+}
+
+void SceneRenderer::SetToneMappingMethod(int method)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting tone mapping method");
+
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            toneMapPass->SetMethod(static_cast<ToneMapRenderPass::Method>(method));
+        }
+    }
+}
+
+int SceneRenderer::GetToneMappingMethod() const
+{
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            return static_cast<int>(toneMapPass->GetMethod());
+        }
+    }
+    return 2; // Default to ACES
+}
+
+void SceneRenderer::SetExposureClampRange(float minExposure, float maxExposure)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting exposure clamp range");
+
+    if (m_Pipeline)
+    {
+        auto hdrLuminancePass = std::dynamic_pointer_cast<HDRLuminancePass>(m_Pipeline->GetPass("HDRLuminancePass"));
+        if (hdrLuminancePass)
+        {
+            hdrLuminancePass->SetExposureClampRange(minExposure, maxExposure);
+        }
+    }
+}
+
+void SceneRenderer::GetExposureClampRange(float& outMin, float& outMax) const
+{
+    if (m_Pipeline)
+    {
+        auto hdrLuminancePass = std::dynamic_pointer_cast<HDRLuminancePass>(m_Pipeline->GetPass("HDRLuminancePass"));
+        if (hdrLuminancePass)
+        {
+            hdrLuminancePass->GetExposureClampRange(outMin, outMax);
+            return;
+        }
+    }
+    // Default values
+    outMin = 0.1f;
+    outMax = 2.0f;
+}

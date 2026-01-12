@@ -600,8 +600,8 @@ void EditorMain::render()
 			Render_Profiler();
 		if (showInspector)
 			Render_Inspector();
-		if (showSkyboxSettings)
-			Render_SkyboxSettings();
+		if (showSceneSettings)
+			Render_SceneSettings();
 		if (showPhysicsDebug)
 			Render_PhysicsDebugPanel();
 		if (showAssetBrowser)

@@ -119,6 +119,20 @@ public:
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
     //void SetEditorResolveShader(const std::shared_ptr<Shader>& shader) const;
 
+    // Bloom configuration
+    void SetBloomStrength(float strength);
+    float GetBloomStrength() const;
+    void EnableBloom(bool enable);
+    bool IsBloomEnabled() const;
+
+    // Tone mapping configuration
+    void SetToneMappingMethod(int method);  // 0=None, 1=Reinhard, 2=ACES, 3=Exposure
+    int GetToneMappingMethod() const;
+
+    // HDR exposure configuration
+    void SetExposureClampRange(float minExposure, float maxExposure);
+    void GetExposureClampRange(float& outMin, float& outMax) const;
+
     // Facade methods for decoupling (avoid exposing internal coordinators/pipeline)
     void ToggleRenderPass(const std::string& passName);
     void SetShadowIntensity(float directional, float point, float spot);
