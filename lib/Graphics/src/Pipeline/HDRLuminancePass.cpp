@@ -227,6 +227,12 @@ void HDRLuminancePass::InitializeBuffer(uint32_t width, uint32_t height)
 
 void HDRLuminancePass::OnResize(uint32_t newWidth, uint32_t newHeight)
 {
+    // Only recreate if size actually changed
+    if (m_LastWidth == newWidth && m_LastHeight == newHeight)
+    {
+        return; // Already the correct size
+    }
+
     // Viewport size changed - recreate SSBO
     spdlog::info("HDRLuminancePass: Viewport size changed to {}x{}, recreating luminance buffer", newWidth, newHeight);
 

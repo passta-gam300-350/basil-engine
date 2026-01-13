@@ -312,6 +312,12 @@ void FrameBuffer::Resize(uint32_t width, uint32_t height)
 		return;
 	}
 
+	// Only recreate GPU resources if size actually changed
+	if (m_Specifications.Width == width && m_Specifications.Height == height)
+	{
+		return; // Already the correct size, no need to recreate
+	}
+
 	m_Specifications.Width = width;
 	m_Specifications.Height = height;
 

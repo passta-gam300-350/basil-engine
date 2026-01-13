@@ -323,6 +323,13 @@ uint32_t BloomRenderPass::GetBloomMip(int index) const
 
 void BloomRenderPass::OnResize(uint32_t newWidth, uint32_t newHeight)
 {
+	// Only recreate if size actually changed
+	if (m_SrcViewportSize.x == static_cast<int>(newWidth) &&
+	    m_SrcViewportSize.y == static_cast<int>(newHeight))
+	{
+		return; // Already the correct size
+	}
+
 	// Viewport size changed - recreate mip chain
 	spdlog::info("BloomRenderPass: Viewport size changed to {}x{}, recreating mip chain", newWidth, newHeight);
 
