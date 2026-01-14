@@ -40,7 +40,7 @@ public:
 private:
 	static bool RenderField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance);
 	static void RenderGameObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info);
-
+	static void RenderUserObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info);
 
 	static bool TryGetFieldValueString(const FieldNode& fieldNode,
 		CSKlass* klass,

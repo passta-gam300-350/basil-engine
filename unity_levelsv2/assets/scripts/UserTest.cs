@@ -15,6 +15,7 @@ public class UserTest : Behavior
     public float newField = 10.0f;  
 
     public GameObject TestField;
+    public MainMenu TestCustomComponent;
 
     public KiteController kiteController;
 

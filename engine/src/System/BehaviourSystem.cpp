@@ -45,7 +45,7 @@ BehaviourSystem& BehaviourSystem::Instance() {
 
 void BehaviourSystem::Init()
 {
-	MonoEntityManager::GetInstance().Attach(); 
+	MonoEntityManager::GetInstance().Attach();
 
 	auto world = Engine::GetWorld();
 
@@ -97,7 +97,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 	auto entites = world.filter_entities<behaviour>();
 
 	if (entites.empty()) return;
-	
+
 	for (auto entity : entites) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		for (auto scriptID : component.scriptIDs) {
@@ -112,7 +112,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 				else instance->Invoke("Update", nullptr, &exception, 0);
 
 
-					if (exception) {
+				if (exception) {
 					MonoString* excStr = mono_object_to_string(exception, nullptr);
 					ManagedConsole::LogError(excStr);
 					// Unload the script instance to prevent further errors
@@ -122,8 +122,8 @@ void BehaviourSystem::Update(ecs::world& world, float)
 						instance->Reset();
 						component.scriptIDs.erase(it);
 					}
-					
-					
+
+
 				}
 
 				/*if (unloaded)
@@ -137,7 +137,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 	}
 
 	firstRun = false;
-	
+
 }
 void BehaviourSystem::FixedUpdate(ecs::world& world)
 {
@@ -162,7 +162,7 @@ bool BehaviourSystem::AddScriptToEntityComponent(ecs::entity& /*entity*/, ecs::w
 
 
 	CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
-	
+
 	if (!instance || !instance->IsValid()) {
 		spdlog::warn("[BehaviourSystem] Failed to create instance for script ID: {}", scriptID.to_hex());
 		return false;
@@ -414,7 +414,7 @@ namespace
 	}
 }
 
-void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns) 
+void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns)
 {
 	CSKlass* klass = MonoEntityManager::GetInstance().GetNamedKlass(klassname, klass_ns);
 	// Check if klass is derived from Behaviour
@@ -432,7 +432,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		spdlog::warn("[BehaviourSystem] Class {}.{} is not derived from BasilEngine.Behaviour", klass_ns, klassname);
 		return;
 	}
-	rp::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns, nullptr, false,entity.get_uuid());
+	rp::Guid scriptID = MonoEntityManager::GetInstance().AddInstance(klassname, klass_ns, nullptr, false, entity.get_uuid());
 	if (AddScriptToEntityComponent(entity, world, scriptID))
 	{
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
@@ -533,4 +533,33 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 	}
 }
 
+rp::Guid BehaviourSystem::GetScriptIDFromClassName(ecs::entity& entity, const char* name, const char* ns)
+{
+	// Get the class from MonoEntityManager
+	CSKlass* klass = MonoEntityManager::GetInstance().GetNamedKlass(name, ns ? ns : "");
+	if (!klass || !klass->IsValid())
+	{
+		return rp::Guid{};
+	}
+	bool hasBehaviour = entity.all<behaviour>();
+	if (!hasBehaviour)
+	{
+		return rp::Guid{};
+	}
+	behaviour& component = entity.get<behaviour>();
+
+	for (const auto& scriptID : component.scriptIDs)
+	{
+		CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(scriptID);
+		if (inst)
+		{
+			const CSKlass* instKlass = inst->Klass();
+			if (instKlass == klass)
+			{
+				return scriptID;
+			}
+		}
+	}
+	return rp::Guid{};
+}
 
