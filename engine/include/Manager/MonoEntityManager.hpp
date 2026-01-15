@@ -110,6 +110,10 @@ public:
 	void Attach();
 	void Detach();
 
+
+	// Utility
+	void SplitTypeName(const char* fullname, std::string& ns, std::string& name);
+
 };
 
 #endif // MonoEntityManager_HPP

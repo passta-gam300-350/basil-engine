@@ -64,6 +64,16 @@ void BehaviourSystem::Init()
 		}
 	}
 
+	for (auto entity : entities) {
+		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		for (int i = 0; i < component.scriptIDs.size(); i++) {
+			rp::Guid scriptID = component.scriptIDs[i];
+			std::string klassName = component.classesName[i];
+			ApplyScriptProperties(component, klassName, scriptID);
+
+		}
+	}
+
 
 }
 
@@ -85,6 +95,18 @@ void BehaviourSystem::Reload()
 			else AddScriptToEntityComponent(entity, world, className.c_str(), namespaceName.c_str());
 		}
 	}
+
+	for (auto entity : entities) {
+		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		for (int i =0; i < component.scriptIDs.size(); i++) {
+			rp::Guid scriptID = component.scriptIDs[i];
+			std::string klassName = component.classesName[i];
+			ApplyScriptProperties(component, klassName, scriptID);
+
+		}
+	}
+
+	
 
 	firstRun = true;
 }
@@ -270,7 +292,8 @@ namespace
 		const CSKlass* klass,
 		std::string_view fieldName,
 		std::string_view typeName,
-		std::string_view value)
+		std::string_view value,
+		bool is_user=false)
 	{
 		if (!scriptObject || !klass)
 		{
@@ -409,6 +432,63 @@ namespace
 			mono_field_set_value(scriptObject, fieldInfo->field, goObject);
 			return true;
 		}
+		else if (is_user)
+		{
+			if (value.empty() || value.find("None") == 0)
+			{
+				mono_field_set_value(scriptObject, fieldInfo->field, nullptr);
+				return true;
+			}
+
+			SceneEntityReference ref{};
+			if (!ParseSceneEntityReference(value, ref))
+			{
+				return false;
+			}
+
+			auto entityOpt = Engine::GetSceneRegistry().GetReferencedEntity(ref);
+			if (!entityOpt.has_value())
+			{
+				mono_field_set_value(scriptObject, fieldInfo->field, nullptr);
+				return true;
+			}
+
+			uint64_t nativeID = entityOpt.value().get_uuid();
+			CSKlass* gameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+			if (!gameObjectKlass)
+			{
+				MonoEntityManager::GetInstance().AddNamedKlass("GameObject", "BasilEngine", true);
+				gameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
+			}
+			if (!gameObjectKlass)
+			{
+				return false;
+			}
+
+
+			std::string kName, KNamespace;
+			std::string type = std::string(typeName);
+			MonoEntityManager::GetInstance().SplitTypeName(type.c_str(), KNamespace, kName);
+			rp::Guid scriptID = BehaviourSystem::Instance().GetScriptIDFromClassName(entityOpt.value(), kName.c_str(), KNamespace.c_str());
+			if (!scriptID)
+			{
+				return false;
+			}
+			CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(scriptID);
+			if (!inst || !inst->IsValid())
+			{
+				return false;
+			}
+			MonoObject* userObject = inst->Object();
+			if (!userObject)
+			{
+				return false;
+			}
+			mono_field_set_value(scriptObject, fieldInfo->field, userObject);
+			return true;
+		}
+
+
 
 		return false;
 	}
@@ -438,7 +518,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		component.scriptIDs.push_back(scriptID);
 		std::string managedName = (klass_ns && *klass_ns) ? (std::string(klass_ns) + "." + klassname) : std::string(klassname);
-		ApplyScriptProperties(component, managedName, scriptID);
+		//ApplyScriptProperties(component, managedName, scriptID);
 	}
 
 }
@@ -495,7 +575,7 @@ void BehaviourSystem::ApplyScriptProperties(behaviour& component, const std::str
 		}
 
 		const std::string fieldName = prop.name.substr(prefix.size());
-		SetFieldFromString(scriptObject, klass, fieldName, prop.typeName, prop.value);
+		SetFieldFromString(scriptObject, klass, fieldName, prop.typeName, prop.value, prop.is_user_type);
 	}
 }
 

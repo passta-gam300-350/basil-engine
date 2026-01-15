@@ -104,6 +104,7 @@ public class PlayerController3D : Behavior
                 audio.Play();
             }
         }
+       
     }
 
     public void FixedUpdate()

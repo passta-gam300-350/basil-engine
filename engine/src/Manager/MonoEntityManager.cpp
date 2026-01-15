@@ -459,3 +459,19 @@ void MonoEntityManager::Attach() {
 void MonoEntityManager::Detach() {
 	MonoManager::Detach();
 }
+
+
+void MonoEntityManager::SplitTypeName(const char* fullname, std::string& ns, std::string& name)
+{
+	std::string fullNameStr(fullname);
+	size_t lastDot = fullNameStr.rfind('.');
+	if (lastDot != std::string::npos) {
+		ns = fullNameStr.substr(0, lastDot);
+		name = fullNameStr.substr(lastDot + 1);
+	}
+	else {
+		ns = "";
+		name = fullNameStr;
+	}
+
+}

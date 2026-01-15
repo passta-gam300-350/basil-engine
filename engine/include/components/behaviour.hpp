@@ -30,6 +30,7 @@ struct ScriptProperty
 	std::string name;
 	std::string typeName;
 	std::string value;
+	bool is_user_type = false;
 };
 
 

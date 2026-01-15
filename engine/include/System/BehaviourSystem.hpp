@@ -48,6 +48,8 @@ public:
 
 	rp::Guid GetScriptIDFromClassName(ecs::entity& entity ,const char* name, const char* ns=nullptr);
 
+
+
 };
 
 RegisterSystemDerivedPreUpdate(BehaviourSystem, BehaviourSystem, (ecs::ReadSet<ecs::entity>), (ecs::EmptySet), 60);

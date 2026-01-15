@@ -42,6 +42,12 @@ public class UserTest : Behavior
             UInt64 handle = TestField.NativeID;
             Logger.Log("TestField NativeID: " + handle);
         }
+
+        if (kiteController != null)
+        {
+            Logger.Log("Valid KiteController component found!");
+            kiteController.windSpeed -= 0.1f;
+        }
     }
 
     public void FixedUpdate()

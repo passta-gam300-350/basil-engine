@@ -448,7 +448,11 @@ void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, CSKlas
 				auto selected_entity = Engine::GetSceneRegistry().GetReferencedEntity(ref);
 				if (selected_entity.has_value())
 				{
+
+
 					ecs::entity e = selected_entity.value();
+
+
 					rp::Guid id = BehaviourSystem::Instance().GetScriptIDFromClassName(e, managedKlassName.c_str(), managedNamespace.empty() ? nullptr : managedNamespace.c_str());
 					CSKlassInstance* objInst = MonoEntityManager::GetInstance().GetInstance(id);
 					// Set Field in the script instance
@@ -650,6 +654,48 @@ bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
 					return true;
 				}
 			}
+			else if (fieldNode.descriptor->isUserType)
+			{
+				MonoObject* obj = nullptr;
+				mono_field_get_value(scriptObject, fieldInfo->field, &obj);
+				auto sceneRefString = [](SceneEntityReference const& ref)
+				{
+					return "scene_guid:" + ref.m_scene_guid.m_guid.to_hex() +
+						";scene_id:" + std::to_string(ref.m_scene_id);
+				};
+				if (!obj)
+				{
+					outValue = "None (" + fieldNode.descriptor->managed_name + ")";
+					return false;
+				}
+				
+				else
+				{
+					SceneEntityReference goRef{};
+					std::string cKlassName, cNamespace;
+					SplitManagedName(fieldNode.descriptor->managed_name, cNamespace, cKlassName);
+					CSKlass* userKlass = MonoEntityManager::GetInstance().GetNamedKlass(cKlassName.c_str(), cNamespace.empty() ? "" : cNamespace.c_str());
+					if (!userKlass)
+					{
+						outValue = "Invalid Class (" + fieldNode.descriptor->managed_name + ")";
+						return false;
+					}
+
+					CSKlass::FieldInfo* nativeIDField = userKlass->ResolveField("NativeID");
+					uint64_t nativeID = 0;
+					mono_field_get_value(obj, nativeIDField->field, &nativeID);
+					if (nativeID == 0)
+					{
+						outValue = "Invalid NativeID (" + fieldNode.descriptor->managed_name + ")";
+						return false;
+					}
+					ecs::entity native{ nativeID };
+					goRef.m_scene_guid = { Engine::GetSceneRegistry().GetActiveSceneGuid(), rp::utility::compute_string_hash("scene") };
+					goRef.m_scene_id = native.get_scene_uid();
+					outValue = sceneRefString(goRef);
+					return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -711,6 +757,7 @@ bool MonoImGuiRenderer::RenderBehaviourFields(const std::string& managedName,
 			prop.name = namePrefix + fieldNode.name;
 			prop.typeName = fieldNode.descriptor ? fieldNode.descriptor->managed_name : fieldNode.type;
 			prop.value = std::move(valueStr);
+			prop.is_user_type = fieldNode.descriptor ? fieldNode.descriptor->isUserType : false;
 			outProperties.push_back(std::move(prop));
 		}
 

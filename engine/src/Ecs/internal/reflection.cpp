@@ -223,7 +223,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		"ScriptProperty",
 		MemberRegistrationV<&ScriptProperty::name, "name">,
 		MemberRegistrationV<&ScriptProperty::typeName, "type">,
-		MemberRegistrationV<&ScriptProperty::value, "value">
+		MemberRegistrationV<&ScriptProperty::value, "value">,
+		MemberRegistrationV<&ScriptProperty::is_user_type, "is_user_type">
 	);
 
 	RegisterReflectionComponent<AudioComponent>(
