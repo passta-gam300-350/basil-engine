@@ -676,6 +676,24 @@
 "Prop_KitchenChair_02_chair_top_Roughness.png":
   "m_guid": "98e439978b3a05c1c9265fe45f1"
   "m_typeindex": "126269861530532084"
+"Puddle1_puddle_BaseColor.png":
+  "m_guid": "4619edd78f8b35607132cd599d3"
+  "m_typeindex": "126269861530532084"
+"Puddle1_puddle_Emissive.png":
+  "m_guid": "4619eec7a669e4ba83c25dc461d"
+  "m_typeindex": "126269861530532084"
+"Puddle1_puddle_Height.png":
+  "m_guid": "4619ef5753bb3327d5b4e589516"
+  "m_typeindex": "126269861530532084"
+"Puddle1_puddle_Metallic.png":
+  "m_guid": "4619eff7e4a839fae162ce54b61"
+  "m_typeindex": "126269861530532084"
+"Puddle1_puddle_Normal.png":
+  "m_guid": "4619f087ba0810229f1ec697462"
+  "m_typeindex": "126269861530532084"
+"Puddle1_puddle_Roughness.png":
+  "m_guid": "4619f117726a565940dd6be9e14"
+  "m_typeindex": "126269861530532084"
 "Sad Memory Jingle_Linear.ogg":
   "m_guid": "469fce676718c72e4cd8d8e15d8"
   "m_typeindex": "17099568057112876377"
@@ -1813,6 +1831,12 @@
 "m_plain_wall":
   "m_guid": "12888e77d30a7559556f11e04c4"
   "m_typeindex": "175488002581160416"
+"m_puddle":
+  "m_guid": "4632da573bb8e96a68fa60ddf7c"
+  "m_typeindex": "175488002581160416"
+"m_puddle_flat":
+  "m_guid": "4d0fdab70559cf505e6abe965e3"
+  "m_typeindex": "175488002581160416"
 "m_rightflag":
   "m_guid": "1534c7578ffa9e20a1ee56fd74a"
   "m_typeindex": "175488002581160416"
@@ -1962,6 +1986,12 @@
   "m_typeindex": "175488002581160416"
 "openPBR_shader5":
   "m_guid": "99868197731ba0ea52cd13a86ca"
+  "m_typeindex": "175488002581160416"
+"puddle1.obj":
+  "m_guid": "4619f5470958232ac940aa6bd58"
+  "m_typeindex": "4838001395392124604"
+"puddle_material":
+  "m_guid": "462e53d7feda3568fdd20d0b4c6"
   "m_typeindex": "175488002581160416"
 "rubberBand":
   "m_guid": "99713b07489b0c13bf4439c3795"

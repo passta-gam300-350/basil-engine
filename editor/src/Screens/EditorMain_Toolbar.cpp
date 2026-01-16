@@ -57,7 +57,7 @@ void EditorMain::Render_StartStop()
 			SaveScene("tmp.yaml");
 			engineService.ExecuteOnEngineThread([&]() {
 				PhysicsSystem::Instance().isActive = true;
-				PhysicsSystem::Instance().DisableObservers();
+				//PhysicsSystem::Instance().DisableObservers();
 				BehaviourSystem::Instance().isActive = true;
 				spdlog::info("Physics Active");
 

@@ -515,7 +515,7 @@ void PhysicsSystem::OnColliderAdded(entt::registry& registry, entt::entity entit
 void PhysicsSystem::OnRigidbodyDestroyed(entt::registry& registry, entt::entity entity) {
     ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
     auto world = Engine::GetWorld();
-
+    
     // Find and destroy associated Jolt body
     auto it = m_entityToBodyID.find(ecsEntity);
     if (it != m_entityToBodyID.end()) {
@@ -535,7 +535,7 @@ void PhysicsSystem::OnColliderDestroyed(entt::registry& registry, entt::entity e
     // Collider removed = body needs recreation (or destruction if no other colliders)
     ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
     auto world = Engine::GetWorld();
-
+    spdlog::critical("enter");
     // Find and destroy associated Jolt body
     auto it = m_entityToBodyID.find(ecsEntity);
     if (it != m_entityToBodyID.end()) {

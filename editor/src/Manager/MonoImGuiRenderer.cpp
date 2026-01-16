@@ -344,6 +344,12 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, CSKlas
 				break;
 				
 			}
+
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Select %s (ID: %d)", entityName.c_str(), entity.second.m_scene_id);
+			}
 			ImGui::PopID();
 		}
 
@@ -470,6 +476,8 @@ void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, CSKlas
 
 				if (!success)
 				{
+				spdlog::warn ("Failed to assign {} to field {}. The selected entity does not have a component of type {}.{}", entityName.c_str(), fieldNode.name.c_str(), managedNamespace.c_str(), managedKlassName.c_str());
+
 
 					ImGui::PopID();
 					continue;
@@ -477,6 +485,10 @@ void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, CSKlas
 				ImGui::PopID();
 				break;
 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Select %s (ID: %d)", entityName.c_str(), entity.second.m_scene_id);
 			}
 			ImGui::PopID();
 		}

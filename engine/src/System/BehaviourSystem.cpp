@@ -518,7 +518,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		component.scriptIDs.push_back(scriptID);
 		std::string managedName = (klass_ns && *klass_ns) ? (std::string(klass_ns) + "." + klassname) : std::string(klassname);
-		//ApplyScriptProperties(component, managedName, scriptID);
+		
 	}
 
 }

@@ -15,7 +15,7 @@ public class PlayerController3D : Behavior
     public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
-    public float moveSpeed =4f;
+    public float moveSpeed = 4f;
 
     public bool disabled = false;
 
@@ -23,7 +23,13 @@ public class PlayerController3D : Behavior
     private float pitch = 0f; // X rotation
     private float yaw = 0f;   // Y rotation
 
-    
+
+    public bool onMopEnabled = false;
+
+
+
+
+
 
 
 
@@ -50,23 +56,32 @@ public class PlayerController3D : Behavior
     public void Update()
     {
         if (disabled) return;
-        
-		//-------------------------------------------------------
-		// 2. Movement (WASD) - FPS style on ground plane
-		//-------------------------------------------------------
-		Vector3 forward = PlayerHead.transform.forward; forward.y = 0f;
-		Vector3 right = PlayerHead.transform.right;     right.y = 0f;
+
+        //-------------------------------------------------------
+        // 2. Movement (WASD) - FPS style on ground plane
+        //-------------------------------------------------------
+        Vector3 forward = PlayerHead.transform.forward; forward.y = 0f;
+        Vector3 right = PlayerHead.transform.right; right.y = 0f;
 
         Vector3 vel = Vector3.Zero;
 
-		if (Input.GetKey(KeyCode.W)) vel += forward;
-		if (Input.GetKey(KeyCode.S)) vel -= forward;
-		// Right vector appears mirrored in engine space, so flip strafing directions
-		if (Input.GetKey(KeyCode.A)) vel += right; // move left
-		if (Input.GetKey(KeyCode.D)) vel -= right; // move right
+        if (Input.GetKey(KeyCode.W)) vel += forward;
+        if (Input.GetKey(KeyCode.S)) vel -= forward;
+        // Right vector appears mirrored in engine space, so flip strafing directions
+        if (Input.GetKey(KeyCode.A)) vel += right; // move left
+        if (Input.GetKey(KeyCode.D)) vel -= right; // move right
+
+        if (Input.GetKey(KeyCode.KEY_1))
+        {
+            onMopEnabled = false;
+        }
+        else if (Input.GetKey(KeyCode.KEY_2))
+        {
+            onMopEnabled = true;
+        }
 
         bool isMoving = vel.MagnitudeSqr() > 0.001f;
-        
+
         // Play footstep sounds at intervals while moving
         if (isMoving)
         {
@@ -93,7 +108,7 @@ public class PlayerController3D : Behavior
     {
         if (footsteps == null || footsteps.Length == 0)
             return;
-            
+
         // Get a random footstep sound
         int randomIndex = random.Next(0, footsteps.Length);
         if (footsteps[randomIndex] != null)
@@ -104,7 +119,7 @@ public class PlayerController3D : Behavior
                 audio.Play();
             }
         }
-       
+
     }
 
     public void FixedUpdate()
@@ -114,5 +129,10 @@ public class PlayerController3D : Behavior
     public void OnCollisionEnter(GameObject other)
     {
         Logger.Log("Entered collision with " + other.NativeID);
+    }
+
+    public void Mop()
+    {
+        
     }
 }
