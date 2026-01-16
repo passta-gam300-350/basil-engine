@@ -195,3 +195,16 @@ void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 		}
 	}
 }
+
+void Window::SetCursorEnabled(bool enabled)
+{
+	m_cursorEnabled = enabled;
+	if (enabled)
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+	else
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+}
