@@ -134,6 +134,8 @@ struct AudioComponent
     float maxDistance = MAXDISTANCE;
 
     // Audio properties
+    // [NEW]
+    //FMOD::Group* group = set to master;
     float volume = 1.0f;
     bool isLooping = false;
     bool is3D = true;
