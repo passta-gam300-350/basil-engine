@@ -221,6 +221,8 @@ void ReflectionRegistry::SetupEngineTypes()
 	RegisterReflectionComponent<AudioComponent>(
 		"AudioComponent",
 		MemberRegistrationV<&AudioComponent::audioAssetGuid, "audioAssetGuid">,
+		//audio group
+		//filter array
 		MemberRegistrationV<&AudioComponent::volume, "volume">,
 		MemberRegistrationV<&AudioComponent::isLooping, "isLooping">,
 		MemberRegistrationV<&AudioComponent::is3D, "is3D">,
