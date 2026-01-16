@@ -39,6 +39,8 @@ public:
 	uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
 
+	void SetCursorEnabled(bool enabled);
+
 
 	void SwapBuffers();
 	void SetVSync(bool enabled);
@@ -55,6 +57,7 @@ private:
 	GLFWwindow* m_Window;
 	uint32_t m_Width, m_Height;
 	bool m_Initialized = false;
+	bool m_cursorEnabled = true;
 
 	// Callback invoked on window resize to trigger re-rendering
 	std::function<void()> m_ResizeCallback;
