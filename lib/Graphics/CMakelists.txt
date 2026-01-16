@@ -13,6 +13,8 @@ set(ALL_LIBS
   PUBLIC stb
   PUBLIC spdlog
   PUBLIC tinyddsloader
+  PUBLIC freetype
+  PUBLIC msdfgen-core
  )
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})

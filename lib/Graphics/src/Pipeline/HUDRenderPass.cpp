@@ -1,6 +1,7 @@
 #include "Pipeline/HUDRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/HUDRenderer.h"
+#include "Rendering/TextRenderer.h"
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 
@@ -79,6 +80,11 @@ void HUDRenderPass::Execute(RenderContext& context)
 
     // Render HUD elements via the HUD renderer
     context.hudRenderer.RenderToPass(*this, context.frameData);
+
+    //spdlog::info("HUDRenderPass::Execute() - calling Text renderer");
+
+    // Render text elements via the Text renderer (on top of HUD)
+    context.textRenderer.RenderToPass(*this, context.frameData);
 
     //spdlog::info("HUDRenderPass::Execute() - executing commands");
 

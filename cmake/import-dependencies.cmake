@@ -381,6 +381,32 @@ macro(import_freetype)
     include_directories(${freetype_SOURCE_DIR}/inc)
 endmacro()
 
+macro(import_msdfgen)
+    FetchContent_Declare(
+        msdfgen
+        GIT_REPOSITORY https://github.com/Chlumsky/msdfgen.git
+        GIT_TAG v1.12
+    )
+
+    # Configure msdfgen build options
+    set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_INSTALL OFF CACHE BOOL "" FORCE)
+
+    FetchContent_MakeAvailable(msdfgen)
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    foreach(target msdfgen-core msdfgen-ext)
+        if(TARGET ${target})
+            get_target_property(inc_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
+            if(inc_dirs)
+                set_target_properties(${target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+            endif()
+        endif()
+    endforeach()
+endmacro()
+
 macro(import_fmod)
     set(FMOD_API_DIR "${CMAKE_SOURCE_DIR}/dep/vendor/fmod")
     set(FMOD_CORE_API_LIB_DIR "${FMOD_API_DIR}/api/core/lib/x64")
@@ -563,6 +589,7 @@ function(hide_dependencies)
         yaml-cpp-sandbox
         imgui_backends
         freetype
+        msdfgen-core
         Jolt
         PROPERTIES FOLDER dep)
     suppress_dep_warnings(
@@ -594,6 +621,7 @@ function(hide_dependencies)
         yaml-cpp-sandbox
         imgui_backends
         freetype
+        msdfgen-core
         Jolt)
 endfunction()
 
@@ -622,6 +650,7 @@ macro(import_dependencies)
 
     # import_zlib()
     import_freetype()
+    import_msdfgen()
     import_fmod()
     import_mono()
     import_xml()

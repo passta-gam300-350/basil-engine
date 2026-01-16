@@ -11,6 +11,7 @@
 #include "Rendering/InstancedRenderer.h"
 #include "Rendering/PBRLightingRenderer.h"
 #include "Rendering/HUDRenderer.h"
+#include "Rendering/TextRenderer.h"
 #include "Pipeline/PresentPass.h"
 //#include "Pipeline/ShadowMappingPass.h"
 #include "Rendering/ParticleRenderer.h"
@@ -64,6 +65,12 @@ void SceneRenderer::SubmitHUDElement(const HUDElementData& hudElement) {
     }
 }
 
+void SceneRenderer::SubmitText(const TextElementData& textElement) {
+    if (m_TextRenderer) {
+        m_TextRenderer->SubmitText(textElement);
+    }
+}
+
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
@@ -78,6 +85,9 @@ void SceneRenderer::ClearFrame()
     }
     if (m_HUDRenderer) {
         m_HUDRenderer->BeginFrame();
+    }
+    if (m_TextRenderer) {
+        m_TextRenderer->BeginFrame();
     }
 
 	// Clear SSBO-based shadow data (will be repopulated by enabled shadow passes)
@@ -195,6 +205,9 @@ void SceneRenderer::InitializeRenderingCoordinators()
 
     m_HUDRenderer = std::make_unique<HUDRenderer>();
     assert(m_HUDRenderer && "Failed to create HUDRenderer");
+
+    m_TextRenderer = std::make_unique<TextRenderer>();
+    assert(m_TextRenderer && "Failed to create TextRenderer");
 }
 
 void SceneRenderer::Render()
@@ -223,6 +236,9 @@ void SceneRenderer::Render()
     if (m_HUDRenderer) {
         m_HUDRenderer->EndFrame();
     }
+    if (m_TextRenderer) {
+        m_TextRenderer->EndFrame();
+    }
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
@@ -235,7 +251,8 @@ void SceneRenderer::Render()
         *m_ResourceManager,      // ref to resource manager
         *m_TextureSlotManager,   // ref to texture slot manager
         *m_ParticleRenderer,     // ref to particle renderer
-        *m_HUDRenderer           // ref to HUD renderer
+        *m_HUDRenderer,          // ref to HUD renderer
+        *m_TextRenderer          // ref to text renderer
     );
 
     // Execute the single pipeline
@@ -368,7 +385,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -799,6 +816,18 @@ void SceneRenderer::SetHUDShader(const std::shared_ptr<Shader>& shader) const
             }
             spdlog::info("SceneRenderer: HUD shader configured");
         }
+    }
+}
+
+void SceneRenderer::SetTextShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "Text shader cannot be null");
+    assert(shader->ID != 0 && "Text shader must be compiled and linked");
+
+    if (m_TextRenderer)
+    {
+        m_TextRenderer->SetTextShader(shader);
+        spdlog::info("SceneRenderer: Text shader configured");
     }
 }
 
