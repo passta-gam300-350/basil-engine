@@ -1,0 +1,5 @@
+#include "../Source/Student/Project_1/Trees/Bird.bht"
+#include "../Source/Student/Project_1/Trees/Car.bht"
+#include "../Source/Student/Project_1/Trees/Ghost.bht"
+#include "../Source/Student/Project_1/Trees/Man.bht"
+#include "../Source/Student/Project_1/Trees/Tree.bht"

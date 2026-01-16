@@ -1,0 +1,10 @@
+﻿  Setup.cpp
+     Creating library C:\Users\onyxx\Downloads\CS380_s.aaronnicholas_A1\CS380_s.aaronnicholas_A1\framework\x64\Release\CS380.lib and object C:\Users\onyxx\Downloads\CS380_s.aaronnicholas_A1\CS380_s.aaronnicholas_A1\framework\x64\Release\CS380.exp
+  Generating code
+  4 of 6788 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    9 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  The-Rabin-Engine.vcxproj -> C:\Users\onyxx\Downloads\CS380_s.aaronnicholas_A1\CS380_s.aaronnicholas_A1\framework\x64\Release\CS380.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.
