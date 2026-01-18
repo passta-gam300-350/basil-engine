@@ -3,6 +3,7 @@
 \file		Terrain.cpp
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	Map and layer management
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -13,7 +14,6 @@ written consent of DigiPen Institute of Technology is prohibited.
 
 #include <pch.h>
 #include "Terrain.h"
-// #include "TerrainAnalysis.h"
 #include <fstream>
 #include "Core/Serialization.h"
 
@@ -168,10 +168,7 @@ void Terrain::load_map(unsigned mapIndex)
     configure_float_map_layer(seekLayer, map.height, map.width, seekSearchColor, seekDetectionColor);
 
     globalScalar = mapSizeInWorld / static_cast<float>(map.width);
-
     generate_positions();
-
-    // refresh_static_analysis_layers();
     
     Messenger::send_message(Messages::MAP_CHANGE);
 }
@@ -187,19 +184,6 @@ void Terrain::configure_float_map_layer(MapLayer<float> &layer, int height, int 
     layer.populate_with_value(height, width, 0.0f);
     layer.configure_float(c0, c1);
 }
-
-//void Terrain::refresh_static_analysis_layers()
-//{
-//    if (opennessLayer.enabled == true)
-//    {
-//        analyze_openness(opennessLayer);
-//    }
-//
-//    if (totalVisibilityLayer.enabled == true)
-//    {
-//        analyze_visibility(totalVisibilityLayer);
-//    }
-//}
 
 void Terrain::reset_path_layer()
 {

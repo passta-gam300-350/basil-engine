@@ -3,6 +3,7 @@
 \file		AgentOrganizer.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	Actor manager declarations
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -14,8 +15,6 @@ written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include <unordered_map>
 #include "CameraAgent.h"
-//#include "AStarAgent.h"
-//#include "EnemyAgent.h"
 #include "BehaviorAgent.h"
 
 enum class BehaviorTreeTypes;
@@ -34,8 +33,6 @@ public:
 
     // agentType is for debug display and also looking up all agents of a specific type
     BehaviorAgent *create_behavior_agent(const char *agentType, BehaviorTreeTypes treeType,Agent::AgentModel model = Agent::AgentModel::Man);
-    // AStarAgent *create_pathing_agent();
-    // EnemyAgent *create_enemy_agent();
     void destroy_agent(Agent *agent);
     
     const std::vector<Agent *> &get_all_agents() const;

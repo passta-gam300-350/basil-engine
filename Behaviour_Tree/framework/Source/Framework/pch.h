@@ -3,6 +3,7 @@
 \file		pch.cpp
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	Pre-compiled header
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -21,7 +22,6 @@ written consent of DigiPen Institute of Technology is prohibited.
 #include <dwrite_2.h>
 #include <d2d1_2.h>
 // Use the C++ standard templated min/max
-
 
 // DirectX apps don't need GDI
 #define NODRAWTEXT

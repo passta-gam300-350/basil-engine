@@ -3,6 +3,7 @@
 \file		Serialization.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	Serialization declarations
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -14,7 +15,6 @@ written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include  <filesystem>
 #include <rapidjson/document.h>
-// #include "Terrain/Terrain.h"
 #include "Misc/PathfindingDetails.hpp"
 #include <tuple>
 #include <string>

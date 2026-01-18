@@ -3,6 +3,7 @@
 \file		Global.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited		Saminathan Aaron Nicholas
 \summary	Global variables and systems
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -25,7 +26,6 @@ class SimpleRenderer;
 class AgentOrganizer;
 class Terrain;
 class Project;
-// class AStarPather;
 class UICoordinator;
 class BehaviorTreeBuilder;
 class AudioManager;
@@ -35,7 +35,6 @@ extern std::unique_ptr<SimpleRenderer> renderer;
 extern std::unique_ptr<AgentOrganizer> agents;
 extern std::unique_ptr<Terrain> terrain;
 extern std::unique_ptr<Project> project;
-// extern std::unique_ptr<AStarPather> pather;
 extern std::unique_ptr<UICoordinator> ui;
 extern std::unique_ptr<BehaviorTreeBuilder> treeBuilder;
 extern std::unique_ptr<AudioManager> audioManager;

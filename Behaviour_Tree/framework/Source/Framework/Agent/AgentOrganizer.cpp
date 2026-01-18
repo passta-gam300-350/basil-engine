@@ -3,6 +3,7 @@
 \file		AgentOrganizer.cpp
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	Actor manager implementation
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -76,36 +77,6 @@ BehaviorAgent* AgentOrganizer::create_behavior_agent(const char* type, BehaviorT
     std::cout << "Attempted to spawn behavior agent while not in project one" << std::endl;
     return nullptr;
 }
-
-//AStarAgent *AgentOrganizer::create_pathing_agent()
-//{
-//    auto &idCounter = agentIDCounts[AStarAgent::patherTypeName];
-//    const auto id = idCounter++;
-//
-//    std::cout << "Creating pathing agent " << id << std::endl;
-//
-//    auto agent = new AStarAgent(id);
-//
-//    agentsAll.emplace_back(agent);
-//    agentsByType[AStarAgent::patherTypeName].emplace_back(agent);
-//
-//    return agent;
-//}
-
-//EnemyAgent *AgentOrganizer::create_enemy_agent()
-//{
-//    auto &idCounter = agentIDCounts[AStarAgent::patherTypeName];
-//    const auto id = idCounter++;
-//
-//    std::cout << "Creating enemy agent " << id << std::endl;
-//
-//    auto agent = new EnemyAgent(id);
-//
-//    agentsAll.emplace_back(agent);
-//    agentsByType[AStarAgent::patherTypeName].emplace_back(agent);
-//
-//    return agent;
-//}
 
 void AgentOrganizer::destroy_agent(Agent *agent)
 {

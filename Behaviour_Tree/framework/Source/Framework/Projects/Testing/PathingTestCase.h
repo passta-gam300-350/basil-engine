@@ -3,6 +3,7 @@
 \file		PathingTestCase.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	A collection of pathfinding tests
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -27,14 +28,7 @@ public:
         bool screenshot;
     };
 
-    // Outcome tick(AStarAgent *agent, PathingTestResult &results);
-
-    // void prep(AStarAgent *agent);
-
     const std::string &get_name() const;
-
-    // void bootstrap(AStarAgent *agent, const PathRequest::Settings &set, unsigned numTests, const std::string &name);
-
     const PathRequest::Settings &get_settings() const;
 
     size_t get_num_tests();

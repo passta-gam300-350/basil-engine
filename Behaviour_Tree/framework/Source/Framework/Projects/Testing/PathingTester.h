@@ -3,6 +3,7 @@
 \file		PathingTester.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\edited     Saminathan Aaron Nicholas
 \summary	System for executing and recording test results
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -14,29 +15,15 @@ written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include "PathingTestCase.h"
 
-// class AStarAgent;
-
 class PathTester
 {
 public:
     bool initialize();
-    // void set_agent(AStarAgent *agent);
 
     const std::wstring &get_button_text();
     const std::wstring &get_status_text();
     const std::wstring &get_failed_text();
     void clear();
-
-    /*void goto_next_test();
-    void goto_next_failed();
-
-    bool has_multiple_failed_tests();
-
-    void execute_current_test();
-    void execute_all_tests();*/
-    // void execute_speed_test();
-
-    // void tick();
 
     void bootstrap();
 private:
@@ -65,7 +52,6 @@ private:
 
     void bootstrap(const std::string &name, Method method, Heuristic heuristic, float weight);
     void bootstrap_speed();
-    // void on_test_start();
     void on_test_end();
     bool load_tests();
     void build_status_message(const std::vector<PathingTestResult> &results);
