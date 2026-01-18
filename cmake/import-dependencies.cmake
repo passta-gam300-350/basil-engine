@@ -379,6 +379,11 @@ macro(import_freetype)
 
     FetchContent_MakeAvailable(freetype)
     include_directories(${freetype_SOURCE_DIR}/inc)
+
+    # Create Freetype::Freetype alias that msdfgen expects
+    if(NOT TARGET Freetype::Freetype)
+        add_library(Freetype::Freetype ALIAS freetype)
+    endif()
 endmacro()
 
 macro(import_msdfgen)
@@ -400,6 +405,8 @@ macro(import_msdfgen)
     set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_INSTALL OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_USE_FREETYPE ON CACHE BOOL "" FORCE)
+    set(MSDFGEN_DISABLE_SVG ON CACHE BOOL "" FORCE)  # Disable SVG support (requires tinyxml2)
+    set(MSDFGEN_DISABLE_PNG ON CACHE BOOL "" FORCE)  # Disable PNG support (requires libpng)
 
     # Provide FreeType variables that msdfgen's FindFreetype expects
     set(FREETYPE_FOUND TRUE CACHE BOOL "")

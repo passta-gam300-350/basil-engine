@@ -28,6 +28,7 @@ Technology is prohibited.
 #include <Utility/HUDData.h>  // For HUD rendering
 #include <Utility/TextData.h>  // For text rendering
 #include <Rendering/HUDRenderer.h>  // For HUD renderer methods
+#include <Rendering/TextRenderer.h>  // For text renderer methods
 
 #include "Messaging/Messaging_System.h"
 
@@ -511,9 +512,10 @@ void RenderSystem::Update(ecs::world& world) {
 		m_SceneRenderer->SubmitText(textData);
 	}
 
-	// Enable/disable HUD pass based on presence of HUD elements
+	// Enable/disable HUD pass based on presence of HUD or text elements
 	// Note: EndFrame() is called by SceneRenderer::Render() before rendering
-	if (hasHUDElements) {
+	bool hasTextElements = m_SceneRenderer->GetTextRenderer()->GetGlyphCount() > 0;
+	if (hasHUDElements || hasTextElements) {
 		m_SceneRenderer->EnablePass("HUDPass", true);
 	} else {
 		m_SceneRenderer->EnablePass("HUDPass", false);

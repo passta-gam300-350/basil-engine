@@ -127,14 +127,14 @@ void TextRenderer::CreateQuadMesh()
     // Simple quad in local space (0,0 to 1,1)
     // Position will be calculated in vertex shader based on glyph position
     float quadVertices[] = {
-        // Positions   // TexCoords (will be replaced by glyph UVs in shader)
-        0.0f, 1.0f,    0.0f, 1.0f,  // Top-left
-        0.0f, 0.0f,    0.0f, 0.0f,  // Bottom-left
-        1.0f, 0.0f,    1.0f, 0.0f,  // Bottom-right
+        // Positions (Y-down)   // TexCoords (Y-up for correct texture sampling)
+        0.0f, 0.0f,    0.0f, 1.0f,  // Top-left position, top-left texcoord
+        0.0f, 1.0f,    0.0f, 0.0f,  // Bottom-left position, bottom-left texcoord
+        1.0f, 1.0f,    1.0f, 0.0f,  // Bottom-right position, bottom-right texcoord
 
-        0.0f, 1.0f,    0.0f, 1.0f,  // Top-left
-        1.0f, 0.0f,    1.0f, 0.0f,  // Bottom-right
-        1.0f, 1.0f,    1.0f, 1.0f   // Top-right
+        0.0f, 0.0f,    0.0f, 1.0f,  // Top-left
+        1.0f, 1.0f,    1.0f, 0.0f,  // Bottom-right
+        1.0f, 0.0f,    1.0f, 1.0f   // Top-right position, top-right texcoord
     };
 
     glGenVertexArrays(1, &m_QuadVAO);
@@ -222,6 +222,104 @@ void TextRenderer::RenderBatch(RenderPass& renderPass, const FontBatch& batch, c
     renderPass.Submit(drawCmd);
 }
 
+glm::vec2 TextRenderer::CalculateTextBounds(const TextElementData& textElement)
+{
+    const FontAtlas* fontAtlas = textElement.fontAtlas;
+    if (!fontAtlas || textElement.text.empty()) return glm::vec2(0.0f);
+
+    float fontScale = textElement.fontSize / static_cast<float>(fontAtlas->GetBaseFontSize());
+    float lineHeight = fontAtlas->GetLineHeight() * fontScale * textElement.lineSpacing;
+
+    float maxWidth = 0.0f;
+    float currentLineWidth = 0.0f;
+    int lineCount = 1;
+    char32_t prevCodepoint = 0;
+
+    const char* str = textElement.text.c_str();
+    while (*str) {
+        char32_t codepoint = DecodeUTF8(str);
+        if (codepoint == 0) break;
+
+        if (codepoint == '\n') {
+            maxWidth = std::max(maxWidth, currentLineWidth);
+            currentLineWidth = 0.0f;
+            lineCount++;
+            prevCodepoint = 0;
+            continue;
+        }
+
+        const GlyphData* glyph = fontAtlas->GetGlyph(codepoint);
+        if (!glyph) {
+            glyph = fontAtlas->GetGlyph(' ');
+            if (!glyph) {
+                prevCodepoint = codepoint;
+                continue;
+            }
+        }
+
+        if (prevCodepoint != 0) {
+            currentLineWidth += fontAtlas->GetKerning(prevCodepoint, codepoint) * fontScale;
+        }
+
+        currentLineWidth += (glyph->advance + textElement.letterSpacing) * fontScale;
+        prevCodepoint = codepoint;
+    }
+
+    maxWidth = std::max(maxWidth, currentLineWidth);
+    float totalHeight = lineHeight * lineCount;
+
+    return glm::vec2(maxWidth, totalHeight);
+}
+
+glm::vec2 TextRenderer::CalculateAnchorOffset(TextAnchor anchor, const glm::vec2& bounds)
+{
+    glm::vec2 offset(0.0f);
+
+    // Horizontal offset - anchor describes which edge of text is at position
+    // Left: position is left edge of text (text extends right)
+    // Right: position is right edge of text (text extends left)
+    switch (anchor) {
+        case TextAnchor::TopRight:
+        case TextAnchor::CenterRight:
+        case TextAnchor::BottomRight:
+            offset.x = 0.0f;  // Position is right edge, text extends left
+            break;
+        case TextAnchor::TopCenter:
+        case TextAnchor::Center:
+        case TextAnchor::BottomCenter:
+            offset.x = -bounds.x * 0.5f;  // Position is horizontal center
+            break;
+        case TextAnchor::TopLeft:
+        case TextAnchor::CenterLeft:
+        case TextAnchor::BottomLeft:
+            offset.x = -bounds.x;  // Position is left edge, text extends right
+            break;
+    }
+
+    // Vertical offset - anchor describes which edge of text is at position
+    // Top: position is top edge of text (text extends down)
+    // Bottom: position is bottom edge of text (text extends up)
+    switch (anchor) {
+        case TextAnchor::BottomLeft:
+        case TextAnchor::BottomCenter:
+        case TextAnchor::BottomRight:
+            offset.y = 0.0f;  // Position is bottom edge, text extends up
+            break;
+        case TextAnchor::CenterLeft:
+        case TextAnchor::Center:
+        case TextAnchor::CenterRight:
+            offset.y = -bounds.y * 0.5f;  // Position is vertical center
+            break;
+        case TextAnchor::TopLeft:
+        case TextAnchor::TopCenter:
+        case TextAnchor::TopRight:
+            offset.y = -bounds.y;  // Position is top edge, text extends down
+            break;
+    }
+
+    return offset;
+}
+
 void TextRenderer::LayoutText(const TextElementData& textElement, FontBatch& batch)
 {
     const FontAtlas* fontAtlas = textElement.fontAtlas;
@@ -230,8 +328,12 @@ void TextRenderer::LayoutText(const TextElementData& textElement, FontBatch& bat
     // Calculate font scale from base size to desired size
     float fontScale = textElement.fontSize / static_cast<float>(fontAtlas->GetBaseFontSize());
 
-    // Starting cursor position
-    glm::vec2 cursor = textElement.position;
+    // Calculate text bounds and anchor offset
+    glm::vec2 textBounds = CalculateTextBounds(textElement);
+    glm::vec2 anchorOffset = CalculateAnchorOffset(textElement.anchor, textBounds);
+
+    // Starting cursor position (adjusted for anchor)
+    glm::vec2 cursor = textElement.position + anchorOffset;
 
     // Decode UTF-8 and layout glyphs
     const char* str = textElement.text.c_str();
@@ -279,12 +381,21 @@ void TextRenderer::LayoutText(const TextElementData& textElement, FontBatch& bat
         glyphInstance.color = textElement.color;
         glyphInstance.sdfThreshold = textElement.sdfThreshold;
         glyphInstance.smoothing = textElement.smoothing;
-        glyphInstance.outlineWidth = textElement.outlineWidth;
-        glyphInstance.glowStrength = textElement.glowStrength;
+
+        // Convert outline/glow from pixels to SDF space
+        // At base font size, 1 pixel = 0.5 / sdfRange in SDF units
+        // Divide by fontScale to maintain consistent screen pixel width at any size
+        float sdfRange = static_cast<float>(fontAtlas->GetSDFRange());
+        float pixelsToSDF = 0.5f / (sdfRange * fontScale);
+        glyphInstance.outlineWidth = textElement.outlineWidth * pixelsToSDF;
+        glyphInstance.glowStrength = textElement.glowStrength * pixelsToSDF;
         glyphInstance.outlineColor = textElement.outlineColor;
         glyphInstance.glowColor = textElement.glowColor;
         glyphInstance.rotation = glm::radians(textElement.rotation);
-        glyphInstance.anchor = static_cast<uint32_t>(textElement.anchor);
+        // Individual glyphs always use TopLeft anchor - the bearing already positions
+        // the top-left of each glyph relative to the baseline. Text block anchoring
+        // is handled via cursor position adjustment in CalculateAnchorOffset().
+        glyphInstance.anchor = static_cast<uint32_t>(TextAnchor::TopLeft);
         glyphInstance.padding[0] = 0.0f;
         glyphInstance.padding[1] = 0.0f;
 

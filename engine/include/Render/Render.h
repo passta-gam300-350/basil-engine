@@ -182,11 +182,11 @@ struct TextComponent {
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);  ///< Text color (RGBA)
 
     // Outline effect
-    float outlineWidth = 0.0f;                              ///< Outline thickness (0.0-0.5, 0 = no outline)
+    float outlineWidth = 0.0f;                              ///< Outline thickness in pixels (0 = no outline)
     glm::vec4 outlineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); ///< Outline color (RGBA)
 
     // Glow/shadow effect
-    float glowStrength = 0.0f;                              ///< Glow/shadow strength (0.0-0.5, 0 = no glow)
+    float glowStrength = 0.0f;                              ///< Glow/shadow strength in pixels (0 = no glow)
     glm::vec4 glowColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f); ///< Glow/shadow color (RGBA)
 
     // SDF rendering parameters

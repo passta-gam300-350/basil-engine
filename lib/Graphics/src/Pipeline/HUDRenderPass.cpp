@@ -27,13 +27,14 @@ void HUDRenderPass::Execute(RenderContext& context)
         return;
     }
 
-    // Check if there are any HUD elements to render
-    uint32_t elementCount = context.hudRenderer.GetElementCount();
-    //spdlog::info("HUDRenderPass::Execute() - HUD element count: {}", elementCount);
+    // Check if there are any HUD or text elements to render
+    uint32_t hudElementCount = context.hudRenderer.GetElementCount();
+    uint32_t textGlyphCount = context.textRenderer.GetGlyphCount();
+    //spdlog::info("HUDRenderPass::Execute() - HUD element count: {}, text glyph count: {}", hudElementCount, textGlyphCount);
 
-    if (elementCount == 0) {
-        //spdlog::warn("HUDRenderPass::Execute() - No HUD elements, skipping");
-        return;  // No HUD elements, skip rendering
+    if (hudElementCount == 0 && textGlyphCount == 0) {
+        //spdlog::warn("HUDRenderPass::Execute() - No HUD or text elements, skipping");
+        return;  // No HUD or text elements, skip rendering
     }
 
     // Setup GL state for HUD rendering

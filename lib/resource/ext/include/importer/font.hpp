@@ -209,8 +209,14 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 		metrics.codepoint = codepoint;
 		metrics.uv_min = glm::vec2(static_cast<float>(rect.x) / atlas_size, static_cast<float>(rect.y) / atlas_size);
 		metrics.uv_max = glm::vec2(static_cast<float>(rect.x + rect.width) / atlas_size, static_cast<float>(rect.y + rect.height) / atlas_size);
-		metrics.size = glm::vec2(static_cast<float>(right - left), static_cast<float>(top - bottom));
-		metrics.bearing = glm::vec2(static_cast<float>(left), static_cast<float>(top));
+		metrics.size = glm::vec2(static_cast<float>(glyph_width), static_cast<float>(glyph_height));
+		// Bearing: offset from cursor to top-left of glyph bitmap
+		// X: horizontal offset (left edge of outline minus padding)
+		// Y: negated for Y-down screen coordinates (negative = above baseline)
+		metrics.bearing = glm::vec2(
+			static_cast<float>(left) - padding,
+			-(static_cast<float>(top) + padding)
+		);
 		metrics.advance = static_cast<float>(advance);
 		metrics.sdf_scale = 1.0f / static_cast<float>(fontDesc.sdf_range);
 
@@ -281,6 +287,6 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 	return fontData;
 }
 
-RegisterResourceTypeImporter(FontDescriptor, FontAtlasResourceData, "font", ".font", ImportFont, ".ttf", ".otf")
+RegisterResourceTypeImporter(FontDescriptor, FontAtlasResourceData, "font_atlas", ".font", ImportFont, ".ttf", ".otf")
 
 #endif

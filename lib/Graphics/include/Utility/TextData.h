@@ -84,11 +84,11 @@ struct TextElementData {
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Outline effect
-    float outlineWidth = 0.0f;                              // Outline thickness (0.0-0.5)
+    float outlineWidth = 0.0f;                              // Outline thickness in pixels
     glm::vec4 outlineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // Outline color
 
     // Glow/shadow effect
-    float glowStrength = 0.0f;                              // Glow strength (0.0-0.5)
+    float glowStrength = 0.0f;                              // Glow strength in pixels
     glm::vec4 glowColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f); // Glow/shadow color
 
     // SDF rendering parameters

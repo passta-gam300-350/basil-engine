@@ -8,6 +8,7 @@
 #include <descriptors/material.hpp>
 #include <descriptors/descriptors.hpp>
 #include <descriptors/audio.hpp>
+#include <importer/importer.hpp>  // Registers native suffixes for GetResourceExt()
 #include <glm/glm.hpp>
 #include "Screens/EditorMain.hpp"
 #include <ranges>
@@ -341,7 +342,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				bool has_source_file = false;
 
 				// Check common source file extensions
-				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac", ".mpeg", ".mpg"};
+				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac", ".mpeg", ".mpg", ".ttf", ".otf"};
 				for (auto const& src_ext : source_exts) {
 					if (std::filesystem::exists(base_name + src_ext)) {
 						has_source_file = true;

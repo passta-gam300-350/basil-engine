@@ -121,4 +121,8 @@ private:
     char32_t DecodeUTF8(const char*& str);
     std::vector<std::string> WrapText(const std::string& text, const FontAtlas* fontAtlas,
                                       float fontSize, float maxWidth);
+
+    // Text bounds calculation for anchor support
+    glm::vec2 CalculateTextBounds(const TextElementData& textElement);
+    glm::vec2 CalculateAnchorOffset(TextAnchor anchor, const glm::vec2& bounds);
 };
