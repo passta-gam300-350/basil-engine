@@ -112,6 +112,6 @@ private:
     void load_map(unsigned mapIndex);
 
     void configure_float_map_layer(MapLayer<float> &layer, int height, int width, const Color &color0, const Color &color1);
-    void refresh_static_analysis_layers();
+    // void refresh_static_analysis_layers();
     void reset_path_layer();
 };

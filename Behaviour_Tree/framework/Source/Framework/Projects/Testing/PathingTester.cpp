@@ -14,7 +14,7 @@ written consent of DigiPen Institute of Technology is prohibited.
 #include <pch.h>
 #include "PathingTester.h"
 #include "Core/Serialization.h"
-#include "Agent/AStarAgent.h"
+// #include "Agent/AStarAgent.h"
 #include <sstream>
 #include "Misc/Stopwatch.h"
 #include <iomanip>
@@ -35,18 +35,18 @@ bool PathTester::initialize()
 
     const bool result = load_tests();
 
-    if (result == true)
+    /*if (result == true)
     {
         goto_next_test();
-    }
+    }*/
 
     return result;
 }
 
-void PathTester::set_agent(AStarAgent *a)
-{
-    agent = a;
-}
+//void PathTester::set_agent(AStarAgent *a)
+//{
+//    agent = a;
+//}
 
 const std::wstring &PathTester::get_button_text()
 {
@@ -73,213 +73,213 @@ void PathTester::clear()
     }
 }
 
-void PathTester::goto_next_test()
-{
-    currentTest = (currentTest + 1) % tests.size();
+//void PathTester::goto_next_test()
+//{
+//    currentTest = (currentTest + 1) % tests.size();
+//
+//    const auto &name = tests[currentTest].get_name();
+//
+//    buttonText = std::wstring(name.begin(), name.end());
+//}
+//
+//void PathTester::goto_next_failed()
+//{
+//    currentFailed = (currentFailed + 1) % failedData.size();
+//}
+//
+//bool PathTester::has_multiple_failed_tests()
+//{
+//    return failedData.size() > 1;
+//}
+//
+//void PathTester::execute_current_test()
+//{
+//    if (tickQueue.empty() == true)
+//    {
+//        // on_test_start();
+//
+//        auto &test = tests[currentTest];
+//        totalTests = test.get_num_tests();
+//
+//        tickQueue.push({ static_cast<size_t>(currentTest), false });
+//
+//        outputName = test.get_name();
+//    }
+//    else
+//    {
+//        std::cout << "Attemped to run test while another test is in progress, ignoring request" << std::endl;
+//    }
+//}
+//
+//void PathTester::execute_all_tests()
+//{
+//    if (tickQueue.empty() == true)
+//    {
+//        // on_test_start();
+//
+//        for (size_t i = 0; i < tests.size(); ++i)
+//        {
+//            tickQueue.push({ i, false });
+//            totalTests += tests[i].get_num_tests();
+//        }
+//
+//        outputName = "All_Tests";
+//    }
+//    else
+//    {
+//        std::cout << "Attemped to run test while another test is in progress, ignoring request" << std::endl;
+//    }
+//}
 
-    const auto &name = tests[currentTest].get_name();
+//void PathTester::execute_speed_test()
+//{
+//    terrain->goto_map(1);
+//
+//    agent->set_heuristic_type(Heuristic::OCTILE);
+//    agent->set_heuristic_weight(1.01f);
+//    agent->set_debug_coloring(false);
+//    agent->set_movement_type(Movement::NONE);
+//    agent->set_method_type(Method::ASTAR);
+//    agent->set_rubberbanding(false);
+//    agent->set_smoothing(false);
+//    agent->set_single_step(false);
+//
+//    Stopwatch timer;
+//
+//    const size_t numIter = 1000;
+//
+//    using ms = std::chrono::microseconds;
+//    std::array<ms, numIter> results;
+//    ms::rep fastest = std::numeric_limits<ms::rep>().max();
+//    ms::rep total = 0;
+//
+//    for (size_t i = 0; i < numIter; ++i)
+//    {
+//        timer.start();
+//
+//        for (const auto &[start, goal] : speedPaths)
+//        {
+//            agent->set_position(terrain->get_world_position(start));
+//            agent->path_to(terrain->get_world_position(goal), false);
+//        }
+//
+//        timer.stop();
+//
+//        results[i] = timer.microseconds();
+//
+//        if (results[i].count() < fastest)
+//        {
+//            fastest = results[i].count();
+//        }
+//
+//        total += results[i].count();
+//    }
+//
+//    std::stringstream filename;
+//    filename << "Output/SpeedTest_";
+//    Serialization::generate_time_stamp(filename);
+//    filename << ".txt";
+//
+//    std::ofstream file(filename.str());
+//
+//    if (file)
+//    {
+//        file << "Fastest: " << fastest << " microseconds" << std::endl;
+//        file << "Average: " << total / numIter << " microseconds" << std::endl << std::endl;
+//
+//        const std::streamsize width = 10;
+//
+//        file << std::left << std::setfill(' ');
+//
+//        file << std::setw(width) << "Test #" << "Microseconds" << std::endl;
+//        std::string temp;
+//
+//        for (size_t i = 0; i < numIter; ++i)
+//        {
+//            temp = std::to_string(i + 1) + ":";
+//            file << std::setw(width) << temp << results[i].count() << std::endl;
+//        }
+//
+//        file.close();
+//    }
+//}
 
-    buttonText = std::wstring(name.begin(), name.end());
-}
-
-void PathTester::goto_next_failed()
-{
-    currentFailed = (currentFailed + 1) % failedData.size();
-}
-
-bool PathTester::has_multiple_failed_tests()
-{
-    return failedData.size() > 1;
-}
-
-void PathTester::execute_current_test()
-{
-    if (tickQueue.empty() == true)
-    {
-        on_test_start();
-
-        auto &test = tests[currentTest];
-        totalTests = test.get_num_tests();
-
-        tickQueue.push({ static_cast<size_t>(currentTest), false });
-
-        outputName = test.get_name();
-    }
-    else
-    {
-        std::cout << "Attemped to run test while another test is in progress, ignoring request" << std::endl;
-    }
-}
-
-void PathTester::execute_all_tests()
-{
-    if (tickQueue.empty() == true)
-    {
-        on_test_start();
-
-        for (size_t i = 0; i < tests.size(); ++i)
-        {
-            tickQueue.push({ i, false });
-            totalTests += tests[i].get_num_tests();
-        }
-
-        outputName = "All_Tests";
-    }
-    else
-    {
-        std::cout << "Attemped to run test while another test is in progress, ignoring request" << std::endl;
-    }
-}
-
-void PathTester::execute_speed_test()
-{
-    terrain->goto_map(1);
-
-    agent->set_heuristic_type(Heuristic::OCTILE);
-    agent->set_heuristic_weight(1.01f);
-    agent->set_debug_coloring(false);
-    agent->set_movement_type(Movement::NONE);
-    agent->set_method_type(Method::ASTAR);
-    agent->set_rubberbanding(false);
-    agent->set_smoothing(false);
-    agent->set_single_step(false);
-
-    Stopwatch timer;
-
-    const size_t numIter = 1000;
-
-    using ms = std::chrono::microseconds;
-    std::array<ms, numIter> results;
-    ms::rep fastest = std::numeric_limits<ms::rep>().max();
-    ms::rep total = 0;
-
-    for (size_t i = 0; i < numIter; ++i)
-    {
-        timer.start();
-
-        for (const auto &[start, goal] : speedPaths)
-        {
-            agent->set_position(terrain->get_world_position(start));
-            agent->path_to(terrain->get_world_position(goal), false);
-        }
-
-        timer.stop();
-
-        results[i] = timer.microseconds();
-
-        if (results[i].count() < fastest)
-        {
-            fastest = results[i].count();
-        }
-
-        total += results[i].count();
-    }
-
-    std::stringstream filename;
-    filename << "Output/SpeedTest_";
-    Serialization::generate_time_stamp(filename);
-    filename << ".txt";
-
-    std::ofstream file(filename.str());
-
-    if (file)
-    {
-        file << "Fastest: " << fastest << " microseconds" << std::endl;
-        file << "Average: " << total / numIter << " microseconds" << std::endl << std::endl;
-
-        const std::streamsize width = 10;
-
-        file << std::left << std::setfill(' ');
-
-        file << std::setw(width) << "Test #" << "Microseconds" << std::endl;
-        std::string temp;
-
-        for (size_t i = 0; i < numIter; ++i)
-        {
-            temp = std::to_string(i + 1) + ":";
-            file << std::setw(width) << temp << results[i].count() << std::endl;
-        }
-
-        file.close();
-    }
-}
-
-void PathTester::tick()
-{
-    // check if the previous test needed a screenshot, now that we have rendered it
-    if (needScreenshot != -1)
-    {
-        renderer->output_screenshot(screenshots[needScreenshot]);
-        needScreenshot = -1;
-    }
-
-    if (tickQueue.empty() == false)
-    {
-        auto &topQueue = tickQueue.front();
-
-        auto &test = tests[topQueue.index];
-        
-        // do any prep work needed
-        if (topQueue.prepped == false)
-        {
-            topQueue.prepped = true;
-            test.prep(agent);
-            results.emplace_back(test.get_name(), test.get_settings());
-        }
-
-        auto &result = results.back();
-
-        // run the next test in the test case
-        const auto outcome = test.tick(agent, result);
-
-        // see if we need to generate a screenshot for this test, after we render
-        if (outcome.screenshot == true)
-        {
-            const auto &settings = test.get_settings();
-
-            if (settings.smoothing && settings.rubberBanding)
-            {
-                needScreenshot = 3;
-            }
-            else if (settings.rubberBanding == true)
-            {
-                needScreenshot = 2;
-            }
-            else if (settings.smoothing == true)
-            {
-                needScreenshot = 1;
-            }
-            else
-            {
-                needScreenshot = 0;
-            }
-        }
-
-        // if this was the final test in this test case
-        if (outcome.complete == true)
-        {
-            // record any failures
-            if (result.num_failing_tests() > 0)
-            {
-                const auto &failures = result.get_failed_tests();
-                failedData.insert(failedData.end(), failures.begin(), failures.end());
-            }
-
-            // pop the queue
-            tickQueue.pop();
-        }
-        else
-        {
-            // update the status message to show we finished another test
-            ++testsProcessed;
-            build_status_message();
-        }
-    }
-    else
-    {
-        on_test_end();
-    }
-}
+//void PathTester::tick()
+//{
+//    // check if the previous test needed a screenshot, now that we have rendered it
+//    if (needScreenshot != -1)
+//    {
+//        renderer->output_screenshot(screenshots[needScreenshot]);
+//        needScreenshot = -1;
+//    }
+//
+//    if (tickQueue.empty() == false)
+//    {
+//        auto &topQueue = tickQueue.front();
+//
+//        auto &test = tests[topQueue.index];
+//        
+//        // do any prep work needed
+//        if (topQueue.prepped == false)
+//        {
+//            topQueue.prepped = true;
+//            // test.prep(agent);
+//            results.emplace_back(test.get_name(), test.get_settings());
+//        }
+//
+//        auto &result = results.back();
+//
+//        // run the next test in the test case
+//        //const auto outcome = test.tick(agent, result);
+//
+//        //// see if we need to generate a screenshot for this test, after we render
+//        //if (outcome.screenshot == true)
+//        //{
+//        //    const auto &settings = test.get_settings();
+//
+//        //    if (settings.smoothing && settings.rubberBanding)
+//        //    {
+//        //        needScreenshot = 3;
+//        //    }
+//        //    else if (settings.rubberBanding == true)
+//        //    {
+//        //        needScreenshot = 2;
+//        //    }
+//        //    else if (settings.smoothing == true)
+//        //    {
+//        //        needScreenshot = 1;
+//        //    }
+//        //    else
+//        //    {
+//        //        needScreenshot = 0;
+//        //    }
+//        //}
+//
+//        //// if this was the final test in this test case
+//        //if (outcome.complete == true)
+//        //{
+//        //    // record any failures
+//        //    if (result.num_failing_tests() > 0)
+//        //    {
+//        //        const auto &failures = result.get_failed_tests();
+//        //        failedData.insert(failedData.end(), failures.begin(), failures.end());
+//        //    }
+//
+//        //    // pop the queue
+//        //    tickQueue.pop();
+//        //}
+//        //else
+//        //{
+//        //    // update the status message to show we finished another test
+//        //    ++testsProcessed;
+//        //    build_status_message();
+//        //}
+//    }
+//    else
+//    {
+//        on_test_end();
+//    }
+//}
 
 void PathTester::bootstrap(const std::string &name, Method method, Heuristic heuristic, float weight)
 {
@@ -296,13 +296,13 @@ void PathTester::bootstrap(const std::string &name, Method method, Heuristic heu
     const auto largeName = name + "_Large";
 
     PathingTestCase smallTest;
-    smallTest.bootstrap(agent, settings, 10, name);
+    // smallTest.bootstrap(agent, settings, 10, name);
     const std::string smallFilename = smallName + ".txt";
     const auto smallFilepath = Serialization::testsPath / smallFilename;
     Serialization::serialize(smallTest, smallFilepath);
 
     PathingTestCase largeTest;
-    largeTest.bootstrap(agent, settings, 50, name + "++");
+    // largeTest.bootstrap(agent, settings, 50, name + "++");
     const std::string largeFilename = largeName + ".txt";
     const auto largeFilepath = Serialization::testsPath / largeFilename;
     Serialization::serialize(largeTest, largeFilepath);
@@ -371,18 +371,18 @@ void PathTester::bootstrap()
     bootstrap_speed();
 }
 
-void PathTester::on_test_start()
-{
-    clearGuard = true;
-    testsProcessed = 0;
-    needScreenshot = -1;
-    agent->set_movement_type(Movement::NONE);
-    agent->set_single_step(false);
-    Messenger::send_message(Messages::PATH_TEST_BEGIN);
-
-    results.clear();
-    failedData.clear();
-}
+//void PathTester::on_test_start()
+//{
+//    clearGuard = true;
+//    testsProcessed = 0;
+//    needScreenshot = -1;
+//    agent->set_movement_type(Movement::NONE);
+//    agent->set_single_step(false);
+//    Messenger::send_message(Messages::PATH_TEST_BEGIN);
+//
+//    results.clear();
+//    failedData.clear();
+//}
 
 void PathTester::on_test_end()
 {
@@ -531,7 +531,7 @@ void PathTester::recreate_failed_scenario(const PathingTestData &failed)
     clearGuard = true;
 
     // run the test and discard the results
-    local(agent);
+    // local(agent);
 
     clearGuard = false;
 }

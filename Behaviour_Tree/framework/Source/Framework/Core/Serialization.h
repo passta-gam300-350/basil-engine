@@ -14,8 +14,11 @@ written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include  <filesystem>
 #include <rapidjson/document.h>
-#include "Terrain/Terrain.h"
+// #include "Terrain/Terrain.h"
 #include "Misc/PathfindingDetails.hpp"
+#include <tuple>
+#include <string>
+#include <rapidjson/document.h>
 
 class PathingTestCase;
 class PathingTestData;

@@ -13,7 +13,7 @@ written consent of DigiPen Institute of Technology is prohibited.
 
 #include <pch.h>
 #include "PathingTestData.h"
-#include "Agent/AStarAgent.h"
+// #include "Agent/AStarAgent.h"
 
 PathingTestData::PathingTestData() :
     map(-1), start { -1, -1 }, goal { -1, -1 }, distCard(-1), distDiag(-1), message(nullptr),
@@ -39,76 +39,76 @@ PathingTestData &PathingTestData::operator=(const PathingTestData &rhs)
     return *this;
 }
 
-PathingTestData::Outcome PathingTestData::operator()(AStarAgent *agent)
-{
-    terrain->goto_map(static_cast<unsigned>(map));
-
-    const auto startPos = terrain->get_world_position(start);
-
-    // set the parameters of this test
-    agent->set_position(startPos);
-    
-    const auto goalPos = terrain->get_world_position(goal);
-
-    agent->path_to(goalPos);
-
-    const auto &pathData = agent->get_request_data();
-
-    Outcome outcome = Outcome::INVALID;
-
-    // check if we got a path and we were expecting one
-    const bool pathFound = pathData.path.size() > 0;
-
-    if (requiresVisualConfirmation == true)
-    {
-        outcome = Outcome::VALID;
-    }
-    else if (pathFound == true && hasSolution == true)
-    {
-        // verify the start and goal positions are correct;
-        const auto startPos = terrain->get_grid_position(pathData.path.front());
-        const auto goalPos = terrain->get_grid_position(pathData.path.back());
-
-        if (startPos != start)
-        {
-            message = "Failed: Start position of the path is incorrect";
-            outcome = Outcome::FAILED;
-        }
-        else if (goalPos != goal)
-        {
-            message = "Failed: Goal position of the path is incorrect";
-            outcome = Outcome::FAILED;
-        }
-        else
-        {
-            // attempt to calculate the path's distance, which may discover a fault
-            if (calculate_distance(pathData.path) == true)
-            {
-                outcome = Outcome::VALID;
-            }
-            else
-            {
-                outcome = Outcome::FAILED;
-            }
-        }
-    }
-    else if (pathFound == true && hasSolution == false)
-    {
-        message = "Failed: A path was found for an impossible goal";
-        outcome = Outcome::FAILED;
-    }
-    else if (pathFound == false && hasSolution == true)
-    {
-        message = "Failed: A path was not found for a valid goal";
-        outcome = Outcome::FAILED;
-    }
-    else if (pathFound == false && hasSolution == false)
-    {
-        outcome = Outcome::VALID;
-    }
-    
-    return outcome;
-}
+//PathingTestData::Outcome PathingTestData::operator()(AStarAgent *agent)
+//{
+//    terrain->goto_map(static_cast<unsigned>(map));
+//
+//    const auto startPos = terrain->get_world_position(start);
+//
+//    // set the parameters of this test
+//    agent->set_position(startPos);
+//    
+//    const auto goalPos = terrain->get_world_position(goal);
+//
+//    agent->path_to(goalPos);
+//
+//    const auto &pathData = agent->get_request_data();
+//
+//    Outcome outcome = Outcome::INVALID;
+//
+//    // check if we got a path and we were expecting one
+//    const bool pathFound = pathData.path.size() > 0;
+//
+//    if (requiresVisualConfirmation == true)
+//    {
+//        outcome = Outcome::VALID;
+//    }
+//    else if (pathFound == true && hasSolution == true)
+//    {
+//        // verify the start and goal positions are correct;
+//        const auto startPos = terrain->get_grid_position(pathData.path.front());
+//        const auto goalPos = terrain->get_grid_position(pathData.path.back());
+//
+//        if (startPos != start)
+//        {
+//            message = "Failed: Start position of the path is incorrect";
+//            outcome = Outcome::FAILED;
+//        }
+//        else if (goalPos != goal)
+//        {
+//            message = "Failed: Goal position of the path is incorrect";
+//            outcome = Outcome::FAILED;
+//        }
+//        else
+//        {
+//            // attempt to calculate the path's distance, which may discover a fault
+//            if (calculate_distance(pathData.path) == true)
+//            {
+//                outcome = Outcome::VALID;
+//            }
+//            else
+//            {
+//                outcome = Outcome::FAILED;
+//            }
+//        }
+//    }
+//    else if (pathFound == true && hasSolution == false)
+//    {
+//        message = "Failed: A path was found for an impossible goal";
+//        outcome = Outcome::FAILED;
+//    }
+//    else if (pathFound == false && hasSolution == true)
+//    {
+//        message = "Failed: A path was not found for a valid goal";
+//        outcome = Outcome::FAILED;
+//    }
+//    else if (pathFound == false && hasSolution == false)
+//    {
+//        outcome = Outcome::VALID;
+//    }
+//    
+//    return outcome;
+//}
 
 PathingTestData::Outcome PathingTestData::operator==(const PathingTestData &rhs)
 {
@@ -150,36 +150,36 @@ const char *PathingTestData::get_message_text() const
     return message;
 }
 
-void PathingTestData::bootstrap(AStarAgent *agent, const GridPos &st, const GridPos &gl, int m)
-{
-    map = m;
-    start = st;
-    goal = gl;
-    message = nullptr;
-
-    const auto startPos = terrain->get_world_position(start);
-
-    // set the parameters of this test
-    agent->set_position(startPos);
-
-    const auto goalPos = terrain->get_world_position(goal);
-
-    agent->path_to(goalPos);
-
-    const auto &pathData = agent->get_request_data();
-
-    if (pathData.path.size() == 1)
-    {
-        hasSolution = false;
-        distCard = -1;
-        distDiag = -1;
-    }
-    else
-    {
-        hasSolution = true;
-        calculate_distance(pathData.path);
-    }
-}
+//void PathingTestData::bootstrap(AStarAgent *agent, const GridPos &st, const GridPos &gl, int m)
+//{
+//    map = m;
+//    start = st;
+//    goal = gl;
+//    message = nullptr;
+//
+//    const auto startPos = terrain->get_world_position(start);
+//
+//    // set the parameters of this test
+//    agent->set_position(startPos);
+//
+//    const auto goalPos = terrain->get_world_position(goal);
+//
+//    agent->path_to(goalPos);
+//
+//    const auto &pathData = agent->get_request_data();
+//
+//    if (pathData.path.size() == 1)
+//    {
+//        hasSolution = false;
+//        distCard = -1;
+//        distDiag = -1;
+//    }
+//    else
+//    {
+//        hasSolution = true;
+//        calculate_distance(pathData.path);
+//    }
+//}
 
 bool PathingTestData::calculate_distance(const WaypointList &path)
 {

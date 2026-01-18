@@ -13,7 +13,7 @@ written consent of DigiPen Institute of Technology is prohibited.
 
 #include <pch.h>
 #include "Terrain.h"
-#include "TerrainAnalysis.h"
+// #include "TerrainAnalysis.h"
 #include <fstream>
 #include "Core/Serialization.h"
 
@@ -171,7 +171,7 @@ void Terrain::load_map(unsigned mapIndex)
 
     generate_positions();
 
-    refresh_static_analysis_layers();
+    // refresh_static_analysis_layers();
     
     Messenger::send_message(Messages::MAP_CHANGE);
 }
@@ -188,18 +188,18 @@ void Terrain::configure_float_map_layer(MapLayer<float> &layer, int height, int 
     layer.configure_float(c0, c1);
 }
 
-void Terrain::refresh_static_analysis_layers()
-{
-    if (opennessLayer.enabled == true)
-    {
-        analyze_openness(opennessLayer);
-    }
-
-    if (totalVisibilityLayer.enabled == true)
-    {
-        analyze_visibility(totalVisibilityLayer);
-    }
-}
+//void Terrain::refresh_static_analysis_layers()
+//{
+//    if (opennessLayer.enabled == true)
+//    {
+//        analyze_openness(opennessLayer);
+//    }
+//
+//    if (totalVisibilityLayer.enabled == true)
+//    {
+//        analyze_visibility(totalVisibilityLayer);
+//    }
+//}
 
 void Terrain::reset_path_layer()
 {

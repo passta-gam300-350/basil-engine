@@ -27,13 +27,13 @@ public:
         bool screenshot;
     };
 
-    Outcome tick(AStarAgent *agent, PathingTestResult &results);
+    // Outcome tick(AStarAgent *agent, PathingTestResult &results);
 
-    void prep(AStarAgent *agent);
+    // void prep(AStarAgent *agent);
 
     const std::string &get_name() const;
 
-    void bootstrap(AStarAgent *agent, const PathRequest::Settings &set, unsigned numTests, const std::string &name);
+    // void bootstrap(AStarAgent *agent, const PathRequest::Settings &set, unsigned numTests, const std::string &name);
 
     const PathRequest::Settings &get_settings() const;
 

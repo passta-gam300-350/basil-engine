@@ -13,8 +13,8 @@ written consent of DigiPen Institute of Technology is prohibited.
 
 #include <pch.h>
 #include "Projects/ProjectOne.h"
-#include "Projects/ProjectTwo.h"
-#include "Projects/ProjectThree.h"
+// #include "Projects/ProjectTwo.h"
+// #include "Projects/ProjectThree.h"
 #include "Serialization.h"
 
 // instantiate the global system pointers
@@ -23,7 +23,7 @@ std::unique_ptr<Project> project;
 std::unique_ptr<Terrain> terrain;
 std::unique_ptr<AgentOrganizer> agents;
 std::unique_ptr<UICoordinator> ui;
-std::unique_ptr<AStarPather> pather;
+// std::unique_ptr<AStarPather> pather;
 std::unique_ptr<BehaviorTreeBuilder> treeBuilder;
 std::unique_ptr<AudioManager> audioManager;
 
@@ -150,12 +150,12 @@ bool Engine::allocate_project()
         case Project::Type::ONE:
             project = std::make_unique<ProjectOne>();
             break;
-        case Project::Type::TWO:
+        /*case Project::Type::TWO:
             project = std::make_unique<ProjectTwo>();
             break;
         case Project::Type::THREE:
             project = std::make_unique<ProjectThree>();
-            break;
+            break;*/
         }
     }
     catch (const std::exception &err)
