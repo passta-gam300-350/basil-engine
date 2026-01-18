@@ -117,6 +117,10 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 	fontData.underline_position = static_cast<float>(ft_face->underline_position) / 64.0f;
 	fontData.underline_thickness = static_cast<float>(ft_face->underline_thickness) / 64.0f;
 
+	// Create msdfgen FontHandle from FreeType face
+	msdfgen::FontHandle* font_handle = msdfgen::adoptFreetypeFont(ft_face);
+	assert(font_handle && "Failed to adopt FreeType font");
+
 	// Generate character list
 	std::vector<char32_t> characters = GenerateCharacterList(fontDesc);
 
@@ -130,28 +134,21 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 
 	// Process each character
 	for (char32_t codepoint : characters) {
-		FT_UInt glyph_index = FT_Get_Char_Index(ft_face, codepoint);
-		if (glyph_index == 0) continue; // Character not in font
-
-		error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP);
-		if (error) continue;
-
-		// Convert FreeType outline to msdfgen shape
+		// Convert FreeType outline to msdfgen shape using FontHandle
 		msdfgen::Shape shape;
-		if (ft_face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
-			if (!msdfgen::loadGlyph(shape, ft_face, glyph_index)) {
-				continue; // Failed to load glyph outline
-			}
-		}
-		else {
-			continue; // Not an outline glyph
+		double advance = 0;
+		if (!msdfgen::loadGlyph(shape, font_handle, codepoint, &advance)) {
+			continue; // Failed to load glyph or character not in font
 		}
 
 		shape.normalize();
 
 		// Calculate glyph bounds
-		double left, bottom, right, top;
-		shape.bounds(left, bottom, right, top);
+		msdfgen::Shape::Bounds bounds = shape.getBounds();
+		double left = bounds.l;
+		double bottom = bounds.b;
+		double right = bounds.r;
+		double top = bounds.t;
 
 		// Calculate SDF bitmap size (add padding for SDF range)
 		const int padding = static_cast<int>(fontDesc.sdf_range) + static_cast<int>(fontDesc.glyph_padding);
@@ -167,36 +164,41 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 			continue;
 		}
 
-		// Generate SDF bitmap
-		msdfgen::Bitmap<float, channels> sdf_bitmap(glyph_width, glyph_height);
+		// Generate SDF bitmap (separate paths for compile-time template parameters)
 		double range = static_cast<double>(fontDesc.sdf_range);
+		msdfgen::Vector2 translate(padding - left, padding - bottom);
+		const double scale = 1.0;
 
 		if (fontDesc.sdf_multi_channel) {
-			// Multi-channel SDF (better quality for complex glyphs)
+			// Multi-channel SDF (RGBA: better quality for complex glyphs)
+			msdfgen::Bitmap<float, 3> msdf_bitmap(glyph_width, glyph_height);
 			msdfgen::edgeColoringSimple(shape, 3.0);
-			msdfgen::generateMSDF(sdf_bitmap, shape, range, 1.0, msdfgen::Vector2(padding - left, padding - bottom));
+			msdfgen::generateMSDF(msdf_bitmap, shape, range, scale, translate);
+
+			// Copy to atlas (RGB -> RGBA8)
+			for (int y = 0; y < glyph_height; ++y) {
+				for (int x = 0; x < glyph_width; ++x) {
+					const int atlas_x = rect.x + x;
+					const int atlas_y = rect.y + y;
+					const int atlas_index = (atlas_y * atlas_size + atlas_x) * 4;
+					atlas_pixels[atlas_index + 0] = static_cast<std::uint8_t>(std::clamp(msdf_bitmap(x, y)[0] * 255.0f, 0.0f, 255.0f));
+					atlas_pixels[atlas_index + 1] = static_cast<std::uint8_t>(std::clamp(msdf_bitmap(x, y)[1] * 255.0f, 0.0f, 255.0f));
+					atlas_pixels[atlas_index + 2] = static_cast<std::uint8_t>(std::clamp(msdf_bitmap(x, y)[2] * 255.0f, 0.0f, 255.0f));
+					atlas_pixels[atlas_index + 3] = 255; // Full alpha
+				}
+			}
 		}
 		else {
 			// Single-channel SDF
-			msdfgen::generateSDF(sdf_bitmap, shape, range, 1.0, msdfgen::Vector2(padding - left, padding - bottom));
-		}
+			msdfgen::Bitmap<float, 1> sdf_bitmap(glyph_width, glyph_height);
+			msdfgen::generateSDF(sdf_bitmap, shape, range, scale, translate);
 
-		// Copy SDF bitmap to atlas
-		for (int y = 0; y < glyph_height; ++y) {
-			for (int x = 0; x < glyph_width; ++x) {
-				const int atlas_x = rect.x + x;
-				const int atlas_y = rect.y + y;
-				const int atlas_index = (atlas_y * atlas_size + atlas_x) * channels;
-
-				if (channels == 4) {
-					// MSDF: convert float RGB to RGBA8
-					atlas_pixels[atlas_index + 0] = static_cast<std::uint8_t>(std::clamp(sdf_bitmap(x, y)[0] * 255.0f, 0.0f, 255.0f));
-					atlas_pixels[atlas_index + 1] = static_cast<std::uint8_t>(std::clamp(sdf_bitmap(x, y)[1] * 255.0f, 0.0f, 255.0f));
-					atlas_pixels[atlas_index + 2] = static_cast<std::uint8_t>(std::clamp(sdf_bitmap(x, y)[2] * 255.0f, 0.0f, 255.0f));
-					atlas_pixels[atlas_index + 3] = 255; // Full alpha
-				}
-				else {
-					// SDF: convert float to R8
+			// Copy to atlas (R -> R8)
+			for (int y = 0; y < glyph_height; ++y) {
+				for (int x = 0; x < glyph_width; ++x) {
+					const int atlas_x = rect.x + x;
+					const int atlas_y = rect.y + y;
+					const int atlas_index = atlas_y * atlas_size + atlas_x;
 					atlas_pixels[atlas_index] = static_cast<std::uint8_t>(std::clamp(sdf_bitmap(x, y)[0] * 255.0f, 0.0f, 255.0f));
 				}
 			}
@@ -207,10 +209,9 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 		metrics.codepoint = codepoint;
 		metrics.uv_min = glm::vec2(static_cast<float>(rect.x) / atlas_size, static_cast<float>(rect.y) / atlas_size);
 		metrics.uv_max = glm::vec2(static_cast<float>(rect.x + rect.width) / atlas_size, static_cast<float>(rect.y + rect.height) / atlas_size);
-		metrics.size = glm::vec2(static_cast<float>(glyph_width - padding * 2), static_cast<float>(glyph_height - padding * 2));
-		metrics.bearing = glm::vec2(static_cast<float>(ft_face->glyph->metrics.horiBearingX) / 64.0f,
-		                             static_cast<float>(ft_face->glyph->metrics.horiBearingY) / 64.0f);
-		metrics.advance = static_cast<float>(ft_face->glyph->metrics.horiAdvance) / 64.0f;
+		metrics.size = glm::vec2(static_cast<float>(right - left), static_cast<float>(top - bottom));
+		metrics.bearing = glm::vec2(static_cast<float>(left), static_cast<float>(top));
+		metrics.advance = static_cast<float>(advance);
 		metrics.sdf_scale = 1.0f / static_cast<float>(fontDesc.sdf_range);
 
 		fontData.glyphs.push_back(metrics);
@@ -242,7 +243,8 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 		}
 	}
 
-	// Cleanup FreeType
+	// Cleanup msdfgen and FreeType
+	msdfgen::destroyFont(font_handle);
 	FT_Done_Face(ft_face);
 	FT_Done_FreeType(ft_library);
 

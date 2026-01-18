@@ -53,6 +53,7 @@ Technology is prohibited.
 #include "Bindings/ManagedInput.hpp"
 #include "Bindings/ManagedCamera.hpp"
 #include "rsc-core/rp.hpp"
+#include <descriptors/descriptors.hpp>
 #include <descriptors/audio.hpp>
 #include <serialization/serializer.h>
 

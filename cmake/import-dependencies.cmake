@@ -382,19 +382,59 @@ macro(import_freetype)
 endmacro()
 
 macro(import_msdfgen)
+    # Ensure FreeType is available
+    FetchContent_GetProperties(freetype)
+    if(NOT freetype_POPULATED)
+        message(FATAL_ERROR "msdfgen requires FreeType to be imported first")
+    endif()
+
     FetchContent_Declare(
         msdfgen
         GIT_REPOSITORY https://github.com/Chlumsky/msdfgen.git
         GIT_TAG v1.12
     )
 
-    # Configure msdfgen build options
+    # Configure msdfgen build options - MUST be set before FetchContent_MakeAvailable
     set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_INSTALL OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_USE_FREETYPE ON CACHE BOOL "" FORCE)
+
+    # Provide FreeType variables that msdfgen's FindFreetype expects
+    set(FREETYPE_FOUND TRUE CACHE BOOL "")
+    set(Freetype_FOUND TRUE CACHE BOOL "")
+    get_target_property(FT_INCLUDE_DIRS freetype INTERFACE_INCLUDE_DIRECTORIES)
+    set(FREETYPE_INCLUDE_DIRS "${FT_INCLUDE_DIRS}" CACHE PATH "")
+    set(FREETYPE_INCLUDE_DIR "${FT_INCLUDE_DIRS}" CACHE PATH "")
+    set(FREETYPE_LIBRARIES freetype CACHE STRING "")
+    set(FREETYPE_LIBRARY freetype CACHE STRING "")
+
+    # Force dynamic runtime to match project settings
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
 
     FetchContent_MakeAvailable(msdfgen)
+
+    # Verify msdfgen targets were created
+    if(NOT TARGET msdfgen-core)
+        message(FATAL_ERROR "msdfgen-core target was not created")
+    endif()
+
+    if(NOT TARGET msdfgen-ext)
+        message(WARNING "msdfgen-ext target was not created. FreeType integration may not be available.")
+        message(STATUS "MSDFGEN_USE_FREETYPE: ${MSDFGEN_USE_FREETYPE}")
+        message(STATUS "FREETYPE_LIBRARY: ${FREETYPE_LIBRARY}")
+        message(STATUS "FREETYPE_INCLUDE_DIRS: ${FREETYPE_INCLUDE_DIRS}")
+    endif()
+
+    # Ensure msdfgen uses dynamic runtime (/MD) not static (/MT)
+    if(MSVC)
+        foreach(target msdfgen-core msdfgen-ext)
+            if(TARGET ${target})
+                set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+            endif()
+        endforeach()
+    endif()
 
     # Mark includes as SYSTEM to exclude from static analysis
     foreach(target msdfgen-core msdfgen-ext)
@@ -592,6 +632,12 @@ function(hide_dependencies)
         msdfgen-core
         Jolt
         PROPERTIES FOLDER dep)
+
+    # Handle msdfgen-ext separately since it's only built with FreeType support
+    if(TARGET msdfgen-ext)
+        set_target_properties(msdfgen-ext PROPERTIES FOLDER dep)
+    endif()
+
     suppress_dep_warnings(
         glad
         glfw
@@ -623,6 +669,11 @@ function(hide_dependencies)
         freetype
         msdfgen-core
         Jolt)
+
+    # Handle msdfgen-ext separately since it's only built with FreeType support
+    if(TARGET msdfgen-ext)
+        suppress_dep_warnings(msdfgen-ext)
+    endif()
 endfunction()
 
 # Macro to import all dependencies

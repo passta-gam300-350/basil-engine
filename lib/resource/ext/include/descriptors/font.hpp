@@ -32,7 +32,7 @@ struct FontDescriptor {
 
 	// Character coverage
 	CharacterSet character_set{ CharacterSet::ASCII };      // Preset character range
-	std::vector<std::pair<char32_t, char32_t>> custom_ranges; // Custom Unicode ranges (start, end) for Custom mode
+	std::vector<std::pair<std::uint32_t, std::uint32_t>> custom_ranges; // Custom Unicode ranges (start, end) for Custom mode
 
 	// Rendering features
 	bool generate_kerning{ true };                          // Include kerning pair data for better spacing

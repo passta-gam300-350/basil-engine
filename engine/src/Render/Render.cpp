@@ -481,14 +481,14 @@ void RenderSystem::Update(ecs::world& world) {
 			continue; // No font atlas set
 		}
 
-		auto fontAtlas = registry.Get<std::shared_ptr<FontAtlas>>(text.m_FontGuid.m_guid);
-		if (!fontAtlas) {
+		auto* fontAtlasPtr = registry.Get<std::shared_ptr<FontAtlas>>(text.m_FontGuid.m_guid);
+		if (!fontAtlasPtr || !*fontAtlasPtr) {
 			continue; // Font not loaded yet
 		}
 
 		// Build TextElementData from component
 		TextElementData textData;
-		textData.fontAtlas = fontAtlas.get();
+		textData.fontAtlas = fontAtlasPtr->get();
 		textData.text = text.text;
 		textData.position = text.position;
 		textData.fontSize = text.fontSize;

@@ -5,7 +5,6 @@
 #include <iostream>
 #include <Utility/StringConversion.hpp>
 
-#include <importer/importer.hpp>
 #include <descriptors/material.hpp>
 #include <descriptors/descriptors.hpp>
 #include <descriptors/audio.hpp>
