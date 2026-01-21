@@ -96,6 +96,28 @@ bool AudioSystem::Init(void* extraDriverData) {
     spdlog::info("Audio: Setting 3D parameters");
     FMOD_ErrorCheck(m_system->set3DSettings(DOPPLERSCALE, DISTANCEFACTOR, ROLLOFFSCALE)); //TEMP (Set saved 3D settings)
 
+    // Setup channel groups (MASTER/BGM/SFX/UI/AMBIENT)
+    m_masterGroup = nullptr;
+    m_groups.clear();
+    FMOD_ErrorCheck(m_system->getMasterChannelGroup(&m_masterGroup));
+    if (m_masterGroup) {
+        auto makeGroup = [&](AudioGroup g, const char* name) {
+            FMOD::ChannelGroup* cg = nullptr;
+            FMOD_ErrorCheck(m_system->createChannelGroup(name, &cg));
+            if (cg) {
+                // Route into master for global volume/mute control
+                FMOD_ErrorCheck(m_masterGroup->addGroup(cg));
+                m_groups[g] = cg;
+            }
+        };
+        makeGroup(AudioGroup::BGM, "BGM");
+        makeGroup(AudioGroup::SFX, "SFX");
+        makeGroup(AudioGroup::UI, "UI");
+        makeGroup(AudioGroup::AMBIENT, "AMBIENT");
+    } else {
+        spdlog::warn("Audio: Failed to acquire master channel group; audio groups disabled");
+    }
+
     m_listenerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
     m_listenerVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
     m_listenerLastPosition = m_listenerPosition;
@@ -181,6 +203,15 @@ void AudioSystem::Exit() {
         if (pair.second)
             FMOD_ErrorCheck(pair.second->release());
     m_loadedSounds.clear();
+
+    // Release channel groups (master is owned by FMOD system)
+    for (auto& kv : m_groups) {
+        if (kv.second) {
+            FMOD_ErrorCheck(kv.second->release());
+        }
+    }
+    m_groups.clear();
+    m_masterGroup = nullptr;
 
     spdlog::info("Audio: Releasing system");
     if (m_system) {
@@ -409,7 +440,15 @@ bool AudioComponent::Play() {
 
     // Start new playback
     FMOD::Channel* newChannel = nullptr;
-    FMOD_RESULT result = system->playSound(sound, 0, true, &newChannel);
+    // Route to the requested channel group (default MASTER)
+    FMOD::ChannelGroup* targetGroup = audioSys.m_masterGroup;
+    if (group != AudioGroup::MASTER) {
+        auto it = audioSys.m_groups.find(group);
+        if (it != audioSys.m_groups.end()) {
+            targetGroup = it->second;
+        }
+    }
+    FMOD_RESULT result = system->playSound(sound, targetGroup, true, &newChannel);
 
     if (result != FMOD_OK) {
         spdlog::error("AudioComponent: Failed to create channel: {}", FMOD_ErrorString(result));

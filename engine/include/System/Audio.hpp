@@ -21,6 +21,7 @@ Technology is prohibited.
 #include <cassert>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 #include "../../vendor/fmod/api/core/inc/fmod.hpp"
 #include "../../vendor/fmod/api/core/inc/fmod_errors.h"
 #include "Ecs/ecs.h"
@@ -44,6 +45,16 @@ RegisterResourceTypeForward(int, "audio", audiodefine)
 
 // Forward declaration
 struct AudioComponent;
+
+// Logical audio mixing groups (routed to FMOD ChannelGroups).
+// NOTE: Keep values stable for serialization/editor.
+enum class AudioGroup : std::uint8_t {
+    MASTER = 0,
+    BGM,
+    SFX,
+    UI,
+    AMBIENT
+};
 
 // Helper functions
 inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, v.z }; }
@@ -109,6 +120,10 @@ private:
     // Channel management (moved from AudioComponent)
     std::unordered_map<AudioComponent*, FMOD::Channel*> m_componentChannels;
 
+    // Mixing groups
+    FMOD::ChannelGroup* m_masterGroup = nullptr;
+    std::unordered_map<AudioGroup, FMOD::ChannelGroup*> m_groups;
+
     // Listener state
     glm::vec3 m_listenerPosition;
     glm::vec3 m_listenerVelocity;
@@ -136,6 +151,7 @@ struct AudioComponent
     // Audio properties
     // [NEW]
     //FMOD::Group* group = set to master;
+    AudioGroup group = AudioGroup::MASTER;
     float volume = 1.0f;
     bool isLooping = false;
     bool is3D = true;
