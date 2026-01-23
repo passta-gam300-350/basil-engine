@@ -37,6 +37,12 @@ public class Cutscene : Behavior
             video = null;
         }
 
+        if (Input.GetKey(KeyCode.ENTER))
+        {
+            video.isPlaying = false;
+            Logger.Warn("TODO: Scene loading");
+            Scene.LoadScene(2);
+        }
 
         if (waitsec <= 0f)
         {
