@@ -108,6 +108,9 @@ namespace rp {
 					return v;
 				}
 				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					if (!cnd.IsDefined() || cnd.IsNull()) {
+						return Type{};  // Return empty container for null/undefined nodes
+					}
 					return cnd.as<Type>();
 				}
 				else if constexpr (std::is_class_v<Type>) {

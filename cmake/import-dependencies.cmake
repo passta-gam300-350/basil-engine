@@ -379,6 +379,83 @@ macro(import_freetype)
 
     FetchContent_MakeAvailable(freetype)
     include_directories(${freetype_SOURCE_DIR}/inc)
+
+    # Create Freetype::Freetype alias that msdfgen expects
+    if(NOT TARGET Freetype::Freetype)
+        add_library(Freetype::Freetype ALIAS freetype)
+    endif()
+endmacro()
+
+macro(import_msdfgen)
+    # Ensure FreeType is available
+    FetchContent_GetProperties(freetype)
+    if(NOT freetype_POPULATED)
+        message(FATAL_ERROR "msdfgen requires FreeType to be imported first")
+    endif()
+
+    FetchContent_Declare(
+        msdfgen
+        GIT_REPOSITORY https://github.com/Chlumsky/msdfgen.git
+        GIT_TAG v1.12
+    )
+
+    # Configure msdfgen build options - MUST be set before FetchContent_MakeAvailable
+    set(MSDFGEN_CORE_ONLY OFF CACHE BOOL "" FORCE)  # Build extensions library (includes FreeType support)
+    set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_INSTALL OFF CACHE BOOL "" FORCE)
+    set(MSDFGEN_USE_FREETYPE ON CACHE BOOL "" FORCE)
+    set(MSDFGEN_DISABLE_SVG ON CACHE BOOL "" FORCE)  # Disable SVG support (requires tinyxml2)
+    set(MSDFGEN_DISABLE_PNG ON CACHE BOOL "" FORCE)  # Disable PNG support (requires libpng)
+    set(MSDFGEN_DYNAMIC_RUNTIME ON CACHE BOOL "" FORCE)  # Use /MD runtime to match project
+
+    # Create Freetype::Freetype target that msdfgen expects
+    if(NOT TARGET Freetype::Freetype)
+        add_library(Freetype::Freetype ALIAS freetype)
+    endif()
+
+    # Provide FreeType variables that msdfgen's FindFreetype expects (as fallback)
+    set(FREETYPE_FOUND TRUE CACHE BOOL "" FORCE)
+    set(Freetype_FOUND TRUE CACHE BOOL "" FORCE)
+    get_target_property(FT_INCLUDE_DIRS freetype INTERFACE_INCLUDE_DIRECTORIES)
+    set(FREETYPE_INCLUDE_DIRS "${FT_INCLUDE_DIRS}" CACHE PATH "" FORCE)
+    set(FREETYPE_INCLUDE_DIR "${FT_INCLUDE_DIRS}" CACHE PATH "" FORCE)
+    set(FREETYPE_LIBRARIES freetype CACHE STRING "" FORCE)
+    set(FREETYPE_LIBRARY freetype CACHE STRING "" FORCE)
+
+    FetchContent_MakeAvailable(msdfgen)
+
+    # Verify msdfgen targets were created
+    if(NOT TARGET msdfgen-core)
+        message(FATAL_ERROR "msdfgen-core target was not created")
+    endif()
+
+    if(NOT TARGET msdfgen-ext)
+        message(WARNING "msdfgen-ext target was not created. FreeType integration may not be available.")
+        message(STATUS "MSDFGEN_USE_FREETYPE: ${MSDFGEN_USE_FREETYPE}")
+        message(STATUS "FREETYPE_LIBRARY: ${FREETYPE_LIBRARY}")
+        message(STATUS "FREETYPE_INCLUDE_DIRS: ${FREETYPE_INCLUDE_DIRS}")
+    endif()
+
+    # Ensure msdfgen uses dynamic runtime (/MD) not static (/MT)
+    if(MSVC)
+        foreach(target msdfgen-core msdfgen-ext)
+            if(TARGET ${target})
+                set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+            endif()
+        endforeach()
+    endif()
+
+    # Mark includes as SYSTEM to exclude from static analysis
+    foreach(target msdfgen-core msdfgen-ext)
+        if(TARGET ${target})
+            get_target_property(inc_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
+            if(inc_dirs)
+                set_target_properties(${target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${inc_dirs}")
+            endif()
+        endif()
+    endforeach()
 endmacro()
 
 macro(import_fmod)
@@ -563,8 +640,15 @@ function(hide_dependencies)
         yaml-cpp-sandbox
         imgui_backends
         freetype
+        msdfgen-core
         Jolt
         PROPERTIES FOLDER dep)
+
+    # Handle msdfgen-ext separately since it's only built with FreeType support
+    if(TARGET msdfgen-ext)
+        set_target_properties(msdfgen-ext PROPERTIES FOLDER dep)
+    endif()
+
     suppress_dep_warnings(
         glad
         glfw
@@ -594,7 +678,13 @@ function(hide_dependencies)
         yaml-cpp-sandbox
         imgui_backends
         freetype
+        msdfgen-core
         Jolt)
+
+    # Handle msdfgen-ext separately since it's only built with FreeType support
+    if(TARGET msdfgen-ext)
+        suppress_dep_warnings(msdfgen-ext)
+    endif()
 endfunction()
 
 # Macro to import all dependencies
@@ -622,6 +712,7 @@ macro(import_dependencies)
 
     # import_zlib()
     import_freetype()
+    import_msdfgen()
     import_fmod()
     import_mono()
     import_xml()

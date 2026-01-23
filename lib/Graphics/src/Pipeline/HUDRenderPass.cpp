@@ -1,6 +1,7 @@
 #include "Pipeline/HUDRenderPass.h"
 #include "Pipeline/RenderContext.h"
 #include "Rendering/HUDRenderer.h"
+#include "Rendering/TextRenderer.h"
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 
@@ -26,13 +27,14 @@ void HUDRenderPass::Execute(RenderContext& context)
         return;
     }
 
-    // Check if there are any HUD elements to render
-    uint32_t elementCount = context.hudRenderer.GetElementCount();
-    //spdlog::info("HUDRenderPass::Execute() - HUD element count: {}", elementCount);
+    // Check if there are any HUD or text elements to render
+    uint32_t hudElementCount = context.hudRenderer.GetElementCount();
+    uint32_t textGlyphCount = context.textRenderer.GetGlyphCount();
+    //spdlog::info("HUDRenderPass::Execute() - HUD element count: {}, text glyph count: {}", hudElementCount, textGlyphCount);
 
-    if (elementCount == 0) {
-        //spdlog::warn("HUDRenderPass::Execute() - No HUD elements, skipping");
-        return;  // No HUD elements, skip rendering
+    if (hudElementCount == 0 && textGlyphCount == 0) {
+        //spdlog::warn("HUDRenderPass::Execute() - No HUD or text elements, skipping");
+        return;  // No HUD or text elements, skip rendering
     }
 
     // Setup GL state for HUD rendering
@@ -79,6 +81,11 @@ void HUDRenderPass::Execute(RenderContext& context)
 
     // Render HUD elements via the HUD renderer
     context.hudRenderer.RenderToPass(*this, context.frameData);
+
+    //spdlog::info("HUDRenderPass::Execute() - calling Text renderer");
+
+    // Render text elements via the Text renderer (on top of HUD)
+    context.textRenderer.RenderToPass(*this, context.frameData);
 
     //spdlog::info("HUDRenderPass::Execute() - executing commands");
 

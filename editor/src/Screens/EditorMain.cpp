@@ -53,6 +53,7 @@ Technology is prohibited.
 #include "Bindings/ManagedInput.hpp"
 #include "Bindings/ManagedCamera.hpp"
 #include "rsc-core/rp.hpp"
+#include <descriptors/descriptors.hpp>
 #include <descriptors/audio.hpp>
 #include <serialization/serializer.h>
 
@@ -600,8 +601,8 @@ void EditorMain::render()
 			Render_Profiler();
 		if (showInspector)
 			Render_Inspector();
-		if (showSkyboxSettings)
-			Render_SkyboxSettings();
+		if (showSceneSettings)
+			Render_SceneSettings();
 		if (showPhysicsDebug)
 			Render_PhysicsDebugPanel();
 		if (showAssetBrowser)

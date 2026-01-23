@@ -400,12 +400,12 @@ void EditorMain::Render_EngineConsole()
 	ImGui::End();
 }
 
-void EditorMain::Render_SkyboxSettings()
+void EditorMain::Render_SceneSettings()
 {
-	PF_EDITOR_SCOPE("Render_SkyboxSettings");
+	PF_EDITOR_SCOPE("Render_SceneSettings");
 
 	// OPTIMIZATION: Check if window is visible before doing expensive work
-	if (!ImGui::Begin("Skybox Settings", &showSkyboxSettings)) {
+	if (!ImGui::Begin("Render Settings", &showSceneSettings)) {
 		ImGui::End();
 		return;
 	}
@@ -422,6 +422,7 @@ void EditorMain::Render_SkyboxSettings()
 	auto& skyboxSettings = activeScene.GetRenderSettings().skybox;
 
 	// Enable/Disable checkbox
+	ImGui::Text("Skybox");
 	bool enabled = skyboxSettings.enabled;
 	if (ImGui::Checkbox("Enable Skybox", &enabled)) {
 		engineService.ExecuteOnEngineThread([enabled]() {
@@ -429,8 +430,6 @@ void EditorMain::Render_SkyboxSettings()
 			scene.GetRenderSettings().skybox.enabled = enabled;
 			});
 	}
-
-	ImGui::Separator();
 
 	// Face texture selection (resource dropdowns)
 	ImGui::Text("Cubemap Face Textures:");
@@ -509,8 +508,6 @@ void EditorMain::Render_SkyboxSettings()
 		ImGui::PopID();
 	}
 
-	ImGui::Separator();
-
 	// Load button (if textures changed)
 	if (ImGui::Button("Load Cubemap")) {
 		engineService.ExecuteOnEngineThread([]() {
@@ -529,8 +526,6 @@ void EditorMain::Render_SkyboxSettings()
 			scene.GetRenderSettings().skybox.needsReload = true;
 			});
 	}
-
-	ImGui::Separator();
 
 	// Skybox properties
 	float exposure = skyboxSettings.exposure;
@@ -557,7 +552,6 @@ void EditorMain::Render_SkyboxSettings()
 			});
 	}
 
-	ImGui::Separator();
 	ImGui::Text("Status:");
 	if (skyboxSettings.cachedCubemapID != 0) {
 		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Cubemap loaded (GPU ID: %u)", skyboxSettings.cachedCubemapID);
@@ -572,6 +566,61 @@ void EditorMain::Render_SkyboxSettings()
 		if (guid != rp::null_guid) validTextures++;
 	}
 	ImGui::Text("Face textures assigned: %d/6", validTextures);
+
+	ImGui::Separator();
+
+	// Lighting settings
+	ImGui::Text("Scene Lighting");
+	auto& renderSettings = activeScene.GetRenderSettings();
+
+	glm::vec3 ambientLight = renderSettings.ambientLight;
+	if (ImGui::ColorEdit3("Ambient Light", &ambientLight.x)) {
+		engineService.ExecuteOnEngineThread([ambientLight]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().ambientLight = ambientLight;
+			});
+	}
+
+	ImGui::Separator();
+
+	// Post-processing settings
+	ImGui::Text("Post-Processing");
+
+	float bloomStrength = renderSettings.bloomStrength;
+	if (ImGui::SliderFloat("Bloom Strength", &bloomStrength, 0.0f, 0.2f, "%.3f")) {
+		engineService.ExecuteOnEngineThread([bloomStrength]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().bloomStrength = bloomStrength;
+			});
+	}
+
+	const char* toneMapMethods[] = { "None", "Reinhard", "ACES", "Exposure" };
+	int toneMapMethod = renderSettings.toneMapMethod;
+	if (ImGui::Combo("Tone Mapping", &toneMapMethod, toneMapMethods, 4)) {
+		engineService.ExecuteOnEngineThread([toneMapMethod]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().toneMapMethod = toneMapMethod;
+			});
+	}
+
+	ImGui::Text("HDR Exposure Clamp");
+	float exposureMin = renderSettings.exposureMin;
+	if (ImGui::SliderFloat("Min Exposure", &exposureMin, 0.0f, 5.0f, "%.2f")) {
+		engineService.ExecuteOnEngineThread([exposureMin]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().exposureMin = exposureMin;
+			});
+	}
+
+	float exposureMax = renderSettings.exposureMax;
+	if (ImGui::SliderFloat("Max Exposure", &exposureMax, 0.0f, 5.0f, "%.2f")) {
+		engineService.ExecuteOnEngineThread([exposureMax]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().exposureMax = exposureMax;
+			});
+	}
+
+	ImGui::Separator();
 
 	ImGui::End();
 }
