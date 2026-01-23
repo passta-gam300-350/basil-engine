@@ -180,7 +180,7 @@ struct animator
 {
     animationContainer* currentAnimation = nullptr; // current playing animation
     float currentTime = 0.0f;
-    // final matrices (one per bone, sent to GPU)
+    // final matrices (one per bone, sent to GPU) // this will be copied to SkeletonComponent
     std::vector<glm::mat4> finalBoneMatrices;
     // the animation state
     animationState state;
@@ -189,8 +189,15 @@ struct animator
     // current animation name
     std::string currentAnimationName; 
     blendState blend;
-    
+    animator() : animator(0) 
+    {
+
+    }
     animator(int numberOfBones)
+    {
+        finalBoneMatrices.resize(numberOfBones);
+    }
+    void Initialize(int numberOfBones)  // call later
     {
         finalBoneMatrices.resize(numberOfBones);
     }
