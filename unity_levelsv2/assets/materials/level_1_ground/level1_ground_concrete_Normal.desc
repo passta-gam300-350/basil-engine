@@ -1,0 +1,7 @@
+base:
+  m_guid: 5d4d70173fbb34e1f867651aeec
+  m_importer: .texture
+  m_source: materials\level_1_ground\level1_ground_concrete_Normal.png
+  m_name: level1_ground_concrete_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

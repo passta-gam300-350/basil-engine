@@ -1717,6 +1717,27 @@
 "kite_scene_kite_scene_mat_Roughness.png":
   "m_guid": "36fd7b1781ba8f62eddc741118a"
   "m_typeindex": "126269861530532084"
+"level1_ground.obj":
+  "m_guid": "5d4d71a7b3687b79a4b0ee3edea"
+  "m_typeindex": "4838001395392124604"
+"level1_ground_concrete_BaseColor.png":
+  "m_guid": "5d4d6da711ebd5f17b48e2715ac"
+  "m_typeindex": "126269861530532084"
+"level1_ground_concrete_Emissive.png":
+  "m_guid": "5d4d6e77ea9b2e1fc915e54f5cb"
+  "m_typeindex": "126269861530532084"
+"level1_ground_concrete_Height.png":
+  "m_guid": "5d4d6f079fba9cd7411af9044c3"
+  "m_typeindex": "126269861530532084"
+"level1_ground_concrete_Metallic.png":
+  "m_guid": "5d4d6f8706184f8e7bf74a6a5e0"
+  "m_typeindex": "126269861530532084"
+"level1_ground_concrete_Normal.png":
+  "m_guid": "5d4d70173fbb34e1f867651aeec"
+  "m_typeindex": "126269861530532084"
+"level1_ground_concrete_Roughness.png":
+  "m_guid": "5d4d70a7f07bb89540f4ba383b6"
+  "m_typeindex": "126269861530532084"
 "m_bottomflag":
   "m_guid": "153863870378ba6c1b686e25a36"
   "m_typeindex": "175488002581160416"
@@ -1815,6 +1836,9 @@
   "m_typeindex": "175488002581160416"
 "m_leftflag":
   "m_guid": "153163f759d852f1d83537d1078"
+  "m_typeindex": "175488002581160416"
+"m_level_1_ground":
+  "m_guid": "5d6270379868756dd5ed6f03f2a"
   "m_typeindex": "175488002581160416"
 "m_metal_rack":
   "m_guid": "806c1727ecb8f259ffa0a021a01"

@@ -8,23 +8,23 @@
     ".NETFramework,Version=v4.8": []
   },
   "packageFolders": {
-    "C:\\Users\\joyta\\.nuget\\packages\\": {},
+    "C:\\Users\\halis\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\joyta\\OneDrive\\Documents\\Digital Production GitHub\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
+      "projectUniqueName": "D:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
       "projectName": "BasilEngine",
-      "projectPath": "C:\\Users\\joyta\\OneDrive\\Documents\\Digital Production GitHub\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
-      "packagesPath": "C:\\Users\\joyta\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\joyta\\OneDrive\\Documents\\Digital Production GitHub\\gam300\\engine\\managed\\BasilEngine\\obj\\",
+      "projectPath": "D:\\gam300\\engine\\managed\\BasilEngine\\BasilEngine.csproj",
+      "packagesPath": "C:\\Users\\halis\\.nuget\\packages\\",
+      "outputPath": "D:\\gam300\\engine\\managed\\BasilEngine\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\joyta\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\halis\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -56,7 +56,7 @@
     "frameworks": {
       "net48": {
         "targetAlias": "net48",
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304\\RuntimeIdentifierGraph.json"
       }
     }
   }

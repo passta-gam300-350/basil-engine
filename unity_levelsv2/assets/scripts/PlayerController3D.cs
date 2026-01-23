@@ -27,7 +27,7 @@ public class PlayerController3D : Behavior
 
     public bool onMopEnabled = false;
 
-
+    private GameObject mopVisual;
 
 
 
@@ -52,6 +52,17 @@ public class PlayerController3D : Behavior
                 Logger.Warn("Cannot find game object: " + objectName);
             }
         }
+
+        // Find the mop (Cube)
+        mopVisual = GameObject.Find("Cube2");
+        if (mopVisual != null)
+        {
+            mopVisual.visibility = false;
+        }
+        else
+        {
+            Logger.Warn("Cube (mop) not found!");
+        }
     }
 
     public void Update()
@@ -72,6 +83,8 @@ public class PlayerController3D : Behavior
         if (Input.GetKey(KeyCode.A)) vel += right; // move left
         if (Input.GetKey(KeyCode.D)) vel -= right; // move right
 
+        bool previousMopState = onMopEnabled;
+
         if (Input.GetKey(KeyCode.KEY_1))
         {
             onMopEnabled = false;
@@ -79,6 +92,14 @@ public class PlayerController3D : Behavior
         else if (Input.GetKey(KeyCode.KEY_2))
         {
             onMopEnabled = true;
+        }
+
+        // Update mop when state changes
+        if (onMopEnabled != previousMopState && mopVisual != null)
+        {
+            mopVisual.visibility = onMopEnabled;
+            
+            Logger.Log("Mop visual: " + (onMopEnabled ? "shown" : "hidden"));
         }
 
         bool isMoving = vel.MagnitudeSqr() > 0.001f;
