@@ -1,0 +1,2089 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 67
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+entities:
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -19
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 60
+      m_AspectRatio: 1.914469
+      m_Near: 0.100000001
+      m_Far: 10000
+      m_Up:
+        x: 0
+        y: 0.945518553
+        z: -0.32556814
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0.32556814
+        z: 0.945518553
+      m_Yaw: -90
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 66
+    entity name:
+      name: kite_hit4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd7479a0b33693485c8d229c
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 546d73b7ac39cca8ce2f4074fa5
+        type: 4838001395392124604
+      m_MaterialGuid:
+        kite_player_mat:
+          guid: 549be077d859642e725a0913676
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 0
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 10
+    entity name:
+      name: Player
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0199999996
+        y: 0.0199999996
+        z: 0.0199999996
+      m_Rotate:
+        x: -179.999893
+        y: -0
+        z: -179.999893
+      m_Trans:
+        x: 0
+        y: 9.51221466
+        z: 12.2189999
+    Behaviour:
+      classesName:
+        - KiteController
+    AudioComponent:
+      audioAssetGuid:
+        guid: 00
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 9.51221466
+        z: 12.2189999
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 1
+    LightComponent:
+      Type: 0
+      Color:
+        x: 0.950177908
+        y: 0.608726978
+        z: 0.182596445
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: -0.200000003
+        y: -1.94000006
+        z: 2.00999999
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    entity name:
+      name: Light
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 16.6807728
+        z: 0
+  - Scene ID:
+      Scene ID: 65
+    entity name:
+      name: kite_hit3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd6973f38158a377d5aecfb5
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 546d71f73608b858a14be1bdbf0
+        type: 4838001395392124604
+      m_MaterialGuid:
+        kite_enemy1_mat:
+          guid: 54f94557151b6536992ee587232
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: -9.81000042
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 11
+    entity name:
+      name: kite_enemy1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0199999996
+        y: 0.0199999996
+        z: 0.0200299993
+      m_Rotate:
+        x: 179.999893
+        y: -0
+        z: 179.999893
+      m_Trans:
+        x: 3.6400001
+        y: 15.2019997
+        z: 12.2193937
+    Behaviour:
+      classesName:
+        - KiteTarget
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 546d7267279b6d12a182207c6f8
+        type: 4838001395392124604
+      m_MaterialGuid:
+        kite_enemy2_mat:
+          guid: f7c7b7b9faa6d59a22499a68e
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: -9.81000042
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 12
+    entity name:
+      name: kite_enemy2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0199999996
+        y: 0.0199999996
+        z: 0.0199999996
+      m_Rotate:
+        x: 179.999893
+        y: -0
+        z: 179.999893
+      m_Trans:
+        x: -5.76871204
+        y: 17.3010006
+        z: 12.2189999
+    Behaviour:
+      classesName:
+        - KiteTarget
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 5
+    entity name:
+      name: building_short3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: 19.1220589
+        z: 0
+      m_Trans:
+        x: 4.85509777
+        y: -0.515945673
+        z: 35.9822273
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 546d72d7f81a9262afa8ae6c176
+        type: 4838001395392124604
+      m_MaterialGuid:
+        kite_enemy3_mat:
+          guid: ff24879238a247f72c21bf69b
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: -9.81000042
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 13
+    entity name:
+      name: kite_enemy3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0199999996
+        y: 0.0199999996
+        z: 0.0199999996
+      m_Rotate:
+        x: -179.999893
+        y: -0
+        z: -179.999893
+      m_Trans:
+        x: 18.9990005
+        y: 12.3990002
+        z: 12.2189388
+    Behaviour:
+      classesName:
+        - KiteTarget
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 546d7347c899d035f806ce3c242
+        type: 4838001395392124604
+      m_MaterialGuid:
+        kite_enemy4_mat:
+          guid: 1068517593915484292e0c8089
+          type: 175488002581160416
+    RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: -9.81000042
+      useGravity: false
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: false
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 14
+    entity name:
+      name: kite_enemy4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0199999996
+        y: 0.0199999996
+        z: 0.0199999996
+      m_Rotate:
+        x: -179.999893
+        y: 0
+        z: -179.999893
+      m_Trans:
+        x: 9.95499992
+        y: 8.34300041
+        z: 12.2189999
+    Behaviour:
+      classesName:
+        - KiteTarget
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 6
+    entity name:
+      name: building_short4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: 17.0271988
+        z: 0
+      m_Trans:
+        x: -3.16084957
+        y: -0.549230695
+        z: 28.4398842
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 15
+    entity name:
+      name: building_short1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000049
+        y: 0.0299999993
+        z: 0.0300000049
+      m_Rotate:
+        x: 0
+        y: 61.8068962
+        z: 0
+      m_Trans:
+        x: 21.2577019
+        y: -0.165623486
+        z: 15.6615028
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136eda7db6a000955607460181
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_2:
+          guid: 172e8c76c6a3a70b7a4f4e6c68
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 16
+    entity name:
+      name: building_tall2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000105
+        y: 0.0299999993
+        z: 0.0300000105
+      m_Rotate:
+        x: 0
+        y: 26.8633366
+        z: 0
+      m_Trans:
+        x: 10.425704
+        y: -0.211433172
+        z: 47.034565
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136eda7db6a000955607460181
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_2:
+          guid: 7e1100c7137b1ed9de886b5e106
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 17
+    entity name:
+      name: building_tall3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: 23.732851
+        z: 0
+      m_Trans:
+        x: 0.735958099
+        y: -0.521960974
+        z: 27.3144264
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136eda7db6a000955607460181
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_2:
+          guid: 7e1100c7137b1ed9de886b5e106
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 18
+    entity name:
+      name: building_tall1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: 66.133873
+        z: 0
+      m_Trans:
+        x: 16.7728043
+        y: 0.014036417
+        z: 16.3655014
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 20422d7a94a069c5b7d335b6fd
+        type: 4838001395392124604
+      m_MaterialGuid:
+        terrian:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 19
+    entity name:
+      name: terrain
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0202510934
+        y: 0.0109587424
+        z: 0.0205630679
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.20416212
+        y: -0.305849075
+        z: 23.5445404
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0.699999988
+        u_RoughnessValue: 0.300000012
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.684626818
+          y: 0.823008835
+          z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 14c66b7c1d98726db576722310
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 21
+    entity name:
+      name: building_short2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: 48.8563423
+        z: 0
+      m_Trans:
+        x: 14.1460924
+        y: -0.0968132019
+        z: 19.962368
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 25
+    entity name:
+      name: sky
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 899.085205
+        y: 375.692749
+        z: 2.86852288
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 49.9417267
+        z: 178.725861
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.627451003
+          y: 0.850980401
+          z: 0.937254906
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bc477e6a83e1f58692fb5e0
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 810fa4373069cab3f750d101a1d
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 26
+    entity name:
+      name: spool
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0130000003
+        y: 0.0130000003
+        z: 0.0130000003
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.953000009
+        z: -5.59299994
+    Behaviour:
+      classesName:
+        - Spool
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace30a7eeea433ebd0ffc881e5
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.00999999978
+      isLooping: true
+      is3D: true
+      isStreaming: true
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0.953000009
+        z: -5.59299994
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 27
+    entity name:
+      name: building_short5
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000049
+        y: 0.0299999993
+        z: 0.0300000049
+      m_Rotate:
+        x: 0
+        y: -28.5920544
+        z: 0
+      m_Trans:
+        x: -16.184906
+        y: 0.0254232883
+        z: 45.6953621
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136eda7db6a000955607460181
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_2:
+          guid: 7e1100c7137b1ed9de886b5e106
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 28
+    entity name:
+      name: building_tall4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000012
+        y: 0.0299999993
+        z: 0.0300000012
+      m_Rotate:
+        x: 0
+        y: -24.0533924
+        z: 0
+      m_Trans:
+        x: -13.9719019
+        y: 0.0072119236
+        z: 24.6797104
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136ed17a7ebfa469010ff3b90f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_1:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 29
+    entity name:
+      name: building_short6
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0299999956
+        y: 0.0299999993
+        z: 0.0299999956
+      m_Rotate:
+        x: 0
+        y: -37.8292961
+        z: 0
+      m_Trans:
+        x: -17.4459381
+        y: -0.112135053
+        z: 22.2873039
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0.699999988
+        u_RoughnessValue: 0.300000012
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 136eda7db6a000955607460181
+        type: 4838001395392124604
+      m_MaterialGuid:
+        hdb_2:
+          guid: 7e1100c7137b1ed9de886b5e106
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 30
+    entity name:
+      name: building_tall5
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0300000459
+        y: 0.0299999993
+        z: 0.0300000459
+      m_Rotate:
+        x: 0
+        y: 6.90314484
+        z: 0
+      m_Trans:
+        x: -20.0121117
+        y: 0.150025249
+        z: 17.6693611
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bcc7a949a4109284e690b1c
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_01:
+          guid: 819c75372e08629a4b32e5a444a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 31
+    entity name:
+      name: tree1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.00999999978
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.9031229
+        z: 0
+      m_Trans:
+        x: 9.99684715
+        y: -0.180081442
+        z: 13.6934614
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bd277cca2887986630b01ff
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_02:
+          guid: 2119f9f17d908c8a60445372ce7a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 32
+    entity name:
+      name: tree2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.00999999978
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.90314484
+        z: 0
+      m_Trans:
+        x: 17.4539871
+        y: -0.106694825
+        z: 12.436842
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bd97a43ab8398bcdae0db8a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_03:
+          guid: 211bd0427a0bb1426dd1b9a5d2b5
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 33
+    entity name:
+      name: tree3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0142000001
+        y: 0.0141999992
+        z: 0.0142000001
+      m_Rotate:
+        x: 0
+        y: 32.9309921
+        z: 0
+      m_Trans:
+        x: -11.1281033
+        y: 0.139580891
+        z: 14.9946442
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4be07818ac5e0a586b16c859
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_04:
+          guid: 212f8e3772dda3b060fb06b1a6c5
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 34
+    entity name:
+      name: tree4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0100000035
+        y: 0.00999999978
+        z: 0.0100000035
+      m_Rotate:
+        x: -179.999893
+        y: 49.2660065
+        z: -179.999893
+      m_Trans:
+        x: -11.3758307
+        y: 0.146762654
+        z: 18.6965637
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4be7723d8aa8e27b156fa6ca
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_05:
+          guid: 212b01e87d9bb0e69544e7e10514
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 35
+    entity name:
+      name: tree5
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.00999999978
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: -72.0970001
+        z: 0
+      m_Trans:
+        x: -15.0042629
+        y: 0.0271106642
+        z: 8.62160969
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bed74478d6b3ccc1c961472
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_06:
+          guid: 2132eefe7617b63f76402b69fda3
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 37
+    entity name:
+      name: tree6
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.00999999978
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: -23.7749786
+        z: 0
+      m_Trans:
+        x: 2.9690609
+        y: -0.40812695
+        z: 23.281208
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bf47163ad798853dd9656d3
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_07:
+          guid: 21384e6479119a14a0c38478798a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 38
+    entity name:
+      name: tree7
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.00999999978
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.90314484
+        z: 0
+      m_Trans:
+        x: -11.2893467
+        y: -0.106542528
+        z: 43.0953789
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4bfb7cc1bdb498c0f7b5811b
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_08:
+          guid: 214ad9ca7ee7aa1d1c7fbb4b7b10
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 39
+    entity name:
+      name: tree8
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0.000664459076
+        y: -49.5792847
+        z: -2.95416594e-05
+      m_Trans:
+        x: -7.60728598
+        y: -0.346808851
+        z: 38.6105614
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7cd4c017f72bf00c7ccbbb32282
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tree_09:
+          guid: 214d210f77e383c472a2071571bb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 40
+    entity name:
+      name: tree9
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0199999996
+        y: 0.0199999996
+        z: 0.0199999996
+      m_Rotate:
+        x: 0
+        y: -46.8139381
+        z: 0
+      m_Trans:
+        x: 15.3014412
+        y: -0.617000163
+        z: 31.22966
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 2120c9a6767f873e79654f47d80c
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Grass_01:
+          guid: 215ee8487fe2ba5a5a4cf897c32f
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 41
+    entity name:
+      name: grass1_1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: 6.9031229
+        z: 0
+      m_Trans:
+        x: -2.70203495
+        y: -0.466519773
+        z: 16.4632931
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 2120c9b07f68be0d23acfda5b9a6
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Grass_02:
+          guid: 21612d9075bc93f713ad67ba4c5b
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 42
+    entity name:
+      name: grass2_1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.9031229
+        z: 0
+      m_Trans:
+        x: 9.05041313
+        y: -0.244094223
+        z: 8.7651825
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 2120c9a6767f873e79654f47d80c
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Grass_01:
+          guid: 215ee8487fe2ba5a5a4cf897c32f
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 43
+    entity name:
+      name: grass1_2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0150000006
+        y: 0.0149999997
+        z: 0.0150000006
+      m_Rotate:
+        x: 0
+        y: 6.90312099
+        z: 0
+      m_Trans:
+        x: 7.99149752
+        y: -0.380896002
+        z: 11.1438732
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 2120c9b07f68be0d23acfda5b9a6
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Grass_02:
+          guid: 21612d9075bc93f713ad67ba4c5b
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 44
+    entity name:
+      name: grass2_3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.9031229
+        z: 0
+      m_Trans:
+        x: -6.08967495
+        y: -0.170932531
+        z: 12.8036928
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 2120c9b07f68be0d23acfda5b9a6
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Grass_02:
+          guid: 21612d9075bc93f713ad67ba4c5b
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 45
+    entity name:
+      name: grass2_4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.9031229
+        z: 0
+      m_Trans:
+        x: 12.5831003
+        y: -0.0514504015
+        z: 8.17798615
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 2120c9b07f68be0d23acfda5b9a6
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Grass_02:
+          guid: 21612d9075bc93f713ad67ba4c5b
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 46
+    entity name:
+      name: grass2_2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: 6.9031229
+        z: 0
+      m_Trans:
+        x: 4.21667862
+        y: -0.429885089
+        z: 12.4292393
+    MaterialOverridesComponent: ~
+  - Scene ID:
+      Scene ID: 47
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: false
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 5.21000004
+        y: -0.860000014
+        z: 2.04999995
+      "[Point/Spot] Range": 0
+      "[Spot] Inner Cone Angle": 0
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: light2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 16.7458
+        z: -4.38350868
+  - Scene ID:
+      Scene ID: 48
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: false
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 1.08000004
+        y: -0.860000014
+        z: 2.04999995
+      "[Point/Spot] Range": 0
+      "[Spot] Inner Cone Angle": 0
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: light3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 16.686142
+        z: -7.37341881
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19cd767ea5f9e771db6b0161
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_2_mat:
+          guid: 542b0327c5a882eb5ac5e75fed7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 49
+    entity name:
+      name: cloud
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 3
+        y: 3
+        z: 3
+      m_Rotate:
+        x: 0
+        y: 30
+        z: 0
+      m_Trans:
+        x: 58.0200005
+        y: 38
+        z: 58.9700851
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19c67e9a90aad1cea52c47ed
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_1_mat:
+          guid: 540bd867bac88a73f63c6271cfb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 50
+    entity name:
+      name: cloud1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 3
+        y: 3
+        z: 3
+      m_Rotate:
+        x: 0
+        y: -20.2999992
+        z: 0
+      m_Trans:
+        x: -61
+        y: 48
+        z: 58.9700851
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19c67e9a90aad1cea52c47ed
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_1_mat:
+          guid: 540bd867bac88a73f63c6271cfb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 51
+    entity name:
+      name: cloud2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 5.46000099
+        y: 5.46000004
+        z: 5.46000099
+      m_Rotate:
+        x: 0
+        y: 7.038414
+        z: 0
+      m_Trans:
+        x: 9.22607613
+        y: 28.972332
+        z: 58.9700851
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19c67e9a90aad1cea52c47ed
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_1_mat:
+          guid: 540bd867bac88a73f63c6271cfb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 52
+    entity name:
+      name: cloud3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 6.46380186
+        y: 6.46379995
+        z: 6.46380186
+      m_Rotate:
+        x: 0
+        y: 17.8132629
+        z: 0
+      m_Trans:
+        x: 39.9599991
+        y: 56.3523407
+        z: 58.9700851
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19c67e9a90aad1cea52c47ed
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_1_mat:
+          guid: 540bd867bac88a73f63c6271cfb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 53
+    entity name:
+      name: cloud4
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 3
+        y: 3
+        z: 3
+      m_Rotate:
+        x: 0
+        y: -35
+        z: 0
+      m_Trans:
+        x: -36
+        y: 28
+        z: 58.9700851
+    MaterialOverridesComponent: ~
+  - Scene ID:
+      Scene ID: 54
+    entity name:
+      name: bgm
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2f97d9dad0293bbb279c491
+        type: 17099568057112876377
+      group: "\x01"
+      volume: 1
+      isLooping: true
+      is3D: true
+      isStreaming: true
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 56
+    entity name:
+      name: ambient_wind
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3af26f475eabcfc74d93948fe85
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 2
+      isLooping: true
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 58
+    entity name:
+      name: ambient_koi
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2db7c809ca2f573f49919e7
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.540000021
+      isLooping: true
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19cd767ea5f9e771db6b0161
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_2_mat:
+          guid: 542b0327c5a882eb5ac5e75fed7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 59
+    entity name:
+      name: cloud5
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 4.98000288
+        y: 4.97999954
+        z: 4.98000288
+      m_Rotate:
+        x: 0
+        y: -15.1530457
+        z: 0
+      m_Trans:
+        x: -43.6655083
+        y: 54
+        z: 60.3635788
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19c67e9a90aad1cea52c47ed
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_1_mat:
+          guid: 540bd867bac88a73f63c6271cfb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 60
+    entity name:
+      name: cloud6
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 4.23000002
+        y: 4.23000002
+        z: 4.23000002
+      m_Rotate:
+        x: 0
+        y: 29.9999657
+        z: 0
+      m_Trans:
+        x: 74.6592255
+        y: 46.6939659
+        z: 52.1792374
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19cd767ea5f9e771db6b0161
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_2_mat:
+          guid: 542b0327c5a882eb5ac5e75fed7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 61
+    entity name:
+      name: cloud7
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 13.3125744
+        y: 13.3125715
+        z: 13.3125744
+      m_Rotate:
+        x: 0
+        y: -3.35002708
+        z: 0
+      m_Trans:
+        x: -15.8646288
+        y: 58.8380013
+        z: 85.0639877
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 53f19c67e9a90aad1cea52c47ed
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cloud_1_mat:
+          guid: 540bd867bac88a73f63c6271cfb
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 62
+    entity name:
+      name: cloud8
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 5.9100008
+        y: 5.90999985
+        z: 5.9100008
+      m_Rotate:
+        x: 0
+        y: -45.2928734
+        z: 0
+      m_Trans:
+        x: -66.3011627
+        y: 30.533968
+        z: 53.6143837
+    MaterialOverridesComponent: ~
+  - Scene ID:
+      Scene ID: 63
+    entity name:
+      name: kite_hit1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd5d7bcb947c8429f9d6d9a8
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 64
+    entity name:
+      name: kite_hit2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 84494f270c8ad7e98595586124b
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0

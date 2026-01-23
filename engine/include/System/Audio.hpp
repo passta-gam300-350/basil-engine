@@ -46,15 +46,7 @@ RegisterResourceTypeForward(int, "audio", audiodefine)
 // Forward declaration
 struct AudioComponent;
 
-// Logical audio mixing groups (routed to FMOD ChannelGroups).
-// NOTE: Keep values stable for serialization/editor.
-enum class AudioGroup : std::uint8_t {
-    MASTER = 0,
-    BGM,
-    SFX,
-    UI,
-    AMBIENT
-};
+// AudioGroup enum is now defined in <native/audio.h> for resource system compatibility
 
 // Helper functions
 inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, v.z }; }
