@@ -1,0 +1,31 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.137539927)
+
+# Material file for level1_ground
+# Generated for GAM300 Graphics Engine
+
+newmtl concrete
+
+# Base color / diffuse map
+map_Kd level1_ground_concrete_BaseColor.png
+
+# Normal map
+map_Bump level1_ground_concrete_Normal.png
+bump level1_ground_concrete_Normal.png
+
+# Metallic map
+map_Ks level1_ground_concrete_Metallic.png
+
+# Roughness map
+map_Ns level1_ground_concrete_Roughness.png
+
+# Emissive map
+map_Ke level1_ground_concrete_Emissive.png
+
+# Height / displacement map
+map_d level1_ground_concrete_Height.png
+disp level1_ground_concrete_Height.png
+
+kd 0.8 0.8 0.8
+illum 1
+
