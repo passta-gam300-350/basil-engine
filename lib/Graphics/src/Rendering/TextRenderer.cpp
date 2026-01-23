@@ -165,14 +165,23 @@ void TextRenderer::UpdateBatchSSBO(FontBatch& batch)
     uint32_t instanceDataSize = static_cast<uint32_t>(batch.glyphInstances.size() * sizeof(GlyphInstanceData));
 
     if (!batch.ssbo) {
-        // Create new SSBO
-        batch.ssbo = std::make_unique<ShaderStorageBuffer>(
-            batch.glyphInstances.data(),
-            instanceDataSize,
-            GL_DYNAMIC_DRAW
-        );
+        // Pre-allocate with 2x growth factor to minimize future resizes
+        // Minimum allocation: 64 glyphs worth of space
+        constexpr uint32_t MIN_ALLOCATION = 64 * sizeof(GlyphInstanceData);
+        uint32_t allocSize = std::max(instanceDataSize * 2, MIN_ALLOCATION);
+
+        // Create buffer with pre-allocated size (no initial data)
+        batch.ssbo = std::make_unique<ShaderStorageBuffer>(nullptr, allocSize, GL_DYNAMIC_DRAW);
+
+        // Upload actual glyph data
+        batch.ssbo->SetData(batch.glyphInstances.data(), instanceDataSize, 0);
     } else {
-        // Update existing SSBO
+        // Resize buffer if new data exceeds capacity (with 2x growth factor)
+        if (instanceDataSize > batch.ssbo->GetSize()) {
+            uint32_t newSize = instanceDataSize * 2; // Pre-allocate 2x for future growth
+            batch.ssbo->Resize(newSize);
+        }
+        // Update existing SSBO (only write actual data, not full buffer)
         batch.ssbo->SetData(batch.glyphInstances.data(), instanceDataSize, 0);
     }
 

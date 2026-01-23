@@ -400,6 +400,7 @@ macro(import_msdfgen)
     )
 
     # Configure msdfgen build options - MUST be set before FetchContent_MakeAvailable
+    set(MSDFGEN_CORE_ONLY OFF CACHE BOOL "" FORCE)  # Build extensions library (includes FreeType support)
     set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
     set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
@@ -407,18 +408,21 @@ macro(import_msdfgen)
     set(MSDFGEN_USE_FREETYPE ON CACHE BOOL "" FORCE)
     set(MSDFGEN_DISABLE_SVG ON CACHE BOOL "" FORCE)  # Disable SVG support (requires tinyxml2)
     set(MSDFGEN_DISABLE_PNG ON CACHE BOOL "" FORCE)  # Disable PNG support (requires libpng)
+    set(MSDFGEN_DYNAMIC_RUNTIME ON CACHE BOOL "" FORCE)  # Use /MD runtime to match project
 
-    # Provide FreeType variables that msdfgen's FindFreetype expects
-    set(FREETYPE_FOUND TRUE CACHE BOOL "")
-    set(Freetype_FOUND TRUE CACHE BOOL "")
+    # Create Freetype::Freetype target that msdfgen expects
+    if(NOT TARGET Freetype::Freetype)
+        add_library(Freetype::Freetype ALIAS freetype)
+    endif()
+
+    # Provide FreeType variables that msdfgen's FindFreetype expects (as fallback)
+    set(FREETYPE_FOUND TRUE CACHE BOOL "" FORCE)
+    set(Freetype_FOUND TRUE CACHE BOOL "" FORCE)
     get_target_property(FT_INCLUDE_DIRS freetype INTERFACE_INCLUDE_DIRECTORIES)
-    set(FREETYPE_INCLUDE_DIRS "${FT_INCLUDE_DIRS}" CACHE PATH "")
-    set(FREETYPE_INCLUDE_DIR "${FT_INCLUDE_DIRS}" CACHE PATH "")
-    set(FREETYPE_LIBRARIES freetype CACHE STRING "")
-    set(FREETYPE_LIBRARY freetype CACHE STRING "")
-
-    # Force dynamic runtime to match project settings
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
+    set(FREETYPE_INCLUDE_DIRS "${FT_INCLUDE_DIRS}" CACHE PATH "" FORCE)
+    set(FREETYPE_INCLUDE_DIR "${FT_INCLUDE_DIRS}" CACHE PATH "" FORCE)
+    set(FREETYPE_LIBRARIES freetype CACHE STRING "" FORCE)
+    set(FREETYPE_LIBRARY freetype CACHE STRING "" FORCE)
 
     FetchContent_MakeAvailable(msdfgen)
 
