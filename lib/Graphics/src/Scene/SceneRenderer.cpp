@@ -71,6 +71,12 @@ void SceneRenderer::SubmitText(const TextElementData& textElement) {
     }
 }
 
+void SceneRenderer::SubmitWorldText(const WorldTextElementData& worldText) {
+    if (m_TextRenderer) {
+        m_TextRenderer->SubmitWorldText(worldText);
+    }
+}
+
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
