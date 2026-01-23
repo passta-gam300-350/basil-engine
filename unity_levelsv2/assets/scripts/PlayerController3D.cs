@@ -15,7 +15,8 @@ public class PlayerController3D : Behavior
     public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
-    public float moveSpeed = 4f;
+    public float baseMoveSpeed = 4f;   // normal speed with no trash
+    public float speedMultiplier = 1f; // modified by GameManager
 
     public bool disabled = false;
 
@@ -99,7 +100,10 @@ public class PlayerController3D : Behavior
         }
 
         if (isMoving)
-            vel = vel.Normalize() * moveSpeed * Time.deltaTime; // Assuming ~60 FPS, so deltaTime ~0.016s
+        {
+            float finalSpeed = baseMoveSpeed * speedMultiplier;
+            vel = vel.Normalize() * finalSpeed * Time.deltaTime;
+        }
 
         rb.MovePosition(transform.position + vel);
     }
