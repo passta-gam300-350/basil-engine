@@ -18,6 +18,7 @@
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CollectFlap.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CollectSticks.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\Cutscene.cs" />
+<Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\DirtyPuddle.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\Dustbin.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\GameManager.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\GetStuff.cs" />
