@@ -8,7 +8,7 @@ namespace rp {
 	namespace serialization {
 		template <rp::utility::static_string format>
 		struct serializer {
-			static_assert(std::false_type::value && "unknown serializer, define your own specialisation for each format. see serializer<\"bin\">");
+			static_assert(format.m_data[0] == '\0' && false, "unknown serializer, define your own specialisation for each format. see serializer<\"bin\">");
 		};
 		template <>
 		struct serializer<"bin"> {

@@ -9,12 +9,12 @@ namespace rp{
 	namespace serialization {
 		template <utility::static_string format_name>
 		struct in_archive {
-			static_assert(std::false_type::value && "unsupported archive format! define your own archive format specialisation, see in_archive<\"bin\">");
+			static_assert(format_name.m_data[0] == '\0' && false, "unsupported archive format! define your own archive format specialisation, see in_archive<\"bin\">");
 		};
 
 		template <utility::static_string format_name>
 		struct out_archive {
-			static_assert(std::false_type::value && "unsupported archive format! define your own archive format specialisation, see out_archive<\"bin\">");
+			static_assert(format_name.m_data[0] == '\0' && false, "unsupported archive format! define your own archive format specialisation, see out_archive<\"bin\">");
 		};
 
 		template <>

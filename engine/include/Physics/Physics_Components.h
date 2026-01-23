@@ -61,7 +61,7 @@ struct RigidBodyComponent {
 	// ========================================================================
 	// COLLISION DETECTION MODE ENUM
 	// ========================================================================
-	enum class CollisionDetectionMode {
+	enum class CollisionDetectionMode : std::uint8_t {
 		Discrete,              // Fast, can miss collisions
 		Continuous,            // Slower, catches fast-moving objects
 		ContinuousDynamic,     // Only continuous against static objects
@@ -72,7 +72,7 @@ struct RigidBodyComponent {
 	// ========================================================================
 	// INTERPOLATION MODE ENUM
 	// ========================================================================
-	enum class InterpolationMode {
+	enum class InterpolationMode : std::uint8_t {
 		None,         // No smoothing (can look jittery)
 		Interpolate,  // Smooth between previous and current
 		Extrapolate   // Predict next position
