@@ -116,6 +116,12 @@ public:
     std::shared_ptr<Shader> GetHUDShader() const { return m_HUDShader; }
 
     /**
+     * @brief Get shader for SDF text rendering
+     * @return Text shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetTextShader() const { return m_TextShader; }
+
+    /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
      * @param vertPath Path to vertex shader
@@ -190,6 +196,7 @@ private:
     std::shared_ptr<Shader> m_EditorResolveShader;   // Editor resolve with gamma correction
     std::shared_ptr<Shader> m_ParticleShader;
     std::shared_ptr<Shader> m_HUDShader;             // HUD/UI screen-space rendering
+    std::shared_ptr<Shader> m_TextShader;            // SDF text rendering
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
 
@@ -207,6 +214,7 @@ private:
     bool LoadEditorResolveShader();
     bool LoadParticleShader();
     bool LoadHUDShader();
+    bool LoadTextShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP

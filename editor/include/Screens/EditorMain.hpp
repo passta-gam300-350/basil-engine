@@ -71,7 +71,7 @@ public:
 	bool showProfiler = true;
 	bool showConsole = true;
 	bool showEngineConsole = true;
-	bool showSkyboxSettings = true;  // Unity-style skybox settings panel
+	bool showSceneSettings = true;  // Scene settings panel (skybox, lighting, post-processing)
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
 	bool showAssetBrowser = true;  // Asset browser panel
 	bool showResources = true;      // Imported resources panel
@@ -157,7 +157,7 @@ public:
 	void Render_CameraControls();  // Camera control overlay
 	void Gizmos(ImVec2 viewportPos, ImVec2 viewportSize);
 
-	void Render_SkyboxSettings();
+	void Render_SceneSettings();
 
 	// ========================================================================
 	// INSPECTOR COMPONENT RENDERING

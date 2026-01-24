@@ -66,6 +66,30 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 				scn.m_renderSettings.skybox.needsReload = true;
 			}
 		}
+
+		// Deserialize lighting settings
+		if (renderSettings["ambient_light"] && renderSettings["ambient_light"].size() == 3) {
+			scn.m_renderSettings.ambientLight.x = renderSettings["ambient_light"][0].as<float>();
+			scn.m_renderSettings.ambientLight.y = renderSettings["ambient_light"][1].as<float>();
+			scn.m_renderSettings.ambientLight.z = renderSettings["ambient_light"][2].as<float>();
+		}
+
+		if (renderSettings["background_color"] && renderSettings["background_color"].size() == 4) {
+			scn.m_renderSettings.backgroundColor.r = renderSettings["background_color"][0].as<float>();
+			scn.m_renderSettings.backgroundColor.g = renderSettings["background_color"][1].as<float>();
+			scn.m_renderSettings.backgroundColor.b = renderSettings["background_color"][2].as<float>();
+			scn.m_renderSettings.backgroundColor.a = renderSettings["background_color"][3].as<float>();
+		}
+
+		// Deserialize post-processing settings
+		if (renderSettings["bloom_strength"])
+			scn.m_renderSettings.bloomStrength = renderSettings["bloom_strength"].as<float>();
+		if (renderSettings["tone_map_method"])
+			scn.m_renderSettings.toneMapMethod = renderSettings["tone_map_method"].as<int>();
+		if (renderSettings["exposure_min"])
+			scn.m_renderSettings.exposureMin = renderSettings["exposure_min"].as<float>();
+		if (renderSettings["exposure_max"])
+			scn.m_renderSettings.exposureMax = renderSettings["exposure_max"].as<float>();
 	}
 
 	YAML::Node const& entities{ nd["entities"] };

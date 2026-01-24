@@ -7,5 +7,6 @@
 #include "descriptors/video.hpp"
 #include "descriptors/texture.hpp"
 #include "descriptors/animation.hpp"
+#include "descriptors/font.hpp"
 
 #endif
