@@ -114,6 +114,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetTextShader()) {
 		m_SceneRenderer->SetTextShader(m_ShaderLibrary->GetTextShader());
 	}
+	if (m_ShaderLibrary->GetWorldTextShader()) {
+		m_SceneRenderer->SetWorldTextShader(m_ShaderLibrary->GetWorldTextShader());
+	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
 	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());
@@ -515,18 +518,27 @@ void RenderSystem::Update(ecs::world& world) {
 
 	// ========== WORLD TEXT ELEMENT SUBMISSION (3D TEXT) ==========
 	// Submit world-space text elements (rendered in 3D with depth testing)
+	int worldTextEntityCount = 0;
 	for (auto worldTextEntity : sceneWorldTextElements) {
+		worldTextEntityCount++;
 		auto [worldText, transform] = worldTextEntity.get<TextMeshComponent, TransformMtxComponent>();
 
-		if (!worldText.visible || worldText.text.empty()) continue;
+		if (!worldText.visible || worldText.text.empty()) {
+			spdlog::warn("RenderSystem: World text entity skipped - visible={}, text empty={}",
+				worldText.visible, worldText.text.empty());
+			continue;
+		}
 
 		// Get font atlas from ResourceRegistry
 		if (worldText.m_FontGuid.m_guid == rp::null_guid) {
+			spdlog::warn("RenderSystem: World text '{}' has null font GUID", worldText.text.substr(0, 20));
 			continue; // No font atlas set
 		}
 
 		auto* fontAtlasPtr = registry.Get<std::shared_ptr<FontAtlas>>(worldText.m_FontGuid.m_guid);
 		if (!fontAtlasPtr || !*fontAtlasPtr) {
+			spdlog::warn("RenderSystem: Font atlas not loaded for GUID {} (text: '{}')",
+				worldText.m_FontGuid.m_guid.to_hex().substr(0, 8), worldText.text.substr(0, 20));
 			continue; // Font not loaded yet
 		}
 
@@ -575,7 +587,13 @@ void RenderSystem::Update(ecs::world& world) {
 		worldTextData.smoothing = worldText.smoothing;
 		worldTextData.visible = worldText.visible;
 
+		spdlog::info("RenderSystem: Submitting world text '{}' at ({:.1f}, {:.1f}, {:.1f}), fontSize={}, atlasID={}",
+			worldTextData.text.substr(0, 20), worldTextData.worldPosition.x, worldTextData.worldPosition.y,
+			worldTextData.worldPosition.z, worldTextData.fontSize, (*fontAtlasPtr)->GetTextureID());
 		m_SceneRenderer->SubmitWorldText(worldTextData);
+	}
+	if (worldTextEntityCount > 0) {
+		spdlog::info("RenderSystem: Processed {} world text entities", worldTextEntityCount);
 	}
 
 	// Enable/disable HUD pass based on presence of HUD or text elements

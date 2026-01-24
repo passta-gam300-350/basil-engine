@@ -98,6 +98,8 @@ void TextRenderer::SubmitWorldText(const WorldTextElementData& worldText)
 
     // Layout world-space text into glyphs
     LayoutWorldText(worldText, batch);
+    spdlog::info("TextRenderer::SubmitWorldText() - batch for atlas {} now has {} glyphs",
+        atlasTextureID, batch.glyphInstances.size());
 }
 
 void TextRenderer::EndFrame()
@@ -113,7 +115,13 @@ void TextRenderer::EndFrame()
     for (auto& [atlasID, batch] : m_WorldFontBatches) {
         if (batch.dirty && !batch.glyphInstances.empty()) {
             UpdateWorldBatchSSBO(batch);
+            spdlog::info("TextRenderer::EndFrame() - Updated SSBO for atlas {}: {} glyphs",
+                atlasID, batch.glyphInstances.size());
         }
+    }
+    if (!m_WorldFontBatches.empty()) {
+        spdlog::info("TextRenderer::EndFrame() - {} world batches, total glyphs: {}",
+            m_WorldFontBatches.size(), m_TotalGlyphs);
     }
 }
 
@@ -301,6 +309,7 @@ void TextRenderer::RenderBatch(RenderPass& renderPass, const FontBatch& batch, c
 void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData& frameData)
 {
     if (m_WorldFontBatches.empty()) {
+        spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world font batches to render!");
         return;
     }
 
@@ -308,6 +317,8 @@ void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData
         spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world text shader set!");
         return;
     }
+
+    spdlog::info("TextRenderer::RenderWorldTextToPass() - Rendering {} world batches", m_WorldFontBatches.size());
 
     // ========== SHARED STATE SETUP (ONCE FOR ALL BATCHES) ==========
     // Bind shader once for all batches
@@ -347,8 +358,28 @@ void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData
 void TextRenderer::RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch& batch, const FrameData& frameData)
 {
     if (batch.glyphInstances.empty() || !batch.ssbo) {
+        spdlog::warn("TextRenderer::RenderWorldBatch() - Skipping: glyphs={}, ssbo={}",
+            batch.glyphInstances.size(), batch.ssbo ? "valid" : "null");
         return;
     }
+
+    // Debug: Check VAO validity and first glyph data
+    if (m_QuadVAO == 0) {
+        spdlog::error("TextRenderer::RenderWorldBatch() - CRITICAL: m_QuadVAO is 0!");
+        return;
+    }
+
+    // Log first glyph details for debugging
+    const auto& firstGlyph = batch.glyphInstances[0];
+    spdlog::info("TextRenderer::RenderWorldBatch() - VAO={}, SSBO={}, atlas={}, glyphs={}",
+        m_QuadVAO, batch.ssbo->GetSSBOHandle(), batch.atlasTextureID, batch.glyphInstances.size());
+    spdlog::info("  First glyph: pos=({:.2f},{:.2f},{:.2f}), size=({:.4f},{:.4f}), color=({:.2f},{:.2f},{:.2f},{:.2f})",
+        firstGlyph.worldPosition.x, firstGlyph.worldPosition.y, firstGlyph.worldPosition.z,
+        firstGlyph.size.x, firstGlyph.size.y,
+        firstGlyph.color.r, firstGlyph.color.g, firstGlyph.color.b, firstGlyph.color.a);
+    spdlog::info("  Billboard: right=({:.2f},{:.2f},{:.2f}), up=({:.2f},{:.2f},{:.2f})",
+        firstGlyph.billboardRight.x, firstGlyph.billboardRight.y, firstGlyph.billboardRight.z,
+        firstGlyph.billboardUp.x, firstGlyph.billboardUp.y, firstGlyph.billboardUp.z);
 
     // Bind instance data SSBO
     uint32_t ssboHandle = batch.ssbo->GetSSBOHandle();
@@ -586,7 +617,11 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
     // Unity-style font scaling: actualSize = (fontSize * referenceDistance) / distanceToCamera
     // This makes text appear at the specified pixel size when at reference distance
     float distanceScale = worldText.referenceDistance / std::max(distanceToCamera, 0.01f);
-    float pixelsToWorldUnits = distanceScale / 1000.0f;  // Convert pixels to world units
+
+    // Unity-style "Pixels Per Unit" - 100 pixels = 1 world unit (Unity's default)
+    // fontSize 100 at reference distance = ~1 world unit height
+    const float PIXELS_PER_WORLD_UNIT = 100.0f;
+    float pixelsToWorldUnits = distanceScale / PIXELS_PER_WORLD_UNIT;
     float fontScale = worldText.fontSize / static_cast<float>(fontAtlas->GetBaseFontSize());
     float worldFontScale = fontScale * pixelsToWorldUnits;
 
@@ -597,7 +632,7 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
         case TextBillboardMode::Full: {
             // Full billboard - text always faces camera
             glm::vec3 toCamera = glm::normalize(worldText.cameraPosition - worldText.worldPosition);
-            billboardRight = glm::normalize(glm::cross(worldText.cameraUp, toCamera));
+            billboardRight = glm::normalize(glm::cross(toCamera, worldText.cameraUp));
             billboardUp = glm::cross(toCamera, billboardRight);
             break;
         }
@@ -612,7 +647,7 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
                 toCamera.y = 0.0f;
             }
             toCamera = glm::normalize(toCamera);
-            billboardRight = glm::normalize(glm::cross(glm::vec3(0, 1, 0), toCamera));
+            billboardRight = glm::normalize(glm::cross(toCamera, glm::vec3(0, 1, 0)));
             billboardUp = glm::vec3(0, 1, 0);  // Always up
             break;
         }
@@ -705,8 +740,9 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
         glm::vec2 glyphPixelSize = glyph->size * fontScale;
 
         // Convert to world-space offset from text origin
+        // Note: Negate Y because text layout uses Y-down but billboardUp points up in world space
         glm::vec3 worldOffset = billboardRight * (glyphPixelPos.x * pixelsToWorldUnits)
-                              + billboardUp * (glyphPixelPos.y * pixelsToWorldUnits);
+                              + billboardUp * (-glyphPixelPos.y * pixelsToWorldUnits);
 
         // Create world glyph instance
         WorldGlyphInstanceData glyphInstance;

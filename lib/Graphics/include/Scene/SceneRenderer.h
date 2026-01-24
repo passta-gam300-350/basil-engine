@@ -92,6 +92,7 @@ public:
     void SetParticleShader(const std::shared_ptr<Shader>& shader) const;
     void SetHUDShader(const std::shared_ptr<Shader>& shader) const;
     void SetTextShader(const std::shared_ptr<Shader>& shader) const;
+    void SetWorldTextShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);

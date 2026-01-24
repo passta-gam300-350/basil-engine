@@ -837,6 +837,18 @@ void SceneRenderer::SetTextShader(const std::shared_ptr<Shader>& shader) const
     }
 }
 
+void SceneRenderer::SetWorldTextShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "World text shader cannot be null");
+    assert(shader->ID != 0 && "World text shader must be compiled and linked");
+
+    if (m_TextRenderer)
+    {
+        m_TextRenderer->SetWorldTextShader(shader);
+        spdlog::info("SceneRenderer: World text shader configured");
+    }
+}
+
 void SceneRenderer::AddOutlinedObject(uint32_t objectID) const
 {
     assert(m_Pipeline && "Pipeline must be initialized before adding outlined object");
