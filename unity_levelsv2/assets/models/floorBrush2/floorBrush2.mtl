@@ -1,0 +1,27 @@
+newmtl Floorbrush
+
+# Base color / diffuse map
+map_Kd floorBrush2_Floorbrush_BaseColor.png
+
+# Normal map
+map_Bump floorBrush2_Floorbrush_Normal.png
+bump floorBrush2_Floorbrush_Normal.png
+
+# Metallic map
+map_Ks floorBrush2_Floorbrush_Metallic.png
+
+# Roughness map
+map_Ns floorBrush2_Floorbrush_Roughness.png
+
+# Emissive map
+map_Ke floorBrush2_Floorbrush_Emissive.png
+
+# Height / displacement map
+map_d floorBrush2_Floorbrush_Height.png
+disp floorBrush2_Floorbrush_Height.png
+
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 0.00
