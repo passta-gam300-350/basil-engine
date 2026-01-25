@@ -142,10 +142,13 @@ void InputManager::Update()
     scrollXOffset = 0.0;
     scrollYOffset = 0.0;
 
+    mouseConsumed = false;
+
     for (auto& keyState : keyReleasedStates)
-    {
         keyState.second = false;
-    }
+
+    for (auto& mouseState : mouseReleasedStates)
+        mouseState.second = false;
 }
 
 void InputManager::GamePadUpdate()
@@ -531,4 +534,29 @@ void InputManager::Poll_GamepadInput()
     {
         messagingSystem.Publish(INPUT_KEY, std::move(gamepadMessage));
     }
+}
+
+void InputManager::SetInputContext(InputContext context)
+{
+    currentContext = context;
+}
+
+InputManager::InputContext InputManager::GetInputContext() const
+{
+    return currentContext;
+}
+
+bool InputManager::IsGameplayInputEnabled() const
+{
+    return currentContext == InputContext::Gameplay;
+}
+
+void InputManager::Consume_Mouse()
+{
+    mouseConsumed = true;
+}
+
+bool InputManager::Is_MouseConsumed() const
+{
+    return mouseConsumed;
 }
