@@ -2,7 +2,7 @@
 \file:      InputManager.cpp
 \author:    Saminathan Aaron Nicholas
 \email:     s.aaronnicholas@digipen.edu
-\course:    CSD 3401 - Software Engineering Project 5
+\course:    CSD 3451 - Software Engineering Project 6
 \brief:     This file implements the class, which provides a wrapper for input handling in the application.
             The class manages input events like key presses, mouse movements, scroll wheel activity, and typed text.
             It captures input using GLFW callbacks and publishes input events to the messaging system for further processing.
