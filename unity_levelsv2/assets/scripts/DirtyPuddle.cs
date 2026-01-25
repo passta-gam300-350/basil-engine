@@ -25,10 +25,10 @@ public class DirtyPuddle : Behavior
 
     public void Update()
     {
-        if (playerController.onMopEnabled &&
+
+        if (playerController.onMopEnabled && 
             Vector3.DistanceSqr(playerObject.transform.position, transform.position) <= wipeDist)
         {
-
             bool rHeldNow = Input.GetKey(KeyCode.R);
 
             if (rHeldNow && !wasRHeld)

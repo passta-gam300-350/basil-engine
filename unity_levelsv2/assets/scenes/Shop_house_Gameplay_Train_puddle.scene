@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 156
+  slot: 159
   guid: 00
   dependencies: ~
 render_settings:
@@ -2404,7 +2404,7 @@ entities:
       m_Type: "\x01"
       m_IsActive: true
       m_Fov: 45
-      m_AspectRatio: 1.75568664
+      m_AspectRatio: 1.5467422
       m_Near: 0.100000001
       m_Far: 1000
       m_Up:
@@ -4868,9 +4868,9 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -0.971659541
-        y: 0.00944110751
-        z: 0.254900247
+        x: -0.579999983
+        y: 0.00100000005
+        z: 0.862999976
     MaterialOverridesComponent:
       vec3Overrides:
         u_AlbedoColor:
