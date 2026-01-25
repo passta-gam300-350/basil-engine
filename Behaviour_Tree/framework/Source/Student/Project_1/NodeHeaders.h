@@ -1,8 +1,7 @@
 // Name: Saminathan Aaron Nicholas
 // DigiPen ID: s.aaronnicholas
-// Class: CS380
-// Date: 23 May 2025
-
+// Module: CSD 3451 - Software Engineering Project 6
+// Date: 25 Jan 2026
 #pragma once
 
 // Include all node headers in this file
@@ -11,9 +10,6 @@
 #include "ControlFlow/C_RandomSelector.h"
 #include "ControlFlow/C_Selector.h"
 #include "ControlFlow/C_Sequencer.h"
-
-// Student Control Flow Nodes
-// None
 
 // Example Decorator Nodes
 #include "Decorator/D_Delay.h"
@@ -36,8 +32,10 @@
 #include "Leaf/My_Idle.h"
 #include "Leaf/My_wait.h"
 #include "Leaf/My_MoveToFurthestFromMouse.h"
-#include "Leaf/My_MoveToTree.h"
 #include "Leaf/My_MoveToMan.h"
 #include "Leaf/My_MoveToCar.h"
 #include "Leaf/My_MoveToBird.h"
 #include "Leaf/My_MoveToRandomAgent.h"
+
+// Movement Leaf Nodes
+#include "Leaf/My_MoveToTopLeft.h"
