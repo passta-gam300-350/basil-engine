@@ -6,6 +6,7 @@ using System;
 
 public class TrashCollectable : Behavior
 {
+    public PlayerController3D playerController;
     private GameObject player;
     public float collect_distance = 0.4f;
     private System.Random random = new System.Random();
@@ -36,7 +37,19 @@ public class TrashCollectable : Behavior
             {
                 return;
             }
-        } 
+        }
+
+        if (playerController == null)
+        {
+            playerController = player.transform.GetComponent<PlayerController3D>();
+            if (playerController == null) {
+                return;
+            }
+        }
+
+        if (!playerController.canCollectTrash){
+            return;
+        }
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         
