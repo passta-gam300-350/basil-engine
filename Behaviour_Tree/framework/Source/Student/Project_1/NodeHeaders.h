@@ -32,10 +32,10 @@
 #include "Leaf/My_Idle.h"
 #include "Leaf/My_wait.h"
 #include "Leaf/My_MoveToFurthestFromMouse.h"
-#include "Leaf/My_MoveToMan.h"
 
 // Movement Leaf Nodes
 #include "Leaf/MoveToTopLeft.h"
 #include "Leaf/MoveToBottomLeft.h"
 #include "Leaf/MoveToTopRight.h"
-#include "Leaf/My_MoveToBottomRight.h"
+#include "Leaf/MoveToBottomRight.h"
+#include "Leaf/MoveToMiddle.h"
