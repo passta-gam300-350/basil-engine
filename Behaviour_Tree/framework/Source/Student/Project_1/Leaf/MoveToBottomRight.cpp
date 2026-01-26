@@ -15,7 +15,7 @@ void L_MoveToTopLeft::on_enter()
 
     Vec2 max = { static_cast<float>(mapWidth), static_cast<float>(mapHeight) };
 
-    targetPoint = Vec2(max.x, max.y);
+    targetPoint = Vec2(max.x, min.y);
     BehaviorNode::on_leaf_enter();
 }
 
