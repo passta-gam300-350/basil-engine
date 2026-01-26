@@ -24,8 +24,8 @@ public class GameManager : Behavior
     private GameObject ThrashCollect;
 
     //public bool isHoldingThrash = false;
-    public int trashInHand = 0;      // number of trash currently held
-    public int maxTrashInHand = 5;   // maximum the player can carry
+    public int trashInHand;      // number of trash currently held
+    public int maxTrashInHand;   // maximum the player can carry
 
     
     public void Init()
