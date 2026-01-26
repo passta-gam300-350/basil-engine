@@ -20,7 +20,7 @@ REGISTER_LEAF(My_Wait, "My_Wait")
 REGISTER_LEAF(My_MoveToFurthestFromMouse, "My_MoveTofurthestFromMouse")
 REGISTER_LEAF(My_MoveToMan, "My_MoveToMan")
 REGISTER_LEAF(My_MoveToBird, "My_MoveToBird")
-REGISTER_LEAF(My_MoveToRandomAgent, "My_MoveToRandomAgent")
 
 REGISTER_LEAF(MoveToTopLeft, "MoveToTopLeft")
 REGISTER_LEAF(MoveToBottomLeft, "MoveToBottomLeft")
+REGISTER_LEAF(MoveToTopRight, "MoveToTopRight")
