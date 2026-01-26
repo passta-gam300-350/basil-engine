@@ -29,7 +29,7 @@ Technology is prohibited.
 #include <Utility/TextData.h>  // For text rendering
 #include <Rendering/HUDRenderer.h>  // For HUD renderer methods
 #include <Rendering/TextRenderer.h>  // For text renderer methods
-
+#include "Component/SkeletonComponent.hpp" // skeleton component
 #include "Messaging/Messaging_System.h"
 
 #include <Resources/MaterialInstanceManager.h>
@@ -338,6 +338,18 @@ void RenderSystem::Update(ecs::world& world) {
 						propBlockDebugCount++;
 					}
 				}
+
+				// Attach bone matrices if entity has skeleton
+				if (obj.all<SkeletonComponent>())
+				{
+					auto& skelComp = obj.get<SkeletonComponent>();
+					if (!skelComp.finalBoneMatrices.empty())
+					{
+						renderData.boneMatrices = skelComp.finalBoneMatrices.data();
+						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
+						renderData.isSkinned = true;
+					}
+				} 
 
 				// Debug: Log entity UID assignment for first few entities
 				static int debugCount = 0;

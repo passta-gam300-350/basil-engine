@@ -18,10 +18,16 @@
 - ✅ AnimationSystem refactored with two paths (skeletal + simple)
 - ✅ `InitializeSkeletalAnimation()` helper function added
 
+**Day 2 Progress (GPU-side complete):**
+- ✅ Shader updated with bone attributes, SSBO, skinning calculation
+- ✅ RenderableData updated with bone fields
+- ✅ InstancedRenderer: bone SSBO, UploadBoneMatrices, RenderSkinnedMeshes
+- ✅ Engine: Render.cpp populates bone data from SkeletonComponent
+
 **Remaining Work:**
-- GPU skinning (shaders)
-- Rendering integration (upload bone matrices)
-- Testing with actual skinned mesh
+- Shadow shader skinning support
+- Editor reflection registration (optional)
+- Testing with actual skinned mesh + animation data
 
 ---
 
@@ -42,7 +48,7 @@
 - [x] Add `bool isSkeletalAnim` flag to switch between skeletal/simple modes
 - [ ] Update reflection bindings (optional, for editor)
 
-### 1.3 Create SkinnedMeshComponent (Optional - Skipped for now)
+### 1.3 Create SkinnedMeshComponent (Optional - Skipped)
 - [ ] Flag to indicate mesh requires skinning
 - [ ] Reference to skeleton component entity (if separate)
 - [ ] Bone matrix buffer handle for GPU
@@ -51,7 +57,7 @@
 
 ## Phase 2: Skeleton Hierarchy Processing ✅ COMPLETE (via animator class)
 
-### 2.1 Skeleton Data Loading
+### 2.1 Skeleton Data Loading ✅
 - [x] `skeleton` structure exists in Animation.h
 - [x] `skeletonHelper::validateHierarchy()` validates bone hierarchy
 - [x] `skeletonHelper::reorderHierarchy()` sorts bones parent-first
@@ -100,62 +106,49 @@
 
 ---
 
-## Phase 4: GPU Skinning (Shaders)
+## Phase 4: GPU Skinning (Shaders) ✅ COMPLETE
 
-### 4.1 Update Vertex Layout
-- [ ] Add bone ID attribute (ivec4) at location 5
-- [ ] Add bone weight attribute (vec4) at location 6
-- [ ] Update `VertexArray` setup in Mesh class
-- [ ] Ensure Assimp loader populates bone data in vertices
+### 4.1 Update Vertex Layout ✅
+- [x] Bone ID attribute (ivec4) at location 5 in shader
+- [x] Bone weight attribute (vec4) at location 6 in shader
+- [x] Vertex buffer layout already includes bone data in `Mesh.cpp`
 
-### 4.2 Create Bone Matrix Buffer
-- [ ] Create SSBO for bone matrices (max ~256 bones per skeleton)
-- [ ] Bind to appropriate binding point (e.g., binding = 3)
-- [ ] Upload matrices from SkeletonComponent each frame
+### 4.2 Create Bone Matrix Buffer ✅
+- [x] SSBO for bone matrices in InstancedRenderer (`m_BoneMatrixSSBO`)
+- [x] Bound to binding point 2 (`BONE_SSBO_BINDING`)
+- [x] `UploadBoneMatrices()` uploads from SkeletonComponent each frame
+- [x] Max 4096 total bones supported (`MAX_TOTAL_BONES`)
 
-### 4.3 Update main_pbr.vert
-- [ ] Add bone matrix SSBO:
-  ```glsl
-  layout(std430, binding = 3) readonly buffer BoneMatrices {
-      mat4 u_BoneMatrices[];
-  };
-  ```
-- [ ] Add skinning uniform flag: `uniform bool u_IsSkinned;`
-- [ ] Implement matrix palette skinning:
-  ```glsl
-  mat4 skinMatrix =
-      u_BoneMatrices[a_BoneIDs.x] * a_Weights.x +
-      u_BoneMatrices[a_BoneIDs.y] * a_Weights.y +
-      u_BoneMatrices[a_BoneIDs.z] * a_Weights.z +
-      u_BoneMatrices[a_BoneIDs.w] * a_Weights.w;
-  ```
-- [ ] Apply to position: `vec4 skinnedPos = skinMatrix * vec4(aPos, 1.0);`
-- [ ] Apply to normal: `vec3 skinnedNormal = mat3(skinMatrix) * aNormal;`
-- [ ] Apply to tangent/bitangent for normal mapping
+### 4.3 Update main_pbr.vert ✅
+- [x] Added bone matrix SSBO (binding 2)
+- [x] Added `uniform bool u_EnableSkinning` flag
+- [x] Added `uniform int u_BoneOffset` for SSBO indexing
+- [x] Implemented matrix palette skinning (4 bone influences per vertex)
+- [x] Applied skinning to position, normal, tangent, bitangent
 
 ### 4.4 Update Shadow Shaders
-- [ ] Add same skinning logic to `shadow_depth.vert`
+- [ ] Add skinning logic to `shadow_depth.vert`
 - [ ] Add to `shadow_depth_instanced.vert`
 - [ ] Add to `point_shadow_instanced.vert`
 
 ---
 
-## Phase 5: Rendering Integration
+## Phase 5: Rendering Integration ✅ COMPLETE
 
-### 5.1 Update RenderData Structure
-- [ ] Add skinning flag to render data
-- [ ] Add bone matrix buffer reference
-- [ ] Add bone count
+### 5.1 Update RenderData Structure ✅
+- [x] Added `bool isSkinned` flag to RenderableData
+- [x] Added `const glm::mat4* boneMatrices` pointer to bone matrices
+- [x] Added `uint32_t boneCount` for bone count
 
-### 5.2 Update MainRenderingPass
-- [ ] Check if mesh is skinned before rendering
-- [ ] Bind bone matrix SSBO for skinned meshes
-- [ ] Set `u_IsSkinned` uniform
+### 5.2 Update InstancedRenderer ✅
+- [x] Skinned meshes separated from batched rendering (`m_SkinnedRenderables`)
+- [x] `RenderSkinnedMeshes()` renders skinned meshes individually with bone data
+- [x] Bone matrix SSBO uploaded per skinned mesh
+- [x] `u_EnableSkinning = false` set for non-skinned batched meshes
 
-### 5.3 Update InstancedRenderer
-- [ ] Handle skinned mesh instances
-- [ ] Each skinned instance needs its own bone matrices
-- [ ] Consider per-instance bone matrix offset in SSBO
+### 5.3 Engine-Side Integration ✅
+- [x] `Render.cpp` checks for `SkeletonComponent` when building RenderableData
+- [x] Bone matrix pointer and count passed from SkeletonComponent to RenderableData
 
 ### 5.4 Update Shadow Passes
 - [ ] Apply skinning in shadow map generation
@@ -212,16 +205,18 @@
 |-----------|-----------|
 | Animation Data Structures | `lib/Graphics/include/Animation/Animation.h` |
 | Animation Implementation | `lib/Graphics/src/Animation/Animation.cpp` |
-| **SkeletonComponent** | `engine/include/Component/SkeletonComponent.hpp` ✅ NEW |
+| **SkeletonComponent** | `engine/include/Component/SkeletonComponent.hpp` |
 | AnimationComponent | `engine/include/Component/AnimationComponent.hpp` |
 | AnimationSystem Header | `engine/include/System/AnimationSystem.hpp` |
 | AnimationSystem Implementation | `engine/src/System/AnimationSystem.cpp` |
+| RenderableData | `lib/Graphics/include/Utility/RenderData.h` |
+| InstancedRenderer Header | `lib/Graphics/include/Rendering/InstancedRenderer.h` |
+| InstancedRenderer Implementation | `lib/Graphics/src/Rendering/InstancedRenderer.cpp` |
+| RenderSystem (bone data wiring) | `engine/src/Render/Render.cpp` |
 | Mesh Vertex Structure | `lib/Graphics/include/Resources/Mesh.h` |
-| Model Loading | `lib/Graphics/src/Resources/Model.cpp` |
 | Main PBR Shader | `bin/assets/shaders/main_pbr.vert` |
 | Shadow Shader | `bin/assets/shaders/shadow_depth.vert` |
 | Rig Resource | `lib/resource/core/include/native/rig.h` |
-| Component Registry | `engine/include/Component/Component.def` |
 
 ---
 
@@ -230,8 +225,8 @@
 1. ✅ **Phase 1** - ECS components (foundation) - DONE
 2. ✅ **Phase 2** - Skeleton hierarchy (CPU-side logic) - DONE (via animator)
 3. ✅ **Phase 3** - AnimationSystem refactor - DONE
-4. ⬜ **Phase 4** - GPU skinning (see mesh deform) - **NEXT**
-5. ⬜ **Phase 5** - Rendering integration
+4. ✅ **Phase 4** - GPU skinning (shaders) - DONE
+5. ✅ **Phase 5** - Rendering integration - DONE
 6. ⬜ **Phase 6** - Debug visualization (verify correctness)
 7. ⬜ **Phase 7** - Advanced features as needed
 
@@ -255,8 +250,8 @@
 | Day | Focus | Status |
 |-----|-------|--------|
 | Day 1 | CPU-side (Components + AnimationSystem) | ✅ Complete |
-| Day 2 | GPU-side (Shaders + Rendering) | ⬜ Pending |
+| Day 2 | GPU-side (Shaders + Rendering) | ✅ Complete |
 
 ---
 
-*Last Updated: 2026-01-24*
+*Last Updated: 2026-01-27*
