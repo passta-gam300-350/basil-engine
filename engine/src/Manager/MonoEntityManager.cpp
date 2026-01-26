@@ -452,6 +452,14 @@ void MonoEntityManager::SetOutputDirectory(const char* path) {
 	useDefault = false;
 }
 
+void MonoEntityManager::SetProjectOutputDirectory(const char* path)
+{
+	std::filesystem::path filePath = path;
+	MonoManager::GetCompiler()->SetProjectOutputDirectory(std::filesystem::absolute(filePath).string());
+	useDefault = false;
+
+}
+
 void MonoEntityManager::Attach() {
 	MonoManager::Attach();
 }

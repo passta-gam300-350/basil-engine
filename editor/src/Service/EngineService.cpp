@@ -23,6 +23,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "assets"/ "scripts";
 	if (std::filesystem::exists(scripts_dir)) {
 		MonoEntityManager::GetInstance().AddSearchDirectory(scripts_dir.string().c_str());
+		MonoEntityManager::GetInstance().SetProjectOutputDirectory(scripts_dir.string().c_str());
 	}
 
 	std::filesystem::path managed_dir = std::filesystem::path{ working_dir } / "managed";

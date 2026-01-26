@@ -40,7 +40,7 @@ void ScriptCompiler::Init(MonoLoader* ptrLoader, std::string const& compiler_dir
 	 *public static void Setup(string output, string outputDirectory, string[] sources, string[] references, bool isDLL = false, bool debug = false,
 	 *bool optimize = false, bool verbose = false)
 	 */
-	current_method = mono_class_get_method_from_name(compilerKlass, "Setup", 8);
+	current_method = mono_class_get_method_from_name(compilerKlass, "Setup", 9);
 	current_running_thread = 0;
 
 }
@@ -150,13 +150,14 @@ void ScriptCompiler::CompileAsync()
 		mono_array_setref(mono_refs, i, mono_str);
 
 	}
-	void* args[8];
+	void* args[9];
 	/*
 	 *public static void Setup(string output, string outputDirectory, string[] sources, string[] references, bool isDLL = false, bool debug = false,
 	 *bool optimize = false, bool verbose = false)
 	*/
 	MonoString* output = mono_string_new(compiler_d, compile_settings.output_name.c_str());
 	MonoString* output_dir = mono_string_new(compiler_d, compile_settings.output_directory.c_str());
+	MonoString* output_proj = mono_string_new(compiler_d, compile_settings.project_output_dir.c_str());
 	//[[maybe_unused]] mono_bool val = compile_settings.optimize ? 1 : 0;
 	mono_bool isdll = compile_settings.isDLL ? 1 : 0;
 	mono_bool debug = compile_settings.debug ? 1 : 0;
@@ -164,12 +165,13 @@ void ScriptCompiler::CompileAsync()
 	mono_bool verbose = compile_settings.verbose ? 1 : 0;
 	args[0] = output;
 	args[1] = output_dir;
-	args[2] = mono_paths;
-	args[3] = mono_refs;
-	args[4] = &isdll; // isDLL
-	args[5] = &debug; // debug
-	args[6] = &optimize; // optimize
-	args[7] = &verbose; // verbose
+	args[2] = output_proj;
+	args[3] = mono_paths;
+	args[4] = mono_refs;
+	args[5] = &isdll; // isDLL
+	args[6] = &debug; // debug
+	args[7] = &optimize; // optimize
+	args[8] = &verbose; // verbose
 
 
 	std::string n = mono_method_full_name(current_method, true);
@@ -351,6 +353,12 @@ void ScriptCompiler::SetCompileOutputDirectory(std::string const& dir)
 {
 	compile_settings.output_directory = dir;
 }
+
+void ScriptCompiler::SetProjectOutputDirectory(std::string const& dir)
+{
+	compile_settings.project_output_dir = dir;
+}
+
 std::string const& ScriptCompiler::GetCompileOutputDirectory() const
 {
 	return compile_settings.output_directory;
