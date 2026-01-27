@@ -1,0 +1,29 @@
+base:
+  m_guid: bb84e67032a1cb88ab0f2fedd8
+  m_importer: .material
+  m_source: ""
+  m_name: m_ghost
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_ghost
+  albedo:
+    x: 0.800000012
+    y: 0.800000012
+    z: 0.800000012
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 00
+    u_DiffuseMap: b50164781c83cf985f87eb04a1
+    u_EmissiveMap: 00
+    u_NormalMap: 00
+    u_HeightMap: 00
+    u_SpecularMap: 00
+    u_MetallicMap: 00

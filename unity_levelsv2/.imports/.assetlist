@@ -280,6 +280,12 @@
 "GarbageBin_Open3.ogg":
   "m_guid": "30b42227666aa39ae12806ef9aa"
   "m_typeindex": "17099568057112876377"
+"Ghost_Model.fbx":
+  "m_guid": "b501c27d55a036d0790a94d2bb"
+  "m_typeindex": "4838001395392124604"
+"Ghost_Model.png":
+  "m_guid": "b50164781c83cf985f87eb04a1"
+  "m_typeindex": "126269861530532084"
 "Grass_01":
   "m_guid": "2120c9a6767f873e79654f47d80c"
   "m_typeindex": "4838001395392124604"
@@ -1273,6 +1279,27 @@
 "flaptop.obj":
   "m_guid": "54961927c9399122be7b0cbb392"
   "m_typeindex": "4838001395392124604"
+"floorBrush2.obj":
+  "m_guid": "1088cb67701bf337d3ce7d4d763"
+  "m_typeindex": "4838001395392124604"
+"floorBrush2_Floorbrush_BaseColor.png":
+  "m_guid": "1088c377a37ac3e028da7892554"
+  "m_typeindex": "126269861530532084"
+"floorBrush2_Floorbrush_Emissive.png":
+  "m_guid": "1088c417cf6bf0cbddb927ce2b7"
+  "m_typeindex": "126269861530532084"
+"floorBrush2_Floorbrush_Height.png":
+  "m_guid": "1088c4b7684b604c32e31cfd962"
+  "m_typeindex": "126269861530532084"
+"floorBrush2_Floorbrush_Metallic.png":
+  "m_guid": "1088c53702ca797d381dd0e6002"
+  "m_typeindex": "126269861530532084"
+"floorBrush2_Floorbrush_Normal.png":
+  "m_guid": "1088c5c7f1bb5a9509cd52c579a"
+  "m_typeindex": "126269861530532084"
+"floorBrush2_Floorbrush_Roughness.png":
+  "m_guid": "1088c65786eb1d675802190f835"
+  "m_typeindex": "126269861530532084"
 "hdb_01":
   "m_guid": "7e10c2f7ab78320cc8af2c84e5a"
   "m_typeindex": "175488002581160416"
@@ -1771,6 +1798,12 @@
 "m_floor":
   "m_guid": "98f196a704f962aa1cab73c4773"
   "m_typeindex": "175488002581160416"
+"m_floorbrush":
+  "m_guid": "10961a27b1fb5b9ee1c6d2a006c"
+  "m_typeindex": "175488002581160416"
+"m_ghost":
+  "m_guid": "bb84e67032a1cb88ab0f2fedd8"
+  "m_typeindex": "175488002581160416"
 "m_grass1":
   "m_guid": "215ee8487fe2ba5a5a4cf897c32f"
   "m_typeindex": "175488002581160416"
@@ -2022,6 +2055,9 @@
   "m_typeindex": "175488002581160416"
 "rubbish":
   "m_guid": "9989f8776c9b5029caa508fd79f"
+  "m_typeindex": "175488002581160416"
+"set1_material":
+  "m_guid": "11827897639b2fcd7bb214cad5c"
   "m_typeindex": "175488002581160416"
 "sfx_footstep_concrete_1.ogg":
   "m_guid": "3a87d9f77cba090c4d50000925b"

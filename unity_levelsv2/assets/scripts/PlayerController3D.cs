@@ -24,17 +24,11 @@ public class PlayerController3D : Behavior
     private float pitch = 0f; // X rotation
     private float yaw = 0f;   // Y rotation
 
-
     public bool onMopEnabled = false;
 
     private GameObject mopVisual;
 
-
-
-
-
-
-
+    public bool canCollectTrash = true;
 
     public void Init()
     {
@@ -88,10 +82,12 @@ public class PlayerController3D : Behavior
         if (Input.GetKey(KeyCode.KEY_1))
         {
             onMopEnabled = false;
+            canCollectTrash = true;
         }
         else if (Input.GetKey(KeyCode.KEY_2))
         {
             onMopEnabled = true;
+            canCollectTrash = false;
         }
 
         // Update mop when state changes

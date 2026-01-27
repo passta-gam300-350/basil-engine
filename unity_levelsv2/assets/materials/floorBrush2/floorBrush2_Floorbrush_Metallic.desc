@@ -1,0 +1,7 @@
+base:
+  m_guid: 1088c53702ca797d381dd0e6002
+  m_importer: .texture
+  m_source: materials\floorBrush2\floorBrush2_Floorbrush_Metallic.png
+  m_name: floorBrush2_Floorbrush_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
