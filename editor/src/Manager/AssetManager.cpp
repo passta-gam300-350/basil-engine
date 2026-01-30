@@ -316,7 +316,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					continue;
 				}
 
-				desc_name = desc_name.substr(0, desc_name.find_last_of(".")) + ".desc";
+				desc_name = desc_name + ".desc";
 				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio" || ext_name == ".video") {
 					continue;
 				}
