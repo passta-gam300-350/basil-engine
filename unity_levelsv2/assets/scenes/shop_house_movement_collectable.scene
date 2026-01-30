@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 81
+  slot: 83
   guid: 00
   dependencies: ~
 render_settings:
@@ -2414,16 +2414,16 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 8df7977a02a9ef4d5cfb29f120
+        guid: 90785d17c8ea2ac4698827da3da
         type: 4838001395392124604
       m_MaterialGuid:
-        g_bx_opened_material:
-          guid: e503367a65b7cb31fa867d2a94
+        cw_bx_opened_material:
+          guid: 90cdd8878fd8978f3a98093df59
           type: 175488002581160416
     Scene ID:
       Scene ID: 72
     entity name:
-      name: box_gem_opened
+      name: box_wafer_opened
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
@@ -2436,7 +2436,7 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -5.26642418
+        x: -4.42521906
         y: 6.10351562e-05
         z: -5.95810413
   - MeshRendererComponent:
@@ -2667,3 +2667,69 @@ entities:
         x: -2.39983058
         y: 0.765057206
         z: -6.00901747
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8df7977a02a9ef4d5cfb29f120
+        type: 4838001395392124604
+      m_MaterialGuid:
+        g_bx_opened_material:
+          guid: e503367a65b7cb31fa867d2a94
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 81
+    entity name:
+      name: box_gem_opened_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -5.26642418
+        y: 6.10351562e-05
+        z: -5.95810413
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 91290a971268b91715f3c12aa2f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        empty_tin_plastic_clear_material:
+          guid: 9193fd675f4bf4420d1fccae814
+          type: 175488002581160416
+        empty_tin_top_material:
+          guid: 91a5e847f948713e05b2878aac0
+          type: 175488002581160416
+        empty_tin_base_material:
+          guid: 914162578eb9fd4f9bd00f552c7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 82
+    entity name:
+      name: new_tin_empty
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0140999993
+        y: 0.0140999993
+        z: 0.0140999993
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.57442808
+        y: 6.10351562e-05
+        z: -5.97175694
