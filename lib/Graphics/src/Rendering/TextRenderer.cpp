@@ -632,8 +632,8 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
         case TextBillboardMode::Full: {
             // Full billboard - text always faces camera
             glm::vec3 toCamera = glm::normalize(worldText.cameraPosition - worldText.worldPosition);
-            billboardRight = glm::normalize(glm::cross(toCamera, worldText.cameraUp));
-            billboardUp = glm::cross(toCamera, billboardRight);
+            billboardRight = glm::normalize(glm::cross(worldText.cameraUp, toCamera));
+            billboardUp = -glm::normalize(glm::cross(billboardRight, toCamera));
             break;
         }
 
@@ -647,7 +647,7 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
                 toCamera.y = 0.0f;
             }
             toCamera = glm::normalize(toCamera);
-            billboardRight = glm::normalize(glm::cross(toCamera, glm::vec3(0, 1, 0)));
+            billboardRight = glm::normalize(glm::cross(glm::vec3(0, 1, 0), toCamera));
             billboardUp = glm::vec3(0, 1, 0);  // Always up
             break;
         }
