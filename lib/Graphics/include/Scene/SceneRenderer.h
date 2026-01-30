@@ -54,6 +54,7 @@ public:
     void SubmitParticles(const ParticleRenderData& particleData);
     void SubmitHUDElement(const HUDElementData& hudElement);
     void SubmitText(const TextElementData& textElement);
+    void SubmitWorldText(const WorldTextElementData& worldText);
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -91,6 +92,7 @@ public:
     void SetParticleShader(const std::shared_ptr<Shader>& shader) const;
     void SetHUDShader(const std::shared_ptr<Shader>& shader) const;
     void SetTextShader(const std::shared_ptr<Shader>& shader) const;
+    void SetWorldTextShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);

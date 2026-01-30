@@ -59,20 +59,51 @@ public:
         // Total: 128 bytes (aligned to vec4)
     };
 
+    /**
+     * @brief World-space glyph instance data for SSBO (std430 layout)
+     *
+     * Extended version for 3D world-space text with billboard support.
+     * Each glyph has its own 3D position and billboard basis vectors.
+     */
+    struct WorldGlyphInstanceData {
+        glm::vec3 worldPosition;    // 3D world position (12 bytes)
+        float _padding0;            // Alignment to vec4 (4 bytes)
+        glm::vec3 billboardRight;   // Billboard right vector (12 bytes)
+        float _padding1;            // Alignment to vec4 (4 bytes)
+        glm::vec3 billboardUp;      // Billboard up vector (12 bytes)
+        float _padding2;            // Alignment to vec4 (4 bytes)
+        glm::vec2 size;             // Glyph size in world units (8 bytes)
+        glm::vec2 _padding3;        // Alignment to vec4 (8 bytes)
+        glm::vec4 uvRect;           // Atlas UV coordinates (min.xy, max.zw) (16 bytes)
+        glm::vec4 color;            // Text color (16 bytes)
+        float sdfThreshold;         // SDF cutoff threshold (4 bytes)
+        float smoothing;            // Edge smoothing (4 bytes)
+        float outlineWidth;         // Outline thickness (4 bytes)
+        float glowStrength;         // Glow/shadow strength (4 bytes)
+        glm::vec4 outlineColor;     // Outline color (16 bytes)
+        glm::vec4 glowColor;        // Glow/shadow color (16 bytes)
+        // Total: 144 bytes (aligned to vec4)
+    };
+
 public:
     TextRenderer();
     ~TextRenderer();
 
-    // Element submission API
+    // Element submission API (screen-space text)
     void BeginFrame();
     void SubmitText(const TextElementData& textElement);
     void EndFrame();
 
+    // World-space text submission API
+    void SubmitWorldText(const WorldTextElementData& worldText);
+
     // Rendering
     void RenderToPass(RenderPass& renderPass, const FrameData& frameData);
+    void RenderWorldTextToPass(RenderPass& renderPass, const FrameData& frameData);
 
     // Shader configuration
     void SetTextShader(const std::shared_ptr<Shader>& shader) { m_TextShader = shader; }
+    void SetWorldTextShader(const std::shared_ptr<Shader>& shader) { m_WorldTextShader = shader; }
 
     // Reference resolution configuration
     void SetReferenceResolution(const glm::vec2& resolution) { m_ReferenceResolution = resolution; }
@@ -98,8 +129,21 @@ private:
     // Font batches (key = atlasTextureID)
     std::unordered_map<uint32_t, FontBatch> m_FontBatches;
 
-    // Text shader (SDF rendering)
-    std::shared_ptr<Shader> m_TextShader;
+    // World-space batch storage per font atlas
+    struct WorldFontBatch {
+        uint32_t atlasTextureID;
+        bool isMultiChannelSDF;
+        std::vector<WorldGlyphInstanceData> glyphInstances;
+        std::unique_ptr<ShaderStorageBuffer> ssbo;
+        bool dirty = true;
+    };
+
+    // World-space font batches (key = atlasTextureID)
+    std::unordered_map<uint32_t, WorldFontBatch> m_WorldFontBatches;
+
+    // Text shaders (SDF rendering)
+    std::shared_ptr<Shader> m_TextShader;         // Screen-space text shader
+    std::shared_ptr<Shader> m_WorldTextShader;    // World-space text shader
 
     // Quad mesh (shared by all glyphs)
     uint32_t m_QuadVAO = 0;
@@ -111,13 +155,20 @@ private:
     // Stats
     uint32_t m_TotalGlyphs = 0;
 
-    // Internal methods
+    // Internal methods (screen-space text)
     void CreateQuadMesh();
     void UpdateBatchSSBO(FontBatch& batch);
     void RenderBatch(RenderPass& renderPass, const FontBatch& batch, const FrameData& frameData);
 
-    // Text layout engine
+    // Internal methods (world-space text)
+    void UpdateWorldBatchSSBO(WorldFontBatch& batch);
+    void RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch& batch, const FrameData& frameData);
+
+    // Text layout engine (screen-space)
     void LayoutText(const TextElementData& textElement, FontBatch& batch);
+
+    // World text layout engine
+    void LayoutWorldText(const WorldTextElementData& worldText, WorldFontBatch& batch);
     char32_t DecodeUTF8(const char*& str);
     std::vector<std::string> WrapText(const std::string& text, const FontAtlas* fontAtlas,
                                       float fontSize, float maxWidth);
