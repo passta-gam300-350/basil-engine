@@ -9,35 +9,35 @@
         <AssemblyName>GameAssembly</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="BasilEngine"><HintPath>D:\gam300\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll</HintPath></Reference>
+        <Reference Include="BasilEngine"><HintPath>M:\gam300\engine\managed\BasilEngine\bin\Release\net48\BasilEngine.dll</HintPath></Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="D:\gam300\unity_levelsv2\assets\scripts\BoxInteractablePoint.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\CameraManager.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\CameraTest.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\CollectFlap.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\CollectSticks.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\Cutscene.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\DirtyPuddle.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\Dustbin.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\GameManager.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\GetStuff.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\GrabScript.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\KiteController.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\KiteInteractablePoint.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\KiteTarget.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\MainMenu.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\NewSaviorTestScript.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\PlayAudio.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\PlayAudioLoop.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\PlayerCameraController.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\PlayerController3D.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\PuzzleManager.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\SimpleMovement.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\Spool.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\TrashCollectable.cs" />
-<Compile Include="D:\gam300\unity_levelsv2\assets\scripts\UserTest.cs" />
+        <Compile Include="M:\gam300\unity_levelsv2\assets\scripts\BoxInteractablePoint.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\CameraManager.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\CameraTest.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\CollectFlap.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\CollectSticks.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\Cutscene.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\DirtyPuddle.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\Dustbin.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\GameManager.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\GetStuff.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\GrabScript.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\KiteController.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\KiteInteractablePoint.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\KiteTarget.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\MainMenu.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\NewSaviorTestScript.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayAudio.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayAudioLoop.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayerCameraController.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PlayerController3D.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\PuzzleManager.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\SimpleMovement.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\Spool.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\TrashCollectable.cs" />
+<Compile Include="M:\gam300\unity_levelsv2\assets\scripts\UserTest.cs" />
     </ItemGroup>
 </Project>

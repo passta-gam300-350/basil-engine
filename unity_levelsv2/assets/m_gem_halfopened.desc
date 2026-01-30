@@ -1,0 +1,29 @@
+base:
+  m_guid: e2c1f87aff92583c64dfab7711
+  m_importer: .material
+  m_source: ""
+  m_name: m_gem_halfopened
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_gem_halfopened
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df70f7398897958422e5e45a5
+    u_DiffuseMap: 8df70b75bea8eed4daa163c712
+    u_EmissiveMap: 8df70b7b4fa37fd292dca882a9
+    u_NormalMap: 8df70e7f71b8c1baad55fafbf7
+    u_HeightMap: 8df70c7197b3a4af371d875c7e
+    u_SpecularMap: 00
+    u_MetallicMap: 8df70d7729aa0cc190ebb15b15

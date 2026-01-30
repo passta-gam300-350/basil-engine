@@ -1,0 +1,38 @@
+base:
+  m_guid: 8e9c987399a86e120e793c017d
+  m_importer: animation
+  m_source: ""
+  m_name: Dr_Blink_animation
+  m_importer_type: 12489485533679399507
+anim:
+  vert_name: Dr_Blink_animation
+  m_id: -999466079
+  m_positions:
+    0:
+      x: -6.10318409e-08
+      y: 1.7920748
+      z: -5.11808872
+    6:
+      x: -6.10318409e-08
+      y: 1.7920748
+      z: -5.11808872
+  m_rotations:
+    0:
+      x: -0.70710665
+      y: 0
+      z: 0.707106888
+      w: 0
+    6:
+      x: -0.70710665
+      y: 0
+      z: 0.707106888
+      w: 0
+  m_scales:
+    0:
+      x: 0.99999994
+      y: 1
+      z: 0.99999994
+    6:
+      x: 0.99999994
+      y: 1
+      z: 0.99999994

@@ -1,0 +1,29 @@
+base:
+  m_guid: be4e7c72da956b6e0ceca6226f
+  m_importer: .material
+  m_source: ""
+  m_name: m_chocolate_closed
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_chocolate_closed
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df6ed72c6b7ce6d8779bd03ce
+    u_DiffuseMap: 8df6e97fd18ca8502c48086bd3
+    u_EmissiveMap: 8df6e97a1aaae93cdc39221c15
+    u_NormalMap: 8df6ec780ab245f25ba3796712
+    u_HeightMap: 8df6ea7cc98fca18fa3e8d4a95
+    u_SpecularMap: 00
+    u_MetallicMap: 8df6eb7189ba1a8785c32f717c

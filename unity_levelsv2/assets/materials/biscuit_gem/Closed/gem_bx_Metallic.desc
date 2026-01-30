@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df7027b0b9c3109d02904be72
+  m_importer: .texture
+  m_source: materials\biscuit_gem\Closed\gem_bx_Metallic.png
+  m_name: gem_bx_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

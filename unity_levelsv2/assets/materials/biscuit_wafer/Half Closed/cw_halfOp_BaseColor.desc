@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df72a71898edbf8687fe47d2b
+  m_importer: .texture
+  m_source: materials\biscuit_wafer\Half Closed\cw_halfOp_BaseColor.png
+  m_name: cw_halfOp_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

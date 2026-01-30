@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df6df7b32bcdd918c6d5a2df4
+  m_importer: .texture
+  m_source: materials\biscuit_cheese\Half Closed\ch_bx_halfOp_Height.png
+  m_name: ch_bx_halfOp_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

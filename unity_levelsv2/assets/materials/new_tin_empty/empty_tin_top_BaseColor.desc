@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df76a7bed80e3e2949e725998
+  m_importer: .texture
+  m_source: materials\new_tin_empty\empty_tin_top_BaseColor.png
+  m_name: empty_tin_top_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

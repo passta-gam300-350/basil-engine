@@ -1,0 +1,24 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl gem_bx
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd gem_bx_BaseColor.png
+map_Ks gem_bx_Metallic.png
+map_Ns gem_bx_Roughness.png
+map_Ke gem_bx_Emissive.png
+map_d gem_bx_Height.png
+map_Bump gem_bx_Normal.png
+
+newmtl gem_bx_tape
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd gem_bx_tape_BaseColor.png
+map_Ks gem_bx_tape_Metallic.png
+map_Ns gem_bx_tape_Roughness.png
+map_Ke gem_bx_tape_Emissive.png
+map_d gem_bx_tape_Height.png
+map_Bump gem_bx_tape_Normal.png

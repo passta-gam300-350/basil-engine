@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df76477f6ad5c8d4b9f08b477
+  m_importer: .texture
+  m_source: materials\new_tin_empty\empty_tin_base_Roughness.png
+  m_name: empty_tin_base_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

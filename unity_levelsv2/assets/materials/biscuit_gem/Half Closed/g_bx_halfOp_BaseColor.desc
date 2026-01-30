@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df70b75bea8eed4daa163c712
+  m_importer: .texture
+  m_source: materials\biscuit_gem\Half Closed\g_bx_halfOp_BaseColor.png
+  m_name: g_bx_halfOp_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

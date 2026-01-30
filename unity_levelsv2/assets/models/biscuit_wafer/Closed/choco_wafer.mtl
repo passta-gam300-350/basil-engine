@@ -1,0 +1,24 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl cw_bx
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd cw_bx_BaseColor.png
+map_Ks cw_bx_Metallic.png
+map_Ns cw_bx_Roughness.png
+map_Ke cw_bx_Emissive.png
+map_d cw_bx_Height.png
+map_Bump cw_bx_Normal.png
+
+newmtl cw_bx_tape
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd cw_bx_tape_BaseColor.png
+map_Ks cw_bx_tape_Metallic.png
+map_Ns cw_bx_tape_Roughness.png
+map_Ke cw_bx_tape_Emissive.png
+map_d cw_bx_tape_Height.png
+map_Bump cw_bx_tape_Normal.png

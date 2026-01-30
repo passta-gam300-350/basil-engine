@@ -1,0 +1,38 @@
+base:
+  m_guid: 8e9c977970a1e24d45366b967b
+  m_importer: animation
+  m_source: ""
+  m_name: Arm.R.001_animation
+  m_importer_type: 12489485533679399507
+anim:
+  vert_name: Arm.R.001_animation
+  m_id: -999466079
+  m_positions:
+    0:
+      x: 0
+      y: 0.355263561
+      z: -2.12639861e-09
+    6:
+      x: 0
+      y: 0.355263561
+      z: -2.12639861e-09
+  m_rotations:
+    0:
+      x: 1.56498558e-07
+      y: -3.42921119e-14
+      z: 1
+      w: 2.19120949e-07
+    6:
+      x: 1.56498558e-07
+      y: -3.42921119e-14
+      z: 1
+      w: 2.19120949e-07
+  m_scales:
+    0:
+      x: 0.99999994
+      y: 0.99999994
+      z: 1
+    6:
+      x: 0.99999994
+      y: 0.99999994
+      z: 1
