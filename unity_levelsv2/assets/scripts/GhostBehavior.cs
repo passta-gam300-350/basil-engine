@@ -5,6 +5,31 @@ using BasilEngine.Mathematics;
 using System;
 using System.Security.AccessControl;
 
+/// <summary>
+/// Ghost patrol behavior with waypoint-based movement and trigger collision detection.
+///
+/// REQUIRED COMPONENTS (must be added in editor):
+/// ================================================
+/// 1. RigidBodyComponent
+///    - Motion Type: KINEMATIC (for script-controlled movement)
+///    - Use Gravity: FALSE (ghost shouldn't fall)
+///    - Drag: 0 (no friction)
+///
+/// 2. Collider (BoxCollider, SphereCollider, or CapsuleCollider)
+///    - isTrigger: TRUE (to pass through walls)
+///    - Size: Large enough to detect player proximity
+///
+/// WHY RIGIDBODY IS REQUIRED:
+/// - Collider-only creates a Static Jolt body that CANNOT move
+/// - Without RigidBody, transform changes don't sync to Jolt physics
+/// - Kinematic RigidBody allows MovePosition() while ignoring gravity/forces
+/// - Trigger callbacks only work if Jolt knows the ghost's current position
+///
+/// BEHAVIOR:
+/// - Patrols between waypoints with configurable pause durations
+/// - Smoothly rotates to face movement direction
+/// - Triggers OnTriggerEnter/Stay/Exit when player enters detection zone
+/// </summary>
 public class GhostBehavior : Behavior
 {
     // PUBLIC CONFIGURATION - Set these in the editor
@@ -34,6 +59,7 @@ public class GhostBehavior : Behavior
 
     // Movement settings
     public float moveSpeed = 2.0f;           // Movement speed (units per second)
+    public float rotationSpeed = 360.0f;     // Rotation speed in degrees per second
     public float arrivalThreshold = 0.1f;    // Distance to waypoint to consider "arrived"
 
     // PRIVATE STATE
@@ -51,11 +77,23 @@ public class GhostBehavior : Behavior
 
     public void Init()
     {
-        // Get the Rigidbody component for physics-based movement
+        // IMPORTANT: Ghost MUST have a Rigidbody for movement to work with Jolt physics
+        // Without RigidBody, the Jolt body stays static and collision detection breaks
+        // Required setup in editor:
+        //   - RigidBodyComponent: Motion Type = Kinematic, UseGravity = false
+        //   - Collider: isTrigger = true (to pass through walls)
         rb = GetComponent<Rigidbody>();
         if (rb == null)
         {
-            Logger.Warn("GhostBehavior: No Rigidbody component found! Movement may not work correctly with physics.");
+            Logger.Warn("GhostBehavior: CRITICAL - No Rigidbody found! Ghost movement will not work with physics.");
+            Logger.Warn("GhostBehavior: Add a Rigidbody with MotionType=Kinematic and UseGravity=false");
+            return;
+        }
+
+        // Verify Rigidbody is configured correctly
+        if (rb.UseGravity)
+        {
+            Logger.Warn("GhostBehavior: Rigidbody has gravity enabled! Ghost may fall. Set UseGravity=false in editor.");
         }
 
         waypoint1 = GameObject.Find("1");
@@ -193,37 +231,27 @@ public class GhostBehavior : Behavior
             return;
         }
 
-        // Move towards the target waypoint using physics
-        float stepDistance = moveSpeed * Time.deltaTime;
+        // Move towards the target waypoint (no rotation while moving)
+        Vector3 normalizedDirection = direction.Normalize();
         Vector3 newPosition;
 
-        if (stepDistance >= distance)
+        if (moveSpeed * Time.deltaTime >= distance)
         {
             // We'll reach or overshoot the target this frame, so just snap to it
             newPosition = targetPosition;
         }
         else
         {
-            // Move a fraction of the way
-            Vector3 normalizedDirection = direction.Normalize();
-            newPosition = currentPosition + (normalizedDirection * stepDistance);
+            // Move towards target at moveSpeed units per second
+            newPosition = currentPosition + (normalizedDirection * moveSpeed * Time.deltaTime);
         }
 
-        // Use Rigidbody.MovePosition for physics-based movement
-        // This ensures proper collision detection and physics integration
-        if (rb != null)
-        {
-            rb.MovePosition(newPosition);
-        }
-        else
-        {
-            // Fallback to direct transform manipulation if no rigidbody
-            transform.position = newPosition;
-        }
+        // Set position directly
+        transform.position = newPosition;
     }
 
     /// <summary>
-    /// Update pause timer at waypoint
+    /// Update pause timer at waypoint and rotate to face next waypoint
     /// </summary>
     private void UpdatePause()
     {
@@ -233,6 +261,10 @@ public class GhostBehavior : Behavior
             rb.velocity = new Vector3(0, 0, 0);
         }
 
+        // Rotate to face the next waypoint while paused
+        RotateTowardsNextWaypoint();
+
+        // Update pause timer
         pauseTimer -= Time.deltaTime;
 
         if (pauseTimer <= 0.0f)
@@ -240,6 +272,78 @@ public class GhostBehavior : Behavior
             // Pause finished, move to next waypoint
             AdvanceToNextWaypoint();
             currentState = GhostState.Moving;
+        }
+    }
+
+    /// <summary>
+    /// Smoothly rotate to face the next waypoint
+    /// </summary>
+    private void RotateTowardsNextWaypoint()
+    {
+        // Calculate which waypoint is next
+        int nextWaypointIndex = currentWaypointIndex + 1;
+        if (nextWaypointIndex >= waypointCount)
+        {
+            nextWaypointIndex = 0; // Loop back to first waypoint
+        }
+
+        GameObject nextWaypoint = GetWaypoint(nextWaypointIndex);
+        if (nextWaypoint == null)
+        {
+            return; // Can't rotate if next waypoint doesn't exist
+        }
+
+        // Calculate direction to next waypoint
+        Vector3 targetPosition = nextWaypoint.transform.position;
+        Vector3 currentPosition = transform.position;
+        Vector3 direction = targetPosition - currentPosition;
+
+        // Only rotate if next waypoint is far enough away
+        if (direction.Magnitude() < 0.1f)
+        {
+            return;
+        }
+
+        Vector3 normalizedDirection = direction.Normalize();
+
+        // Calculate target yaw angle in degrees
+        // Math.Atan2 returns radians, so convert to degrees (* 180/PI)
+        float targetYaw = (float)(Math.Atan2(normalizedDirection.x, normalizedDirection.z) * (180.0 / Math.PI));
+
+        // Get current rotation
+        Vector3 currentRotation = transform.rotation;
+        float currentYaw = currentRotation.y;
+
+        // Calculate angle difference with wrapping
+        float angleDifference = targetYaw - currentYaw;
+        while (angleDifference > 180.0f) angleDifference -= 360.0f;
+        while (angleDifference < -180.0f) angleDifference += 360.0f;
+
+        // Only rotate if difference is significant (> 1 degree)
+        if (Math.Abs(angleDifference) > 1.0f)
+        {
+            // Calculate rotation step for this frame
+            float rotationStep = rotationSpeed * Time.deltaTime;
+
+            // Apply rotation
+            float newYaw;
+            if (Math.Abs(angleDifference) <= rotationStep)
+            {
+                // Close enough, snap to target
+                newYaw = targetYaw;
+            }
+            else
+            {
+                // Rotate towards target
+                newYaw = currentYaw + Math.Sign(angleDifference) * rotationStep;
+            }
+
+            // Normalize angle to [0, 360) range
+            while (newYaw < 0.0f) newYaw += 360.0f;
+            while (newYaw >= 360.0f) newYaw -= 360.0f;
+
+            // Apply rotation (only change Y axis)
+            transform.rotation = new Vector3(currentRotation.x, newYaw, currentRotation.z);
         }
     }
 
@@ -276,4 +380,70 @@ public class GhostBehavior : Behavior
 
         Logger.Log($"GhostBehavior: Moving to waypoint {currentWaypointIndex + 1}.");
     }
+
+    // ========================================================================
+    // TRIGGER COLLISION CALLBACKS (Unity-style)
+    // ========================================================================
+    // These methods are automatically called by the physics system when
+    // another collider enters, stays in, or exits this ghost's trigger zone.
+    // Make sure the ghost has a collider component with isTrigger = true!
+    // ========================================================================
+
+    /// <summary>
+    /// Called when another collider enters the ghost's trigger zone
+    /// </summary>
+    //public void OnTriggerEnter()
+    //{
+    //    // Check if the colliding object is the player
+    //    if (other.name == "Player" || other.name == "PlayerGroup")
+    //    {
+    //        Logger.Log($"GhostBehavior: Player entered ghost trigger zone!");
+
+    //        // Example interactions:
+    //        // - Play a sound effect
+    //        // - Trigger a jumpscare animation
+    //        // - Load a different scene (game over)
+    //        // - Damage the player
+    //        // - Enable a UI prompt
+
+    //        // Example: Load game over scene
+    //        // Scene.LoadScene(0);
+    //    }
+    //}
+
+    /// <summary>
+    /// Called every frame while another collider stays in the ghost's trigger zone
+    /// </summary>
+    //public void OnTriggerStay(GameObject other)
+    //{
+    //    // Check if player is still in range
+    //    if (other.name == "Player" || other.name == "PlayerGroup")
+    //    {
+    //        // This is called every frame while player is inside the trigger
+    //        // Use this for continuous effects like:
+    //        // - Draining player health over time
+    //        // - Playing ambient sounds
+    //        // - Showing warning UI
+
+    //        // Example: Log every 60 frames (roughly once per second at 60fps)
+    //        // Note: You'd need to add a frame counter variable for this
+    //    }
+    //}
+
+    ///// <summary>
+    ///// Called when another collider exits the ghost's trigger zone
+    ///// </summary>
+    //public void OnTriggerExit(GameObject other)
+    //{
+    //    // Check if the player left the trigger zone
+    //    if (other.name == "Player" || other.name == "PlayerGroup")
+    //    {
+    //        Logger.Log($"GhostBehavior: Player left ghost trigger zone.");
+
+    //        // Example interactions:
+    //        // - Stop playing sounds
+    //        // - Hide UI warnings
+    //        // - Resume normal gameplay
+    //    }
+    //}
 }
