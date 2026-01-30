@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 169
+  slot: 175
   guid: 00
   dependencies: ~
 render_settings:
@@ -68,6 +68,19 @@ entities:
         unnamed slot:
           guid: 00
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.100000001
+        y: 1.10000002
+        z: 0.600000024
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 20
     entity name:
@@ -145,9 +158,9 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.300999999
-        y: 1
-        z: 0.500999987
+        x: 0.25
+        y: 0.800000012
+        z: 0.300000012
       CenterOffset:
         x: 0
         y: 0
@@ -164,17 +177,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00432451768
+        x: 0.0043245079
         y: 0.00339634321
         z: 0.00432537869
       m_Rotate:
         x: -172.065262
-        y: -34.9999847
+        y: -34.9999886
         z: 179.999893
       m_Trans:
-        x: 1.97398102
-        y: 0.0666681007
-        z: 1.53310215
+        x: 2.05467343
+        y: 0.0181681998
+        z: 1.5832274
     Behaviour:
       classesName:
         - Dustbin
@@ -185,7 +198,7 @@ entities:
           is_user_type: false
         - name: Dustbin.tossDistance
           type: System.Single
-          value: 0.9
+          value: 0.6
           is_user_type: false
   - Scene ID:
       Scene ID: 146
@@ -351,36 +364,6 @@ entities:
           y: 0.951241732
           z: 0.608540893
   - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
-        type: 4838001395392124604
-      m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 0
-    entity name:
-      name: floor
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0378000028
-        y: 0.0379999988
-        z: 0.0378000028
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 3.77544212
-        y: 0
-        z: -3.7713964
-  - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
       isPrimitive: true
@@ -407,7 +390,7 @@ entities:
     Scene ID:
       Scene ID: 25
     entity name:
-      name: plain_wall_Copy
+      name: end_block
     VisibilityComponent:
       m_IsVisible: false
     TransformComponent:
@@ -503,6 +486,19 @@ entities:
         rubbish:
           guid: 9ccc1257d638a8b8f37818a0553
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.5
+        y: 0.300999999
+        z: 0.400000006
+      CenterOffset:
+        x: 0.00999999978
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 9
     entity name:
@@ -519,12 +515,17 @@ entities:
         y: 56.7120018
         z: 0
       m_Trans:
-        x: 1.91866493
+        x: 2.02843618
         y: 0.00117171369
-        z: 1.14437783
+        z: 1.0300765
     Behaviour:
       classesName:
         - TrashCollectable
+      scriptProperties:
+        - name: TrashCollectable.collect_distance
+          type: System.Single
+          value: 0.3
+          is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -540,11 +541,11 @@ entities:
       size:
         x: 0.5
         y: 0.300000012
-        z: 0.5
+        z: 0.600000024
       CenterOffset:
         x: 0
         y: 0
-        z: 0
+        z: -0.0799999982
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -565,9 +566,9 @@ entities:
         y: -4.70118666
         z: -3.49792026e-05
       m_Trans:
-        x: 1.9243921
-        y: 0.0010516214
-        z: -0.211328596
+        x: 1.9448036
+        y: 0.00105168205
+        z: -0.459540904
     Behaviour:
       classesName:
         - TrashCollectable
@@ -623,6 +624,19 @@ entities:
         standardSurface18:
           guid: 9d47bbb74a48f822245f6e12f91
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.5
+        y: 0.300000012
+        z: 0.400000006
+      CenterOffset:
+        x: -0.00999999978
+        y: 0
+        z: -0.0399999991
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 12
     entity name:
@@ -693,6 +707,35 @@ entities:
     Behaviour:
       classesName:
         - GameManager
+      scriptProperties:
+        - name: GameManager.KitePuzzleCompleted
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.TrainPuzzleCompleted
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.bagIsFull
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.hasBag
+          type: System.Boolean
+          value: true
+          is_user_type: false
+        - name: GameManager.isCleaned
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.maxTrashInHand
+          type: System.Int32
+          value: 5
+          is_user_type: false
+        - name: GameManager.trashInHand
+          type: System.Int32
+          value: 0
+          is_user_type: false
   - Scene ID:
       Scene ID: 138
     entity name:
@@ -792,6 +835,19 @@ entities:
         unnamed slot:
           guid: 00
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.101000004
+        y: 1
+        z: 0.400000006
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 39
     entity name:
@@ -981,7 +1037,7 @@ entities:
       m_Trans:
         x: 1.83747876
         y: 0.415434897
-        z: -2.00890493
+        z: -2.21712756
     Behaviour:
       classesName:
         - PlayerController3D
@@ -1063,9 +1119,9 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: 0
-        y: 0.0423420072
-        z: 0
+        x: 1.90734863e-06
+        y: 0.247573853
+        z: -2.86102295e-06
     Behaviour:
       classesName:
         - PlayerCameraPlacementController
@@ -1552,7 +1608,7 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: 0
+        x: -2.23599982
         y: 0
         z: 0
   - MeshRendererComponent:
@@ -1566,6 +1622,19 @@ entities:
         standardSurface13:
           guid: 9d0228771888e951fb2e63aa123
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.5
+        y: 0.300000012
+        z: 0.5
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 155
     entity name:
@@ -1582,16 +1651,16 @@ entities:
         y: 34.7009773
         z: 179.999893
       m_Trans:
-        x: 1.61644757
-        y: 0.00105150649
-        z: 0.926247001
+        x: 1.56955111
+        y: 0.00105159217
+        z: 0.893773198
     Behaviour:
       classesName:
         - TrashCollectable
       scriptProperties:
         - name: TrashCollectable.collect_distance
           type: System.Single
-          value: 0
+          value: 0.3
           is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
@@ -1606,9 +1675,9 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.5
+        x: 0.600000024
         y: 0.300000012
-        z: 0.400000006
+        z: 0.500999987
       CenterOffset:
         x: 0
         y: 0
@@ -1633,9 +1702,9 @@ entities:
         y: -69.1539841
         z: -179.999893
       m_Trans:
-        x: 1.95854568
-        y: 0.0010024748
-        z: -0.809544086
+        x: 2.02912474
+        y: 0.00100236572
+        z: -1.36055028
     Behaviour:
       classesName:
         - TrashCollectable
@@ -1657,13 +1726,13 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.400000006
+        x: 0.600000024
         y: 0.300000012
-        z: 0.300000012
+        z: 0.600000024
       CenterOffset:
-        x: 0
+        x: -0.0399999991
         y: 0
-        z: 0
+        z: -0.0500000007
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -1676,17 +1745,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00474998914
+        x: 0.00474998727
         y: 0.00474999985
-        z: 0.00474998914
+        z: 0.00474998727
       m_Rotate:
         x: -179.999893
         y: -36.9274673
         z: 179.999893
       m_Trans:
-        x: 1.98259032
-        y: 0.0010512548
-        z: 0.391947508
+        x: 1.95141304
+        y: 0.0010510108
+        z: 0.208151489
     Behaviour:
       classesName:
         - TrashCollectable
@@ -1703,13 +1772,13 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.300000012
+        x: 0.400000006
         y: 0.300000012
-        z: 0.5
+        z: 0.400000006
       CenterOffset:
-        x: 0
+        x: 0.0700000003
         y: 0
-        z: 0
+        z: -0.109999999
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -1730,9 +1799,9 @@ entities:
         y: 39.154171
         z: 0
       m_Trans:
-        x: 1.52041459
+        x: 1.50728369
         y: 0.00100202241
-        z: -0.0586828403
+        z: -0.161338538
     Behaviour:
       classesName:
         - TrashCollectable
@@ -1755,8 +1824,8 @@ entities:
     BoxCollider:
       size:
         x: 0.5
-        y: 0.300000012
-        z: 0.300000012
+        y: 0.400000006
+        z: 0.400000006
       CenterOffset:
         x: 0
         y: 0
@@ -1781,9 +1850,9 @@ entities:
         y: 57.8460045
         z: -179.999893
       m_Trans:
-        x: 1.55063176
-        y: 0.0010020436
-        z: -0.808615148
+        x: 1.56042099
+        y: 0.00100178597
+        z: -1.07728791
     Behaviour:
       classesName:
         - TrashCollectable
@@ -1803,6 +1872,19 @@ entities:
         standardSurface18:
           guid: 9d47bbb74a48f822245f6e12f91
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.400000006
+        y: 0.300000012
+        z: 0.400000006
+      CenterOffset:
+        x: -0.0299999993
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 161
     entity name:
@@ -1865,46 +1947,16 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
+        guid: 5d4d71a7b3687b79a4b0ee3edea
         type: 4838001395392124604
       m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 163
-    entity name:
-      name: floor_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0378000028
-        y: 0.0379999988
-        z: 0.0378000028
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 3.77544212
-        y: 0
-        z: 0
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
-        type: 4838001395392124604
-      m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
           type: 175488002581160416
     Scene ID:
       Scene ID: 164
     entity name:
-      name: floor_Copy
+      name: concrete_floor
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
@@ -1917,9 +1969,9 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: 0.00427849591
+        x: 1.60000002
         y: 0
-        z: -3.7713964
+        z: -3.77999997
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -2024,3 +2076,131 @@ entities:
           x: 1
           y: 0.951241732
           z: 0.608540893
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.100000001
+        y: 1
+        z: 1
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 169
+    entity name:
+      name: end_block_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0499999896
+        y: 1
+        z: 1.11000001
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 1.81754529
+        y: 0.485636622
+        z: 1.84829223
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 1
+          y: 0.951241732
+          z: 0.608540893
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 170
+    entity name:
+      name: concrete_floor2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0378000028
+        y: 0.0379999988
+        z: 0.0378000028
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.60000002
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 172
+    entity name:
+      name: MengMaxTrashAudio
+    AudioComponent:
+      audioAssetGuid:
+        guid: 10c525e7e9194f5b86cce86e0ff
+        type: 17099568057112876377
+      volume: 0.300000012
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 174
+    entity name:
+      name: Intro_VO1
+    AudioComponent:
+      audioAssetGuid:
+        guid: 10c51ce77dab10c066438204b5c
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
