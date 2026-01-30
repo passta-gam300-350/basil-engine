@@ -60,6 +60,9 @@ bool ShaderLibrary::Initialize() {
     if (!LoadTextShader()) {
         spdlog::warn("ShaderLibrary: Text shader not loaded - SDF text rendering will be disabled");
     }
+    if (!LoadWorldTextShader()) {
+        spdlog::warn("ShaderLibrary: World text shader not loaded - world-space text rendering will be disabled");
+    }
 
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
@@ -345,5 +348,18 @@ bool ShaderLibrary::LoadTextShader() {
     }
 
     spdlog::info("ShaderLibrary: SDF text shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadWorldTextShader() {
+    m_WorldTextShader = Load("text_sdf_world",
+        "assets/shaders/text_sdf_world.vert",
+        "assets/shaders/text_sdf.frag");
+
+    if (!m_WorldTextShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: World SDF text shader loaded successfully");
     return true;
 }
