@@ -700,6 +700,8 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
     }
 
     // Starting cursor position (in pixel space, will be converted to world)
+    // Cursor Y=0 represents the baseline. Glyph bearing.Y (pre-negated, Y-down) positions each glyph
+    // relative to this baseline. Negative bearing.Y = above baseline, positive = below baseline.
     glm::vec2 cursor(alignmentOffsetX, 0.0f);
 
     // Decode UTF-8 and layout glyphs

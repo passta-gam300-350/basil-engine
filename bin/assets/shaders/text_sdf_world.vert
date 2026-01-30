@@ -52,14 +52,16 @@ void main()
     WorldGlyphInstanceData instance = instances[gl_InstanceID];
 
     // Build world-space quad position using billboard basis vectors
-    // aPosition is in (0,1) range, center at (0.5, 0.5)
-    // Offset to center the quad at origin
-    vec2 centeredPos = aPosition - vec2(0.5, 0.5);
+    // aPosition is in (0,1) range, anchored at top-left (0,0)
+    // This matches screen-space text behavior for correct bearing application
+    vec2 localPos = aPosition;
 
     // Build world position using billboard right/up vectors
+    // Negate Y because quad vertices use Y-down convention (0=top, 1=bottom)
+    // but billboardUp points up in world space
     vec3 worldPos = instance.worldPosition
-        + instance.billboardRight * (centeredPos.x * instance.size.x)
-        + instance.billboardUp * (centeredPos.y * instance.size.y);
+        + instance.billboardRight * (localPos.x * instance.size.x)
+        + instance.billboardUp * (-localPos.y * instance.size.y);
 
     // Apply MVP transformation
     gl_Position = u_Projection * u_View * vec4(worldPos, 1.0);
