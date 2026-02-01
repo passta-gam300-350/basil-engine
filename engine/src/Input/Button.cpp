@@ -13,3 +13,31 @@ Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
+#include "Button.h"
+#include <iostream>
+
+Button::Button(float x, float y, float width, float height, const std::string& text)
+    : x(x),
+      y(y),
+      width(width),
+      height(height),
+      text(text),
+      hovered(false),
+      pressed(false)
+{}
+
+void Button::setOnClick(Callback callback)
+{
+}
+
+bool Button::isHovered() const
+{
+}
+
+void Button::update(float mouseX, float mouseY, bool mousePressed)
+{
+}
+
+void Button::render() const
+{
+}
