@@ -184,6 +184,13 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
 
+    // Clear the command buffer so skinned rendering doesn't re-execute
+    // the entire main pass (clear, skybox, opaque draws, etc.)
+    ClearCommands();
+
+    // Render skinned meshes using direct GL calls (after deferred commands)
+    context.instancedRenderer.RenderSkinnedMeshes(*this, context.frameData);
+
     // Store main color buffer in frame data (direct update via reference!)
     context.frameData.mainColorBuffer = GetFramebuffer();
 

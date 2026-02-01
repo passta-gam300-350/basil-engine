@@ -85,6 +85,16 @@ void InstancedRenderer::Clear()
     m_InstanceSSBOs.clear();
     m_TotalInstances = 0;
     m_BatchActive = false;
+    m_SkinnedRenderables.clear();
+
+    // Also reset tracking state so HasRenderablesChanged() returns true
+    // after a clear, forcing BuildDynamicInstanceData() to repopulate.
+    m_LastRenderableCount = 0;
+    m_LastObjectIDs.clear();
+    m_LastTransformHashes.clear();
+    m_LastPropertyBlockHashes.clear();
+    m_LastMaterialPointers.clear();
+    m_LastMeshPointers.clear();
 }
 
 void InstancedRenderer::UpdateInstanceSSBO(const std::string& meshId)
@@ -187,7 +197,8 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
             }
         }
     }
-    RenderSkinnedMeshes(renderPass, frameData);
+    // NOTE: RenderSkinnedMeshes uses direct GL calls and must be called
+    // AFTER ExecuteCommands() in the render pass, not here (deferred).
 }
 
 void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader)
@@ -264,6 +275,8 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     // Clear and rebuild instance data based on currently visible renderables
     Clear();
     BeginInstanceBatch();
+    // Clear skinned renderables (rebuilt below from current frame's data)
+    m_SkinnedRenderables.clear();
 
     // Group renderables by mesh for instancing
     for (size_t i = 0; i < renderables.size(); ++i) {
@@ -497,41 +510,83 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
     if (m_SkinnedRenderables.empty())
     {
         return;
-    }   
+    }
+
+    // Reset lighting/shadow caches so skinned meshes get full lighting setup.
+    // After the main batch's ExecuteCommands() + CleanupGPUState(), the shader
+    // program was unbound. Uniforms persist in the program object, but we
+    // force re-submission to be safe.
+    if (m_PBRLighting)
+    {
+        m_PBRLighting->ResetFrameCache();
+    }
+
+    static int logCount = 0;
+    bool shouldLog = (logCount++ % 120 == 0);
+
+    if (shouldLog)
+        spdlog::info("[Skinned] RenderSkinnedMeshes: {} skinned renderables", m_SkinnedRenderables.size());
 
     for (const RenderableData* renderable : m_SkinnedRenderables)
     {
         if (!renderable || !renderable->mesh || !renderable->material)
-        {
             continue;
-        }
-            
         if (!renderable->boneMatrices || renderable->boneCount == 0)
-        {
             continue;
-        }
 
         auto shader = renderable->material->GetShader();
         if (!shader)
-        {
             continue;
-        }
 
-        // 1. Upload bone matrices
+        // Each skinned mesh gets its own submit-then-execute cycle
+        // so that immediate GL calls (SSBO uploads) and deferred commands stay in sync.
+
+        // 1. Upload bone matrices (immediate GL: creates/updates SSBO, binds to point 2)
         UploadBoneMatrices(renderable->boneMatrices, renderable->boneCount);
 
-        // 2. Bind shader
+        // 2. Upload instance data (immediate GL: creates/updates SSBO, binds to point 0)
+        {
+            InstanceData instanceData{};
+            instanceData.modelMatrix = renderable->transform;
+
+            glm::vec3 albedo = renderable->material->GetAlbedoColor();
+            instanceData.color = glm::vec4(albedo, 1.0f);
+            instanceData.metallic = renderable->material->GetMetallicValue();
+            instanceData.roughness = renderable->material->GetRoughnessValue();
+            instanceData.materialId = 0;
+            instanceData.flags = 0;
+
+            if (!m_SkinnedInstanceSSBO)
+            {
+                m_SkinnedInstanceSSBO = std::make_unique<ShaderStorageBuffer>(
+                    &instanceData, sizeof(InstanceData), GL_DYNAMIC_DRAW);
+            }
+            else
+            {
+                m_SkinnedInstanceSSBO->SetData(&instanceData, sizeof(InstanceData), 0);
+            }
+            m_SkinnedInstanceSSBO->BindBase(INSTANCE_SSBO_BINDING);
+        }
+
+        // 3. Submit deferred commands: shader, uniforms, lighting, textures, draw
+
+        // Restore GL state that CleanupGPUState may have changed
+        renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
+        renderPass.Submit(RenderCommands::SetBlendingData{ false });
+        renderPass.Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
+
         RenderCommands::BindShaderData bindShaderCmd{ shader };
         renderPass.Submit(bindShaderCmd);
 
-        // 3. Set skinning uniforms
         RenderCommands::SetUniformBoolData enableSkinningCmd{ shader, "u_EnableSkinning", true };
         renderPass.Submit(enableSkinningCmd);
 
         RenderCommands::SetUniformIntData boneOffsetCmd{ shader, "u_BoneOffset", 0 };
         renderPass.Submit(boneOffsetCmd);
 
-        // 4. Set camera uniforms
+        // Set opaque pass flag (missing before)
+        renderPass.Submit(RenderCommands::SetUniformBoolData{ shader, "u_IsOpaquePass", true });
+
         RenderCommands::SetUniformsData uniformsCmd{
             shader,
             renderable->transform,
@@ -541,30 +596,48 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         };
         renderPass.Submit(uniformsCmd);
 
-        // 5. Apply lighting
         if (m_PBRLighting)
         {
             m_PBRLighting->SubmitLightingCommands(renderPass, shader, nullptr);
             m_PBRLighting->SubmitShadowCommands(renderPass, shader, frameData);
         }
 
-        // 6. Bind textures
         std::vector<Texture> textures = renderable->material->GetAllTextures();
         RenderCommands::BindTexturesData texturesCmd{ textures, shader };
         renderPass.Submit(texturesCmd);
 
-        // 7. Draw mesh
+        // Re-bind SSBOs via deferred commands (belt-and-suspenders: the immediate
+        // binds above may have been overwritten by CleanupGPUState or other passes)
+        renderPass.Submit(RenderCommands::BindSSBOData{
+            m_SkinnedInstanceSSBO->GetSSBOHandle(), INSTANCE_SSBO_BINDING });
+        renderPass.Submit(RenderCommands::BindSSBOData{
+            m_BoneMatrixSSBO->GetSSBOHandle(), BONE_SSBO_BINDING });
+
         uint32_t vaoHandle = renderable->mesh->GetVertexArray()->GetVAOHandle();
         uint32_t indexCount = renderable->mesh->GetIndexCount();
+
+        if (shouldLog)
+            spdlog::info("[Skinned] Drawing: VAO={}, indices={}, bones={}, ssbo0={}, ssbo2={}, transform[3]=({},{},{})",
+                vaoHandle, indexCount, renderable->boneCount,
+                m_SkinnedInstanceSSBO->GetSSBOHandle(), m_BoneMatrixSSBO->GetSSBOHandle(),
+                renderable->transform[3][0], renderable->transform[3][1], renderable->transform[3][2]);
 
         RenderCommands::DrawElementsInstancedData drawCmd{
             vaoHandle,
             indexCount,
-            1,  // Single instance
+            1,
             0,
             GL_TRIANGLES
         };
         renderPass.Submit(drawCmd);
+
+        // 4. Execute immediately - SSBOs are bound, commands reference them now
+        renderPass.ExecuteCommands();
+        renderPass.ClearCommands();
+
+        // 5. Disable skinning for next draw (immediate)
+        shader->use();
+        shader->setBool("u_EnableSkinning", false);
     }
 }
 

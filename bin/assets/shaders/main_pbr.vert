@@ -79,7 +79,7 @@ void main()
         skinnedBitangent = skinMatrix3 * aBitangent;
     }
     // Transform vertex to world space using instance matrix
-    vec4 worldPos = model * vec4(aPos, 1.0);
+    vec4 worldPos = model * vec4(skinnedPos, 1.0);
     gl_Position = u_Projection * u_View * worldPos;
 
     // Pass data to fragment shader
