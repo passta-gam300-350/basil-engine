@@ -608,6 +608,7 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 			case CollisionCallback::OnCollisionExit:
 				inst->Invoke("OnCollisionExit", argsCollision, nullptr, 1);
 				break;
+			 
 			}
 		}
 	}

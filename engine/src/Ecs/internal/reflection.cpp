@@ -282,4 +282,29 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&TextComponent::layer, "layer">,
 		MemberRegistrationV<&TextComponent::visible, "visible">
 	);
+
+	// Register TextMeshComponent enums
+	RegisterReflectionComponent<TextMeshComponent::BillboardMode>("TextMeshComponent::BillboardMode");
+	RegisterReflectionComponent<TextMeshComponent::Alignment>("TextMeshComponent::Alignment");
+
+	RegisterReflectionComponent<TextMeshComponent>(
+		"TextMeshComponent",
+		MemberRegistrationV<&TextMeshComponent::m_FontGuid, "fontGuid">,
+		MemberRegistrationV<&TextMeshComponent::text, "text">,
+		MemberRegistrationV<&TextMeshComponent::billboardMode, "billboardMode">,
+		MemberRegistrationV<&TextMeshComponent::fontSize, "fontSize">,
+		MemberRegistrationV<&TextMeshComponent::referenceDistance, "referenceDistance">,
+		MemberRegistrationV<&TextMeshComponent::alignment, "alignment">,
+		MemberRegistrationV<&TextMeshComponent::lineSpacing, "lineSpacing">,
+		MemberRegistrationV<&TextMeshComponent::letterSpacing, "letterSpacing">,
+		MemberRegistrationV<&TextMeshComponent::maxWidth, "maxWidth">,
+		MemberRegistrationV<&TextMeshComponent::color, "color">,
+		MemberRegistrationV<&TextMeshComponent::outlineWidth, "outlineWidth">,
+		MemberRegistrationV<&TextMeshComponent::outlineColor, "outlineColor">,
+		MemberRegistrationV<&TextMeshComponent::glowStrength, "glowStrength">,
+		MemberRegistrationV<&TextMeshComponent::glowColor, "glowColor">,
+		MemberRegistrationV<&TextMeshComponent::sdfThreshold, "sdfThreshold">,
+		MemberRegistrationV<&TextMeshComponent::smoothing, "smoothing">,
+		MemberRegistrationV<&TextMeshComponent::visible, "visible">
+	);
 }

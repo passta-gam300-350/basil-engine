@@ -152,10 +152,14 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 
 		// Calculate SDF bitmap size (add padding for SDF range)
 		const int padding = static_cast<int>(fontDesc.sdf_range) + static_cast<int>(fontDesc.glyph_padding);
-		const int glyph_width = static_cast<int>(std::ceil(right - left)) + padding * 2;
-		const int glyph_height = static_cast<int>(std::ceil(top - bottom)) + padding * 2;
+		int glyph_width = static_cast<int>(std::ceil(right - left)) + padding * 2;
+		int glyph_height = static_cast<int>(std::ceil(top - bottom)) + padding * 2;
 
-		if (glyph_width <= 0 || glyph_height <= 0) continue; // Empty glyph
+		// Handle invisible glyphs (space, etc.) - they need metrics but minimal atlas space
+		if (glyph_width <= 0 || glyph_height <= 0) {
+			glyph_width = 1;   // Minimal size for atlas (won't render visible pixels)
+			glyph_height = 1;
+		}
 
 		// Pack glyph into atlas
 		RectPacker::Rect rect;

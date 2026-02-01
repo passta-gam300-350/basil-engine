@@ -71,6 +71,12 @@ void SceneRenderer::SubmitText(const TextElementData& textElement) {
     }
 }
 
+void SceneRenderer::SubmitWorldText(const WorldTextElementData& worldText) {
+    if (m_TextRenderer) {
+        m_TextRenderer->SubmitWorldText(worldText);
+    }
+}
+
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
@@ -828,6 +834,18 @@ void SceneRenderer::SetTextShader(const std::shared_ptr<Shader>& shader) const
     {
         m_TextRenderer->SetTextShader(shader);
         spdlog::info("SceneRenderer: Text shader configured");
+    }
+}
+
+void SceneRenderer::SetWorldTextShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "World text shader cannot be null");
+    assert(shader->ID != 0 && "World text shader must be compiled and linked");
+
+    if (m_TextRenderer)
+    {
+        m_TextRenderer->SetWorldTextShader(shader);
+        spdlog::info("SceneRenderer: World text shader configured");
     }
 }
 

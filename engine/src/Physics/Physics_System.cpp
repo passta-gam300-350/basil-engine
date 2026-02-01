@@ -580,7 +580,7 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         restitution = Collider.restitution;
         isTrigger = Collider.isTrigger;
 
-        /*Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
+        Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
             ecs::entity entityHandle{ entity };
             BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionEnter);
 		};
@@ -591,7 +591,20 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         Collider.onCollisionExit = [entity](ecs::entity other) {
             ecs::entity entityHandle{ entity };
             BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnCollisionExit);
-		};*/
+		};
+
+        Collider.onTriggerEnter = [entity](TriggerInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnTriggerEnter);
+            };
+        Collider.onTriggerStay = [entity](TriggerInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnTriggerStay);
+            };
+        Collider.onTriggerExit = [entity](ecs::entity other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnTriggerExit);
+            };
     }
     else if (world.has_all_components_in_entity<SphereCollider>(entity)) {
         auto Collider = entity.get<SphereCollider>();
@@ -599,7 +612,7 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         restitution = Collider.restitution;
         isTrigger = Collider.isTrigger;
 
-        /*Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
+        Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
             ecs::entity entityHandle{ entity };
             BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionEnter);
         };
@@ -610,7 +623,20 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         Collider.onCollisionExit = [entity](ecs::entity other) {
             ecs::entity entityHandle{ entity };
             BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnCollisionExit);
-        };*/
+        };
+
+        Collider.onTriggerEnter = [entity](TriggerInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnTriggerEnter);
+            };
+        Collider.onTriggerStay = [entity](TriggerInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnTriggerStay);
+            };
+        Collider.onTriggerExit = [entity](ecs::entity other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnTriggerExit);
+            };
     }
     else if (world.has_all_components_in_entity<CapsuleCollider>(entity)) {
         auto Collider = entity.get<CapsuleCollider>();
@@ -618,7 +644,7 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         restitution = Collider.restitution;
         isTrigger = Collider.isTrigger;
 
-        /*Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
+        Collider.onCollisionEnter = [entity](CollisionInfo const& other) {
             ecs::entity entityHandle{ entity };
             BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnCollisionEnter);
         };
@@ -629,7 +655,20 @@ void PhysicsSystem::TryCreateBodyForEntity(ecs::entity entity) {
         Collider.onCollisionExit = [entity](ecs::entity other) {
             ecs::entity entityHandle{ entity };
             BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnCollisionExit);
-        };*/
+        };
+
+        Collider.onTriggerEnter = [entity](TriggerInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnTriggerEnter);
+            };
+        Collider.onTriggerStay = [entity](TriggerInfo const& other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other.otherEntity, BehaviourSystem::CollisionCallback::OnTriggerStay);
+            };
+        Collider.onTriggerExit = [entity](ecs::entity other) {
+            ecs::entity entityHandle{ entity };
+            BehaviourSystem::Instance().OnCollisionCallback(entityHandle, other, BehaviourSystem::CollisionCallback::OnTriggerExit);
+            };
     }
 
     // Determine motion type and layer
