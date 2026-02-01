@@ -11,3 +11,42 @@ Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
+#include "UIManager.h"
+
+UIManager* UIManager::instance = nullptr;
+
+UIManager* UIManager::Get_Instance()
+{
+}
+
+void UIManager::Destroy_Instance()
+{
+}
+
+void UIManager::OpenUI()
+{
+}
+
+void UIManager::CloseUI()
+{
+}
+
+bool UIManager::IsUIOpen() const
+{
+}
+
+void UIManager::AddButton(std::shared_ptr<Button> button)
+{
+}
+
+void UIManager::Clear()
+{
+}
+
+void UIManager::Update()
+{
+}
+
+void UIManager::Render()
+{
+}
