@@ -14,6 +14,8 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
 #include "Button.h"
+#include "InputManager.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 
 Button::Button(float x, float y, float width, float height, const std::string& text)
@@ -28,7 +30,7 @@ Button::Button(float x, float y, float width, float height, const std::string& t
 
 void Button::setOnClick(std::function<void()> callback)
 {
-    this->onClick = callback;
+    this->onClick = std::move(callback);
 }
 
 bool Button::isHovered() const
@@ -38,16 +40,27 @@ bool Button::isHovered() const
 
 void Button::update(float mouseX, float mouseY, bool mousePressed)
 {
-    this->hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    InputManager* input = InputManager::Get_Instance();
 
-    if (this->hovered && mousePressed && !this->pressed)
+    float mx, my;
+    input->Get_MousePosition(mx, my);
+
+    // AABB hit test
+    this->hovered = mx >= x && mx <= x + width && my >= y && my <= y + height;
+
+    // Fire once on press
+    if (this->hovered && input->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT) && !this->pressed)
     {
         this->pressed = true;
+
+        // UI consumes the mouse so gameplay won't see
+        input->Consume_Mouse();
         if (this->onClick)
             onClick();
     }
 
-    if (!mousePressed)
+    // Reset press state on release
+    if (input->Is_MouseReleased(GLFW_MOUSE_BUTTON_LEFT))
         this->pressed = false;
 }
 
