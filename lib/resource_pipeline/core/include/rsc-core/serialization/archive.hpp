@@ -9,12 +9,12 @@ namespace rp{
 	namespace serialization {
 		template <utility::static_string format_name>
 		struct in_archive {
-			static_assert(std::false_type::value && "unsupported archive format! define your own archive format specialisation, see in_archive<\"bin\">");
+			static_assert(format_name.m_data[0] == '\0' && false, "unsupported archive format! define your own archive format specialisation, see in_archive<\"bin\">");
 		};
 
 		template <utility::static_string format_name>
 		struct out_archive {
-			static_assert(std::false_type::value && "unsupported archive format! define your own archive format specialisation, see out_archive<\"bin\">");
+			static_assert(format_name.m_data[0] == '\0' && false, "unsupported archive format! define your own archive format specialisation, see out_archive<\"bin\">");
 		};
 
 		template <>
@@ -57,7 +57,9 @@ namespace rp{
 					//fast deserialization if trivial
 					if constexpr (cont_view.get_cont_traits().is_contiguous_v && std::is_trivially_copyable_v<underlying_type>) {
 						cont_view.resize(cont_sz);
-						m_ifs.read(reinterpret_cast<char*>(&(*cont_view.begin())), sizeof(underlying_type)*cont_sz);
+						if (cont_sz > 0) {
+							m_ifs.read(reinterpret_cast<char*>(&(*cont_view.begin())), sizeof(underlying_type)*cont_sz);
+						}
 					}
 					else {
 						//this does not guarantees reserve mem, because not all containers supports reserve
@@ -114,7 +116,9 @@ namespace rp{
 					//fast deserialization if trivial
 					if constexpr (cont_view.get_cont_traits().is_contiguous_v && std::is_trivially_copyable_v<underlying_type>) {
 						cont_view.resize(cont_sz);
-						blob_read_bytes(reinterpret_cast<char*>(&(*cont_view.begin())), sizeof(underlying_type) * cont_sz);
+						if (cont_sz > 0) {
+							blob_read_bytes(reinterpret_cast<char*>(&(*cont_view.begin())), sizeof(underlying_type) * cont_sz);
+						}
 					}
 					else {
 						//this does not guarantees reserve mem, because not all containers supports reserve
@@ -166,7 +170,9 @@ namespace rp{
 					using underlying_type = decltype(cont)::underlying_type;
 					//fast serialization if trivial
 					if constexpr (cont.get_cont_traits().is_contiguous_v && std::is_trivially_copyable_v<underlying_type>){
-						m_ofs.write(reinterpret_cast<const char*>(&(*cont.begin())), sizeof(underlying_type)*cont.size());
+						if (cont.size() > 0) {
+							m_ofs.write(reinterpret_cast<const char*>(&(*cont.begin())), sizeof(underlying_type)*cont.size());
+						}
 					}
 					else {
 						cont.each([&](auto const& field) {

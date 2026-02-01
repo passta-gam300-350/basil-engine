@@ -33,6 +33,10 @@ struct AnimationComponent
 	float currentTime = 0.0f;
 	float ticksPerSecond = 60.0f;
 	animationState state;
+	animationContainer* currentAnimationContainer = nullptr;
+	blendState blend;
+	bool isSkeletalAnim = false;
+	animator* animatorInstance = nullptr;
 };
 
 // Register animationState first 

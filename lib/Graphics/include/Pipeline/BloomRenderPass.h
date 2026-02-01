@@ -52,7 +52,7 @@ private:
 	// Configuration
 	static constexpr uint32_t NUM_BLOOM_MIPS = 6;
 	float m_FilterRadius = 0.005f;
-	float m_BloomStrength = 0.04f;
+	float m_BloomStrength = 0.01f;  // Reduced from 0.04 for subtler bloom effect
 	bool m_KarisAverage = true;
 	bool m_Initialized = false;
 

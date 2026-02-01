@@ -142,7 +142,7 @@ void EditorMain::CreateDemoScene()
 		});
 
 	// Set stronger ambient light for better visibility
-	engineService.SetAmbientLight(glm::vec3(0.03f));
+	engineService.SetAmbientLight(glm::vec3(0.05f));
 
 	spdlog::info("Demo scene created with 9 cubes and enhanced lighting");
 

@@ -1029,10 +1029,20 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 
 			}
-			/*else if (std::string* vs = value.try_cast<std::string>())
-				if (ImGui::InputText(field_name.c_str(), vs)) {
+			else if (std::string* vs = value.try_cast<std::string>()) {
+				// Use a buffer for ImGui::InputText, then copy back to string
+				char buffer[1024];
+				strncpy_s(buffer, vs->c_str(), sizeof(buffer) - 1);
+				buffer[sizeof(buffer) - 1] = '\0';
+
+				ImGui::Text("%s", field_name.c_str());
+				ImGui::SameLine(150);
+				ImGui::SetNextItemWidth(-1);
+				if (ImGui::InputText("##string_input", buffer, sizeof(buffer))) {
+					*vs = buffer;
 					is_dirty = true;
-				}*/
+				}
+			}
 			else if (bool* vb = value.try_cast<bool>()) {
 				if (ImGui::Checkbox(field_name.c_str(), vb)) {
 					is_dirty = true;

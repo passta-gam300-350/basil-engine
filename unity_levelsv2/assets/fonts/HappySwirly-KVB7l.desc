@@ -1,0 +1,16 @@
+base:
+  m_guid: 21bd01a7b12a1cae42676571bb8
+  m_importer: .font
+  m_source: fonts\HappySwirly-KVB7l.ttf
+  m_name: HappySwirly-KVB7l.ttf
+  m_importer_type: 3072536808783166376
+atlas_size: 1024
+base_font_size: 64
+sdf_range: 8
+glyph_padding: 4
+character_set: ASCII
+custom_ranges: ~
+generate_kerning: true
+generate_outline_support: true
+sdf_multi_channel: false
+compression: BC4_R4

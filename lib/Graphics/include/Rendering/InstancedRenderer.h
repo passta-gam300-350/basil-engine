@@ -73,14 +73,21 @@ public:
     // Mesh and material setup
     void SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
     
-    
+    // Render skinned meshes (called after regular instanced rendering)
+    void RenderSkinnedMeshes(RenderPass& renderPass, const FrameData& frameData);
+
+
     // Configuration
     void SetMaxInstances(uint32_t maxInstances) { m_MaxInstances = maxInstances; }
     uint32_t GetInstanceCount() const { return m_TotalInstances; }
-    
+    // Upload bone matrices for skinned mesh rendering
+    void UploadBoneMatrices(const glm::mat4* matrices, uint32_t count);
     // SSBO binding points (for shader access)
     static constexpr uint32_t INSTANCE_SSBO_BINDING = 0;
-    
+    // Bone matrix SSBO for skeletal animation
+    std::unique_ptr<ShaderStorageBuffer> m_BoneMatrixSSBO;
+    static constexpr uint32_t BONE_SSBO_BINDING = 2;
+    static constexpr uint32_t MAX_TOTAL_BONES = 4096;
 private:
     // Instance data storage per mesh
     struct MeshInstances {
@@ -93,7 +100,8 @@ private:
     std::unordered_map<std::string, MeshInstances> m_MeshInstances;
     std::unordered_map<std::string, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
 
-
+    // Skinned renderables (rendered individually, not batched)
+    std::vector<const RenderableData*> m_SkinnedRenderables;
 
     uint32_t m_MaxInstances;
     uint32_t m_TotalInstances;

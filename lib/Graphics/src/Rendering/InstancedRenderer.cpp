@@ -187,6 +187,7 @@ void InstancedRenderer::RenderToPass(RenderPass& renderPass, const std::vector<R
             }
         }
     }
+    RenderSkinnedMeshes(renderPass, frameData);
 }
 
 void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, std::shared_ptr<Shader> shadowShader)
@@ -268,6 +269,12 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
     for (size_t i = 0; i < renderables.size(); ++i) {
         const auto& renderable = renderables[i];
         if (!renderable.visible || !renderable.mesh || !renderable.material) {
+            continue;
+        }
+
+        if (renderable.isSkinned)
+        {
+            m_SkinnedRenderables.push_back(&renderable);
             continue;
         }
 
@@ -392,6 +399,10 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     RenderCommands::BindShaderData bindShaderCmd{shader};
     renderPass.Submit(bindShaderCmd);
 
+    // Disable skinning for non-skinned batched meshes
+    RenderCommands::SetUniformBoolData disableSkinningCmd{ shader, "u_EnableSkinning", false };
+    renderPass.Submit(disableSkinningCmd);
+
     // 2. Bind instance SSBO
     RenderCommands::BindSSBOData bindSSBOCmd{
         ssboIt->second->GetSSBOHandle(),
@@ -479,6 +490,82 @@ void InstancedRenderer::SetMeshData(const std::string& meshId, const std::shared
     auto& meshInstances = m_MeshInstances[meshId];
     meshInstances.mesh = mesh;
     meshInstances.material = material;
+}
+
+void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameData& frameData)
+{
+    if (m_SkinnedRenderables.empty())
+    {
+        return;
+    }   
+
+    for (const RenderableData* renderable : m_SkinnedRenderables)
+    {
+        if (!renderable || !renderable->mesh || !renderable->material)
+        {
+            continue;
+        }
+            
+        if (!renderable->boneMatrices || renderable->boneCount == 0)
+        {
+            continue;
+        }
+
+        auto shader = renderable->material->GetShader();
+        if (!shader)
+        {
+            continue;
+        }
+
+        // 1. Upload bone matrices
+        UploadBoneMatrices(renderable->boneMatrices, renderable->boneCount);
+
+        // 2. Bind shader
+        RenderCommands::BindShaderData bindShaderCmd{ shader };
+        renderPass.Submit(bindShaderCmd);
+
+        // 3. Set skinning uniforms
+        RenderCommands::SetUniformBoolData enableSkinningCmd{ shader, "u_EnableSkinning", true };
+        renderPass.Submit(enableSkinningCmd);
+
+        RenderCommands::SetUniformIntData boneOffsetCmd{ shader, "u_BoneOffset", 0 };
+        renderPass.Submit(boneOffsetCmd);
+
+        // 4. Set camera uniforms
+        RenderCommands::SetUniformsData uniformsCmd{
+            shader,
+            renderable->transform,
+            frameData.viewMatrix,
+            frameData.projectionMatrix,
+            frameData.cameraPosition
+        };
+        renderPass.Submit(uniformsCmd);
+
+        // 5. Apply lighting
+        if (m_PBRLighting)
+        {
+            m_PBRLighting->SubmitLightingCommands(renderPass, shader, nullptr);
+            m_PBRLighting->SubmitShadowCommands(renderPass, shader, frameData);
+        }
+
+        // 6. Bind textures
+        std::vector<Texture> textures = renderable->material->GetAllTextures();
+        RenderCommands::BindTexturesData texturesCmd{ textures, shader };
+        renderPass.Submit(texturesCmd);
+
+        // 7. Draw mesh
+        uint32_t vaoHandle = renderable->mesh->GetVertexArray()->GetVAOHandle();
+        uint32_t indexCount = renderable->mesh->GetIndexCount();
+
+        RenderCommands::DrawElementsInstancedData drawCmd{
+            vaoHandle,
+            indexCount,
+            1,  // Single instance
+            0,
+            GL_TRIANGLES
+        };
+        renderPass.Submit(drawCmd);
+    }
 }
 
 bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> &renderables)
@@ -754,3 +841,26 @@ void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>&
     }
 }
 
+
+void InstancedRenderer::UploadBoneMatrices(const glm::mat4* matrices, uint32_t count)
+{
+    if (matrices == nullptr || count == 0)
+        return;
+
+    // Create SSBO if it doesn't exist
+    if (!m_BoneMatrixSSBO)
+    {
+        m_BoneMatrixSSBO = std::make_unique<ShaderStorageBuffer>(
+            nullptr,
+            MAX_TOTAL_BONES * sizeof(glm::mat4),
+            GL_DYNAMIC_DRAW
+        );
+    }
+
+    // Upload bone matrices
+    uint32_t dataSize = count * sizeof(glm::mat4);
+    m_BoneMatrixSSBO->SetData(matrices, dataSize, 0);
+
+    // Bind to shader binding point
+    m_BoneMatrixSSBO->BindBase(BONE_SSBO_BINDING);
+}

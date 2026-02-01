@@ -41,6 +41,7 @@ class JoltDebugRenderer;
 RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
 RegisterResourceTypeForward(MaterialResourceData, "material", materialdefine)
 RegisterResourceTypeForward(TextureResourceData, "texture", texturedefine)
+RegisterResourceTypeForward(FontAtlasResourceData, "font_atlas", fontatlasdefine)
 
 /**
  * @brief Component for rendering meshes on entities
@@ -129,6 +130,73 @@ struct HUDComponent {
     float rotation = 0.0f;              ///< Rotation in degrees (clockwise, around anchor point)
     uint8_t layer = 0;                 ///< Layer for depth sorting (higher values render on top)
     bool visible = true;                ///< Visibility toggle
+};
+
+/**
+ * @brief Component for rendering SDF text in screen space
+ *
+ * Text elements are rendered using signed distance field (SDF) fonts for crisp, scalable text.
+ * Supports outline, glow, and shadow effects, as well as rich text formatting.
+ */
+struct TextComponent {
+    rp::BasicIndexedGuid m_FontGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"font_atlas">{}) };  ///< GUID of the font atlas asset
+
+    // Text content
+    std::string text = "Text";  ///< Text string (UTF-8 encoded)
+
+    // Screen-space positioning (pixels)
+    glm::vec2 position = glm::vec2(0.0f);  ///< Position in pixels from anchor point
+    float fontSize = 16.0f;                ///< Font size in pixels
+
+    /**
+     * @brief Anchor point for positioning (reuses HUDComponent::Anchor)
+     */
+    enum class Anchor : uint8_t {
+        TopLeft,
+        TopCenter,
+        TopRight,
+        CenterLeft,
+        Center,
+        CenterRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight
+    } anchor = Anchor::TopLeft;
+
+    /**
+     * @brief Text alignment for multi-line text
+     */
+    enum class Alignment : uint8_t {
+        Left,
+        Center,
+        Right,
+        Justified
+    } alignment = Alignment::Left;
+
+    // Layout properties
+    float lineSpacing = 1.0f;     ///< Line spacing multiplier (1.0 = default line height)
+    float letterSpacing = 0.0f;   ///< Letter spacing in pixels
+    float maxWidth = 0.0f;        ///< Maximum width for word wrapping (0 = no wrapping)
+
+    // Visual properties
+    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);  ///< Text color (RGBA)
+
+    // Outline effect
+    float outlineWidth = 0.0f;                              ///< Outline thickness in pixels (0 = no outline)
+    glm::vec4 outlineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); ///< Outline color (RGBA)
+
+    // Glow/shadow effect
+    float glowStrength = 0.0f;                              ///< Glow/shadow strength in pixels (0 = no glow)
+    glm::vec4 glowColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f); ///< Glow/shadow color (RGBA)
+
+    // SDF rendering parameters
+    float sdfThreshold = 0.5f;    ///< SDF cutoff threshold (0.5 = sharp edges)
+    float smoothing = 0.04f;      ///< Edge smoothing factor (anti-aliasing)
+
+    // Transform
+    float rotation = 0.0f;        ///< Rotation in degrees (clockwise, around anchor point)
+    uint8_t layer = 0;           ///< Layer for depth sorting (higher values render on top)
+    bool visible = true;          ///< Visibility toggle
 };
 
 

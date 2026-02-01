@@ -39,6 +39,10 @@ struct RenderableData {
     // Preserves GPU instancing unlike MaterialInstance
     std::shared_ptr<MaterialPropertyBlock> propertyBlock = nullptr;
     uint32_t modelInstanceID = 0;  // ID shared by all meshes of the same model instance
+    // Skeletal animation data
+    const glm::mat4* boneMatrices = nullptr;  // Pointer to bone matrices (null if not skinned)
+    uint32_t boneCount = 0;                    // Number of bones
+    bool isSkinned = false;                    // Flag for skinned mesh
 };
 
 struct SubmittedLightData {

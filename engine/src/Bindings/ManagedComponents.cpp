@@ -27,6 +27,7 @@ Technology is prohibited.
 #include "Particles/ParticleComponent.h"
 #include "Physics/Physics_Components.h"
 #include "Render/Camera.h"
+#include "Render/Render.h"
 #include "System/Audio.hpp"
 #include "System/BehaviourSystem.hpp"
 
@@ -127,6 +128,20 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		}, [](ecs::entity& entity)
 		{
 			entity.remove<VideoComponent>();
+		});
+		return id;
+	}
+	if (strName == "MeshRenderer")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for MeshRenderer component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			bool result = entity.any<MeshRendererComponent>();
+			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<MeshRendererComponent>();
 		});
 		return id;
 	}

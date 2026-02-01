@@ -3,5 +3,6 @@
 
 #include "importer/mesh.hpp"
 #include "importer/texture.hpp"
+#include "importer/font.hpp"
 
 #endif

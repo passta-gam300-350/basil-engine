@@ -26,14 +26,17 @@ Technology is prohibited.
 #include "Manager/ResourceSystem.hpp"
 #include "Render/JoltDebugRenderer.h"  // For Jolt physics debug rendering
 #include <Utility/HUDData.h>  // For HUD rendering
+#include <Utility/TextData.h>  // For text rendering
 #include <Rendering/HUDRenderer.h>  // For HUD renderer methods
-
+#include <Rendering/TextRenderer.h>  // For text renderer methods
+#include "Component/SkeletonComponent.hpp" // skeleton component
 #include "Messaging/Messaging_System.h"
 
 #include <Resources/MaterialInstanceManager.h>
 #include <Resources/MaterialInstance.h>
 #include <Resources/MaterialPropertyBlock.h>
 #include <Resources/Texture.h>
+#include <Resources/FontAtlas.h>
 
 #include "native/native.h"
 #include "native/texture.h"
@@ -107,6 +110,9 @@ RenderSystem::RenderSystem() {
 	}
 	if (m_ShaderLibrary->GetHUDShader()) {
 		m_SceneRenderer->SetHUDShader(m_ShaderLibrary->GetHUDShader());
+	}
+	if (m_ShaderLibrary->GetTextShader()) {
+		m_SceneRenderer->SetTextShader(m_ShaderLibrary->GetTextShader());
 	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
@@ -235,6 +241,7 @@ void RenderSystem::Update(ecs::world& world) {
 
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
+	auto sceneTextElements = world.filter_entities<TextComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = visibleEntityIDs.size();
@@ -331,6 +338,18 @@ void RenderSystem::Update(ecs::world& world) {
 						propBlockDebugCount++;
 					}
 				}
+
+				// Attach bone matrices if entity has skeleton
+				if (obj.all<SkeletonComponent>())
+				{
+					auto& skelComp = obj.get<SkeletonComponent>();
+					if (!skelComp.finalBoneMatrices.empty())
+					{
+						renderData.boneMatrices = skelComp.finalBoneMatrices.data();
+						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
+						renderData.isSkinned = true;
+					}
+				} 
 
 				// Debug: Log entity UID assignment for first few entities
 				static int debugCount = 0;
@@ -463,9 +482,52 @@ void RenderSystem::Update(ecs::world& world) {
 		m_SceneRenderer->SubmitHUDElement(hudData);
 	}
 
-	// Enable/disable HUD pass based on presence of HUD elements
+	// ========== TEXT ELEMENT SUBMISSION ==========
+	// Submit text elements to renderer (rendered in screen space after HUD)
+	for (auto textEntity : sceneTextElements) {
+		auto& text = textEntity.get<TextComponent>();
+
+		if (!text.visible || text.text.empty()) continue;
+
+		// Get font atlas from ResourceRegistry
+		if (text.m_FontGuid.m_guid == rp::null_guid) {
+			continue; // No font atlas set
+		}
+
+		auto* fontAtlasPtr = registry.Get<std::shared_ptr<FontAtlas>>(text.m_FontGuid.m_guid);
+		if (!fontAtlasPtr || !*fontAtlasPtr) {
+			continue; // Font not loaded yet
+		}
+
+		// Build TextElementData from component
+		TextElementData textData;
+		textData.fontAtlas = fontAtlasPtr->get();
+		textData.text = text.text;
+		textData.position = text.position;
+		textData.fontSize = text.fontSize;
+		textData.anchor = static_cast<TextAnchor>(text.anchor);
+		textData.alignment = static_cast<TextAlignment>(text.alignment);
+		textData.lineSpacing = text.lineSpacing;
+		textData.letterSpacing = text.letterSpacing;
+		textData.maxWidth = text.maxWidth;
+		textData.color = text.color;
+		textData.outlineWidth = text.outlineWidth;
+		textData.outlineColor = text.outlineColor;
+		textData.glowStrength = text.glowStrength;
+		textData.glowColor = text.glowColor;
+		textData.sdfThreshold = text.sdfThreshold;
+		textData.smoothing = text.smoothing;
+		textData.rotation = text.rotation;
+		textData.layer = text.layer;
+		textData.visible = text.visible;
+
+		m_SceneRenderer->SubmitText(textData);
+	}
+
+	// Enable/disable HUD pass based on presence of HUD or text elements
 	// Note: EndFrame() is called by SceneRenderer::Render() before rendering
-	if (hasHUDElements) {
+	bool hasTextElements = m_SceneRenderer->GetTextRenderer()->GetGlyphCount() > 0;
+	if (hasHUDElements || hasTextElements) {
 		m_SceneRenderer->EnablePass("HUDPass", true);
 	} else {
 		m_SceneRenderer->EnablePass("HUDPass", false);
@@ -1315,6 +1377,64 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Texture>, texture,
 
 // Note: ShaderAssetData registration removed
 // Shaders are now loaded by name from MaterialResourceData
+
+// Register FontAtlas resource type
+REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<FontAtlas>, font_atlas,
+	[](const char* data) -> std::shared_ptr<FontAtlas> {
+		// Deserialize FontAtlasResourceData from binary
+		FontAtlasResourceData fontData = rp::serialization::serializer<"bin">::deserialize<FontAtlasResourceData>(
+			reinterpret_cast<const std::byte*>(data)
+		);
+
+		// Create GPU texture from DDS data
+		unsigned int textureID = FontAtlasLoader::CreateGPUAtlasTexture(
+			fontData.atlas_texture_data.Raw(),
+			fontData.atlas_texture_data.Size()
+		);
+
+		if (textureID == 0) {
+			spdlog::error("Failed to create GPU texture for font atlas");
+			return nullptr;
+		}
+
+		// Create FontAtlas and populate it directly (following Texture pattern)
+		auto fontAtlas = std::make_shared<FontAtlas>();
+		fontAtlas->m_AtlasTextureID = textureID;
+		fontAtlas->m_FontName = fontData.font_name;
+		fontAtlas->m_BaseFontSize = fontData.base_font_size;
+		fontAtlas->m_Ascent = fontData.ascent;
+		fontAtlas->m_Descent = fontData.descent;
+		fontAtlas->m_LineHeight = fontData.line_height;
+		fontAtlas->m_UnderlinePosition = fontData.underline_position;
+		fontAtlas->m_UnderlineThickness = fontData.underline_thickness;
+		fontAtlas->m_SDFRange = fontData.sdf_range;
+		fontAtlas->m_MultiChannelSDF = fontData.multi_channel_sdf;
+
+		// Copy glyph metrics
+		fontAtlas->m_Glyphs.reserve(fontData.glyphs.size());
+		for (const auto& srcGlyph : fontData.glyphs) {
+			GlyphData glyph;
+			glyph.codepoint = srcGlyph.codepoint;
+			glyph.uv_min = srcGlyph.uv_min;
+			glyph.uv_max = srcGlyph.uv_max;
+			glyph.size = srcGlyph.size;
+			glyph.bearing = srcGlyph.bearing;
+			glyph.advance = srcGlyph.advance;
+			glyph.sdf_scale = srcGlyph.sdf_scale;
+			fontAtlas->m_Glyphs.push_back(glyph);
+		}
+
+		// Copy codepoint lookup map and kerning
+		fontAtlas->m_CodepointToIndex = fontData.codepoint_to_index;
+		fontAtlas->m_KerningMap = fontData.kerning_map;
+
+		spdlog::info("Successfully loaded font atlas '{}' from resource pipeline (GPU ID: {}, {} glyphs)",
+			fontData.font_name, textureID, fontData.glyphs.size());
+		return fontAtlas;
+	},
+	[](std::shared_ptr<FontAtlas>& atlas) {
+		// Cleanup handled by FontAtlas destructor (deletes GPU texture)
+	});
 
 // ========== Skybox Settings Implementation (Unity-style API) ==========
 

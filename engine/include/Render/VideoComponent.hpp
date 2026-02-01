@@ -20,12 +20,13 @@ Technology is prohibited.
 #include "ecs/internal/reflection.h"
 #include <native/video.h>
 #include "Render/Render.h"
+#include <cstdint>
 
 // Forward declare video resource type for ResourceRegistry
 // This will be defined when your teammate implements the video resource compiler
 RegisterResourceTypeForward(VideoResourceData, "video", videodefine)
 
-enum class VideoResizeMode {
+enum class VideoResizeMode : std::uint8_t {
     Stretch,
     Fit,
     Fill,

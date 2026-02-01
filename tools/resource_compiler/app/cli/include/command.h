@@ -9,6 +9,11 @@
 #include <string>
 #include <memory>
 
+// Windows headers define ERROR as a macro, which conflicts with our enum values
+#ifdef ERROR
+#undef ERROR
+#endif
+
 struct CommandProcessor {
 	enum class Status : std::uint8_t {
 		ERROR = (char)0xFF,

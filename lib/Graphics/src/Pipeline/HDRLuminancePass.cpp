@@ -164,8 +164,8 @@ void HDRLuminancePass::CalculateExposure(RenderContext& context)
     const float targetGray = 0.18f;  // Standard photographic middle gray
     float exposure = targetGray / glm::max(avgLuminance, 0.001f);  // Avoid division by zero
 
-    // Clamp exposure to reasonable range (lowered max from 3.0 to 2.0 to reduce over-brightening)
-    exposure = glm::clamp(exposure, 0.1f, 5.0f);
+    // Clamp exposure to configurable range
+    exposure = glm::clamp(exposure, m_ExposureMin, m_ExposureMax);
 
     // Validate exposure - if still NaN, use safe default
     if (!std::isfinite(exposure)) {
@@ -236,4 +236,16 @@ void HDRLuminancePass::OnResize(uint32_t newWidth, uint32_t newHeight)
     // Update tracking (will be used to detect resize in Execute)
     m_LastWidth = newWidth;
     m_LastHeight = newHeight;
+}
+
+void HDRLuminancePass::SetExposureClampRange(float minExposure, float maxExposure)
+{
+    m_ExposureMin = minExposure;
+    m_ExposureMax = maxExposure;
+}
+
+void HDRLuminancePass::GetExposureClampRange(float& outMin, float& outMax) const
+{
+    outMin = m_ExposureMin;
+    outMax = m_ExposureMax;
 }

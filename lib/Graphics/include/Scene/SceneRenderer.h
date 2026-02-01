@@ -22,6 +22,7 @@ Technology is prohibited.
 #include "../Utility/FrameData.h"
 #include "../utility/Particle.h"
 #include "../Utility/HUDData.h"
+#include "../Utility/TextData.h"
 #include "../Resources/ResourceManager.h"
 #include "../Resources/TextureSlotManager.h"
 #include <memory>
@@ -36,6 +37,7 @@ class ParticleRenderer;
 class OutlineRenderPass;
 class ParticleRenderer;
 class HUDRenderer;
+class TextRenderer;
 
 class SceneRenderer {
 public:
@@ -51,6 +53,7 @@ public:
     void SubmitLight(const SubmittedLightData& light);
     void SubmitParticles(const ParticleRenderData& particleData);
     void SubmitHUDElement(const HUDElementData& hudElement);
+    void SubmitText(const TextElementData& textElement);
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -75,6 +78,7 @@ public:
     TextureSlotManager* GetTextureSlotManager() const { return m_TextureSlotManager.get(); }
     ParticleRenderer* GetParticleRenderer() const { return m_ParticleRenderer.get(); }
     HUDRenderer* GetHUDRenderer() const { return m_HUDRenderer.get(); }
+    TextRenderer* GetTextRenderer() const { return m_TextRenderer.get(); }
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
     void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
@@ -86,6 +90,7 @@ public:
     void SetOutlineShader(const std::shared_ptr<Shader>& shader) const;
     void SetParticleShader(const std::shared_ptr<Shader>& shader) const;
     void SetHUDShader(const std::shared_ptr<Shader>& shader) const;
+    void SetTextShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
@@ -118,6 +123,20 @@ public:
     void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
     //void SetEditorResolveShader(const std::shared_ptr<Shader>& shader) const;
+
+    // Bloom configuration
+    void SetBloomStrength(float strength);
+    float GetBloomStrength() const;
+    void EnableBloom(bool enable);
+    bool IsBloomEnabled() const;
+
+    // Tone mapping configuration
+    void SetToneMappingMethod(int method);  // 0=None, 1=Reinhard, 2=ACES, 3=Exposure
+    int GetToneMappingMethod() const;
+
+    // HDR exposure configuration
+    void SetExposureClampRange(float minExposure, float maxExposure);
+    void GetExposureClampRange(float& outMin, float& outMax) const;
 
     // Facade methods for decoupling (avoid exposing internal coordinators/pipeline)
     void ToggleRenderPass(const std::string& passName);
@@ -153,7 +172,7 @@ private:
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
     std::vector<SubmittedLightData> m_SubmittedLights;
-    glm::vec3 m_AmbientLight = glm::vec3(0.1f);
+    glm::vec3 m_AmbientLight = glm::vec3(0.03f);
 
     // Single render pipeline
     std::unique_ptr<RenderPipeline> m_Pipeline;
@@ -171,4 +190,5 @@ private:
     std::unique_ptr<PBRLightingRenderer> m_PBRLightingRenderer;
     std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
     std::unique_ptr<HUDRenderer> m_HUDRenderer;
+    std::unique_ptr<TextRenderer> m_TextRenderer;
 };

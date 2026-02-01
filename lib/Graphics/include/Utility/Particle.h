@@ -33,7 +33,7 @@ struct Texture; // forward declaration, save compile time
  *
  * Controls how particles blend with the background.
  */
-enum class BlendMode
+enum class BlendMode : std::uint8_t
 {
     Alpha,        // standard transparency (smoke, clouds, dust)
     Additive,     // additive blending (fire, sparks, magic)

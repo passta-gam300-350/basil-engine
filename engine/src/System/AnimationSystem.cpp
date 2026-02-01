@@ -19,13 +19,46 @@ Technology is prohibited.
 #include "Engine.hpp"
 #include "Component/AnimationComponent.hpp"
 #include "Manager/ResourceSystem.hpp"
+#include "Component/SkeletonComponent.hpp"
+
 void animationSystem::FixedUpdate(ecs::world& world)
 {
-	float dt = Engine::GetLastDeltaTime();
-	auto animated = world.filter_entities<AnimationComponent, TransformComponent>();
-	for (auto eachAEntity : animated)
+	float dt = Engine::GetDeltaTime();
+	// SKELETAL ANIMATION //
+	auto skeletalEntities = world.filter_entities<AnimationComponent, SkeletonComponent>();
+	for (auto eachAEntity : skeletalEntities)
 	{
 		auto& animationComponent = eachAEntity.get<AnimationComponent>();
+		auto& skeletonComponent = eachAEntity.get<SkeletonComponent>();
+
+		// Skip if not skeletal or not playing
+		if (animationComponent.isSkeletalAnim == false)
+		{
+			continue;
+		}
+		if (animationComponent.state.isPlaying == false)
+		{
+			continue;
+		}
+		if (animationComponent.animatorInstance == nullptr)
+		{
+			continue;
+		}
+
+		animator* anim = animationComponent.animatorInstance;
+		skeleton& skel = skeletonComponent.skeletonData;
+		anim->updateAnimation(dt, skel);
+		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
+	}
+	// SIMPLE ANIMATION //
+	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>();
+	for (auto eachAEntity : simpleAnimationEntites)
+	{
+		auto& animationComponent = eachAEntity.get<AnimationComponent>();
+		if (animationComponent.isSkeletalAnim == true)
+		{
+			continue;
+		}
 		auto& transformComponent = eachAEntity.get<TransformComponent>();
 		if (!animationComponent.state.isPlaying)
 		{
@@ -83,6 +116,35 @@ boneChannel LoadBoneChannel(const char* data) {
 		bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
 	}
 	return bc;
+}
+
+// function / API to call when add component / load animation data 
+void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent& skelComp, const skeleton& skeletonData, animationContainer* animation)
+{
+	// 1. Set up skeleton
+	skelComp.skeletonData = skeletonData;
+	skelComp.InitializeMatrices();
+
+	// 2. Create animator
+	int boneCount = static_cast<int>(skeletonData.bones.size());
+	animComp.animatorInstance = new animator(boneCount);
+
+	// 3. Set animation
+	animComp.animatorInstance->currentAnimation = animation;
+	animComp.duration = animation->duration;
+	animComp.ticksPerSecond = animation->ticksPerSecond;
+
+	// 4. Enable skeletal mode
+	animComp.isSkeletalAnim = true;
+}
+
+void CleanupSkeletalAnimation(AnimationComponent& animComp)
+{
+	if (animComp.animatorInstance)
+	{
+		delete animComp.animatorInstance;
+		animComp.animatorInstance = nullptr;
+	}
 }
 
 REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel& bc) {return; })

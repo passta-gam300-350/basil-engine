@@ -46,7 +46,7 @@ private:
     std::shared_ptr<Shader> m_ToneMappingShader;
 
     // Configuration (exposure/luminance come from context!)
-    Method m_Method = Method::Exposure;
+    Method m_Method = Method::ACES;  // Changed from Exposure to ACES for better color preservation and softer highlights
     bool m_GammaCorrection = true;
 
     // Bloom configuration

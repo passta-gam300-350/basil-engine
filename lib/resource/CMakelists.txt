@@ -29,9 +29,16 @@ set(RESOURCE_EXT_DEP_LIBS
     INTERFACE assimp::assimp
     INTERFACE meshoptimizer
     INTERFACE DirectXTex
+    INTERFACE freetype
+    INTERFACE msdfgen-core
     INTERFACE resource-pipeline-ext
     ${RESOURCE_CORE_DEP_LIBS}
 )
+
+# Add msdfgen-ext only if it was built (requires FreeType support)
+if(TARGET msdfgen-ext)
+    list(APPEND RESOURCE_EXT_DEP_LIBS INTERFACE msdfgen-ext)
+endif()
 
 set(RESOURCE_EXT_FILES
     ${RESOURCE_CORE_FILES}

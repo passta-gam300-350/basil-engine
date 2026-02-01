@@ -51,8 +51,14 @@ struct SceneRenderSettings {
 		mutable bool needsReload = true; // Flag to trigger cubemap reload when GUIDs change
 	} skybox;
 
-	glm::vec3 ambientLight = glm::vec3(0.1f);     // Ambient light color
+	glm::vec3 ambientLight = glm::vec3(0.03f);     // Ambient light color
 	glm::vec4 backgroundColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f); // Background clear color
+
+	// Post-processing settings
+	float bloomStrength = 0.04f;                   // Bloom intensity (0.0 - 0.2 typical range)
+	int toneMapMethod = 2;                         // Tone mapping method: 0=None, 1=Reinhard, 2=ACES, 3=Exposure
+	float exposureMin = 0.1f;                      // HDR exposure minimum clamp
+	float exposureMax = 2.0f;                      // HDR exposure maximum clamp
 };
 
 struct SceneComponent {
@@ -156,6 +162,27 @@ struct Scene
 		}
 		skybox["face_textures"] = faceTextures;
 		renderSettings["skybox"] = skybox;
+
+		// Serialize lighting settings
+		YAML::Node ambientLight;
+		ambientLight.push_back(m_renderSettings.ambientLight.x);
+		ambientLight.push_back(m_renderSettings.ambientLight.y);
+		ambientLight.push_back(m_renderSettings.ambientLight.z);
+		renderSettings["ambient_light"] = ambientLight;
+
+		YAML::Node backgroundColor;
+		backgroundColor.push_back(m_renderSettings.backgroundColor.r);
+		backgroundColor.push_back(m_renderSettings.backgroundColor.g);
+		backgroundColor.push_back(m_renderSettings.backgroundColor.b);
+		backgroundColor.push_back(m_renderSettings.backgroundColor.a);
+		renderSettings["background_color"] = backgroundColor;
+
+		// Serialize post-processing settings
+		renderSettings["bloom_strength"] = m_renderSettings.bloomStrength;
+		renderSettings["tone_map_method"] = m_renderSettings.toneMapMethod;
+		renderSettings["exposure_min"] = m_renderSettings.exposureMin;
+		renderSettings["exposure_max"] = m_renderSettings.exposureMax;
+
 		root["render_settings"] = renderSettings;
 
 		entt::registry& reg{ ecs::world(m_scene_entities.begin()->second.get_world_handle()).impl.get_registry() };

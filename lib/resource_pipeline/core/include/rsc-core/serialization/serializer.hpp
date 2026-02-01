@@ -8,7 +8,7 @@ namespace rp {
 	namespace serialization {
 		template <rp::utility::static_string format>
 		struct serializer {
-			static_assert(std::false_type::value && "unknown serializer, define your own specialisation for each format. see serializer<\"bin\">");
+			static_assert(format.m_data[0] == '\0' && false, "unknown serializer, define your own specialisation for each format. see serializer<\"bin\">");
 		};
 		template <>
 		struct serializer<"bin"> {
@@ -108,6 +108,9 @@ namespace rp {
 					return v;
 				}
 				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					if (!cnd.IsDefined() || cnd.IsNull()) {
+						return Type{};  // Return empty container for null/undefined nodes
+					}
 					return cnd.as<Type>();
 				}
 				else if constexpr (std::is_class_v<Type>) {
