@@ -26,18 +26,33 @@ Button::Button(float x, float y, float width, float height, const std::string& t
       pressed(false)
 {}
 
-void Button::setOnClick(Callback callback)
+void Button::setOnClick(std::function<void()> callback)
 {
+    this->onClick = callback;
 }
 
 bool Button::isHovered() const
 {
+    return this->hovered;
 }
 
 void Button::update(float mouseX, float mouseY, bool mousePressed)
 {
+    this->hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+
+    if (this->hovered && mousePressed && !this->pressed)
+    {
+        this->pressed = true;
+        if (this->onClick)
+            onClick();
+    }
+
+    if (!mousePressed)
+        this->pressed = false;
 }
 
 void Button::render() const
 {
+    // Replace this with how button is to be rendered
+    std::cout << "[Button]: " << this->text << ", (hovered): " << this->hovered << "\n";
 }
