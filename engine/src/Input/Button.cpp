@@ -56,3 +56,15 @@ void Button::render() const
     // Replace this with how button is to be rendered
     std::cout << "[Button]: " << this->text << ", (hovered): " << this->hovered << "\n";
 }
+
+/*
+Button playButton(100, 100, 200, 50, "Play");
+playButton.setOnClick([]()
+    {
+        std::cout << "Play button clicked!\n";
+    });
+
+In game loop:
+    playButton.update(mouseX, mouseY, mousePressed);
+    playButton.render();
+*/
