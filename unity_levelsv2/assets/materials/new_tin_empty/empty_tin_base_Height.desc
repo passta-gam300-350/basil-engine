@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df7617986b1aafce80cc6d689
+  m_importer: .texture
+  m_source: materials\new_tin_empty\empty_tin_base_Height.png
+  m_name: empty_tin_base_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

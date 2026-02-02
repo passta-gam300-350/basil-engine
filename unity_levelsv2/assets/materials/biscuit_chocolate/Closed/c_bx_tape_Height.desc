@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df6f07b2a9f778e0f7ccb38ff
+  m_importer: .texture
+  m_source: materials\biscuit_chocolate\Closed\c_bx_tape_Height.png
+  m_name: c_bx_tape_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

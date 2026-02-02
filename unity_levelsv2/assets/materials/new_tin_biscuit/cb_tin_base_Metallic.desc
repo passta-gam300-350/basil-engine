@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df75176709eb8cb38b297543e
+  m_importer: .texture
+  m_source: materials\new_tin_biscuit\cb_tin_base_Metallic.png
+  m_name: cb_tin_base_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

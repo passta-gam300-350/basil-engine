@@ -1,0 +1,25 @@
+base:
+  m_guid: 90c150d701a8b69005c03cd7184
+  m_importer: material
+  m_source: ""
+  m_name: cw_halfOp_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: cw_halfOp
+  albedo:
+    x: 0.600000024
+    y: 0.600000024
+    z: 0.600000024
+  metallic: 0.699999988
+  roughness: 1
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_DiffuseMap: 00
+    u_NormalMap: 00
+    u_EmissiveMap: 00
+    u_SpecularMap: 00

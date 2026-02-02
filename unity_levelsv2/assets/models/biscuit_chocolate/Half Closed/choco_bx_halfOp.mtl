@@ -1,0 +1,13 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl c_bx_halfOp
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd c_bx_halfOp_BaseColor.png
+map_Ks c_bx_halfOp_Metallic.png
+map_Ns c_bx_halfOp_Roughness.png
+map_Ke c_bx_halfOp_Emissive.png
+map_d c_bx_halfOp_Height.png
+map_Bump c_bx_halfOp_Normal.png

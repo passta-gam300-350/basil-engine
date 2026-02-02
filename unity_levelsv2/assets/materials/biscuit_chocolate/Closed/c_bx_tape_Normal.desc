@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df6f277eea1acb820a641b839
+  m_importer: .texture
+  m_source: materials\biscuit_chocolate\Closed\c_bx_tape_Normal.png
+  m_name: c_bx_tape_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

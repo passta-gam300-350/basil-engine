@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df75e77e09c6a4f513b95abbc
+  m_importer: .texture
+  m_source: materials\new_tin_biscuit\cb_tin_top_Roughness.png
+  m_name: cb_tin_top_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

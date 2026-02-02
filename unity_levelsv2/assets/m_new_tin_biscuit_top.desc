@@ -1,0 +1,29 @@
+base:
+  m_guid: f26e357172b101878dd9638258
+  m_importer: .material
+  m_source: ""
+  m_name: m_new_tin_biscuit_top
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_new_tin_biscuit_top
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df75e77e09c6a4f513b95abbc
+    u_DiffuseMap: 8df7597b15b6b1367de7142c3c
+    u_EmissiveMap: 8df75a7f91abb547ceaf032cf4
+    u_NormalMap: 8df75d775d9947bbc1f95479da
+    u_HeightMap: 8df75b76dd8df4fff167a66b54
+    u_SpecularMap: 00
+    u_MetallicMap: 8df75c7178a252d316e32bfddf

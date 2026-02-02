@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df6fd7464834e013c57e207c3
+  m_importer: .texture
+  m_source: materials\biscuit_chocolate\Opened\c_bx_opened_Normal.png
+  m_name: c_bx_opened_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

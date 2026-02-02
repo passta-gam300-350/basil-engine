@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df6d7702bbe527102bc93b3bd
+  m_importer: .texture
+  m_source: materials\biscuit_cheese\Closed\ch_bx_Roughness.png
+  m_name: ch_bx_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

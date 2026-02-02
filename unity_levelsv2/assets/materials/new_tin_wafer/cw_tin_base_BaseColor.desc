@@ -1,0 +1,7 @@
+base:
+  m_guid: 8df7707d59b61575938d6b73bc
+  m_importer: .texture
+  m_source: materials\new_tin_wafer\cw_tin_base_BaseColor.png
+  m_name: cw_tin_base_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

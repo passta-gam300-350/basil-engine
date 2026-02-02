@@ -1,0 +1,29 @@
+base:
+  m_guid: 90cdd8878fd8978f3a98093df59
+  m_importer: .material
+  m_source: ""
+  m_name: m_wafer_opened
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_wafer_opened
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df7357afca390657834292680
+    u_DiffuseMap: 8df73172b096c3b37cd3b2538c
+    u_EmissiveMap: 8df732789d87df5595c4f78748
+    u_NormalMap: 8df7347a8e93b7c54ad2ceca98
+    u_HeightMap: 8df73376469281c52798e0ade7
+    u_SpecularMap: 00
+    u_MetallicMap: 8df73477ac894ace850a1d7486

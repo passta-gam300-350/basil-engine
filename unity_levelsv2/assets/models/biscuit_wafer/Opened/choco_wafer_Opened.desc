@@ -1,0 +1,20 @@
+base:
+  m_guid: 90785d17c8ea2ac4698827da3da
+  m_importer: .mesh
+  m_source: models\biscuit_wafer\Opened\choco_wafer_Opened.obj
+  m_name: choco_wafer_Opened.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0
