@@ -1,0 +1,14 @@
+base:
+  m_guid: 72955ee76cbbe6454dd8d739028
+  m_importer: .audio
+  m_source: audio\Father_KiteHit1.ogg
+  m_name: Father_KiteHit1.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

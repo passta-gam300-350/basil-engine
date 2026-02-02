@@ -106,6 +106,7 @@ public class KiteTarget : Behavior
             }
             GameObject.Destroy(gameObject);
             kiteController.totalKite -= 1;
+            kiteController.OnKiteCollected();
         }   
         Logger.Log(d);
     }

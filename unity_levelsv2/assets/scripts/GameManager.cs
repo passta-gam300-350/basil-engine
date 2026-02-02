@@ -27,7 +27,12 @@ public class GameManager : Behavior
     public int trashInHand;      // number of trash currently held
     public int maxTrashInHand;   // maximum the player can carry
 
-    
+    public bool hasBag = true; // player starts with a bag
+    public bool bagIsFull = false;
+
+    public GameObject droppedBagPrefab;
+
+
     public void Init()
     {
         instance = this;
@@ -35,6 +40,10 @@ public class GameManager : Behavior
         ThrashCollect = GameObject.Find("ThrashCollect");
         if (ThrashCollect == null){
             Logger.Warn("ThrashCollect not found; skipping trash visual setup.");
+        }
+        else
+        {
+            ThrashCollect.visibility = true; // player starts holding a bag
         }
 
         player = GameObject.Find("PlayerGroup");
@@ -57,9 +66,24 @@ public class GameManager : Behavior
             Logger.Warn("PlayerGroup not found; skipping player setup.");
         }
 
+        droppedBagPrefab = GameObject.Find("DroppedTrashBag");
+
+        if (droppedBagPrefab == null)
+        {
+            Logger.Warn("DroppedTrashBag prefab not found!");
+        }
+        else
+        {
+            droppedBagPrefab.visibility = false; // keep template hidden
+        }
+
     }
     public void Update()
     {
+        if (Input.GetKey(KeyCode.Q))
+        {
+            DropBag();
+        }
 
         if (player != null && isCleaned && KitePuzzleCompleted && TrainPuzzleCompleted)
         {
@@ -75,35 +99,88 @@ public class GameManager : Behavior
 
     public void ShowCollected()
     {
-        trashInHand = Math.Min(trashInHand + 1, maxTrashInHand);
-        Logger.Log("Trash collected! Current number of trash: " + trashInHand);
+        if (bagIsFull)
+            return;
 
-        // Show visual only if player has collected all 5 trash
-        if (trashInHand >= maxTrashInHand && ThrashCollect != null)
+        trashInHand++;
+        Logger.Log("Trash collected! Current: " + trashInHand);
+
+        if (trashInHand >= maxTrashInHand)
         {
-            ThrashCollect.visibility = true;
-            Logger.Log("Trash bag ready!");
+            trashInHand = maxTrashInHand;
+            bagIsFull = true;
+            Logger.Log("Bag is full!");
         }
-        
-        //isHoldingThrash = true;
+
+        UpdateBagSize();
+        UpdatePlayerSpeed();
     }
 
     public void ShowFree()
     {
-        if (trashInHand > 0)
-        {
-            Logger.Log("Tossing all trash");
-            trashInHand = 0; // toss all trash at once
+        trashInHand = 0;
+        bagIsFull = false;
 
-            if(ThrashCollect != null){
+        Logger.Log("Bag emptied!");
 
-            ThrashCollect.visibility = false;
-            }
-        }
-
-        //isHoldingThrash = false;
+        UpdateBagSize();
+        UpdatePlayerSpeed();
     }
 
+    private void UpdateBagSize()
+    {
+        if (ThrashCollect == null) return;
+
+        if (trashInHand == 0)
+        {
+            ThrashCollect.transform.scale = new Vector3(0.002f, 0.002f, 0.002f);
+            ThrashCollect.transform.position = new Vector3(0f, -0.230f, 0.3f);
+        }
+
+        else if (trashInHand <= 2)
+        {
+            ThrashCollect.transform.scale = new Vector3(0.0021f, 0.0021f, 0.0021f);
+            ThrashCollect.transform.position = new Vector3(0f, -0.235f, 0.3f);
+        }
+
+        else if (trashInHand <= 4)
+        {
+            ThrashCollect.transform.scale = new Vector3(0.0023f, 0.0023f, 0.0023f);
+            ThrashCollect.transform.position = new Vector3(0f, -0.24f, 0.3f);
+        }
+
+        else
+        {
+            ThrashCollect.transform.scale = new Vector3(0.0025f, 0.0025f, 0.0025f);
+            ThrashCollect.transform.position = new Vector3(0f, -0.245f, 0.3f);
+        }
+    }
+
+    private void UpdatePlayerSpeed()
+    {
+        if (controller == null) return;
+
+        float minMultiplier = 0.2f; // slowest speed at full bag
+        float t = (float)trashInHand / maxTrashInHand;
+
+        controller.speedMultiplier = 1f - (t * (1f - minMultiplier));
+
+        Logger.Log("Speed multiplier: " + controller.speedMultiplier);
+    }
+
+    public void DropBag()
+    {
+        if (trashInHand == 0)
+            return;
+
+        trashInHand = 0;
+        bagIsFull = false;
+
+        UpdateBagSize();
+        UpdatePlayerSpeed();
+
+        Logger.Log("Bag dropped");
+    }
 
     public void DisableControls()
     {
@@ -140,6 +217,6 @@ public class GameManager : Behavior
 
     public void CompleteKitePuzzle()
     {
-                KitePuzzleCompleted = true;
+        KitePuzzleCompleted = true;
     }
 }

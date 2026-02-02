@@ -37,7 +37,7 @@ public class Dustbin : Behavior
             return;
 
         float dist = Vector3.DistanceSqr(player.transform.position, transform.position);
-        if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
+        if (GameManager.instance.trashInHand > 0)
         {
             if (Input.GetKey(KeyCode.E))
             {

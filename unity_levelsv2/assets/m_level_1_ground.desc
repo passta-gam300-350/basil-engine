@@ -1,0 +1,29 @@
+base:
+  m_guid: 5d6270379868756dd5ed6f03f2a
+  m_importer: .material
+  m_source: ""
+  m_name: m_level_1_ground
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_level_1_ground
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 5d4d70a7f07bb89540f4ba383b6
+    u_DiffuseMap: 5d4d6da711ebd5f17b48e2715ac
+    u_EmissiveMap: 5d4d6e77ea9b2e1fc915e54f5cb
+    u_NormalMap: 5d4d70173fbb34e1f867651aeec
+    u_HeightMap: 5d4d6f079fba9cd7411af9044c3
+    u_SpecularMap: 00
+    u_MetallicMap: 5d4d6f8706184f8e7bf74a6a5e0

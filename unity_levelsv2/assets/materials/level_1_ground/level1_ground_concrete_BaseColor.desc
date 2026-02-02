@@ -1,0 +1,7 @@
+base:
+  m_guid: 5d4d6da711ebd5f17b48e2715ac
+  m_importer: .texture
+  m_source: materials\level_1_ground\level1_ground_concrete_BaseColor.png
+  m_name: level1_ground_concrete_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
