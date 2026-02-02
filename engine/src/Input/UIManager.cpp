@@ -11,7 +11,8 @@ Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
-#include "UIManager.h"
+
+#include "Input/UIManager.h"
 
 UIManager* UIManager::instance = nullptr;
 
@@ -60,8 +61,8 @@ void UIManager::Update()
     if (!uiOpen)
         return;
 
-    for (auto& button : buttons)
-        button->update();
+    /*for (auto& button : buttons)
+        button->update();*/
 }
 
 void UIManager::Render()

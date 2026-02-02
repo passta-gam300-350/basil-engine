@@ -10,8 +10,8 @@ Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
-#include "Button.h"
-#include "InputManager.h"
+#include "Input/Button.h"
+#include "Input/InputManager.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 
