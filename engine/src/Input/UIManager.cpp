@@ -17,32 +17,32 @@ UIManager* UIManager::instance = nullptr;
 
 UIManager* UIManager::Get_Instance()
 {
-    if (!this->instance)
-        this->instance = new UIManager();
-    return this->instance;
+    if (!instance)
+        instance = new UIManager();
+    return instance;
 }
 
 void UIManager::Destroy_Instance()
 {
-    delete this->instance;
-    this->instance = nullptr;
+    delete instance;
+    instance = nullptr;
 }
 
 void UIManager::OpenUI()
 {
-    this->uiOpen = true;
+    uiOpen = true;
     InputManager::Get_Instance()->SetInputContext(InputManager::InputContext::UI);
 }
 
 void UIManager::CloseUI()
 {
-    this->uiOpen = false;
+    uiOpen = false;
     InputManager::Get_Instance()->SetInputContext(InputManager::InputContext::Gameplay);
 }
 
 bool UIManager::IsUIOpen() const
 {
-    return this->uiOpen;
+    return uiOpen;
 }
 
 void UIManager::AddButton(std::shared_ptr<Button> button)
@@ -57,19 +57,19 @@ void UIManager::Clear()
 
 void UIManager::Update()
 {
-    if (!this->uiOpen)
+    if (!uiOpen)
         return;
 
-    for (auto& button : this->buttons)
+    for (auto& button : buttons)
         button->update();
 }
 
 void UIManager::Render()
 {
-    if (!this->uiOpen)
+    if (!uiOpen)
         return;
 
-    for (auto& button : this->buttons)
+    for (auto& button : buttons)
     {
         button->render();
     }
