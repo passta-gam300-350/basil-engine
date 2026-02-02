@@ -1,5 +1,5 @@
 base:
-  m_guid: b19ec77e4bb31db5b9b493b657
+  m_guid: 1d8854a7a0db631faf5d416eb8c
   m_importer: .texture
   m_source: materials\wall\wall_wall_BaseColor.png
   m_name: wall_wall_BaseColor.png

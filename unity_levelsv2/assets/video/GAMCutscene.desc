@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a5a57f1a85a834fd3286e55e
+  m_guid: 1d890b87ee6b3cce61b20c67642
   m_importer: .video
   m_source: video\GAMCutscene.mpg
   m_name: GAMCutscene.mpg

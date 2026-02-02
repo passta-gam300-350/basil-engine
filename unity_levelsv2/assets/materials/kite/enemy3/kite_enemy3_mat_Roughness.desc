@@ -1,5 +1,5 @@
 base:
-  m_guid: b18df77666a686afd6e5736aa3
+  m_guid: 1d868ff706b8eeff1bcb2d1fa1f
   m_importer: .texture
   m_source: materials\kite\enemy3\kite_enemy3_mat_Roughness.png
   m_name: kite_enemy3_mat_Roughness.png

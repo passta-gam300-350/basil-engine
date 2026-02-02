@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df73f752e9307be864e7c23ca
+  m_guid: 1d863247745ae14445a9f85aa2f
   m_importer: .texture
   m_source: materials\ghost\Eye Open\ghost_eye_open_BaseColor.png
   m_name: ghost_eye_open_BaseColor.png

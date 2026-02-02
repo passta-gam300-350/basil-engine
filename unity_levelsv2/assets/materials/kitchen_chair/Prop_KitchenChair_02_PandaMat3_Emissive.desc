@@ -1,5 +1,5 @@
 base:
-  m_guid: b18bb67bdab05cf7dbbcbfb1e3
+  m_guid: 1d865bf7519a5eb12655b9dbf75
   m_importer: .texture
   m_source: materials\kitchen_chair\Prop_KitchenChair_02_PandaMat3_Emissive.png
   m_name: Prop_KitchenChair_02_PandaMat3_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b189667fb3b25cd16d7930f707
+  m_guid: 1d8623376118882a55af224ef49
   m_importer: .texture
   m_source: materials\floor\Floor_openPBR_shader1_Normal.png
   m_name: Floor_openPBR_shader1_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b19c60792396dd6122f63d6f00
+  m_guid: 1d88271728bb3e4e225badeb7f3
   m_importer: .texture
   m_source: materials\tree\05\tree_05_Emissive.png
   m_name: tree_05_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df70b7b4fa37fd292dca882a9
+  m_guid: 1d85ca87e4fafd2d7cbc77bc857
   m_importer: .texture
   m_source: materials\biscuit_gem\Half Closed\g_bx_halfOp_Emissive.png
   m_name: g_bx_halfOp_Emissive.png

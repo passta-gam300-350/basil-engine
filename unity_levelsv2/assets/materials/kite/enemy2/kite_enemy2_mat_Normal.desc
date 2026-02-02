@@ -1,5 +1,5 @@
 base:
-  m_guid: b18da578c490e96265cc61d4ca
+  m_guid: 1d868897842b2f6ee50acd48981
   m_importer: .texture
   m_source: materials\kite\enemy2\kite_enemy2_mat_Normal.png
   m_name: kite_enemy2_mat_Normal.png

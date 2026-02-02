@@ -1,5 +1,5 @@
 base:
-  m_guid: b192857acbbceadb989a32d147
+  m_guid: 1d874e07c7d89ef16f93142f087
   m_importer: .texture
   m_source: materials\shutter\shutter_mat_Metallic.png
   m_name: shutter_mat_Metallic.png

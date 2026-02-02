@@ -1,5 +1,5 @@
 base:
-  m_guid: b1923376baa6aa9aca1cb09c3c
+  m_guid: 1d8744f756d991630a716b884de
   m_importer: .texture
   m_source: materials\puddle\Puddle1_puddle_Height.png
   m_name: Puddle1_puddle_Height.png

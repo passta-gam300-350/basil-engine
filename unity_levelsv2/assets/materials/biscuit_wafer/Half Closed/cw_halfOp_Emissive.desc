@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df72b73fbb2384c8e8d4ecf60
+  m_guid: 1d85e197e40a2a1be761de25df2
   m_importer: .texture
   m_source: materials\biscuit_wafer\Half Closed\cw_halfOp_Emissive.png
   m_name: cw_halfOp_Emissive.png

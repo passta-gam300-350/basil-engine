@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7507329856bc6d7054ae55d
+  m_guid: 1d86fe975e586b3494ba43e8ec1
   m_importer: .texture
   m_source: materials\new_tin_biscuit\cb_tin_base_Height.png
   m_name: cb_tin_base_Height.png

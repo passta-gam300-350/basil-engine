@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7657f3bb303d6c50bde00e4
+  m_guid: 1d871dc7e0c8ddd2aae8449363f
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_plastic_clear_Emissive.png
   m_name: empty_tin_plastic_clear_Emissive.png

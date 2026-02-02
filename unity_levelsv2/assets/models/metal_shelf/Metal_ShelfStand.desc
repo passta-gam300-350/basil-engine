@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a3177f0eb7c5a485c94bdaf7
+  m_guid: 1d88c09707c9bc9fdfa791786dc
   m_importer: .mesh
   m_source: models\metal_shelf\Metal_ShelfStand.obj
   m_name: Metal_ShelfStand.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: b194ec70989f943e4394849108
+  m_guid: 1d878a270ce91641ba14b02a1c7
   m_importer: .texture
   m_source: materials\terrain\terrian_Roughness.png
   m_name: terrian_Roughness.png

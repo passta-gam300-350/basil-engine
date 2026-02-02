@@ -1,5 +1,5 @@
 base:
-  m_guid: b18ad57cb4985b6a1858d1ce3e
+  m_guid: 1d864b27893ba4bb1b8b15b9921
   m_importer: .texture
   m_source: materials\hdb\2\hdb_2_Emissive.png
   m_name: hdb_2_Emissive.png

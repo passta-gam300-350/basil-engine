@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a1f9733086b392e6c305f979
+  m_guid: 1d88a6174c38e2500a043dc161b
   m_importer: .mesh
   m_source: models\kitchen_shelf\kitchenShelf.obj
   m_name: kitchenShelf.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7757a9ca1792525e4d28aa0
+  m_guid: 1d8733470f58ec1390ccbd1c154
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_plastic_clear_BaseColor.png
   m_name: cw_tin_plastic_clear_BaseColor.png

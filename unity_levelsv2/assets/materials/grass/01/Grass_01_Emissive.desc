@@ -1,5 +1,5 @@
 base:
-  m_guid: b189ea7a99a941e676b4bf0af7
+  m_guid: 1d8639f78e2a4b0c9af28d0de4c
   m_importer: .texture
   m_source: materials\grass\01\Grass_01_Emissive.png
   m_name: Grass_01_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b1921b744e833d3a1c6f82f3b7
+  m_guid: 1d8742672c6a18e7a06bc6ea935
   m_importer: .texture
   m_source: materials\puddle\Puddle1_puddle_BaseColor.png
   m_name: Puddle1_puddle_BaseColor.png

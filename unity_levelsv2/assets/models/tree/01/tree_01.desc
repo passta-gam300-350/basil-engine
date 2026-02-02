@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a4687939a0b996ae7cea20bf
+  m_guid: 1d88e877dd5b5dd88a658384915
   m_importer: .mesh
   m_source: models\tree\01\tree_01.obj
   m_name: tree_01.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: b18b53725887467013c6ccc19e
+  m_guid: 1d865437ce2b45b9d4a2da3e7ef
   m_importer: .texture
   m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_Roughness.png
   m_name: kitchenCabinet_PandaMat_Roughness.png

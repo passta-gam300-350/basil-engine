@@ -1,5 +1,5 @@
 base:
-  m_guid: b19eb57616837a77a1112b169e
+  m_guid: 1d885367bf4ada76935fa01fdd5
   m_importer: .texture
   m_source: materials\trolley\trolley_mat_Roughness.png
   m_name: trolley_mat_Roughness.png

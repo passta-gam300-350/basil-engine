@@ -1,5 +1,5 @@
 base:
-  m_guid: b188be787b8b56c61b4192316f
+  m_guid: 1d8615f7330af18d6c185bc5d4e
   m_importer: .texture
   m_source: materials\clouds\2\cloud_2_mat_Height.png
   m_name: cloud_2_mat_Height.png

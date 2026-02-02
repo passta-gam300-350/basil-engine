@@ -1,5 +1,5 @@
 base:
-  m_guid: b18b6070118c24d502ee77122e
+  m_guid: 1d8654f77bcb9d3d4530b9bbe35
   m_importer: .texture
   m_source: materials\kitchen_chair\Prop_KitchenChair_02_chair_top_BaseColor.png
   m_name: Prop_KitchenChair_02_chair_top_BaseColor.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b195b679008bc0ca6539b68edf
+  m_guid: 1d879fb7890ac9534a3c10c7403
   m_importer: .texture
   m_source: materials\tin\biscuit\biscuit_tin1_tin_top_Normal.png
   m_name: biscuit_tin1_tin_top_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b191c772ddbb6bf61caacc51cb
+  m_guid: 1d86f3473bd85d02a4644d7d827
   m_importer: .texture
   m_source: materials\metal_rack\trim_sheet_low_Roughness.png
   m_name: trim_sheet_low_Roughness.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7727acbb5a157277da15fa6
+  m_guid: 1d872e17b158b3d2435fd633700
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_base_Height.png
   m_name: cw_tin_base_Height.png

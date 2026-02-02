@@ -1,5 +1,5 @@
 base:
-  m_guid: b198b275dab50d3aed04980f3a
+  m_guid: 1d87ed772fe8eb2b3249745ff3e
   m_importer: .texture
   m_source: materials\trashbag\trashbag1_trashbag1_Roughness.png
   m_name: trashbag1_trashbag1_Roughness.png

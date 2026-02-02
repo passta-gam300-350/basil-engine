@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a4fd7004a9200dfe7e1ec693
+  m_guid: 1d88f957601bc833ffc6b8185d9
   m_importer: .mesh
   m_source: models\wall\wall.obj
   m_name: wall.obj

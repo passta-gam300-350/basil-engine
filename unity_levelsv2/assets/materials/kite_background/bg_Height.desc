@@ -1,5 +1,5 @@
 base:
-  m_guid: b1907b79ca883d30af6aeb061c
+  m_guid: 1d86cbc7e83b80c879a33fba3a2
   m_importer: .texture
   m_source: materials\kite_background\bg_Height.png
   m_name: bg_Height.png

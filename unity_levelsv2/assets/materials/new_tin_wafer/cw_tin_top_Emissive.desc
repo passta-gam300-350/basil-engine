@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df77c7db894b63308eebef43e
+  m_guid: 1d873c97e39926aea0966ebe4c5
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_top_Emissive.png
   m_name: cw_tin_top_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b187d07df6847e4f52e01d58a3
+  m_guid: 1d8601f7d679f138e7a301661ea
   m_importer: .texture
   m_source: materials\ceiling_fan\Ceilingfan_ceilingfan_Holder_BaseColor.png
   m_name: Ceilingfan_ceilingfan_Holder_BaseColor.png

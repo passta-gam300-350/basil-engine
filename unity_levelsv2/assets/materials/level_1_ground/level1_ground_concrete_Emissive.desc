@@ -1,5 +1,5 @@
 base:
-  m_guid: 5d4d6e77ea9b2e1fc915e54f5cb
+  m_guid: 1d86d967ba892c13beb951ab152
   m_importer: .texture
   m_source: materials\level_1_ground\level1_ground_concrete_Emissive.png
   m_name: level1_ground_concrete_Emissive.png

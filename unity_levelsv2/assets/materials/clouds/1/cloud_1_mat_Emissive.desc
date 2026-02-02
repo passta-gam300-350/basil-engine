@@ -1,5 +1,5 @@
 base:
-  m_guid: b1886773c2b5725f8421fc6b2c
+  m_guid: 1d860e87ff7b505056bbadf9783
   m_importer: .texture
   m_source: materials\clouds\1\cloud_1_mat_Emissive.png
   m_name: cloud_1_mat_Emissive.png

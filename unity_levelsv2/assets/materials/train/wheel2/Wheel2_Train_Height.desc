@@ -1,5 +1,5 @@
 base:
-  m_guid: b197b47cde88472b275256881a
+  m_guid: 1d87d5b74b4b7bb7952005640a0
   m_importer: .texture
   m_source: materials\train\wheel2\Wheel2_Train_Height.png
   m_name: Wheel2_Train_Height.png

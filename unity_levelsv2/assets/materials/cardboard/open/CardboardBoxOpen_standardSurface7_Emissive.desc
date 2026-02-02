@@ -1,5 +1,5 @@
 base:
-  m_guid: b187997245aedbc23812dfaa2c
+  m_guid: 1d85fdd7323b296dc9c00a7d55b
   m_importer: .texture
   m_source: materials\cardboard\open\CardboardBoxOpen_standardSurface7_Emissive.png
   m_name: CardboardBoxOpen_standardSurface7_Emissive.png

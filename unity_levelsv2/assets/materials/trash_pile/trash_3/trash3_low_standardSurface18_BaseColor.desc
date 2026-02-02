@@ -1,5 +1,5 @@
 base:
-  m_guid: b1998c7e98a5eb566a2c4d7e2e
+  m_guid: 1d87fe67166a4a27a2a33b9c166
   m_importer: .texture
   m_source: materials\trash_pile\trash_3\trash3_low_standardSurface18_BaseColor.png
   m_name: trash3_low_standardSurface18_BaseColor.png

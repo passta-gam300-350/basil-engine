@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a3087623b694faeeb4e71dc1
+  m_guid: 1d88bf27fdfbea260e209034a90
   m_importer: .mesh
   m_source: models\metal_rack\metal_rack.obj
   m_name: metal_rack.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: b18e037081ac230b06ebdc1685
+  m_guid: 1d8690d719a9cf9730c9a41961f
   m_importer: .texture
   m_source: materials\kite\enemy4\kite_enemy4_mat_BaseColor.png
   m_name: kite_enemy4_mat_BaseColor.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df6ff75aabe3aaa4af043ef05
+  m_guid: 1d85bed7ad6af872a7c62f4c5e7
   m_importer: .texture
   m_source: materials\biscuit_gem\Closed\gem_bx_BaseColor.png
   m_name: gem_bx_BaseColor.png

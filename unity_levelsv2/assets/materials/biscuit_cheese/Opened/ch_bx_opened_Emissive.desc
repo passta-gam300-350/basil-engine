@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df6e47dea87e61b23f3a05363
+  m_guid: 1d85a3177df887235a417328659
   m_importer: .texture
   m_source: materials\biscuit_cheese\Opened\ch_bx_opened_Emissive.png
   m_name: ch_bx_opened_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b192917c83b66692adff52f39f
+  m_guid: 1d874f678adb679c958549e053d
   m_importer: .texture
   m_source: materials\shutter\shutter_mat_Normal.png
   m_name: shutter_mat_Normal.png

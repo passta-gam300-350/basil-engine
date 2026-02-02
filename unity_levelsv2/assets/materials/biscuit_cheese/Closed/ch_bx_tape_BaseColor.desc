@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df6d878df9a59c408ef6aa45e
+  m_guid: 1d859617e018c6c0c933e1ffda7
   m_importer: .texture
   m_source: materials\biscuit_cheese\Closed\ch_bx_tape_BaseColor.png
   m_name: ch_bx_tape_BaseColor.png

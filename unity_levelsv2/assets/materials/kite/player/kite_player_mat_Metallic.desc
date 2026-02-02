@@ -1,5 +1,5 @@
 base:
-  m_guid: b18f1d7759bc521c38a3bb6fb0
+  m_guid: 1d86a8e7984aa1bd0f0445fc216
   m_importer: .texture
   m_source: materials\kite\player\kite_player_mat_Metallic.png
   m_name: kite_player_mat_Metallic.png

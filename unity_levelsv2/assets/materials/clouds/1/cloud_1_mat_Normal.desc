@@ -1,5 +1,5 @@
 base:
-  m_guid: b1888a74fb94c0c302b901d097
+  m_guid: 1d8611d775bb5acbe47b3c8b57d
   m_importer: .texture
   m_source: materials\clouds\1\cloud_1_mat_Normal.png
   m_name: cloud_1_mat_Normal.png

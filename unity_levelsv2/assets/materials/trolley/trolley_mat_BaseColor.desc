@@ -1,5 +1,5 @@
 base:
-  m_guid: b19e647898814e166e541251aa
+  m_guid: 1d884ce744eb99c15330aaee452
   m_importer: .texture
   m_source: materials\trolley\trolley_mat_BaseColor.png
   m_name: trolley_mat_BaseColor.png

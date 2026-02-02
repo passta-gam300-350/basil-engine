@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7a17870991aefe57ecc2f12
+  m_guid: 1d88c267999a6dfd35131427aae
   m_importer: .mesh
   m_source: models\new_tin_biscuit\biscuit_tin_choco.obj
   m_name: biscuit_tin_choco.obj

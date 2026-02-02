@@ -1,5 +1,5 @@
 base:
-  m_guid: b19159772c992c2d5ee422e64d
+  m_guid: 1d86e7a7337a4862255bbbaef2d
   m_importer: .texture
   m_source: materials\metal_rack\Metal_Plate_Mat_Emissive.png
   m_name: Metal_Plate_Mat_Emissive.png

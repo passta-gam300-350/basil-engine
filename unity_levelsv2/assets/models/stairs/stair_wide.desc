@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a3627f679f86f1ca62555685
+  m_guid: 1d88ce67e618a4b382bfb3dd910
   m_importer: .mesh
   m_source: models\stairs\stair_wide.obj
   m_name: stair_wide.obj

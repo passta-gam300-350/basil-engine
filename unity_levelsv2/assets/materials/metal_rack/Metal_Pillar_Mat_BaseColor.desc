@@ -1,5 +1,5 @@
 base:
-  m_guid: b190fc7885a132622d0b931db9
+  m_guid: 1d86df678e58ddfd4eab4fb2a7e
   m_importer: .texture
   m_source: materials\metal_rack\Metal_Pillar_Mat_BaseColor.png
   m_name: Metal_Pillar_Mat_BaseColor.png

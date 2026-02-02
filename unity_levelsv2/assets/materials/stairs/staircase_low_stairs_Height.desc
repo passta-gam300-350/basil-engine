@@ -1,5 +1,5 @@
 base:
-  m_guid: b1935277d2a26da177a0365fa7
+  m_guid: 1d87620799f87308baddfe1b830
   m_importer: .texture
   m_source: materials\stairs\staircase_low_stairs_Height.png
   m_name: staircase_low_stairs_Height.png

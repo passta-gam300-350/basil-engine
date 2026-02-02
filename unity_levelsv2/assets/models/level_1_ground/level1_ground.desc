@@ -1,5 +1,5 @@
 base:
-  m_guid: 5d4d71a7b3687b79a4b0ee3edea
+  m_guid: 1d88bdb7a23847c32b11c56be76
   m_importer: .mesh
   m_source: models\level_1_ground\level1_ground.obj
   m_name: level1_ground.obj

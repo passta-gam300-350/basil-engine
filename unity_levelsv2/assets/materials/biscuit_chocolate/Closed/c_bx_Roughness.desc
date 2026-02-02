@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df6ed72c6b7ce6d8779bd03ce
+  m_guid: 1d85ac071dcb1567faec60282f2
   m_importer: .texture
   m_source: materials\biscuit_chocolate\Closed\c_bx_Roughness.png
   m_name: c_bx_Roughness.png

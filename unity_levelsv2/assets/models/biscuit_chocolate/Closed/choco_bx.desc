@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df791786cada5d5eb58f23b3a
+  m_guid: 1d887e57f57898775fccca32718
   m_importer: .mesh
   m_source: models\biscuit_chocolate\Closed\choco_bx.obj
   m_name: choco_bx.obj

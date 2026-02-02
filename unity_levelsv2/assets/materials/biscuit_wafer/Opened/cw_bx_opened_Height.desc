@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df73376469281c52798e0ade7
+  m_guid: 1d85e8175c78f8772b6cfd5c2a2
   m_importer: .texture
   m_source: materials\biscuit_wafer\Opened\cw_bx_opened_Height.png
   m_name: cw_bx_opened_Height.png

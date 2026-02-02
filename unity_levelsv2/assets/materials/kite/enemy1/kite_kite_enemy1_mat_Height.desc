@@ -1,5 +1,5 @@
 base:
-  m_guid: b18d477985a60830be2449a077
+  m_guid: 1d867ec716d9e515d34e98fc047
   m_importer: .texture
   m_source: materials\kite\enemy1\kite_kite_enemy1_mat_Height.png
   m_name: kite_kite_enemy1_mat_Height.png

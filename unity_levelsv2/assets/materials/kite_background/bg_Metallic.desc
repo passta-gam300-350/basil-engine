@@ -1,5 +1,5 @@
 base:
-  m_guid: b1908674678a550058b3a23c56
+  m_guid: 1d86cd375ae91e7d6c73d846878
   m_importer: .texture
   m_source: materials\kite_background\bg_Metallic.png
   m_name: bg_Metallic.png

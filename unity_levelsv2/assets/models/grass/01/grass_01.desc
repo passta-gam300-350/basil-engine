@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a17f793e984d088d7d295d4e
+  m_guid: 1d889d871dca46eeb319fcb07d0
   m_importer: .mesh
   m_source: models\grass\01\grass_01.obj
   m_name: grass_01.obj

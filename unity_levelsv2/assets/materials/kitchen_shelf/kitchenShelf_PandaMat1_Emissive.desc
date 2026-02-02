@@ -1,5 +1,5 @@
 base:
-  m_guid: b18c047b519509447595f5f293
+  m_guid: 1d866157f6a8e0ce02ac7c71f0f
   m_importer: .texture
   m_source: materials\kitchen_shelf\kitchenShelf_PandaMat1_Emissive.png
   m_name: kitchenShelf_PandaMat1_Emissive.png

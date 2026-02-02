@@ -1,5 +1,5 @@
 base:
-  m_guid: b1999b72f295a86458d5578fce
+  m_guid: 1d87ff57561aa611eb37ae572f7
   m_importer: .texture
   m_source: materials\trash_pile\trash_3\trash3_low_standardSurface18_Emissive.png
   m_name: trash3_low_standardSurface18_Emissive.png

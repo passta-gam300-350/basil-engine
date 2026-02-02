@@ -1,5 +1,5 @@
 base:
-  m_guid: b1913e78e48157717456b377cd
+  m_guid: 1d86e5e7834bc863622e3974f89
   m_importer: .texture
   m_source: materials\metal_rack\Metal_Pillar_Mat_Roughness.png
   m_name: Metal_Pillar_Mat_Roughness.png

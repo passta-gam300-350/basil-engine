@@ -1,5 +1,5 @@
 base:
-  m_guid: b197c07b1bb1cb50d8a3355ad9
+  m_guid: 1d87d727fb7993d5de16779f516
   m_importer: .texture
   m_source: materials\train\wheel2\Wheel2_Train_Metallic.png
   m_name: Wheel2_Train_Metallic.png

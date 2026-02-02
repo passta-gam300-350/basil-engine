@@ -1,5 +1,5 @@
 base:
-  m_guid: b191df768ea05eb9aefd0fd0fc
+  m_guid: 1d86f6178aa8c37593c6b2084a8
   m_importer: .texture
   m_source: materials\metal_shelf\Metal_ShelfStand_Metal_Emissive.png
   m_name: Metal_ShelfStand_Metal_Emissive.png

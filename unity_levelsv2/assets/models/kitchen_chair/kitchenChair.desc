@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a1d971b99962b33c45c554f0
+  m_guid: 1d88a4976a8b8f626e922af87be
   m_importer: .mesh
   m_source: models\kitchen_chair\kitchenChair.obj
   m_name: kitchenChair.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a1087d848bf69e2476c085fd
+  m_guid: 1d8890774ca9bb274f654823ed3
   m_importer: .mesh
   m_source: models\ceiling_fan\ceilingfan.obj
   m_name: ceilingfan.obj

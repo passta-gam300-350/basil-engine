@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a2927842a4c899a841168971
+  m_guid: 1d88b337d049273ff912448ab21
   m_importer: .mesh
   m_source: models\kite\flaptop\flaptop.obj
   m_name: flaptop.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: b1895a7ecd9ff66835db57ceef
+  m_guid: 1d8621f75c8bcc7b7f1ea7914f2
   m_importer: .texture
   m_source: materials\floor\Floor_openPBR_shader1_Metallic.png
   m_name: Floor_openPBR_shader1_Metallic.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b18ff57690ba484fa4ae57a680
+  m_guid: 1d86be47cabb36992ea068440dd
   m_importer: .texture
   m_source: materials\kite\stick2\stick_2_mat_Metallic.png
   m_name: stick_2_mat_Metallic.png

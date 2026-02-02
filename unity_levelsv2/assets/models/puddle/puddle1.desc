@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a3257f56817901fb8dd1e05e
+  m_guid: 1d88c787fbcb6c220ed05bb7f0d
   m_importer: .mesh
   m_source: models\puddle\puddle1.obj
   m_name: puddle1.obj

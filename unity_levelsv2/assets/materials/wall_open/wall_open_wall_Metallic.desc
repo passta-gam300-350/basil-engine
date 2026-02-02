@@ -1,5 +1,5 @@
 base:
-  m_guid: b19f5d75d1a4039f0fe91a9a94
+  m_guid: 1d8860171aa948b58ab74b68c11
   m_importer: .texture
   m_source: materials\wall_open\wall_open_wall_Metallic.png
   m_name: wall_open_wall_Metallic.png

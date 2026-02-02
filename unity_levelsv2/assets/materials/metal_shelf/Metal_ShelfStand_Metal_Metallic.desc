@@ -1,5 +1,5 @@
 base:
-  m_guid: b191f57fb0b3687cc76b41ba1e
+  m_guid: 1d86f8b7f359f9502d9ea2cff40
   m_importer: .texture
   m_source: materials\metal_shelf\Metal_ShelfStand_Metal_Metallic.png
   m_name: Metal_ShelfStand_Metal_Metallic.png

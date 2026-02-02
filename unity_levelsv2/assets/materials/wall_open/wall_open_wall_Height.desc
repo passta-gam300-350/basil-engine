@@ -1,5 +1,5 @@
 base:
-  m_guid: b19f4d7ebcbf3fba0cb4df0353
+  m_guid: 1d885ed7361b7ef8bf3bceb96ac
   m_importer: .texture
   m_source: materials\wall_open\wall_open_wall_Height.png
   m_name: wall_open_wall_Height.png

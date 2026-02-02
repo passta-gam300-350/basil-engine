@@ -1,5 +1,5 @@
 base:
-  m_guid: b18fc779f889a7ce53f3319344
+  m_guid: 1d86b967b26aed2346853db59c4
   m_importer: .texture
   m_source: materials\kite\stick1\stick_1_mat_Roughness.png
   m_name: stick_1_mat_Roughness.png

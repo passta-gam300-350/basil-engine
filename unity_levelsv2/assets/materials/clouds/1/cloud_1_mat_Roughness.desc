@@ -1,5 +1,5 @@
 base:
-  m_guid: b188997735877f0db59c58e942
+  m_guid: 1d8612f74e1b753186f6cd59f38
   m_importer: .texture
   m_source: materials\clouds\1\cloud_1_mat_Roughness.png
   m_name: cloud_1_mat_Roughness.png

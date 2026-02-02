@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df73d7bb0beb5b9b9b9845192
+  m_guid: 1d862f57989b64bb07d4d9d1ad9
   m_importer: .texture
   m_source: materials\ghost\Eye Close\ghost_eye_close_Metallic.png
   m_name: ghost_eye_close_Metallic.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b1861d7206b0229fece9e03cd3
+  m_guid: 1d857e776789316ebc79e376c0f
   m_importer: .audio
   m_source: audio\sfx_kite_hit2.ogg
   m_name: sfx_kite_hit2.ogg

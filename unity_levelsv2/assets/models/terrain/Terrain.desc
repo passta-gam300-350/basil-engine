@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a37e7eea9889211e8f603639
+  m_guid: 1d88d1178c58b6371af9466525c
   m_importer: .mesh
   m_source: models\terrain\Terrain.obj
   m_name: Terrain.obj

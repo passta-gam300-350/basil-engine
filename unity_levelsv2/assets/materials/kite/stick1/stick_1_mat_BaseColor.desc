@@ -1,5 +1,5 @@
 base:
-  m_guid: b18f8d7f81ba43edc014b398ff
+  m_guid: 1d86b3872edbaf7b8c2c402519e
   m_importer: .texture
   m_source: materials\kite\stick1\stick_1_mat_BaseColor.png
   m_name: stick_1_mat_BaseColor.png

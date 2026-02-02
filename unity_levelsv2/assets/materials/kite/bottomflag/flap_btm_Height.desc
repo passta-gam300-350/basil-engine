@@ -1,5 +1,5 @@
 base:
-  m_guid: b18cfb7580babd825dddcfbf48
+  m_guid: 1d867757abaaf95ae66a7df3a90
   m_importer: .texture
   m_source: materials\kite\bottomflag\flap_btm_Height.png
   m_name: flap_btm_Height.png

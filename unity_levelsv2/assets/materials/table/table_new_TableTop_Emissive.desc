@@ -1,5 +1,5 @@
 base:
-  m_guid: b194797aa786a0924d621db1bb
+  m_guid: 1d877dd7c1c8c0d40c208241ca0
   m_importer: .texture
   m_source: materials\table\table_new_TableTop_Emissive.png
   m_name: table_new_TableTop_Emissive.png

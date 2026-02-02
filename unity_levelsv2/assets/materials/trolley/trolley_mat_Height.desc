@@ -1,5 +1,5 @@
 base:
-  m_guid: b19e82721882418ea6e9867161
+  m_guid: 1d884f87a08a91e43c6a192ba84
   m_importer: .texture
   m_source: materials\trolley\trolley_mat_Height.png
   m_name: trolley_mat_Height.png

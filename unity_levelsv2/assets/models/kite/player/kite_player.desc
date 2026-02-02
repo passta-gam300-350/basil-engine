@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a2b07566a611d2b02e22cb61
+  m_guid: 1d88b657a9584b88c4b6760003c
   m_importer: .mesh
   m_source: models\kite\player\kite_player.obj
   m_name: kite_player.obj

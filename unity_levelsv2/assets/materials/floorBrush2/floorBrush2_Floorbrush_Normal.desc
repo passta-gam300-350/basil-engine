@@ -1,5 +1,5 @@
 base:
-  m_guid: b189b2706292aa4ab35cb8e172
+  m_guid: 1d862997d7f8a1b603426fcc230
   m_importer: .texture
   m_source: materials\floorBrush2\floorBrush2_Floorbrush_Normal.png
   m_name: floorBrush2_Floorbrush_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b192e87e60ad92c6a26ea27162
+  m_guid: 1d875877faa95b30c8542fab337
   m_importer: .texture
   m_source: materials\shutter_frame\shutter_frame_Roughness.png
   m_name: shutter_frame_Roughness.png

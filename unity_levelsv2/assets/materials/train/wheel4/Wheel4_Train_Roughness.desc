@@ -1,5 +1,5 @@
 base:
-  m_guid: b1985c78e98d75f683432abacf
+  m_guid: 1d87e5f762b9bc26ecf064b1c4b
   m_importer: .texture
   m_source: materials\train\wheel4\Wheel4_Train_Roughness.png
   m_name: Wheel4_Train_Roughness.png

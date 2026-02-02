@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df6e97a1aaae93cdc39221c15
+  m_guid: 1d85a8a77e09261420340588ab1
   m_importer: .texture
   m_source: materials\biscuit_chocolate\Closed\c_bx_Emissive.png
   m_name: c_bx_Emissive.png

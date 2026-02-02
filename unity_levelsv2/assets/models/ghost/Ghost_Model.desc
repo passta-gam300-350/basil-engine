@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a1707baca2337685ce9a5b01
+  m_guid: 1d889be71069d3888e768664960
   m_importer: .mesh
   m_source: models\ghost\Ghost_Model.fbx
   m_name: Ghost_Model.fbx

@@ -1,5 +1,5 @@
 base:
-  m_guid: b192dc75409bcf6c05c6aca0d6
+  m_guid: 1d875727f928d7b7022d2d33461
   m_importer: .texture
   m_source: materials\shutter_frame\shutter_frame_Normal.png
   m_name: shutter_frame_Normal.png

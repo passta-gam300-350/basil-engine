@@ -1,5 +1,5 @@
 base:
-  m_guid: b195e47b92b8dcfddbf3a4283c
+  m_guid: 1d87a4c7f85b15e9e721cbfc526
   m_importer: .texture
   m_source: materials\tin\wafer\biscuit_tin_standardSurface1_Height.png
   m_name: biscuit_tin_standardSurface1_Height.png

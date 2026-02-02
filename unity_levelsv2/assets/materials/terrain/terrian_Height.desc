@@ -1,5 +1,5 @@
 base:
-  m_guid: b194c973dfb209195ace3901b6
+  m_guid: 1d878667133ab7e47911b13eab3
   m_importer: .texture
   m_source: materials\terrain\terrian_Height.png
   m_name: terrian_Height.png

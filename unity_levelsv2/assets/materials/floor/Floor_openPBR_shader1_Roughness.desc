@@ -1,5 +1,5 @@
 base:
-  m_guid: b189727fe0833a7e09a508e090
+  m_guid: 1d86242702d900dfc44f78d18e6
   m_importer: .texture
   m_source: materials\floor\Floor_openPBR_shader1_Roughness.png
   m_name: Floor_openPBR_shader1_Roughness.png

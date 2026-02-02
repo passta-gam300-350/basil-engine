@@ -1,5 +1,5 @@
 base:
-  m_guid: b192797633aa8cba0229f42761
+  m_guid: 1d874cd79a0898075af98245d14
   m_importer: .texture
   m_source: materials\shutter\shutter_mat_Height.png
   m_name: shutter_mat_Height.png

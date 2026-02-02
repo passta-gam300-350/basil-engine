@@ -1,5 +1,5 @@
 base:
-  m_guid: b19255757689c08f0f0c99a25d
+  m_guid: 1d8748d74239ee8d4223d0fd664
   m_importer: .texture
   m_source: materials\puddle\Puddle1_puddle_Roughness.png
   m_name: Puddle1_puddle_Roughness.png

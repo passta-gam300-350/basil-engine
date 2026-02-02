@@ -1,5 +1,5 @@
 base:
-  m_guid: b1982a7ad785890e3efb37de7d
+  m_guid: 1d87e107e2184077e5e5387af22
   m_importer: .texture
   m_source: materials\train\wheel4\Wheel4_Train_BaseColor.png
   m_name: Wheel4_Train_BaseColor.png

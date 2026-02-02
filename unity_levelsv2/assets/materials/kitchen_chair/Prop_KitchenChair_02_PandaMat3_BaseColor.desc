@@ -1,5 +1,5 @@
 base:
-  m_guid: b18bab74038bc37c11ba7b563c
+  m_guid: 1d865af789c85fc0741ebafdd9f
   m_importer: .texture
   m_source: materials\kitchen_chair\Prop_KitchenChair_02_PandaMat3_BaseColor.png
   m_name: Prop_KitchenChair_02_PandaMat3_BaseColor.png

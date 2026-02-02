@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df75c7178a252d316e32bfddf
+  m_guid: 1d8710476189fe2b64c162b7746
   m_importer: .texture
   m_source: materials\new_tin_biscuit\cb_tin_top_Metallic.png
   m_name: cb_tin_top_Metallic.png

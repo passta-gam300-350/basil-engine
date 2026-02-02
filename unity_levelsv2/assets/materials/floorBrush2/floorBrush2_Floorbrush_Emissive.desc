@@ -1,5 +1,5 @@
 base:
-  m_guid: b1898e7586a6c2da258e93a360
+  m_guid: 1d862667705850ed72bd212e37e
   m_importer: .texture
   m_source: materials\floorBrush2\floorBrush2_Floorbrush_Emissive.png
   m_name: floorBrush2_Floorbrush_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df77e7fc2aa2726f40cc039b7
+  m_guid: 1d873f172ea8a7bd78c69f7a50d
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_top_Metallic.png
   m_name: cw_tin_top_Metallic.png

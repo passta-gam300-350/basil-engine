@@ -1,5 +1,5 @@
 base:
-  m_guid: b1926f7cc6a3320bb5599a19ef
+  m_guid: 1d874be782bbc11f0814e9c1f30
   m_importer: .texture
   m_source: materials\shutter\shutter_mat_Emissive.png
   m_name: shutter_mat_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a05f79d7a413484de889a9cd
+  m_guid: 1d8871b70bbae774754bf328ab3
   m_importer: .texture
   m_source: materials\workbench\Prop_Desk_03_table_top_BaseColor.png
   m_name: Prop_Desk_03_table_top_BaseColor.png

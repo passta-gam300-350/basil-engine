@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a1387ca693d4fb722cbfed7f
+  m_guid: 1d8895172dca91d3ccc16f41a05
   m_importer: .mesh
   m_source: models\dustbin\Dustbin.obj
   m_name: Dustbin.obj

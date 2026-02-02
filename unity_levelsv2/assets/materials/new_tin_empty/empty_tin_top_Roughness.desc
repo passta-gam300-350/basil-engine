@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df76f76e498c5ca70cbf1ecbe
+  m_guid: 1d8729f7b59b8afb80d453823a1
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_top_Roughness.png
   m_name: empty_tin_top_Roughness.png

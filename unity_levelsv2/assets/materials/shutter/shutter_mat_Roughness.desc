@@ -1,5 +1,5 @@
 base:
-  m_guid: b1929d7e76aa33f11bad33308a
+  m_guid: 1d8750a7b6b83480f95a41ddd47
   m_importer: .texture
   m_source: materials\shutter\shutter_mat_Roughness.png
   m_name: shutter_mat_Roughness.png

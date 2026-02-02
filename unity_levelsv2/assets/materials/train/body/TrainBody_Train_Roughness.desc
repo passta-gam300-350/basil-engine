@@ -1,5 +1,5 @@
 base:
-  m_guid: b196db7a72857e7287b5a68535
+  m_guid: 1d87bef738fa8839321fb8f478a
   m_importer: .texture
   m_source: materials\train\body\TrainBody_Train_Roughness.png
   m_name: TrainBody_Train_Roughness.png

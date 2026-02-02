@@ -1,5 +1,5 @@
 base:
-  m_guid: 91290a971268b91715f3c12aa2f
+  m_guid: 1d88c417f908eb7871ef5f4dcc8
   m_importer: .mesh
   m_source: models\new_tin_empty\bs_tin_empty.obj
   m_name: bs_tin_empty.obj

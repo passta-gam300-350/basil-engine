@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7447869b0144548d183dd3c
+  m_guid: 1d8636b77ef9fc3da9c54a67df3
   m_importer: .texture
   m_source: materials\ghost\Eye Open\ghost_eye_open_Roughness.png
   m_name: ghost_eye_open_Roughness.png

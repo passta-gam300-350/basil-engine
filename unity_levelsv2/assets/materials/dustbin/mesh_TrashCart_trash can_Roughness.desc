@@ -1,5 +1,5 @@
 base:
-  m_guid: b18933750abbf82ddd91330de5
+  m_guid: 1d861ec7311a1f74f8c3397c1e1
   m_importer: .texture
   m_source: materials\dustbin\mesh_TrashCart_trash can_Roughness.png
   m_name: mesh_TrashCart_trash can_Roughness.png

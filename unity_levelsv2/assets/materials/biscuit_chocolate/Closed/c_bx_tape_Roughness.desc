@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df6f37e979019446fe3a0cd36
+  m_guid: 1d85b257f77b394cf0c31d89477
   m_importer: .texture
   m_source: materials\biscuit_chocolate\Closed\c_bx_tape_Roughness.png
   m_name: c_bx_tape_Roughness.png

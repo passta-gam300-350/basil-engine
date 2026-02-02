@@ -1,5 +1,5 @@
 base:
-  m_guid: b191987613bcb75f4f69f826f7
+  m_guid: 1d86ee17d06b2a95037f0d294ae
   m_importer: .texture
   m_source: materials\metal_rack\trim_sheet_low_BaseColor.png
   m_name: trim_sheet_low_BaseColor.png

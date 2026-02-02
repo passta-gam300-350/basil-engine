@@ -1,5 +1,5 @@
 base:
-  m_guid: 8df7747e98a2fca388b084261a
+  m_guid: 1d8730876bea73d9e309175c8a5
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_base_Normal.png
   m_name: cw_tin_base_Normal.png

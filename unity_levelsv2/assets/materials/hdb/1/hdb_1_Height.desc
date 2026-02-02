@@ -1,5 +1,5 @@
 base:
-  m_guid: b18a977a7185bee6d25ad726bd
+  m_guid: 1d864687da4b17eed4fa695a0e6
   m_importer: .texture
   m_source: materials\hdb\1\hdb_1_Height.png
   m_name: hdb_1_Height.png

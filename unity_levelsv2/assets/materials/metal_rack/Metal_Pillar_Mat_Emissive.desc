@@ -1,5 +1,5 @@
 base:
-  m_guid: b191097efd8b07fbe6f85826da
+  m_guid: 1d86e0c742082b24c8f240ff64f
   m_importer: .texture
   m_source: materials\metal_rack\Metal_Pillar_Mat_Emissive.png
   m_name: Metal_Pillar_Mat_Emissive.png

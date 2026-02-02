@@ -1,5 +1,5 @@
 base:
-  m_guid: b1a1c275d8a1e9cb3d69367e0c
+  m_guid: 1d88a3570369448c5304c064816
   m_importer: .mesh
   m_source: models\kitchen_cabinet\kitchenCabinet.obj
   m_name: kitchenCabinet.obj

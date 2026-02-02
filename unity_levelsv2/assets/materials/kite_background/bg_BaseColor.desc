@@ -1,5 +1,5 @@
 base:
-  m_guid: b190627ae5967d9029077d0109
+  m_guid: 1d86c91716ebfae9fd9aee099ba
   m_importer: .texture
   m_source: materials\kite_background\bg_BaseColor.png
   m_name: bg_BaseColor.png
