@@ -1,5 +1,5 @@
 base:
-  m_guid: 20420c766f83afeb74b1604f28
+  m_guid: b194d47337a9ae2da6fd69a70f
   m_importer: .texture
   m_source: materials\terrain\terrian_Metallic.png
   m_name: terrian_Metallic.png

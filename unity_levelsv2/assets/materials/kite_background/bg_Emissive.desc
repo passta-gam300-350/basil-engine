@@ -1,5 +1,5 @@
 base:
-  m_guid: 53290576209feab27f7ed5c83a
+  m_guid: b1906e70bdbdb417c002bdea62
   m_importer: .texture
   m_source: materials\kite_background\bg_Emissive.png
   m_name: bg_Emissive.png

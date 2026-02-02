@@ -1,5 +1,5 @@
 base:
-  m_guid: 2041eb749fbc4f7f435531491a
+  m_guid: b194b171fc9178898cc082dc13
   m_importer: .texture
   m_source: materials\terrain\terrian_BaseColor.png
   m_name: terrian_BaseColor.png

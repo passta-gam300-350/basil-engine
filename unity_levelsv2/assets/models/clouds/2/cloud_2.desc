@@ -1,5 +1,5 @@
 base:
-  m_guid: 53f19cd767ea5f9e771db6b0161
+  m_guid: b1a1287679abff53d65b51198b
   m_importer: .mesh
   m_source: models\clouds\2\cloud_2.obj
   m_name: cloud_2.obj

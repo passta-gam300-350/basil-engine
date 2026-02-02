@@ -1,5 +1,5 @@
 base:
-  m_guid: 36fd800775bb4a45dfb87c68c46
+  m_guid: b1954b7eab9c373fd6533c6fbe
   m_importer: .texture
   m_source: materials\tin\biscuit\biscuit_tin1_tin_plastic_clear_Emissive.png
   m_name: biscuit_tin1_tin_plastic_clear_Emissive.png

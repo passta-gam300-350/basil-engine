@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd4bbe74019b3999dacf91e41a
+  m_guid: b1a33571418e2fdc931fd4f16d
   m_importer: .mesh
   m_source: models\shutter\shutter.obj
   m_name: shutter.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e42e975669cff18120fa9454f
+  m_guid: b1881675e1b3c2c0c0eb8a2368
   m_importer: .texture
   m_source: materials\ceiling_fan\Ceilingfan_openPBR_shader5_BaseColor.png
   m_name: Ceilingfan_openPBR_shader5_BaseColor.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 55e503172eea4df7c6094d12130
+  m_guid: b1a3fd7cf48fb1a352327bd3b6
   m_importer: .mesh
   m_source: models\train\wheel3\Wheel3.obj
   m_name: Wheel3.obj

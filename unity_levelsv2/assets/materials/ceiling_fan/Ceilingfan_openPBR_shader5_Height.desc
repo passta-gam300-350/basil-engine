@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e42f67ac9b3b27e1dd8be852b
+  m_guid: b1882d7c749e06bf392c56d566
   m_importer: .texture
   m_source: materials\ceiling_fan\Ceilingfan_openPBR_shader5_Height.png
   m_name: Ceilingfan_openPBR_shader5_Height.png

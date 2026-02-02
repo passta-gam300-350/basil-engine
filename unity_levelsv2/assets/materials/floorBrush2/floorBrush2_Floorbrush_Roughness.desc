@@ -1,5 +1,5 @@
 base:
-  m_guid: 1088c65786eb1d675802190f835
+  m_guid: b189c07261a117c3e4816626aa
   m_importer: .texture
   m_source: materials\floorBrush2\floorBrush2_Floorbrush_Roughness.png
   m_name: floorBrush2_Floorbrush_Roughness.png

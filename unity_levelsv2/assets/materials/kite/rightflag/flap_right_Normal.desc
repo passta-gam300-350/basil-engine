@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4f1d7122a8b915f150354bdb
+  m_guid: b18f75760491bb936fbc2b04e0
   m_importer: .texture
   m_source: materials\kite\rightflag\flap_right_Normal.png
   m_name: flap_right_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd4a3170198a6387bec6233ab8
+  m_guid: b19bd97a61a958428d35140a7c
   m_importer: .texture
   m_source: materials\tree\03\tree_03_Normal.png
   m_name: tree_03_Normal.png

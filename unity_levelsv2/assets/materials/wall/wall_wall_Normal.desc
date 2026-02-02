@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e45bb719ca36d1e71154e19c8
+  m_guid: b19f097f10a78b104634105a8c
   m_importer: .texture
   m_source: materials\wall\wall_wall_Normal.png
   m_name: wall_wall_Normal.png

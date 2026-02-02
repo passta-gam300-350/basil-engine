@@ -1,5 +1,5 @@
 base:
-  m_guid: 55e4ffc707fae58f071fc6f0110
+  m_guid: b198517bb89d02e2724893b989
   m_importer: .texture
   m_source: materials\train\wheel4\Wheel4_Train_Normal.png
   m_name: Wheel4_Train_Normal.png

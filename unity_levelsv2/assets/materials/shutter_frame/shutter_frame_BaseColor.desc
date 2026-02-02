@@ -1,5 +1,5 @@
 base:
-  m_guid: 536d8729999d8fe859f5f5ab1
+  m_guid: b192ab78539ea6c23cf384ee18
   m_importer: .texture
   m_source: materials\shutter_frame\shutter_frame_BaseColor.png
   m_name: shutter_frame_BaseColor.png

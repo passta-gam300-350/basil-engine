@@ -1,5 +1,5 @@
 base:
-  m_guid: 122773d742a8125dd1fc899fdff
+  m_guid: b1937676f9b59eceecf27b4216
   m_importer: .texture
   m_source: materials\stairs\staircase_low_stairs_Roughness.png
   m_name: staircase_low_stairs_Roughness.png

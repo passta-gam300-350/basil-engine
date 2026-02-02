@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd4a5e774f8c1bbcaf954cd7a9
+  m_guid: b19c447baabf38306ffc68a89f
   m_importer: .texture
   m_source: materials\tree\04\tree_04_Roughness.png
   m_name: tree_04_Roughness.png

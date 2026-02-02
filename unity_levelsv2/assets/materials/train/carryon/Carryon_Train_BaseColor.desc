@@ -1,5 +1,5 @@
 base:
-  m_guid: 560ddb077609b3e9c23b73eac7f
+  m_guid: b196e87efe904a210cbcb72099
   m_importer: .texture
   m_source: materials\train\carryon\Carryon_Train_BaseColor.png
   m_name: Carryon_Train_BaseColor.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: b50164781c83cf985f87eb04a1
+  m_guid: b189ce76e18cb2a2e978f87bef
   m_importer: .texture
   m_source: materials\ghost\Ghost_Model.png
   m_name: Ghost_Model.png

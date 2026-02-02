@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4ec47ae29d314b08e41538c7
+  m_guid: b18eb67e93a31fd3c36ea4cbec
   m_importer: .texture
   m_source: materials\kite\leftflag\flap_left_mat_Emissive.png
   m_name: flap_left_mat_Emissive.png

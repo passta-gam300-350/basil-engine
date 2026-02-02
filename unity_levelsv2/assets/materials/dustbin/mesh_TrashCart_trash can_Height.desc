@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e431c7cbdb3eae6c0b8000b8f
+  m_guid: b1890b70a3ab0bef5a3fea0e48
   m_importer: .texture
   m_source: materials\dustbin\mesh_TrashCart_trash can_Height.png
   m_name: mesh_TrashCart_trash can_Height.png

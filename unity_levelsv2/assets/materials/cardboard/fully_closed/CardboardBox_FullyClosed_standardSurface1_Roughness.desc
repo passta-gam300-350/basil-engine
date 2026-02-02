@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e423f74ee971760ba086d06b2
+  m_guid: b187017b30b1ec8d7a248d94e9
   m_importer: .texture
   m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface1_Roughness.png
   m_name: CardboardBox_FullyClosed_standardSurface1_Roughness.png

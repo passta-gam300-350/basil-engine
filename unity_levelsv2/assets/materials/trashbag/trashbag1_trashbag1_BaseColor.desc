@@ -1,5 +1,5 @@
 base:
-  m_guid: 218ecbac75d7837c54dcf4cb827a
+  m_guid: b1986d7a35859c5d1441ea6139
   m_importer: .texture
   m_source: materials\trashbag\trashbag1_trashbag1_BaseColor.png
   m_name: trashbag1_trashbag1_BaseColor.png

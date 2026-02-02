@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd4ad47179960d6802d4f4a2cb
+  m_guid: b19d347249ac4aac1f2072198b
   m_importer: .texture
   m_source: materials\tree\07\tree_07_Metallic.png
   m_name: tree_07_Metallic.png

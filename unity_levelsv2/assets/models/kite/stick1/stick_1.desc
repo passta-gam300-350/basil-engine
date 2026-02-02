@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e50307b7aac9ca142f4953925
+  m_guid: b1a2c077da95da8cea277d5120
   m_importer: .mesh
   m_source: models\kite\stick1\stick_1.obj
   m_name: stick_1.obj

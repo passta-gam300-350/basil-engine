@@ -1,5 +1,5 @@
 base:
-  m_guid: 36fd7c872aaa5887312d529d67e
+  m_guid: b195047466b537ebdfd7ab2d78
   m_importer: .texture
   m_source: materials\tin\biscuit\biscuit_tin1_standardSurface1_Emissive.png
   m_name: biscuit_tin1_standardSurface1_Emissive.png

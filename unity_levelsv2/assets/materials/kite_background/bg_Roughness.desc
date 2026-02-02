@@ -1,5 +1,5 @@
 base:
-  m_guid: 53292e783a9b72f0a484cc7979
+  m_guid: b190a372a694e1bd62c74aeab0
   m_importer: .texture
   m_source: materials\kite_background\bg_Roughness.png
   m_name: bg_Roughness.png

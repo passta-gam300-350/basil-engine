@@ -1,5 +1,5 @@
 base:
-  m_guid: 12277157da8bf623f8bc25810d1
+  m_guid: b19335746dacdb1713783921bb
   m_importer: .texture
   m_source: materials\stairs\staircase_low_stairs_BaseColor.png
   m_name: staircase_low_stairs_BaseColor.png

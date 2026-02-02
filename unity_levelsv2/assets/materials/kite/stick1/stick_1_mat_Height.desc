@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4f44736e9a00f6946fd85be9
+  m_guid: b18fa47512b80c237d8a4d3507
   m_importer: .texture
   m_source: materials\kite\stick1\stick_1_mat_Height.png
   m_name: stick_1_mat_Height.png

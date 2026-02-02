@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e44b1749abb61a157940a0b7a
+  m_guid: b194837ce387439aeee2b90bca
   m_importer: .texture
   m_source: materials\table\table_new_TableTop_Height.png
   m_name: table_new_TableTop_Height.png

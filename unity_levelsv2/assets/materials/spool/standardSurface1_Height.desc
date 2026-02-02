@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd499c77d8af7575183d1648d9
+  m_guid: b1930270b6ac7381e9aa8395e9
   m_importer: .texture
   m_source: materials\spool\standardSurface1_Height.png
   m_name: standardSurface1_Height.png

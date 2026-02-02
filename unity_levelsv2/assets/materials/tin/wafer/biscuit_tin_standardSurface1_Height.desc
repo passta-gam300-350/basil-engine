@@ -1,7 +1,7 @@
 base:
-  m_guid: 199888a7f5c96d9fa0b2cbfe046
+  m_guid: b195e47b92b8dcfddbf3a4283c
   m_importer: .texture
-  m_source: materials\tin\empty\biscuit_tin_standardSurface1_Height.png
+  m_source: materials\tin\wafer\biscuit_tin_standardSurface1_Height.png
   m_name: biscuit_tin_standardSurface1_Height.png
   m_importer_type: 13238151832854353850
 compression: BC3_RGBA8

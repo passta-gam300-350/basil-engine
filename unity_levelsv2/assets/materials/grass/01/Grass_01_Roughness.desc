@@ -1,5 +1,5 @@
 base:
-  m_guid: 2120c95f7958a53c575cf40a34d9
+  m_guid: b18a1e7ccfbea385548e6acc88
   m_importer: .texture
   m_source: materials\grass\01\Grass_01_Roughness.png
   m_name: Grass_01_Roughness.png

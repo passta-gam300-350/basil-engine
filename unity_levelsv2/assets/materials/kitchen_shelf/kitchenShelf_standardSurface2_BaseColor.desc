@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e43eb7df4b6cfa1b4894538d1
+  m_guid: b18c447ddbb1fbf93a64956783
   m_importer: .texture
   m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_BaseColor.png
   m_name: kitchenShelf_standardSurface2_BaseColor.png

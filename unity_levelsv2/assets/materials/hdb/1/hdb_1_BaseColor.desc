@@ -1,5 +1,5 @@
 base:
-  m_guid: 136e637a9498a9088994efc3a6
+  m_guid: b18a7e71b1a666e6c8506c5aaa
   m_importer: .texture
   m_source: materials\hdb\1\hdb_1_BaseColor.png
   m_name: hdb_1_BaseColor.png

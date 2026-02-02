@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e44357e7398471ca0b2aaaca0
+  m_guid: b193847cd79e700a62dece5f62
   m_importer: .texture
   m_source: materials\table\table_new_TableBottom_BaseColor.png
   m_name: table_new_TableBottom_BaseColor.png

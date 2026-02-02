@@ -1,5 +1,5 @@
 base:
-  m_guid: 536e873e09ad8eaf222636ca8
+  m_guid: b192c37a8895da1f572c729a46
   m_importer: .texture
   m_source: materials\shutter_frame\shutter_frame_Height.png
   m_name: shutter_frame_Height.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 536ef7a18803d32d4b6e8ad54
+  m_guid: b192d174359e075304819595b8
   m_importer: .texture
   m_source: materials\shutter_frame\shutter_frame_Metallic.png
   m_name: shutter_frame_Metallic.png

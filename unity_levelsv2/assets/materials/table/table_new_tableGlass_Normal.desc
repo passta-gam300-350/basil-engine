@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e449877cbbff572139579c551
+  m_guid: b194537c0cb7ddf7c1a0ce45a6
   m_importer: .texture
   m_source: materials\table\table_new_tableGlass_Normal.png
   m_name: table_new_tableGlass_Normal.png

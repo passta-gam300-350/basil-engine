@@ -1,5 +1,5 @@
 base:
-  m_guid: 560ddd07cadb39066039e59b27b
+  m_guid: b1971d7b29877461bb07b5d00a
   m_importer: .texture
   m_source: materials\train\carryon\Carryon_Train_Roughness.png
   m_name: Carryon_Train_Roughness.png

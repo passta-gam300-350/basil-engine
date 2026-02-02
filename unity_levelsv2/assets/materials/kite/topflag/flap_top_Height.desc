@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4fb27517816fae40eb733d1a
+  m_guid: b1902f736790434efd553ae201
   m_importer: .texture
   m_source: materials\kite\topflag\flap_top_Height.png
   m_name: flap_top_Height.png

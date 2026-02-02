@@ -1,5 +1,5 @@
 base:
-  m_guid: 3ace2f97d9dad0293bbb279c491
+  m_guid: b1859970afa51eee695c69c81e
   m_importer: .audio
   m_source: audio\bgm_happy_jingle.ogg
   m_name: bgm_happy_jingle.ogg

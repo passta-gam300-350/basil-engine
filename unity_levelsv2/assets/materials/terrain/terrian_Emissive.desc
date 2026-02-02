@@ -1,5 +1,5 @@
 base:
-  m_guid: 2041f87dc58c473c2c235b81c4
+  m_guid: b194bd77859f2f0cdb5dcdb769
   m_importer: .texture
   m_source: materials\terrain\terrian_Emissive.png
   m_name: terrian_Emissive.png

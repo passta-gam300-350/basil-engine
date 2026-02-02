@@ -1,5 +1,5 @@
 base:
-  m_guid: 36fd822796796e5389d09dd67fe
+  m_guid: b1957b7cd7a62ed3593f5b25bc
   m_importer: .texture
   m_source: materials\tin\biscuit\biscuit_tin1_tin_plastic_clear_Roughness.png
   m_name: biscuit_tin1_tin_plastic_clear_Roughness.png

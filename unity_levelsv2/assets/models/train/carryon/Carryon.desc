@@ -1,5 +1,5 @@
 base:
-  m_guid: 560dde97c4ebf6ceb2788ef91f9
+  m_guid: b1a3bb7c5fa41704d388bdbb0d
   m_importer: .mesh
   m_source: models\train\carryon\Carryon.obj
   m_name: Carryon.obj

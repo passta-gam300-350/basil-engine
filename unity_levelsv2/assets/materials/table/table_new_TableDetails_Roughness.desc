@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e44787ab4a1864a5b72ee7474
+  m_guid: b194107168b6a95b54352c62a7
   m_importer: .texture
   m_source: materials\table\table_new_TableDetails_Roughness.png
   m_name: table_new_TableDetails_Roughness.png

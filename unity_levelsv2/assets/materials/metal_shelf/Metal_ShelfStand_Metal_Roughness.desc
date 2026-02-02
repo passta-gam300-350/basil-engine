@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e442f7fc7973e404fd6ac6ebe
+  m_guid: b1920e7c38899f27855732e363
   m_importer: .texture
   m_source: materials\metal_shelf\Metal_ShelfStand_Metal_Roughness.png
   m_name: Metal_ShelfStand_Metal_Roughness.png

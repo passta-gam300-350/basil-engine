@@ -1,5 +1,5 @@
 base:
-  m_guid: 53f19197b7981230901f4187166
+  m_guid: b1885c7f4f82f80d412af2fc84
   m_importer: .texture
   m_source: materials\clouds\1\cloud_1_mat_BaseColor.png
   m_name: cloud_1_mat_BaseColor.png
