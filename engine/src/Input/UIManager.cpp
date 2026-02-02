@@ -60,9 +60,15 @@ void UIManager::Update()
 {
     if (!uiOpen)
         return;
+    double mouseX{}, mouseY{};
+	InputManager::Get_Instance()->Get_MousePosition(mouseX, mouseY);
+	bool mousePress = InputManager::Get_Instance()->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT);
 
-    /*for (auto& button : buttons)
-        button->update();*/
+    for (auto& button : buttons)
+    {
+        button->update(static_cast<float>(mouseX), static_cast<float>(mouseY), mousePress);
+    }
+        
 }
 
 void UIManager::Render()
