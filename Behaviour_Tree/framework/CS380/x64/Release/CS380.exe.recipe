@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>C:\Users\onyxx\OneDrive\Documents\GitHub\gam300\Behaviour_Tree\framework\x64\Release\CS380.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>C:\Users\onyxx\OneDrive\Documents\GitHub\gam300\Behaviour_Tree\framework\Assets\GridCellPixelShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\onyxx\OneDrive\Documents\GitHub\gam300\Behaviour_Tree\framework\Assets\GridCellVertexShader.cso</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>
