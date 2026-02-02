@@ -19,7 +19,12 @@ public:
 	{
 		OnCollisionEnter,
 		OnCollisionStay,
-		OnCollisionExit
+		OnCollisionExit,
+		OnTriggerEnter,
+		OnTriggerStay,
+		OnTriggerExit
+
+
 	} ;
 	static BehaviourSystem& Instance();
 	void Init() override;

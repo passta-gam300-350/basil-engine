@@ -41,6 +41,9 @@ float sampleSDF(vec2 uv)
 
 void main()
 {
+    // DEBUG: Uncomment to output solid magenta to verify geometry renders
+    // FragColor = vec4(1.0, 0.0, 1.0, 1.0); return;
+
     // Sample SDF distance field
     float distance = sampleSDF(vTexCoord);
 
