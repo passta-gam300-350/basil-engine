@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d875e77b5ab2e018605c318f78
+  m_guid: 6d7c4b4709c890884602ae12e2c
   m_importer: .texture
   m_source: materials\spool\standardSurface1_Roughness.png
   m_name: standardSurface1_Roughness.png

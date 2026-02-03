@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d866ac72ee88a8c0fddf6b1704
+  m_guid: 6d7b6257a44a71b29ca2e7955cd
   m_importer: .texture
   m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_Metallic.png
   m_name: kitchenShelf_standardSurface2_Metallic.png

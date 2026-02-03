@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d885b573348dea1c893c4a6822
+  m_guid: 6d7d17c73e7b88c2e33ea17d361
   m_importer: .texture
   m_source: materials\wall\wall_wall_Roughness.png
   m_name: wall_wall_Roughness.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d86d7f7c6796baeac641780b07
+  m_guid: 6d7bd827f0986a04d9505b40609
   m_importer: .texture
   m_source: materials\level_1_ground\level1_ground_concrete_BaseColor.png
   m_name: level1_ground_concrete_BaseColor.png

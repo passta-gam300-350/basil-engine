@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d883d77489a4c1b0d0a2a1aba1
+  m_guid: 6d7d01776e59cfb6916a9e76218
   m_importer: .texture
   m_source: materials\tree\08\tree_08_BaseColor.png
   m_name: tree_08_BaseColor.png

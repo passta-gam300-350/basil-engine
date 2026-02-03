@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87250786dbe758808ecd91698
+  m_guid: 6d7c1897c71ab0e1b11e66a14cb
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_top_Emissive.png
   m_name: empty_tin_top_Emissive.png

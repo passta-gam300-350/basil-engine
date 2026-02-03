@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d86e9178ec8d7427e529023028
+  m_guid: 6d7be96701095ec48c903a08ce0
   m_importer: .texture
   m_source: materials\metal_rack\Metal_Plate_Mat_Height.png
   m_name: Metal_Plate_Mat_Height.png

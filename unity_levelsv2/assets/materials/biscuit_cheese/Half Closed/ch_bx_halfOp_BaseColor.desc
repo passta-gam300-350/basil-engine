@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d859cb75888ca3ad3280d9b325
+  m_guid: 6d7a4d570889a7419aa88a929c8
   m_importer: .texture
   m_source: materials\biscuit_cheese\Half Closed\ch_bx_halfOp_BaseColor.png
   m_name: ch_bx_halfOp_BaseColor.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85ec277b48d37b7bccaff7e1b
+  m_guid: 6d7aad97072b35b9ef192d711bc
   m_importer: .texture
   m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface1_BaseColor.png
   m_name: CardboardBox_FullyClosed_standardSurface1_BaseColor.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d871807d47a9399b586cf555e3
+  m_guid: 6d7c0f27a09aa57e92565181617
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_base_Metallic.png
   m_name: empty_tin_base_Metallic.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d873ac7509b29e0ce72c238d2c
+  m_guid: 6d7c2b27bb7b73b2c6216c708bf
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_top_BaseColor.png
   m_name: cw_tin_top_BaseColor.png

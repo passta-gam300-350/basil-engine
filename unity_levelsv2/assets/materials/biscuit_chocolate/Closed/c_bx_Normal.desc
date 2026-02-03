@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85ab271e3ae44be45f0c581b8
+  m_guid: 6d7a60a72c4ac12c8410c7754dd
   m_importer: .texture
   m_source: materials\biscuit_chocolate\Closed\c_bx_Normal.png
   m_name: c_bx_Normal.png

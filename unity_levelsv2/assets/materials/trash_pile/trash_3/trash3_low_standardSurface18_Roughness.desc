@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8803e78dbb9a9d7cfdf6cc434
+  m_guid: 6d7cd5d71ee82846bf8e427b9eb
   m_importer: .texture
   m_source: materials\trash_pile\trash_3\trash3_low_standardSurface18_Roughness.png
   m_name: trash3_low_standardSurface18_Roughness.png

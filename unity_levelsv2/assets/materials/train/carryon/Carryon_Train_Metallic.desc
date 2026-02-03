@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87c367a15918ef4cf8e05462b
+  m_guid: 6d7ca1f7c54a606994337cf3aa0
   m_importer: .texture
   m_source: materials\train\carryon\Carryon_Train_Metallic.png
   m_name: Carryon_Train_Metallic.png

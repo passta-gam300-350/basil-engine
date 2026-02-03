@@ -30,6 +30,7 @@ public:
 	static bool GetMousePress(int mousecode); // returns true only on the frame the mouse button was pressed
 	static void GetMousePosition(float* xp, float* yp); // Mouse screen position
 	static void SetMouseOverride(float x, float y, bool enabled); // Editor override (ImGui space)
+	static void LockCursor(bool locked); // Lock cursor to center of window
 
 };
 

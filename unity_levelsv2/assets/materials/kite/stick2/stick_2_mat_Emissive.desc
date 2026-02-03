@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d86bbc7ef5940ef681ee3b0c21
+  m_guid: 6d7bbcd75ed82cf4b940a72cf26
   m_importer: .texture
   m_source: materials\kite\stick2\stick_2_mat_Emissive.png
   m_name: stick_2_mat_Emissive.png

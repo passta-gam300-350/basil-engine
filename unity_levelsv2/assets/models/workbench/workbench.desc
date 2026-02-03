@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88fc77fd08e53b33b08a08eee
+  m_guid: 6d7d9887ffd87e8a5785185d59f
   m_importer: .mesh
   m_source: models\workbench\workbench.obj
   m_name: workbench.obj

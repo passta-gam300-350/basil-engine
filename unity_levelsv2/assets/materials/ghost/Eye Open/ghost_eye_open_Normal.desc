@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8635d7beeacf2d38418fcbc99
+  m_guid: 6d7b0dc7cd99d8b4ef7224c32ea
   m_importer: .texture
   m_source: materials\ghost\Eye Open\ghost_eye_open_Normal.png
   m_name: ghost_eye_open_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d86d23724f8d379c663e65daa0
+  m_guid: 6d7bd2677f585b263d954c87b3a
   m_importer: .texture
   m_source: materials\kite_enemy\kite_scene_kite_scene_mat_Emissive.png
   m_name: kite_scene_kite_scene_mat_Emissive.png

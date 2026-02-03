@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8888f7a9fb382ec82bdcef192
+  m_guid: 6d7d3d47b67821f8a144442f28f
   m_importer: .mesh
   m_source: models\biscuit_wafer\Half Closed\choco_wafer_halfOpened.obj
   m_name: choco_wafer_halfOpened.obj

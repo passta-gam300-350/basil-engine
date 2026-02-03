@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d889667a6fadcaf54375502609
+  m_guid: 6d7d4917b6789fc8efd44307376
   m_importer: .mesh
   m_source: models\floor\Floor.obj
   m_name: Floor.obj

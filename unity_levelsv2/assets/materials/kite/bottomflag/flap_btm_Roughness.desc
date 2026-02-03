@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d867af7f38b9a53e4abe88ada0
+  m_guid: 6d7b74e7093aac3535657ed898b
   m_importer: .texture
   m_source: materials\kite\bottomflag\flap_btm_Roughness.png
   m_name: flap_btm_Roughness.png

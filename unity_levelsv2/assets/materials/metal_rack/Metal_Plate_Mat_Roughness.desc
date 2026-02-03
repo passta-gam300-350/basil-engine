@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d86ece7a24887a4f2080d7323a
+  m_guid: 6d7bed6724a865254ad3c8ae474
   m_importer: .texture
   m_source: materials\metal_rack\Metal_Plate_Mat_Roughness.png
   m_name: Metal_Plate_Mat_Roughness.png

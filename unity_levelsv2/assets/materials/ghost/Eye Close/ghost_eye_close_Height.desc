@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d862e178d88398fa816567abd1
+  m_guid: 6d7b0427aa9aeeed09d9d9212ca
   m_importer: .texture
   m_source: materials\ghost\Eye Close\ghost_eye_close_Height.png
   m_name: ghost_eye_close_Height.png

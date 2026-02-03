@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85ef37674bfa3ab7dec75141c
+  m_guid: 6d7ab137b078ae87fb9a9828581
   m_importer: .texture
   m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface1_Metallic.png
   m_name: CardboardBox_FullyClosed_standardSurface1_Metallic.png

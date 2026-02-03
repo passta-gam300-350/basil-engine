@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85dea7cfaa4f39b99c3dc4c6f
+  m_guid: 6d7a9dd768d9c74de3de5a1a454
   m_importer: .texture
   m_source: materials\biscuit_wafer\Closed\cw_bx_tape_Normal.png
   m_name: cw_bx_tape_Normal.png

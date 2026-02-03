@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8675d715d81bc511704332419
+  m_guid: 6d7b6fc7e88b29ed5b21d90484e
   m_importer: .texture
   m_source: materials\kite\bottomflag\flap_btm_Emissive.png
   m_name: flap_btm_Emissive.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8694170e9aa31ab213bf6f018
+  m_guid: 6d7b9247fa0be856bbd04f0b24a
   m_importer: .texture
   m_source: materials\kite\enemy4\kite_enemy4_mat_Metallic.png
   m_name: kite_enemy4_mat_Metallic.png

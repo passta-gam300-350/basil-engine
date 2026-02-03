@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d866cb70199c8ceb5174c52107
+  m_guid: 6d7b6557ff3a6008376d14aa583
   m_importer: .texture
   m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_Roughness.png
   m_name: kitchenShelf_standardSurface2_Roughness.png

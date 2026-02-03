@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8882f79759bbdf48fce0a7272
+  m_guid: 6d7d3897d2489bbf09fd5709c86
   m_importer: .mesh
   m_source: models\biscuit_gem\Closed\gem_bx.obj
   m_name: gem_bx.obj

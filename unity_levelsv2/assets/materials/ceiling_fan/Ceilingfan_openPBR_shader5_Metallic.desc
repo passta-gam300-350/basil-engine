@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d860a87ddd92c152e23cfeb944
+  m_guid: 6d7addd79d79fbe6012146e2c2a
   m_importer: .texture
   m_source: materials\ceiling_fan\Ceilingfan_openPBR_shader5_Metallic.png
   m_name: Ceilingfan_openPBR_shader5_Metallic.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d855da79438391a57b8d0b1964
+  m_guid: 6d79ff67052a562e8e95faadc0c
   m_importer: .audio
   m_source: audio\ambience_traffic.ogg
   m_name: ambience_traffic.ogg

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85e0874518a80eb54601f1ef0
+  m_guid: 6d7aa037bb7951f7a00560d4a66
   m_importer: .texture
   m_source: materials\biscuit_wafer\Half Closed\cw_halfOp_BaseColor.png
   m_name: cw_halfOp_BaseColor.png

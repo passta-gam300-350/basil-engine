@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87a277e989d718fa5479c30f6
+  m_guid: 6d7c8987fe095855b56043a7da5
   m_importer: .texture
   m_source: materials\tin\wafer\biscuit_tin_standardSurface1_BaseColor.png
   m_name: biscuit_tin_standardSurface1_BaseColor.png

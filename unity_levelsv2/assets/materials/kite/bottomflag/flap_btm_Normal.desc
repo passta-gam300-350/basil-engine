@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8679f7ae09bb2c30e33d72e4a
+  m_guid: 6d7b73c737c995d5ac3a7c47761
   m_importer: .texture
   m_source: materials\kite\bottomflag\flap_btm_Normal.png
   m_name: flap_btm_Normal.png

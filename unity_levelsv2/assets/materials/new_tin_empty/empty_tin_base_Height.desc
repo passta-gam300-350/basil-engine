@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8716b7361aa25338cc100c448
+  m_guid: 6d7c0e5772f837ee00827ac7564
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_base_Height.png
   m_name: empty_tin_base_Height.png

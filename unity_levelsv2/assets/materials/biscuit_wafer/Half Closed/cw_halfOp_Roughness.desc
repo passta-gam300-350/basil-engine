@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85e577bed967f8fe299aaab6f
+  m_guid: 6d7aa5b72ab84a283d6a76c7dda
   m_importer: .texture
   m_source: materials\biscuit_wafer\Half Closed\cw_halfOp_Roughness.png
   m_name: cw_halfOp_Roughness.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d859a97c379d6f34e731f968cd
+  m_guid: 6d7a4a87e0299a196c748d5bd99
   m_importer: .texture
   m_source: materials\biscuit_cheese\Closed\ch_bx_tape_Normal.png
   m_name: ch_bx_tape_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8899273a49f72115174f9c7e2
+  m_guid: 6d7d4ba7610a6e7c47485902dd2
   m_importer: .mesh
   m_source: models\ghost\Eye Close\ghost_eye_close.obj
   m_name: ghost_eye_close.obj

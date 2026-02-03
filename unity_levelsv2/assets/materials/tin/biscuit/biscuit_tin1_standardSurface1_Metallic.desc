@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d878f17f92b240c33acf830c3b
+  m_guid: 6d7c7ab7e4689388b078a666295
   m_importer: .texture
   m_source: materials\tin\biscuit\biscuit_tin1_standardSurface1_Metallic.png
   m_name: biscuit_tin1_standardSurface1_Metallic.png

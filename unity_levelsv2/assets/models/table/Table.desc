@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88cfb7be09fb4244139861034
+  m_guid: 6d7d7807d2693de16e6a0359b31
   m_importer: .mesh
   m_source: models\table\Table.obj
   m_name: Table.obj

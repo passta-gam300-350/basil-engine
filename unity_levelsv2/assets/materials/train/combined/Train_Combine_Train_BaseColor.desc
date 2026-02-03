@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87c767380926a8cb888c491f3
+  m_guid: 6d7ca527b54afb208242efb9ac8
   m_importer: .texture
   m_source: materials\train\combined\Train_Combine_Train_BaseColor.png
   m_name: Train_Combine_Train_BaseColor.png

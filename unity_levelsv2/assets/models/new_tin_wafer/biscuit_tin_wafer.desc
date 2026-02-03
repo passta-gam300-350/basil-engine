@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88c5b7590a46f42f685cf00f6
+  m_guid: 6d7d70d7b1199768b14cde26272
   m_importer: .mesh
   m_source: models\new_tin_wafer\biscuit_tin_wafer.obj
   m_name: biscuit_tin_wafer.obj

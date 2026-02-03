@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85b9676178207f9177c038e30
+  m_guid: 6d7a70679ee8123f08c0bea5780
   m_importer: .texture
   m_source: materials\biscuit_chocolate\Opened\c_bx_opened_BaseColor.png
   m_name: c_bx_opened_BaseColor.png

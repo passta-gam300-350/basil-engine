@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d888ef7e0ead5375438e6848b2
+  m_guid: 6d7d4237be080b97bcf2b0669da
   m_importer: .mesh
   m_source: models\cardboard\open\cardboard_open.obj
   m_name: cardboard_open.obj

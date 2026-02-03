@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88ba97fdfb8ac01c9ec50ce51
+  m_guid: 6d7d686733b924f086f8c249176
   m_importer: .mesh
   m_source: models\kite_background\kite_bg.obj
   m_name: kite_bg.obj

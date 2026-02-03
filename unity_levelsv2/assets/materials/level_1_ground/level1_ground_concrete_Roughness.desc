@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d86de171f2932c6a937d9f55ab
+  m_guid: 6d7bdea723daa64cebd600c73e8
   m_importer: .texture
   m_source: materials\level_1_ground\level1_ground_concrete_Roughness.png
   m_name: level1_ground_concrete_Roughness.png

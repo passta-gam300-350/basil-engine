@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d876347febb73fa414b6cf06d7
+  m_guid: 6d7c4fb77f3836b39edcb00666e
   m_importer: .texture
   m_source: materials\stairs\staircase_low_stairs_Metallic.png
   m_name: staircase_low_stairs_Metallic.png

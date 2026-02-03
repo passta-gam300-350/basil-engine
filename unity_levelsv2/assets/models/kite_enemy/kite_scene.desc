@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88bc47db3aa11d4857ca041f7
+  m_guid: 6d7d6957db98710979d8a61150c
   m_importer: .mesh
   m_source: models\kite_enemy\kite_scene.obj
   m_name: kite_scene.obj

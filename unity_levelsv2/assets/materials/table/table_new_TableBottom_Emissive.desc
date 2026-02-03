@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87682740b9e188574018d01e9
+  m_guid: 6d7c54172788134e825f5b92bd2
   m_importer: .texture
   m_source: materials\table\table_new_TableBottom_Emissive.png
   m_name: table_new_TableBottom_Emissive.png

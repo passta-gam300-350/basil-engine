@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d855a47f50a0b28fba159370ec
+  m_guid: 6d79fc27ff28042c42833fe346f
   m_importer: .mesh
   m_source: animations\celling fan\ceilingfan_anim.gltf
   m_name: ceilingfan_anim.gltf

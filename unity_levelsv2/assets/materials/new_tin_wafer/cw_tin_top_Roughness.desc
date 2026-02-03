@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87417776ab5c2434198bd7dbc
+  m_guid: 6d7c30979079faa40b5885254ab
   m_importer: .texture
   m_source: materials\new_tin_wafer\cw_tin_top_Roughness.png
   m_name: cw_tin_top_Roughness.png

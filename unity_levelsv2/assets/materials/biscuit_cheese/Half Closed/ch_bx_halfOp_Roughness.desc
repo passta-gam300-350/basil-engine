@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85a157366841b3d130c657dbc
+  m_guid: 6d7a53f73fd852e2680f03f6486
   m_importer: .texture
   m_source: materials\biscuit_cheese\Half Closed\ch_bx_halfOp_Roughness.png
   m_name: ch_bx_halfOp_Roughness.png

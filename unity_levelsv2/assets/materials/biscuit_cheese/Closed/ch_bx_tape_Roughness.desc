@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d859ba753dba61c4b5322336f4
+  m_guid: 6d7a4c17122a5c9ef1c40545095
   m_importer: .texture
   m_source: materials\biscuit_cheese\Closed\ch_bx_tape_Roughness.png
   m_name: ch_bx_tape_Roughness.png

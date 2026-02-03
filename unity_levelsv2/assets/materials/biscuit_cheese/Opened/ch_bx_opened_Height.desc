@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d85a3f7922bffc64dcb31e52ee
+  m_guid: 6d7a57d73819e467fa698048476
   m_importer: .texture
   m_source: materials\biscuit_cheese\Opened\ch_bx_opened_Height.png
   m_name: ch_bx_opened_Height.png

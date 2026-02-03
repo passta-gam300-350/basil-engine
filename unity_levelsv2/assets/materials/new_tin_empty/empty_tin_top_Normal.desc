@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d872887da38ec785ccf79965a3
+  m_guid: 6d7c1c872df9bc7ae0b51202652
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_top_Normal.png
   m_name: empty_tin_top_Normal.png

@@ -24,6 +24,7 @@
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GetStuff.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GhostBehavior.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GrabScript.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\HideMouse.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\KiteController.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\KiteInteractablePoint.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\KiteTarget.cs" />

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d888bb7b8c98271eb63f4d4a9a
+  m_guid: 6d7d3ff70cda6c0c31f63d81c69
   m_importer: .mesh
   m_source: models\cardboard\fully_closed\cardboard_Fullyclosed.obj
   m_name: cardboard_Fullyclosed.obj

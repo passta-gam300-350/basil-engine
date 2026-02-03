@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88cc97138891487855b3bb65d
+  m_guid: 6d7d75c7596a05f0e07edc17cb5
   m_importer: .mesh
   m_source: models\spool\spool.obj
   m_name: spool.obj

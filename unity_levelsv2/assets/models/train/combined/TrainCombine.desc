@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d88d8b765d8c300c4c3f675dd5
+  m_guid: 6d7d7f6776ca0c0cc920941ecfd
   m_importer: .mesh
   m_source: models\train\combined\TrainCombine.obj
   m_name: TrainCombine.obj

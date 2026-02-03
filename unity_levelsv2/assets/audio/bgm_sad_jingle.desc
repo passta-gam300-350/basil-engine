@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d856007810b4e17d3ac4a70397
+  m_guid: 6d7a01f729784453da7b34d054f
   m_importer: .audio
   m_source: audio\bgm_sad_jingle.ogg
   m_name: bgm_sad_jingle.ogg

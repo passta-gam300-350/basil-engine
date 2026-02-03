@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d861dd7661992770e396fdf1e3
+  m_guid: 6d7af377eca86a6ea7948a78d22
   m_importer: .texture
   m_source: materials\dustbin\mesh_TrashCart_trash can_Normal.png
   m_name: mesh_TrashCart_trash can_Normal.png

@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d87eea7250802d68a9266d7b3b
+  m_guid: 6d7cc4279dabc7a73d098845ac5
   m_importer: .texture
   m_source: materials\trash_pile\trash_1\trash1_low_rubbish_BaseColor.png
   m_name: trash1_low_rubbish_BaseColor.png

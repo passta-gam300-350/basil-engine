@@ -1,5 +1,5 @@
 base:
-  m_guid: 1d8723c79ec9204552a370258cb
+  m_guid: 6d7c1797ab89fd414cc3c2333c3
   m_importer: .texture
   m_source: materials\new_tin_empty\empty_tin_top_BaseColor.png
   m_name: empty_tin_top_BaseColor.png
