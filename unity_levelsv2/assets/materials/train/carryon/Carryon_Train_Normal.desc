@@ -1,5 +1,5 @@
 base:
-  m_guid: 560ddc8723a9a008a97d82ace01
+  m_guid: 1d87c4b7b278c4da1a865434246
   m_importer: .texture
   m_source: materials\train\carryon\Carryon_Train_Normal.png
   m_name: Carryon_Train_Normal.png

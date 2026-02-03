@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4ed67819a7f62503d3129584
+  m_guid: 1d86a1a74d9977afb71be8bf841
   m_importer: .texture
   m_source: materials\kite\leftflag\flap_left_mat_Metallic.png
   m_name: flap_left_mat_Metallic.png

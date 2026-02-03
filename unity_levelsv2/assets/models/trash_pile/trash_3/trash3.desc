@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e46c77e4a9b3be74b48cda8b1
+  m_guid: 1d88e6e7c31ba90dbe675716963
   m_importer: .mesh
   m_source: models\trash_pile\trash_3\trash3.obj
   m_name: trash3.obj

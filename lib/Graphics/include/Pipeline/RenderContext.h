@@ -30,6 +30,7 @@ class ResourceManager;
 class TextureSlotManager;
 class ParticleRenderer;
 class HUDRenderer;
+class TextRenderer;
 /**
  * RenderContext - Single source of truth for all rendering data
  *
@@ -59,6 +60,7 @@ struct RenderContext {
     TextureSlotManager& textureSlotManager;
     ParticleRenderer& particleRenderer;
     HUDRenderer& hudRenderer;
+    TextRenderer& textRenderer;
     // HDR pipeline data (mutable) - set by HDR passes
     uint32_t hdrTextureID = 0;        // Set by MainRenderingPass
     float avgLuminance = 0.5f;        // Set by HDRLuminancePass
@@ -75,7 +77,8 @@ struct RenderContext {
         ResourceManager& resourceManager_,
         TextureSlotManager& textureSlotManager_,
         ParticleRenderer& particleRenderer_,
-        HUDRenderer& hudRenderer_
+        HUDRenderer& hudRenderer_,
+        TextRenderer& textRenderer_
     ) : renderables(renderables_)
       , lights(lights_)
       , ambientLight(ambientLight_)
@@ -85,7 +88,8 @@ struct RenderContext {
       , resourceManager(resourceManager_)
       , textureSlotManager(textureSlotManager_)
       , particleRenderer(particleRenderer_)
-      , hudRenderer(hudRenderer_){}
+      , hudRenderer(hudRenderer_)
+      , textRenderer(textRenderer_){}
 
     // Delete copy constructor and assignment to prevent accidental copying
     RenderContext(const RenderContext&) = delete;

@@ -57,6 +57,12 @@ bool ShaderLibrary::Initialize() {
     if (!LoadHUDShader()) {
         spdlog::warn("ShaderLibrary: HUD shader not loaded - HUD rendering will be disabled");
     }
+    if (!LoadTextShader()) {
+        spdlog::warn("ShaderLibrary: Text shader not loaded - SDF text rendering will be disabled");
+    }
+    if (!LoadWorldTextShader()) {
+        spdlog::warn("ShaderLibrary: World text shader not loaded - world-space text rendering will be disabled");
+    }
 
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
@@ -329,5 +335,31 @@ bool ShaderLibrary::LoadHUDShader() {
     }
 
     spdlog::info("ShaderLibrary: HUD shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadTextShader() {
+    m_TextShader = Load("text_sdf",
+        "assets/shaders/text_sdf.vert",
+        "assets/shaders/text_sdf.frag");
+
+    if (!m_TextShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: SDF text shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadWorldTextShader() {
+    m_WorldTextShader = Load("text_sdf_world",
+        "assets/shaders/text_sdf_world.vert",
+        "assets/shaders/text_sdf.frag");
+
+    if (!m_WorldTextShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: World SDF text shader loaded successfully");
     return true;
 }

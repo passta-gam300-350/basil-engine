@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd493579af8b3606f1ed51d5bb
+  m_guid: 1d86ef676d58fc898fc0219bedb
   m_importer: .texture
   m_source: materials\metal_rack\trim_sheet_low_Height.png
   m_name: trim_sheet_low_Height.png

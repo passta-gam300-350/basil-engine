@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd49967d698289ffc23a9a4473
+  m_guid: 1d8759c73e38cf7883ce07344fe
   m_importer: .texture
   m_source: materials\spool\standardSurface1_BaseColor.png
   m_name: standardSurface1_BaseColor.png

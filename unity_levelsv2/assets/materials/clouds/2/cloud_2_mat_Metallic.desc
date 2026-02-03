@@ -1,5 +1,5 @@
 base:
-  m_guid: 53f196879ae9d61cb2aaf4a7d63
+  m_guid: 1d8617070978229608a3728856a
   m_importer: .texture
   m_source: materials\clouds\2\cloud_2_mat_Metallic.png
   m_name: cloud_2_mat_Metallic.png

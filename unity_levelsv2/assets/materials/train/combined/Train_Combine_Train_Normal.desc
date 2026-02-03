@@ -1,5 +1,5 @@
 base:
-  m_guid: 55e4f79779c92ae00b75f0f1c55
+  m_guid: 1d87caa763aa64b47149f479c58
   m_importer: .texture
   m_source: materials\train\combined\Train_Combine_Train_Normal.png
   m_name: Train_Combine_Train_Normal.png

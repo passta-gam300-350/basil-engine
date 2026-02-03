@@ -1,0 +1,29 @@
+base:
+  m_guid: b814f27bf88cf651e84f283d39
+  m_importer: .material
+  m_source: ""
+  m_name: m_cheese_halfopened
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_cheese_halfopened
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df6e27bc0903360305b670b87
+    u_DiffuseMap: 8df6dd721a801cae027269bb6b
+    u_EmissiveMap: 8df6de78e69e7eacff8b951276
+    u_NormalMap: 8df6e17a148f4bed8b4a6548a8
+    u_HeightMap: 8df6df7b32bcdd918c6d5a2df4
+    u_SpecularMap: 00
+    u_MetallicMap: 8df6e07ac4aea956ed37d5722c

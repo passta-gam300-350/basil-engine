@@ -45,6 +45,11 @@ inline glm::quat ToQuat(const aiQuaternion& q) {
     return glm::quat(q.x, q.y, q.z, q.w);
 }
 
+// --- helper: convert aiquat to glm::vec3 ---
+inline glm::mat4 ToMat4(const aiMatrix4x4& m) {
+    return glm::mat4(m.a1, m.b1, m.c1, m.d1, m.a2, m.b2, m.c2, m.d2, m.a3, m.b3, m.c3, m.d3, m.a4, m.b4, m.c4, m.d4);
+}
+
 // --- helper: extract material into MaterialDescriptor ---
 inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& base_path) {
     MaterialDescriptor matDesc{};
@@ -52,7 +57,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     if (AI_SUCCESS == aimat->Get(AI_MATKEY_NAME, name)) {
         matDesc.material.material_name = name.C_Str();
         if (auto sz = matDesc.material.material_name.find("pin:"); sz != std::string::npos) {
-            matDesc.material.material_name = matDesc.material.material_name.substr(sz+4);
+            matDesc.material.material_name = matDesc.material.material_name.substr(sz + 4);
         }
     }
 
@@ -76,7 +81,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     }
 
     const auto getTextureGuid{ [](std::string const& texname) {
-        if (std::string desc_path{texname.substr(0, texname.rfind('.')) + ".desc"};std::filesystem::exists(desc_path)) {
+        if (std::string desc_path{texname.substr(0, texname.rfind('.')) + ".desc"}; std::filesystem::exists(desc_path)) {
             return rp::serialization::yaml_serializer::deserialize<TextureDescriptor>(desc_path).base.m_guid;
         }
         else {
@@ -126,7 +131,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
 inline AnimationDescriptor ExtractAnimation(aiNodeAnim* aianimnd) {
     AnimationDescriptor anidesc;
     aiString const& name = aianimnd->mNodeName;
-    
+
     for (std::uint32_t i{}; i < aianimnd->mNumPositionKeys; i++) {
         auto poskey = aianimnd->mPositionKeys[i];
         anidesc.anim.m_positions.emplace(poskey.mTime, ToVec3(poskey.mValue));
@@ -220,8 +225,6 @@ inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, gl
 
 // --- main ImportModel ---
 inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescriptor const& desc) {
-    std::vector<std::pair<rp::Guid, MeshResourceData>> result;
-
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(
         rp::utility::resolve_path(desc.base.m_source),
@@ -237,54 +240,62 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
     glm::mat4 transform = BuildTransform(desc);
 
-    std::string parent_path{std::filesystem::path(rp::utility::resolve_path(desc.base.m_source)).parent_path().string()};
+    std::string parent_path{ std::filesystem::path(rp::utility::resolve_path(desc.base.m_source)).parent_path().string() };
 
     // Collect all extracted materials
     std::vector<MaterialDescriptor> extractedMaterials;
+    aiNode* nd = scene->mRootNode;
 
-    if (desc.merge_mesh) {
-        MeshResourceData merged;
-        MeshResourceData::Mesh mergedMesh;
-        unsigned int indexOffset = 0;
+    auto processNodes = [&desc, &parent_path, &extractedMaterials](aiScene const* sceneptr, glm::mat4 const& basetransform) {
+        auto processNode = [&](aiNode const* ndptr, aiScene const* sptr, glm::mat4 const& parentTransform, std::vector<std::pair<rp::Guid, MeshResourceData>>& mres, auto nodeFn) {
+            if (!ndptr)
+                return;
+            glm::mat4 nodeWorldTransform = parentTransform * ToMat4(ndptr->mTransformation);
+            for (unsigned int m = 0; m < ndptr->mNumMeshes; m++) {
+                MeshResourceData::Mesh mesh = ProcessMesh(sptr->mMeshes[ndptr->mMeshes[m]], sptr, nodeWorldTransform, desc.extract_material, extractedMaterials, parent_path);
+                if (desc.merge_mesh) {
+                    if (mres.empty()) {
+                        MeshResourceData mrdata;
+                        mrdata.meshes.emplace_back(mesh);
+                        mres.emplace_back(std::pair<rp::Guid, MeshResourceData>(desc.base.m_guid, std::move(mrdata)));
+                    }
+                    else {
+                        MeshResourceData::Mesh& mergedMesh = mres[0].second.meshes[0];
+                        unsigned int index_vertex_offset{ static_cast<unsigned int>(mergedMesh.vertices.size()) };
+                        unsigned int index_size{ static_cast<unsigned int>(mergedMesh.indices.size()) };
+                        mergedMesh.vertices.insert(mergedMesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 
-        for (unsigned int m = 0; m < scene->mNumMeshes; m++) {
-            MeshResourceData::Mesh mesh = ProcessMesh(scene->mMeshes[m], scene, transform,
-                desc.extract_material, extractedMaterials, parent_path);
+                        // append indices with offset
+                        for (auto idx : mesh.indices) {
+                            mergedMesh.indices.push_back(idx + index_vertex_offset);
+                        }
 
-            // append vertices
-            mergedMesh.vertices.insert(mergedMesh.vertices.end(),
-                mesh.vertices.begin(),
-                mesh.vertices.end());
-
-            unsigned int index_size{ static_cast<unsigned int>(mergedMesh.indices.size()) };
-
-            // append indices with offset
-            for (auto idx : mesh.indices) {
-                mergedMesh.indices.push_back(idx + indexOffset);
+                        // adjust material slot
+                        for (auto& slot : mesh.materials) {
+                            MeshResourceData::MaterialSlot newSlot = slot;
+                            newSlot.index_begin = index_size;
+                            newSlot.material_guid = slot.material_guid;
+                            newSlot.material_slot_name = slot.material_slot_name;
+                            mergedMesh.materials.push_back(newSlot);
+                        }
+                    }
+                }
+                else { //guid for this stuff is broken should be stable and not regenerated
+                    MeshResourceData mrdata;
+                    mrdata.meshes.push_back(mesh);
+                    mres.emplace_back(std::pair<rp::Guid, MeshResourceData>(rp::Guid::generate(), std::move(mrdata)));
+                }
             }
-
-            // adjust material slot
-            for (auto& slot : mesh.materials) {
-                MeshResourceData::MaterialSlot newSlot = slot;
-                newSlot.index_begin = index_size;
-                newSlot.material_guid = slot.material_guid;
-                newSlot.material_slot_name = slot.material_slot_name;
-                mergedMesh.materials.push_back(newSlot);
+            for (unsigned int i = 0; i < ndptr->mNumChildren; i++) {
+                nodeFn(ndptr->mChildren[i], sptr, nodeWorldTransform, mres, nodeFn);
             }
-            indexOffset += static_cast<unsigned int>(mesh.vertices.size());
-        }
+            };
+        std::vector<std::pair<rp::Guid, MeshResourceData>> res;
+        processNode(sceneptr->mRootNode, sceneptr, basetransform, res, processNode);
+        return res;
+        };
 
-        merged.meshes.push_back(std::move(mergedMesh));
-        result.emplace_back(std::pair<rp::Guid, MeshResourceData>(desc.base.m_guid, std::move(merged)));
-    }
-    else {
-        for (unsigned int m = 0; m < scene->mNumMeshes; m++) {
-            MeshResourceData res;
-            res.meshes.push_back(ProcessMesh(scene->mMeshes[m], scene, transform,
-                desc.extract_material, extractedMaterials, parent_path));
-            result.emplace_back(std::pair<rp::Guid, MeshResourceData>(rp::Guid::generate(), std::move(res)));
-        }
-    }
+    std::vector<std::pair<rp::Guid, MeshResourceData>> result{ processNodes(scene, transform) };
 
     std::string parent{ rp::utility::resolve_path(desc.base.m_source) };
     parent = parent.substr(0, parent.rfind("\\") + 1);

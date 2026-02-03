@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d85ca87e4fafd2d7cbc77bc857
+  m_importer: .texture
+  m_source: materials\biscuit_gem\Half Closed\g_bx_halfOp_Emissive.png
+  m_name: g_bx_halfOp_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

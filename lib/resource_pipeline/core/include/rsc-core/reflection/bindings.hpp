@@ -16,7 +16,7 @@ namespace rp {
 		template <typename EnumType>
 		consteval auto EnumBindings() {
 			static_assert(std::is_enum_v<EnumType>, "Type is not an enum!");
-			static_assert(std::false_type::value, "No matching overload! Define your own custom bindings for the type");
+			static_assert(sizeof(EnumType) == 0, "No matching overload! Define your own custom bindings for the type");
 		}
 
 		template <auto Ptr>
@@ -62,7 +62,7 @@ namespace rp {
 			template <typename Type, std::size_t Arity>
 			struct aggregate_binding_helper {
 				static_assert(std::is_aggregate_v<Type>, "Type is not an aggregate! Write your own implementation of static std::tuple<ptrs...> get_bindings() in your custom type");
-				static_assert(std::false_type::value, "Arity unsupported! Update MakeAggregateBindings(Arity, ...) with another macro to support your arity");
+				static_assert(sizeof(Type) == 0, "Arity unsupported! Update MakeAggregateBindings(Arity, ...) with another macro to support your arity");
 			};
 
 			template <typename Type, auto ...Ptrs>

@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d862e178d88398fa816567abd1
+  m_importer: .texture
+  m_source: materials\ghost\Eye Close\ghost_eye_close_Height.png
+  m_name: ghost_eye_close_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

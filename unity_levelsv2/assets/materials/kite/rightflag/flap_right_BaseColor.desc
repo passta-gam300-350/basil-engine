@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4ef170298398fdf0ca0dffce
+  m_guid: 1d86ac675838c8be995bcfda09d
   m_importer: .texture
   m_source: materials\kite\rightflag\flap_right_BaseColor.png
   m_name: flap_right_BaseColor.png

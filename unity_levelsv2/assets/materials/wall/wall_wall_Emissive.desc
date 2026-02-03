@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e45a570f2a9d8294cb9bbb5c7
+  m_guid: 1d8855d7c57918e077d5b9141c3
   m_importer: .texture
   m_source: materials\wall\wall_wall_Emissive.png
   m_name: wall_wall_Emissive.png

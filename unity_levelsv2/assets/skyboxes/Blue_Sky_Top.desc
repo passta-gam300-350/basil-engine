@@ -1,7 +1,7 @@
 base:
-  m_guid: d8b17877ce5ba3b286f5789acd0
+  m_guid: 1d8909e7fdda74ead3b439d7adc
   m_importer: .texture
   m_source: skyboxes\Blue_Sky_Top.png
   m_name: Blue_Sky_Top.png
   m_importer_type: 13238151832854353850
-compression: BC1_RGB4
+compression: BC3_RGBA8

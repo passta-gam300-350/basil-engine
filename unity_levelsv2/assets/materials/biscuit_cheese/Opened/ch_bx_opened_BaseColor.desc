@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d85a2370a2bf2655e584bff414
+  m_importer: .texture
+  m_source: materials\biscuit_cheese\Opened\ch_bx_opened_BaseColor.png
+  m_name: ch_bx_opened_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

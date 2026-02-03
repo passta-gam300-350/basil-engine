@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd49527c7fbe8d8f7291ed1863
+  m_guid: 1d874a279768ae7f36200ed1bdd
   m_importer: .texture
   m_source: materials\shutter\shutter_mat_BaseColor.png
   m_name: shutter_mat_BaseColor.png

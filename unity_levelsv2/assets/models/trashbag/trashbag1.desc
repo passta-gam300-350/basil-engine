@@ -1,26 +1,20 @@
 base:
-  m_guid: 218f0b8176c997d75f023dcb7b13
-  m_importer: material
-  m_source: ""
-  m_name: trashbag1
-  m_importer_type: 12248969845253211364
-material:
-  vert_name: main_pbr.vert
-  frag_name: main_pbr.frag
-  material_name: trashbag1
-  albedo:
-    x: 0.800000012
-    y: 0.800000012
-    z: 0.800000012
-  metallic: 0.699999988
-  roughness: 1
-  blend_mode: 0
-  float_properties: ~
-  vec3_properties: ~
-  vec4_properties: ~
-  texture_properties:
-    u_DiffuseMap: 00
-    u_HeightMap: 00
-    u_NormalMap: 00
-    u_EmissiveMap: 00
-    u_SpecularMap: 00
+  m_guid: 1d88e20781ebb18763e68467a75
+  m_importer: .mesh
+  m_source: models\trashbag\trashbag1.obj
+  m_name: trashbag1.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

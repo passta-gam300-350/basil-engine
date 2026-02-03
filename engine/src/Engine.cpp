@@ -543,5 +543,12 @@ void Engine::SyncActiveSceneRenderSettings()
 	renderSystem.SetSkyboxRotation(settings.skybox.rotation);
 	renderSystem.SetSkyboxTint(settings.skybox.tint);
 
-	// Future: Could sync ambient light, background color, fog, etc.
+	// Sync lighting settings to renderer
+	renderSystem.m_SceneRenderer->SetAmbientLight(settings.ambientLight);
+	renderSystem.m_SceneRenderer->SetBackgroundColor(settings.backgroundColor);
+
+	// Sync post-processing settings to renderer
+	renderSystem.m_SceneRenderer->SetBloomStrength(settings.bloomStrength);
+	renderSystem.m_SceneRenderer->SetToneMappingMethod(settings.toneMapMethod);
+	renderSystem.m_SceneRenderer->SetExposureClampRange(settings.exposureMin, settings.exposureMax);
 }

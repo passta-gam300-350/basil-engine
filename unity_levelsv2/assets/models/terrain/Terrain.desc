@@ -1,8 +1,8 @@
 base:
-  m_guid: 20422d7a94a069c5b7d335b6fd
+  m_guid: 1d88d1178c58b6371af9466525c
   m_importer: .mesh
-  m_source: models\terrain\terrain.obj
-  m_name: terrain.obj
+  m_source: models\terrain\Terrain.obj
+  m_name: Terrain.obj
   m_importer_type: 3262350505779219304
 merge_mesh: true
 extract_material: true

@@ -25,6 +25,9 @@
 "Affandi_6.ogg":
   "m_guid": "469fb95744f8ed59f7707ae0900"
   "m_typeindex": "17099568057112876377"
+"Arial.ttf":
+  "m_guid": "273927d7fbdbfd28320610a3d4e"
+  "m_typeindex": "10090887602259309668"
 "Blue_Sky_Back.png":
   "m_guid": "d8b15167931942c4d4809169900"
   "m_typeindex": "126269861530532084"
@@ -331,6 +334,9 @@
 "Happy Memory Jingle_Linear.ogg":
   "m_guid": "469fc0b776e9bb6bd4dc6b3494c"
   "m_typeindex": "17099568057112876377"
+"HappySwirly-KVB7l.ttf":
+  "m_guid": "21bd01a7b12a1cae42676571bb8"
+  "m_typeindex": "10090887602259309668"
 "Hover_GlueBottle.ogg":
   "m_guid": "30b422a7832949450e4d9f6c730"
   "m_typeindex": "17099568057112876377"
@@ -1000,6 +1006,9 @@
 "biscuit_tin1_tin_top_Roughness.png":
   "m_guid": "36fd8587eb7818cc80061b3ab44"
   "m_typeindex": "126269861530532084"
+"biscuit_tin_choco.obj":
+  "m_guid": "8df7a17870991aefe57ecc2f12"
+  "m_typeindex": "4838001395392124604"
 "biscuit_tin_chocoBiscuit.obj":
   "m_guid": "12279807add9cd85b75e19f7db8"
   "m_typeindex": "4838001395392124604"
@@ -1063,6 +1072,81 @@
 "biscuit_tin_wafer.obj":
   "m_guid": "122798c7953bba558f899785673"
   "m_typeindex": "4838001395392124604"
+"bs_tin_empty.obj":
+  "m_guid": "91290a971268b91715f3c12aa2f"
+  "m_typeindex": "4838001395392124604"
+"c_bx_BaseColor.png":
+  "m_guid": "8df6e97fd18ca8502c48086bd3"
+  "m_typeindex": "126269861530532084"
+"c_bx_Emissive.png":
+  "m_guid": "8df6e97a1aaae93cdc39221c15"
+  "m_typeindex": "126269861530532084"
+"c_bx_Height.png":
+  "m_guid": "8df6ea7cc98fca18fa3e8d4a95"
+  "m_typeindex": "126269861530532084"
+"c_bx_Metallic.png":
+  "m_guid": "8df6eb7189ba1a8785c32f717c"
+  "m_typeindex": "126269861530532084"
+"c_bx_Normal.png":
+  "m_guid": "8df6ec780ab245f25ba3796712"
+  "m_typeindex": "126269861530532084"
+"c_bx_Roughness.png":
+  "m_guid": "8df6ed72c6b7ce6d8779bd03ce"
+  "m_typeindex": "126269861530532084"
+"c_bx_halfOp_BaseColor.png":
+  "m_guid": "8df6f4717dbf7a6bcfb8dc7ac3"
+  "m_typeindex": "126269861530532084"
+"c_bx_halfOp_Emissive.png":
+  "m_guid": "8df6f5767f9465a0b2dd32827c"
+  "m_typeindex": "126269861530532084"
+"c_bx_halfOp_Height.png":
+  "m_guid": "8df6f67cf6a79f45f64e34eaa2"
+  "m_typeindex": "126269861530532084"
+"c_bx_halfOp_Metallic.png":
+  "m_guid": "8df6f7756c87c228b524145d19"
+  "m_typeindex": "126269861530532084"
+"c_bx_halfOp_Normal.png":
+  "m_guid": "8df6f87204a32aa3476646a4a1"
+  "m_typeindex": "126269861530532084"
+"c_bx_halfOp_Roughness.png":
+  "m_guid": "8df6f97729812bed12a087f86f"
+  "m_typeindex": "126269861530532084"
+"c_bx_opened_BaseColor.png":
+  "m_guid": "8df6fa7efda7c2194847e9aebb"
+  "m_typeindex": "126269861530532084"
+"c_bx_opened_Emissive.png":
+  "m_guid": "8df6fb78249ac319fe4338da67"
+  "m_typeindex": "126269861530532084"
+"c_bx_opened_Height.png":
+  "m_guid": "8df6fb7041bf29476e5d1374a7"
+  "m_typeindex": "126269861530532084"
+"c_bx_opened_Metallic.png":
+  "m_guid": "8df6fc7527920ac2207aa9f0a3"
+  "m_typeindex": "126269861530532084"
+"c_bx_opened_Normal.png":
+  "m_guid": "8df6fd7464834e013c57e207c3"
+  "m_typeindex": "126269861530532084"
+"c_bx_opened_Roughness.png":
+  "m_guid": "8df6fe788fa5db268a6c18ec5e"
+  "m_typeindex": "126269861530532084"
+"c_bx_tape_BaseColor.png":
+  "m_guid": "8df6ee7b98a7627aa48786f34f"
+  "m_typeindex": "126269861530532084"
+"c_bx_tape_Emissive.png":
+  "m_guid": "8df6ef71059576b3c29066451c"
+  "m_typeindex": "126269861530532084"
+"c_bx_tape_Height.png":
+  "m_guid": "8df6f07b2a9f778e0f7ccb38ff"
+  "m_typeindex": "126269861530532084"
+"c_bx_tape_Metallic.png":
+  "m_guid": "8df6f1725a9a5a90eed0b66b72"
+  "m_typeindex": "126269861530532084"
+"c_bx_tape_Normal.png":
+  "m_guid": "8df6f277eea1acb820a641b839"
+  "m_typeindex": "126269861530532084"
+"c_bx_tape_Roughness.png":
+  "m_guid": "8df6f37e979019446fe3a0cd36"
+  "m_typeindex": "126269861530532084"
 "cardboard_Fullyclosed.obj":
   "m_guid": "98e466c73278a961e6c2cf254a0"
   "m_typeindex": "4838001395392124604"
@@ -1072,6 +1156,60 @@
 "cardboard_open.obj":
   "m_guid": "98e467b7b89871731e2713d6ddc"
   "m_typeindex": "4838001395392124604"
+"cb_tin_base_BaseColor.png":
+  "m_guid": "8df74e7423a6c93c32ead3962d"
+  "m_typeindex": "126269861530532084"
+"cb_tin_base_Emissive.png":
+  "m_guid": "8df74f707ba7f71caafd71dab3"
+  "m_typeindex": "126269861530532084"
+"cb_tin_base_Height.png":
+  "m_guid": "8df7507329856bc6d7054ae55d"
+  "m_typeindex": "126269861530532084"
+"cb_tin_base_Metallic.png":
+  "m_guid": "8df75176709eb8cb38b297543e"
+  "m_typeindex": "126269861530532084"
+"cb_tin_base_Normal.png":
+  "m_guid": "8df75270dfaec00f21ac70feb8"
+  "m_typeindex": "126269861530532084"
+"cb_tin_base_Roughness.png":
+  "m_guid": "8df7537c349759cb986232c017"
+  "m_typeindex": "126269861530532084"
+"cb_tin_plastic_clear_BaseColor.png":
+  "m_guid": "8df75479cf930465797be9cf50"
+  "m_typeindex": "126269861530532084"
+"cb_tin_plastic_clear_Emissive.png":
+  "m_guid": "8df755714996e189c92dcb7eec"
+  "m_typeindex": "126269861530532084"
+"cb_tin_plastic_clear_Height.png":
+  "m_guid": "8df7557ad790941ae218310265"
+  "m_typeindex": "126269861530532084"
+"cb_tin_plastic_clear_Metallic.png":
+  "m_guid": "8df7567834aacac07f3fa90d39"
+  "m_typeindex": "126269861530532084"
+"cb_tin_plastic_clear_Normal.png":
+  "m_guid": "8df7577949b15691e65a544db1"
+  "m_typeindex": "126269861530532084"
+"cb_tin_plastic_clear_Roughness.png":
+  "m_guid": "8df7587c778be40533bf066fec"
+  "m_typeindex": "126269861530532084"
+"cb_tin_top_BaseColor.png":
+  "m_guid": "8df7597b15b6b1367de7142c3c"
+  "m_typeindex": "126269861530532084"
+"cb_tin_top_Emissive.png":
+  "m_guid": "8df75a7f91abb547ceaf032cf4"
+  "m_typeindex": "126269861530532084"
+"cb_tin_top_Height.png":
+  "m_guid": "8df75b76dd8df4fff167a66b54"
+  "m_typeindex": "126269861530532084"
+"cb_tin_top_Metallic.png":
+  "m_guid": "8df75c7178a252d316e32bfddf"
+  "m_typeindex": "126269861530532084"
+"cb_tin_top_Normal.png":
+  "m_guid": "8df75d775d9947bbc1f95479da"
+  "m_typeindex": "126269861530532084"
+"cb_tin_top_Roughness.png":
+  "m_guid": "8df75e77e09c6a4f513b95abbc"
+  "m_typeindex": "126269861530532084"
 "ceilingFan1_animation":
   "m_guid": "716a9de75e9b5cc4cf3346c689f"
   "m_typeindex": "10466365863016233885"
@@ -1084,9 +1222,108 @@
 "ceilingfan_anim.gltf":
   "m_guid": "71257d7781c95d84db92404a56a"
   "m_typeindex": "4838001395392124604"
+"ch_bx_BaseColor.png":
+  "m_guid": "8df6d377f3841f5d9147be6712"
+  "m_typeindex": "126269861530532084"
+"ch_bx_Emissive.png":
+  "m_guid": "8df6d4764e9a4626745540c73a"
+  "m_typeindex": "126269861530532084"
+"ch_bx_Height.png":
+  "m_guid": "8df6d57c8cb055e6fd2889fb94"
+  "m_typeindex": "126269861530532084"
+"ch_bx_Metallic.png":
+  "m_guid": "8df6d6762eaccdbcab7a60657a"
+  "m_typeindex": "126269861530532084"
+"ch_bx_Normal.png":
+  "m_guid": "8df6d678fd9fd119222cda6b7f"
+  "m_typeindex": "126269861530532084"
+"ch_bx_Roughness.png":
+  "m_guid": "8df6d7702bbe527102bc93b3bd"
+  "m_typeindex": "126269861530532084"
+"ch_bx_halfOp_BaseColor.png":
+  "m_guid": "8df6dd721a801cae027269bb6b"
+  "m_typeindex": "126269861530532084"
+"ch_bx_halfOp_Emissive.png":
+  "m_guid": "8df6de78e69e7eacff8b951276"
+  "m_typeindex": "126269861530532084"
+"ch_bx_halfOp_Height.png":
+  "m_guid": "8df6df7b32bcdd918c6d5a2df4"
+  "m_typeindex": "126269861530532084"
+"ch_bx_halfOp_Metallic.png":
+  "m_guid": "8df6e07ac4aea956ed37d5722c"
+  "m_typeindex": "126269861530532084"
+"ch_bx_halfOp_Normal.png":
+  "m_guid": "8df6e17a148f4bed8b4a6548a8"
+  "m_typeindex": "126269861530532084"
+"ch_bx_halfOp_Roughness.png":
+  "m_guid": "8df6e27bc0903360305b670b87"
+  "m_typeindex": "126269861530532084"
+"ch_bx_opened_BaseColor.png":
+  "m_guid": "8df6e37107bd09aa6cbbbc9bec"
+  "m_typeindex": "126269861530532084"
+"ch_bx_opened_Emissive.png":
+  "m_guid": "8df6e47dea87e61b23f3a05363"
+  "m_typeindex": "126269861530532084"
+"ch_bx_opened_Height.png":
+  "m_guid": "8df6e5789d8d8faaca6f4aa5fb"
+  "m_typeindex": "126269861530532084"
+"ch_bx_opened_Metallic.png":
+  "m_guid": "8df6e6771d803ae13672ab3480"
+  "m_typeindex": "126269861530532084"
+"ch_bx_opened_Normal.png":
+  "m_guid": "8df6e778169d3ac3649a292bf4"
+  "m_typeindex": "126269861530532084"
+"ch_bx_opened_Roughness.png":
+  "m_guid": "8df6e87c4fb3e409d3a76b6b6f"
+  "m_typeindex": "126269861530532084"
+"ch_bx_tape_BaseColor.png":
+  "m_guid": "8df6d878df9a59c408ef6aa45e"
+  "m_typeindex": "126269861530532084"
+"ch_bx_tape_Emissive.png":
+  "m_guid": "8df6d975d7a81fa432212746fe"
+  "m_typeindex": "126269861530532084"
+"ch_bx_tape_Height.png":
+  "m_guid": "8df6da773bbcc0cdd390559f25"
+  "m_typeindex": "126269861530532084"
+"ch_bx_tape_Metallic.png":
+  "m_guid": "8df6db7757ae46c9717e73d076"
+  "m_typeindex": "126269861530532084"
+"ch_bx_tape_Normal.png":
+  "m_guid": "8df6dc7378bf6cd4b15adce68e"
+  "m_typeindex": "126269861530532084"
+"ch_bx_tape_Roughness.png":
+  "m_guid": "8df6dc77b99d033ee11bf2a6bd"
+  "m_typeindex": "126269861530532084"
 "chair_top":
   "m_guid": "9987cdf71459d97703d4b1bcd92"
   "m_typeindex": "175488002581160416"
+"cheese_bs_Opened.obj":
+  "m_guid": "8df7907920a3e8ebc9b4eaaeac"
+  "m_typeindex": "4838001395392124604"
+"cheese_bs_bx.obj":
+  "m_guid": "8df78e75a0939dafb78ca1ec36"
+  "m_typeindex": "4838001395392124604"
+"cheese_bs_bx_halfOp.obj":
+  "m_guid": "8df78f7402bb1dcb48ab174bab"
+  "m_typeindex": "4838001395392124604"
+"choco_bx.obj":
+  "m_guid": "8df791786cada5d5eb58f23b3a"
+  "m_typeindex": "4838001395392124604"
+"choco_bx_halfOp.obj":
+  "m_guid": "8df79274ea842f89ca00839af9"
+  "m_typeindex": "4838001395392124604"
+"choco_bx_opened.obj":
+  "m_guid": "8df793798e93330b9401a628bd"
+  "m_typeindex": "4838001395392124604"
+"choco_wafer.obj":
+  "m_guid": "8df7987d0d8d73b8f4385b1f50"
+  "m_typeindex": "4838001395392124604"
+"choco_wafer_Opened.obj":
+  "m_guid": "90785d17c8ea2ac4698827da3da"
+  "m_typeindex": "4838001395392124604"
+"choco_wafer_halfOpened.obj":
+  "m_guid": "8df7997177b7bb7426cecc5137"
+  "m_typeindex": "4838001395392124604"
 "cloud.obj":
   "m_guid": "211dd9ab7898819a0b856f6201da"
   "m_typeindex": "4838001395392124604"
@@ -1174,6 +1411,207 @@
 "cloud_2_mat_Roughness.png":
   "m_guid": "53f197572b5b8ae99c890beeef2"
   "m_typeindex": "126269861530532084"
+"cw_bx_BaseColor.png":
+  "m_guid": "8df7167fc0b62742a4ea2847da"
+  "m_typeindex": "126269861530532084"
+"cw_bx_Emissive.png":
+  "m_guid": "8df71777bd9d09bdb278f4777f"
+  "m_typeindex": "126269861530532084"
+"cw_bx_Height.png":
+  "m_guid": "8df718701aa9e8f7016c8ebe57"
+  "m_typeindex": "126269861530532084"
+"cw_bx_Metallic.png":
+  "m_guid": "8df7197748bd52ceedd482a975"
+  "m_typeindex": "126269861530532084"
+"cw_bx_Normal.png":
+  "m_guid": "8df71a73f8abe77567d30f26b2"
+  "m_typeindex": "126269861530532084"
+"cw_bx_Roughness.png":
+  "m_guid": "8df71b7d3c83d5de0a586f33a7"
+  "m_typeindex": "126269861530532084"
+"cw_bx_material":
+  "m_guid": "90c14e77b478b089356757f7aef"
+  "m_typeindex": "175488002581160416"
+"cw_bx_opened_BaseColor.png":
+  "m_guid": "8df73172b096c3b37cd3b2538c"
+  "m_typeindex": "126269861530532084"
+"cw_bx_opened_Emissive.png":
+  "m_guid": "8df732789d87df5595c4f78748"
+  "m_typeindex": "126269861530532084"
+"cw_bx_opened_Height.png":
+  "m_guid": "8df73376469281c52798e0ade7"
+  "m_typeindex": "126269861530532084"
+"cw_bx_opened_Metallic.png":
+  "m_guid": "8df73477ac894ace850a1d7486"
+  "m_typeindex": "126269861530532084"
+"cw_bx_opened_Normal.png":
+  "m_guid": "8df7347a8e93b7c54ad2ceca98"
+  "m_typeindex": "126269861530532084"
+"cw_bx_opened_Roughness.png":
+  "m_guid": "8df7357afca390657834292680"
+  "m_typeindex": "126269861530532084"
+"cw_bx_opened_material":
+  "m_guid": "90c15567b4387364bafa89f1329"
+  "m_typeindex": "175488002581160416"
+"cw_bx_tape_BaseColor.png":
+  "m_guid": "8df71b736c953e7df4ebaaed87"
+  "m_typeindex": "126269861530532084"
+"cw_bx_tape_Emissive.png":
+  "m_guid": "8df71c7101bed4859ccc5529f6"
+  "m_typeindex": "126269861530532084"
+"cw_bx_tape_Height.png":
+  "m_guid": "8df71f742094176bcd495682cc"
+  "m_typeindex": "126269861530532084"
+"cw_bx_tape_Metallic.png":
+  "m_guid": "8df7207e7b8d2ef5ba28553fa3"
+  "m_typeindex": "126269861530532084"
+"cw_bx_tape_Normal.png":
+  "m_guid": "8df72174b8b7b84f59cf84d0b5"
+  "m_typeindex": "126269861530532084"
+"cw_bx_tape_Roughness.png":
+  "m_guid": "8df7297ecd8613d8f7acbd2e04"
+  "m_typeindex": "126269861530532084"
+"cw_bx_tape_material":
+  "m_guid": "90c14e67aa9b46d7469d67f57e5"
+  "m_typeindex": "175488002581160416"
+"cw_halfOp_BaseColor.png":
+  "m_guid": "8df72a71898edbf8687fe47d2b"
+  "m_typeindex": "126269861530532084"
+"cw_halfOp_Emissive.png":
+  "m_guid": "8df72b73fbb2384c8e8d4ecf60"
+  "m_typeindex": "126269861530532084"
+"cw_halfOp_Height.png":
+  "m_guid": "8df72c764492a8c54b478c7d06"
+  "m_typeindex": "126269861530532084"
+"cw_halfOp_Metallic.png":
+  "m_guid": "8df72e7f1082c244700902a79c"
+  "m_typeindex": "126269861530532084"
+"cw_halfOp_Normal.png":
+  "m_guid": "8df72f72ccb6a88ff61ee0ae89"
+  "m_typeindex": "126269861530532084"
+"cw_halfOp_Roughness.png":
+  "m_guid": "8df73078e2a699f9b7fbc11ef6"
+  "m_typeindex": "126269861530532084"
+"cw_halfOp_material":
+  "m_guid": "90c150d701a8b69005c03cd7184"
+  "m_typeindex": "175488002581160416"
+"cw_tin_base_BaseColor.png":
+  "m_guid": "8df7707d59b61575938d6b73bc"
+  "m_typeindex": "126269861530532084"
+"cw_tin_base_Emissive.png":
+  "m_guid": "8df77172f8ad4c5945bf4dcd1b"
+  "m_typeindex": "126269861530532084"
+"cw_tin_base_Height.png":
+  "m_guid": "8df7727acbb5a157277da15fa6"
+  "m_typeindex": "126269861530532084"
+"cw_tin_base_Metallic.png":
+  "m_guid": "8df7737f2899ee04aae0df6ebe"
+  "m_typeindex": "126269861530532084"
+"cw_tin_base_Normal.png":
+  "m_guid": "8df7747e98a2fca388b084261a"
+  "m_typeindex": "126269861530532084"
+"cw_tin_base_Roughness.png":
+  "m_guid": "8df7757a37b3ec3f670fc100c1"
+  "m_typeindex": "126269861530532084"
+"cw_tin_plastic_clear_BaseColor.png":
+  "m_guid": "8df7757a9ca1792525e4d28aa0"
+  "m_typeindex": "126269861530532084"
+"cw_tin_plastic_clear_Emissive.png":
+  "m_guid": "8df7767f6b86d157c5968f389f"
+  "m_typeindex": "126269861530532084"
+"cw_tin_plastic_clear_Height.png":
+  "m_guid": "8df7777eaeabd9ec5474576281"
+  "m_typeindex": "126269861530532084"
+"cw_tin_plastic_clear_Metallic.png":
+  "m_guid": "8df77877a2bce59210e5da204f"
+  "m_typeindex": "126269861530532084"
+"cw_tin_plastic_clear_Normal.png":
+  "m_guid": "8df779739993a45f65c8fe8f85"
+  "m_typeindex": "126269861530532084"
+"cw_tin_plastic_clear_Roughness.png":
+  "m_guid": "8df77a7ce385d61df520e0dff0"
+  "m_typeindex": "126269861530532084"
+"cw_tin_top_BaseColor.png":
+  "m_guid": "8df77b78d583e1bbd0ec81d793"
+  "m_typeindex": "126269861530532084"
+"cw_tin_top_Emissive.png":
+  "m_guid": "8df77c7db894b63308eebef43e"
+  "m_typeindex": "126269861530532084"
+"cw_tin_top_Height.png":
+  "m_guid": "8df77d73538875f725d23c64cb"
+  "m_typeindex": "126269861530532084"
+"cw_tin_top_Metallic.png":
+  "m_guid": "8df77e7fc2aa2726f40cc039b7"
+  "m_typeindex": "126269861530532084"
+"cw_tin_top_Normal.png":
+  "m_guid": "8df77f78649a7b047afd81c629"
+  "m_typeindex": "126269861530532084"
+"cw_tin_top_Roughness.png":
+  "m_guid": "8df78074a1927f6d89ce9e90bc"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_BaseColor.png":
+  "m_guid": "8df75f7db0a1fc0405216d945a"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_Emissive.png":
+  "m_guid": "8df7607cb198a59c46207ec6fe"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_Height.png":
+  "m_guid": "8df7617986b1aafce80cc6d689"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_Metallic.png":
+  "m_guid": "8df7627e9f8f58683199b2d364"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_Normal.png":
+  "m_guid": "8df762726fa0fd73acc3cead25"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_Roughness.png":
+  "m_guid": "8df76477f6ad5c8d4b9f08b477"
+  "m_typeindex": "126269861530532084"
+"empty_tin_base_material":
+  "m_guid": "8eac9d783faebf77240861d483"
+  "m_typeindex": "175488002581160416"
+"empty_tin_plastic_clear_BaseColor.png":
+  "m_guid": "8df764792b81e26fd877428c7d"
+  "m_typeindex": "126269861530532084"
+"empty_tin_plastic_clear_Emissive.png":
+  "m_guid": "8df7657f3bb303d6c50bde00e4"
+  "m_typeindex": "126269861530532084"
+"empty_tin_plastic_clear_Height.png":
+  "m_guid": "8df766783688eaeaa401d0048d"
+  "m_typeindex": "126269861530532084"
+"empty_tin_plastic_clear_Metallic.png":
+  "m_guid": "8df7677f038ee796b09104b463"
+  "m_typeindex": "126269861530532084"
+"empty_tin_plastic_clear_Normal.png":
+  "m_guid": "8df7687dd5995a08de3bb524db"
+  "m_typeindex": "126269861530532084"
+"empty_tin_plastic_clear_Roughness.png":
+  "m_guid": "8df7697c37b22aede354a94326"
+  "m_typeindex": "126269861530532084"
+"empty_tin_plastic_clear_material":
+  "m_guid": "8eac9d784cbbbea4cebf90b01f"
+  "m_typeindex": "175488002581160416"
+"empty_tin_top_BaseColor.png":
+  "m_guid": "8df76a7bed80e3e2949e725998"
+  "m_typeindex": "126269861530532084"
+"empty_tin_top_Emissive.png":
+  "m_guid": "8df76b720db55f2403c2bb1ad0"
+  "m_typeindex": "126269861530532084"
+"empty_tin_top_Height.png":
+  "m_guid": "8df76c79d5b39c715fa5d6c4af"
+  "m_typeindex": "126269861530532084"
+"empty_tin_top_Metallic.png":
+  "m_guid": "8df76d7729abf18ce4945c3590"
+  "m_typeindex": "126269861530532084"
+"empty_tin_top_Normal.png":
+  "m_guid": "8df76e715d8867c398fca1007f"
+  "m_typeindex": "126269861530532084"
+"empty_tin_top_Roughness.png":
+  "m_guid": "8df76f76e498c5ca70cbf1ecbe"
+  "m_typeindex": "126269861530532084"
+"empty_tin_top_material":
+  "m_guid": "8eac9d70399e53ad1bd0f115d8"
+  "m_typeindex": "175488002581160416"
 "father_intro_combine.ogg":
   "m_guid": "10c51c07e54ae12e07855a74929"
   "m_typeindex": "17099568057112876377"
@@ -1306,6 +1744,138 @@
 "floorBrush2_Floorbrush_Roughness.png":
   "m_guid": "1088c65786eb1d675802190f835"
   "m_typeindex": "126269861530532084"
+"g_bx_halfOp_BaseColor.png":
+  "m_guid": "8df70b75bea8eed4daa163c712"
+  "m_typeindex": "126269861530532084"
+"g_bx_halfOp_Emissive.png":
+  "m_guid": "8df70b7b4fa37fd292dca882a9"
+  "m_typeindex": "126269861530532084"
+"g_bx_halfOp_Height.png":
+  "m_guid": "8df70c7197b3a4af371d875c7e"
+  "m_typeindex": "126269861530532084"
+"g_bx_halfOp_Metallic.png":
+  "m_guid": "8df70d7729aa0cc190ebb15b15"
+  "m_typeindex": "126269861530532084"
+"g_bx_halfOp_Normal.png":
+  "m_guid": "8df70e7f71b8c1baad55fafbf7"
+  "m_typeindex": "126269861530532084"
+"g_bx_halfOp_Roughness.png":
+  "m_guid": "8df70f7398897958422e5e45a5"
+  "m_typeindex": "126269861530532084"
+"g_bx_halfOp_material":
+  "m_guid": "96f55773cfbe942bed604564c1"
+  "m_typeindex": "175488002581160416"
+"g_bx_opened_BaseColor.png":
+  "m_guid": "8df71078998740e8e2fdd49b8a"
+  "m_typeindex": "126269861530532084"
+"g_bx_opened_Emissive.png":
+  "m_guid": "8df711746196593e71289143ed"
+  "m_typeindex": "126269861530532084"
+"g_bx_opened_Height.png":
+  "m_guid": "8df7127f089a12d799a261b074"
+  "m_typeindex": "126269861530532084"
+"g_bx_opened_Metallic.png":
+  "m_guid": "8df7137718bd0af677566456bc"
+  "m_typeindex": "126269861530532084"
+"g_bx_opened_Normal.png":
+  "m_guid": "8df7147fc7b45c63a03c407f92"
+  "m_typeindex": "126269861530532084"
+"g_bx_opened_Roughness.png":
+  "m_guid": "8df715764c9c22683fba3a6d66"
+  "m_typeindex": "126269861530532084"
+"g_bx_opened_material":
+  "m_guid": "96f5617cab8f57d1fe49785acb"
+  "m_typeindex": "175488002581160416"
+"gem_bx_BaseColor.png":
+  "m_guid": "8df6ff75aabe3aaa4af043ef05"
+  "m_typeindex": "126269861530532084"
+"gem_bx_Emissive.png":
+  "m_guid": "8df7007f8e88bfa88236721a0b"
+  "m_typeindex": "126269861530532084"
+"gem_bx_Height.png":
+  "m_guid": "8df7017176b896301de5d79c1e"
+  "m_typeindex": "126269861530532084"
+"gem_bx_Metallic.png":
+  "m_guid": "8df7027b0b9c3109d02904be72"
+  "m_typeindex": "126269861530532084"
+"gem_bx_Normal.png":
+  "m_guid": "8df7037acf928861f41e1b255b"
+  "m_typeindex": "126269861530532084"
+"gem_bx_Opened.obj":
+  "m_guid": "8df7977a02a9ef4d5cfb29f120"
+  "m_typeindex": "4838001395392124604"
+"gem_bx_Roughness.png":
+  "m_guid": "8df70478d7b5b6574e91f7edfa"
+  "m_typeindex": "126269861530532084"
+"gem_bx_halfOp.obj":
+  "m_guid": "8df7957dc29d71b41f56de71ce"
+  "m_typeindex": "4838001395392124604"
+"gem_bx_material":
+  "m_guid": "8df79479528bfc1b3a97718d61"
+  "m_typeindex": "4838001395392124604"
+"gem_bx_tape_BaseColor.png":
+  "m_guid": "8df70577e3a249d6cb7dabfc00"
+  "m_typeindex": "126269861530532084"
+"gem_bx_tape_Emissive.png":
+  "m_guid": "8df7067882a1daa55b7e2c6000"
+  "m_typeindex": "126269861530532084"
+"gem_bx_tape_Height.png":
+  "m_guid": "8df7077976955c0d1dbb58c258"
+  "m_typeindex": "126269861530532084"
+"gem_bx_tape_Metallic.png":
+  "m_guid": "8df708732890bc1d775481a9a5"
+  "m_typeindex": "126269861530532084"
+"gem_bx_tape_Normal.png":
+  "m_guid": "8df7097cf9bd57051efa87a9e5"
+  "m_typeindex": "126269861530532084"
+"gem_bx_tape_Roughness.png":
+  "m_guid": "8df70a7105bae3e3499806f695"
+  "m_typeindex": "126269861530532084"
+"gem_bx_tape_material":
+  "m_guid": "8e82d07bad9b2309835a8d56be"
+  "m_typeindex": "175488002581160416"
+"ghost_eye_close_BaseColor.png":
+  "m_guid": "8df73a7a35ab797724e131012a"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_close_Emissive.png":
+  "m_guid": "8df73b703b8d0c19d5ef92b121"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_close_Height.png":
+  "m_guid": "8df73c7cba9ec2a517a33dbccd"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_close_Metallic.png":
+  "m_guid": "8df73d7bb0beb5b9b9b9845192"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_close_Normal.png":
+  "m_guid": "8df73e72729fc8b1de32aaf81a"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_close_Roughness.png":
+  "m_guid": "8df73f71cf8093fda22f998ff2"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_close_material":
+  "m_guid": "8df79c73278ac77cd77578ff63"
+  "m_typeindex": "4838001395392124604"
+"ghost_eye_open_BaseColor.png":
+  "m_guid": "8df73f752e9307be864e7c23ca"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_open_Emissive.png":
+  "m_guid": "8df740791a97022607308794a2"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_open_Height.png":
+  "m_guid": "8df74174839eaf0d0390c141c9"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_open_Metallic.png":
+  "m_guid": "8df7427e1a86ba2d80569bb25c"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_open_Normal.png":
+  "m_guid": "8df7437e84a930a6926ff472b2"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_open_Roughness.png":
+  "m_guid": "8df7447869b0144548d183dd3c"
+  "m_typeindex": "126269861530532084"
+"ghost_eye_open_material":
+  "m_guid": "8df79d7298b8a3e46485ceb6ae"
+  "m_typeindex": "4838001395392124604"
 "hdb_01":
   "m_guid": "7e10c2f7ab78320cc8af2c84e5a"
   "m_typeindex": "175488002581160416"
@@ -1792,6 +2362,30 @@
 "m_chair_panda":
   "m_guid": "9e94a0e74f2bf0c7d5b4d383f7a"
   "m_typeindex": "175488002581160416"
+"m_cheese_closed":
+  "m_guid": "b222d272df993e0514b36e56af"
+  "m_typeindex": "175488002581160416"
+"m_cheese_closed_tape":
+  "m_guid": "b46e4d7bc9b7d5292871b3d0fb"
+  "m_typeindex": "175488002581160416"
+"m_cheese_halfopened":
+  "m_guid": "b814f27bf88cf651e84f283d39"
+  "m_typeindex": "175488002581160416"
+"m_cheese_opened":
+  "m_guid": "bbf82c7df5a195eb528e4acf90"
+  "m_typeindex": "175488002581160416"
+"m_chocolate_closed":
+  "m_guid": "be4e7c72da956b6e0ceca6226f"
+  "m_typeindex": "175488002581160416"
+"m_chocolate_closed_tape":
+  "m_guid": "bfc6737e1abfc5ed0d4aaefa6a"
+  "m_typeindex": "175488002581160416"
+"m_chocolate_halfopened":
+  "m_guid": "c1deed75d0bb66826035ab28f5"
+  "m_typeindex": "175488002581160416"
+"m_chocolate_opened":
+  "m_guid": "c3971477a89b1227c444ce5ed2"
+  "m_typeindex": "175488002581160416"
 "m_cloud1":
   "m_guid": "540bd867bac88a73f63c6271cfb"
   "m_typeindex": "175488002581160416"
@@ -1807,8 +2401,26 @@
 "m_floorbrush":
   "m_guid": "10961a27b1fb5b9ee1c6d2a006c"
   "m_typeindex": "175488002581160416"
+"m_gem_closed":
+  "m_guid": "df260f796fa79c7f5c73626b9a"
+  "m_typeindex": "175488002581160416"
+"m_gem_closed_tape":
+  "m_guid": "e089957b78b3f17f9f59f1080c"
+  "m_typeindex": "175488002581160416"
+"m_gem_halfopened":
+  "m_guid": "e2c1f87aff92583c64dfab7711"
+  "m_typeindex": "175488002581160416"
+"m_gem_opened":
+  "m_guid": "e503367a65b7cb31fa867d2a94"
+  "m_typeindex": "175488002581160416"
 "m_ghost":
   "m_guid": "bb84e67032a1cb88ab0f2fedd8"
+  "m_typeindex": "175488002581160416"
+"m_ghost_closed":
+  "m_guid": "ff2b15708bbe006e8965cb7ddf"
+  "m_typeindex": "175488002581160416"
+"m_ghost_open":
+  "m_guid": "fd295571eb9c3f1045e834d728"
   "m_typeindex": "175488002581160416"
 "m_grass1":
   "m_guid": "215ee8487fe2ba5a5a4cf897c32f"
@@ -1890,6 +2502,33 @@
   "m_typeindex": "175488002581160416"
 "m_metal_shelf":
   "m_guid": "9b10bb37872925796aa10feb2ae"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_biscuit_base":
+  "m_guid": "eed65a77fa84278e7915f129bb"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_biscuit_plastic":
+  "m_guid": "f075237421b44b83c29c560d0d"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_biscuit_top":
+  "m_guid": "f26e357172b101878dd9638258"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_empty_base":
+  "m_guid": "914162578eb9fd4f9bd00f552c7"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_empty_plastic":
+  "m_guid": "9193fd675f4bf4420d1fccae814"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_empty_top":
+  "m_guid": "91a5e847f948713e05b2878aac0"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_wafer_base":
+  "m_guid": "f65a5c727899d1b992732f6860"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_wafer_plastic":
+  "m_guid": "f95bc072299756398fcdd74c37"
+  "m_typeindex": "175488002581160416"
+"m_new_tin_wafer_top":
+  "m_guid": "fa6f1571c79ca664dabee49e8c"
   "m_typeindex": "175488002581160416"
 "m_plain_wall":
   "m_guid": "12888e77d30a7559556f11e04c4"
@@ -2004,6 +2643,18 @@
   "m_typeindex": "175488002581160416"
 "m_trolley_1":
   "m_guid": "ecb547574846129ae9fc21fa3"
+  "m_typeindex": "175488002581160416"
+"m_wafer_closed":
+  "m_guid": "e7671a7623b9f65e45b04079a0"
+  "m_typeindex": "175488002581160416"
+"m_wafer_closed_tape":
+  "m_guid": "eab5f97cbeaa6eebf56cd84166"
+  "m_typeindex": "175488002581160416"
+"m_wafer_halfopened":
+  "m_guid": "ec90087d87bd678ddd53d756a6"
+  "m_typeindex": "175488002581160416"
+"m_wafer_opened":
+  "m_guid": "90cdd8878fd8978f3a98093df59"
   "m_typeindex": "175488002581160416"
 "m_wall":
   "m_guid": "9de16a172969186227c8f591621"

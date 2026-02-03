@@ -1,0 +1,29 @@
+base:
+  m_guid: f075237421b44b83c29c560d0d
+  m_importer: .material
+  m_source: ""
+  m_name: m_new_tin_biscuit_plastic
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_new_tin_biscuit_plastic
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_DiffuseMap: 8df75479cf930465797be9cf50
+    u_RoughnessMap: 8df7587c778be40533bf066fec
+    u_EmissiveMap: 8df755714996e189c92dcb7eec
+    u_HeightMap: 8df7557ad790941ae218310265
+    u_NormalMap: 8df7577949b15691e65a544db1
+    u_MetallicMap: 8df7567834aacac07f3fa90d39
+    u_SpecularMap: 00

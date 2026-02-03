@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e42797b699ed3e92ca879bd8a
+  m_guid: 1d85f9675229481e179347be908
   m_importer: .texture
   m_source: materials\cardboard\half_closed\CardboardBox_halfClosed_standardSurface7_Height.png
   m_name: CardboardBox_halfClosed_standardSurface7_Height.png

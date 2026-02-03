@@ -24,8 +24,9 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include <vector>
 #include <random>
+#include <cstdint>
 
-enum class EmissionType
+enum class EmissionType : std::uint8_t
 {
 	Point,
 	Box,

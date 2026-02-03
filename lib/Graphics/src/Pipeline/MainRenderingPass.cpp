@@ -6,7 +6,7 @@
 #include "../../include/Rendering/ParticleRenderer.h"
 #include "../../include/Scene/SceneRenderer.h"
 #include "../../include/Resources/PrimitiveGenerator.h"
-#include "../../include/Rendering/ParticleRenderer.h"
+#include "../../include/Rendering/TextRenderer.h"
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -154,7 +154,34 @@ void MainRenderingPass::Execute(RenderContext& context)
                 false  // disable blending
             });
         }
+
     }
+
+    // 8. Render world-space text (3D text with depth testing)
+    // NOTE: Moved OUTSIDE the renderables check so world text renders even with no 3D objects
+    // World text should render with alpha blending but respect depth
+    Submit(RenderCommands::SetBlendingData{
+        true,                        // enable blending
+        GL_SRC_ALPHA,                // source factor
+        GL_ONE_MINUS_SRC_ALPHA       // destination factor
+    });
+
+    Submit(RenderCommands::SetDepthTestData{
+        true,           // enable depth testing
+        GL_LESS,        // depth function
+        false           // DISABLE depth writing (so text doesn't occlude itself)
+    });
+
+    // Disable face culling for billboard text (quads may face either direction)
+    Submit(RenderCommands::SetFaceCullingData{ false });
+
+    // Render world text
+    context.textRenderer.RenderWorldTextToPass(*this, context.frameData);
+
+    // Restore state after world text
+    Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });  // Re-enable face culling
+    Submit(RenderCommands::SetBlendingData{ false });  // Disable blending
+    Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });  // Restore depth writing
 
     // Render light cubes for visualization (if enabled)
     if (m_ShowLightCubes && !context.lights.empty()) {

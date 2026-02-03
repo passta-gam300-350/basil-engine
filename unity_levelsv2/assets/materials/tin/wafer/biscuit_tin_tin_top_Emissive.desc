@@ -1,7 +1,7 @@
 base:
-  m_guid: 19988db7f3eb65531f19160ab20
+  m_guid: 1d87b317cd9b4ebd6fbd73854e2
   m_importer: .texture
-  m_source: materials\tin\empty\biscuit_tin_tin_top_Emissive.png
+  m_source: materials\tin\wafer\biscuit_tin_tin_top_Emissive.png
   m_name: biscuit_tin_tin_top_Emissive.png
   m_importer_type: 13238151832854353850
 compression: BC3_RGBA8

@@ -1,0 +1,29 @@
+base:
+  m_guid: b222d272df993e0514b36e56af
+  m_importer: .material
+  m_source: ""
+  m_name: m_cheese_closed
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_cheese_closed
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df6d7702bbe527102bc93b3bd
+    u_DiffuseMap: 8df6d377f3841f5d9147be6712
+    u_EmissiveMap: 8df6d4764e9a4626745540c73a
+    u_NormalMap: 8df6d678fd9fd119222cda6b7f
+    u_HeightMap: 8df6d57c8cb055e6fd2889fb94
+    u_SpecularMap: 00
+    u_MetallicMap: 8df6d6762eaccdbcab7a60657a

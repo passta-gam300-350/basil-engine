@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd49a4751c947c770a46c71bbe
+  m_guid: 1d875c57f29a5548cb3b5a52f70
   m_importer: .texture
   m_source: materials\spool\standardSurface1_Metallic.png
   m_name: standardSurface1_Metallic.png

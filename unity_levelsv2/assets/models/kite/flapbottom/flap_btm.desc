@@ -1,5 +1,5 @@
 base:
-  m_guid: 3f901a77b7294658ef4967ed88f
+  m_guid: 1d88ae7724293ab17defa4463ce
   m_importer: .mesh
   m_source: models\kite\flapbottom\flap_btm.obj
   m_name: flap_btm.obj

@@ -1,5 +1,5 @@
 base:
-  m_guid: 136ea173f99514e526c5a77157
+  m_guid: 1d864d1760ab2327e057f7054f1
   m_importer: .texture
   m_source: materials\hdb\2\hdb_2_Metallic.png
   m_name: hdb_2_Metallic.png

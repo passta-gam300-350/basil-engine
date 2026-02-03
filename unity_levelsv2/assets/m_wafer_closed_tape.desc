@@ -1,0 +1,29 @@
+base:
+  m_guid: eab5f97cbeaa6eebf56cd84166
+  m_importer: .material
+  m_source: ""
+  m_name: m_wafer_closed_tape
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_wafer_closed_tape
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df7297ecd8613d8f7acbd2e04
+    u_DiffuseMap: 8df71b736c953e7df4ebaaed87
+    u_EmissiveMap: 8df71c7101bed4859ccc5529f6
+    u_NormalMap: 8df72174b8b7b84f59cf84d0b5
+    u_HeightMap: 8df71f742094176bcd495682cc
+    u_SpecularMap: 00
+    u_MetallicMap: 8df7207e7b8d2ef5ba28553fa3

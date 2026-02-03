@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d873997af4b6dad03320179a7f
+  m_importer: .texture
+  m_source: materials\new_tin_wafer\cw_tin_plastic_clear_Roughness.png
+  m_name: cw_tin_plastic_clear_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

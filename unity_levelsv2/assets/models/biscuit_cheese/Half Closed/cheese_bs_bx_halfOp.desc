@@ -1,0 +1,20 @@
+base:
+  m_guid: 1d887b77e228462bc32b9786eff
+  m_importer: .mesh
+  m_source: models\biscuit_cheese\Half Closed\cheese_bs_bx_halfOp.obj
+  m_name: cheese_bs_bx_halfOp.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

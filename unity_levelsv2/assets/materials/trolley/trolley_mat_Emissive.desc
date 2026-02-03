@@ -1,5 +1,5 @@
 base:
-  m_guid: a045875e4a87fbfc5f62d4da2
+  m_guid: 1d884e274a7baecfd1ec665f889
   m_importer: .texture
   m_source: materials\trolley\trolley_mat_Emissive.png
   m_name: trolley_mat_Emissive.png

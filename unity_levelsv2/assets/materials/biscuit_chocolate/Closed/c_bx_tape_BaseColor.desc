@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d85ad074ebb25f872d57d733a3
+  m_importer: .texture
+  m_source: materials\biscuit_chocolate\Closed\c_bx_tape_BaseColor.png
+  m_name: c_bx_tape_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

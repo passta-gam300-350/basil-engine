@@ -7,5 +7,6 @@
 #include "native/audio.h"
 #include "native/scene.h"
 #include "native/video.h"
+#include "native/font.h"
 
 #endif

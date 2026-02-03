@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e42c87057ad6352509f52719b
+  m_guid: 1d8603e7b479a4c063803c283dd
   m_importer: .texture
   m_source: materials\ceiling_fan\Ceilingfan_ceilingfan_Holder_Height.png
   m_name: Ceilingfan_ceilingfan_Holder_Height.png

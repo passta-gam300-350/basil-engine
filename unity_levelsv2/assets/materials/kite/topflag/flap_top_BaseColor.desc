@@ -1,5 +1,5 @@
 base:
-  m_guid: 14e4fa070aa995761ba7b896f76
+  m_guid: 1d86c1e7570ba360bc1c12c23b4
   m_importer: .texture
   m_source: materials\kite\topflag\flap_top_BaseColor.png
   m_name: flap_top_BaseColor.png

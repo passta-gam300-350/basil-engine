@@ -1,5 +1,5 @@
 base:
-  m_guid: 7cd49aa741c8f7963be813dfe83
+  m_guid: 1d875d47b7abc0b59675a313a85
   m_importer: .texture
   m_source: materials\spool\standardSurface1_Normal.png
   m_name: standardSurface1_Normal.png

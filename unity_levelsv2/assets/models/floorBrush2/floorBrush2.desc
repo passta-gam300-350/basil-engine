@@ -1,5 +1,5 @@
 base:
-  m_guid: 1088cb67701bf337d3ce7d4d763
+  m_guid: 1d8897c7b63ad946667d1c3d1a7
   m_importer: .mesh
   m_source: models\floorBrush2\floorBrush2.obj
   m_name: floorBrush2.obj

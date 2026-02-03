@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d863507589a4fd0e83ff288442
+  m_importer: .texture
+  m_source: materials\ghost\Eye Open\ghost_eye_open_Metallic.png
+  m_name: ghost_eye_open_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,26 +1,20 @@
 base:
-  m_guid: 7ecd7c07651858f927a5a1a2742
-  m_importer: material
-  m_source: ""
-  m_name: tree_04
-  m_importer_type: 12248969845253211364
-material:
-  vert_name: main_pbr.vert
-  frag_name: main_pbr.frag
-  material_name: tree_04
-  albedo:
-    x: 0.5
-    y: 0.5
-    z: 0.5
-  metallic: 0.699999988
-  roughness: 1
-  blend_mode: 0
-  float_properties: ~
-  vec3_properties: ~
-  vec4_properties: ~
-  texture_properties:
-    u_DiffuseMap: 00
-    u_HeightMap: 00
-    u_NormalMap: 00
-    u_EmissiveMap: 00
-    u_SpecularMap: 00
+  m_guid: 1d88ede7864a5b1d1c0d3850786
+  m_importer: .mesh
+  m_source: models\tree\04\tree_04.obj
+  m_name: tree_04.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

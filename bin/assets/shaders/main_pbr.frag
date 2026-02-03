@@ -90,7 +90,7 @@ uniform vec3 u_AlbedoColor = vec3(0.8, 0.8, 0.8);
 uniform float u_MetallicValue = 0.0;
 uniform float u_RoughnessValue = 0.5;
 
-// Ambient lighting
+// Ambient lighting (default 0.03 matches SceneRenderer.h and Scene.hpp)
 uniform vec3 u_AmbientLight = vec3(0.03);
 
 // Blend mode control (true = opaque pass, false = transparent pass)

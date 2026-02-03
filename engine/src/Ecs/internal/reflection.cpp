@@ -255,4 +255,56 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&HUDComponent::layer, "layer">,
 		MemberRegistrationV<&HUDComponent::visible, "visible">
 	);
+
+	// Register TextComponent enums
+	RegisterReflectionComponent<TextComponent::Anchor>("TextComponent::Anchor");
+	RegisterReflectionComponent<TextComponent::Alignment>("TextComponent::Alignment");
+
+	RegisterReflectionComponent<TextComponent>(
+		"TextComponent",
+		MemberRegistrationV<&TextComponent::m_FontGuid, "fontGuid">,
+		MemberRegistrationV<&TextComponent::text, "text">,
+		MemberRegistrationV<&TextComponent::position, "position">,
+		MemberRegistrationV<&TextComponent::fontSize, "fontSize">,
+		MemberRegistrationV<&TextComponent::anchor, "anchor">,
+		MemberRegistrationV<&TextComponent::alignment, "alignment">,
+		MemberRegistrationV<&TextComponent::lineSpacing, "lineSpacing">,
+		MemberRegistrationV<&TextComponent::letterSpacing, "letterSpacing">,
+		MemberRegistrationV<&TextComponent::maxWidth, "maxWidth">,
+		MemberRegistrationV<&TextComponent::color, "color">,
+		MemberRegistrationV<&TextComponent::outlineWidth, "outlineWidth">,
+		MemberRegistrationV<&TextComponent::outlineColor, "outlineColor">,
+		MemberRegistrationV<&TextComponent::glowStrength, "glowStrength">,
+		MemberRegistrationV<&TextComponent::glowColor, "glowColor">,
+		MemberRegistrationV<&TextComponent::sdfThreshold, "sdfThreshold">,
+		MemberRegistrationV<&TextComponent::smoothing, "smoothing">,
+		MemberRegistrationV<&TextComponent::rotation, "rotation">,
+		MemberRegistrationV<&TextComponent::layer, "layer">,
+		MemberRegistrationV<&TextComponent::visible, "visible">
+	);
+
+	// Register TextMeshComponent enums
+	RegisterReflectionComponent<TextMeshComponent::BillboardMode>("TextMeshComponent::BillboardMode");
+	RegisterReflectionComponent<TextMeshComponent::Alignment>("TextMeshComponent::Alignment");
+
+	RegisterReflectionComponent<TextMeshComponent>(
+		"TextMeshComponent",
+		MemberRegistrationV<&TextMeshComponent::m_FontGuid, "fontGuid">,
+		MemberRegistrationV<&TextMeshComponent::text, "text">,
+		MemberRegistrationV<&TextMeshComponent::billboardMode, "billboardMode">,
+		MemberRegistrationV<&TextMeshComponent::fontSize, "fontSize">,
+		MemberRegistrationV<&TextMeshComponent::referenceDistance, "referenceDistance">,
+		MemberRegistrationV<&TextMeshComponent::alignment, "alignment">,
+		MemberRegistrationV<&TextMeshComponent::lineSpacing, "lineSpacing">,
+		MemberRegistrationV<&TextMeshComponent::letterSpacing, "letterSpacing">,
+		MemberRegistrationV<&TextMeshComponent::maxWidth, "maxWidth">,
+		MemberRegistrationV<&TextMeshComponent::color, "color">,
+		MemberRegistrationV<&TextMeshComponent::outlineWidth, "outlineWidth">,
+		MemberRegistrationV<&TextMeshComponent::outlineColor, "outlineColor">,
+		MemberRegistrationV<&TextMeshComponent::glowStrength, "glowStrength">,
+		MemberRegistrationV<&TextMeshComponent::glowColor, "glowColor">,
+		MemberRegistrationV<&TextMeshComponent::sdfThreshold, "sdfThreshold">,
+		MemberRegistrationV<&TextMeshComponent::smoothing, "smoothing">,
+		MemberRegistrationV<&TextMeshComponent::visible, "visible">
+	);
 }

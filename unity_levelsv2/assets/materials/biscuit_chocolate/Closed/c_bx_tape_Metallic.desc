@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d85b047c24bf86aeaee9dd8d4f
+  m_importer: .texture
+  m_source: materials\biscuit_chocolate\Closed\c_bx_tape_Metallic.png
+  m_name: c_bx_tape_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

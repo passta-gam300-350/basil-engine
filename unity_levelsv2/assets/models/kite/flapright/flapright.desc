@@ -1,5 +1,5 @@
 base:
-  m_guid: 549618777aba204ee2115ded48c
+  m_guid: 1d88b177e60afb20a0a2bc5beae
   m_importer: .mesh
   m_source: models\kite\flapright\flapright.obj
   m_name: flapright.obj

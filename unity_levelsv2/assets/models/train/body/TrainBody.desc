@@ -1,5 +1,5 @@
 base:
-  m_guid: 55e50167fb292fb9c5efc576e6e
+  m_guid: 1d88d597bd9bfffc9da6f4e368f
   m_importer: .mesh
   m_source: models\train\body\TrainBody.obj
   m_name: TrainBody.obj

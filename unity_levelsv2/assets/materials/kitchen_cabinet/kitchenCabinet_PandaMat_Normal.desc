@@ -1,5 +1,5 @@
 base:
-  m_guid: 98e436e770cb63403de0d242fef
+  m_guid: 1d8653378b9adf8fae4906fbb12
   m_importer: .texture
   m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_Normal.png
   m_name: kitchenCabinet_PandaMat_Normal.png

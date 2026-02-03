@@ -1,5 +1,5 @@
 base:
-  m_guid: 12277227820a6277e20abcece20
+  m_guid: 1d8760b7687af9298caf48ba4c7
   m_importer: .texture
   m_source: materials\stairs\staircase_low_stairs_Emissive.png
   m_name: staircase_low_stairs_Emissive.png

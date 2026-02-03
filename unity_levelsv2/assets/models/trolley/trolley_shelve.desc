@@ -1,5 +1,5 @@
 base:
-  m_guid: a048875438b77c9c5690ce14d
+  m_guid: 1d88f7b7a8ab197fe806105d933
   m_importer: .mesh
   m_source: models\trolley\trolley_shelve.obj
   m_name: trolley_shelve.obj

@@ -1,7 +1,7 @@
 base:
-  m_guid: 19988d474fa82808bda9a1803bd
+  m_guid: 1d87b1c7305b0681c4113bbb85f
   m_importer: .texture
-  m_source: materials\tin\empty\biscuit_tin_tin_top_BaseColor.png
+  m_source: materials\tin\wafer\biscuit_tin_tin_top_BaseColor.png
   m_name: biscuit_tin_tin_top_BaseColor.png
   m_importer_type: 13238151832854353850
 compression: BC3_RGBA8

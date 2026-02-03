@@ -1,0 +1,7 @@
+base:
+  m_guid: 1d859da78eea94b082fa40b3dad
+  m_importer: .texture
+  m_source: materials\biscuit_cheese\Half Closed\ch_bx_halfOp_Emissive.png
+  m_name: ch_bx_halfOp_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

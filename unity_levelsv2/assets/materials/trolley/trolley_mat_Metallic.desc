@@ -1,5 +1,5 @@
 base:
-  m_guid: a046770b7bbe551060612d739
+  m_guid: 1d8850d709591fe23607f19b18c
   m_importer: .texture
   m_source: materials\trolley\trolley_mat_Metallic.png
   m_name: trolley_mat_Metallic.png

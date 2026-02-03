@@ -1,5 +1,5 @@
 base:
-  m_guid: 12277097f4b82d60e7a28dabc00
+  m_guid: 1d869be74b09793ecfe675178d5
   m_importer: .texture
   m_source: materials\kite\kite_Normal.png
   m_name: kite_Normal.png

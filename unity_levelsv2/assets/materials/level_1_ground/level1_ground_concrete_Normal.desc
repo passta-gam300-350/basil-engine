@@ -1,5 +1,5 @@
 base:
-  m_guid: 5d4d70173fbb34e1f867651aeec
+  m_guid: 1d86dcd7e3c88e683831c3514cf
   m_importer: .texture
   m_source: materials\level_1_ground\level1_ground_concrete_Normal.png
   m_name: level1_ground_concrete_Normal.png
