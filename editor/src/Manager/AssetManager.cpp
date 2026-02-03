@@ -324,6 +324,11 @@ void AssetManager::FileIndexingWorkerLoop() {
 				if (!std::filesystem::exists(desc_name)) {
 					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string(), m_RootPath);
 				}
+
+				auto pos = desc_name.find_first_of(".");
+				if (pos != std::string::npos) {
+					desc_name = desc_name.substr(0, pos) + ".desc";
+				}
 				m_FileList.emplace(dir_path, desc_name);
 			}
 		}
