@@ -111,7 +111,16 @@ namespace rp {
 					if (!cnd.IsDefined() || cnd.IsNull()) {
 						return Type{};  // Return empty container for null/undefined nodes
 					}
-					return cnd.as<Type>();
+					if constexpr (std::is_fundamental_v<typename Type::value_type> || std::is_same_v<std::remove_cvref_t<typename Type::value_type>, std::string>) {
+						return cnd.as<Type>();
+					}
+					else {
+						Type v{};
+						for (auto it = cnd.begin(); it != cnd.end(); ++it) {
+							v.emplace(v.end(), read<typename Type::value_type>(*it));
+						}
+						return v;
+					}
 				}
 				else if constexpr (std::is_class_v<Type>) {
 					Type v{};
@@ -148,12 +157,20 @@ namespace rp {
 				else if constexpr (std::is_fundamental_v<Type> || std::is_same_v<std::remove_cvref_t<Type>, std::string>) {
 					nd = v;
 				}
-				else if constexpr (reflection::is_associative_container_v<Type> || reflection::is_sequence_container_v<Type>) {
+				else if constexpr (reflection::is_associative_container_v<Type>) {
 					auto cont{ reflection::reflect(v) };
 					cont.each([&](auto const& field) {
 						YAML::Node member{};
 						write(field.second, member);
 						nd[field.first] = member;
+						});
+				}
+				else if constexpr (reflection::is_sequence_container_v<Type>) {
+					auto cont{ reflection::reflect(v) };
+					cont.each([&](auto const& field) {
+						YAML::Node member{};
+						write(field, member);
+						nd.push_back(member);
 						});
 				}
 				else if constexpr (std::is_class_v<Type>) {

@@ -19,6 +19,7 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include <vector>
 #include "Animation/Animation.h"
+#include <native/skeleton.h>
 #include <rsc-core/rp.hpp>
 
 // Maximum bones supported per skeleton (matches shader limit)

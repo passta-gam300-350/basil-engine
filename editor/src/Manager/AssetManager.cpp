@@ -454,6 +454,26 @@ void AssetManager::FileIndexingWorkerLoop() {
 						break;
 					}
 
+					// Handles dynamically created desc
+					if (file_ext.find(".desc")!=std::string::npos) {
+						dir_path = getParentPath(nfile);
+						{
+							std::lock_guard lg_file{ m_DescriptorListMtx };
+							auto files = GetFiles(dir_path);
+							bool fileExists = false;
+							for (auto it = files.first; it != files.second; ++it) {
+								if (normalizePath(it->second) == nfile) {
+									fileExists = true;
+									break;
+								}
+							}
+							if (!fileExists) {
+								m_FileList.emplace(dir_path, nfile);
+							}
+						}
+						break;
+					}
+
 					// Mark that we need a rescan after quiet period
 					m_NeedsRescan = true;
 					descriptor_filepath = nfile + ".desc";

@@ -15,6 +15,7 @@
 #include "descriptors/material.hpp"
 #include "descriptors/texture.hpp"
 #include "descriptors/animation.hpp"
+#include "descriptors/skeleton.hpp"
 #include <native/mesh.h>
 
 // --- helper: build transform matrix ---
@@ -127,28 +128,99 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     return matDesc;
 }
 
+inline SkeletonDescriptor ExtractSkeleton(const aiScene* scene, std::unordered_map<std::string, int>& boneMap) {
+    SkeletonDescriptor skelDesc;
+    SkeletonResourceData& skel{ skelDesc.skel };
+
+    int nextId = 0;
+    for (unsigned int m = 0; m < scene->mNumMeshes; ++m) {
+        const aiMesh* mesh = scene->mMeshes[m];
+        for (unsigned int b = 0; b < mesh->mNumBones; ++b) {
+            const aiBone* bone = mesh->mBones[b];
+            std::string name(bone->mName.C_Str());
+
+            if (boneMap.find(name) == boneMap.end()) {
+                SkeletonResourceData::Bone newBone;
+                newBone.m_bone_name = name;
+                newBone.m_id = nextId++;
+                newBone.m_parent_index = -1; // fill later
+                glm::mat4 ivmat = ToMat4(bone->mOffsetMatrix);
+
+                newBone.m_inv_bind_c1 = ivmat[0];
+                newBone.m_inv_bind_c2 = ivmat[1];
+                newBone.m_inv_bind_c3 = ivmat[2];
+                newBone.m_inv_bind_c4 = ivmat[3];
+
+                skel.m_bones.push_back(newBone);
+                boneMap[name] = newBone.m_id;
+            }
+        }
+    }
+
+    std::function<void(const aiNode*, int)> traverse = [&](const aiNode* node, int parentIndex) {
+        std::string nodeName(node->mName.C_Str());
+
+        auto it = boneMap.find(nodeName);
+        if (it != boneMap.end()) {
+            int boneIndex = it->second;
+            skel.m_bones[boneIndex].m_parent_index = parentIndex;
+            parentIndex = boneIndex; // children inherit this as parent
+        }
+
+        for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+            traverse(node->mChildren[i], parentIndex);
+        }
+        };
+
+    traverse(scene->mRootNode, -1);
+
+    skelDesc.base.m_guid = rp::Guid::generate();
+    skelDesc.base.m_importer = "skeleton";
+    skelDesc.skel.m_name = skelDesc.base.m_name = scene->mName.C_Str() + std::string("_skeleton");
+    skelDesc.base.m_importer_type = rp::utility::type_hash<SkeletonDescriptor>::value();
+
+    return skelDesc;
+}
+
 //just assume 1 animation is 1 channel. //assume same interpolation, change this in the future
-inline AnimationDescriptor ExtractAnimation(aiNodeAnim* aianimnd) {
+inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, std::unordered_map<std::string, int> const& boneMap) {
     AnimationDescriptor anidesc;
-    aiString const& name = aianimnd->mNodeName;
+    aiString const& name = anim->mName;
 
-    for (std::uint32_t i{}; i < aianimnd->mNumPositionKeys; i++) {
-        auto poskey = aianimnd->mPositionKeys[i];
-        anidesc.anim.m_positions.emplace(poskey.mTime, ToVec3(poskey.mValue));
-    }
-    for (std::uint32_t i{}; i < aianimnd->mNumRotationKeys; i++) {
-        auto rotkey = aianimnd->mRotationKeys[i];
-        anidesc.anim.m_rotations.emplace(rotkey.mTime, ToQuat(rotkey.mValue));
-    }
-    for (std::uint32_t i{}; i < aianimnd->mNumScalingKeys; i++) {
-        auto sclkey = aianimnd->mScalingKeys[i];
-        anidesc.anim.m_scales.emplace(sclkey.mTime, ToVec3(sclkey.mValue));
+    anidesc.anim.m_channels.reserve(anim->mNumChannels);
+    for (unsigned int c = 0; c < anim->mNumChannels; c++) {
+        auto chl = anim->mChannels[c];
+        AnimationResourceData::Channel chldata{};
+        chldata.m_name = chl->mNodeName.C_Str();
+        for (std::uint32_t i{}; i < chl->mNumPositionKeys; i++) {
+            auto poskey = chl->mPositionKeys[i];
+            chldata.m_positions.emplace(poskey.mTime, ToVec3(poskey.mValue));
+        }
+        for (std::uint32_t i{}; i < chl->mNumRotationKeys; i++) {
+            auto rotkey = chl->mRotationKeys[i];
+            chldata.m_rotations.emplace(rotkey.mTime, ToQuat(rotkey.mValue));
+        }
+        for (std::uint32_t i{}; i < chl->mNumScalingKeys; i++) {
+            auto sclkey = chl->mScalingKeys[i];
+            chldata.m_scales.emplace(sclkey.mTime, ToVec3(sclkey.mValue));
+        }
+        auto res_it = boneMap.find(chldata.m_name);
+        chldata.m_id = (res_it==boneMap.end()) ? 0 : res_it->second;
+        anidesc.anim.m_channels.emplace_back(chldata);
     }
 
+    anidesc.anim.m_duration = anim->mDuration;
+    anidesc.anim.m_ticks_per_sec = anim->mTicksPerSecond;
     // Assign a new Guid for this material
     anidesc.base.m_guid = rp::Guid::generate();
     anidesc.base.m_importer = "animation";
-    anidesc.anim.m_name = anidesc.base.m_name = name.C_Str() + std::string("_animation");
+    anidesc.base.m_name = name.C_Str() + std::string("_animation");
+    while (anidesc.base.m_name.find("|") != std::string::npos) {
+        auto pos = anidesc.base.m_name.find("|");
+        anidesc.base.m_name[pos] = '-';
+    }
+    anidesc.anim.m_name = anidesc.base.m_name;
+
     anidesc.base.m_importer_type = rp::utility::type_hash<AnimationDescriptor>::value();
     return anidesc;
 }
@@ -307,16 +379,16 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         rp::serialization::yaml_serializer::serialize(matDesc, parent + matDesc.material.material_name + ".desc");
     }
 
-
+    std::unordered_map<std::string, int> boneMap;
+    auto skeldesc = ExtractSkeleton(scene, boneMap);
+    rp::serialization::yaml_serializer::serialize(skeldesc, parent + skeldesc.skel.m_name + ".desc");
+        
     //change this in the future, this is only single channel
-    /*for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
-        auto anim = scene->mAnimations[a];
-        for (unsigned int c = 0; c < anim->mNumChannels; c++) {
-            auto chl = anim->mChannels[c];
-            auto anidesc = ExtractAnimation(chl);
-            rp::serialization::yaml_serializer::serialize(anidesc, parent + anidesc.anim.m_name + ".desc");
-        }
-    }*/
+    for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
+        auto anim = scene->mAnimations[a]; 
+        auto anidesc = ExtractAnimation(anim, boneMap);
+        rp::serialization::yaml_serializer::serialize(anidesc, parent + anidesc.anim.m_name + ".desc");
+    }
 
     return result;
 }

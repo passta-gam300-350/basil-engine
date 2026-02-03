@@ -102,10 +102,11 @@ void animationSystem::FixedUpdate(ecs::world& world)
 }
 
 boneChannel LoadBoneChannel(const char* data) {
-	AnimationResourceData animData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
+	AnimationResourceData animResData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
 		reinterpret_cast<const std::byte*>(data)
 	);
-	boneChannel bc{ animData.m_name, animData.m_id };
+	AnimationResourceData::Channel const& animData = animResData.m_channels[0];
+	boneChannel bc{ animData.m_name, animData.m_id};
 	for (auto const& poskey : animData.m_positions) {
 		bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
 	}
@@ -116,6 +117,47 @@ boneChannel LoadBoneChannel(const char* data) {
 		bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
 	}
 	return bc;
+}
+
+skeleton LoadSkeleton(const char* data) {
+	SkeletonResourceData skelData = rp::serialization::serializer<"bin">::deserialize<SkeletonResourceData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	skeleton skel{};
+	skel.bones.reserve(skelData.m_bones.size());
+	for (auto bone : skelData.m_bones) {
+		oneSkeletonBone onebone;
+		onebone.id = bone.m_id;
+		onebone.name = bone.m_bone_name;
+		onebone.parentIndex = bone.m_parent_index;
+		onebone.inverseBind = glm::mat4(bone.m_inv_bind_c1, bone.m_inv_bind_c2, bone.m_inv_bind_c3, bone.m_inv_bind_c4);
+		skel.bones.emplace_back(onebone);
+	}
+	return skel;
+}
+
+animationContainer LoadAnimationContainer(const char* data) {
+	AnimationResourceData animData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	animationContainer ac{};
+	ac.channels.reserve(animData.m_channels.size());
+	for (AnimationResourceData::Channel chl : animData.m_channels) {
+		boneChannel bc{ chl.m_name, chl.m_id };
+		for (auto const& poskey : chl.m_positions) {
+			bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
+		}
+		for (auto const& rotkey : chl.m_rotations) {
+			bc.addRotationKeyframe(rotkey.first / 1000, rotkey.second);
+		}
+		for (auto const& sclkey : chl.m_scales) {
+			bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
+		}
+		ac.channels.emplace_back(bc);
+	}
+	ac.ticksPerSecond = animData.m_ticks_per_sec;
+	ac.duration = animData.m_duration;
+	return ac;
 }
 
 // function / API to call when add component / load animation data 
