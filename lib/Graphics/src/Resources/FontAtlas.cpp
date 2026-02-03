@@ -15,6 +15,7 @@ Technology is prohibited.
 #include <Resources/FontAtlas.h>
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
+#define TINYDDSLOADER_IMPLEMENTATION
 #include <tinyddsloader.h>
 #include <cstring>
 

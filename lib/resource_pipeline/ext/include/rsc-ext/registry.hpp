@@ -190,7 +190,7 @@ namespace rp {
 		static void CreateDefaultDescriptor(std::string const& str, std::string const& relativepath = {}) {
 			auto pos{ str.rfind('.') };
 			std::string ext{ pos == std::string::npos ? "" : str.substr(pos) };
-			std::string desc_name{ str.substr(0, pos) + ".desc" };
+			std::string desc_name{ str + ".desc" };
 			auto imp{ Instance().m_known_file_ext_importer };
 			auto& inst{ Instance() };
 			std::uint64_t descimpid{};

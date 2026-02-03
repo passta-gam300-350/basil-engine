@@ -105,6 +105,9 @@ public:
     int GetShadowFilterSize() const { return m_ShadowFilterSize; }
     float GetShadowRandomRadius() const { return m_ShadowRandomRadius; }
 
+    // Reset per-frame caches (forces re-submission of lighting/shadow commands)
+    void ResetFrameCache() { m_LastLightingShader.reset(); m_LastShadowShader.reset(); }
+
 private:
     // Light storage (moved from InstancedRenderer)
     std::vector<PointLight> m_PointLights;

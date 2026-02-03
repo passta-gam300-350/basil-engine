@@ -68,7 +68,7 @@ int main(int, char**)
 
 	//_CrtSetBreakAlloc(457658);
 	//_CrtSetBreakAlloc(26635);
-
+	//_CrtSetBreakAlloc(1357257);
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit())
 		return 1;

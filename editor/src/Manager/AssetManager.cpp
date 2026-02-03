@@ -321,7 +321,12 @@ void AssetManager::FileIndexingWorkerLoop() {
 					continue;
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
-				if (!std::filesystem::exists(desc_name)) {
+				std::string legacy_name = entry.path().string();
+				legacy_name = legacy_name.substr(0, legacy_name.rfind(".")) + ".desc";
+				if (std::filesystem::exists(legacy_name)) {
+					std::filesystem::rename(legacy_name, desc_name);
+				}
+				else if (!std::filesystem::exists(desc_name)) {
 					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string(), m_RootPath);
 				}
 				m_FileList.emplace(dir_path, desc_name);
@@ -342,12 +347,16 @@ void AssetManager::FileIndexingWorkerLoop() {
 				bool has_source_file = false;
 
 				// Check common source file extensions
-				std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac", ".mpeg", ".mpg", ".ttf", ".otf"};
+				/*std::vector<std::string> source_exts = {".png", ".jpg", ".jpeg", ".fbx", ".obj", ".gltf", ".glb", ".wav", ".mp3", ".ogg", ".flac", ".mpeg", ".mpg", ".ttf", ".otf"};
 				for (auto const& src_ext : source_exts) {
 					if (std::filesystem::exists(base_name + src_ext)) {
 						has_source_file = true;
 						break;
 					}
+				}*/
+
+				if (std::filesystem::exists(base_name)) {
+					has_source_file = true;
 				}
 
 				// Only register if it has NO source file (standalone descriptor)
@@ -447,7 +456,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 
 					// Mark that we need a rescan after quiet period
 					m_NeedsRescan = true;
-					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
+					descriptor_filepath = nfile + ".desc";
 					dir_path = getParentPath(nfile);
 					if (!std::filesystem::exists(descriptor_filepath)) {
 						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile, m_RootPath);
@@ -463,7 +472,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 						break;
 					}
 					dir_path = getParentPath(nfile);
-					descriptor_filepath = nfile.substr(0, nfile.find_last_of(".")) + ".desc";
+					descriptor_filepath = nfile + ".desc";
 					if (std::filesystem::exists(descriptor_filepath)) {
 						std::filesystem::remove(descriptor_filepath);
 						{
@@ -517,7 +526,7 @@ void AssetManager::RescanDirectory() {
 
 			std::string file_path = entry.path().string();
 			std::string ext_name = getFileExtension(file_path);
-			std::string desc_name = file_path.substr(0, file_path.find_last_of(".")) + ".desc";
+			std::string desc_name = file_path + ".desc";
 
 			// Skip files we don't process
 			if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl") {

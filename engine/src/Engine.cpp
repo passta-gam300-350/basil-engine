@@ -134,6 +134,7 @@ void Engine::Init(std::string const& cfg ) {
 
 	// [TEMP]
 	AudioSystem::GetInstance().Init();
+	VideoSystem().Init();
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
@@ -347,6 +348,7 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 
 	// [TEMP]
 	AudioSystem::GetInstance().Init();
+	VideoSystem().Init();
 	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
 	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
 	//		std::string filename = entry.path().stem().string();

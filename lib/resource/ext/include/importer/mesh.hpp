@@ -309,14 +309,14 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
 
     //change this in the future, this is only single channel
-    for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
+    /*for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
         auto anim = scene->mAnimations[a];
         for (unsigned int c = 0; c < anim->mNumChannels; c++) {
             auto chl = anim->mChannels[c];
             auto anidesc = ExtractAnimation(chl);
             rp::serialization::yaml_serializer::serialize(anidesc, parent + anidesc.anim.m_name + ".desc");
         }
-    }
+    }*/
 
     return result;
 }

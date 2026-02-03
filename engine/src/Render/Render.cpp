@@ -13,8 +13,7 @@ Technology is prohibited.
 */
 /******************************************************************************/
 
-// Define implementation for tinyddsloader BEFORE any includes (header-only library like stb_image.h)
-#define TINYDDSLOADER_IMPLEMENTATION
+// TINYDDSLOADER_IMPLEMENTATION is now defined in lib/Graphics/src/Resources/FontAtlas.cpp
 
 #include <Core/Window.h>
 #include "Render/Render.h"
