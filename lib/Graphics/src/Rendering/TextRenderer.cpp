@@ -318,7 +318,7 @@ void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData
         return;
     }
 
-    spdlog::info("TextRenderer::RenderWorldTextToPass() - Rendering {} world batches", m_WorldFontBatches.size());
+    // spdlog::info("TextRenderer::RenderWorldTextToPass() - Rendering {} world batches", m_WorldFontBatches.size());
 
     // ========== SHARED STATE SETUP (ONCE FOR ALL BATCHES) ==========
     // Bind shader once for all batches
@@ -371,7 +371,7 @@ void TextRenderer::RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch
 
     // Log first glyph details for debugging
     const auto& firstGlyph = batch.glyphInstances[0];
-    spdlog::info("TextRenderer::RenderWorldBatch() - VAO={}, SSBO={}, atlas={}, glyphs={}",
+    /*spdlog::info("TextRenderer::RenderWorldBatch() - VAO={}, SSBO={}, atlas={}, glyphs={}",
         m_QuadVAO, batch.ssbo->GetSSBOHandle(), batch.atlasTextureID, batch.glyphInstances.size());
     spdlog::info("  First glyph: pos=({:.2f},{:.2f},{:.2f}), size=({:.4f},{:.4f}), color=({:.2f},{:.2f},{:.2f},{:.2f})",
         firstGlyph.worldPosition.x, firstGlyph.worldPosition.y, firstGlyph.worldPosition.z,
@@ -379,7 +379,7 @@ void TextRenderer::RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch
         firstGlyph.color.r, firstGlyph.color.g, firstGlyph.color.b, firstGlyph.color.a);
     spdlog::info("  Billboard: right=({:.2f},{:.2f},{:.2f}), up=({:.2f},{:.2f},{:.2f})",
         firstGlyph.billboardRight.x, firstGlyph.billboardRight.y, firstGlyph.billboardRight.z,
-        firstGlyph.billboardUp.x, firstGlyph.billboardUp.y, firstGlyph.billboardUp.z);
+        firstGlyph.billboardUp.x, firstGlyph.billboardUp.y, firstGlyph.billboardUp.z);*/
 
     // Bind instance data SSBO
     uint32_t ssboHandle = batch.ssbo->GetSSBOHandle();
