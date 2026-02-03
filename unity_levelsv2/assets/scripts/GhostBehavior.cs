@@ -285,9 +285,9 @@ public class GhostBehavior : Behavior
     }
 
     /// <summary>
-    /// Smoothly rotate clockwise to face the next waypoint
+    /// Smoothly rotate to face the next waypoint (shortest path with clockwise bias)
     /// Uses pre-calculated targetYaw from OnArriveAtWaypoint()
-    /// Always rotates clockwise (positive direction) without wrapping
+    /// Can rotate clockwise (positive) or counter-clockwise (negative) depending on shortest path
     /// </summary>
     private bool RotateTowardsNextWaypoint()
     {
@@ -304,17 +304,22 @@ public class GhostBehavior : Behavior
             return true;
         }
 
-        // Calculate rotation step for this frame (always positive = clockwise)
+        // Calculate rotation step for this frame, clamped to max rotation speed in both directions
         float maxStep = rotationSpeed * Time.deltaTime;
         float step = remainingRotation;
+
+        // Clamp step to [-maxStep, maxStep]
         if (step > maxStep)
             step = maxStep;
+        else if (step < -maxStep)
+            step = -maxStep;
 
-        // Apply rotation step (always add, never subtract = clockwise only)
+        // Apply rotation step (positive = clockwise, negative = counter-clockwise)
         float newYaw = currentYaw + step;
 
         // Debug logging
-        Logger.Log($"Rotating clockwise: Current={currentYaw:F1}° Target={targetYaw:F1}° Remaining={remainingRotation:F1}° Step={step:F1}° New={newYaw:F1}°");
+        string direction = step > 0 ? "clockwise" : "counter-clockwise";
+        Logger.Log($"Rotating {direction}: Current={currentYaw:F1}° Target={targetYaw:F1}° Remaining={remainingRotation:F1}° Step={step:F1}° New={newYaw:F1}°");
 
         // CRITICAL: Always set X=0 and Z=0 to prevent gimbal lock and axis flipping
         transform.rotation = new Vector3(0f, newYaw, 0f);
@@ -364,20 +369,29 @@ public class GhostBehavior : Behavior
                 while (wrappedCurrentYaw > 180f) wrappedCurrentYaw -= 360f;
                 while (wrappedCurrentYaw < -180f) wrappedCurrentYaw += 360f;
 
-                // Calculate how much we need to add to currentYaw to reach desiredYaw clockwise
-                // If desiredYaw is "behind" wrappedCurrentYaw (counter-clockwise), add 360
-                targetYaw = desiredYaw;
-                if (desiredYaw <= wrappedCurrentYaw)
+                // Calculate angular difference (shortest path with clockwise bias on ties)
+                float angleDiff = desiredYaw - wrappedCurrentYaw;
+
+                // Normalize to shortest path [-180, 180]
+                if (angleDiff > 180f)
                 {
-                    targetYaw = desiredYaw + 360f;
+                    angleDiff -= 360f;  // Shorter to go counter-clockwise
+                }
+                else if (angleDiff < -180f)
+                {
+                    angleDiff += 360f;  // Shorter to go clockwise
+                }
+                else if (angleDiff == -180f)
+                {
+                    angleDiff = 180f;  // Tie (180° either way) - prefer clockwise
                 }
 
-                // Now adjust targetYaw to be relative to the actual currentYaw (not wrapped)
-                // We want targetYaw to always be > currentYaw for clockwise rotation
-                float offset = currentYaw - wrappedCurrentYaw;  // This is the multiple of 360
-                targetYaw += offset;
+                // Calculate targetYaw relative to unwrapped currentYaw
+                // Positive angleDiff = clockwise, Negative angleDiff = counter-clockwise
+                targetYaw = currentYaw + angleDiff;
 
-                Logger.Log($"GhostBehavior: Current={currentYaw:F1}° Wrapped={wrappedCurrentYaw:F1}° Desired={desiredYaw:F1}° Target={targetYaw:F1}°");
+                string direction = angleDiff > 0 ? "clockwise" : (angleDiff < 0 ? "counter-clockwise" : "no rotation");
+                Logger.Log($"GhostBehavior: Current={currentYaw:F1}° Wrapped={wrappedCurrentYaw:F1}° Desired={desiredYaw:F1}° AngleDiff={angleDiff:F1}° Target={targetYaw:F1}° Direction={direction}");
             }
         }
 
