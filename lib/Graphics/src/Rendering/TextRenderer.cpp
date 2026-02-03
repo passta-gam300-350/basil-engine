@@ -308,10 +308,10 @@ void TextRenderer::RenderBatch(RenderPass& renderPass, const FontBatch& batch, c
 
 void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData& frameData)
 {
-    if (m_WorldFontBatches.empty()) {
+    /*if (m_WorldFontBatches.empty()) {
         spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world font batches to render!");
         return;
-    }
+    }*/
 
     if (!m_WorldTextShader) {
         spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world text shader set!");
