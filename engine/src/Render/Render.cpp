@@ -599,14 +599,14 @@ void RenderSystem::Update(ecs::world& world) {
 		worldTextData.smoothing = worldText.smoothing;
 		worldTextData.visible = worldText.visible;
 
-		spdlog::info("RenderSystem: Submitting world text '{}' at ({:.1f}, {:.1f}, {:.1f}), fontSize={}, atlasID={}",
+		/*spdlog::info("RenderSystem: Submitting world text '{}' at ({:.1f}, {:.1f}, {:.1f}), fontSize={}, atlasID={}",
 			worldTextData.text.substr(0, 20), worldTextData.worldPosition.x, worldTextData.worldPosition.y,
-			worldTextData.worldPosition.z, worldTextData.fontSize, (*fontAtlasPtr)->GetTextureID());
+			worldTextData.worldPosition.z, worldTextData.fontSize, (*fontAtlasPtr)->GetTextureID());*/
 		m_SceneRenderer->SubmitWorldText(worldTextData);
 	}
-	if (worldTextEntityCount > 0) {
+	/*if (worldTextEntityCount > 0) {
 		spdlog::info("RenderSystem: Processed {} world text entities", worldTextEntityCount);
-	}
+	}*/
 
 	// Enable/disable HUD pass based on presence of HUD or text elements
 	// Note: EndFrame() is called by SceneRenderer::Render() before rendering
