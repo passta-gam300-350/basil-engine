@@ -98,8 +98,8 @@ void TextRenderer::SubmitWorldText(const WorldTextElementData& worldText)
 
     // Layout world-space text into glyphs
     LayoutWorldText(worldText, batch);
-    spdlog::info("TextRenderer::SubmitWorldText() - batch for atlas {} now has {} glyphs",
-        atlasTextureID, batch.glyphInstances.size());
+    /*spdlog::info("TextRenderer::SubmitWorldText() - batch for atlas {} now has {} glyphs",
+        atlasTextureID, batch.glyphInstances.size());*/
 }
 
 void TextRenderer::EndFrame()
@@ -115,13 +115,13 @@ void TextRenderer::EndFrame()
     for (auto& [atlasID, batch] : m_WorldFontBatches) {
         if (batch.dirty && !batch.glyphInstances.empty()) {
             UpdateWorldBatchSSBO(batch);
-            spdlog::info("TextRenderer::EndFrame() - Updated SSBO for atlas {}: {} glyphs",
-                atlasID, batch.glyphInstances.size());
+            /*spdlog::info("TextRenderer::EndFrame() - Updated SSBO for atlas {}: {} glyphs",
+                atlasID, batch.glyphInstances.size());*/
         }
     }
     if (!m_WorldFontBatches.empty()) {
-        spdlog::info("TextRenderer::EndFrame() - {} world batches, total glyphs: {}",
-            m_WorldFontBatches.size(), m_TotalGlyphs);
+        /*spdlog::info("TextRenderer::EndFrame() - {} world batches, total glyphs: {}",
+            m_WorldFontBatches.size(), m_TotalGlyphs);*/
     }
 }
 
