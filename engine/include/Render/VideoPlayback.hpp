@@ -19,6 +19,7 @@ Technology is prohibited.
 #include "Ecs/ecs.h"
 
 struct VideoSystem : public ecs::SystemBase {
+    void Init();
     void Update(ecs::world&);
     void FixedUpdate(ecs::world&);
 };

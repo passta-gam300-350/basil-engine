@@ -227,6 +227,25 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 	return rgb;
 }
 
+void FreeSoundChannel(entt::registry& registry, entt::entity entity) {
+	ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+	auto& vidc = ecsEntity.get<VideoComponent>();
+	RuntimeVideoData& ptr = *ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
+	if (ptr.m_VidResource->m_Chl) {
+		ptr.m_VidResource->m_Chl->stop();
+		ptr.m_VidResource->m_Chl = nullptr;
+	}
+}
+
+void VideoSystem::Init() {
+	auto world = Engine::GetWorld();
+	entt::registry& registry = world.impl.get_registry();
+
+	registry.on_construct<VideoComponent>().disconnect();
+	registry.on_destroy<VideoComponent>().disconnect();
+	registry.on_destroy<VideoComponent>().connect<FreeSoundChannel>();
+}
+
 void VideoSystem::Update(ecs::world& wrld) {
 	auto view = wrld.filter_entities<VideoComponent>();
 	if (!Engine::GetRenderSystem().GetSceneRenderer()->GetHUDRenderer())
