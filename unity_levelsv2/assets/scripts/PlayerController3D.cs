@@ -30,6 +30,13 @@ public class PlayerController3D : Behavior
 
     public bool canCollectTrash = true;
 
+    public bool wantsToCollect = false;
+    public bool wantsToMop = false;
+
+    public bool interactionsLocked = false;
+
+    private bool cheatUsed = false;
+
     public void Init()
     {
         // throw new Exception("This is a test for init");
@@ -89,13 +96,40 @@ public class PlayerController3D : Behavior
             onMopEnabled = true;
             canCollectTrash = false;
         }
+        // Interaction input
+        wantsToCollect = !interactionsLocked && Input.GetKey(KeyCode.E) && canCollectTrash;
+        wantsToMop = !interactionsLocked && Input.GetKey(KeyCode.R) && onMopEnabled;
+
+        // CHEAT: collect sticks + flap
+        if (Input.GetKey(KeyCode.K) && !cheatUsed)
+        {
+            cheatUsed = true;
+
+            Logger.Warn("CHEAT ACTIVATED: sticks + flap collected");
+
+            if (PuzzleManager.manager != null)
+            {
+                PuzzleManager.manager.UnlockSticks();
+                PuzzleManager.manager.UnlockFlap();
+                PuzzleManager.manager.RevealKiteBody();
+            }
+        }
 
         // Update mop when state changes
-        if (onMopEnabled != previousMopState && mopVisual != null)
+        if (onMopEnabled != previousMopState)
         {
-            mopVisual.visibility = onMopEnabled;
-            
-            Logger.Log("Mop visual: " + (onMopEnabled ? "shown" : "hidden"));
+            // Mop visual
+            if (mopVisual != null)
+                mopVisual.visibility = onMopEnabled;
+
+            // Trash bag visual (opposite of mop)
+            if (GameManager.instance != null)
+                GameManager.instance.SetBagVisibility(!onMopEnabled);
+
+            Logger.Log(
+                "Mop: " + (onMopEnabled ? "shown" : "hidden") +
+                " | Bag: " + (!onMopEnabled ? "shown" : "hidden")
+            );
         }
 
         bool isMoving = vel.MagnitudeSqr() > 0.001f;
