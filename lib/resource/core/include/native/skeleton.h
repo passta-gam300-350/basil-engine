@@ -14,8 +14,8 @@
 class SkeletonResourceData {
 public:
     struct Bone {
+        int m_parent_index; //-1 is root
         std::string m_bone_name;
-        int m_parent_index{ -1 }; //-1 is root
         int m_id;
         glm::vec4 m_inv_bind_c1; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
         glm::vec4 m_inv_bind_c2; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways

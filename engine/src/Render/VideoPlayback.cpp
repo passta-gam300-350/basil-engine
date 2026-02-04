@@ -230,10 +230,10 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 void FreeSoundChannel(entt::registry& registry, entt::entity entity) {
 	ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
 	auto& vidc = ecsEntity.get<VideoComponent>();
-	RuntimeVideoData& ptr = *ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
-	if (ptr.m_VidResource->m_Chl) {
-		ptr.m_VidResource->m_Chl->stop();
-		ptr.m_VidResource->m_Chl = nullptr;
+	RuntimeVideoData* ptr = ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
+	if (ptr && ptr->m_VidResource->m_Chl) {
+		ptr->m_VidResource->m_Chl->stop();
+		ptr->m_VidResource->m_Chl = nullptr;
 	}
 }
 

@@ -32,7 +32,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		auto& skeletonComponent = eachAEntity.get<SkeletonComponent>();
 
 		// Skip if not skeletal or not playing
-		if (animationComponent.isSkeletalAnim == false)
+		if (animationComponent.isSkeletalAnim == false && animationComponent.animatorInstance)
 		{
 			continue;
 		}
@@ -42,6 +42,16 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		}
 		if (animationComponent.animatorInstance == nullptr)
 		{
+			//what if animation changed
+			if (animationComponent.animationdata.m_guid && skeletonComponent.skeletondata.m_guid) {
+				skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
+				InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
+			}
+			continue;
+		}
+		if (!animationComponent.animationdata.m_guid || !skeletonComponent.skeletondata.m_guid) {
+			delete animationComponent.animatorInstance;
+			animationComponent.animatorInstance = nullptr;
 			continue;
 		}
 
@@ -51,7 +61,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
 	}
 	// SIMPLE ANIMATION //
-	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>();
+	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>(ecs::exclude<SkeletonComponent>);
 	for (auto eachAEntity : simpleAnimationEntites)
 	{
 		auto& animationComponent = eachAEntity.get<AnimationComponent>();
@@ -169,7 +179,14 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 
 	// 2. Create animator
 	int boneCount = static_cast<int>(skeletonData.bones.size());
+	if (animComp.animatorInstance) {
+		delete animComp.animatorInstance;
+		animComp.animatorInstance = nullptr;
+	}
 	animComp.animatorInstance = new animator(boneCount);
+
+	animComp.animatorInstance->addAnimation("default_ani1", animation);
+	animComp.animatorInstance->playAnimation("default_ani1", true);
 
 	// 3. Set animation
 	animComp.animatorInstance->currentAnimation = animation;
@@ -190,3 +207,5 @@ void CleanupSkeletalAnimation(AnimationComponent& animComp)
 }
 
 REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel& bc) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(animationContainer, animationcont, LoadAnimationContainer, [](animationContainer& ac) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(skeleton, skeleton, LoadSkeleton, [](skeleton& ac) {return; })

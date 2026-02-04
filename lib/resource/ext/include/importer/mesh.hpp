@@ -381,7 +381,11 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
     std::unordered_map<std::string, int> boneMap;
     auto skeldesc = ExtractSkeleton(scene, boneMap);
-    rp::serialization::yaml_serializer::serialize(skeldesc, parent + skeldesc.skel.m_name + ".desc");
+    std::string skeldescpath = parent + skeldesc.skel.m_name + ".desc";
+    if (std::filesystem::exists(skeldescpath)) {
+        skeldesc.base.m_guid = rp::serialization::yaml_serializer::deserialize<SkeletonDescriptor>(skeldescpath).base.m_guid;
+    }
+    rp::serialization::yaml_serializer::serialize(skeldesc, skeldescpath);
         
     //change this in the future, this is only single channel
     for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
