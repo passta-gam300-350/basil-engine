@@ -298,6 +298,7 @@ struct ResourceRegistry {
 
     template <typename T>
     T* Get(rp::Guid guid, ResourceHandle* out_handle = nullptr) {
+        if (!guid) return nullptr;
         auto* pool = Pool<T>();
         if (!pool) return nullptr;
         ResourceHandle h = pool->GetHandle(guid);

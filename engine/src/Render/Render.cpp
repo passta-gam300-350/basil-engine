@@ -351,6 +351,9 @@ void RenderSystem::Update(ecs::world& world) {
 						renderData.boneMatrices = skelComp.finalBoneMatrices.data();
 						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
 						renderData.isSkinned = true;
+						spdlog::info("[AnimTest] bones={}, isSkinned={}, ptr={}",
+							renderData.boneCount, renderData.isSkinned,
+							(void*)renderData.boneMatrices);
 					}
 				} 
 

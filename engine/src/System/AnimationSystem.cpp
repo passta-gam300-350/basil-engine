@@ -32,7 +32,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		auto& skeletonComponent = eachAEntity.get<SkeletonComponent>();
 
 		// Skip if not skeletal or not playing
-		if (animationComponent.isSkeletalAnim == false)
+		if (animationComponent.isSkeletalAnim == false && animationComponent.animatorInstance)
 		{
 			continue;
 		}
@@ -42,6 +42,16 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		}
 		if (animationComponent.animatorInstance == nullptr)
 		{
+			//what if animation changed
+			if (animationComponent.animationdata.m_guid && skeletonComponent.skeletondata.m_guid) {
+				skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
+				InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
+			}
+			continue;
+		}
+		if (!animationComponent.animationdata.m_guid || !skeletonComponent.skeletondata.m_guid) {
+			delete animationComponent.animatorInstance;
+			animationComponent.animatorInstance = nullptr;
 			continue;
 		}
 
@@ -51,7 +61,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
 	}
 	// SIMPLE ANIMATION //
-	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>();
+	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>(ecs::exclude<SkeletonComponent>);
 	for (auto eachAEntity : simpleAnimationEntites)
 	{
 		auto& animationComponent = eachAEntity.get<AnimationComponent>();
@@ -102,10 +112,11 @@ void animationSystem::FixedUpdate(ecs::world& world)
 }
 
 boneChannel LoadBoneChannel(const char* data) {
-	AnimationResourceData animData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
+	AnimationResourceData animResData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
 		reinterpret_cast<const std::byte*>(data)
 	);
-	boneChannel bc{ animData.m_name, animData.m_id };
+	AnimationResourceData::Channel const& animData = animResData.m_channels[0];
+	boneChannel bc{ animData.m_name, animData.m_id};
 	for (auto const& poskey : animData.m_positions) {
 		bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
 	}
@@ -118,6 +129,47 @@ boneChannel LoadBoneChannel(const char* data) {
 	return bc;
 }
 
+skeleton LoadSkeleton(const char* data) {
+	SkeletonResourceData skelData = rp::serialization::serializer<"bin">::deserialize<SkeletonResourceData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	skeleton skel{};
+	skel.bones.reserve(skelData.m_bones.size());
+	for (auto bone : skelData.m_bones) {
+		oneSkeletonBone onebone;
+		onebone.id = bone.m_id;
+		onebone.name = bone.m_bone_name;
+		onebone.parentIndex = bone.m_parent_index;
+		onebone.inverseBind = glm::mat4(bone.m_inv_bind_c1, bone.m_inv_bind_c2, bone.m_inv_bind_c3, bone.m_inv_bind_c4);
+		skel.bones.emplace_back(onebone);
+	}
+	return skel;
+}
+
+animationContainer LoadAnimationContainer(const char* data) {
+	AnimationResourceData animData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	animationContainer ac{};
+	ac.channels.reserve(animData.m_channels.size());
+	for (AnimationResourceData::Channel chl : animData.m_channels) {
+		boneChannel bc{ chl.m_name, chl.m_id };
+		for (auto const& poskey : chl.m_positions) {
+			bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
+		}
+		for (auto const& rotkey : chl.m_rotations) {
+			bc.addRotationKeyframe(rotkey.first / 1000, rotkey.second);
+		}
+		for (auto const& sclkey : chl.m_scales) {
+			bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
+		}
+		ac.channels.emplace_back(bc);
+	}
+	ac.ticksPerSecond = animData.m_ticks_per_sec;
+	ac.duration = animData.m_duration;
+	return ac;
+}
+
 // function / API to call when add component / load animation data 
 void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent& skelComp, const skeleton& skeletonData, animationContainer* animation)
 {
@@ -127,7 +179,14 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 
 	// 2. Create animator
 	int boneCount = static_cast<int>(skeletonData.bones.size());
+	if (animComp.animatorInstance) {
+		delete animComp.animatorInstance;
+		animComp.animatorInstance = nullptr;
+	}
 	animComp.animatorInstance = new animator(boneCount);
+
+	animComp.animatorInstance->addAnimation("default_ani1", animation);
+	animComp.animatorInstance->playAnimation("default_ani1", true);
 
 	// 3. Set animation
 	animComp.animatorInstance->currentAnimation = animation;
@@ -148,3 +207,5 @@ void CleanupSkeletalAnimation(AnimationComponent& animComp)
 }
 
 REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel& bc) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(animationContainer, animationcont, LoadAnimationContainer, [](animationContainer& ac) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(skeleton, skeleton, LoadSkeleton, [](skeleton& ac) {return; })

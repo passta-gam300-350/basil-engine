@@ -9,11 +9,17 @@
 //serialised native format
 class AnimationResourceData {
 public:
+    struct Channel {
+        std::string m_name;
+        int m_id;
+        std::map<float, glm::vec3> m_positions;
+        std::map<float, glm::quat> m_rotations;
+        std::map<float, glm::vec3> m_scales;
+    };
+    std::vector<Channel> m_channels;
     std::string m_name;
-    int m_id;
-    std::map<float, glm::vec3> m_positions;
-    std::map<float, glm::quat> m_rotations;
-    std::map<float, glm::vec3> m_scales;
+    float m_ticks_per_sec;
+    float m_duration;
 };
 
 #endif
