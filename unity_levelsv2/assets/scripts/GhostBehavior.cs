@@ -69,6 +69,11 @@ public class GhostBehavior : Behavior
     private float pauseTimer = 0.0f;         // Timer for pause duration
     private Rigidbody rb;                    // Rigidbody component for physics-based movement
 
+    public float ghostRadius;
+    private PlayerController3D player;
+    private GameObject playerObj;
+    private bool playerInside = false;
+
     private enum GhostState
     {
         Moving,     // Moving towards waypoint
@@ -116,6 +121,17 @@ public class GhostBehavior : Behavior
         currentState = GhostState.Moving;
         pauseTimer = 0.0f;
         Logger.Log($"GhostBehavior initialized with {waypointCount} waypoints.");
+
+        playerObj = GameObject.Find("PlayerGroup");
+
+        if (playerObj != null)
+        {
+            player = playerObj.transform.GetComponent<PlayerController3D>();
+        }
+        else
+        {
+            Logger.Warn("GhostBehavior: PlayerGroup not found");
+        }
     }
 
     public void Update()
@@ -136,6 +152,8 @@ public class GhostBehavior : Behavior
                 UpdatePause();
                 break;
         }
+
+        UpdatePlayerDistance();
     }
 
     public void FixedUpdate()
@@ -381,6 +399,44 @@ public class GhostBehavior : Behavior
         Logger.Log($"GhostBehavior: Moving to waypoint {currentWaypointIndex + 1}.");
     }
 
+    private void UpdatePlayerDistance()
+    {
+        if (player == null || playerObj == null)
+            return;
+
+        float distSqr = Vector3.DistanceSqr(
+            transform.position,
+            playerObj.transform.position
+        );
+
+        float radiusSqr = ghostRadius * ghostRadius;
+
+        if (distSqr <= radiusSqr)
+        {
+            if (!playerInside)
+            {
+                playerInside = true;
+
+                player.interactionsLocked = true;
+                player.wantsToCollect = false;
+                player.wantsToMop = false;
+
+                Logger.Log("Ghost: Player entered radius");
+            }
+        }
+        else
+        {
+            if (playerInside)
+            {
+                playerInside = false;
+
+                player.interactionsLocked = false;
+
+                Logger.Log("Ghost: Player left radius");
+            }
+        }
+    }
+
     // ========================================================================
     // TRIGGER COLLISION CALLBACKS (Unity-style)
     // ========================================================================
@@ -389,31 +445,17 @@ public class GhostBehavior : Behavior
     // Make sure the ghost has a collider component with isTrigger = true!
     // ========================================================================
 
-    /// <summary>
-    /// Called when another collider enters the ghost's trigger zone
-    /// </summary>
-    //public void OnTriggerEnter()
+    // Called when another collider enters the ghost's trigger zone
+    //public void OnTriggerEnter(GameObject other)
     //{
     //    // Check if the colliding object is the player
     //    if (other.name == "Player" || other.name == "PlayerGroup")
     //    {
     //        Logger.Log($"GhostBehavior: Player entered ghost trigger zone!");
-
-    //        // Example interactions:
-    //        // - Play a sound effect
-    //        // - Trigger a jumpscare animation
-    //        // - Load a different scene (game over)
-    //        // - Damage the player
-    //        // - Enable a UI prompt
-
-    //        // Example: Load game over scene
-    //        // Scene.LoadScene(0);
     //    }
     //}
 
-    /// <summary>
-    /// Called every frame while another collider stays in the ghost's trigger zone
-    /// </summary>
+    // Called every frame while another collider stays in the ghost's trigger zone
     //public void OnTriggerStay(GameObject other)
     //{
     //    // Check if player is still in range
@@ -430,20 +472,14 @@ public class GhostBehavior : Behavior
     //    }
     //}
 
-    ///// <summary>
-    ///// Called when another collider exits the ghost's trigger zone
-    ///// </summary>
+
+    // Called when another collider exits the ghost's trigger zone
     //public void OnTriggerExit(GameObject other)
     //{
-    //    // Check if the player left the trigger zone
     //    if (other.name == "Player" || other.name == "PlayerGroup")
     //    {
     //        Logger.Log($"GhostBehavior: Player left ghost trigger zone.");
 
-    //        // Example interactions:
-    //        // - Stop playing sounds
-    //        // - Hide UI warnings
-    //        // - Resume normal gameplay
     //    }
     //}
 }

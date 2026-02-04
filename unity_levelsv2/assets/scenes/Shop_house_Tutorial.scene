@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 175
+  slot: 178
   guid: 00
   dependencies: ~
 render_settings:
@@ -23,27 +23,24 @@ render_settings:
       - 00
       - 00
       - 00
+  ambient_light:
+    - 0.0299999993
+    - 0.0299999993
+    - 0.0299999993
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.0399999991
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
 entities:
   - Scene ID:
-      Scene ID: 4
-    LightComponent:
-      Type: 0
-      Color:
-        x: 1
-        y: 1
-        z: 1
-      Enabled: true
-      Cast Shadows: true
-      Intensity: 0.600000024
-      "[Dir/Spot] Direction":
-        x: -45
-        y: -45
-        z: 30
-      "[Point/Spot] Range": 10
-      "[Spot] Inner Cone Angle": 30
-      "[Spot] Outer Cone Angle": 45
+      Scene ID: 148
     entity name:
-      name: light
+      name: garbage_bin_2
     TransformComponent:
       m_Scale:
         x: 1
@@ -51,11 +48,30 @@ entities:
         z: 1
       m_Rotate:
         x: 0
-        y: -0
+        y: 0
         z: 0
       m_Trans:
         x: 0
-        y: 10.4424181
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267a87c778239bab1d38a94a2
+        type: 17099568057112876377
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
         z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
@@ -110,9 +126,42 @@ entities:
           y: 0.315332592
           z: 0.14893429
   - Scene ID:
-      Scene ID: 148
+      Scene ID: 4
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.600000024
+      "[Dir/Spot] Direction":
+        x: -45
+        y: -45
+        z: 30
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
     entity name:
-      name: garbage_bin_2
+      name: light
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 10.4424181
+        z: 0
+  - Scene ID:
+      Scene ID: 146
+    entity name:
+      name: footstep_9
     TransformComponent:
       m_Scale:
         x: 1
@@ -128,9 +177,9 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 3b267a87c778239bab1d38a94a2
+        guid: 3a87df67f919e1d9beefb0dcb95
         type: 17099568057112876377
-      volume: 0.349999994
+      volume: 0.150000006
       isLooping: false
       is3D: true
       isStreaming: false
@@ -194,48 +243,12 @@ entities:
       scriptProperties:
         - name: Dustbin.thrashRemaining
           type: System.Int32
-          value: 3
+          value: 8
           is_user_type: false
         - name: Dustbin.tossDistance
           type: System.Single
           value: 0.6
           is_user_type: false
-  - Scene ID:
-      Scene ID: 146
-    entity name:
-      name: footstep_9
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 3a87df67f919e1d9beefb0dcb95
-        type: 17099568057112876377
-      volume: 0.150000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - Scene ID:
       Scene ID: 150
     entity name:
@@ -258,45 +271,6 @@ entities:
         guid: 3b267b977ffad9b36b8bd00d6ca
         type: 17099568057112876377
       volume: 0.300000012
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
-  - Scene ID:
-      Scene ID: 152
-    entity name:
-      name: ambience_traffic
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    Behaviour:
-      classesName:
-        - PlayAudioLoop
-    AudioComponent:
-      audioAssetGuid:
-        guid: 3ace2f075dbacc951c03bdff7a6
-        type: 17099568057112876377
-      volume: 0.519999981
       isLooping: false
       is3D: true
       isStreaming: false
@@ -363,6 +337,45 @@ entities:
           x: 1
           y: 0.951241732
           z: 0.608540893
+  - Scene ID:
+      Scene ID: 152
+    entity name:
+      name: ambience_traffic
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2f075dbacc951c03bdff7a6
+        type: 17099568057112876377
+      volume: 0.519999981
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -2182,16 +2195,28 @@ entities:
         y: 0
         z: 0
   - Scene ID:
-      Scene ID: 174
+      Scene ID: 175
     entity name:
-      name: Intro_VO1
+      name: TutorialScript
+    Behaviour:
+      classesName:
+        - TutorialLevel
+      scriptProperties:
+        - name: TutorialLevel.voDuration
+          type: System.Single
+          value: 6
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 176
+    entity name:
+      name: TutorialIntroVO
     AudioComponent:
       audioAssetGuid:
-        guid: 10c51ce77dab10c066438204b5c
+        guid: aa1c2e2745c99db806cba11941e
         type: 17099568057112876377
       volume: 1
       isLooping: false
-      is3D: false
+      is3D: true
       isStreaming: false
       playOnAwake: false
       minDistance: 1

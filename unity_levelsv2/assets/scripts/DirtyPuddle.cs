@@ -29,7 +29,7 @@ public class DirtyPuddle : Behavior
         if (playerController.onMopEnabled && 
             Vector3.DistanceSqr(playerObject.transform.position, transform.position) <= wipeDist)
         {
-            bool rHeldNow = Input.GetKey(KeyCode.R);
+            bool rHeldNow = playerController.wantsToMop;
 
             if (rHeldNow && !wasRHeld)
             {

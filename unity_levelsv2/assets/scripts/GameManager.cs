@@ -30,7 +30,10 @@ public class GameManager : Behavior
     public bool hasBag = true; // player starts with a bag
     public bool bagIsFull = false;
 
-    public GameObject droppedBagPrefab;
+    public GameObject maxTrashAudioObject;
+    private Audio maxTrashAudio;
+
+    //public GameObject droppedBagPrefab;
 
 
     public void Init()
@@ -66,15 +69,27 @@ public class GameManager : Behavior
             Logger.Warn("PlayerGroup not found; skipping player setup.");
         }
 
-        droppedBagPrefab = GameObject.Find("DroppedTrashBag");
+        //droppedBagPrefab = GameObject.Find("DroppedTrashBag");
 
-        if (droppedBagPrefab == null)
+        //if (droppedBagPrefab == null)
+        //{
+        //    Logger.Warn("DroppedTrashBag prefab not found!");
+        //}
+        //else
+        //{
+        //    droppedBagPrefab.visibility = false; // keep template hidden
+        //}
+
+        maxTrashAudioObject = GameObject.Find("MengMaxTrashAudio"); // all levels should have
+        if (maxTrashAudioObject != null)
         {
-            Logger.Warn("DroppedTrashBag prefab not found!");
+            maxTrashAudio = maxTrashAudioObject.transform.GetComponent<Audio>();
+            if (maxTrashAudio == null)
+                Logger.Warn("MaxTrashAudio object found but Audio component missing!");
         }
         else
         {
-            droppedBagPrefab.visibility = false; // keep template hidden
+            Logger.Warn("MaxTrashAudio object not found!");
         }
 
     }
@@ -85,10 +100,10 @@ public class GameManager : Behavior
             DropBag();
         }
 
-        if (player != null && isCleaned && KitePuzzleCompleted && TrainPuzzleCompleted)
+        if (player != null && KitePuzzleCompleted)
         {
             Logger.Log("Congratz: Move to Kite Level!");
-            Scene.LoadScene(3);
+            Scene.LoadScene(4);
         }
     }
 
@@ -110,6 +125,11 @@ public class GameManager : Behavior
             trashInHand = maxTrashInHand;
             bagIsFull = true;
             Logger.Log("Bag is full!");
+
+            if (bagIsFull && maxTrashAudio != null)
+            {
+                maxTrashAudio.Play();
+            }
         }
 
         UpdateBagSize();
@@ -180,6 +200,13 @@ public class GameManager : Behavior
         UpdatePlayerSpeed();
 
         Logger.Log("Bag dropped");
+    }
+
+    public void SetBagVisibility(bool visible)
+    {
+        if (ThrashCollect == null) return;
+
+        ThrashCollect.visibility = visible;
     }
 
     public void DisableControls()
