@@ -4,7 +4,7 @@ using BasilEngine.Debug;
 using BasilEngine.Mathematics;
 using System;
 
-public class CollectSticks : Behavior
+public class CollectKiteBody : Behavior
 {
     private GameObject player;
     private PlayerController3D controller;
@@ -39,10 +39,10 @@ public class CollectSticks : Behavior
                 return;
             }
 
-            Logger.Log("Sticks collected!");
+            Logger.Log("Kite collected!");
 
             GameObject.Destroy(gameObject);
-            PuzzleManager.manager.UnlockSticks();
+            PuzzleManager.manager.RevealKiteBody();
         }
         //Logger.Log("Distance" + distance);
     }

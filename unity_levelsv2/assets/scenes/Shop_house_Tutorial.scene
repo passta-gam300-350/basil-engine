@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 178
+  slot: 179
   guid: 00
   dependencies: ~
 render_settings:
@@ -488,57 +488,6 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e46bb75f49fdc9ff91c281af1
-        type: 4838001395392124604
-      m_MaterialGuid:
-        rubbish:
-          guid: 9ccc1257d638a8b8f37818a0553
-          type: 175488002581160416
-    BoxCollider:
-      size:
-        x: 0.5
-        y: 0.300999999
-        z: 0.400000006
-      CenterOffset:
-        x: 0.00999999978
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 9
-    entity name:
-      name: trash1
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00475000218
-        y: 0.00474999985
-        z: 0.00475000218
-      m_Rotate:
-        x: 0
-        y: 56.7120018
-        z: 0
-      m_Trans:
-        x: 2.02843618
-        y: 0.00117171369
-        z: 1.0300765
-    Behaviour:
-      classesName:
-        - TrashCollectable
-      scriptProperties:
-        - name: TrashCollectable.collect_distance
-          type: System.Single
-          value: 0.3
-          is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1641,9 +1590,9 @@ entities:
         y: 0.300000012
         z: 0.5
       CenterOffset:
-        x: 0
-        y: 0
-        z: 0
+        x: -0.0599999987
+        y: 0.00999999978
+        z: -0.0700000003
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -1664,9 +1613,9 @@ entities:
         y: 34.7009773
         z: 179.999893
       m_Trans:
-        x: 1.56955111
-        y: 0.00105159217
-        z: 0.893773198
+        x: 1.57899237
+        y: 0.00105166866
+        z: 0.962534249
     Behaviour:
       classesName:
         - TrashCollectable
@@ -2213,6 +2162,29 @@ entities:
     AudioComponent:
       audioAssetGuid:
         guid: aa1c2e2745c99db806cba11941e
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 178
+    entity name:
+      name: TutorialEndVO
+    AudioComponent:
+      audioAssetGuid:
+        guid: 10c52727eab9bdf433140a3e0a2
         type: 17099568057112876377
       volume: 1
       isLooping: false

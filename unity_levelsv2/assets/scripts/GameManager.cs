@@ -99,12 +99,6 @@ public class GameManager : Behavior
         {
             DropBag();
         }
-
-        if (player != null && KitePuzzleCompleted)
-        {
-            Logger.Log("Congratz: Move to Kite Level!");
-            Scene.LoadScene(4);
-        }
     }
 
     public void FixedUpdate()

@@ -16,6 +16,7 @@
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CameraManager.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CameraTest.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CollectFlap.cs" />
+<Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CollectKiteBody.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\CollectSticks.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\Cutscene.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\DirtyPuddle.cs" />
@@ -27,6 +28,7 @@
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\KiteController.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\KiteInteractablePoint.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\KiteTarget.cs" />
+<Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\Level1.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\MainMenu.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\NewSaviorTestScript.cs" />
 <Compile Include="C:\Users\joyta\OneDrive\Documents\Digital Production GitHub\gam300\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />

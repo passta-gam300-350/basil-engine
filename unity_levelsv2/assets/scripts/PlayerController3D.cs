@@ -111,6 +111,7 @@ public class PlayerController3D : Behavior
             {
                 PuzzleManager.manager.UnlockSticks();
                 PuzzleManager.manager.UnlockFlap();
+                PuzzleManager.manager.RevealKiteBody();
             }
         }
 
