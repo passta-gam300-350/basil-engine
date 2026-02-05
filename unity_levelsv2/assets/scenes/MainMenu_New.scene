@@ -166,4 +166,6 @@ entities:
         x: 0
         y: 0
         z: 0
-    Behaviour: ~
+    Behaviour:
+      classesName:
+        - MainMenuManager

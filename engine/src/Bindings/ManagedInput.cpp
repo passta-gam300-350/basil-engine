@@ -61,21 +61,7 @@ bool ManagedInput::GetKeyPress(int keycode)
 		return GetMousePress(keycode);
 	}
 
-	static bool pressed = false;
-	if (InputManager::Get_Instance()->Is_KeyPressed(keycode))
-	{
-		if (!pressed)
-		{
-			pressed = true;
-			return true;
-		}
-	}
-	else
-	{
-		pressed = false;
-	}
-	
-	return false;
+	return InputManager::Get_Instance()->Is_KeyTriggered(keycode);
 }
 
 void ManagedInput::GetMousePosition(float* xp, float* yp)

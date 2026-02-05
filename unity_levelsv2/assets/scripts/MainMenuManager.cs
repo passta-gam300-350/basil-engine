@@ -3,7 +3,7 @@ using BasilEngine.Components;
 using BasilEngine.Mathematics;
 using BasilEngine.Debug;
 using System;
-
+using BasilEngine.SceneManagement;
 
 
 public class MainMenuManager : Behavior
@@ -32,40 +32,57 @@ public class MainMenuManager : Behavior
     }
     public void Update()
     {
-        if ((Input.GetKey(KeyCode.DOWN) || Input.GetKey(KeyCode.S)) && !downKeyDebounce)
+        //if ((Input.GetKey(KeyCode.DOWN) || Input.GetKey(KeyCode.S)) && !downKeyDebounce)
+        //{
+        //    downKeyDebounce = true;
+        //    if (currentState == MenuStates.PLAY_SELECT)
+        //    {
+        //        currentState = MenuStates.QUIT_SELECT;
+        //    }
+        //    else currentState = MenuStates.PLAY_SELECT;
+        //}
+        //else if (!Input.GetKey(KeyCode.DOWN) && !Input.GetKey(KeyCode.S))
+        //{
+        //    downKeyDebounce = false;
+        //}
+        if (Input.GetKeyPress(KeyCode.DOWN) || Input.GetKeyPress(KeyCode.S))
         {
-            downKeyDebounce = true;
+            // Execute action for down key press
             if (currentState == MenuStates.PLAY_SELECT)
             {
                 currentState = MenuStates.QUIT_SELECT;
             }
             else currentState = MenuStates.PLAY_SELECT;
         }
-        else if (!Input.GetKey(KeyCode.DOWN) && !Input.GetKey(KeyCode.S))
+
+        if (Input.GetKeyPress(KeyCode.UP) || Input.GetKeyPress(KeyCode.W))
         {
-            downKeyDebounce = false;
-        }
-
-
-
-
-        if ((Input.GetKeyPress(KeyCode.UP) || Input.GetKeyPress(KeyCode.W)) && !upKeyDebounce)
-        {
-
-
-            upKeyDebounce = true;
-
-
+            // Execute action for up key press
             if (currentState == MenuStates.QUIT_SELECT)
             {
                 currentState = MenuStates.PLAY_SELECT;
             }
             else currentState = MenuStates.QUIT_SELECT;
         }
-        else if (!Input.GetKey(KeyCode.UP) && !Input.GetKey(KeyCode.W))
-        {
-            upKeyDebounce = false;
-        }
+
+
+        //if ((Input.GetKeyPress(KeyCode.UP) || Input.GetKeyPress(KeyCode.W)) && !upKeyDebounce)
+        //{
+
+
+        //    upKeyDebounce = true;
+
+
+        //    if (currentState == MenuStates.QUIT_SELECT)
+        //    {
+        //        currentState = MenuStates.PLAY_SELECT;
+        //    }
+        //    else currentState = MenuStates.QUIT_SELECT;
+        //}
+        //else if (!Input.GetKey(KeyCode.UP) && !Input.GetKey(KeyCode.W))
+        //{
+        //    upKeyDebounce = false;
+        //}
 
         switch (currentState)
         {
@@ -78,6 +95,19 @@ public class MainMenuManager : Behavior
 
         }
 
+
+        if (Input.GetKeyPress(KeyCode.ENTER) || Input.GetKeyPress(KeyCode.SPACE))
+        {
+            switch (currentState)
+            {
+                case MenuStates.PLAY_SELECT:
+                    Scene.LoadSceneByIndex(1);
+                    break;
+                case MenuStates.QUIT_SELECT:
+                    Logger.Log("QUIT!");
+                    break;
+            }
+        }
     }
 
     public void FixedUpdate()
