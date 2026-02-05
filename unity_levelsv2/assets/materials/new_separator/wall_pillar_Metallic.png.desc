@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73df7d5d81313a9cd990c3c5
+  m_importer: .texture
+  m_source: materials\new_separator\wall_pillar_Metallic.png
+  m_name: wall_pillar_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

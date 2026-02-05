@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73d777bc86d166baa4f8127b
+  m_importer: .texture
+  m_source: materials\new_separator\wall_pillar_Height.png
+  m_name: wall_pillar_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

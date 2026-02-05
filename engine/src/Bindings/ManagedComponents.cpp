@@ -161,6 +161,21 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		});
 		return id;
 	}
+	if (strName == "HudComponent")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Particle component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Particle component check
+			bool result = entity.any<HUDComponent>(); // Replace with actual Particle component
+			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<HUDComponent>();
+		});
+		return id;
+	}
 
 
 

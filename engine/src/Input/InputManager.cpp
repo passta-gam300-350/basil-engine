@@ -144,8 +144,8 @@ void InputManager::Update()
 
     mouseConsumed = false;
 
-    for (auto& keyState : keyReleasedStates)
-        keyState.second = false;
+    //for (auto& keyState : keyReleasedStates)
+    //    keyState.second = false;
 
     for (auto& mouseState : mouseReleasedStates)
         mouseState.second = false;

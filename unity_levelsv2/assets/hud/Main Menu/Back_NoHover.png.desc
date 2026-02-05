@@ -1,0 +1,7 @@
+base:
+  m_guid: dc3b6a57a38ab12282aba0f571b
+  m_importer: .texture
+  m_source: hud\Main Menu\Back_NoHover.png
+  m_name: Back_NoHover.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

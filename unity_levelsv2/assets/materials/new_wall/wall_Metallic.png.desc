@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf744f72d59e2af1997714fe2e
+  m_importer: .texture
+  m_source: materials\new_wall\wall_Metallic.png
+  m_name: wall_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

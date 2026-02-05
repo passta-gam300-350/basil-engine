@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73e979e18785ea872a54aa65
+  m_importer: .texture
+  m_source: materials\new_separator\wall_pillar_Normal.png
+  m_name: wall_pillar_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

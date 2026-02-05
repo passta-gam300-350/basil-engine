@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73217de494c02b38f63b4e11
+  m_importer: .texture
+  m_source: materials\new_ceiling\ceiling_Height.png
+  m_name: ceiling_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

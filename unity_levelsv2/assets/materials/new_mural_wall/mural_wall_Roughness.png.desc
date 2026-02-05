@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73b979158486b394c32e90f3
+  m_importer: .texture
+  m_source: materials\new_mural_wall\mural_wall_Roughness.png
+  m_name: mural_wall_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

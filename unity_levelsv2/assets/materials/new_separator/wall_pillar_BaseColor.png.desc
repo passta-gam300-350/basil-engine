@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73c47353bbe5ac14919f2cea
+  m_importer: .texture
+  m_source: materials\new_separator\wall_pillar_BaseColor.png
+  m_name: wall_pillar_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
