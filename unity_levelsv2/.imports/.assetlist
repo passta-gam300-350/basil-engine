@@ -562,6 +562,9 @@
 "OpeningCutscene BGM.ogg":
   "m_guid": "30b42b476ad8c7fb300b598bedc"
   "m_typeindex": "17099568057112876377"
+"PAUSED_Text.png":
+  "m_guid": "126d92667f51b597f33f4c32d5f5"
+  "m_typeindex": "126269861530532084"
 "PLAY_NoHover.png":
   "m_guid": "dc3b6b87675a43e6122d9a15ac1"
   "m_typeindex": "126269861530532084"
@@ -595,6 +598,51 @@
 "Paper-Shufle_6.ogg":
   "m_guid": "469fcda737c9c1c67f6f941c52b"
   "m_typeindex": "17099568057112876377"
+"PauseMenu_CleanBackground.jpg":
+  "m_guid": "1247c2bd78f2abaedff9db54bb0b"
+  "m_typeindex": "126269861530532084"
+"Pause_GameEnd_Menu.jpg":
+  "m_guid": "1297077f7b4d908fbc88e4c9d83b"
+  "m_typeindex": "126269861530532084"
+"Pause_MainMenu.jpg":
+  "m_guid": "1297078f72af81dcea768e761d68"
+  "m_typeindex": "126269861530532084"
+"Pause_MainMenu_Hover.png":
+  "m_guid": "1253e24e77db859075f769bf5c68"
+  "m_typeindex": "126269861530532084"
+"Pause_MainMenu_NoHover.png":
+  "m_guid": "1253e25c72b1b0d9bb4d3558b46d"
+  "m_typeindex": "126269861530532084"
+"Pause_Quit_No.jpg":
+  "m_guid": "129707997c5aa017e2f2c70899ab"
+  "m_typeindex": "126269861530532084"
+"Pause_Quit_Yes.jpg":
+  "m_guid": "129707a479dbb0ece368f0d188d5"
+  "m_typeindex": "126269861530532084"
+"Pause_Restart.jpg":
+  "m_guid": "129707b07ef787b38c2b5a5f9588"
+  "m_typeindex": "126269861530532084"
+"Pause_Restart_Hover.png":
+  "m_guid": "1253e2677b869503415fc81e20c5"
+  "m_typeindex": "126269861530532084"
+"Pause_Restart_No.jpg":
+  "m_guid": "129707ba7ca19a09063b1bb3d1a7"
+  "m_typeindex": "126269861530532084"
+"Pause_Restart_NoHover.png":
+  "m_guid": "1253e271762882b115ad93a3b052"
+  "m_typeindex": "126269861530532084"
+"Pause_Restart_Yes.jpg":
+  "m_guid": "129707c47e938f8548dca4026ff7"
+  "m_typeindex": "126269861530532084"
+"Pause_Resume.jpg":
+  "m_guid": "129707cd714ea914c669891eebfb"
+  "m_typeindex": "126269861530532084"
+"Pause_Resume_Hover.png":
+  "m_guid": "1253e27b7638b65d490ab164b41e"
+  "m_typeindex": "126269861530532084"
+"Pause_Resume_NoHover.png":
+  "m_guid": "1253e2837e7f90e40f2ee528f3a4"
+  "m_typeindex": "126269861530532084"
 "PickUpItem_1.ogg":
   "m_guid": "30b42bd73438ca72c7d1304b892"
   "m_typeindex": "17099568057112876377"

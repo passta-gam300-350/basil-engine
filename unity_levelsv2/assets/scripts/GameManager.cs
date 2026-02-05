@@ -9,7 +9,7 @@ using System;
 
 public class GameManager : Behavior
 {
-    
+
 
     public static GameManager instance;
     public bool TrainPuzzleCompleted = false;
@@ -34,14 +34,15 @@ public class GameManager : Behavior
     private Audio maxTrashAudio;
 
     //public GameObject droppedBagPrefab;
-
+    public static bool IsGamePaused = false;
 
     public void Init()
     {
         instance = this;
 
         ThrashCollect = GameObject.Find("ThrashCollect");
-        if (ThrashCollect == null){
+        if (ThrashCollect == null)
+        {
             Logger.Warn("ThrashCollect not found; skipping trash visual setup.");
         }
         else
@@ -51,16 +52,19 @@ public class GameManager : Behavior
 
         player = GameObject.Find("PlayerGroup");
 
-        if (player != null){
+        if (player != null)
+        {
             playerRigidbody = player.transform.GetComponent<Rigidbody>();
 
-            if (playerRigidbody == null){
+            if (playerRigidbody == null)
+            {
                 Logger.Warn("Player Rigidbody not found!");
             }
-        
+
             controller = player.transform.GetComponent<PlayerController3D>();
 
-            if(controller == null){
+            if (controller == null)
+            {
                 Logger.Warn("PlayerController3D not found!");
             }
         }
@@ -239,5 +243,19 @@ public class GameManager : Behavior
     public void CompleteKitePuzzle()
     {
         KitePuzzleCompleted = true;
+    }
+
+    public bool GetPaused()
+    {
+        return IsGamePaused;
+    }
+
+    public void PauseGame()
+    {
+        IsGamePaused = true;
+    }
+    public void UnpauseGame()
+    {
+        IsGamePaused = false;
     }
 }

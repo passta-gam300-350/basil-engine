@@ -1,0 +1,7 @@
+base:
+  m_guid: 126d92667f51b597f33f4c32d5f5
+  m_importer: .texture
+  m_source: 2d\ui\pause menu\PauseMenu_Buttons\texts\PAUSED_Text.png
+  m_name: PAUSED_Text.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

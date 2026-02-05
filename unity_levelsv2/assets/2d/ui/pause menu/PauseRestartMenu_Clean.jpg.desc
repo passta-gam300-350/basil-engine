@@ -1,0 +1,7 @@
+base:
+  m_guid: 1247c2d47fdba53e957a6f6054bf
+  m_importer: .texture
+  m_source: 2d\ui\pause menu\PauseRestartMenu_Clean.jpg
+  m_name: PauseRestartMenu_Clean.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
