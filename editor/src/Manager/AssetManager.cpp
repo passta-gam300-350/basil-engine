@@ -94,7 +94,7 @@ std::vector<std::string> AssetManager::GetSubDirectories() {
 }
 
 AssetManager::AssetManager(std::string const& root_dir, std::string const& import_dir)
-	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_DescriptorListMtx{}, m_IndexingWorker {} {
+	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_DescriptorListMtx{}, m_IndexingWorker{} {
 	m_LastNotificationTime = std::chrono::steady_clock::now();
 	m_NeedsRescan = false;
 	if (!std::filesystem::exists(m_ImportedAssetPath)) {
@@ -329,6 +329,11 @@ void AssetManager::FileIndexingWorkerLoop() {
 				else if (!std::filesystem::exists(desc_name)) {
 					rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(entry.path().string(), m_RootPath);
 				}
+
+				auto pos = desc_name.find_first_of(".");
+				if (pos != std::string::npos) {
+					desc_name = desc_name.substr(0, pos) + ".desc";
+				}
 				m_FileList.emplace(dir_path, desc_name);
 			}
 		}
@@ -455,7 +460,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					}
 
 					// Handles dynamically created desc
-					if (file_ext.find(".desc")!=std::string::npos) {
+					if (file_ext.find(".desc") != std::string::npos) {
 						dir_path = getParentPath(nfile);
 						{
 							std::lock_guard lg_file{ m_DescriptorListMtx };
@@ -565,11 +570,11 @@ void AssetManager::RescanDirectory() {
 				std::lock_guard lg{ m_DescriptorListMtx };
 				m_FileList.emplace(dir_path, file_path);
 			}
-				// Log recovered file
-				std::filesystem::path p(file_path);
-				std::wcout << L"Recovered: " << p.filename().wstring() << L"\n";
-			}
+			// Log recovered file
+			std::filesystem::path p(file_path);
+			std::wcout << L"Recovered: " << p.filename().wstring() << L"\n";
 		}
+	}
 	catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Rescan error: " << e.what() << "\n";
 	}
