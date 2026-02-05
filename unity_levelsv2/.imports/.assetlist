@@ -145,6 +145,9 @@
 "Carryon_Train_Roughness.png":
   "m_guid": "560ddd07cadb39066039e59b27b"
   "m_typeindex": "126269861530532084"
+"CaveatBrush-Regular.ttf":
+  "m_guid": "ff7f5c7366bb0f067a65ea8155"
+  "m_typeindex": "10090887602259309668"
 "Ceilingfan_ceilingfan_Holder_BaseColor.png":
   "m_guid": "98e42b97e7fa01f89b21de833fc"
   "m_typeindex": "126269861530532084"
@@ -1996,6 +1999,9 @@
 "hdb_2_mesh.obj":
   "m_guid": "136eda7db6a000955607460181"
   "m_typeindex": "4838001395392124604"
+"ingameBGM.ogg":
+  "m_guid": "1fdb32072b8886676f7854ee681"
+  "m_typeindex": "17099568057112876377"
 "kitchenCabinet.obj":
   "m_guid": "98e46937e72ac6d40e2610281a0"
   "m_typeindex": "4838001395392124604"
@@ -2689,6 +2695,9 @@
 "mainmenu_screen.jpg":
   "m_guid": "518484793984f8f17f242cc860"
   "m_typeindex": "126269861530532084"
+"meng_level1_combine.ogg":
+  "m_guid": "fc464076c2b4b3f54a653d1302"
+  "m_typeindex": "17099568057112876377"
 "meng_new_1.ogg":
   "m_guid": "10c51ce77dab10c066438204b5c"
   "m_typeindex": "17099568057112876377"
@@ -3487,6 +3496,21 @@
 "wall_wall_Roughness.png":
   "m_guid": "98e45c37354ba01abc8c0c8697f"
   "m_typeindex": "126269861530532084"
+"wetmop1.ogg":
+  "m_guid": "f78fab7f908e00c36634fa28bf"
+  "m_typeindex": "17099568057112876377"
+"wetmop2.ogg":
+  "m_guid": "f78fb97925b50573db01efbe8e"
+  "m_typeindex": "17099568057112876377"
+"wetmop3.ogg":
+  "m_guid": "f78fc47df2b3e6a7a73e0fdbfa"
+  "m_typeindex": "17099568057112876377"
+"wetmop4.ogg":
+  "m_guid": "f78fcd728da00c6fb7c49d03a4"
+  "m_typeindex": "17099568057112876377"
+"wetmop5.ogg":
+  "m_guid": "f78fd87fc2be2531ae5e0296ac"
+  "m_typeindex": "17099568057112876377"
 "workbench.obj":
   "m_guid": "98e46de7a6697e1c8abc89d5a22"
   "m_typeindex": "4838001395392124604"

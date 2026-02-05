@@ -74,6 +74,8 @@ public class GhostBehavior : Behavior
     private GameObject playerObj;
     private bool playerInside = false;
 
+    private bool activated = false;
+
     private enum GhostState
     {
         Moving,     // Moving towards waypoint
@@ -132,10 +134,17 @@ public class GhostBehavior : Behavior
         {
             Logger.Warn("GhostBehavior: PlayerGroup not found");
         }
+
+        gameObject.visibility = false;   // start hidden
+        activated = false;
     }
 
     public void Update()
     {
+
+        if (!activated)
+            return;
+
         // Don't do anything if no waypoints configured
         if (waypointCount == 0)
         {
@@ -420,8 +429,6 @@ public class GhostBehavior : Behavior
                 player.interactionsLocked = true;
                 player.wantsToCollect = false;
                 player.wantsToMop = false;
-
-                Logger.Log("Ghost: Player entered radius");
             }
         }
         else
@@ -432,10 +439,20 @@ public class GhostBehavior : Behavior
 
                 player.interactionsLocked = false;
 
-                Logger.Log("Ghost: Player left radius");
             }
         }
     }
+
+    public void ActivateGhost()
+    {
+        gameObject.visibility = true;
+        activated = true;
+
+        currentWaypointIndex = 0;
+        currentState = GhostState.Moving;
+
+    }
+
 
     // ========================================================================
     // TRIGGER COLLISION CALLBACKS (Unity-style)
