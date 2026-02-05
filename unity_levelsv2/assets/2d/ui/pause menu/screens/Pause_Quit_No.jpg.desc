@@ -1,0 +1,7 @@
+base:
+  m_guid: 129707997c5aa017e2f2c70899ab
+  m_importer: .texture
+  m_source: 2d\ui\pause menu\screens\Pause_Quit_No.jpg
+  m_name: Pause_Quit_No.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

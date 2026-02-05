@@ -18,7 +18,7 @@ public class MainMenuManager : Behavior
 
 
     private GameObject[] menus = new GameObject[2];
-    private HudComponent play;
+    private HudComponent play,quit;
 
     private bool upKeyDebounce, downKeyDebounce;
 
@@ -33,6 +33,7 @@ public class MainMenuManager : Behavior
         menus[1] = GameObject.Find("GUIBackground_Quit");
 
         play = menus[0].transform.GetComponent<HudComponent>();
+        quit = menus[1].transform.GetComponent<HudComponent>();
 
         audio = transform.GetComponent<Audio>();
         targetVolume = audio.Volume;
@@ -109,9 +110,11 @@ public class MainMenuManager : Behavior
         {
             case MenuStates.PLAY_SELECT:
                 play.Visible = true;
+                quit.Visible = false;
                 break;
             case MenuStates.QUIT_SELECT:
                 play.Visible = false;
+                quit.Visible = true;
                 break;
 
         }

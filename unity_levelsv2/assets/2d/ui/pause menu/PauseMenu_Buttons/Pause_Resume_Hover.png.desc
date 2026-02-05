@@ -1,0 +1,7 @@
+base:
+  m_guid: 1253e27b7638b65d490ab164b41e
+  m_importer: .texture
+  m_source: 2d\ui\pause menu\PauseMenu_Buttons\Pause_Resume_Hover.png
+  m_name: Pause_Resume_Hover.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
