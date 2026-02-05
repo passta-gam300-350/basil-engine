@@ -401,6 +401,9 @@ void AssetManager::FileIndexingWorkerLoop() {
 			do {
 				std::wstring filename(fni->FileName, fni->FileNameLength / sizeof(WCHAR));
 				std::string nfile{ normalizePath(GetRootPath() + "/" + normalizePath(wstring_to_string(filename))) };
+				if (*nfile.crbegin() == '\0') {
+					nfile.resize(nfile.size() - 1); //hack, not sure why nfile has a '\0' at the back
+				}
 
 				// Update last notification time
 				m_LastNotificationTime = std::chrono::steady_clock::now();
@@ -415,13 +418,14 @@ void AssetManager::FileIndexingWorkerLoop() {
 
 				std::string file_ext{ getFileExtension(nfile) };
 
+				// Legacy stuff, we needd to handle generated descriptors as well
 				// Skip .desc files early (they're generated, not source assets)
-				if (file_ext == ".desc") {
+				/*if (file_ext == ".desc") {
 					if (fni->NextEntryOffset == 0) break;
 					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
 						reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
 					continue;
-				}
+				}*/
 
 				std::string dir_path{};
 				std::string descriptor_filepath{};
@@ -455,7 +459,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					}
 
 					// Handles dynamically created desc
-					if (file_ext.find(".desc")!=std::string::npos) {
+					if (file_ext == ".desc") {
 						dir_path = getParentPath(nfile);
 						{
 							std::lock_guard lg_file{ m_DescriptorListMtx };
@@ -499,7 +503,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 							std::lock_guard lg{ m_DescriptorListMtx };
 							auto files = GetFiles(dir_path);
 							for (auto it = files.first; it != files.second; ++it) {
-								if (normalizePath(it->second) == nfile) {
+								if (normalizePath(it->second) == descriptor_filepath) {
 									m_FileList.erase(it); // erase just this one
 									break;
 								}
@@ -514,6 +518,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					std::wcout << L"Renamed to: " << filename << "\n";
 					break;
 				}
+				m_ActivityCallback(nfile);
 				if (fni->NextEntryOffset == 0) break;
 				fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
 					reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);

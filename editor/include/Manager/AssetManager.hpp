@@ -29,6 +29,8 @@ struct AssetManager {
 	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
 	std::atomic<bool> m_NeedsRescan;
 
+	std::function<void(std::string const&)> m_ActivityCallback;
+
 	// Prefab synchronization tracking
 	std::vector<std::string> m_ChangedPrefabs;  ///< List of prefab file paths that have changed
 	std::mutex m_ChangedPrefabsMtx;              ///< Mutex for thread-safe access to changed prefabs list

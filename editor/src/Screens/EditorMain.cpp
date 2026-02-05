@@ -239,6 +239,7 @@ void EditorMain::init()
 	glfwMaximizeWindow(window);
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	m_AssetManager->InitWorkerLoop();
+	m_AssetManager->m_ActivityCallback = [&](std::string const& str) {m_AssetBrowserCache.needsRefresh = true; };
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 

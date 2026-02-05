@@ -281,7 +281,7 @@ private:
 		std::string cachedPath;
 		std::vector<std::string> cachedSubdirs;
 		std::vector<std::pair<std::string, std::string>> cachedFiles;
-		bool needsRefresh = true;
+		std::atomic_bool needsRefresh = true;
 	} m_AssetBrowserCache;
 
 	// ========================================================================
