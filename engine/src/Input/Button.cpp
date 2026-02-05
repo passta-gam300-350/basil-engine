@@ -15,6 +15,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+Button::Button() : x(),y(),width(),height(),hovered(),pressed()
+{
+	
+}
+
 Button::Button(float x, float y, float width, float height, const std::string& text)
     : x(x),
       y(y),

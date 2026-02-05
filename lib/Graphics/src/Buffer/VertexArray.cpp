@@ -23,6 +23,7 @@ uint32_t VertexBufferLayout::Element::GetSizeOfType(uint32_t type)
 	switch (type)
 	{
 	case GL_FLOAT: return sizeof(GLfloat);
+	case GL_INT: return sizeof(GLint);
 	case GL_UNSIGNED_INT: return sizeof(GLuint);
 	case GL_UNSIGNED_BYTE: return sizeof(GLubyte);
 	default: return 0;
@@ -63,11 +64,29 @@ void VertexArray::AddVertexBuffer(std::shared_ptr<VertexBuffer> const &vertexBuf
 		const auto &element = elements[i];
 
 		glEnableVertexAttribArray(i);
-		glVertexAttribPointer(
-			i, static_cast<GLint>(element.count),
-			element.type, element.normalised != 0 ? GL_TRUE : GL_FALSE,
-			static_cast<GLsizei>(layout.GetStride()), reinterpret_cast<const void *>(static_cast<intptr_t>(offset))
-		);
+
+		// Integer types (GL_INT, GL_UNSIGNED_INT, GL_BYTE, GL_SHORT, etc.) must use
+		// glVertexAttribIPointer to preserve integer data in the shader.
+		// Using glVertexAttribPointer would convert them to float, corrupting ivec4 attributes
+		// like bone IDs.
+		if (element.type == GL_INT || element.type == GL_UNSIGNED_INT ||
+			element.type == GL_BYTE || element.type == GL_UNSIGNED_BYTE ||
+			element.type == GL_SHORT || element.type == GL_UNSIGNED_SHORT)
+		{
+			glVertexAttribIPointer(
+				i, static_cast<GLint>(element.count),
+				element.type,
+				static_cast<GLsizei>(layout.GetStride()), reinterpret_cast<const void *>(static_cast<intptr_t>(offset))
+			);
+		}
+		else
+		{
+			glVertexAttribPointer(
+				i, static_cast<GLint>(element.count),
+				element.type, element.normalised != 0 ? GL_TRUE : GL_FALSE,
+				static_cast<GLsizei>(layout.GetStride()), reinterpret_cast<const void *>(static_cast<intptr_t>(offset))
+			);
+		}
 
 		offset += element.count * VertexBufferLayout::Element::GetSizeOfType(element.type);
 	}

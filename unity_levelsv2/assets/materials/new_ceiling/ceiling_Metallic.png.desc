@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf732a71d19cb551b51fe5e0ce
+  m_importer: .texture
+  m_source: materials\new_ceiling\ceiling_Metallic.png
+  m_name: ceiling_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

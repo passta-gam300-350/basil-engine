@@ -38,6 +38,8 @@ public class PuzzleManager : Behavior
     private GameObject[] kiteParts;
     private GameObject[] kiteGoals;
 
+    private GameObject kiteBody;
+
     private bool trainCompleted;
     private bool kiteCompleted;
     private int trainFixedCount = 0;
@@ -52,6 +54,9 @@ public class PuzzleManager : Behavior
         box = GameObject.Find("cardboard_fully_open");
         kiteCtn = GameObject.Find("workbench");
         cam = GameObject.Find("GlobalCamera").transform.GetComponent<Camera>();
+
+        kiteBody = GameObject.Find("kite_body");
+        kiteBody.visibility = false;
         // rayMarker = GameObject.Find("RayMarker");
 
         lastPos = Input.mousePosition;
@@ -302,5 +307,9 @@ public class PuzzleManager : Behavior
         stickUnlocked = true;
     }
 
+    public void RevealKiteBody()
+    {
+        kiteBody.visibility = true;
+    }
 
 }

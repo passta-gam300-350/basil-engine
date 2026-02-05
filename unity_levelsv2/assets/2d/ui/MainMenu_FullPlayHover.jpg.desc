@@ -1,0 +1,7 @@
+base:
+  m_guid: fef96af76eb937af7a9b3a5d81f
+  m_importer: .texture
+  m_source: 2d\ui\MainMenu_FullPlayHover.jpg
+  m_name: MainMenu_FullPlayHover.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

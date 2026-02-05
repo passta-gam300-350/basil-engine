@@ -30,9 +30,6 @@ using System.Security.AccessControl;
 /// - Smoothly rotates to face movement direction
 /// - Triggers OnTriggerEnter/Stay/Exit when player enters detection zone
 /// </summary>
-/// 
-
-
 public class GhostBehavior : Behavior
 {
     // PUBLIC CONFIGURATION - Set these in the editor
@@ -71,10 +68,12 @@ public class GhostBehavior : Behavior
     private GhostState currentState = GhostState.Moving;
     private float pauseTimer = 0.0f;         // Timer for pause duration
     private Rigidbody rb;                    // Rigidbody component for physics-based movement
-    private const float Rad2Deg = 180.0f / (float)Math.PI; // Named const variable
-    private const float Deg2Rad = (float)Math.PI / 180.0f;
-    private float targetYaw = 0.0f;          // Target yaw angle (calculated once when entering pause state)
-    private bool rotationComplete = false;   // Flag to track if rotation is done during pause
+
+    public float ghostRadius;
+    private PlayerController3D player;
+    private GameObject playerObj;
+    private bool playerInside = false;
+
     private enum GhostState
     {
         Moving,     // Moving towards waypoint
@@ -88,19 +87,19 @@ public class GhostBehavior : Behavior
         // Required setup in editor:
         //   - RigidBodyComponent: Motion Type = Kinematic, UseGravity = false
         //   - Collider: isTrigger = true (to pass through walls)
-        //rb = GetComponent<Rigidbody>();
-        //if (rb == null)
-        //{
-        //    Logger.Warn("GhostBehavior: CRITICAL - No Rigidbody found! Ghost movement will not work with physics.");
-        //    Logger.Warn("GhostBehavior: Add a Rigidbody with MotionType=Kinematic and UseGravity=false");
-        //    return;
-        //}
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            Logger.Warn("GhostBehavior: CRITICAL - No Rigidbody found! Ghost movement will not work with physics.");
+            Logger.Warn("GhostBehavior: Add a Rigidbody with MotionType=Kinematic and UseGravity=false");
+            return;
+        }
 
-        //// Verify Rigidbody is configured correctly
-        //if (rb.UseGravity)
-        //{
-        //    Logger.Warn("GhostBehavior: Rigidbody has gravity enabled! Ghost may fall. Set UseGravity=false in editor.");
-        //}
+        // Verify Rigidbody is configured correctly
+        if (rb.UseGravity)
+        {
+            Logger.Warn("GhostBehavior: Rigidbody has gravity enabled! Ghost may fall. Set UseGravity=false in editor.");
+        }
 
         waypoint1 = GameObject.Find("1");
         waypoint2 = GameObject.Find("2");
@@ -122,6 +121,17 @@ public class GhostBehavior : Behavior
         currentState = GhostState.Moving;
         pauseTimer = 0.0f;
         Logger.Log($"GhostBehavior initialized with {waypointCount} waypoints.");
+
+        playerObj = GameObject.Find("PlayerGroup");
+
+        if (playerObj != null)
+        {
+            player = playerObj.transform.GetComponent<PlayerController3D>();
+        }
+        else
+        {
+            Logger.Warn("GhostBehavior: PlayerGroup not found");
+        }
     }
 
     public void Update()
@@ -142,6 +152,8 @@ public class GhostBehavior : Behavior
                 UpdatePause();
                 break;
         }
+
+        UpdatePlayerDistance();
     }
 
     public void FixedUpdate()
@@ -225,7 +237,7 @@ public class GhostBehavior : Behavior
 
         Vector3 targetPosition = targetWaypoint.transform.position;
         Vector3 currentPosition = transform.position;
-        
+
         // Calculate direction and distance
         Vector3 direction = targetPosition - currentPosition;
         float distance = direction.Magnitude();
@@ -261,70 +273,96 @@ public class GhostBehavior : Behavior
     /// </summary>
     private void UpdatePause()
     {
-        //// Ensure no movement while paused
-        //if (rb != null)
-        //{
-        //    rb.velocity = new Vector3(0, 0, 0);
-        //}
-
-        // Rotate while paused (only if not already complete)
-        if (!rotationComplete)
+        // Ensure velocity stays at zero while paused
+        if (rb != null)
         {
-            rotationComplete = RotateTowardsNextWaypoint();
+            rb.velocity = new Vector3(0, 0, 0);
         }
 
-        // Always tick the pause timer
+        // Rotate to face the next waypoint while paused
+        RotateTowardsNextWaypoint();
+
+        // Update pause timer
         pauseTimer -= Time.deltaTime;
 
-        // Only move on when pause time is done AND rotation is complete
-        if (pauseTimer <= 0.0f && rotationComplete)
+        if (pauseTimer <= 0.0f)
         {
+            // Pause finished, move to next waypoint
             AdvanceToNextWaypoint();
             currentState = GhostState.Moving;
         }
     }
 
     /// <summary>
-    /// Smoothly rotate to face the next waypoint (shortest path with clockwise bias)
-    /// Uses pre-calculated targetYaw from OnArriveAtWaypoint()
-    /// Can rotate clockwise (positive) or counter-clockwise (negative) depending on shortest path
+    /// Smoothly rotate to face the next waypoint
     /// </summary>
-    private bool RotateTowardsNextWaypoint()
+    private void RotateTowardsNextWaypoint()
     {
-        // Get current yaw (can be any value from -infinity to +infinity)
-        float currentYaw = transform.rotation.y;
-
-        // Calculate how much further we need to rotate
-        float remainingRotation = targetYaw - currentYaw;
-
-        // Check if we've reached the target (within tolerance)
-        if (Math.Abs(remainingRotation) <= 1.0f)
+        // Calculate which waypoint is next
+        int nextWaypointIndex = currentWaypointIndex + 1;
+        if (nextWaypointIndex >= waypointCount)
         {
-            Logger.Log($"Rotation complete: Current={currentYaw:F1}° Target={targetYaw:F1}°");
-            return true;
+            nextWaypointIndex = 0; // Loop back to first waypoint
         }
 
-        // Calculate rotation step for this frame, clamped to max rotation speed in both directions
-        float maxStep = rotationSpeed * Time.deltaTime;
-        float step = remainingRotation;
+        GameObject nextWaypoint = GetWaypoint(nextWaypointIndex);
+        if (nextWaypoint == null)
+        {
+            return; // Can't rotate if next waypoint doesn't exist
+        }
 
-        // Clamp step to [-maxStep, maxStep]
-        if (step > maxStep)
-            step = maxStep;
-        else if (step < -maxStep)
-            step = -maxStep;
+        // Calculate direction to next waypoint
+        Vector3 targetPosition = nextWaypoint.transform.position;
+        Vector3 currentPosition = transform.position;
+        Vector3 direction = targetPosition - currentPosition;
 
-        // Apply rotation step (positive = clockwise, negative = counter-clockwise)
-        float newYaw = currentYaw + step;
+        // Only rotate if next waypoint is far enough away
+        if (direction.Magnitude() < 0.1f)
+        {
+            return;
+        }
 
-        // Debug logging
-        string direction = step > 0 ? "clockwise" : "counter-clockwise";
-        Logger.Log($"Rotating {direction}: Current={currentYaw:F1}° Target={targetYaw:F1}° Remaining={remainingRotation:F1}° Step={step:F1}° New={newYaw:F1}°");
+        Vector3 normalizedDirection = direction.Normalize();
 
-        // CRITICAL: Always set X=0 and Z=0 to prevent gimbal lock and axis flipping
-        transform.rotation = new Vector3(0f, newYaw, 0f);
+        // Calculate target yaw angle in degrees
+        // Math.Atan2 returns radians, so convert to degrees (* 180/PI)
+        float targetYaw = (float)(Math.Atan2(normalizedDirection.x, normalizedDirection.z) * (180.0 / Math.PI));
 
-        return false;
+        // Get current rotation
+        Vector3 currentRotation = transform.rotation;
+        float currentYaw = currentRotation.y;
+
+        // Calculate angle difference with wrapping
+        float angleDifference = targetYaw - currentYaw;
+        while (angleDifference > 180.0f) angleDifference -= 360.0f;
+        while (angleDifference < -180.0f) angleDifference += 360.0f;
+
+        // Only rotate if difference is significant (> 1 degree)
+        if (Math.Abs(angleDifference) > 1.0f)
+        {
+            // Calculate rotation step for this frame
+            float rotationStep = rotationSpeed * Time.deltaTime;
+
+            // Apply rotation
+            float newYaw;
+            if (Math.Abs(angleDifference) <= rotationStep)
+            {
+                // Close enough, snap to target
+                newYaw = targetYaw;
+            }
+            else
+            {
+                // Rotate towards target
+                newYaw = currentYaw + Math.Sign(angleDifference) * rotationStep;
+            }
+
+            // Normalize angle to [0, 360) range
+            while (newYaw < 0.0f) newYaw += 360.0f;
+            while (newYaw >= 360.0f) newYaw -= 360.0f;
+
+            // Apply rotation (only change Y axis)
+            transform.rotation = new Vector3(currentRotation.x, newYaw, currentRotation.z);
+        }
     }
 
     /// <summary>
@@ -335,64 +373,11 @@ public class GhostBehavior : Behavior
         // Start pause at this waypoint
         currentState = GhostState.Paused;
         pauseTimer = GetPauseDuration(currentWaypointIndex);
-        rotationComplete = false;  // Reset rotation flag
 
-        //// Stop the rigidbody's velocity to prevent continued movement
-        //if (rb != null)
-        //{
-        //    rb.velocity = new Vector3(0, 0, 0);
-        //}
-
-        // Calculate target yaw ONCE when entering pause state
-        int nextIndex = currentWaypointIndex + 1;
-        if (nextIndex >= waypointCount)
-            nextIndex = 0;
-
-        GameObject nextWaypoint = GetWaypoint(nextIndex);
-        if (nextWaypoint != null)
+        // Stop the rigidbody's velocity to prevent continued movement
+        if (rb != null)
         {
-            Vector3 toTarget = nextWaypoint.transform.position - transform.position;
-            toTarget.y = 0f;
-
-            float distSq = toTarget.x * toTarget.x + toTarget.z * toTarget.z;
-            if (distSq >= 0.0001f)
-            {
-                // Calculate target yaw from world-space direction
-                // Atan2(x, z) gives angle from forward axis (0,0,1), returns [-180, 180]
-                float desiredYaw = (float)Math.Atan2(toTarget.x, toTarget.z) * Rad2Deg;
-
-                // Get current yaw (can be any value: 360, 720, -360, etc.)
-                float currentYaw = transform.rotation.y;
-
-                // Wrap currentYaw to [-180, 180] to compare with desiredYaw
-                float wrappedCurrentYaw = currentYaw;
-                while (wrappedCurrentYaw > 180f) wrappedCurrentYaw -= 360f;
-                while (wrappedCurrentYaw < -180f) wrappedCurrentYaw += 360f;
-
-                // Calculate angular difference (shortest path with clockwise bias on ties)
-                float angleDiff = desiredYaw - wrappedCurrentYaw;
-
-                // Normalize to shortest path [-180, 180]
-                if (angleDiff > 180f)
-                {
-                    angleDiff -= 360f;  // Shorter to go counter-clockwise
-                }
-                else if (angleDiff < -180f)
-                {
-                    angleDiff += 360f;  // Shorter to go clockwise
-                }
-                else if (angleDiff == -180f)
-                {
-                    angleDiff = 180f;  // Tie (180° either way) - prefer clockwise
-                }
-
-                // Calculate targetYaw relative to unwrapped currentYaw
-                // Positive angleDiff = clockwise, Negative angleDiff = counter-clockwise
-                targetYaw = currentYaw + angleDiff;
-
-                string direction = angleDiff > 0 ? "clockwise" : (angleDiff < 0 ? "counter-clockwise" : "no rotation");
-                Logger.Log($"GhostBehavior: Current={currentYaw:F1}° Wrapped={wrappedCurrentYaw:F1}° Desired={desiredYaw:F1}° AngleDiff={angleDiff:F1}° Target={targetYaw:F1}° Direction={direction}");
-            }
+            rb.velocity = new Vector3(0, 0, 0);
         }
 
         Logger.Log($"GhostBehavior: Arrived at waypoint {currentWaypointIndex + 1}, pausing for {pauseTimer} seconds.");
@@ -414,6 +399,44 @@ public class GhostBehavior : Behavior
         Logger.Log($"GhostBehavior: Moving to waypoint {currentWaypointIndex + 1}.");
     }
 
+    private void UpdatePlayerDistance()
+    {
+        if (player == null || playerObj == null)
+            return;
+
+        float distSqr = Vector3.DistanceSqr(
+            transform.position,
+            playerObj.transform.position
+        );
+
+        float radiusSqr = ghostRadius * ghostRadius;
+
+        if (distSqr <= radiusSqr)
+        {
+            if (!playerInside)
+            {
+                playerInside = true;
+
+                player.interactionsLocked = true;
+                player.wantsToCollect = false;
+                player.wantsToMop = false;
+
+                Logger.Log("Ghost: Player entered radius");
+            }
+        }
+        else
+        {
+            if (playerInside)
+            {
+                playerInside = false;
+
+                player.interactionsLocked = false;
+
+                Logger.Log("Ghost: Player left radius");
+            }
+        }
+    }
+
     // ========================================================================
     // TRIGGER COLLISION CALLBACKS (Unity-style)
     // ========================================================================
@@ -422,31 +445,17 @@ public class GhostBehavior : Behavior
     // Make sure the ghost has a collider component with isTrigger = true!
     // ========================================================================
 
-    /// <summary>
-    /// Called when another collider enters the ghost's trigger zone
-    /// </summary>
-    //public void OnTriggerEnter()
+    // Called when another collider enters the ghost's trigger zone
+    //public void OnTriggerEnter(GameObject other)
     //{
     //    // Check if the colliding object is the player
     //    if (other.name == "Player" || other.name == "PlayerGroup")
     //    {
     //        Logger.Log($"GhostBehavior: Player entered ghost trigger zone!");
-
-    //        // Example interactions:
-    //        // - Play a sound effect
-    //        // - Trigger a jumpscare animation
-    //        // - Load a different scene (game over)
-    //        // - Damage the player
-    //        // - Enable a UI prompt
-
-    //        // Example: Load game over scene
-    //        // Scene.LoadScene(0);
     //    }
     //}
 
-    /// <summary>
-    /// Called every frame while another collider stays in the ghost's trigger zone
-    /// </summary>
+    // Called every frame while another collider stays in the ghost's trigger zone
     //public void OnTriggerStay(GameObject other)
     //{
     //    // Check if player is still in range
@@ -463,20 +472,14 @@ public class GhostBehavior : Behavior
     //    }
     //}
 
-    ///// <summary>
-    ///// Called when another collider exits the ghost's trigger zone
-    ///// </summary>
+
+    // Called when another collider exits the ghost's trigger zone
     //public void OnTriggerExit(GameObject other)
     //{
-    //    // Check if the player left the trigger zone
     //    if (other.name == "Player" || other.name == "PlayerGroup")
     //    {
     //        Logger.Log($"GhostBehavior: Player left ghost trigger zone.");
 
-    //        // Example interactions:
-    //        // - Stop playing sounds
-    //        // - Hide UI warnings
-    //        // - Resume normal gameplay
     //    }
     //}
 }

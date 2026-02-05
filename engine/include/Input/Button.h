@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 class Button
 {
     public:
+        Button();
         Button(float x, float y, float width, float height, const std::string& text);
 
         void setOnClick(std::function<void()> callback);
@@ -25,7 +26,7 @@ class Button
 
         bool isHovered() const;
 
-    private:
+    
         float x, y;
         float width, height;
         std::string text;

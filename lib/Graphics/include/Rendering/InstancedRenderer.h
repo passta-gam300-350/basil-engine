@@ -86,6 +86,8 @@ public:
     static constexpr uint32_t INSTANCE_SSBO_BINDING = 0;
     // Bone matrix SSBO for skeletal animation
     std::unique_ptr<ShaderStorageBuffer> m_BoneMatrixSSBO;
+    // Instance SSBO for skinned meshes (single-element, reused per skinned draw)
+    std::unique_ptr<ShaderStorageBuffer> m_SkinnedInstanceSSBO;
     static constexpr uint32_t BONE_SSBO_BINDING = 2;
     static constexpr uint32_t MAX_TOTAL_BONES = 4096;
 private:

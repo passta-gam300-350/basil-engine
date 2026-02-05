@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf735c77f3b13c1a0e66c09586
+  m_importer: .texture
+  m_source: materials\new_floor\floor_Height.png
+  m_name: floor_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

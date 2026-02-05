@@ -14,6 +14,7 @@
 
 #include <Jolt/Jolt.h>
 
+#include "Input/Button.h"
 #include "System/Audio.hpp"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
@@ -239,6 +240,14 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
 		MemberRegistrationV<&AudioComponent::position, "position">,
 		MemberRegistrationV<&AudioComponent::velocity, "velocity">
+	);
+
+	RegisterReflectionComponent<Button>(
+		"ButtonComponent",
+		MemberRegistrationV<&Button::x, "position_x">,
+		MemberRegistrationV<&Button::y, "position_y">,
+		MemberRegistrationV<&Button::text, "Text">
+
 	);
 
 	// Register HUDComponent anchor enum

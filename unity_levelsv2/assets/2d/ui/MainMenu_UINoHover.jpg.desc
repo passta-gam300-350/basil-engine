@@ -1,0 +1,7 @@
+base:
+  m_guid: fef96c27ab7aad7bd2002e5ced0
+  m_importer: .texture
+  m_source: 2d\ui\MainMenu_UINoHover.jpg
+  m_name: MainMenu_UINoHover.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

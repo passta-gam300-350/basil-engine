@@ -53,7 +53,7 @@ public class TrashCollectable : Behavior
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         
-        if (distance <= collect_distance && Input.GetKey(KeyCode.E))
+        if (distance <= collect_distance && playerController.wantsToCollect)
         {
             if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
             {

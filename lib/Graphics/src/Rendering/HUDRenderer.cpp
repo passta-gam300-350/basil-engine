@@ -91,7 +91,7 @@ void HUDRenderer::RenderToPass(RenderPass& renderPass, const FrameData& frameDat
         m_TextureBatches.size(), m_TotalElements);*/
 
     if (m_TextureBatches.empty() || m_TotalElements == 0) {
-        spdlog::warn("HUDRenderer::RenderToPass() - no batches or elements to render");
+        //spdlog::warn("HUDRenderer::RenderToPass() - no batches or elements to render");
         return;
     }
 

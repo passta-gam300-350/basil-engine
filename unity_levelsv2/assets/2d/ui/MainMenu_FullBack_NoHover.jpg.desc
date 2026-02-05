@@ -1,0 +1,7 @@
+base:
+  m_guid: fef96a672c6bd4e79960e9d1b22
+  m_importer: .texture
+  m_source: 2d\ui\MainMenu_FullBack_NoHover.jpg
+  m_name: MainMenu_FullBack_NoHover.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

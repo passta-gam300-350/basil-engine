@@ -409,6 +409,15 @@
 "Main Menu.png":
   "m_guid": "276196b17e2da9feda4147f14d77"
   "m_typeindex": "126269861530532084"
+"MainMenu_Background.jpg":
+  "m_guid": "fe5f12477dd9e04761b8c8fb078"
+  "m_typeindex": "126269861530532084"
+"MainMenu_Background.png":
+  "m_guid": "dc3b6af7d12a35201ca40ea3bdb"
+  "m_typeindex": "126269861530532084"
+"MainMenu_FullPlayHover.jpg":
+  "m_guid": "fef96af76eb937af7a9b3a5d81f"
+  "m_typeindex": "126269861530532084"
 "Meng_1.ogg":
   "m_guid": "469fc3b7f92b2832c27268637a2"
   "m_typeindex": "17099568057112876377"
@@ -553,6 +562,9 @@
 "OpeningCutscene BGM.ogg":
   "m_guid": "30b42b476ad8c7fb300b598bedc"
   "m_typeindex": "17099568057112876377"
+"PLAY_NoHover.png":
+  "m_guid": "dc3b6b87675a43e6122d9a15ac1"
+  "m_typeindex": "126269861530532084"
 "PandaMat":
   "m_guid": "99876a277d69f9cfbb7410ca045"
   "m_typeindex": "175488002581160416"
@@ -705,6 +717,9 @@
   "m_typeindex": "126269861530532084"
 "Puddle1_puddle_Roughness.png":
   "m_guid": "4619f117726a565940dd6be9e14"
+  "m_typeindex": "126269861530532084"
+"QuitFull_Hover.jpg":
+  "m_guid": "fef96cb7ff8bd6aa86f295121b1"
   "m_typeindex": "126269861530532084"
 "Sad Memory Jingle_Linear.ogg":
   "m_guid": "469fce676718c72e4cd8d8e15d8"
@@ -2730,6 +2745,9 @@
   "m_typeindex": "17099568057112876377"
 "meng_new_9.ogg":
   "m_guid": "10c528677f4ad1a84f9670c414d"
+  "m_typeindex": "17099568057112876377"
+"meng_tutorial_combine.ogg":
+  "m_guid": "aa1c2e2745c99db806cba11941e"
   "m_typeindex": "17099568057112876377"
 "mesh_TrashCart_trash can_BaseColor.png":
   "m_guid": "98e4310799fbfa1d5ee0f8441c0"

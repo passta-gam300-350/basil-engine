@@ -1,0 +1,7 @@
+base:
+  m_guid: dbf73ce71788bd9f98c41c6a5df
+  m_importer: .texture
+  m_source: materials\new_separator\wall_pillar_Emissive.png
+  m_name: wall_pillar_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

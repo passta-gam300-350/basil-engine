@@ -19,15 +19,19 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include <vector>
 #include "Animation/Animation.h"
+#include <native/skeleton.h>
 #include <rsc-core/rp.hpp>
 
 // Maximum bones supported per skeleton (matches shader limit)
 constexpr int MAX_BONES = 128;
 
+RegisterResourceTypeForward(SkeletonResourceData, "skeleton", unusedskeletonstuff)
+
 struct SkeletonComponent
 {
     // The skeleton data (bone hierarchy, inverse bind matrices)
     skeleton skeletonData;
+    rp::BasicIndexedGuid skeletondata{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"skeleton">()) };
 
     // Final bone matrices for GPU skinning (updated each frame by AnimationSystem)
     // These are: globalTransform * inverseBind for each bone
@@ -67,5 +71,10 @@ struct SkeletonComponent
 // Note: SkeletonComponent contains runtime data (matrices) that shouldn't be serialized
 // Only the skeleton reference/GUID would be serialized in a full implementation
 // For now, skeleton data is set up programmatically or loaded with the model
+
+RegisterReflectionTypeBegin(SkeletonComponent, "SkeletonComponent")
+MemberRegistrationV<&SkeletonComponent::skeletondata, "SkeletonData">
+// Note: channel is NOT registered (runtime pointer, not serializable)
+RegisterReflectionTypeEnd
 
 #endif
