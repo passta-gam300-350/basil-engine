@@ -1,0 +1,7 @@
+base:
+  m_guid: 7c539e8772ca3ec2531bb888206
+  m_importer: .texture
+  m_source: materials\glue\glue_Metallic.png
+  m_name: glue_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

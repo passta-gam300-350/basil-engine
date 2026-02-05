@@ -1,0 +1,29 @@
+base:
+  m_guid: 7a9ac1c72d7b37c3a5527669e05
+  m_importer: .material
+  m_source: ""
+  m_name: m_new_mural
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_new_mural
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: dbf73b979158486b394c32e90f3
+    u_DiffuseMap: dbf73867962b8ffe884492bf805
+    u_EmissiveMap: dbf73907bd1949eceba89902b3d
+    u_NormalMap: dbf73af768ea516edf7362114f1
+    u_HeightMap: dbf739973dfa6d03e8949e5bd98
+    u_SpecularMap: 00
+    u_MetallicMap: dbf73a475b7b60243e36da5453b

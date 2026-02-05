@@ -1,0 +1,7 @@
+base:
+  m_guid: 7c539da7b1d8b27f3f47b3e91e6
+  m_importer: .texture
+  m_source: materials\ceiling_fan_v2\blade_Roughness_v2.png
+  m_name: blade_Roughness_v2.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

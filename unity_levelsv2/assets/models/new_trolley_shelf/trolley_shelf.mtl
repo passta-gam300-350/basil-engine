@@ -1,0 +1,14 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl trolley_shelf
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+
+map_Kd trolley_shelf_BaseColor.png
+map_Ks trolley_shelf_Metallic.png
+map_Ns trolley_shelf_Roughness.png
+map_Ke trolley_shelf_Emissive.png
+map_d trolley_shelf_Height.png
+map_Bump trolley_shelf_Normal.png

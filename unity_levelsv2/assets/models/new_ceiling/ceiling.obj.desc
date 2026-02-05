@@ -1,20 +1,25 @@
 base:
-  m_guid: dbf75b870e8853b8c0f4f9ecfc9
-  m_importer: .mesh
-  m_source: models\new_ceiling\ceiling.obj
-  m_name: ceiling.obj
-  m_importer_type: 3262350505779219304
-merge_mesh: true
-extract_material: true
-scale:
-  x: 1
-  y: 1
-  z: 1
-rotate:
-  x: 0
-  y: 0
-  z: 0
-translate:
-  x: 0
-  y: 0
-  z: 0
+  m_guid: 7a011f87f40a9e638eadadae02c
+  m_importer: material
+  m_source: ""
+  m_name: ceiling_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: ceiling
+  albedo:
+    x: 0.5
+    y: 0.5
+    z: 0.5
+  metallic: 0.699999988
+  roughness: 1
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_DiffuseMap: 00
+    u_NormalMap: 00
+    u_EmissiveMap: 00
+    u_SpecularMap: 00

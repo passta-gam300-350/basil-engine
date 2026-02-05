@@ -1,0 +1,7 @@
+base:
+  m_guid: 82929fa717faef9421ddb24a284
+  m_importer: .texture
+  m_source: materials\new_work_bench\desk_Height.png
+  m_name: desk_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1087,6 +1087,27 @@
 "biscuit_tin_wafer.obj":
   "m_guid": "122798c7953bba558f899785673"
   "m_typeindex": "4838001395392124604"
+"blade_BaseColor_v2.png":
+  "m_guid": "7c539d577ae846e8a30d0ecbcf7"
+  "m_typeindex": "126269861530532084"
+"blade_Emissive_v2.png":
+  "m_guid": "7c539d67beaa3075bcefab3ca2f"
+  "m_typeindex": "126269861530532084"
+"blade_Height_v2.png":
+  "m_guid": "7c539d77f97a7d23ea750b006d2"
+  "m_typeindex": "126269861530532084"
+"blade_Metallic_v2.png":
+  "m_guid": "7c539d874859e74cbf9959ccb14"
+  "m_typeindex": "126269861530532084"
+"blade_Normal_v2.png":
+  "m_guid": "7c539d97f68a78e2fe5344f5ffb"
+  "m_typeindex": "126269861530532084"
+"blade_Roughness_v2.png":
+  "m_guid": "7c539da7b1d8b27f3f47b3e91e6"
+  "m_typeindex": "126269861530532084"
+"blade_material":
+  "m_guid": "7c76dcc71adb25ac4cebe1e1777"
+  "m_typeindex": "175488002581160416"
 "bs_tin_empty.obj":
   "m_guid": "91290a971268b91715f3c12aa2f"
   "m_typeindex": "4838001395392124604"
@@ -1225,9 +1246,33 @@
 "cb_tin_top_Roughness.png":
   "m_guid": "8df75e77e09c6a4f513b95abbc"
   "m_typeindex": "126269861530532084"
+"ceiling.obj":
+  "m_guid": "dbf75b870e8853b8c0f4f9ecfc9"
+  "m_typeindex": "4838001395392124604"
 "ceilingFan1_animation":
   "m_guid": "716a9de75e9b5cc4cf3346c689f"
   "m_typeindex": "10466365863016233885"
+"ceiling_BaseColor.png":
+  "m_guid": "dbf730b7a049fa226ded2b84539"
+  "m_typeindex": "126269861530532084"
+"ceiling_Emissive.png":
+  "m_guid": "dbf73157c05873e2b85141a6afc"
+  "m_typeindex": "126269861530532084"
+"ceiling_Height.png":
+  "m_guid": "dbf73217de494c02b38f63b4e11"
+  "m_typeindex": "126269861530532084"
+"ceiling_Metallic.png":
+  "m_guid": "dbf732a71d19cb551b51fe5e0ce"
+  "m_typeindex": "126269861530532084"
+"ceiling_Normal.png":
+  "m_guid": "dbf7338748ebb49624c820c3d4c"
+  "m_typeindex": "126269861530532084"
+"ceiling_Roughness.png":
+  "m_guid": "dbf734175fb87e43eda0ea81572"
+  "m_typeindex": "126269861530532084"
+"ceiling_material":
+  "m_guid": "7a011f87f40a9e638eadadae02c"
+  "m_typeindex": "175488002581160416"
 "ceilingfan.obj":
   "m_guid": "98e46817f8fa0aa495a51c2a535"
   "m_typeindex": "4838001395392124604"
@@ -1236,6 +1281,30 @@
   "m_typeindex": "175488002581160416"
 "ceilingfan_anim.gltf":
   "m_guid": "71257d7781c95d84db92404a56a"
+  "m_typeindex": "4838001395392124604"
+"ceilingfan_holder_BaseColor_v2.png":
+  "m_guid": "7c539db7bf9b589a9cb94d3fc49"
+  "m_typeindex": "126269861530532084"
+"ceilingfan_holder_Emissive_v2.png":
+  "m_guid": "7c539db7839a56e776702c917de"
+  "m_typeindex": "126269861530532084"
+"ceilingfan_holder_Height_v2.png":
+  "m_guid": "7c539dc7a05a627aecb2fd4dd32"
+  "m_typeindex": "126269861530532084"
+"ceilingfan_holder_Metallic_v2.png":
+  "m_guid": "7c539dd7c288930b0759643fc6a"
+  "m_typeindex": "126269861530532084"
+"ceilingfan_holder_Normal_v2.png":
+  "m_guid": "7c539de7c24b5ffdcb46f7307c0"
+  "m_typeindex": "126269861530532084"
+"ceilingfan_holder_Roughness_v2.png":
+  "m_guid": "7c539df72af8a1db8bc59c96644"
+  "m_typeindex": "126269861530532084"
+"ceilingfan_holder_material":
+  "m_guid": "7c76dcc705fa3309b3edf53d5b8"
+  "m_typeindex": "175488002581160416"
+"ceilingfan_v2.obj":
+  "m_guid": "7c53a257c9c81521544a354a08e"
   "m_typeindex": "4838001395392124604"
 "ch_bx_BaseColor.png":
   "m_guid": "8df6d377f3841f5d9147be6712"
@@ -1564,6 +1633,24 @@
 "cw_tin_top_Roughness.png":
   "m_guid": "8df78074a1927f6d89ce9e90bc"
   "m_typeindex": "126269861530532084"
+"desk_BaseColor.png":
+  "m_guid": "82929f87b8ea8a030d005121b10"
+  "m_typeindex": "126269861530532084"
+"desk_Emissive.png":
+  "m_guid": "82929f97aa590bef82f9a545290"
+  "m_typeindex": "126269861530532084"
+"desk_Height.png":
+  "m_guid": "82929fa717faef9421ddb24a284"
+  "m_typeindex": "126269861530532084"
+"desk_Metallic.png":
+  "m_guid": "82929fb7675b444a844f2dd7a29"
+  "m_typeindex": "126269861530532084"
+"desk_Normal.png":
+  "m_guid": "82929fc79699cf2aec48b522b58"
+  "m_typeindex": "126269861530532084"
+"desk_Roughness.png":
+  "m_guid": "82929fd7db48693d8e1e4a6c764"
+  "m_typeindex": "126269861530532084"
 "empty_tin_base_BaseColor.png":
   "m_guid": "8df75f7db0a1fc0405216d945a"
   "m_typeindex": "126269861530532084"
@@ -1738,6 +1825,9 @@
 "flaptop.obj":
   "m_guid": "54961927c9399122be7b0cbb392"
   "m_typeindex": "4838001395392124604"
+"floor.obj":
+  "m_guid": "dbf75c678998ed22d85f255885a"
+  "m_typeindex": "4838001395392124604"
 "floorBrush2.obj":
   "m_guid": "1088cb67701bf337d3ce7d4d763"
   "m_typeindex": "4838001395392124604"
@@ -1759,6 +1849,27 @@
 "floorBrush2_Floorbrush_Roughness.png":
   "m_guid": "1088c65786eb1d675802190f835"
   "m_typeindex": "126269861530532084"
+"floor_BaseColor.png":
+  "m_guid": "dbf734b7cde9386d723b6cdbb82"
+  "m_typeindex": "126269861530532084"
+"floor_Emissive.png":
+  "m_guid": "dbf7353737dabfe0386c64b5801"
+  "m_typeindex": "126269861530532084"
+"floor_Height.png":
+  "m_guid": "dbf735c77f3b13c1a0e66c09586"
+  "m_typeindex": "126269861530532084"
+"floor_Metallic.png":
+  "m_guid": "dbf736577a9996b8476fb9aacc6"
+  "m_typeindex": "126269861530532084"
+"floor_Normal.png":
+  "m_guid": "dbf736e7119866cbc66f5adc191"
+  "m_typeindex": "126269861530532084"
+"floor_Roughness.png":
+  "m_guid": "dbf737a724f9b72e7a221cf5725"
+  "m_typeindex": "126269861530532084"
+"floor_material":
+  "m_guid": "7a016e2793295eca4aedf8676df"
+  "m_typeindex": "175488002581160416"
 "g_bx_halfOp_BaseColor.png":
   "m_guid": "8df70b75bea8eed4daa163c712"
   "m_typeindex": "126269861530532084"
@@ -1891,6 +2002,30 @@
 "ghost_eye_open_material":
   "m_guid": "8df79d7298b8a3e46485ceb6ae"
   "m_typeindex": "4838001395392124604"
+"glue.obj":
+  "m_guid": "7c53a28731a9303fba507298eef"
+  "m_typeindex": "4838001395392124604"
+"glue_BaseColor.png":
+  "m_guid": "7c539e47379927f24a3f0171a33"
+  "m_typeindex": "126269861530532084"
+"glue_Emissive.png":
+  "m_guid": "7c539e5747eab5041ed2bb34101"
+  "m_typeindex": "126269861530532084"
+"glue_Height.png":
+  "m_guid": "7c539e77101a9b0f6156a569753"
+  "m_typeindex": "126269861530532084"
+"glue_Metallic.png":
+  "m_guid": "7c539e8772ca3ec2531bb888206"
+  "m_typeindex": "126269861530532084"
+"glue_Normal.png":
+  "m_guid": "7c539e8771f88ebec6409e94d27"
+  "m_typeindex": "126269861530532084"
+"glue_Roughness.png":
+  "m_guid": "7c539ea7dafa2b746754b0f1beb"
+  "m_typeindex": "126269861530532084"
+"glue_material":
+  "m_guid": "7c774ac7445a0d56d2015a07039"
+  "m_typeindex": "175488002581160416"
 "hdb_01":
   "m_guid": "7e10c2f7ab78320cc8af2c84e5a"
   "m_typeindex": "175488002581160416"
@@ -1996,6 +2131,30 @@
 "hdb_2_mesh.obj":
   "m_guid": "136eda7db6a000955607460181"
   "m_typeindex": "4838001395392124604"
+"key.obj":
+  "m_guid": "7c53a2978d3aff9d106bd19dc47"
+  "m_typeindex": "4838001395392124604"
+"key_mat_BaseColor.png":
+  "m_guid": "7c539ee7822bfa78c365500b368"
+  "m_typeindex": "126269861530532084"
+"key_mat_Emissive.png":
+  "m_guid": "7c539ef7f0bb69618f5193e2805"
+  "m_typeindex": "126269861530532084"
+"key_mat_Height.png":
+  "m_guid": "7c539f0753bb29cd4b2f9358d30"
+  "m_typeindex": "126269861530532084"
+"key_mat_Metallic.png":
+  "m_guid": "7c539f17f5fb4c5f06e4c002dc3"
+  "m_typeindex": "126269861530532084"
+"key_mat_Normal.png":
+  "m_guid": "7c539f27ac995c2ba903ddc307c"
+  "m_typeindex": "126269861530532084"
+"key_mat_Roughness.png":
+  "m_guid": "7c539f37f36a71d9b57c86a1946"
+  "m_typeindex": "126269861530532084"
+"key_mat_material":
+  "m_guid": "7c777d973fea753f06dea90a4bb"
+  "m_typeindex": "175488002581160416"
 "kitchenCabinet.obj":
   "m_guid": "98e46937e72ac6d40e2610281a0"
   "m_typeindex": "4838001395392124604"
@@ -2356,6 +2515,30 @@
 "level1_ground_concrete_Roughness.png":
   "m_guid": "5d4d70a7f07bb89540f4ba383b6"
   "m_typeindex": "126269861530532084"
+"light.obj":
+  "m_guid": "8292a22701b888c87aa688800e2"
+  "m_typeindex": "4838001395392124604"
+"light_BaseColor.png":
+  "m_guid": "82929da73e5a359f1275405bba5"
+  "m_typeindex": "126269861530532084"
+"light_Emissive.png":
+  "m_guid": "82929db732da80ce3e89f69d384"
+  "m_typeindex": "126269861530532084"
+"light_Height.png":
+  "m_guid": "82929e77b8ca5266c469a5ab424"
+  "m_typeindex": "126269861530532084"
+"light_Metallic.png":
+  "m_guid": "82929e87035bd65f4a8b83d323e"
+  "m_typeindex": "126269861530532084"
+"light_Normal.png":
+  "m_guid": "82929e9735cb6f3628996926db1"
+  "m_typeindex": "126269861530532084"
+"light_Roughness.png":
+  "m_guid": "82929ea778485fd144d5758b840"
+  "m_typeindex": "126269861530532084"
+"light_material":
+  "m_guid": "82f13a4772d982706f1028434d7"
+  "m_typeindex": "175488002581160416"
 "m_bottomflag":
   "m_guid": "153863870378ba6c1b686e25a36"
   "m_typeindex": "175488002581160416"
@@ -2373,6 +2556,12 @@
   "m_typeindex": "175488002581160416"
 "m_cardboard_half_open":
   "m_guid": "9b7cfb67446aac5b0aae33cbcc4"
+  "m_typeindex": "175488002581160416"
+"m_ceiling_fan_v2":
+  "m_guid": "7cb717877398f917eb632f30883"
+  "m_typeindex": "175488002581160416"
+"m_ceiling_fan_v2_blade":
+  "m_guid": "7cbe4847373a46490ebc3551026"
   "m_typeindex": "175488002581160416"
 "m_chair_panda":
   "m_guid": "9e94a0e74f2bf0c7d5b4d383f7a"
@@ -2437,6 +2626,9 @@
 "m_ghost_open":
   "m_guid": "fd295571eb9c3f1045e834d728"
   "m_typeindex": "175488002581160416"
+"m_glue":
+  "m_guid": "7cb84027d4a9d0a7e95e4033872"
+  "m_typeindex": "175488002581160416"
 "m_grass1":
   "m_guid": "215ee8487fe2ba5a5a4cf897c32f"
   "m_typeindex": "175488002581160416"
@@ -2448,6 +2640,9 @@
   "m_typeindex": "175488002581160416"
 "m_hdb2":
   "m_guid": "172e8c76c6a3a70b7a4f4e6c68"
+  "m_typeindex": "175488002581160416"
+"m_key":
+  "m_guid": "7cba5157ef8a6b934a70c2b9ede"
   "m_typeindex": "175488002581160416"
 "m_kitchen_cabinet":
   "m_guid": "9f1a2e4709c98bce8ba8c0aeec9"
@@ -2518,6 +2713,21 @@
 "m_metal_shelf":
   "m_guid": "9b10bb37872925796aa10feb2ae"
   "m_typeindex": "175488002581160416"
+"m_new_ceiling":
+  "m_guid": "7a9c9f37f2895e155561d97c413"
+  "m_typeindex": "175488002581160416"
+"m_new_ceiling_light":
+  "m_guid": "82c2fd47b6b97a328e977f36ec3"
+  "m_typeindex": "175488002581160416"
+"m_new_floor":
+  "m_guid": "7a9e0a67dff9d2e5accc69c27cd"
+  "m_typeindex": "175488002581160416"
+"m_new_mural":
+  "m_guid": "7a9ac1c72d7b37c3a5527669e05"
+  "m_typeindex": "175488002581160416"
+"m_new_separator":
+  "m_guid": "7aa01ab71a7a5c3a40f5efc9732"
+  "m_typeindex": "175488002581160416"
 "m_new_tin_biscuit_base":
   "m_guid": "eed65a77fa84278e7915f129bb"
   "m_typeindex": "175488002581160416"
@@ -2544,6 +2754,15 @@
   "m_typeindex": "175488002581160416"
 "m_new_tin_wafer_top":
   "m_guid": "fa6f1571c79ca664dabee49e8c"
+  "m_typeindex": "175488002581160416"
+"m_new_trolley_shelf":
+  "m_guid": "82ab70e7404aace4d63806b52a7"
+  "m_typeindex": "175488002581160416"
+"m_new_wall":
+  "m_guid": "7c41b037caa9c2e2737b69c9532"
+  "m_typeindex": "175488002581160416"
+"m_new_work_bench":
+  "m_guid": "82adaa770a7b189b772d65a7a94"
   "m_typeindex": "175488002581160416"
 "m_plain_wall":
   "m_guid": "12888e77d30a7559556f11e04c4"
@@ -2770,6 +2989,30 @@
 "metal_rack.obj":
   "m_guid": "7cd4bb77d28b283a3fa08a9be33"
   "m_typeindex": "4838001395392124604"
+"mural_wall.obj":
+  "m_guid": "dbf75d2740c85cdd17e6904fc0a"
+  "m_typeindex": "4838001395392124604"
+"mural_wall_BaseColor.png":
+  "m_guid": "dbf73867962b8ffe884492bf805"
+  "m_typeindex": "126269861530532084"
+"mural_wall_Emissive.png":
+  "m_guid": "dbf73907bd1949eceba89902b3d"
+  "m_typeindex": "126269861530532084"
+"mural_wall_Height.png":
+  "m_guid": "dbf739973dfa6d03e8949e5bd98"
+  "m_typeindex": "126269861530532084"
+"mural_wall_Metallic.png":
+  "m_guid": "dbf73a475b7b60243e36da5453b"
+  "m_typeindex": "126269861530532084"
+"mural_wall_Normal.png":
+  "m_guid": "dbf73af768ea516edf7362114f1"
+  "m_typeindex": "126269861530532084"
+"mural_wall_Roughness.png":
+  "m_guid": "dbf73b979158486b394c32e90f3"
+  "m_typeindex": "126269861530532084"
+"mural_wall_material":
+  "m_guid": "79f524c70afb13b0dd2c643593a"
+  "m_typeindex": "175488002581160416"
 "openPBR_shader1":
   "m_guid": "9a8087c7bafbcc5939d4c8bbfcf"
   "m_typeindex": "175488002581160416"
@@ -3442,12 +3685,57 @@
 "trolley_mat_Roughness.png":
   "m_guid": "a04757093b98f2298f453bb41"
   "m_typeindex": "126269861530532084"
+"trolley_shelf.obj":
+  "m_guid": "8292a2478aba0f87b6388eff592"
+  "m_typeindex": "4838001395392124604"
+"trolley_shelf_BaseColor.png":
+  "m_guid": "82929f17f8089e46711229aeb16"
+  "m_typeindex": "126269861530532084"
+"trolley_shelf_Emissive.png":
+  "m_guid": "82929f378f78efccc7b2c158ba2"
+  "m_typeindex": "126269861530532084"
+"trolley_shelf_Height.png":
+  "m_guid": "82929f4738283fd06c575eb7d91"
+  "m_typeindex": "126269861530532084"
+"trolley_shelf_Metallic.png":
+  "m_guid": "82929f57427a3e63b75ec8436d0"
+  "m_typeindex": "126269861530532084"
+"trolley_shelf_Normal.png":
+  "m_guid": "82929f670ddaa7e60fa17a47238"
+  "m_typeindex": "126269861530532084"
+"trolley_shelf_Roughness.png":
+  "m_guid": "82929f771f391ca01905d1b52de"
+  "m_typeindex": "126269861530532084"
+"trolley_shelf_material":
+  "m_guid": "82f492072f7ba4c24034f40a8c5"
+  "m_typeindex": "175488002581160416"
 "trolley_shelve.obj":
   "m_guid": "a048875438b77c9c5690ce14d"
   "m_typeindex": "4838001395392124604"
 "wall.obj":
   "m_guid": "98e46cd7735859afaf829532dd8"
   "m_typeindex": "4838001395392124604"
+"wall_BaseColor.png":
+  "m_guid": "dbf743378169c2f19ea375a413a"
+  "m_typeindex": "126269861530532084"
+"wall_Emissive.png":
+  "m_guid": "dbf743d7080acff6ff5442f84ec"
+  "m_typeindex": "126269861530532084"
+"wall_Height.png":
+  "m_guid": "dbf74467e22a1d8234ee3e86e82"
+  "m_typeindex": "126269861530532084"
+"wall_Metallic.png":
+  "m_guid": "dbf744f72d59e2af1997714fe2e"
+  "m_typeindex": "126269861530532084"
+"wall_Normal.png":
+  "m_guid": "dbf7458724586d9cff1519faf4c"
+  "m_typeindex": "126269861530532084"
+"wall_Roughness.png":
+  "m_guid": "dbf74647ba2aba802f1dde5b409"
+  "m_typeindex": "126269861530532084"
+"wall_material":
+  "m_guid": "7a03958793f978f8f3d916e1303"
+  "m_typeindex": "175488002581160416"
 "wall_open.obj":
   "m_guid": "98e46d67bd9ad12a5a6ae13df56"
   "m_typeindex": "4838001395392124604"
@@ -3469,6 +3757,27 @@
 "wall_open_wall_Roughness.png":
   "m_guid": "98e45f07d57b71f5edf4036730f"
   "m_typeindex": "126269861530532084"
+"wall_pillar_BaseColor.png":
+  "m_guid": "dbf73c47353bbe5ac14919f2cea"
+  "m_typeindex": "126269861530532084"
+"wall_pillar_Emissive.png":
+  "m_guid": "dbf73ce71788bd9f98c41c6a5df"
+  "m_typeindex": "126269861530532084"
+"wall_pillar_Height.png":
+  "m_guid": "dbf73d777bc86d166baa4f8127b"
+  "m_typeindex": "126269861530532084"
+"wall_pillar_Metallic.png":
+  "m_guid": "dbf73df7d5d81313a9cd990c3c5"
+  "m_typeindex": "126269861530532084"
+"wall_pillar_Normal.png":
+  "m_guid": "dbf73e979e18785ea872a54aa65"
+  "m_typeindex": "126269861530532084"
+"wall_pillar_Roughness.png":
+  "m_guid": "dbf73f77a08bbef6bde6f3c619b"
+  "m_typeindex": "126269861530532084"
+"wall_separator.obj":
+  "m_guid": "dbf75db7ea0ac56750d9e2f80e9"
+  "m_typeindex": "4838001395392124604"
 "wall_wall_BaseColor.png":
   "m_guid": "98e459e76fba062f1299315fef7"
   "m_typeindex": "126269861530532084"
@@ -3487,6 +3796,9 @@
 "wall_wall_Roughness.png":
   "m_guid": "98e45c37354ba01abc8c0c8697f"
   "m_typeindex": "126269861530532084"
+"work_bench.obj":
+  "m_guid": "8292a267eb480261c0018184d5f"
+  "m_typeindex": "4838001395392124604"
 "workbench.obj":
   "m_guid": "98e46de7a6697e1c8abc89d5a22"
   "m_typeindex": "4838001395392124604"
