@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 217
+  slot: 225
   guid: 00
   dependencies: ~
 render_settings:
@@ -118,39 +118,6 @@ entities:
         z: -0.662619889
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e46a174c696692318e374794b
-        type: 4838001395392124604
-      m_MaterialGuid:
-        PandaMat1:
-          guid: 9bca0c57316b6f3576d16ac2fd1
-          type: 175488002581160416
-        standardSurface2:
-          guid: 9be3fc8740f8a5f8a62d75ec69a
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 30
-    entity name:
-      name: kitchen_shelf_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00600021705
-        y: 0.00499999942
-        z: 0.00500010699
-      m_Rotate:
-        x: 89.9993896
-        y: -88.7030716
-        z: -89.9993896
-      m_Trans:
-        x: 0.0367141403
-        y: 0.690294325
-        z: -1.39697111
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
       hasAttachedMaterial: false
       isPrimitive: false
       m_MeshGuid:
@@ -230,24 +197,24 @@ entities:
           guid: 9be3fc8740f8a5f8a62d75ec69a
           type: 175488002581160416
     Scene ID:
-      Scene ID: 29
+      Scene ID: 30
     entity name:
       name: kitchen_shelf_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00606634421
-        y: 0.00500000408
-        z: 0.00500006229
+        x: 0.00600021705
+        y: 0.00499999942
+        z: 0.00500010699
       m_Rotate:
-        x: 89.9991074
-        y: -87.1214905
-        z: -89.9991074
+        x: 89.9993896
+        y: -88.7030716
+        z: -89.9993896
       m_Trans:
-        x: 0.0367146172
-        y: 0.686894774
-        z: -0.0771824718
+        x: 0.0367141403
+        y: 0.690294325
+        z: -1.39697111
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: false
@@ -319,6 +286,75 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
+        guid: 98e46a174c696692318e374794b
+        type: 4838001395392124604
+      m_MaterialGuid:
+        PandaMat1:
+          guid: 9bca0c57316b6f3576d16ac2fd1
+          type: 175488002581160416
+        standardSurface2:
+          guid: 9be3fc8740f8a5f8a62d75ec69a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 29
+    entity name:
+      name: kitchen_shelf_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00606634421
+        y: 0.00500000408
+        z: 0.00500006229
+      m_Rotate:
+        x: 89.9991074
+        y: -87.1214905
+        z: -89.9991074
+      m_Trans:
+        x: 0.0367146172
+        y: 0.686894774
+        z: -0.0771824718
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 1227985796f81e4d5c327308919
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tin_plastic_clear:
+          guid: 19df4a572a084171defbcaee86e
+          type: 175488002581160416
+        standardSurface1:
+          guid: 1a1f94a7051a6c8f0740656eafa
+          type: 175488002581160416
+        tin_top:
+          guid: 1a070777bafad0d466ac7f3bc60
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 43
+    entity name:
+      name: tin_wafer_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00770473899
+        y: 0.0077047362
+        z: 0.00770471571
+      m_Rotate:
+        x: -15.0377502
+        y: -9.39150959e-06
+        z: -89.9998779
+      m_Trans:
+        x: -2.4176929
+        y: 0.733202457
+        z: -0.434987098
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
         guid: 14e50307b7aac9ca142f4953925
         type: 4838001395392124604
       m_MaterialGuid:
@@ -375,24 +411,24 @@ entities:
           guid: 1a070777bafad0d466ac7f3bc60
           type: 175488002581160416
     Scene ID:
-      Scene ID: 43
+      Scene ID: 42
     entity name:
       name: tin_wafer_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00770473899
-        y: 0.0077047362
-        z: 0.00770471571
+        x: 0.00770472037
+        y: 0.00770472037
+        z: 0.00770472037
       m_Rotate:
-        x: -15.0377502
-        y: -9.39150959e-06
-        z: -89.9998779
+        x: 0
+        y: -0
+        z: 0
       m_Trans:
-        x: -2.4176929
-        y: 0.733202457
-        z: -0.434987098
+        x: -3.11415386
+        y: 0.442223817
+        z: -0.425643563
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -441,72 +477,6 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 1227985796f81e4d5c327308919
-        type: 4838001395392124604
-      m_MaterialGuid:
-        tin_plastic_clear:
-          guid: 19df4a572a084171defbcaee86e
-          type: 175488002581160416
-        standardSurface1:
-          guid: 1a1f94a7051a6c8f0740656eafa
-          type: 175488002581160416
-        tin_top:
-          guid: 1a070777bafad0d466ac7f3bc60
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 42
-    entity name:
-      name: tin_wafer_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00770472037
-        y: 0.00770472037
-        z: 0.00770472037
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -3.11415386
-        y: 0.442223817
-        z: -0.425643563
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: false
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 549617d7801a7763d2a7ac15c64
-        type: 4838001395392124604
-      m_MaterialGuid:
-        flap_left:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 108
-    entity name:
-      name: kite_left_flap
-    VisibilityComponent:
-      m_IsVisible: false
-    TransformComponent:
-      m_Scale:
-        x: 0.491530776
-        y: 0.491511792
-        z: 0.491519809
-      m_Rotate:
-        x: 0
-        y: -89.9999771
-        z: -90
-      m_Trans:
-        x: -0.593305111
-        y: 0.370184511
-        z: -1.09252524
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
         guid: 12279737ce4956276de22f3c339
         type: 4838001395392124604
       m_MaterialGuid:
@@ -541,6 +511,36 @@ entities:
           x: 1
           y: 1
           z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 549617d7801a7763d2a7ac15c64
+        type: 4838001395392124604
+      m_MaterialGuid:
+        flap_left:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 108
+    entity name:
+      name: kite_left_flap
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.491530776
+        y: 0.491511792
+        z: 0.491519809
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: -90
+      m_Trans:
+        x: -0.593305111
+        y: 0.370184511
+        z: -1.09252524
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1567,6 +1567,28 @@ entities:
         x: -2.2556963
         y: 6.15039826e-05
         z: 0.548450053
+  - Scene ID:
+      Scene ID: 96
+    entity name:
+      name: PuzzleManager
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PuzzleManager
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1613,28 +1635,6 @@ entities:
         x: 0.910866261
         y: 6.10351562e-05
         z: 0.590159476
-  - Scene ID:
-      Scene ID: 96
-    entity name:
-      name: PuzzleManager
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    Behaviour:
-      classesName:
-        - PuzzleManager
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -1952,36 +1952,6 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 14e4ff37b4cb05009d4fe00b707
-        type: 4838001395392124604
-      m_MaterialGuid:
-        kite_base_mat:
-          guid: 57638ab7cee9009151d9fa7a3d6
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 105
-    entity name:
-      name: kite_body
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00315297977
-        y: 0.00315303286
-        z: 0.00299999909
-      m_Rotate:
-        x: -90
-        y: -89.9999466
-        z: 0
-      m_Trans:
-        x: -0.748034537
-        y: 0.368863732
-        z: -0.999476314
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
         guid: 1227985796f81e4d5c327308919
         type: 4838001395392124604
       m_MaterialGuid:
@@ -2018,31 +1988,31 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 14e50307b7aac9ca142f4953925
+        guid: 14e4ff37b4cb05009d4fe00b707
         type: 4838001395392124604
       m_MaterialGuid:
-        stick_1_mat:
-          guid: 153b70b72508ef06e092fbad5fb
+        kite_base_mat:
+          guid: 57638ab7cee9009151d9fa7a3d6
           type: 175488002581160416
     Scene ID:
-      Scene ID: 113
+      Scene ID: 105
     entity name:
-      name: kite_stick2
+      name: kite_body
     VisibilityComponent:
-      m_IsVisible: false
+      m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00366597041
-        y: 0.00275315228
-        z: 0.00620361837
+        x: 0.00315297977
+        y: 0.00315303286
+        z: 0.00299999909
       m_Rotate:
-        x: 89.9999771
-        y: -0
+        x: -90
+        y: -89.9999466
         z: 0
       m_Trans:
-        x: -0.554439247
-        y: 0.375469863
-        z: -1.10025835
+        x: -0.748034537
+        y: 0.368863732
+        z: -0.999476314
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -2131,47 +2101,36 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
-  - BoxCollider:
-      size:
-        x: 1.79999995
-        y: 1.04299998
-        z: 0.381999999
-      CenterOffset:
-        x: 0.170000002
-        y: 0.00999999978
-        z: -0.0700000003
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 14e50307b7aac9ca142f4953925
+        type: 4838001395392124604
+      m_MaterialGuid:
+        stick_1_mat:
+          guid: 153b70b72508ef06e092fbad5fb
+          type: 175488002581160416
     Scene ID:
-      Scene ID: 51
+      Scene ID: 113
     entity name:
-      name: ShelfCollider_Copy
+      name: kite_stick2
     VisibilityComponent:
-      m_IsVisible: true
+      m_IsVisible: false
     TransformComponent:
       m_Scale:
-        x: 1.83105934
-        y: 1.24331307
-        z: 0.481914192
+        x: 0.00366597041
+        y: 0.00275315228
+        z: 0.00620361837
       m_Rotate:
-        x: 0
+        x: 89.9999771
         y: -0
         z: 0
       m_Trans:
-        x: -2.40472817
-        y: 0.245940328
-        z: 0.728433728
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 0.5
-          y: 0.5
-          z: 1
+        x: -0.554439247
+        y: 0.375469863
+        z: -1.10025835
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: false
@@ -2215,6 +2174,47 @@ entities:
         x: -0.57017535
         y: 0.379999995
         z: -1.20159948
+  - BoxCollider:
+      size:
+        x: 1.79999995
+        y: 1.04299998
+        z: 0.381999999
+      CenterOffset:
+        x: 0.170000002
+        y: 0.00999999978
+        z: -0.0700000003
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 51
+    entity name:
+      name: ShelfCollider_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1.83105934
+        y: 1.24331307
+        z: 0.481914192
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.40472817
+        y: 0.245940328
+        z: 0.728433728
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
   - BoxCollider:
       size:
         x: 1.79999995
@@ -4615,10 +4615,10 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: b501c27d55a036d0790a94d2bb
+        guid: 8df79d7298b8a3e46485ceb6ae
         type: 4838001395392124604
       m_MaterialGuid:
-        ghost_material:
+        ghost_eye_open_material:
           guid: fd295571eb9c3f1045e834d728
           type: 175488002581160416
     RigidBodyComponent:
@@ -4665,17 +4665,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.100000001
-        y: 0.100000001
-        z: 0.100000001
+        x: 0.00149999966
+        y: 0.0014999999
+        z: 0.00149999978
       m_Rotate:
-        x: -90
-        y: -90
-        z: 3.00000024
+        x: 0
+        y: -89.9999771
+        z: 0
       m_Trans:
-        x: -0.724205136
-        y: 0.538132906
-        z: 0.977142453
+        x: -1.03963172
+        y: 0.362641215
+        z: 1.27242434
     Behaviour:
       classesName:
         - GhostBehavior
@@ -5583,11 +5583,11 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: b501c27d55a036d0790a94d2bb
+        guid: 8df79d7298b8a3e46485ceb6ae
         type: 4838001395392124604
       m_MaterialGuid:
-        ghost_material:
-          guid: 00
+        ghost_eye_open_material:
+          guid: fd295571eb9c3f1045e834d728
           type: 175488002581160416
     Scene ID:
       Scene ID: 203
@@ -5599,17 +5599,17 @@ entities:
       m_IsVisible: false
     TransformComponent:
       m_Scale:
-        x: 0.0999981165
-        y: 0.0999999791
-        z: 0.099999994
+        x: 0.000999997137
+        y: 0.00100000005
+        z: 0.000999997137
       m_Rotate:
-        x: -91.9999619
-        y: -6.43756437e-11
-        z: -3.10601067e-18
+        x: 0
+        y: -6.44064177e-11
+        z: -3.10601129e-18
       m_Trans:
-        x: -1.10864639e-05
-        y: -0.00340294838
-        z: 0.288078725
+        x: -1.257658e-05
+        y: 0.0048648119
+        z: 0.288077235
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
