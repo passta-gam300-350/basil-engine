@@ -149,6 +149,8 @@ void InputManager::Update()
 
     for (auto& mouseState : mouseReleasedStates)
         mouseState.second = false;
+
+    keyPressedStatesLastFrame = keyPressedStates;
 }
 
 void InputManager::GamePadUpdate()
@@ -255,6 +257,18 @@ bool InputManager::Is_KeyReleased(int key) const
 
     return false;
 }
+
+bool InputManager::Is_KeyTriggered(int key) const
+{
+    auto current = keyPressedStates.find(key);
+    auto previous = keyPressedStatesLastFrame.find(key);
+
+    bool curr = (current != keyPressedStates.end()) ? current->second : false;
+    bool prev = (previous != keyPressedStatesLastFrame.end()) ? previous->second : false;
+
+    return curr && !prev;
+}
+
 
 bool InputManager::Is_MousePressed(int button) const
 {

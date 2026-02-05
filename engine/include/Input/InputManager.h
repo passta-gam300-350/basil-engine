@@ -319,6 +319,16 @@ class InputManager
         bool Is_KeyPressed(int key) const;
 
         /**
+        * @brief Checks if a specific key is currently pressed and not pressed in the previous frame.
+        *
+        * This function returns true if the specified key is currently being pressed and not pressed in the previous frame, otherwise false.
+        * It can be used to detect real-time input for key presses.
+        *
+        * @param[in] key The GLFW key code to check.
+        */
+        bool Is_KeyTriggered(int key) const;
+
+        /**
         * @brief Checks if a specific key has been released.
         *
         * This function returns true if the specified key has just been released.
@@ -415,6 +425,7 @@ class InputManager
         InputManager() noexcept : mouseButton(false), mouseXPosition(0.0), mouseYPosition(0.0), scrollXOffset(0.0), scrollYOffset(0.0), typedText(""), debugMode(false), currentContext(InputContext::Gameplay), mouseConsumed(false) {}
         std::unordered_map<int, bool> keyPressedStates;
         std::unordered_map<int, bool> keyReleasedStates;
+        std::unordered_map<int, bool> keyPressedStatesLastFrame;
         std::unordered_map<int, bool> mousePressedStates;
         std::unordered_map<int, bool> mouseReleasedStates;
         GLboolean mouseButton;
