@@ -8,6 +8,8 @@ struct ModelDescriptor {
 	rp::descriptor_base base;
 	bool merge_mesh{ true };
 	bool extract_material{ true }; //extracts material in pbr. if false, materials are not created but material slots are still allocated
+	bool extract_animation{ true }; //extracts material in pbr. if false, materials are not created but material slots are still allocated
+	bool is_skinned{ false };
 	//bool merge_material{ false }; //merge all material slots into 1 material slot with material atlas (texture baking) //TODO: m3 maybe
 	glm::vec3 scale{1.f};
 	glm::vec3 rotate{}; //in degrees, euler rotation

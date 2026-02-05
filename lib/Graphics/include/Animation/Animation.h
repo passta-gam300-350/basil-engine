@@ -123,6 +123,10 @@ public:
         m_scales.clear();
     }
 
+    bool hasAnimation() {
+        return !m_positions.empty() || !m_rotations.empty() || !m_scales.empty();
+    }
+
 private:
     std::string m_name;
     int m_id;

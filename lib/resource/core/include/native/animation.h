@@ -11,7 +11,7 @@ class AnimationResourceData {
 public:
     struct Channel {
         std::string m_name;
-        int m_id;
+        int m_id; 
         std::map<float, glm::vec3> m_positions;
         std::map<float, glm::quat> m_rotations;
         std::map<float, glm::vec3> m_scales;

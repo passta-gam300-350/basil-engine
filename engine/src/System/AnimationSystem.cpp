@@ -54,11 +54,18 @@ void animationSystem::FixedUpdate(ecs::world& world)
 			animationComponent.animatorInstance = nullptr;
 			continue;
 		}
+		if (animationComponent.animatorInstance->currentAnimation != ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid)) {
+			CleanupSkeletalAnimation(animationComponent);
+			skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
+			InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
+			continue;
+		}
 
 		animator* anim = animationComponent.animatorInstance;
 		skeleton& skel = skeletonComponent.skeletonData;
 		anim->updateAnimation(dt, skel);
 		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
+		int i{};
 	}
 	// SIMPLE ANIMATION //
 	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>(ecs::exclude<SkeletonComponent>);
@@ -111,6 +118,31 @@ void animationSystem::FixedUpdate(ecs::world& world)
 	}
 }
 
+void FreeAnimatorOnDestroy(entt::registry& registry, entt::entity entity) {
+	ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+	auto& anc = ecsEntity.get<AnimationComponent>();
+	CleanupSkeletalAnimation(anc);
+}
+
+void animationSystem::Init()
+{
+	auto world = Engine::GetWorld();
+	entt::registry& registry = world.impl.get_registry();
+
+	registry.on_construct<AnimationComponent>().disconnect();
+	registry.on_destroy<AnimationComponent>().disconnect();
+	registry.on_destroy<AnimationComponent>().connect<FreeAnimatorOnDestroy>();
+}
+
+void animationSystem::Exit()
+{
+	auto world = Engine::GetWorld();
+	auto animationen = world.filter_entities<AnimationComponent>();
+	for (auto e : animationen) {
+		e.remove<AnimationComponent>();
+	}
+}
+
 boneChannel LoadBoneChannel(const char* data) {
 	AnimationResourceData animResData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
 		reinterpret_cast<const std::byte*>(data)
@@ -155,13 +187,13 @@ animationContainer LoadAnimationContainer(const char* data) {
 	for (AnimationResourceData::Channel chl : animData.m_channels) {
 		boneChannel bc{ chl.m_name, chl.m_id };
 		for (auto const& poskey : chl.m_positions) {
-			bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
+			bc.addPositionKeyframe(poskey.first, poskey.second);
 		}
 		for (auto const& rotkey : chl.m_rotations) {
-			bc.addRotationKeyframe(rotkey.first / 1000, rotkey.second);
+			bc.addRotationKeyframe(rotkey.first, rotkey.second);
 		}
 		for (auto const& sclkey : chl.m_scales) {
-			bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
+			bc.addScaleKeyframe(sclkey.first, sclkey.second);
 		}
 		ac.channels.emplace_back(bc);
 	}
