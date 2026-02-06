@@ -134,7 +134,7 @@ public class KiteController : Behavior
             if (finalVOTimer <= 0f)
             {
                 Logger.Log("Final Father VO finished, changing scene");
-                Scene.LoadSceneByIndex(0);
+                Scene.LoadSceneByIndex(5);
             }
 
             return; // freeze everything while VO finishes

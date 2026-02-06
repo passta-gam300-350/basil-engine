@@ -21,6 +21,12 @@ public class MainMenuManager : Behavior
     private HudComponent play,quit;
 
     private bool upKeyDebounce, downKeyDebounce;
+
+    private Audio audio;
+    private float fadeSpeed = 100.0f;
+    private bool isFadingIn = false;
+    private float targetVolume;
+
     public void Init()
     {
         menus[0] = GameObject.Find("GUIBackground_Play");
@@ -29,10 +35,25 @@ public class MainMenuManager : Behavior
         play = menus[0].transform.GetComponent<HudComponent>();
         quit = menus[1].transform.GetComponent<HudComponent>();
 
-
+        audio = transform.GetComponent<Audio>();
+        targetVolume = audio.Volume;
+        audio.Volume = 0;
+        audio.Looping = true;
+        audio.Play();
+        isFadingIn = true;
     }
     public void Update()
     {
+        if (isFadingIn)
+        {
+            audio.Volume += (targetVolume * fadeSpeed / 100.0f) * Time.deltaTime;
+
+            if (audio.Volume >= targetVolume)
+            {
+                audio.Volume = targetVolume;
+                isFadingIn = false;
+            }
+        }
         //if ((Input.GetKey(KeyCode.DOWN) || Input.GetKey(KeyCode.S)) && !downKeyDebounce)
         //{
         //    downKeyDebounce = true;

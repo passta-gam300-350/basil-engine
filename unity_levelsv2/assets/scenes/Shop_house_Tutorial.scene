@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 179
+  slot: 185
   guid: 00
   dependencies: ~
 render_settings:
@@ -137,9 +137,9 @@ entities:
       Cast Shadows: true
       Intensity: 0.600000024
       "[Dir/Spot] Direction":
-        x: -45
-        y: -45
-        z: 30
+        x: -16
+        y: -19
+        z: 87
       "[Point/Spot] Range": 10
       "[Spot] Inner Cone Angle": 30
       "[Spot] Outer Cone Angle": 45
@@ -929,6 +929,36 @@ entities:
           x: 1
           y: 0.952941179
           z: 0.607843161
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 181
+    entity name:
+      name: concrete_floor_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.60000002
+        y: 0
+        z: -4.8839941
   - RigidBodyComponent:
       motionType: "\x01"
       mass: 1
@@ -1020,6 +1050,55 @@ entities:
           type: System.Single
           value: 4
           is_user_type: false
+  - Scene ID:
+      Scene ID: 183
+    entity name:
+      name: UI_Text2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: -179.999893
+        y: -5.00895567e-06
+        z: -179.999893
+      m_Trans:
+        x: 2.04517412
+        y: 0.488726556
+        z: 1.6987015
+    TextMeshComponent:
+      fontGuid:
+        guid: ff7f5c7366bb0f067a65ea8155
+        type: 10090887602259309668
+      text: Throw Trash (E)
+      billboardMode: "\x00"
+      fontSize: 7
+      referenceDistance: 5
+      alignment: "\x01"
+      lineSpacing: 1
+      letterSpacing: 0
+      maxWidth: 0
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      outlineWidth: 0
+      outlineColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+      glowStrength: 0
+      glowColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 0.5
+      sdfThreshold: 0.5
+      smoothing: 0.0399999991
+      visible: true
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -1233,28 +1312,6 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
-  - Scene ID:
-      Scene ID: 96
-    entity name:
-      name: PuzzleManager
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    Behaviour:
-      classesName:
-        - PuzzleManager
   - Scene ID:
       Scene ID: 141
     entity name:
@@ -1923,9 +1980,9 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.0378000028
-        y: 0.0379999988
-        z: 0.0378000028
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
       m_Rotate:
         x: 0
         y: -0
@@ -1933,7 +1990,7 @@ entities:
       m_Trans:
         x: 1.60000002
         y: 0
-        z: -3.77999997
+        z: -0.388846934
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -2109,9 +2166,9 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.0378000028
-        y: 0.0379999988
-        z: 0.0378000028
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
       m_Rotate:
         x: 0
         y: -0
@@ -2119,7 +2176,7 @@ entities:
       m_Trans:
         x: 1.60000002
         y: 0
-        z: 0
+        z: 1.1042279
   - Scene ID:
       Scene ID: 172
     entity name:
@@ -2201,3 +2258,112 @@ entities:
         x: 0
         y: 0
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 179
+    entity name:
+      name: concrete_floor_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.60000002
+        y: 0
+        z: -3.38723922
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 180
+    entity name:
+      name: concrete_floor_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.60000002
+        y: 0
+        z: -1.88792837
+  - Scene ID:
+      Scene ID: 182
+    entity name:
+      name: UI_Text1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: -179.999893
+        y: -5.00895567e-06
+        z: -179.999893
+      m_Trans:
+        x: 1.78497481
+        y: 0.534583151
+        z: -1.13029468
+    TextMeshComponent:
+      fontGuid:
+        guid: ff7f5c7366bb0f067a65ea8155
+        type: 10090887602259309668
+      text: Pick Up Trash (E)
+      billboardMode: "\x00"
+      fontSize: 7
+      referenceDistance: 5
+      alignment: "\x01"
+      lineSpacing: 1
+      letterSpacing: 0
+      maxWidth: 0
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      outlineWidth: 0
+      outlineColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+      glowStrength: 0
+      glowColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 0.5
+      sdfThreshold: 0.5
+      smoothing: 0.0399999991
+      visible: true

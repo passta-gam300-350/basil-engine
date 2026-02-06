@@ -1,0 +1,16 @@
+base:
+  m_guid: ff7f5c7366bb0f067a65ea8155
+  m_importer: .font
+  m_source: fonts\CaveatBrush-Regular.ttf
+  m_name: CaveatBrush-Regular.ttf
+  m_importer_type: 3072536808783166376
+atlas_size: 1024
+base_font_size: 64
+sdf_range: 8
+glyph_padding: 4
+character_set: ASCII
+custom_ranges: ~
+generate_kerning: true
+generate_outline_support: true
+sdf_multi_channel: false
+compression: BC4_R4
