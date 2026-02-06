@@ -579,6 +579,61 @@ glm::vec4 SceneRenderer::GetBackgroundColor() const
     return glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);  // Default gray
 }
 
+void SceneRenderer::SetDefaultLightCubeSize(float size)
+{
+    assert(size > 0.0f && "Light cube size must be positive");
+    assert(m_Pipeline && "Pipeline must be initialized before setting light cube size");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetBaseLightCubeSize(size);
+        }
+    }
+}
+
+float SceneRenderer::GetDefaultLightCubeSize() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetBaseLightCubeSize();
+        }
+    }
+    return 0.3f;  // Default value
+}
+
+void SceneRenderer::SetShowLightCubes(bool show)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting light cube visibility");
+
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            mainPass->SetShowLightCubes(show);
+        }
+    }
+}
+
+bool SceneRenderer::GetShowLightCubes() const
+{
+    if (m_Pipeline)
+    {
+        auto mainPass = std::dynamic_pointer_cast<MainRenderingPass>(m_Pipeline->GetPass("MainPass"));
+        if (mainPass)
+        {
+            return mainPass->GetShowLightCubes();
+        }
+    }
+    return true;  // Default: visible
+}
+
 void SceneRenderer::SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const
 {
     assert(shader && "HDR compute shader cannot be null");
