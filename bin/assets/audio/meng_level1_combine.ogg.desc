@@ -1,0 +1,14 @@
+base:
+  m_guid: fc464076c2b4b3f54a653d1302
+  m_importer: .audio
+  m_source: audio\meng_level1_combine.ogg
+  m_name: meng_level1_combine.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

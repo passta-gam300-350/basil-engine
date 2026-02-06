@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 67
+  slot: 73
   guid: 00
   dependencies: ~
 render_settings:
@@ -24,80 +24,6 @@ render_settings:
       - 00
       - 00
 entities:
-  - Scene ID:
-      Scene ID: 2
-    entity name:
-      name: Camera
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 0.99999994
-        z: 0.99999994
-      m_Rotate:
-        x: -19
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 1.18654835
-        z: -6.32290268
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 60
-      m_AspectRatio: 1.914469
-      m_Near: 0.100000001
-      m_Far: 10000
-      m_Up:
-        x: 0
-        y: 0.945518553
-        z: -0.32556814
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0.32556814
-        z: 0.945518553
-      m_Yaw: -90
-      m_Pitch: 0
-  - Scene ID:
-      Scene ID: 66
-    entity name:
-      name: kite_hit4
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 39dfd7479a0b33693485c8d229c
-        type: 17099568057112876377
-      volume: 0.400000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -174,8 +100,8 @@ entities:
         y: -0
         z: -179.999893
       m_Trans:
-        x: 0
-        y: 9.51221466
+        x: 1.37835223e-05
+        y: 1.93855023
         z: 12.2189999
     Behaviour:
       classesName:
@@ -192,9 +118,119 @@ entities:
       minDistance: 1
       maxDistance: 1000
       position:
-        x: 0
-        y: 9.51221466
+        x: 1.37835223e-05
+        y: 1.93855023
         z: 12.2189999
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 66
+    entity name:
+      name: kite_hit4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd7479a0b33693485c8d229c
+        type: 17099568057112876377
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -19
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 60
+      m_AspectRatio: 1.914469
+      m_Near: 0.100000001
+      m_Far: 10000
+      m_Up:
+        x: 0
+        y: 0.945518553
+        z: -0.32556814
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0.32556814
+        z: 0.945518553
+      m_Yaw: -90
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 65
+    entity name:
+      name: kite_hit3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd6973f38158a377d5aecfb5
+        type: 17099568057112876377
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
       velocity:
         x: 0
         y: 0
@@ -231,42 +267,6 @@ entities:
       m_Trans:
         x: 0
         y: 16.6807728
-        z: 0
-  - Scene ID:
-      Scene ID: 65
-    entity name:
-      name: kite_hit3
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 39dfd6973f38158a377d5aecfb5
-        type: 17099568057112876377
-      volume: 0.400000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
         z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
@@ -627,6 +627,29 @@ entities:
     Behaviour:
       classesName:
         - KiteTarget
+  - Scene ID:
+      Scene ID: 70
+    entity name:
+      name: Father_Win2
+    AudioComponent:
+      audioAssetGuid:
+        guid: 30b41c67ab99e03637687a32222
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -924,6 +947,23 @@ entities:
     Behaviour:
       classesName:
         - Spool
+      scriptProperties:
+        - name: Spool.maxPosition
+          type: System.Single
+          value: 0.02
+          is_user_type: false
+        - name: Spool.maxRotation
+          type: System.Single
+          value: 30
+          is_user_type: false
+        - name: Spool.moveSpeed
+          type: System.Single
+          value: 0.1
+          is_user_type: false
+        - name: Spool.rotationSpeed
+          type: System.Single
+          value: 90
+          is_user_type: false
     AudioComponent:
       audioAssetGuid:
         guid: 3ace30a7eeea433ebd0ffc881e5
@@ -2064,6 +2104,100 @@ entities:
         guid: 84494f270c8ad7e98595586124b
         type: 17099568057112876377
       volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 67
+    entity name:
+      name: KiteIntroVO1
+    AudioComponent:
+      audioAssetGuid:
+        guid: 10c51c07e54ae12e07855a74929
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 68
+    Relationship:
+      parent: 0
+    entity name:
+      name: Father_Win1
+    AudioComponent:
+      audioAssetGuid:
+        guid: 30b41bd7ad9b1cffe044fd09aed
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 71
+    entity name:
+      name: Father_Win3
+    AudioComponent:
+      audioAssetGuid:
+        guid: 30b41cf7d4abfcd3fed7716fa3f
+        type: 17099568057112876377
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 72
+    entity name:
+      name: Father_Win_combine
+    AudioComponent:
+      audioAssetGuid:
+        guid: 729561d729bb4bc8edc90a52422
+        type: 17099568057112876377
+      volume: 1
       isLooping: false
       is3D: true
       isStreaming: false

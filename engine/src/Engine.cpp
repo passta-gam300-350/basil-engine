@@ -81,11 +81,18 @@ void Engine::Init(std::string const& cfg ) {
 	if (YAML::Node window{ root["window"] }; window) {
 		std::uint32_t win_width{ window["width"] ? window["width"].as<std::uint32_t>() : DEFAULT_RESOLUTION_WIDTH };
 		std::uint32_t win_height{ window["height"] ? window["height"].as<std::uint32_t>() : DEFAULT_RESOLUTION_HEIGHT };
-		//bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
+		bool win_mode{ window["fullscreen"] ? window["fullscreen"].as<bool>() : DEFAULT_WINDOW_MODE };
 		std::string win_name{ window["title"] ? window["title"].as<std::string>() : std::string(DEFAULT_NAME.begin(), DEFAULT_NAME.end()) };
 		bool win_vsync{ window["vsync"] ? window["vsync"].as<bool>() : DEFAULT_VSYNC_OPTION };
 		Instance().m_Window = std::make_unique<Window>(win_name, win_width, win_height);
 		Instance().m_Window->SetVSync(win_vsync);
+
+		if (win_mode) {
+			auto ptr = Instance().m_Window->GetNativeWindow();
+			GLFWmonitor* monitor = glfwGetPrimaryMonitor(); // Get the monitor's video mode (resolution, refresh rate, etc.) const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			// Switch to fullscreen
+			glfwSetWindowMonitor(ptr, monitor, 0, 0, win_width, win_height, 0);
+		}
 	}
 	else {
 		Instance().m_Window = std::make_unique<Window>(DEFAULT_NAME.data(), DEFAULT_RESOLUTION_WIDTH, DEFAULT_RESOLUTION_HEIGHT);
@@ -177,7 +184,6 @@ void Engine::CoreUpdate() {
 	//thread_local auto physic_system{PhysicsSystem()};
 	Engine& instance{ Instance() };
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
-	InputManager::Get_Instance()->Update();
 	instance.m_World.pre_update();
 	//TransformSystem().FixedUpdate(instance.m_World);
 	HierarchySystem().FixedUpdate(instance.m_World);
@@ -201,6 +207,7 @@ void Engine::CoreUpdate() {
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
+	InputManager::Get_Instance()->Update();
 	messagingSystem.Update();
 
 
