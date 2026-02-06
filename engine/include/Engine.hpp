@@ -65,7 +65,10 @@ public:
 	static void UpdateDebug();
 	static void Exit();
 
-	
+	inline static void ShouldExit() {
+		auto& instance = Instance();
+		instance.m_Info.m_State = Info::State::Exit;
+	}
 
 	static void BeginFrame();
 	static void EndFrame();
