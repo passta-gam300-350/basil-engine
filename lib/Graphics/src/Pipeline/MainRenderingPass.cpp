@@ -343,8 +343,8 @@ void MainRenderingPass::RenderLightCubes(RenderContext& context)
 
     // Render each light as a cube (all light types: Directional, Point, Spot)
     for (const auto& light : context.lights) {
-        // Use fixed cube size (intensity-based scaling disabled)
-        float cubeSize = m_BaseLightCubeSize;
+        // Use per-light size if specified (visualSize > 0), otherwise use default
+        float cubeSize = (light.visualSize > 0.0f) ? light.visualSize : m_BaseLightCubeSize;
 
         // Calculate transform matrix for light position with fixed scaling
         glm::mat4 modelMatrix = glm::mat4(1.0f);
