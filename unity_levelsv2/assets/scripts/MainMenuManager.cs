@@ -20,7 +20,6 @@ public class MainMenuManager : Behavior
     private GameObject[] menus = new GameObject[2];
     private HudComponent play,quit;
 
-    private bool upKeyDebounce, downKeyDebounce;
 
     private Audio audio;
     private float fadeSpeed = 100.0f;
@@ -44,6 +43,7 @@ public class MainMenuManager : Behavior
     }
     public void Update()
     {
+
         if (isFadingIn)
         {
             audio.Volume += (targetVolume * fadeSpeed / 100.0f) * Time.deltaTime;
@@ -67,8 +67,10 @@ public class MainMenuManager : Behavior
         //{
         //    downKeyDebounce = false;
         //}
+
         if (Input.GetKeyPress(KeyCode.DOWN) || Input.GetKeyPress(KeyCode.S))
         {
+            
             // Execute action for down key press
             if (currentState == MenuStates.PLAY_SELECT)
             {

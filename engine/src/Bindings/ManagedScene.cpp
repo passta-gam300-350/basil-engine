@@ -28,3 +28,8 @@ void ManagedScene::LoadSceneName(MonoString* name)
 
 	mono_free(name_cstr);
 }
+
+void ManagedScene::ExitApplication()
+{
+	// TODO: Implementation for exiting the application
+}

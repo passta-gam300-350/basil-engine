@@ -35,7 +35,10 @@ namespace BasilEngine.SceneManagement
         /// <param name="index">Scene index.</param>
         public extern static void LoadSceneByIndex(int index);
 
-
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("ExitApplication")]
+        [StaticAccessor("ManagedScene", StaticAccessorType.DoubleColon)]
+        public extern static void ExitApplication();
 
         /// <summary>
         /// Loads a scene by build index.
@@ -53,6 +56,11 @@ namespace BasilEngine.SceneManagement
         public static void LoadScene(string name)
         {
             LoadSceneByName(name);
+        }
+
+        public static void Quit()
+        {
+            ExitApplication();
         }
 
     }
