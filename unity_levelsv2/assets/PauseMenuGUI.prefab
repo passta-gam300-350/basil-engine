@@ -1,0 +1,392 @@
+metadata:
+  guid: 6ec537bf3a274103367e524f0
+  typeIndex: 0
+  name: PauseMenuGUI_Prefab
+  version: 1
+  created: 2026-02-06T04:51:29Z
+root:
+  components:
+    - typeHash: 2841974188
+      typeName: Scene ID
+      properties:
+        Scene ID: 0
+    - typeHash: 449632347
+      typeName: Relationship
+      properties:
+        child: 0
+        parent: 0
+    - typeHash: 2310838253
+      typeName: entity name
+      properties:
+        name: PauseMenuGUI
+    - typeHash: 3400599862
+      typeName: TransformComponent
+      properties:
+        m_Rotate:
+          - 0
+          - 0
+          - 0
+        m_Scale:
+          - 1
+          - 1
+          - 1
+        m_Trans:
+          - 0
+          - 0
+          - 0
+    - typeHash: 945215924
+      typeName: Behaviour
+      properties:
+        classesName: 0
+        scriptProperties: 0
+  children:
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Menu_Resume
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 129707cd714ea914c669891eebfb
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Menu_Restart
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 129707b07ef787b38c2b5a5f9588
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Menu_MainMenu
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 1297078f72af81dcea768e761d68
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Restart_Yes
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 129707c47e938f8548dca4026ff7
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Restart_No
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 129707ba7ca19a09063b1bb3d1a7
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Quit_Yes
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 129707a479dbb0ece368f0d188d5
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
+    - components:
+        - typeHash: 2841974188
+          typeName: Scene ID
+          properties:
+            Scene ID: 0
+        - typeHash: 449632347
+          typeName: Relationship
+          properties:
+            child: 0
+            parent: 0
+        - typeHash: 2310838253
+          typeName: entity name
+          properties:
+            name: PauseMenu_Quit_No
+        - typeHash: 3400599862
+          typeName: TransformComponent
+          properties:
+            m_Rotate:
+              - 0
+              - 0
+              - 0
+            m_Scale:
+              - 1
+              - 1
+              - 1
+            m_Trans:
+              - 0
+              - 0
+              - 0
+        - typeHash: 3128845333
+          typeName: HUDComponent
+          properties:
+            anchor: 0
+            color:
+              - 1
+              - 1
+              - 1
+              - 1
+            layer: 0
+            m_TextureGuid:
+              guid: 129707997c5aa017e2f2c70899ab
+              type: 126269861530532084
+            position:
+              - 0
+              - 0
+            rotation: 0
+            size:
+              - 1920
+              - 1080
+            visible: true
