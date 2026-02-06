@@ -32,4 +32,5 @@ void ManagedScene::LoadSceneName(MonoString* name)
 void ManagedScene::ExitApplication()
 {
 	// TODO: Implementation for exiting the application
+	Engine::ShouldExit();
 }
