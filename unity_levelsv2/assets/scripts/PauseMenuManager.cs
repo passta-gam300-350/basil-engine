@@ -50,7 +50,7 @@ public class PauseMenuManager : Behavior
 
     private KeyCode exit = KeyCode.ESCAPE;
 
-    private int start=0, end=0;
+    private int start = 0, end = 0;
     private bool onTypeChanged = false;
     public void Init()
     {
@@ -96,121 +96,137 @@ public class PauseMenuManager : Behavior
     {
         if (Input.GetKeyPress(KeyCode.ESCAPE))
         {
-            currentMenuState = PauseMenuState.MENU_RESUME;
+            currentMenuState = currentMenuState != PauseMenuState.UNPAUSED ? PauseMenuState.UNPAUSED : PauseMenuState.MENU_RESUME;
+            Logger.Log(currentMenuState.ToString());
+            currentMenuType = PauseMenuType.MAIN;
             GameManager.IsGamePaused = true;
         }
 
         if (currentMenuState == PauseMenuState.UNPAUSED)
-            return;
-        if (currentMenuType == PauseMenuType.MAIN)
         {
-            end = menuStates[PauseMenuType.MAIN].Count;
-            start = (onTypeChanged) ? 0 : start;
-            onTypeChanged = false;
-
-        }
-
-
-        if (Input.GetKeyPress(next) || Input.GetKeyPress(next2))
-        {
-            start++;
-            
-
-        }
-        if (Input.GetKeyPress(previous) || Input.GetKeyPress(previous2))
-        {
-            start--;
-            
-        }
-
-        if (start >= end)
-        {
-            start = 0;
-        }
-
-        if (start < 0)
-        {
-            start = end - 1;
-        }
-
-        currentMenuState = menuStates[currentMenuType][start];
-       
-
-
-
-        int counter = 0;
-        GameObject current = GetCurrentSelectedObject();
-        ulong name = current.NativeID;
-        
-        
-        foreach (GameObject obj in UIObjects)
-        {
-            if (obj.NativeID != name)
+            foreach (HudComponent component in HudComponents)
             {
-                if (HudComponents[counter] != null)
+                if (component.Visible == true)
                 {
-                    HudComponents[counter].Visible = false;
+                    component.Visible = false;
                 }
+                else continue;
+
             }
-            else
-            {
-                HudComponents[counter].Visible = true;
-            }
-            counter++;
         }
 
-        if (Input.GetKeyPress(select) || Input.GetKeyPress(select2))
-        {
-            if (currentMenuState == PauseMenuState.MENU_RESUME)
+        if (currentMenuState == PauseMenuState.UNPAUSED)
+            return;
+
+        if (currentMenuType == PauseMenuType.MAIN)
             {
-                currentMenuState = PauseMenuState.UNPAUSED;
+                end = menuStates[PauseMenuType.MAIN].Count;
+                start = (onTypeChanged) ? 0 : start;
+                onTypeChanged = false;
+
             }
 
-            if (currentMenuState == PauseMenuState.MENU_RESTART)
+
+            if (Input.GetKeyPress(next) || Input.GetKeyPress(next2))
             {
-                currentMenuType = PauseMenuType.RESTART;
-                onTypeChanged = true;
-                start = 0;
-                end = menuStates[currentMenuType].Count;
+                start++;
+
+
             }
-            else if (currentMenuState == PauseMenuState.MENU_QUIT)
+            if (Input.GetKeyPress(previous) || Input.GetKeyPress(previous2))
             {
-                currentMenuType = PauseMenuType.QUIT;
-                onTypeChanged = true;
-                start = 0;
-                end = menuStates[currentMenuType].Count;
+                start--;
+
             }
 
-            if (currentMenuType == PauseMenuType.RESTART && currentMenuState == PauseMenuState.OPTION_YES)
+            if (start >= end)
             {
-                Logger.Log("Reload Scene");
-            }
-            else if (currentMenuType == PauseMenuType.RESTART && currentMenuState == PauseMenuState.OPTION_NO)
-            {
-                currentMenuType = PauseMenuType.MAIN;
-                onTypeChanged = true;
                 start = 0;
-                end = menuStates[currentMenuType].Count;
             }
 
-            if (currentMenuType == PauseMenuType.QUIT && currentMenuState == PauseMenuState.OPTION_YES)
+            if (start < 0)
             {
-                Scene.LoadScene(0);
+                start = end - 1;
             }
-            else if (currentMenuType == PauseMenuType.QUIT && currentMenuState == PauseMenuState.OPTION_NO)
+
+            currentMenuState = menuStates[currentMenuType][start];
+
+
+
+
+            int counter = 0;
+            GameObject current = GetCurrentSelectedObject();
+            ulong name = current.NativeID;
+
+
+            foreach (GameObject obj in UIObjects)
             {
-                currentMenuType = PauseMenuType.MAIN;
-                onTypeChanged = true;
-                start = 0;
-                end = menuStates[currentMenuType].Count;
+                if (obj.NativeID != name)
+                {
+                    if (HudComponents[counter] != null)
+                    {
+                        HudComponents[counter].Visible = false;
+                    }
+                }
+                else
+                {
+                    HudComponents[counter].Visible = true;
+                }
+                counter++;
             }
+
+            if (Input.GetKeyPress(select) || Input.GetKeyPress(select2))
+            {
+                if (currentMenuState == PauseMenuState.MENU_RESUME)
+                {
+                    currentMenuState = PauseMenuState.UNPAUSED;
+                }
+
+                if (currentMenuState == PauseMenuState.MENU_RESTART)
+                {
+                    currentMenuType = PauseMenuType.RESTART;
+                    onTypeChanged = true;
+                    start = 0;
+                    end = menuStates[currentMenuType].Count;
+                }
+                else if (currentMenuState == PauseMenuState.MENU_QUIT)
+                {
+                    currentMenuType = PauseMenuType.QUIT;
+                    onTypeChanged = true;
+                    start = 0;
+                    end = menuStates[currentMenuType].Count;
+                }
+
+                if (currentMenuType == PauseMenuType.RESTART && currentMenuState == PauseMenuState.OPTION_YES)
+                {
+                    Logger.Log("Reload Scene");
+                }
+                else if (currentMenuType == PauseMenuType.RESTART && currentMenuState == PauseMenuState.OPTION_NO)
+                {
+                    currentMenuType = PauseMenuType.MAIN;
+                    onTypeChanged = true;
+                    start = 0;
+                    end = menuStates[currentMenuType].Count;
+                }
+
+                if (currentMenuType == PauseMenuType.QUIT && currentMenuState == PauseMenuState.OPTION_YES)
+                {
+                    Scene.LoadScene(0);
+                }
+                else if (currentMenuType == PauseMenuType.QUIT && currentMenuState == PauseMenuState.OPTION_NO)
+                {
+                    currentMenuType = PauseMenuType.MAIN;
+                    onTypeChanged = true;
+                    start = 0;
+                    end = menuStates[currentMenuType].Count;
+                }
+
+
+            }
+
 
 
         }
-
-        
-
-    }
 
     public void FixedUpdate()
     {
