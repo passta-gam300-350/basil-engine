@@ -1,7 +1,0 @@
-base:
-  m_guid: d8b172d72c6b7483b0f048d3c89
-  m_importer: .texture
-  m_source: skyboxes\Blue_Sky_Right.png
-  m_name: Blue_Sky_Right.png
-  m_importer_type: 13238151832854353850
-compression: BC1_RGB4

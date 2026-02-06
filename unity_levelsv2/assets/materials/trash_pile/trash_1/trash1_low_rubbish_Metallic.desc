@@ -1,7 +1,0 @@
-base:
-  m_guid: 98e45307ab5a67c428ee764afce
-  m_importer: .texture
-  m_source: materials\trash_pile\trash_1\trash1_low_rubbish_Metallic.png
-  m_name: trash1_low_rubbish_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

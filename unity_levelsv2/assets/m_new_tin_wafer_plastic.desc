@@ -1,0 +1,29 @@
+base:
+  m_guid: f95bc072299756398fcdd74c37
+  m_importer: .material
+  m_source: ""
+  m_name: m_new_tin_wafer_plastic
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_new_tin_wafer_plastic
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df77a7ce385d61df520e0dff0
+    u_DiffuseMap: 8df7757a9ca1792525e4d28aa0
+    u_EmissiveMap: 8df7767f6b86d157c5968f389f
+    u_NormalMap: 8df779739993a45f65c8fe8f85
+    u_HeightMap: 8df7777eaeabd9ec5474576281
+    u_SpecularMap: 00
+    u_MetallicMap: 8df77877a2bce59210e5da204f

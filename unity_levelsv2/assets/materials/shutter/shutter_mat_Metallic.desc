@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd496779669653a95a0effa49f
-  m_importer: .texture
-  m_source: materials\shutter\shutter_mat_Metallic.png
-  m_name: shutter_mat_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

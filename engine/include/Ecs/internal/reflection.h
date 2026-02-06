@@ -28,6 +28,7 @@ Technology is prohibited.
 #include <iostream>
 #include <fstream>
 #include <glm/glm.hpp>
+#include <components/behaviour.hpp>
 using TypeName = entt::hashed_string;
 constexpr TypeName ToTypeName(std::string_view name) { return entt::hashed_string(name.data(), name.length()); };
 
@@ -286,6 +287,14 @@ void SerializeType(const entt::meta_any& obj, Node& out) {
 					out[field_name].push_back(guid.to_hex());
 				}
 			}
+			else if (std::vector<ScriptProperty> const* vprops = value.try_cast<std::vector<ScriptProperty> const>()) {
+				for (auto const& prop : *vprops) {
+					Node nested;
+					auto prop_any = entt::meta_any{ prop };
+					SerializeType(prop_any, nested);
+					out[field_name].push_back(nested);
+				}
+			}
 			
 
 			// primitives
@@ -480,6 +489,19 @@ void DeserializeType(const Node& in, entt::meta_any& obj) {
 				vec_guid.emplace_back(rp::Guid::to_guid(value.template as<std::string>()));
 			}
 			data.set(obj, vec_guid);
+			continue;
+		}
+
+		if (mid == entt::type_hash<std::vector<ScriptProperty>>::value()) {
+			auto vecnode = in[field_name];
+			std::vector<ScriptProperty> vec_props{};
+			auto prop_meta_type = entt::resolve<ScriptProperty>();
+			for (auto const& item : vecnode) {
+				entt::meta_any prop_any = prop_meta_type.construct();
+				DeserializeType(item, prop_any);
+				vec_props.emplace_back(prop_any.cast<ScriptProperty>());
+			}
+			data.set(obj, vec_props);
 			continue;
 		}
 

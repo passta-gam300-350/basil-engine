@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c51f745999b5b10b0be50603
+  m_importer: .texture
+  m_source: materials\stairs\staircase_low_stairs_Roughness.png
+  m_name: staircase_low_stairs_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

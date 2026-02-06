@@ -1,7 +1,0 @@
-base:
-  m_guid: 36fd7887ea892e0a0c9e8ea672d
-  m_importer: .texture
-  m_source: materials\kite_enemy\kite_scene_kite_scene_mat_Emissive.png
-  m_name: kite_scene_kite_scene_mat_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

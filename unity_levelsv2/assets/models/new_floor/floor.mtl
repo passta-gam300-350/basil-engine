@@ -1,0 +1,13 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl floor
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd floor_BaseColor.png
+map_Ks floor_Metallic.png
+map_Ns floor_Roughness.png
+map_Ke floor_Emissive.png
+map_d floor_Height.png
+map_Bump floor_Normal.png

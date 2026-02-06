@@ -1,7 +1,0 @@
-base:
-  m_guid: 5328f7774591d42aac22b9b777
-  m_importer: .texture
-  m_source: materials\kite_background\bg_BaseColor.png
-  m_name: bg_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

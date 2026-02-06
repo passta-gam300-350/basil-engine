@@ -16,11 +16,10 @@ Technology is prohibited.
 */
 /******************************************************************************/
 #pragma once
-#include <glad/glad.h>
-#include <glfw/glfw3.h>
+
 #include <string>
 #include <functional>
-
+struct GLFWwindow;
 class Window
 {
 public:

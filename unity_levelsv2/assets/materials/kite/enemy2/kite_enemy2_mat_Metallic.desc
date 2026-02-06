@@ -1,7 +1,0 @@
-base:
-  m_guid: 546d6797dc1aa78ec8f5b02d573
-  m_importer: .texture
-  m_source: materials\kite\enemy2\kite_enemy2_mat_Metallic.png
-  m_name: kite_enemy2_mat_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

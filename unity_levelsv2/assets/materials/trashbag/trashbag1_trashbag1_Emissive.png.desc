@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7cbfc76e1ad153e5c83699100
+  m_importer: .texture
+  m_source: materials\trashbag\trashbag1_trashbag1_Emissive.png
+  m_name: trashbag1_trashbag1_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

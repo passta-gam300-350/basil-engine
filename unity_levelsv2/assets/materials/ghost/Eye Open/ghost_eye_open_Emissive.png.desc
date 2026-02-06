@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b0a57158969a5e924f2044a8
+  m_importer: .texture
+  m_source: materials\ghost\Eye Open\ghost_eye_open_Emissive.png
+  m_name: ghost_eye_open_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

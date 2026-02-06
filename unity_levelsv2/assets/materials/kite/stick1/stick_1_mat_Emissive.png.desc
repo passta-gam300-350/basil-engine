@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7bb5579a0b881b8be7fa0782d
+  m_importer: .texture
+  m_source: materials\kite\stick1\stick_1_mat_Emissive.png
+  m_name: stick_1_mat_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

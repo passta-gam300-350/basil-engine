@@ -1,0 +1,191 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 3
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 0
+    entity name:
+      name: Test
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 4.17581797
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+    Behaviour:
+      classesName:
+        - UserTest
+      scriptProperties:
+        - name: UserTest.Dir2d
+          type: BasilEngine.Mathematics.Vector2
+          value: 0,1
+          is_user_type: true
+        - name: UserTest.TestField
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:2
+          is_user_type: true
+        - name: UserTest.counter
+          type: System.Int32
+          value: 0
+          is_user_type: false
+        - name: UserTest.direction
+          type: BasilEngine.Mathematics.Vector3
+          value: 1,0,0
+          is_user_type: true
+        - name: UserTest.kiteController
+          type: KiteController
+          value: scene_guid:00;scene_id:1
+          is_user_type: true
+        - name: UserTest.newField
+          type: System.Single
+          value: 10
+          is_user_type: false
+        - name: UserTest.speed
+          type: System.Single
+          value: 5
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 1
+    entity name:
+      name: kite
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+    Behaviour:
+      classesName:
+        - KiteController
+      scriptProperties:
+        - name: KiteController.moveSpeed
+          type: System.Single
+          value: 250
+          is_user_type: false
+        - name: KiteController.totalKite
+          type: System.Int32
+          value: 4
+          is_user_type: false
+        - name: KiteController.windSpeed
+          type: System.Single
+          value: 30
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 2
+    entity name:
+      name: go
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.86795235
+        y: 2
+        z: 2.50749421
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1

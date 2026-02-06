@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7a5d477efb9cad0c8e70cbb59
+  m_importer: .texture
+  m_source: materials\biscuit_chocolate\Closed\c_bx_Emissive.png
+  m_name: c_bx_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

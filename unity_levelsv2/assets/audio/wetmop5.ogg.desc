@@ -1,0 +1,14 @@
+base:
+  m_guid: f78fd87fc2be2531ae5e0296ac
+  m_importer: .audio
+  m_source: audio\wetmop5.ogg
+  m_name: wetmop5.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

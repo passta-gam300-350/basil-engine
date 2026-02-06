@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c9c57905b38cff9c774e4741
+  m_importer: .texture
+  m_source: materials\train\body\TrainBody_Train_Height.png
+  m_name: TrainBody_Train_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

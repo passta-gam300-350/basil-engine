@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b32f76a9bd0d6a31dc8262bd
+  m_importer: .texture
+  m_source: materials\kitchen_cabinet\kitchenCabinet_PandaMat_Height.png
+  m_name: kitchenCabinet_PandaMat_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

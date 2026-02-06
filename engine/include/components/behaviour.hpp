@@ -21,12 +21,24 @@ Technology is prohibited.
 #define behaviour_hpp
 
 #include <string>
+#include <vector>
 
 #include "rsc-core/rp.hpp"
+
+struct ScriptProperty
+{
+	std::string name;
+	std::string typeName;
+	std::string value;
+	bool is_user_type = false;
+};
+
 
 struct behaviour
 {
 	std::vector<std::string> classesName;
+	std::vector<ScriptProperty> scriptProperties;
+	//Runtime
 	std::vector<rp::Guid> scriptIDs;
 
 };

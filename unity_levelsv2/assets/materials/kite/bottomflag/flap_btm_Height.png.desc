@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b710733689e2366d271fdfb8
+  m_importer: .texture
+  m_source: materials\kite\bottomflag\flap_btm_Height.png
+  m_name: flap_btm_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

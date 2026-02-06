@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7ba817eaaa02c3493508c07f6
+  m_importer: .texture
+  m_source: materials\kite\player\kite_player_mat_Height.png
+  m_name: kite_player_mat_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

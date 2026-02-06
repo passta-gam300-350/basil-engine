@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7a513783ba48088f5f82356b2
+  m_importer: .texture
+  m_source: materials\biscuit_cheese\Half Closed\ch_bx_halfOp_Metallic.png
+  m_name: ch_bx_halfOp_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

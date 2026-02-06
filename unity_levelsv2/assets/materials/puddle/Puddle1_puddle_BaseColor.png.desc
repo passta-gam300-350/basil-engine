@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c31d75c0831325e3a6840af5
+  m_importer: .texture
+  m_source: materials\puddle\Puddle1_puddle_BaseColor.png
+  m_name: Puddle1_puddle_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

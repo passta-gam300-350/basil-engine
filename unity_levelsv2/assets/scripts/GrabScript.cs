@@ -13,10 +13,14 @@ public class GrabScript : Behavior
     private Camera cam;
     private GameObject heldEntity = null;
     private Transform heldTransform = null;
+    private Particle particleComponent;
+
+    private bool Active = false;
 
     public void Init()
     {
         Logger.Log("GrabScript Has been initialized");
+       
     }
 
     public void Update()
@@ -56,6 +60,10 @@ public class GrabScript : Behavior
         // Hold: move entity toward target point along the camera ray
         if (heldTransform != null)
         {
+            if (particleComponent == null)
+            {
+                particleComponent = heldTransform.GetComponent<Particle>();
+            }
             Vector2 mouse = Input.mousePosition;
             Ray ray = cam.ScreenPointToRay(mouse);
             Vector3 target = ray.origin + ray.direction * holdDistance;
@@ -63,6 +71,23 @@ public class GrabScript : Behavior
             Vector3 current = heldTransform.position;
             Vector3 desired = current + (target - current) * moveSpeed * 1/165f;
             heldTransform.position = desired;
+            Logger.Log("Holding to object!");
+            if (Input.GetKey(KeyCode.R))
+            {
+                Logger.Log("Mouse Clicked!");
+                if (particleComponent != null)
+                {
+                    particleComponent.emissionRate = 15;
+                    
+                }
+            } else if (particleComponent != null)
+            {
+                particleComponent.emissionRate = 0;
+            }
+            else
+            {
+                Logger.Log("Particle Component is NULL");
+            }
         }
     }
 

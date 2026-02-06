@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7ca9b7d07b65c93f9638d7aea
+  m_importer: .texture
+  m_source: materials\train\combined\Train_Combine_Train_Roughness.png
+  m_name: Train_Combine_Train_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

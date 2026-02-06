@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b66c7421910ce77ff26c4b4b
+  m_importer: .texture
+  m_source: materials\kite\base\kite_base_mat_BaseColor.png
+  m_name: kite_base_mat_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

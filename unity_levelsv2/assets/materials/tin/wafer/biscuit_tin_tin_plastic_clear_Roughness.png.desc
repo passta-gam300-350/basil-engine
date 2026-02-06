@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c9457c0d89618a30b003b51c
+  m_importer: .texture
+  m_source: materials\tin\wafer\biscuit_tin_tin_plastic_clear_Roughness.png
+  m_name: biscuit_tin_tin_plastic_clear_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

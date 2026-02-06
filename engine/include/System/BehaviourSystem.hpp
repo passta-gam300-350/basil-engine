@@ -1,8 +1,10 @@
 #pragma once
 #include <mono/metadata/object-forward.h>
+#include <string>
 
 #include "ecs/system/system.h"
 #include "rsc-core/rp.hpp"
+#include <components/behaviour.hpp>
 
 
 
@@ -19,7 +21,12 @@ public:
 	{
 		OnCollisionEnter,
 		OnCollisionStay,
-		OnCollisionExit
+		OnCollisionExit,
+		OnTriggerEnter,
+		OnTriggerStay,
+		OnTriggerExit
+
+
 	} ;
 	static BehaviourSystem& Instance();
 	void Init() override;
@@ -36,12 +43,17 @@ public:
 
 
 	void AddScriptToEntityComponent(ecs::entity& entity, ecs::world& world, const char* klassname, const char* klass_ns="");
+	void ApplyScriptProperties(behaviour& component, const std::string& managedName, rp::Guid scriptID);
 
 
 	void RegisterComponent(ecs::entity& entity);
 
 
 	void OnCollisionCallback(ecs::entity& entity, ecs::entity other, CollisionCallback callback);
+
+	rp::Guid GetScriptIDFromClassName(ecs::entity& entity ,const char* name, const char* ns=nullptr);
+
+
 
 };
 

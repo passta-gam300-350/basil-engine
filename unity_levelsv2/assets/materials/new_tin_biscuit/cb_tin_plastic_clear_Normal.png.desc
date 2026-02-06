@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c0477403a9dd0c6dc6f7e00e
+  m_importer: .texture
+  m_source: materials\new_tin_biscuit\cb_tin_plastic_clear_Normal.png
+  m_name: cb_tin_plastic_clear_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

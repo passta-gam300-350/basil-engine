@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c14d7ee0ab4adcfa8cd2f91f
+  m_importer: .texture
+  m_source: materials\new_tin_empty\empty_tin_plastic_clear_Metallic.png
+  m_name: empty_tin_plastic_clear_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

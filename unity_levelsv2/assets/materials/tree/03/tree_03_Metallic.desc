@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd4a2b799088b36613ce9bd37a
-  m_importer: .texture
-  m_source: materials\tree\03\tree_03_Metallic.png
-  m_name: tree_03_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -1,0 +1,20 @@
+base:
+  m_guid: 6d7d94175129c3110b121dfd75c
+  m_importer: .mesh
+  m_source: models\trolley\trolley_shelve.obj
+  m_name: trolley_shelve.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

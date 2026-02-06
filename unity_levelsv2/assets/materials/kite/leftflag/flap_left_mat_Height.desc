@@ -1,7 +1,0 @@
-base:
-  m_guid: 14e4ecc7cd79117692330e94aec
-  m_importer: .texture
-  m_source: materials\kite\leftflag\flap_left_mat_Height.png
-  m_name: flap_left_mat_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b138795284d03111422b8e39
+  m_importer: .texture
+  m_source: materials\grass\01\Grass_01_Height.png
+  m_name: Grass_01_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

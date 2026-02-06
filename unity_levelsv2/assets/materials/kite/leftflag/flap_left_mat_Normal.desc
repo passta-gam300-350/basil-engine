@@ -1,7 +1,0 @@
-base:
-  m_guid: 14e4edf79eda388ccce1667b30d
-  m_importer: .texture
-  m_source: materials\kite\leftflag\flap_left_mat_Normal.png
-  m_name: flap_left_mat_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

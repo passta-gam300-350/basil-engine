@@ -1,0 +1,7 @@
+base:
+  m_guid: 1253e25c72b1b0d9bb4d3558b46d
+  m_importer: .texture
+  m_source: 2d\ui\pause menu\PauseMenu_Buttons\Pause_MainMenu_NoHover.png
+  m_name: Pause_MainMenu_NoHover.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

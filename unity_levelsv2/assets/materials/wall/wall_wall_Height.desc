@@ -1,7 +1,0 @@
-base:
-  m_guid: 98e45ac7ce29530740f2e97bce4
-  m_importer: .texture
-  m_source: materials\wall\wall_wall_Height.png
-  m_name: wall_wall_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

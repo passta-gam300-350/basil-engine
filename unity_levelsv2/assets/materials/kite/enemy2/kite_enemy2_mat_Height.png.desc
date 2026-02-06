@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b80d7c6c8ed5e1fef8886780
+  m_importer: .texture
+  m_source: materials\kite\enemy2\kite_enemy2_mat_Height.png
+  m_name: kite_enemy2_mat_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

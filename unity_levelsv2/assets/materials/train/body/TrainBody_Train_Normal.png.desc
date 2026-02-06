@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c9e4703d8ef6c62ede9dc0a6
+  m_importer: .texture
+  m_source: materials\train\body\TrainBody_Train_Normal.png
+  m_name: TrainBody_Train_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

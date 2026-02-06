@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd4a4a70a78f8123b0d310b7ee
-  m_importer: .texture
-  m_source: materials\tree\04\tree_04_Height.png
-  m_name: tree_04_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

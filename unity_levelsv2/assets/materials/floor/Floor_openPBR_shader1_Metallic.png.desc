@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7af7d77b4b6f158854a7c194c
+  m_importer: .texture
+  m_source: materials\floor\Floor_openPBR_shader1_Metallic.png
+  m_name: Floor_openPBR_shader1_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

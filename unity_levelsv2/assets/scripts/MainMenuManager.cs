@@ -1,0 +1,143 @@
+﻿using BasilEngine;
+using BasilEngine.Components;
+using BasilEngine.Mathematics;
+using BasilEngine.Debug;
+using System;
+using BasilEngine.SceneManagement;
+
+
+public class MainMenuManager : Behavior
+{
+    enum MenuStates
+    {
+
+        PLAY_SELECT,
+        QUIT_SELECT
+    }
+    MenuStates currentState = MenuStates.PLAY_SELECT;
+
+
+    private GameObject[] menus = new GameObject[2];
+    private HudComponent play,quit;
+
+    private bool upKeyDebounce, downKeyDebounce;
+
+    private Audio audio;
+    private float fadeSpeed = 100.0f;
+    private bool isFadingIn = false;
+    private float targetVolume;
+
+    public void Init()
+    {
+        menus[0] = GameObject.Find("GUIBackground_Play");
+        menus[1] = GameObject.Find("GUIBackground_Quit");
+
+        play = menus[0].transform.GetComponent<HudComponent>();
+        quit = menus[1].transform.GetComponent<HudComponent>();
+
+        audio = transform.GetComponent<Audio>();
+        targetVolume = audio.Volume;
+        audio.Volume = 0;
+        audio.Looping = true;
+        audio.Play();
+        isFadingIn = true;
+    }
+    public void Update()
+    {
+        if (isFadingIn)
+        {
+            audio.Volume += (targetVolume * fadeSpeed / 100.0f) * Time.deltaTime;
+
+            if (audio.Volume >= targetVolume)
+            {
+                audio.Volume = targetVolume;
+                isFadingIn = false;
+            }
+        }
+        //if ((Input.GetKey(KeyCode.DOWN) || Input.GetKey(KeyCode.S)) && !downKeyDebounce)
+        //{
+        //    downKeyDebounce = true;
+        //    if (currentState == MenuStates.PLAY_SELECT)
+        //    {
+        //        currentState = MenuStates.QUIT_SELECT;
+        //    }
+        //    else currentState = MenuStates.PLAY_SELECT;
+        //}
+        //else if (!Input.GetKey(KeyCode.DOWN) && !Input.GetKey(KeyCode.S))
+        //{
+        //    downKeyDebounce = false;
+        //}
+        if (Input.GetKeyPress(KeyCode.DOWN) || Input.GetKeyPress(KeyCode.S))
+        {
+            // Execute action for down key press
+            if (currentState == MenuStates.PLAY_SELECT)
+            {
+                currentState = MenuStates.QUIT_SELECT;
+            }
+            else currentState = MenuStates.PLAY_SELECT;
+        }
+
+        if (Input.GetKeyPress(KeyCode.UP) || Input.GetKeyPress(KeyCode.W))
+        {
+            // Execute action for up key press
+            if (currentState == MenuStates.QUIT_SELECT)
+            {
+                currentState = MenuStates.PLAY_SELECT;
+            }
+            else currentState = MenuStates.QUIT_SELECT;
+        }
+
+
+        //if ((Input.GetKeyPress(KeyCode.UP) || Input.GetKeyPress(KeyCode.W)) && !upKeyDebounce)
+        //{
+
+
+        //    upKeyDebounce = true;
+
+
+        //    if (currentState == MenuStates.QUIT_SELECT)
+        //    {
+        //        currentState = MenuStates.PLAY_SELECT;
+        //    }
+        //    else currentState = MenuStates.QUIT_SELECT;
+        //}
+        //else if (!Input.GetKey(KeyCode.UP) && !Input.GetKey(KeyCode.W))
+        //{
+        //    upKeyDebounce = false;
+        //}
+
+        switch (currentState)
+        {
+            case MenuStates.PLAY_SELECT:
+                play.Visible = true;
+                quit.Visible = false;
+                break;
+            case MenuStates.QUIT_SELECT:
+                play.Visible = false;
+                quit.Visible = true;
+                break;
+
+        }
+
+
+        if (Input.GetKeyPress(KeyCode.ENTER) || Input.GetKeyPress(KeyCode.SPACE))
+        {
+            switch (currentState)
+            {
+                case MenuStates.PLAY_SELECT:
+                    Scene.LoadSceneByIndex(1);
+                    break;
+                case MenuStates.QUIT_SELECT:
+                    Logger.Log("QUIT!");
+                    break;
+            }
+        }
+    }
+
+    public void FixedUpdate()
+    {
+
+    }
+
+
+}

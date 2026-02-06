@@ -2,7 +2,7 @@
 \file:      InputManager.cpp
 \author:    Saminathan Aaron Nicholas
 \email:     s.aaronnicholas@digipen.edu
-\course:    CSD 3401 - Software Engineering Project 5
+\course:    CSD 3451 - Software Engineering Project 6
 \brief:     This file implements the class, which provides a wrapper for input handling in the application.
             The class manages input events like key presses, mouse movements, scroll wheel activity, and typed text.
             It captures input using GLFW callbacks and publishes input events to the messaging system for further processing.
@@ -142,10 +142,15 @@ void InputManager::Update()
     scrollXOffset = 0.0;
     scrollYOffset = 0.0;
 
-    for (auto& keyState : keyReleasedStates)
-    {
-        keyState.second = false;
-    }
+    mouseConsumed = false;
+
+    //for (auto& keyState : keyReleasedStates)
+    //    keyState.second = false;
+
+    for (auto& mouseState : mouseReleasedStates)
+        mouseState.second = false;
+
+    keyPressedStatesLastFrame = keyPressedStates;
 }
 
 void InputManager::GamePadUpdate()
@@ -252,6 +257,18 @@ bool InputManager::Is_KeyReleased(int key) const
 
     return false;
 }
+
+bool InputManager::Is_KeyTriggered(int key) const
+{
+    auto current = keyPressedStates.find(key);
+    auto previous = keyPressedStatesLastFrame.find(key);
+
+    bool curr = (current != keyPressedStates.end()) ? current->second : false;
+    bool prev = (previous != keyPressedStatesLastFrame.end()) ? previous->second : false;
+
+    return curr && !prev;
+}
+
 
 bool InputManager::Is_MousePressed(int button) const
 {
@@ -531,4 +548,29 @@ void InputManager::Poll_GamepadInput()
     {
         messagingSystem.Publish(INPUT_KEY, std::move(gamepadMessage));
     }
+}
+
+void InputManager::SetInputContext(InputContext context)
+{
+    currentContext = context;
+}
+
+InputManager::InputContext InputManager::GetInputContext() const
+{
+    return currentContext;
+}
+
+bool InputManager::IsGameplayInputEnabled() const
+{
+    return currentContext == InputContext::Gameplay;
+}
+
+void InputManager::Consume_Mouse()
+{
+    mouseConsumed = true;
+}
+
+bool InputManager::Is_MouseConsumed() const
+{
+    return mouseConsumed;
 }

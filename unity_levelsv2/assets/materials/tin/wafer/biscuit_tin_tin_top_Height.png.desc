@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c9747f6888103f0da1582a02
+  m_importer: .texture
+  m_source: materials\tin\wafer\biscuit_tin_tin_top_Height.png
+  m_name: biscuit_tin_tin_top_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

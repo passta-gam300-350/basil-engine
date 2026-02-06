@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7bda879919ccb72bbd0154ca0
+  m_importer: .texture
+  m_source: materials\level_1_ground\level1_ground_concrete_Height.png
+  m_name: level1_ground_concrete_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

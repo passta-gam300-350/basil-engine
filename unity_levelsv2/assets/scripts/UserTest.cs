@@ -2,7 +2,7 @@ using BasilEngine;
 using BasilEngine.Components;
 using BasilEngine.Mathematics;
 using BasilEngine.Debug;
-
+using System;
 
 
 
@@ -12,6 +12,12 @@ public class UserTest : Behavior
     public Vector2 Dir2d = new Vector2(0, 1);
     public int counter = 0;
     public float speed = 5.0f;
+    public float newField = 10.0f;  
+
+    public GameObject TestField;
+    public MainMenu TestCustomComponent;
+
+    public KiteController kiteController;
 
     public void Init()
     {
@@ -29,6 +35,18 @@ public class UserTest : Behavior
         } else if (Input.GetKeyPress(KeyCode.S))
         {
             Logger.Log("Current User Position at: " + transform.position);
+        }
+
+        if (TestField != null)
+        {
+            UInt64 handle = TestField.NativeID;
+            Logger.Log("TestField NativeID: " + handle);
+        }
+
+        if (kiteController != null)
+        {
+            Logger.Log("Valid KiteController component found!");
+            kiteController.windSpeed -= 0.1f;
         }
     }
 

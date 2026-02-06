@@ -1,7 +1,0 @@
-base:
-  m_guid: 98e45807136a3a807100c6304e8
-  m_importer: .texture
-  m_source: materials\trash_pile\trash_3\trash3_low_standardSurface18_Height.png
-  m_name: trash3_low_standardSurface18_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

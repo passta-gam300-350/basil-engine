@@ -7,37 +7,42 @@ using System;
 public class CollectFlap : Behavior
 {
     private GameObject player;
+    private PlayerController3D controller;
     public float collect_distance = 0.4f;
-
-
-
 
     public void Init()
     {
         player = GameObject.Find("PlayerGroup");
+
+        if (player != null)
+        {
+            controller = player.transform.GetComponent<PlayerController3D>();
+        }
+
+        if (controller == null)
+        {
+            Logger.Warn("CollectSticks: PlayerController3D not found!");
+        }
     }
 
     public void Update()
     {
-       
+        if (player == null || controller == null)
+            return;
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
-        if (distance <= collect_distance && Input.GetKey(KeyCode.E))
+        if (distance <= collect_distance && controller.wantsToCollect)
         {
-            if (GameManager.instance.isHoldingThrash)
+            if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
             {
                 Logger.Log("No hands to use!");
                 return;
             }
 
-            //TODO: REMOVAL?
-            Logger.Log("Player should collect the flaps!");
-            gameObject.transform.position = new Vector3(1000, 1000, 1000);
+            Logger.Log("Flap collected!");
+
             GameObject.Destroy(gameObject);
-
             PuzzleManager.manager.UnlockFlap();
-            
-
 
         }
         //Logger.Log("Distance" + distance);

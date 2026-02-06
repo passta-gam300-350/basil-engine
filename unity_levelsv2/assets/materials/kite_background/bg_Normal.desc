@@ -1,7 +1,0 @@
-base:
-  m_guid: 53292477b0b4d22f49886da143
-  m_importer: .texture
-  m_source: materials\kite_background\bg_Normal.png
-  m_name: bg_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

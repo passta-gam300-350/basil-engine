@@ -18,6 +18,7 @@
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CollectFlap.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\CollectSticks.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\Cutscene.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\DirtyPuddle.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\Dustbin.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GameManager.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\GetStuff.cs" />
@@ -26,6 +27,7 @@
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\KiteInteractablePoint.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\KiteTarget.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\MainMenu.cs" />
+<Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\NewSaviorTestScript.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\obj\Debug\net48\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\obj\Debug\net48\GameAssembly.AssemblyInfo.cs" />
 <Compile Include="C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\unity_levelsv2\assets\scripts\PlayAudio.cs" />

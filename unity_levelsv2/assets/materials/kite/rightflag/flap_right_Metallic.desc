@@ -1,7 +1,0 @@
-base:
-  m_guid: 14e4f127503952bfa0aa5671c70
-  m_importer: .texture
-  m_source: materials\kite\rightflag\flap_right_Metallic.png
-  m_name: flap_right_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -18,8 +18,11 @@ Technology is prohibited.
 #define EDITOR_MANAGER_MONO_IMGUI_RENDERER_HPP
 
 #include <string>
+#include <vector>
 
+#include <components/behaviour.hpp>
 
+#include "ABI/CSKlass.hpp"
 #include "Screens/EditorMain.hpp"
 
 struct FieldNode;
@@ -30,10 +33,19 @@ struct CSKlassInstance;
 class MonoImGuiRenderer
 {
 public:
-	static void RenderBehaviourFields(const std::string& managedName, rp::Guid scriptGuid);
+	static bool RenderBehaviourFields(const std::string& managedName,
+		rp::Guid scriptGuid,
+		std::vector<ScriptProperty>& outProperties);
 
 private:
 	static bool RenderField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance);
+	static void RenderGameObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info);
+	static void RenderUserObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info);
+
+	static bool TryGetFieldValueString(const FieldNode& fieldNode,
+		CSKlass* klass,
+		CSKlassInstance* instance,
+		std::string& outValue);
 	static CSKlass* ResolveManagedClass(const std::string& fullName);
 	static void SplitManagedName(const std::string& fullName, std::string& namespaceName, std::string& className);
 };

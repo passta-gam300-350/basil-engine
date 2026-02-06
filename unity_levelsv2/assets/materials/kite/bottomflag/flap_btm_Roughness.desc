@@ -1,7 +1,0 @@
-base:
-  m_guid: 14e4eaa7972a530639a2ee47566
-  m_importer: .texture
-  m_source: materials\kite\bottomflag\flap_btm_Roughness.png
-  m_name: flap_btm_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

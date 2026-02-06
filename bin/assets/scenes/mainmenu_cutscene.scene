@@ -1,0 +1,90 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 2
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+entities:
+  - Scene ID:
+      Scene ID: 0
+    VideoComponent:
+      Video GUID:
+        guid: 2546d1df7cbb9a76ce7586150f0d
+        type: 14081220367743959884
+      Auto Play: true
+      Loop: false
+      Playback Speed: 0
+      Render Fullscreen: false
+      Render Fullscreen Mode: 0
+      Background Texture:
+        guid: 00
+        type: 126269861530532084
+      Background Color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      Background Visible: true
+      Render Layer: 200
+    entity name:
+      name: Video
+    Behaviour:
+      classesName:
+        - Cutscene
+  - Scene ID:
+      Scene ID: 1
+    entity name:
+      name: unnamed
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 5
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 100
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: -90
+      m_Pitch: 0

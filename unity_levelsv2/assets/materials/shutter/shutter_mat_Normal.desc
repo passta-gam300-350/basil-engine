@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd49897880908794337c4631f4
-  m_importer: .texture
-  m_source: materials\shutter\shutter_mat_Normal.png
-  m_name: shutter_mat_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

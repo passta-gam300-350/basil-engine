@@ -2,7 +2,7 @@
 \file:      InputManager.h
 \author:    Saminathan Aaron Nicholas
 \email:     s.aaronnicholas@digipen.edu
-\course:    CSD 3401 - Software Engineering Project 5
+\course:    CSD 3451 - Software Engineering Project 6
 \brief:     This file declares the functions used by the input manager class.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -319,6 +319,16 @@ class InputManager
         bool Is_KeyPressed(int key) const;
 
         /**
+        * @brief Checks if a specific key is currently pressed and not pressed in the previous frame.
+        *
+        * This function returns true if the specified key is currently being pressed and not pressed in the previous frame, otherwise false.
+        * It can be used to detect real-time input for key presses.
+        *
+        * @param[in] key The GLFW key code to check.
+        */
+        bool Is_KeyTriggered(int key) const;
+
+        /**
         * @brief Checks if a specific key has been released.
         *
         * This function returns true if the specified key has just been released.
@@ -396,10 +406,26 @@ class InputManager
         void Poll_GamepadInput();
         void Initialise_GamePad_Input();
         void GamePadUpdate();
+
+        enum class InputContext
+        {
+            Gameplay,
+            UI
+        };
+
+        void SetInputContext(InputContext context);
+        InputContext GetInputContext() const;
+        bool IsGameplayInputEnabled() const;
+
+        // Mouse consumption to hide from gameplay
+        void Consume_Mouse();
+        bool Is_MouseConsumed() const;
+
     private:
-        InputManager() : mouseButton(false), mouseXPosition(0.0), mouseYPosition(0.0), scrollXOffset(0.0), scrollYOffset(0.0), typedText(""), debugMode(false) {}
+        InputManager() noexcept : mouseButton(false), mouseXPosition(0.0), mouseYPosition(0.0), scrollXOffset(0.0), scrollYOffset(0.0), typedText(""), debugMode(false), currentContext(InputContext::Gameplay), mouseConsumed(false) {}
         std::unordered_map<int, bool> keyPressedStates;
         std::unordered_map<int, bool> keyReleasedStates;
+        std::unordered_map<int, bool> keyPressedStatesLastFrame;
         std::unordered_map<int, bool> mousePressedStates;
         std::unordered_map<int, bool> mouseReleasedStates;
         GLboolean mouseButton;
@@ -424,6 +450,31 @@ class InputManager
         // Static variables for callbacks
         static InputManager* instance;
         bool debugMode = false;
+
+        // To switch between gameplay and UI input
+        InputContext currentContext = InputContext::Gameplay;
+        bool mouseConsumed = false;
+
+        // UI
+        /*
+            float mx, my;
+            InputManager::Get_Instance()->Get_MousePosition(mx, my);
+
+            if (hovered && InputManager::Get_Instance()->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT))
+            {
+                InputManager::Get_Instance()->Consume_Mouse();
+                InputManager::Get_Instance()->SetInputContext(InputManager::InputContext::UI);
+            }
+        */
+
+        // Gameplay
+        /*
+            if (!InputManager::Get_Instance()->IsGameplayInputEnabled())
+                return;
+
+            if (InputManager::Get_Instance()->Is_MouseConsumed())
+                return;
+        */
 };
 
 #endif

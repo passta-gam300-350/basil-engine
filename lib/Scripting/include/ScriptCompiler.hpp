@@ -60,6 +60,7 @@ class ScriptCompiler {
 	struct CompileSettings {
 		std::string output_name = "GameAssembly";
 		std::string output_directory = "bin";
+		std::string project_output_dir = "bin";
 		bool isDLL = true;
 		bool debug = true;
 		bool optimize = false;
@@ -143,6 +144,7 @@ public:
 	void SetCompileOutputName(std::string const& name);
 	std::string const& GetCompileOutputName() const;
 	void SetCompileOutputDirectory(std::string const& dir);
+	void SetProjectOutputDirectory(std::string const& dir);
 	std::string const& GetCompileOutputDirectory() const;
 	void SetCompileAsDLL(bool isDLL);
 	bool IsCompileAsDLL() const;

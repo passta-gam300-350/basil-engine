@@ -1,7 +1,0 @@
-base:
-  m_guid: 276196b17e2da9feda4147f14d77
-  m_importer: .texture
-  m_source: hud\Main Menu\Main Menu.png
-  m_name: Main Menu.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

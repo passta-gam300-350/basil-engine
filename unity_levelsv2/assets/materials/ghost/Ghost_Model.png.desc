@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b1027df3902dabe0258ffb5c
+  m_importer: .texture
+  m_source: materials\ghost\Ghost_Model.png
+  m_name: Ghost_Model.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

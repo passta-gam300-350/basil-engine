@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>C:\Users\onyxx\OneDrive\Desktop\CS380\CS380 AI Framework\framework\x64\Debug\CS380.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>C:\Users\onyxx\OneDrive\Desktop\CS380\CS380 AI Framework\framework\Assets\GridCellPixelShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\onyxx\OneDrive\Desktop\CS380\CS380 AI Framework\framework\Assets\GridCellVertexShader.cso</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>

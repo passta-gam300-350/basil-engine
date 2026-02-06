@@ -70,6 +70,8 @@ public:
 	void AddSearchDirectory(const char* path);
 	void SetOutputDirectory(const char* path);
 
+	void SetProjectOutputDirectory(const char* path);
+
 	ScriptID AddAssembly(std::unique_ptr<ManagedAssembly> assembly);
 	ScriptID AddAssembly(const char* assemblyPath, bool isSystem);
 
@@ -109,6 +111,10 @@ public:
 
 	void Attach();
 	void Detach();
+
+
+	// Utility
+	void SplitTypeName(const char* fullname, std::string& ns, std::string& name);
 
 };
 

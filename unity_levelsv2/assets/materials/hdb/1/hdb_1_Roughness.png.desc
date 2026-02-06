@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b25b7af0bf6ada2d0e61197a
+  m_importer: .texture
+  m_source: materials\hdb\1\hdb_1_Roughness.png
+  m_name: hdb_1_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

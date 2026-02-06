@@ -1,7 +1,0 @@
-base:
-  m_guid: 12277097f4b82d60e7a28dabc00
-  m_importer: .texture
-  m_source: materials\kite\kite_Normal.png
-  m_name: kite_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

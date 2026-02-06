@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd49b17cb99935beb680a7ff95
-  m_importer: .texture
-  m_source: materials\spool\standardSurface1_Roughness.png
-  m_name: standardSurface1_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

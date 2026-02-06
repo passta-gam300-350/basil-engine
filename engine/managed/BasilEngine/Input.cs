@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using BasilEngine.Mathematics;
@@ -148,7 +149,7 @@ namespace BasilEngine
     /// </summary>
     public static class Input
     {
-        
+
         /// <summary>
         ///  Check for key press or held.
         /// </summary>
@@ -177,6 +178,12 @@ namespace BasilEngine
         /// <param name="x">Receives the X coordinate.</param>
         /// <param name="y">Receives the Y coordinate.</param>
         public static extern void GetMouseScreenPosInternal(out float x, out float y);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("LockCursor")]
+        [StaticAccessor("ManagedInput", StaticAccessorType.DoubleColon)]
+        private static extern void SetCursorLockedInternal(bool locked);
+
 
         /// <summary>
         /// Get key held down.
@@ -229,6 +236,10 @@ namespace BasilEngine
             }
         }
 
-
+        public static bool CursorHidden
+        {
+            get => false; // TODO
+            set => SetCursorLockedInternal(value);
+        }
     }
 }

@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd48c17aafa162ff1bb29f0771
-  m_importer: .texture
-  m_source: materials\metal_rack\Metal_Plate_Mat_BaseColor.png
-  m_name: Metal_Plate_Mat_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

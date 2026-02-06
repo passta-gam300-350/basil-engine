@@ -1,0 +1,29 @@
+base:
+  m_guid: c1deed75d0bb66826035ab28f5
+  m_importer: .material
+  m_source: ""
+  m_name: m_chocolate_halfopened
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_chocolate_halfopened
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 8df6f97729812bed12a087f86f
+    u_DiffuseMap: 8df6f4717dbf7a6bcfb8dc7ac3
+    u_EmissiveMap: 8df6f5767f9465a0b2dd32827c
+    u_NormalMap: 8df6f87204a32aa3476646a4a1
+    u_HeightMap: 8df6f67cf6a79f45f64e34eaa2
+    u_SpecularMap: 00
+    u_MetallicMap: 8df6f7756c87c228b524145d19

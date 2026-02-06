@@ -1,7 +1,0 @@
-base:
-  m_guid: 12277157da8bf623f8bc25810d1
-  m_importer: .texture
-  m_source: materials\stairs\staircase_low_stairs_BaseColor.png
-  m_name: staircase_low_stairs_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

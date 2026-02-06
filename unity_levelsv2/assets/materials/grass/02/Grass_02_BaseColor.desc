@@ -1,7 +1,0 @@
-base:
-  m_guid: 2120c96971fa9f710bd1e361b600
-  m_importer: .texture
-  m_source: materials\grass\02\Grass_02_BaseColor.png
-  m_name: Grass_02_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

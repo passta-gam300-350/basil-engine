@@ -14,6 +14,7 @@
 
 #include <Jolt/Jolt.h>
 
+#include "Input/Button.h"
 #include "System/Audio.hpp"
 TypeInfo ResolveType(TypeName t_name) {
 	return entt::resolve(t_name);
@@ -215,7 +216,16 @@ void ReflectionRegistry::SetupEngineTypes()
 
 	RegisterReflectionComponent<behaviour>(
 		"Behaviour",
-		MemberRegistrationV<&behaviour::classesName, "classesName">
+		MemberRegistrationV<&behaviour::classesName, "classesName">,
+		MemberRegistrationV<&behaviour::scriptProperties, "scriptProperties">
+	);
+
+	RegisterReflectionComponent<ScriptProperty>(
+		"ScriptProperty",
+		MemberRegistrationV<&ScriptProperty::name, "name">,
+		MemberRegistrationV<&ScriptProperty::typeName, "type">,
+		MemberRegistrationV<&ScriptProperty::value, "value">,
+		MemberRegistrationV<&ScriptProperty::is_user_type, "is_user_type">
 	);
 
 	RegisterReflectionComponent<AudioComponent>(
@@ -230,6 +240,14 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
 		MemberRegistrationV<&AudioComponent::position, "position">,
 		MemberRegistrationV<&AudioComponent::velocity, "velocity">
+	);
+
+	RegisterReflectionComponent<Button>(
+		"ButtonComponent",
+		MemberRegistrationV<&Button::x, "position_x">,
+		MemberRegistrationV<&Button::y, "position_y">,
+		MemberRegistrationV<&Button::text, "Text">
+
 	);
 
 	// Register HUDComponent anchor enum
@@ -272,5 +290,30 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&TextComponent::rotation, "rotation">,
 		MemberRegistrationV<&TextComponent::layer, "layer">,
 		MemberRegistrationV<&TextComponent::visible, "visible">
+	);
+
+	// Register TextMeshComponent enums
+	RegisterReflectionComponent<TextMeshComponent::BillboardMode>("TextMeshComponent::BillboardMode");
+	RegisterReflectionComponent<TextMeshComponent::Alignment>("TextMeshComponent::Alignment");
+
+	RegisterReflectionComponent<TextMeshComponent>(
+		"TextMeshComponent",
+		MemberRegistrationV<&TextMeshComponent::m_FontGuid, "fontGuid">,
+		MemberRegistrationV<&TextMeshComponent::text, "text">,
+		MemberRegistrationV<&TextMeshComponent::billboardMode, "billboardMode">,
+		MemberRegistrationV<&TextMeshComponent::fontSize, "fontSize">,
+		MemberRegistrationV<&TextMeshComponent::referenceDistance, "referenceDistance">,
+		MemberRegistrationV<&TextMeshComponent::alignment, "alignment">,
+		MemberRegistrationV<&TextMeshComponent::lineSpacing, "lineSpacing">,
+		MemberRegistrationV<&TextMeshComponent::letterSpacing, "letterSpacing">,
+		MemberRegistrationV<&TextMeshComponent::maxWidth, "maxWidth">,
+		MemberRegistrationV<&TextMeshComponent::color, "color">,
+		MemberRegistrationV<&TextMeshComponent::outlineWidth, "outlineWidth">,
+		MemberRegistrationV<&TextMeshComponent::outlineColor, "outlineColor">,
+		MemberRegistrationV<&TextMeshComponent::glowStrength, "glowStrength">,
+		MemberRegistrationV<&TextMeshComponent::glowColor, "glowColor">,
+		MemberRegistrationV<&TextMeshComponent::sdfThreshold, "sdfThreshold">,
+		MemberRegistrationV<&TextMeshComponent::smoothing, "smoothing">,
+		MemberRegistrationV<&TextMeshComponent::visible, "visible">
 	);
 }

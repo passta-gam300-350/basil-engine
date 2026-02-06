@@ -6,6 +6,7 @@ using System;
 
 public class TrashCollectable : Behavior
 {
+    public PlayerController3D playerController;
     private GameObject player;
     public float collect_distance = 0.4f;
     private System.Random random = new System.Random();
@@ -32,15 +33,31 @@ public class TrashCollectable : Behavior
         if (player == null)
         {
             player =  GameObject.Find("PlayerGroup");
+            if (player == null)
+            {
+                return;
+            }
+        }
+
+        if (playerController == null)
+        {
+            playerController = player.transform.GetComponent<PlayerController3D>();
+            if (playerController == null) {
+                return;
+            }
+        }
+
+        if (!playerController.canCollectTrash){
             return;
-        } 
+        }
 
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
-        if (distance <= collect_distance && Input.GetKey(KeyCode.E))
+        
+        if (distance <= collect_distance && playerController.wantsToCollect)
         {
-            if (GameManager.instance.isHoldingThrash)
+            if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
             {
-                Logger.Log("No hands to use!");
+                Logger.Log("Hands are full!");
                 return;
             }
 

@@ -94,7 +94,7 @@ std::vector<std::string> AssetManager::GetSubDirectories() {
 }
 
 AssetManager::AssetManager(std::string const& root_dir, std::string const& import_dir)
-	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_DescriptorListMtx{}, m_IndexingWorker {} {
+	: m_AssetNameGuid{}, m_RootPath{ normalizePath(root_dir) }, m_CurrentPath{ m_RootPath }, m_ImportedAssetPath{ import_dir.empty() ? m_RootPath : normalizePath(import_dir) }, m_DescriptorListMtx{}, m_IndexingWorker{} {
 	m_LastNotificationTime = std::chrono::steady_clock::now();
 	m_NeedsRescan = false;
 	if (!std::filesystem::exists(m_ImportedAssetPath)) {
@@ -570,11 +570,11 @@ void AssetManager::RescanDirectory() {
 				std::lock_guard lg{ m_DescriptorListMtx };
 				m_FileList.emplace(dir_path, file_path);
 			}
-				// Log recovered file
-				std::filesystem::path p(file_path);
-				std::wcout << L"Recovered: " << p.filename().wstring() << L"\n";
-			}
+			// Log recovered file
+			std::filesystem::path p(file_path);
+			std::wcout << L"Recovered: " << p.filename().wstring() << L"\n";
 		}
+	}
 	catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Rescan error: " << e.what() << "\n";
 	}

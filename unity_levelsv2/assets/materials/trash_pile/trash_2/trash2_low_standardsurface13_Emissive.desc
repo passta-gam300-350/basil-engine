@@ -1,7 +1,0 @@
-base:
-  m_guid: 98e454c74eb8efc7929b5bca427
-  m_importer: .texture
-  m_source: materials\trash_pile\trash_2\trash2_low_standardsurface13_Emissive.png
-  m_name: trash2_low_standardsurface13_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

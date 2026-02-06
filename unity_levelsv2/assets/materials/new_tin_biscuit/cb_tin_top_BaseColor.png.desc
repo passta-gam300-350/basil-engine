@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c0687c9c8e44f2c0c7026853
+  m_importer: .texture
+  m_source: materials\new_tin_biscuit\cb_tin_top_BaseColor.png
+  m_name: cb_tin_top_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

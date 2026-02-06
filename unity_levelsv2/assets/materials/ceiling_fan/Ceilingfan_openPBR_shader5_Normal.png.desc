@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7adef7f11a434d3b595f6d4dc
+  m_importer: .texture
+  m_source: materials\ceiling_fan\Ceilingfan_openPBR_shader5_Normal.png
+  m_name: Ceilingfan_openPBR_shader5_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

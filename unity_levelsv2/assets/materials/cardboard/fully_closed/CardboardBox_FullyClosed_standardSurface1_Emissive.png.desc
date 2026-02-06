@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7aaed79b48e8e2b9e380699fd
+  m_importer: .texture
+  m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface1_Emissive.png
+  m_name: CardboardBox_FullyClosed_standardSurface1_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,7 +1,0 @@
-base:
-  m_guid: 7cd49f8753db6f27e42752a3d3b
-  m_importer: .texture
-  m_source: materials\tree\02\tree_02_Emissive.png
-  m_name: tree_02_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

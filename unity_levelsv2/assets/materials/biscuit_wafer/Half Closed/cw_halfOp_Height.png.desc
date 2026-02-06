@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7aa2779ff9770cf403ce6417f
+  m_importer: .texture
+  m_source: materials\biscuit_wafer\Half Closed\cw_halfOp_Height.png
+  m_name: cw_halfOp_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

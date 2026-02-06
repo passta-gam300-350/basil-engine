@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7ab007a1298c94b7106d32a57
+  m_importer: .texture
+  m_source: materials\cardboard\fully_closed\CardboardBox_FullyClosed_standardSurface1_Height.png
+  m_name: CardboardBox_FullyClosed_standardSurface1_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

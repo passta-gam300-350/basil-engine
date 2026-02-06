@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7b4c47f83a4eeeb43a1df576a
+  m_importer: .texture
+  m_source: materials\kitchen_chair\Prop_KitchenChair_02_PandaMat3_Metallic.png
+  m_name: Prop_KitchenChair_02_PandaMat3_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7c8d37ed9a0f47a1c0d331c47
+  m_importer: .texture
+  m_source: materials\tin\wafer\biscuit_tin_standardSurface1_Normal.png
+  m_name: biscuit_tin_standardSurface1_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

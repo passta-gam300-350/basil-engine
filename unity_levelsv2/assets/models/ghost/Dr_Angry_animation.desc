@@ -1,0 +1,38 @@
+base:
+  m_guid: cd05a573f0a7e1f61ef58311d5
+  m_importer: animation
+  m_source: ""
+  m_name: Dr_Angry_animation
+  m_importer_type: 12489485533679399507
+anim:
+  vert_name: Dr_Angry_animation
+  m_id: 206502096
+  m_positions:
+    0:
+      x: -9.27032175e-08
+      y: 1.7920748
+      z: -4.3935318
+    6:
+      x: -9.27032175e-08
+      y: 1.7920748
+      z: -4.3935318
+  m_rotations:
+    0:
+      x: -0.70710665
+      y: 0
+      z: 0.707106888
+      w: 0
+    6:
+      x: -0.70710665
+      y: 0
+      z: 0.707106888
+      w: 0
+  m_scales:
+    0:
+      x: 0.99999994
+      y: 1
+      z: 0.99999994
+    6:
+      x: 0.99999994
+      y: 1
+      z: 0.99999994

@@ -113,6 +113,9 @@ RenderSystem::RenderSystem() {
 	if (m_ShaderLibrary->GetTextShader()) {
 		m_SceneRenderer->SetTextShader(m_ShaderLibrary->GetTextShader());
 	}
+	if (m_ShaderLibrary->GetWorldTextShader()) {
+		m_SceneRenderer->SetWorldTextShader(m_ShaderLibrary->GetWorldTextShader());
+	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
 	// 	m_SceneRenderer->SetEditorResolveShader(m_ShaderLibrary->GetEditorResolveShader());
@@ -241,6 +244,7 @@ void RenderSystem::Update(ecs::world& world) {
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
 	auto sceneTextElements = world.filter_entities<TextComponent>();
+	auto sceneWorldTextElements = world.filter_entities<TextMeshComponent, TransformMtxComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = visibleEntityIDs.size();
@@ -522,6 +526,86 @@ void RenderSystem::Update(ecs::world& world) {
 
 		m_SceneRenderer->SubmitText(textData);
 	}
+
+	// ========== WORLD TEXT ELEMENT SUBMISSION (3D TEXT) ==========
+	// Submit world-space text elements (rendered in 3D with depth testing)
+	int worldTextEntityCount = 0;
+	for (auto worldTextEntity : sceneWorldTextElements) {
+		worldTextEntityCount++;
+		auto [worldText, transform] = worldTextEntity.get<TextMeshComponent, TransformMtxComponent>();
+
+		if (!worldText.visible || worldText.text.empty()) {
+			spdlog::warn("RenderSystem: World text entity skipped - visible={}, text empty={}",
+				worldText.visible, worldText.text.empty());
+			continue;
+		}
+
+		// Get font atlas from ResourceRegistry
+		if (worldText.m_FontGuid.m_guid == rp::null_guid) {
+			spdlog::warn("RenderSystem: World text '{}' has null font GUID", worldText.text.substr(0, 20));
+			continue; // No font atlas set
+		}
+
+		auto* fontAtlasPtr = registry.Get<std::shared_ptr<FontAtlas>>(worldText.m_FontGuid.m_guid);
+		if (!fontAtlasPtr || !*fontAtlasPtr) {
+			spdlog::warn("RenderSystem: Font atlas not loaded for GUID {} (text: '{}')",
+				worldText.m_FontGuid.m_guid.to_hex().substr(0, 8), worldText.text.substr(0, 20));
+			continue; // Font not loaded yet
+		}
+
+		// Extract world position from transform matrix
+		glm::vec3 worldPosition = glm::vec3(transform.m_Mtx[3]);
+
+		// Get camera data for billboard calculation
+		glm::vec3 cameraPosition = hasGameCamera
+			? CameraSystem::Instance().GetActiveCameraData().position
+			: editorCameraSnapshot.position;
+		glm::vec3 cameraForward = hasGameCamera
+			? CameraSystem::Instance().GetActiveCameraData().front
+			: editorCameraSnapshot.front;
+		glm::vec3 cameraUp = hasGameCamera
+			? CameraSystem::Instance().GetActiveCameraData().up
+			: editorCameraSnapshot.up;
+
+		// Build WorldTextElementData from component
+		WorldTextElementData worldTextData;
+		worldTextData.fontAtlas = fontAtlasPtr->get();
+		worldTextData.text = worldText.text;
+		worldTextData.worldPosition = worldPosition;
+		worldTextData.billboardMode = static_cast<TextBillboardMode>(worldText.billboardMode);
+
+		// For non-billboard mode, extract rotation from transform matrix
+		if (worldText.billboardMode == TextMeshComponent::BillboardMode::None) {
+			// Extract rotation part of transform matrix (upper-left 3x3)
+			worldTextData.customRotation = glm::mat3(transform.m_Mtx);
+		}
+
+		worldTextData.fontSize = worldText.fontSize;
+		worldTextData.referenceDistance = worldText.referenceDistance;
+		worldTextData.cameraPosition = cameraPosition;
+		worldTextData.cameraForward = cameraForward;
+		worldTextData.cameraUp = cameraUp;
+		worldTextData.alignment = static_cast<TextAlignment>(worldText.alignment);
+		worldTextData.lineSpacing = worldText.lineSpacing;
+		worldTextData.letterSpacing = worldText.letterSpacing;
+		worldTextData.maxWidth = worldText.maxWidth;
+		worldTextData.color = worldText.color;
+		worldTextData.outlineWidth = worldText.outlineWidth;
+		worldTextData.outlineColor = worldText.outlineColor;
+		worldTextData.glowStrength = worldText.glowStrength;
+		worldTextData.glowColor = worldText.glowColor;
+		worldTextData.sdfThreshold = worldText.sdfThreshold;
+		worldTextData.smoothing = worldText.smoothing;
+		worldTextData.visible = worldText.visible;
+
+		/*spdlog::info("RenderSystem: Submitting world text '{}' at ({:.1f}, {:.1f}, {:.1f}), fontSize={}, atlasID={}",
+			worldTextData.text.substr(0, 20), worldTextData.worldPosition.x, worldTextData.worldPosition.y,
+			worldTextData.worldPosition.z, worldTextData.fontSize, (*fontAtlasPtr)->GetTextureID());*/
+		m_SceneRenderer->SubmitWorldText(worldTextData);
+	}
+	/*if (worldTextEntityCount > 0) {
+		spdlog::info("RenderSystem: Processed {} world text entities", worldTextEntityCount);
+	}*/
 
 	// Enable/disable HUD pass based on presence of HUD or text elements
 	// Note: EndFrame() is called by SceneRenderer::Render() before rendering

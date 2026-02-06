@@ -1,7 +1,0 @@
-base:
-  m_guid: a0460733eb2245fa9d3e7a7c9
-  m_importer: .texture
-  m_source: materials\trolley\trolley_mat_Height.png
-  m_name: trolley_mat_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

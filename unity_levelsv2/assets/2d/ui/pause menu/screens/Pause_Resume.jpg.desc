@@ -1,0 +1,7 @@
+base:
+  m_guid: 129707cd714ea914c669891eebfb
+  m_importer: .texture
+  m_source: 2d\ui\pause menu\screens\Pause_Resume.jpg
+  m_name: Pause_Resume.jpg
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

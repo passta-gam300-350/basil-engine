@@ -20,6 +20,8 @@ public class Spool : Behavior
     private float initialY = 0.0f;
     private bool wasPlaying = false;
 
+    public bool canControlSpool = true;
+
     public void Init()
     {
         audio = transform.GetComponent<Audio>();
@@ -28,6 +30,16 @@ public class Spool : Behavior
     }
     public void Update()
     {
+        if (!canControlSpool)
+        {
+            if (wasPlaying)
+            {
+                audio.Stop();
+                wasPlaying = false;
+            }
+            return;
+        }
+
         Vector3 currentRotation = gameObject.transform.rotation;
         float currentZ = currentRotation.z;
         bool isKeyPressed = false;

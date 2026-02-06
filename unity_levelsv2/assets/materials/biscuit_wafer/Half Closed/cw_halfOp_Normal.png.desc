@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7aa4b72c79be7c5975df6d7b0
+  m_importer: .texture
+  m_source: materials\biscuit_wafer\Half Closed\cw_halfOp_Normal.png
+  m_name: cw_halfOp_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,20 @@
+base:
+  m_guid: 6d7d3787b60a21063fa89b5b7ea
+  m_importer: .mesh
+  m_source: models\biscuit_chocolate\Opened\choco_bx_opened.obj
+  m_name: choco_bx_opened.obj
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

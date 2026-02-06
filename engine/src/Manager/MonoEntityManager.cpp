@@ -115,7 +115,7 @@ rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klass
 		CSKlass* NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
 		if (!NativeClass)
 		{
-			AddNamedKlass("NativeObject", "BasilEngine");
+			AddNamedKlass("NativeObject", "BasilEngine", true);
 			NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
 
 		}
@@ -452,10 +452,34 @@ void MonoEntityManager::SetOutputDirectory(const char* path) {
 	useDefault = false;
 }
 
+void MonoEntityManager::SetProjectOutputDirectory(const char* path)
+{
+	std::filesystem::path filePath = path;
+	MonoManager::GetCompiler()->SetProjectOutputDirectory(std::filesystem::absolute(filePath).string());
+	useDefault = false;
+
+}
+
 void MonoEntityManager::Attach() {
 	MonoManager::Attach();
 }
 
 void MonoEntityManager::Detach() {
 	MonoManager::Detach();
+}
+
+
+void MonoEntityManager::SplitTypeName(const char* fullname, std::string& ns, std::string& name)
+{
+	std::string fullNameStr(fullname);
+	size_t lastDot = fullNameStr.rfind('.');
+	if (lastDot != std::string::npos) {
+		ns = fullNameStr.substr(0, lastDot);
+		name = fullNameStr.substr(lastDot + 1);
+	}
+	else {
+		ns = "";
+		name = fullNameStr;
+	}
+
 }

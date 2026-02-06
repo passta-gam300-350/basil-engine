@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7be26760abb4da55a91994771
+  m_importer: .texture
+  m_source: materials\metal_rack\Metal_Pillar_Mat_Height.png
+  m_name: Metal_Pillar_Mat_Height.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

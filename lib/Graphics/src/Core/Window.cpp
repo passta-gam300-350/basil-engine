@@ -15,9 +15,10 @@ without the prior written consent of DigiPen Institute of
 Technology is prohibited.
 */
 /******************************************************************************/
-#include "../../include/Core/Window.h"
+#include "Core/Window.h"
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
+#include "glfw/glfw3.h"
 
 Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	: m_Width(width), m_Height(height), m_Window(nullptr)

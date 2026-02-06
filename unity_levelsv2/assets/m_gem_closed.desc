@@ -1,0 +1,29 @@
+base:
+  m_guid: df260f796fa79c7f5c73626b9a
+  m_importer: .material
+  m_source: ""
+  m_name: m_gem_closed
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_gem_closed
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_DiffuseMap: 8df6ff75aabe3aaa4af043ef05
+    u_RoughnessMap: 8df70478d7b5b6574e91f7edfa
+    u_EmissiveMap: 8df7007f8e88bfa88236721a0b
+    u_HeightMap: 8df7017176b896301de5d79c1e
+    u_NormalMap: 8df7037acf928861f41e1b255b
+    u_MetallicMap: 8df7027b0b9c3109d02904be72
+    u_SpecularMap: 00

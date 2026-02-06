@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7af9e7c3c81fe3407c5d44d2d
+  m_importer: .texture
+  m_source: materials\floor\Floor_openPBR_shader1_Roughness.png
+  m_name: Floor_openPBR_shader1_Roughness.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

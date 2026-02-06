@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7cb9c7916aa468c57b680981f
+  m_importer: .texture
+  m_source: materials\train\wheel4\Wheel4_Train_BaseColor.png
+  m_name: Wheel4_Train_BaseColor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -62,6 +62,8 @@ Technology is prohibited.
 #include "Manager/ObjectManager.hpp"
 #include <components/behaviour.hpp>
 #include <System/BehaviourSystem.hpp>
+
+#include <algorithm>
 #include <Manager/MonoEntityManager.hpp>
 #include <Manager/MonoReflectionRegistry.hpp>
 #include <Manager/MonoTypeRegistry.hpp>
@@ -696,7 +698,75 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 
 		if (ImGui::TreeNode(label.c_str()))
 		{
-			MonoImGuiRenderer::RenderBehaviourFields(fullName, scriptGuid);
+			std::vector<ScriptProperty> updatedProperties{};
+			bool fieldModified = MonoImGuiRenderer::RenderBehaviourFields(fullName, scriptGuid, updatedProperties);
+
+			std::sort(updatedProperties.begin(), updatedProperties.end(), [](const ScriptProperty& lhs, const ScriptProperty& rhs) {
+				if (lhs.name != rhs.name)
+				{
+					return lhs.name < rhs.name;
+				}
+				if (lhs.typeName != rhs.typeName)
+				{
+					return lhs.typeName < rhs.typeName;
+				}
+				return lhs.value < rhs.value;
+			});
+
+			const std::string prefix = fullName + ".";
+			std::vector<ScriptProperty> currentProperties{};
+			currentProperties.reserve(component.scriptProperties.size());
+			for (const auto& prop : component.scriptProperties)
+			{
+				if (prop.name.rfind(prefix, 0) == 0)
+				{
+					currentProperties.push_back(prop);
+				}
+			}
+
+			std::sort(currentProperties.begin(), currentProperties.end(), [](const ScriptProperty& lhs, const ScriptProperty& rhs) {
+				if (lhs.name != rhs.name)
+				{
+					return lhs.name < rhs.name;
+				}
+				if (lhs.typeName != rhs.typeName)
+				{
+					return lhs.typeName < rhs.typeName;
+				}
+				return lhs.value < rhs.value;
+			});
+
+			auto props_equal = [](const std::vector<ScriptProperty>& lhs, const std::vector<ScriptProperty>& rhs) {
+				if (lhs.size() != rhs.size())
+				{
+					return false;
+				}
+				for (size_t idx = 0; idx < lhs.size(); ++idx)
+				{
+					if (lhs[idx].name != rhs[idx].name ||
+						lhs[idx].typeName != rhs[idx].typeName ||
+						lhs[idx].value != rhs[idx].value)
+					{
+						return false;
+					}
+				}
+				return true;
+			};
+
+			if (fieldModified || !props_equal(currentProperties, updatedProperties))
+			{
+				auto update_script_properties = [updatedProperties, prefix, localSelectedEntityID]()
+				{
+					ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), localSelectedEntityID };
+					behaviour& behaviour_component = entity.get<behaviour>();
+					auto& props = behaviour_component.scriptProperties;
+					props.erase(std::remove_if(props.begin(), props.end(), [&prefix](const ScriptProperty& prop) {
+						return prop.name.rfind(prefix, 0) == 0;
+					}), props.end());
+					props.insert(props.end(), updatedProperties.begin(), updatedProperties.end());
+				};
+				engineService.m_cont->m_command_queue.push(update_script_properties);
+			}
 			ImGui::TreePop();
 		}
 
@@ -714,7 +784,8 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 				<< ", scriptIDs size=" << component.scriptIDs.size()
 				<< ", i=" << i << std::endl;
 
-			auto RemoveScripts = [i, localSelectedEntityID]()
+			const std::string prefix = fullName + ".";
+			auto RemoveScripts = [i, localSelectedEntityID, prefix]()
 			{
 				ecs::entity entity{ static_cast<std::uint32_t>(Engine::GetWorld()), localSelectedEntityID };
 				behaviour& behaviour_component = entity.get<behaviour>();
@@ -726,6 +797,10 @@ void EditorMain::Render_Behaviour_Component(behaviour& component)
 				{
 					behaviour_component.scriptIDs.erase(behaviour_component.scriptIDs.begin() + i);
 				}
+				auto& props = behaviour_component.scriptProperties;
+				props.erase(std::remove_if(props.begin(), props.end(), [&prefix](const ScriptProperty& prop) {
+					return prop.name.rfind(prefix, 0) == 0;
+				}), props.end());
 
 			};
 			engineService.m_cont->m_command_queue.push(RemoveScripts);

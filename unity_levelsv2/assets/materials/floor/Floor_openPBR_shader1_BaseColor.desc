@@ -1,7 +1,0 @@
-base:
-  m_guid: 98e4334725ebac8bede5ada8e0f
-  m_importer: .texture
-  m_source: materials\floor\Floor_openPBR_shader1_BaseColor.png
-  m_name: Floor_openPBR_shader1_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

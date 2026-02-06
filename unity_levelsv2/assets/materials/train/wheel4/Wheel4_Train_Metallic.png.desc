@@ -1,0 +1,7 @@
+base:
+  m_guid: 6d7cbb971768e3628371a9d2501
+  m_importer: .texture
+  m_source: materials\train\wheel4\Wheel4_Train_Metallic.png
+  m_name: Wheel4_Train_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
