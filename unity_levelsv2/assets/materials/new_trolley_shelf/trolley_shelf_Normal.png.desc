@@ -1,0 +1,7 @@
+base:
+  m_guid: 82929f670ddaa7e60fa17a47238
+  m_importer: .texture
+  m_source: materials\new_trolley_shelf\trolley_shelf_Normal.png
+  m_name: trolley_shelf_Normal.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

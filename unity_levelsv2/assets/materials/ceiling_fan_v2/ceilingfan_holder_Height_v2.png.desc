@@ -1,0 +1,7 @@
+base:
+  m_guid: 7c539dc7a05a627aecb2fd4dd32
+  m_importer: .texture
+  m_source: materials\ceiling_fan_v2\ceilingfan_holder_Height_v2.png
+  m_name: ceilingfan_holder_Height_v2.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

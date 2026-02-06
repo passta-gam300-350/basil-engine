@@ -1,0 +1,24 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl blade
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd blade_BaseColor_v2.png
+map_Ks blade_Metallic_v2.png
+map_Ns blade_Roughness_v2.png
+map_Ke blade_Emissive_v2.png
+map_d blade_Height_v2.png
+map_Bump blade_Normal_v2.png
+
+newmtl ceilingfan_holder
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd ceilingfan_holder_BaseColor_v2.png
+map_Ks ceilingfan_holder_Metallic_v2.png
+map_Ns ceilingfan_holder_Roughness_v2.png
+map_Ke ceilingfan_holder_Emissive_v2.png
+map_d ceilingfan_holder_Height_v2.png
+map_Bump ceilingfan_holder_Normal_v2.png

@@ -1,0 +1,9 @@
+base:
+  m_guid: 7a011f97cef8d3d2790fc6a5d6b
+  m_importer: skeleton
+  m_source: ""
+  m_name: _skeleton
+  m_importer_type: 17465350814002410854
+skel:
+  m_bones: ~
+  m_name: _skeleton

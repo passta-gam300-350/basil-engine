@@ -1,0 +1,7 @@
+base:
+  m_guid: 82929f57427a3e63b75ec8436d0
+  m_importer: .texture
+  m_source: materials\new_trolley_shelf\trolley_shelf_Metallic.png
+  m_name: trolley_shelf_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

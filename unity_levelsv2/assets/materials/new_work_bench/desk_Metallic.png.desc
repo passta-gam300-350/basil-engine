@@ -1,0 +1,7 @@
+base:
+  m_guid: 82929fb7675b444a844f2dd7a29
+  m_importer: .texture
+  m_source: materials\new_work_bench\desk_Metallic.png
+  m_name: desk_Metallic.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

@@ -1,0 +1,29 @@
+base:
+  m_guid: 7cbe4847373a46490ebc3551026
+  m_importer: .material
+  m_source: ""
+  m_name: m_ceiling_fan_v2_blade
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_ceiling_fan_v2_blade
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 7c539da7b1d8b27f3f47b3e91e6
+    u_DiffuseMap: 7c539d577ae846e8a30d0ecbcf7
+    u_EmissiveMap: 7c539d67beaa3075bcefab3ca2f
+    u_NormalMap: 7c539d97f68a78e2fe5344f5ffb
+    u_HeightMap: 7c539d77f97a7d23ea750b006d2
+    u_SpecularMap: 00
+    u_MetallicMap: 7c539d874859e74cbf9959ccb14

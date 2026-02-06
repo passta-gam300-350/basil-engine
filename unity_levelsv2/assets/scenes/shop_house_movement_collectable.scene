@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 83
+  slot: 95
   guid: 00
   dependencies: ~
 render_settings:
@@ -23,6 +23,19 @@ render_settings:
       - 00
       - 00
       - 00
+  ambient_light:
+    - 0.0299999993
+    - 0.0299999993
+    - 0.0299999993
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.0399999991
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
 entities:
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
@@ -511,7 +524,7 @@ entities:
       m_Type: "\x01"
       m_IsActive: true
       m_Fov: 45
-      m_AspectRatio: 2.08727574
+      m_AspectRatio: 2.08897948
       m_Near: 0.100000001
       m_Far: 1000
       m_Up:
@@ -2733,3 +2746,336 @@ entities:
         x: -3.57442808
         y: 6.10351562e-05
         z: -5.97175694
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 83
+    entity name:
+      name: new_mural_wall
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00316404016
+        y: 0.00316404016
+        z: 0.00316404016
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.53793061
+        y: -0.0348858088
+        z: -6.08304739
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75db7ea0ac56750d9e2f80e9
+        type: 4838001395392124604
+      m_MaterialGuid:
+        wall_material:
+          guid: 7aa01ab71a7a5c3a40f5efc9732
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 85
+    entity name:
+      name: new_separator
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00316404109
+        y: 0.00316404016
+        z: 0.00316404109
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: -0.357050359
+        y: -0.0348187424
+        z: -4.32585239
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75c678998ed22d85f255885a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        floor_material:
+          guid: 7a9e0a67dff9d2e5accc69c27cd
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 86
+    entity name:
+      name: new_floor
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0146495104
+        y: 0.0146495067
+        z: 0.0146495104
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 0.617557764
+        y: -0.0348187424
+        z: -5.85098648
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75b870e8853b8c0f4f9ecfc9
+        type: 4838001395392124604
+      m_MaterialGuid:
+        ceiling_material:
+          guid: 7a9c9f37f2895e155561d97c413
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 87
+    entity name:
+      name: new_ceiling
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0146495104
+        y: 0.0146495067
+        z: 0.0146495104
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 0.617557764
+        y: -0.0348187424
+        z: -4.32585239
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46cd7735859afaf829532dd8
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 7c41b037caa9c2e2737b69c9532
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 88
+    entity name:
+      name: new_wall
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00316404109
+        y: 0.00316404016
+        z: 0.00316404109
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: -0.891120732
+        y: -0.0348187424
+        z: -4.32585239
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7c53a28731a9303fba507298eef
+        type: 4838001395392124604
+      m_MaterialGuid:
+        glue_material:
+          guid: 7cb84027d4a9d0a7e95e4033872
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 89
+    entity name:
+      name: glue
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0146495104
+        y: 0.0146495067
+        z: 0.0146495104
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 1.9879005
+        y: -0.0348187424
+        z: -4.32585239
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7c53a2978d3aff9d106bd19dc47
+        type: 4838001395392124604
+      m_MaterialGuid:
+        key_mat_material:
+          guid: 7cba5157ef8a6b934a70c2b9ede
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 90
+    entity name:
+      name: key
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0656298101
+        y: 0.0656297877
+        z: 0.0656298101
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 1.9879005
+        y: -0.0348187424
+        z: -5.80499268
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7c53a257c9c81521544a354a08e
+        type: 4838001395392124604
+      m_MaterialGuid:
+        ceilingfan_holder_material:
+          guid: 7cb717877398f917eb632f30883
+          type: 175488002581160416
+        blade_material:
+          guid: 7cbe4847373a46490ebc3551026
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 91
+    entity name:
+      name: ceiling_fan_v2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00483433902
+        y: 0.00483433763
+        z: 0.00483433902
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 3.22382855
+        y: -0.0348187424
+        z: -4.32585239
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8292a2478aba0f87b6388eff592
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trolley_shelf_material:
+          guid: 82ab70e7404aace4d63806b52a7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 92
+    entity name:
+      name: new_trolley_shelf
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0100070816
+        y: 0.0100070788
+        z: 0.0100070816
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 3.22382855
+        y: -0.0348187424
+        z: -5.79919529
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8292a22701b888c87aa688800e2
+        type: 4838001395392124604
+      m_MaterialGuid:
+        light_material:
+          guid: 82c2fd47b6b97a328e977f36ec3
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 93
+    entity name:
+      name: new_ceiling_light
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00483433902
+        y: 0.00483433763
+        z: 0.00483433902
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 4.80874825
+        y: 0.733075142
+        z: -4.32585239
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8292a267eb480261c0018184d5f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        desk_material:
+          guid: 82adaa770a7b189b772d65a7a94
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 94
+    entity name:
+      name: new_work_bench
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0100070816
+        y: 0.0100070788
+        z: 0.0100070816
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 4.85982656
+        y: -0.0348187424
+        z: -5.79919529
