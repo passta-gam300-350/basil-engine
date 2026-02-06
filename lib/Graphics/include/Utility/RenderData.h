@@ -53,7 +53,8 @@ struct SubmittedLightData {
     float outerCone = 45.0f;
     bool enabled = true;
     bool castShadows = true;             // Per-light shadow control (Unity-style)
-    float visualSize = 0.0f;             // Light cube visualization size (0 = use default from SceneRenderer)
+    glm::vec3 visualSize = glm::vec3(0.0f); // Light cube visualization size per axis (0,0,0 = use default from SceneRenderer)
+    glm::vec3 visualRotation = glm::vec3(0.0f); // Euler angles in degrees for light cube visualization
 };
 
 // Picking data structures

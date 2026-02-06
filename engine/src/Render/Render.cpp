@@ -411,7 +411,7 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	for (auto light : sceneLights) {
-		auto [lightComponent, position] {light.get<LightComponent, TransformComponent>()};
+		auto [lightComponent, transform] {light.get<LightComponent, TransformComponent>()};
 		SubmittedLightData lightData;
 		lightData.type = lightComponent.m_Type;
 		lightData.color = lightComponent.m_Color;
@@ -422,7 +422,9 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.outerCone = lightComponent.m_OuterCone;
 		lightData.diffuseIntensity = lightComponent.m_Intensity;
 		lightData.range = lightComponent.m_Range;
-		lightData.position = position.m_Translation;
+		lightData.position = transform.m_Translation;
+		lightData.visualSize = transform.m_Scale * 0.3f;
+		lightData.visualRotation = transform.m_Rotation;
 		m_SceneRenderer->SubmitLight(lightData);
 	}
 

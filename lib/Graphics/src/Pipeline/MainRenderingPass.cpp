@@ -343,13 +343,16 @@ void MainRenderingPass::RenderLightCubes(RenderContext& context)
 
     // Render each light as a cube (all light types: Directional, Point, Spot)
     for (const auto& light : context.lights) {
-        // Use per-light size if specified (visualSize > 0), otherwise use default
-        float cubeSize = (light.visualSize > 0.0f) ? light.visualSize : m_BaseLightCubeSize;
+        // Use per-light size if specified (any component non-zero), otherwise use default uniform size
+        glm::vec3 cubeSize = (glm::length(light.visualSize) > 0.0f)
+            ? light.visualSize
+            : glm::vec3(m_BaseLightCubeSize);
 
-        // Calculate transform matrix for light position with fixed scaling
+        // Calculate transform matrix with full TRS (Translate-Rotate-Scale)
         glm::mat4 modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, light.position);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(cubeSize));
+        modelMatrix = modelMatrix * glm::mat4_cast(glm::quat(glm::radians(light.visualRotation)));
+        modelMatrix = glm::scale(modelMatrix, cubeSize);
 
         // Set uniforms using the available SetUniformsData command
         RenderCommands::SetUniformsData uniformsCmd{
