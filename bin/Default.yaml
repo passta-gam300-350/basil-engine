@@ -1,0 +1,25 @@
+window:
+  width: 1600
+  height: 900
+  fullscreen: false
+  title: Engine
+  vsync: false
+system:
+  system threads: 4
+  enabled system:
+    camera_system: true
+    BehaviourSystem: true
+    transform_system: true
+    animation_system: true
+    ParticleSystem: true
+    HierarchySystem: true
+  system configurations: ~
+resource:
+  resource threads: 4
+  resource list: ~
+  root directory: C:\Users\Steven\source\repos\academic\gam300\gam300\bin
+  enable globbing: false
+logger:
+  name: Engine
+  output file: ""
+  severity: 2

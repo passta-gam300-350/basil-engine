@@ -1,0 +1,14 @@
+base:
+  m_guid: 6d7a0ee7a5e9b18f1824be28f0d
+  m_importer: .audio
+  m_source: audio\meng_new_2.ogg
+  m_name: meng_new_2.ogg
+  m_importer_type: 3386065993928156319
+audio:
+  sourcePath: ""
+  is3D: true
+  isStreaming: false
+  isLooping: false
+  duration: 0
+  sampleRate: 0
+  channels: 0

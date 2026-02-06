@@ -524,7 +524,8 @@ struct ResourceSystem {
         for (auto [name, typed] : assetlist) {
             ResourceSystem::FileEntry fentry{};
             fentry.m_Guid = typed.m_guid;
-            fentry.m_Path = imported_path + "/" + typed.m_guid.to_hex() + "." + rp::ResourceTypeRegistry::GetResourceTypeName(typed).value();
+            std::string tname = rp::ResourceTypeRegistry::GetResourceTypeName(typed).value();
+            fentry.m_Path = imported_path + "/" + typed.m_guid.to_hex() + "." + (tname == "font_atlas"?"font":tname);
             fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
             ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
         }
