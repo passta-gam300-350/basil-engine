@@ -15,7 +15,7 @@ inline AudioResourceData CreateAudio(AudioDescriptor const& audioDesc, std::stri
     data.sourcePath = audioDesc.base.m_source;
 
     // Serialize to binary (.audio file)
-    SerializeBinary(data, audioDesc.base.m_guid, ".audio", path);
+    //SerializeBinary(data, audioDesc.base.m_guid, ".audio", path);
 
     // Serialize descriptor to YAML
     if (!serializedescpath.empty())

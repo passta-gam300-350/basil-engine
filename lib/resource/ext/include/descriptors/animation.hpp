@@ -11,7 +11,7 @@ struct AnimationDescriptor {
 };
 
 inline AnimationResourceData CreateAnimation(AnimationDescriptor const& animDesc, std::string const& path = {}, std::string const& serialisedescpath = {}) {
-	SerializeBinary(animDesc.anim, animDesc.base.m_guid, ".animation", path);
+	//SerializeBinary(animDesc.anim, animDesc.base.m_guid, ".animation", path);
 	if (!serialisedescpath.empty())
 		rp::serialization::yaml_serializer::serialize(animDesc, serialisedescpath);
 	return animDesc.anim;

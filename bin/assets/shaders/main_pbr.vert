@@ -6,8 +6,6 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
 layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
-layout (location = 5) in ivec4 aBoneIDs;
-layout (location = 6) in vec4 aWeights;
 
 // Instance data structure (must match C++ InstanceData exactly)
 struct InstanceData {
@@ -25,17 +23,10 @@ layout(std430, binding = 0) buffer InstanceBuffer {
     InstanceData instances[];
 };
 
-layout(std430, binding = 2) readonly buffer BoneMatrixBuffer {
-    mat4 boneMatrices[];
-};
-
 // Camera uniforms
 uniform mat4 u_View;
 uniform mat4 u_Projection;
 uniform vec3 u_ViewPos;
-// Skinning control
-uniform bool u_EnableSkinning;
-uniform int u_BoneOffset;  // Offset into boneMatrices for this instance
 
 // Output to fragment shader
 out VS_OUT {
@@ -58,28 +49,8 @@ void main()
     InstanceData instance = instances[gl_InstanceID];
     mat4 model = instance.modelMatrix;
 
-    // === SKINNING ===
-    vec3 skinnedPos = aPos;
-    vec3 skinnedNormal = aNormal;
-    vec3 skinnedTangent = aTangent;
-    vec3 skinnedBitangent = aBitangent;
-    if (u_EnableSkinning)
-    {
-        mat4 skinMatrix =
-        boneMatrices[u_BoneOffset + aBoneIDs.x] * aWeights.x +
-        boneMatrices[u_BoneOffset + aBoneIDs.y] * aWeights.y +
-        boneMatrices[u_BoneOffset + aBoneIDs.z] * aWeights.z +
-        boneMatrices[u_BoneOffset + aBoneIDs.w] * aWeights.w;
-
-        skinnedPos = vec3(skinMatrix * vec4(aPos, 1.0));
-
-        mat3 skinMatrix3 = mat3(skinMatrix);
-        skinnedNormal = skinMatrix3 * aNormal;
-        skinnedTangent = skinMatrix3 * aTangent;
-        skinnedBitangent = skinMatrix3 * aBitangent;
-    }
     // Transform vertex to world space using instance matrix
-    vec4 worldPos = model * vec4(skinnedPos, 1.0);
+    vec4 worldPos = model * vec4(aPos, 1.0);
     gl_Position = u_Projection * u_View * worldPos;
 
     // Pass data to fragment shader
@@ -90,9 +61,9 @@ void main()
     mat3 normalMatrix = mat3(transpose(inverse(model)));
 
     // Transform normals and tangent space vectors
-    vs_out.Normal = normalize(normalMatrix * skinnedNormal);
-    vs_out.Tangent = normalize(normalMatrix * skinnedTangent);
-    vs_out.Bitangent = normalize(normalMatrix * skinnedBitangent);
+    vs_out.Normal = normalize(normalMatrix * aNormal);
+    vs_out.Tangent = normalize(normalMatrix * aTangent);
+    vs_out.Bitangent = normalize(normalMatrix * aBitangent);
 
     // Calculate TBN matrix for normal mapping
     vec3 T = normalize(vs_out.Tangent);

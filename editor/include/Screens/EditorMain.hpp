@@ -74,6 +74,7 @@ public:
 	bool showSceneSettings = true;  // Scene settings panel (skybox, lighting, post-processing)
 	bool showPhysicsDebug = true;  // Toggle for Jolt Physics debug rendering (from m3-physics)
 	bool showAssetBrowser = true;  // Asset browser panel
+	bool showExporter = false;
 	bool showResources = true;      // Imported resources panel
 	bool showSceneManifestSetting = false; // Scene manifest settings panel
 
@@ -148,6 +149,7 @@ public:
 	void Render_Resources();         // Imported resources window
 	void Render_AssetBrowser_Old();
 	void Render_ImporterSettings();
+	void Render_ExporterSettings();
 
 	// ========================================================================
 	// VIEWPORT RENDERING
