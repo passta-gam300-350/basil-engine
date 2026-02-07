@@ -1,0 +1,433 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 17
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+  ambient_light:
+    - 0
+    - 0
+    - 0
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.0250000004
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
+entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46cd7735859afaf829532dd8
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 7c41b037caa9c2e2737b69c9532
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 1
+    entity name:
+      name: wall
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.5
+        y: -0.000113510199
+        z: 8
+    MaterialOverridesComponent: ~
+  - Scene ID:
+      Scene ID: 3
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.600000024
+      "[Dir/Spot] Direction":
+        x: -45
+        y: -45
+        z: 30
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    entity name:
+      name: direction_light
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 15
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75b870e8853b8c0f4f9ecfc9
+        type: 4838001395392124604
+      m_MaterialGuid:
+        ceiling_material:
+          guid: 7a9c9f37f2895e155561d97c413
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 4
+    entity name:
+      name: ceiling
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0250000004
+        y: 0.0250382591
+        z: 0.0250382591
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.75
+        y: 0.5
+        z: 8
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8df79274ea842f89ca00839af9
+        type: 4838001395392124604
+      m_MaterialGuid:
+        c_bx_halfOp_material:
+          guid: c1deed75d0bb66826035ab28f5
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 12
+    entity name:
+      name: chocolate_box_halfopened
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.65072632
+        y: 6.61594531e-05
+        z: 5.7699461
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75c678998ed22d85f255885a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        floor_material:
+          guid: 7a9e0a67dff9d2e5accc69c27cd
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 5
+    entity name:
+      name: floor
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0250000004
+        y: 0.0250000004
+        z: 0.0250000004
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2
+        y: 0.5
+        z: 8
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 7c53a257c9c81521544a354a08e
+        type: 4838001395392124604
+      m_MaterialGuid:
+        blade_material:
+          guid: 7cbe4847373a46490ebc3551026
+          type: 175488002581160416
+        ceilingfan_holder_material:
+          guid: 7cb717877398f917eb632f30883
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 6
+    entity name:
+      name: fan
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.59389114
+        y: 1.70189893
+        z: 4.8637886
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8df791786cada5d5eb58f23b3a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        c_bx_material:
+          guid: be4e7c72da956b6e0ceca6226f
+          type: 175488002581160416
+        c_bx_tape_material:
+          guid: bfc6737e1abfc5ed0d4aaefa6a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 7
+    entity name:
+      name: chocolate_box_closed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.65215492
+        y: 6.10351562e-05
+        z: 6.24537516
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x02"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 8
+    entity name:
+      name: baseplate
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 10
+        y: 1
+        z: 10
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.899999976
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 1
+          y: 1
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8df793798e93330b9401a628bd
+        type: 4838001395392124604
+      m_MaterialGuid:
+        c_bx_opened_material:
+          guid: c3971477a89b1227c444ce5ed2
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 13
+    entity name:
+      name: chocolate_box_opened
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.65072632
+        y: 6.61594531e-05
+        z: 5.30964279
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 122798c7953bba558f899785673
+        type: 4838001395392124604
+      m_MaterialGuid:
+        tin_top:
+          guid: fa6f1571c79ca664dabee49e8c
+          type: 175488002581160416
+        tin_plastic_clear:
+          guid: f95bc072299756398fcdd74c37
+          type: 175488002581160416
+        standardSurface1:
+          guid: f65a5c727899d1b992732f6860
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 14
+    entity name:
+      name: wafer_tin
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0116999866
+        y: 0.0116999988
+        z: 0.0116999866
+      m_Rotate:
+        x: 180
+        y: 90
+        z: 180
+      m_Trans:
+        x: 6.74697542
+        y: 6.61594531e-05
+        z: 5.30964279
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8292a2478aba0f87b6388eff592
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trolley_shelf_material:
+          guid: 82ab70e7404aace4d63806b52a7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 15
+    entity name:
+      name: trolley_shelf
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00799499918
+        y: 0.00799500011
+        z: 0.00799499918
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 5.7852602
+        y: 6.61594531e-05
+        z: 5.30964279
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8292a267eb480261c0018184d5f
+        type: 4838001395392124604
+      m_MaterialGuid:
+        desk_material:
+          guid: 82adaa770a7b189b772d65a7a94
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 16
+    entity name:
+      name: work_bench
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 4.67857122
+        y: 6.61594531e-05
+        z: 5.30964279
+    MaterialOverridesComponent: ~
