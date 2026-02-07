@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 73
+  slot: 84
   guid: 00
   dependencies: ~
 render_settings:
@@ -37,80 +37,6 @@ render_settings:
   exposure_min: 0.100000001
   exposure_max: 2
 entities:
-  - Scene ID:
-      Scene ID: 2
-    entity name:
-      name: Camera
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 0.99999994
-        z: 0.99999994
-      m_Rotate:
-        x: -19
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 1.18654835
-        z: -6.32290268
-    CameraComponent:
-      m_Type: "\x01"
-      m_IsActive: true
-      m_Fov: 60
-      m_AspectRatio: 1.914469
-      m_Near: 0.100000001
-      m_Far: 10000
-      m_Up:
-        x: 0
-        y: 0.945518553
-        z: -0.32556814
-      m_Right:
-        x: 1
-        y: 0
-        z: 0
-      m_Front:
-        x: 0
-        y: 0.32556814
-        z: 0.945518553
-      m_Yaw: -90
-      m_Pitch: 0
-  - Scene ID:
-      Scene ID: 66
-    entity name:
-      name: kite_hit4
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 39dfd7479a0b33693485c8d229c
-        type: 17099568057112876377
-      volume: 0.400000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -213,25 +139,31 @@ entities:
         y: 0
         z: 0
   - Scene ID:
-      Scene ID: 1
-    LightComponent:
-      Type: 0
-      Color:
-        x: 0.950177908
-        y: 0.608726978
-        z: 0.182596445
-      Enabled: true
-      Cast Shadows: true
-      Intensity: 1
-      "[Dir/Spot] Direction":
-        x: -0.200000003
-        y: -1.94000006
-        z: 2.00999999
-      "[Point/Spot] Range": 10
-      "[Spot] Inner Cone Angle": 30
-      "[Spot] Outer Cone Angle": 45
+      Scene ID: 74
     entity name:
-      name: Light
+      name: VOtext1_2
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61bf7ae8981b29a8150eda1a
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 750
+        y: 95
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 66
+    entity name:
+      name: kite_hit4
     TransformComponent:
       m_Scale:
         x: 1
@@ -239,12 +171,69 @@ entities:
         z: 1
       m_Rotate:
         x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 39dfd7479a0b33693485c8d229c
+        type: 17099568057112876377
+      volume: 0.400000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 2
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.99999994
+        z: 0.99999994
+      m_Rotate:
+        x: -19
         y: -0
         z: 0
       m_Trans:
         x: 0
-        y: 16.6807728
+        y: 1.18654835
+        z: -6.32290268
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 60
+      m_AspectRatio: 2.00173616
+      m_Near: 0.100000001
+      m_Far: 10000
+      m_Up:
+        x: 0
+        y: 0.945518553
+        z: -0.32556814
+      m_Right:
+        x: 1
+        y: 0
         z: 0
+      m_Front:
+        x: 0
+        y: 0.32556814
+        z: 0.945518553
+      m_Yaw: -90
+      m_Pitch: 0
   - Scene ID:
       Scene ID: 65
     entity name:
@@ -280,6 +269,39 @@ entities:
       velocity:
         x: 0
         y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 1
+    LightComponent:
+      Type: 0
+      Color:
+        x: 0.950177908
+        y: 0.608726978
+        z: 0.182596445
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: -0.200000003
+        y: -1.94000006
+        z: 2.00999999
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    entity name:
+      name: Light
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 16.6807728
         z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
@@ -363,6 +385,40 @@ entities:
     Behaviour:
       classesName:
         - KiteTarget
+  - Scene ID:
+      Scene ID: 75
+    entity name:
+      name: VOtext1_3
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61c876afb39250b744e897c4
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 814
+        y: 92
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 76
+    entity name:
+      name: VOHudManager
+    Behaviour:
+      classesName:
+        - KiteGameHudVO
+      scriptProperties:
+        - name: KiteGameHudVO.imageDuration
+          type: System.Single
+          value: 2
+          is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -476,6 +532,28 @@ entities:
         y: -0.515945673
         z: 35.9822273
     MaterialOverridesComponent: ~
+  - Scene ID:
+      Scene ID: 77
+    entity name:
+      name: VOtext2_1
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61d07f1785578584b9ad4f48
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 161
+        y: 83
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -2225,3 +2303,157 @@ entities:
         x: 0
         y: 0
         z: 0
+  - Scene ID:
+      Scene ID: 73
+    entity name:
+      name: VOtext1_1
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61b37464976ab04129b85358
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 300
+        y: 90
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 78
+    entity name:
+      name: VOtext2_2
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61d87ffd85a1056ab343c2e4
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 473
+        y: 79
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 79
+    entity name:
+      name: VOtext3_1
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61e17f709be8c3d9c5b23ca1
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 673
+        y: 84
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 80
+    entity name:
+      name: VOtext4_1
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61ea72249272fed178c39468
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 249
+        y: 87
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 81
+    entity name:
+      name: VOtext4_2
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61f47009ad110abf8dc937b5
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 989
+        y: 90
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 82
+    entity name:
+      name: VOtext5_1
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d61fd7d6c9f71c0c81911a6bd
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 861
+        y: 88
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true
+  - Scene ID:
+      Scene ID: 83
+    entity name:
+      name: VOtext5_2
+    HUDComponent:
+      m_TextureGuid:
+        guid: b8d62057ef79c35c3f9322eaa53
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 851
+        y: 93
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      visible: true

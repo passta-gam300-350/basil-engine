@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 232
+  slot: 234
   guid: 00
   dependencies: ~
 render_settings:
@@ -294,9 +294,9 @@ entities:
         y: -4.81244326
         z: -175.977142
       m_Trans:
-        x: 2.46192622
-        y: 0.0469896384
-        z: 1.55044067
+        x: 2.46778846
+        y: 0.056274347
+        z: 1.62764287
     Behaviour:
       classesName:
         - Dustbin
@@ -1055,6 +1055,14 @@ entities:
       classesName:
         - PlayerController3D
       scriptProperties:
+        - name: PlayerController3D.baseMoveSpeed
+          type: System.Single
+          value: 1.5
+          is_user_type: false
+        - name: PlayerController3D.canCollectTrash
+          type: System.Boolean
+          value: true
+          is_user_type: false
         - name: PlayerController3D.disabled
           type: System.Boolean
           value: false
@@ -1063,13 +1071,29 @@ entities:
           type: System.Single
           value: 0.5
           is_user_type: false
+        - name: PlayerController3D.interactionsLocked
+          type: System.Boolean
+          value: false
+          is_user_type: false
         - name: PlayerController3D.mouseSensitivity
           type: System.Single
           value: 0.075
           is_user_type: false
-        - name: PlayerController3D.moveSpeed
+        - name: PlayerController3D.onMopEnabled
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.speedMultiplier
           type: System.Single
-          value: 4
+          value: 1
+          is_user_type: false
+        - name: PlayerController3D.wantsToCollect
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.wantsToMop
+          type: System.Boolean
+          value: false
           is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
@@ -1170,7 +1194,7 @@ entities:
       m_Type: "\x01"
       m_IsActive: true
       m_Fov: 45
-      m_AspectRatio: 1.53757834
+      m_AspectRatio: 1.68055558
       m_Near: 0.100000001
       m_Far: 1000
       m_Up:
@@ -2025,13 +2049,13 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.400000006
-        y: 0.300000012
-        z: 0.400000006
+        x: 0.600000024
+        y: 0.200000003
+        z: 0.600000024
       CenterOffset:
-        x: 0.0700000003
-        y: 0
-        z: -0.109999999
+        x: 0
+        y: 0.0599999987
+        z: 0
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -2052,9 +2076,9 @@ entities:
         y: 39.154171
         z: 0
       m_Trans:
-        x: 1.50728369
+        x: 2.51667619
         y: 0.00100202241
-        z: -0.161338538
+        z: -0.278389931
     Behaviour:
       classesName:
         - TrashCollectable
@@ -2076,12 +2100,12 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.5
-        y: 0.400000006
-        z: 0.400000006
+        x: 0.600000024
+        y: 0.201000005
+        z: 0.5
       CenterOffset:
         x: 0
-        y: 0
+        y: 0.0900000036
         z: 0
       isTrigger: false
       friction: 0.5
@@ -2103,9 +2127,9 @@ entities:
         y: 57.8460045
         z: -179.999893
       m_Trans:
-        x: 1.56042099
-        y: 0.00100178597
-        z: -1.07728791
+        x: 2.55420971
+        y: 0.0010020585
+        z: -1.08234441
     Behaviour:
       classesName:
         - TrashCollectable
@@ -2127,12 +2151,12 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.400000006
-        y: 0.300000012
-        z: 0.400000006
+        x: 0.600000024
+        y: 0.201000005
+        z: 0.600000024
       CenterOffset:
-        x: -0.0299999993
-        y: 0
+        x: 0
+        y: 0.0500000007
         z: 0
       isTrigger: false
       friction: 0.5
@@ -2151,12 +2175,12 @@ entities:
         z: 0.00500000035
       m_Rotate:
         x: 0
-        y: -13.8459997
+        y: -13.8459978
         z: 0
       m_Trans:
-        x: 1.54177129
+        x: 2.42930412
         y: 0.00100202241
-        z: 0.436118662
+        z: 0.972160995
     Behaviour:
       classesName:
         - TrashCollectable
@@ -2834,7 +2858,7 @@ entities:
     Scene ID:
       Scene ID: 231
     entity name:
-      name: unnamed
+      name: wall_collider
     VisibilityComponent:
       m_IsVisible: false
     TransformComponent:
@@ -2850,3 +2874,101 @@ entities:
         x: 1.19894159
         y: 0.58003056
         z: -0.465511918
+  - Scene ID:
+      Scene ID: 232
+    entity name:
+      name: UI_Text1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 71.5029984
+        z: 0
+      m_Trans:
+        x: 2.23928642
+        y: 0.55885011
+        z: -0.557437718
+    TextMeshComponent:
+      fontGuid:
+        guid: ff7f5c7366bb0f067a65ea8155
+        type: 10090887602259309668
+      text: Pick Up Trash (E)
+      billboardMode: "\x02"
+      fontSize: 16
+      referenceDistance: 5
+      alignment: "\x01"
+      lineSpacing: 1
+      letterSpacing: 0
+      maxWidth: 0
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      outlineWidth: 0
+      outlineColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+      glowStrength: 0
+      glowColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 0.5
+      sdfThreshold: 0.5
+      smoothing: 0.0399999991
+      visible: true
+  - Scene ID:
+      Scene ID: 233
+    entity name:
+      name: UI_Text2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: -179.999893
+        y: -5.00895567e-06
+        z: -179.999893
+      m_Trans:
+        x: 2.43583322
+        y: 0.568670392
+        z: 1.51915157
+    TextMeshComponent:
+      fontGuid:
+        guid: ff7f5c7366bb0f067a65ea8155
+        type: 10090887602259309668
+      text: Throw Trash (E)
+      billboardMode: "\x02"
+      fontSize: 16
+      referenceDistance: 5
+      alignment: "\x01"
+      lineSpacing: 1
+      letterSpacing: 0
+      maxWidth: 0
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      outlineWidth: 0
+      outlineColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+      glowStrength: 0
+      glowColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 0.5
+      sdfThreshold: 0.5
+      smoothing: 0.0399999991
+      visible: true
