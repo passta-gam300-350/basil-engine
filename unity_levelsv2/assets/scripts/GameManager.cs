@@ -124,4 +124,14 @@ public class GameManager : Behavior
     {
         IsGamePaused = false;
     }
+
+    public void ShowMouse()
+    {
+        Input.CursorHidden = false;
+    }
+
+    public void HideMouse()
+    {
+        Input.CursorHidden = true;
+    }
 }

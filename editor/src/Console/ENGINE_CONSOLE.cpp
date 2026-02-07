@@ -15,6 +15,10 @@ Technology is prohibited.
 */
 /******************************************************************************/
 
+#ifdef NDEBUG
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
+#endif
+
 #include "Console/ENGINE_CONSOLE.hpp"
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>

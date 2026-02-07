@@ -68,6 +68,7 @@ public class Level1 : Behavior
 
         if (gameManager != null && gameManager.KitePuzzleCompleted && !kiteVOStarted)
         {
+            gameManager.HideMouse();
             kiteVOStarted = true;
 
             if (kiteVO != null)

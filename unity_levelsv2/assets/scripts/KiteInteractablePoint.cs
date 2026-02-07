@@ -41,6 +41,7 @@ public class KiteInteractablePoint : Behavior
                 CameraManager.instance.ActivateKiteCamera();
                 PuzzleManager.manager.KitePuzzle();
                 GameManager.instance.DisableControls();
+                GameManager.instance.ShowMouse();
             }
             else
             {
@@ -48,6 +49,7 @@ public class KiteInteractablePoint : Behavior
                 CameraManager.instance.ActivatePlayerCamera();
                 GameManager.instance.EnableControls();
                 PuzzleManager.manager.Explore();
+                GameManager.instance.HideMouse();
             }
 
 
