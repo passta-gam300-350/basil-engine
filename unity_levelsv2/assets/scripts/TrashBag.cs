@@ -17,6 +17,14 @@ public class TrashBag : Behavior
     private GameObject player;
     private PlayerController3D controller;
 
+    private bool bagDipActive = false;
+    private float bagDipTimer = 0f;
+
+    public float bagDipDuration = 0.4f;
+    public float bagDipAmount = -0.02f;
+
+    private Vector3 baseBagPos;
+
     public GameObject maxTrashAudioObject;
     private Audio maxTrashAudio;
 
@@ -50,12 +58,17 @@ public class TrashBag : Behavior
 
         if (ThrashCollect != null)
             ThrashCollect.visibility = true;
+
+        if (ThrashCollect != null)
+            baseBagPos = ThrashCollect.transform.position;
     }
 
     public void Update()
     {
         if (Input.GetKey(KeyCode.Q))
             DropBag();
+
+        UpdateBagDip();
     }
 
     // =========================
@@ -79,6 +92,7 @@ public class TrashBag : Behavior
 
         UpdateBagSize();
         UpdatePlayerSpeed();
+        StartBagDip();
     }
 
     public void EmptyBag()
@@ -137,6 +151,8 @@ public class TrashBag : Behavior
             ThrashCollect.transform.scale = new Vector3(0.0025f, 0.0025f, 0.0025f);
             ThrashCollect.transform.position = new Vector3(0f, -0.245f, 0.3f);
         }
+
+        baseBagPos = ThrashCollect.transform.position;
     }
 
     void UpdatePlayerSpeed()
@@ -147,6 +163,36 @@ public class TrashBag : Behavior
         float t = (float)trashInHand / maxTrashInHand;
 
         controller.speedMultiplier = 1f - (t * (1f - minMultiplier));
+    }
+
+    void StartBagDip()
+    {
+        bagDipActive = true;
+        bagDipTimer = bagDipDuration;
+    }
+
+    void UpdateBagDip()
+    {
+        if (!bagDipActive || ThrashCollect == null) return;
+
+        bagDipTimer -= Time.deltaTime;
+
+        if (bagDipTimer > bagDipDuration * 0.5f)
+        {
+            // first half: go down
+            ThrashCollect.transform.position =
+                baseBagPos + new Vector3(0f, bagDipAmount, 0f);
+        }
+        else if (bagDipTimer > 0f)
+        {
+            // second half: go back up
+            ThrashCollect.transform.position = baseBagPos;
+        }
+        else
+        {
+            bagDipActive = false;
+            ThrashCollect.transform.position = baseBagPos;
+        }
     }
 
 }
