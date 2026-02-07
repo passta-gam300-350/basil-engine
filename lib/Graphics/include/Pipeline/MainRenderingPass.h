@@ -65,6 +65,7 @@ public:
     void SetShowLightCubes(bool show) { m_ShowLightCubes = show; }
     bool GetShowLightCubes() const { return m_ShowLightCubes; }
     void SetBaseLightCubeSize(float size) { m_BaseLightCubeSize = size; }
+    float GetBaseLightCubeSize() const { return m_BaseLightCubeSize; }
     void SetIntensityScaleFactor(float factor) { m_IntensityScaleFactor = factor; }
     void SetCubeSizeRange(float minSize, float maxSize) { m_MinCubeSize = minSize; m_MaxCubeSize = maxSize; }
 
