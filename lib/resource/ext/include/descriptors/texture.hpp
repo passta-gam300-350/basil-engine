@@ -11,6 +11,11 @@ enum class CompressionFormat : std::uint8_t {
 	BC5_RG8 = 83u //dual channel 8 bit, for normals
 };
 
+enum class TextureArchiveFormat : std::uint8_t {
+	UNCOMPRESSED, 
+	COMPRESSED //png, jpeg...
+};
+
 struct TextureDescriptor {
 	rp::descriptor_base base;
 

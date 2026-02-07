@@ -19,7 +19,7 @@ inline VideoResourceData CreateVideo(VideoDescriptor const& vidDesc, std::string
         file.seekg(0, std::ios::beg);
         file.read(reinterpret_cast<char*>(data.m_VidData.Raw()), data.m_VidData.Size());
 
-        SerializeBinary(data, vidDesc.base.m_guid, ".video", path);
+        //SerializeBinary(data, vidDesc.base.m_guid, ".video", path);
 
         // Serialize descriptor to YAML
         if (!serializedescpath.empty())

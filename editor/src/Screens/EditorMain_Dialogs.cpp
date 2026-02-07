@@ -10,6 +10,8 @@
 #include <ranges>
 #include <numeric>
 #include <unordered_map>
+#include "Manager/BuildManager.hpp"
+#include "Editor.hpp"
 
 void EditorMain::Render_Profiler()
 {
@@ -904,6 +906,98 @@ void EditorMain::Render_PhysicsDebugPanel()
 
 	ImGui::PopStyleColor();
 	ImGui::End();
+}
+
+void EditorMain::Render_ExporterSettings() 
+{
+	if (showExporter) {
+		showExporter = false;
+		ImGui::OpenPopup("Build Menu");
+	}
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	static bool needs_repositioning{};
+	if (needs_repositioning) {
+		ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+		needs_repositioning = false;
+	}
+	else {
+		//ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	}
+	// Begin the popup modal
+	if (ImGui::BeginPopupModal("Build Menu", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		//temp static
+		static std::atomic_bool buildStarted{};
+		static BuildConfiguration config{ [](std::string name, std::string dir) {
+			auto config = BuildManager::LoadBuildConfiguration();
+			if (config.output_name.empty()) {
+				config.output_name = name;
+			};
+			if (config.output_dir.empty() || !std::filesystem::exists(config.output_dir)) {
+				config.output_dir = dir;
+			};
+			return config;
+			}(Editor::GetInstance().GetConfig().workspace_name, std::string(Engine::getWorkingDir().data()) + "/build")};
+		static std::shared_ptr<BuildContext> buildCtx{ std::make_shared<BuildContext>() };
+		static std::unique_ptr<std::future<void>> fut_ptr{}; //hack
+
+		if (!buildStarted) {
+			ImGui::Text("Build Settings");
+			ImGui::Separator();
+
+			ImguiInspectTypeRenderer::present(config, "Build Configuration                                              ");//i dunno how to resize this
+			ImGui::Separator();
+			if (ImGui::Button("Build", ImVec2(120, 0)))
+			{
+				buildStarted.store(true);
+				BuildManager::SaveBuildConfiguration(config);
+				needs_repositioning = true;
+				fut_ptr.reset(new std::future<void> (BuildManager::BuildAsync(config, buildCtx))); //hack
+			}
+			ImGui::SetItemDefaultFocus();
+			ImGui::SameLine();
+			if (ImGui::Button("Save", ImVec2(120, 0)))
+			{
+				ImGui::CloseCurrentPopup();
+				BuildManager::SaveBuildConfiguration(config);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+		}
+		else {
+			needs_repositioning = true;
+			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(0, 122, 204, 255)); // blue fill 
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(40, 40, 40, 255)); // dark background
+			ImGui::Text("Build Progress");
+			float progress = buildCtx->m_progress100 / 100.f;
+			ImGui::Dummy(ImVec2(10, 5));
+			ImGui::SameLine();
+			ImGui::ProgressBar(progress, ImVec2(750, 25));
+			ImGui::SameLine();
+			ImGui::Dummy(ImVec2(10, 5));
+			ImGui::PopStyleColor(2);
+			ImGui::Separator();
+			if (fut_ptr->valid()&&fut_ptr->wait_for(std::chrono::nanoseconds(0))==std::future_status::ready) {
+				ImGui::Text(buildCtx->m_state == BuildState::FAILED ? "Build Failed!" : "Build Success!");
+				if (ImGui::Button("OK", ImVec2(120, 0))) {
+					fut_ptr->get();
+					ImGui::CloseCurrentPopup();
+					buildStarted = false;
+				}
+			}
+			else if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+				buildCtx->m_state = BuildState::ABORTED;
+				ImGui::CloseCurrentPopup();
+				buildStarted = false;
+				fut_ptr->wait();
+			}
+		}
+		ImGui::EndPopup();
+	}
 }
 
 void EditorMain::Render_ImporterSettings()

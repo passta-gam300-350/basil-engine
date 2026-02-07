@@ -80,7 +80,7 @@ public:
 	static Logger::Sink* GetSink();
 	static bool WindowShouldClose();
 
-	static void GenerateDefaultConfig();
+	static void GenerateDefaultConfig(std::string_view sv = "");
 	//static void CreateDefaultResources();
 
 	static void ReportLastError();

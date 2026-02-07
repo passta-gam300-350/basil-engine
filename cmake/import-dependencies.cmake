@@ -582,6 +582,18 @@ macro(import_mono)
     ENDIF()
 endmacro()
 
+macro(import_mono_prod)
+    FetchContent_Declare(
+        mono_prod
+        GIT_REPOSITORY https://github.com/Silver1713/mono_prod.git
+        GIT_TAG master
+    )
+    FetchContent_GetProperties(mono_prod) 
+    if(NOT mono_prod_POPULATED) 
+        FetchContent_Populate(mono_prod) 
+    endif()
+endmacro()
+
 macro(import_xml)
     FetchContent_Declare(
         pugixml
@@ -715,6 +727,7 @@ macro(import_dependencies)
     import_msdfgen()
     import_fmod()
     import_mono()
+    import_mono_prod()
     import_xml()
     import_jolt()
     import_plmpeg()

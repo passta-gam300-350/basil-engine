@@ -13,7 +13,10 @@ int main() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	ResourceSystem::Instance().ImportAssetList(".assetlist","assets/bin");
 	auto& rsc = ResourceSystem::Instance();
-	Engine::Init("Default.yaml");
+	if (!std::filesystem::exists("config.yaml")) {
+		Engine::GenerateDefaultConfig("config.yaml");
+	}
+	Engine::Init("config.yaml");
 	Engine::Update();
 	Engine::Exit();
 	return 0;

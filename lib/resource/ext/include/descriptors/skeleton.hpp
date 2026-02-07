@@ -11,7 +11,7 @@ struct SkeletonDescriptor {
 };
 
 inline SkeletonResourceData CreateSkeleton(SkeletonDescriptor const& skelDesc, std::string const& path = {}, std::string const& serialisedescpath = {}) {
-	SerializeBinary(skelDesc.skel, skelDesc.base.m_guid, ".skeleton", path);
+	//SerializeBinary(skelDesc.skel, skelDesc.base.m_guid, ".skeleton", path);
 	if (!serialisedescpath.empty())
 		rp::serialization::yaml_serializer::serialize(skelDesc, serialisedescpath);
 	return skelDesc.skel;

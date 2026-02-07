@@ -351,9 +351,6 @@ void RenderSystem::Update(ecs::world& world) {
 						renderData.boneMatrices = skelComp.finalBoneMatrices.data();
 						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
 						renderData.isSkinned = true;
-						spdlog::info("[AnimTest] bones={}, isSkinned={}, ptr={}",
-							renderData.boneCount, renderData.isSkinned,
-							(void*)renderData.boneMatrices);
 					}
 				} 
 
@@ -1290,6 +1287,10 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			vert[i].TexCoords = mesh.vertices[i].TexCoords;
 			vert[i].Tangent = mesh.vertices[i].Tangent;
 			vert[i].Bitangent = mesh.vertices[i].Bitangent;
+			for (int a{}; a < 4; a++) {
+				vert[i].m_Weights[a] = mesh.vertices[i].m_Weights[a];
+				vert[i].m_BoneIDs[a] = mesh.vertices[i].m_BoneIDs[a];
+			}
 		}
 		std::vector<unsigned int> indices{};
 		for (const auto& matslot : mesh.materials) {

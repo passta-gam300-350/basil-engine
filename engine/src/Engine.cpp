@@ -142,6 +142,7 @@ void Engine::Init(std::string const& cfg ) {
 	// [TEMP]
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
+	animationSystem().Init();
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
@@ -356,6 +357,7 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 	// [TEMP]
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
+	animationSystem().Init();
 	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
 	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
 	//		std::string filename = entry.path().stem().string();
@@ -389,6 +391,7 @@ void Engine::Exit() {
 	ResourceSystem::Release();
 	Scheduler::Release();
 	AudioSystem::GetInstance().Exit(); // [TEMP]
+	animationSystem().Exit();
 	InstancePtr().reset();
 	MonoEntityManager::GetInstance().ClearAll();
 	WorldRegistry::Clear();
@@ -406,7 +409,7 @@ double Engine::GetLastDeltaTime() {
 	return Instance().m_Info.m_ActualDeltaTime;
 }
 
-void Engine::GenerateDefaultConfig() {
+void Engine::GenerateDefaultConfig(std::string_view name) {
 	YAML::Node root{  };
 	YAML::Node window{  };
 	YAML::Node logger{  };
@@ -422,7 +425,7 @@ void Engine::GenerateDefaultConfig() {
 	root["system"] = SystemRegistry::GetDefaultConfig();
 	root["resource"] = ResourceSystem::GetDefaultConfig();
 	root["logger"] = logger;
-	std::ofstream ofs{ DEFAULT_CONFIG_NAME.data() };
+	std::ofstream ofs{ name.empty() ? DEFAULT_CONFIG_NAME.data()  : std::string(name.begin(), name.end())};
 	ofs << root;
 }
 

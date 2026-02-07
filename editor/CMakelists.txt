@@ -54,9 +54,26 @@ set(ALL_LIBS
 
 add_executable(${PROJECT_NAME} ${ALL_FILES})
 
+add_dependencies(${PROJECT_NAME} application)
+
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+set(EDITOR_BINARIES "${CMAKE_SOURCE_DIR}/bin/bin")
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EDITOR_BINARIES}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:application>
+        ${EDITOR_BINARIES}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${mono_prod_SOURCE_DIR}/lib"
+        "${CMAKE_SOURCE_DIR}/bin/lib/mono/lib"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/engine/managed/BasilEngine/bin/$<IF:$<CONFIG:Debug>,Debug,Release>/net48
+        ${EDITOR_BINARIES}
+)
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
