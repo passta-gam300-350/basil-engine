@@ -15,7 +15,7 @@ public class PlayerController3D : Behavior
     public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
-    public float baseMoveSpeed = 4f;   // normal speed with no trash
+    public float baseMoveSpeed = 1.5f;   // normal speed with no trash
     public float speedMultiplier = 1f; // modified by GameManager
 
     public bool disabled = false;
