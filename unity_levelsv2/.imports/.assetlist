@@ -2836,6 +2836,9 @@
 "m_shutter_frame":
   "m_guid": "660287b51aa05a227da8031a8"
   "m_typeindex": "175488002581160416"
+"m_shutter_v2":
+  "m_guid": "11efca927778820f6187ebbb08d1"
+  "m_typeindex": "175488002581160416"
 "m_spool":
   "m_guid": "810fa4373069cab3f750d101a1d"
   "m_typeindex": "175488002581160416"
@@ -2949,6 +2952,9 @@
   "m_typeindex": "175488002581160416"
 "m_wall_open":
   "m_guid": "9e1c7cd7ddf984a6192df379e9b"
+  "m_typeindex": "175488002581160416"
+"m_wall_v2":
+  "m_guid": "11efaea27b23b2992c65e257cd58"
   "m_typeindex": "175488002581160416"
 "m_workbench":
   "m_guid": "9d75f257546a69888c6d30b5076"
@@ -3208,6 +3214,27 @@
 "shutter_mat_Roughness.png":
   "m_guid": "7cd498f7691a2624b1a012c9800"
   "m_typeindex": "126269861530532084"
+"shutter_mat_v2_BaseColor.png":
+  "m_guid": "11ec793d75869f8d319842ab18c2"
+  "m_typeindex": "126269861530532084"
+"shutter_mat_v2_Emissive.png":
+  "m_guid": "11ec793e7a218aea9730dc97a07e"
+  "m_typeindex": "126269861530532084"
+"shutter_mat_v2_Height.png":
+  "m_guid": "11ec794072a59fb5fe5497e358b5"
+  "m_typeindex": "126269861530532084"
+"shutter_mat_v2_Metallic.png":
+  "m_guid": "11ec79417ef88a03dad18efbb905"
+  "m_typeindex": "126269861530532084"
+"shutter_mat_v2_Normal.png":
+  "m_guid": "11ec79427078b7daf7c7f6fffc2d"
+  "m_typeindex": "126269861530532084"
+"shutter_mat_v2_Roughness.png":
+  "m_guid": "11ec7943749cb0f0c8bc79733e97"
+  "m_typeindex": "126269861530532084"
+"shutter_v2.obj":
+  "m_guid": "11ec797175cfaa26a98a66f4dc12"
+  "m_typeindex": "4838001395392124604"
 "spool.obj":
   "m_guid": "7cd4bc477e6a83e1f58692fb5e0"
   "m_typeindex": "4838001395392124604"
@@ -3835,6 +3862,30 @@
 "wall_separator.obj":
   "m_guid": "dbf75db7ea0ac56750d9e2f80e9"
   "m_typeindex": "4838001395392124604"
+"wall_v2.obj":
+  "m_guid": "11ec79787da28f51ac6103422566"
+  "m_typeindex": "4838001395392124604"
+"wall_v2_BaseColor.png":
+  "m_guid": "11ec795c729ca8c9fe832a53dc65"
+  "m_typeindex": "126269861530532084"
+"wall_v2_Emissive.png":
+  "m_guid": "11ec795d720e867a58257c6c2655"
+  "m_typeindex": "126269861530532084"
+"wall_v2_Height.png":
+  "m_guid": "11ec795e7a96a136f1750b69b0c1"
+  "m_typeindex": "126269861530532084"
+"wall_v2_Metallic.png":
+  "m_guid": "11ec7960733d8aff1a7dd83c5a5d"
+  "m_typeindex": "126269861530532084"
+"wall_v2_Normal.png":
+  "m_guid": "11ec796178ae8fa17e4708df8932"
+  "m_typeindex": "126269861530532084"
+"wall_v2_Roughness.png":
+  "m_guid": "11ec79627f8a8cd9d7f92a658f41"
+  "m_typeindex": "126269861530532084"
+"wall_v2_material":
+  "m_guid": "11ed17897621a7de4299616d70f4"
+  "m_typeindex": "175488002581160416"
 "wall_wall_BaseColor.png":
   "m_guid": "98e459e76fba062f1299315fef7"
   "m_typeindex": "126269861530532084"

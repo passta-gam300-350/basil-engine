@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 17
+  slot: 19
   guid: 00
   dependencies: ~
 render_settings:
@@ -430,4 +430,66 @@ entities:
         x: 4.67857122
         y: 6.61594531e-05
         z: 5.30964279
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 11ec79787da28f51ac6103422566
+        type: 4838001395392124604
+      m_MaterialGuid:
+        wall_v2_material:
+          guid: 11efaea27b23b2992c65e257cd58
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 17
+    entity name:
+      name: wall_v2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.5
+        y: -0.000113510199
+        z: 3.78120661
+    MaterialOverridesComponent: ~
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 11ec797175cfaa26a98a66f4dc12
+        type: 4838001395392124604
+      m_MaterialGuid:
+        shutter_mat_v2_material:
+          guid: 11efca927778820f6187ebbb08d1
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 18
+    entity name:
+      name: shutter_v2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00499999989
+        y: 0.00499999989
+        z: 0.00499999989
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.07351732
+        y: -0.000113510199
+        z: 3.78120661
     MaterialOverridesComponent: ~
