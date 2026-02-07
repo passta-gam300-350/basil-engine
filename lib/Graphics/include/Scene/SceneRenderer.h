@@ -121,6 +121,12 @@ public:
     void SetBackgroundColor(const glm::vec4& color);
     glm::vec4 GetBackgroundColor() const;
 
+    // Light cube visualization configuration
+    void SetDefaultLightCubeSize(float size);
+    float GetDefaultLightCubeSize() const;
+    void SetShowLightCubes(bool show);
+    bool GetShowLightCubes() const;
+
     // HDR configuration API
     void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
