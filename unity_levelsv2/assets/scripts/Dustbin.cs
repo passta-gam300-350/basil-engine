@@ -37,7 +37,7 @@ public class Dustbin : Behavior
             return;
 
         float dist = Vector3.DistanceSqr(player.transform.position, transform.position);
-        if (GameManager.instance.trashInHand > 0)
+        if (TrashBag.instance.trashInHand > 0)
         {
             if (Input.GetKey(KeyCode.E))
             {
@@ -46,10 +46,10 @@ public class Dustbin : Behavior
                 if (dist < tossDistance * tossDistance)
                 {
                     Logger.Log("Tossing trash!");
-                    GameManager.instance.ShowFree(); // resets trashInHand to 0
+                    TrashBag.instance.EmptyBag(); // resets trashInHand to 0
                     PlayGarbageSound();
                     
-                    thrashRemaining -= GameManager.instance.maxTrashInHand;
+                    thrashRemaining -= TrashBag.instance.maxTrashInHand;
 
                     if (thrashRemaining <= 0)
                     {

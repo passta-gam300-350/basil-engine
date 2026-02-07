@@ -33,7 +33,7 @@ public class CollectFlap : Behavior
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         if (distance <= collect_distance && controller.wantsToCollect)
         {
-            if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
+            if (TrashBag.instance.trashInHand >= TrashBag.instance.maxTrashInHand)
             {
                 Logger.Log("No hands to use!");
                 return;

@@ -123,8 +123,8 @@ public class PlayerController3D : Behavior
                 mopVisual.visibility = onMopEnabled;
 
             // Trash bag visual (opposite of mop)
-            if (GameManager.instance != null)
-                GameManager.instance.SetBagVisibility(!onMopEnabled);
+            if (TrashBag.instance != null)
+                TrashBag.instance.SetVisible(!onMopEnabled);
 
             Logger.Log(
                 "Mop: " + (onMopEnabled ? "shown" : "hidden") +
