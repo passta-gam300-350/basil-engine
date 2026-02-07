@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 208
+  slot: 234
   guid: 00
   dependencies: ~
 render_settings:
@@ -37,6 +37,36 @@ render_settings:
   exposure_min: 0.100000001
   exposure_max: 2
 entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 212
+    entity name:
+      name: wall1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000003
+        y: 0.00300000003
+        z: 0.00200000009
+      m_Rotate:
+        x: -179.999893
+        y: -5.00895567e-06
+        z: -179.999893
+      m_Trans:
+        x: 1.25978875
+        y: -1.47274159e-06
+        z: -3.81975698
   - Scene ID:
       Scene ID: 148
     entity name:
@@ -107,15 +137,15 @@ entities:
       m_Scale:
         x: 0.0499999002
         y: 1.02199996
-        z: 0.536999941
+        z: 0.649999976
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 1.23544204
+        x: 1.22437751
         y: 0.509999752
-        z: 1.31974208
+        z: 1.32762551
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -135,7 +165,7 @@ entities:
         z: 1
       Enabled: true
       Cast Shadows: true
-      Intensity: 0.600000024
+      Intensity: 1.20000005
       "[Dir/Spot] Direction":
         x: -45
         y: -45
@@ -158,6 +188,36 @@ entities:
         x: 0
         y: 10.4424181
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 210
+    entity name:
+      name: concrete_floor_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.33500004
+        y: 0
+        z: -0.299209476
   - Scene ID:
       Scene ID: 146
     entity name:
@@ -207,13 +267,13 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.25
-        y: 0.800000012
-        z: 0.300000012
+        x: 0.300000012
+        y: 0.400000006
+        z: 0.25
       CenterOffset:
         x: 0
-        y: 0
-        z: 0
+        y: 0.219999999
+        z: -0.0900000036
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -226,17 +286,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.0043245079
-        y: 0.00339634321
-        z: 0.00432537869
+        x: 0.00432450557
+        y: 0.00339634204
+        z: 0.00432537543
       m_Rotate:
-        x: -172.065262
-        y: -34.9999886
-        z: 179.999893
+        x: -173.48288
+        y: -4.81244326
+        z: -175.977142
       m_Trans:
-        x: 2.05467343
-        y: 0.0181681998
-        z: 1.5832274
+        x: 2.46778846
+        y: 0.056274347
+        z: 1.62764287
     Behaviour:
       classesName:
         - Dustbin
@@ -285,58 +345,6 @@ entities:
         x: 0
         y: 0
         z: 0
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    BoxCollider:
-      size:
-        x: 0.200000003
-        y: 1
-        z: 5.19999981
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 24
-    entity name:
-      name: plain_wall_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0499999896
-        y: 1.22000003
-        z: 5.11000013
-      m_Rotate:
-        x: 0
-        y: 89.9999771
-        z: 0
-      m_Trans:
-        x: -1.29299998
-        y: 0.610000014
-        z: 1.86381543
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
   - Scene ID:
       Scene ID: 152
     entity name:
@@ -377,6 +385,36 @@ entities:
         y: 0
         z: 0
   - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 216
+    entity name:
+      name: wall3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000003
+        y: 0.00300000003
+        z: 0.00300000003
+      m_Rotate:
+        x: -5.00895567e-06
+        y: -5.00895567e-06
+        z: 0.000104274055
+      m_Trans:
+        x: 4.02299976
+        y: -1.39466988e-06
+        z: -5.2693944
+  - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
       isPrimitive: true
@@ -389,9 +427,9 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.100000001
+        x: 0.101000004
         y: 1
-        z: 1.10000002
+        z: 2.72000003
       CenterOffset:
         x: 0
         y: 0
@@ -403,22 +441,22 @@ entities:
     Scene ID:
       Scene ID: 25
     entity name:
-      name: end_block
+      name: end_wall
     VisibilityComponent:
       m_IsVisible: false
     TransformComponent:
       m_Scale:
         x: 0.0499999896
         y: 1
-        z: 1.11000001
+        z: 2.72000003
       m_Rotate:
         x: 0
         y: 89.9999771
         z: 0
       m_Trans:
-        x: 1.81754529
+        x: 2.64028668
         y: 0.509880245
-        z: -2.5398562
+        z: -1.83226848
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -428,6 +466,49 @@ entities:
           x: 1
           y: 0.951241732
           z: 0.608540893
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.101000004
+        y: 1.79999995
+        z: 4.30000019
+      CenterOffset:
+        x: 0
+        y: 0.879999995
+        z: 0.200000003
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 217
+    entity name:
+      name: wall3_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000003
+        y: 0.00300000003
+        z: 0.00300000003
+      m_Rotate:
+        x: -5.00895567e-06
+        y: -5.00895567e-06
+        z: 0.000104274055
+      m_Trans:
+        x: 4.02325726
+        y: 7.29839485e-07
+        z: -0.440842628
   - Scene ID:
       Scene ID: 195
     Relationship:
@@ -464,7 +545,7 @@ entities:
         z: 1
         w: 1
       rotation: 0
-      visible: true
+      visible: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -561,7 +642,7 @@ entities:
         z: 1
         w: 1
       rotation: 0
-      visible: true
+      visible: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -821,58 +902,6 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.100000001
-        y: 1.39999998
-        z: 6.4000001
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 167
-    entity name:
-      name: plain_wall_Copy_Copy_Copy_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0500000007
-        y: 1.22000003
-        z: 6.3499999
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 1.23137617
-        y: 1.80848968
-        z: -1.29509068
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    BoxCollider:
-      size:
         x: 0.101000004
         y: 1
         z: 0.400000006
@@ -889,7 +918,7 @@ entities:
     entity name:
       name: plain_wall_Copy
     VisibilityComponent:
-      m_IsVisible: true
+      m_IsVisible: false
     TransformComponent:
       m_Scale:
         x: 0.0499999002
@@ -902,7 +931,7 @@ entities:
       m_Trans:
         x: 1.23699999
         y: 0.50999999
-        z: 1.73839438
+        z: 1.74753702
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -912,45 +941,6 @@ entities:
           x: 1
           y: 0.952941179
           z: 0.607843161
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 168
-    entity name:
-      name: plain_wall_Copy_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0499999896
-        y: 1.22000003
-        z: 5.11000013
-      m_Rotate:
-        x: 0
-        y: 89.9999771
-        z: 0
-      m_Trans:
-        x: -1.29327953
-        y: 0.610000014
-        z: -4.46832848
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -993,7 +983,7 @@ entities:
       m_Trans:
         x: 1.23699999
         y: 1.12
-        z: 1.47025716
+        z: 1.4208678
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -1071,13 +1061,21 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: 1.83747876
+        x: 3.43468642
         y: 0.415434897
-        z: -2.21712756
+        z: 0.384641528
     Behaviour:
       classesName:
         - PlayerController3D
       scriptProperties:
+        - name: PlayerController3D.baseMoveSpeed
+          type: System.Single
+          value: 1.5
+          is_user_type: false
+        - name: PlayerController3D.canCollectTrash
+          type: System.Boolean
+          value: true
+          is_user_type: false
         - name: PlayerController3D.disabled
           type: System.Boolean
           value: false
@@ -1086,13 +1084,29 @@ entities:
           type: System.Single
           value: 0.5
           is_user_type: false
+        - name: PlayerController3D.interactionsLocked
+          type: System.Boolean
+          value: false
+          is_user_type: false
         - name: PlayerController3D.mouseSensitivity
           type: System.Single
           value: 0.075
           is_user_type: false
-        - name: PlayerController3D.moveSpeed
+        - name: PlayerController3D.onMopEnabled
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.speedMultiplier
           type: System.Single
-          value: 4
+          value: 1
+          is_user_type: false
+        - name: PlayerController3D.wantsToCollect
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.wantsToMop
+          type: System.Boolean
+          value: false
           is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
@@ -1193,7 +1207,7 @@ entities:
       m_Type: "\x01"
       m_IsActive: true
       m_Fov: 45
-      m_AspectRatio: 1.53757834
+      m_AspectRatio: 1.68055558
       m_Near: 0.100000001
       m_Far: 1000
       m_Up:
@@ -1249,6 +1263,22 @@ entities:
         x: 0
         y: -0.230000004
         z: 0.300000012
+    Behaviour:
+      classesName:
+        - TrashBag
+      scriptProperties:
+        - name: TrashBag.bagIsFull
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: TrashBag.maxTrashInHand
+          type: System.Int32
+          value: 5
+          is_user_type: false
+        - name: TrashBag.trashInHand
+          type: System.Int32
+          value: 0
+          is_user_type: false
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -1365,7 +1395,7 @@ entities:
         z: 1
         w: 1
       rotation: 0
-      visible: true
+      visible: false
   - Scene ID:
       Scene ID: 141
     entity name:
@@ -1474,7 +1504,7 @@ entities:
         z: 1
         w: 1
       rotation: 0
-      visible: true
+      visible: false
   - Scene ID:
       Scene ID: 143
     entity name:
@@ -1511,6 +1541,36 @@ entities:
         x: 0
         y: 0
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 208
+    entity name:
+      name: wall_mural
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000003
+        y: 0.00300000003
+        z: 0.00300000003
+      m_Rotate:
+        x: 0.000101523743
+        y: -0
+        z: 0.000106987143
+      m_Trans:
+        x: 1.25978875
+        y: 0
+        z: -1.40390432
   - Scene ID:
       Scene ID: 144
     entity name:
@@ -1547,6 +1607,36 @@ entities:
         x: 0
         y: 0
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 209
+    entity name:
+      name: wall2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00299999933
+        y: 0.00300000003
+        z: 0.00299999933
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: 0
+      m_Trans:
+        x: 5.50253391
+        y: 0
+        z: 1.97000003
   - Scene ID:
       Scene ID: 145
     entity name:
@@ -1619,6 +1709,36 @@ entities:
         x: 0
         y: 0
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 211
+    entity name:
+      name: concrete_floor_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.84000003
+        y: 0
+        z: -1.79871809
   - Scene ID:
       Scene ID: 149
     entity name:
@@ -1721,6 +1841,66 @@ entities:
         x: -2.23599982
         y: 0
         z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 218
+    entity name:
+      name: wall3_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000003
+        y: 0.00300000003
+        z: 0.00300000003
+      m_Rotate:
+        x: -5.00895567e-06
+        y: -5.00895567e-06
+        z: 0.000104274055
+      m_Trans:
+        x: 4.02299976
+        y: -1.18364119e-06
+        z: -2.8555069
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 219
+    entity name:
+      name: wall2_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.00300000003
+        z: 0.00100000005
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: 0
+      m_Trans:
+        x: 1.2816838
+        y: -8.26499786e-07
+        z: 1.87205875
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1882,13 +2062,13 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.400000006
-        y: 0.300000012
-        z: 0.400000006
+        x: 0.600000024
+        y: 0.200000003
+        z: 0.600000024
       CenterOffset:
-        x: 0.0700000003
-        y: 0
-        z: -0.109999999
+        x: 0
+        y: 0.0599999987
+        z: 0
       isTrigger: false
       friction: 0.5
       restitution: 0
@@ -1909,9 +2089,9 @@ entities:
         y: 39.154171
         z: 0
       m_Trans:
-        x: 1.50728369
+        x: 2.51667619
         y: 0.00100202241
-        z: -0.161338538
+        z: -0.278389931
     Behaviour:
       classesName:
         - TrashCollectable
@@ -1933,12 +2113,12 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.5
-        y: 0.400000006
-        z: 0.400000006
+        x: 0.600000024
+        y: 0.201000005
+        z: 0.5
       CenterOffset:
         x: 0
-        y: 0
+        y: 0.0900000036
         z: 0
       isTrigger: false
       friction: 0.5
@@ -1960,9 +2140,9 @@ entities:
         y: 57.8460045
         z: -179.999893
       m_Trans:
-        x: 1.56042099
-        y: 0.00100178597
-        z: -1.07728791
+        x: 2.55420971
+        y: 0.0010020585
+        z: -1.08234441
     Behaviour:
       classesName:
         - TrashCollectable
@@ -1984,12 +2164,12 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.400000006
-        y: 0.300000012
-        z: 0.400000006
+        x: 0.600000024
+        y: 0.201000005
+        z: 0.600000024
       CenterOffset:
-        x: -0.0299999993
-        y: 0
+        x: 0
+        y: 0.0500000007
         z: 0
       isTrigger: false
       friction: 0.5
@@ -2008,12 +2188,12 @@ entities:
         z: 0.00500000035
       m_Rotate:
         x: 0
-        y: -13.8459997
+        y: -13.8459978
         z: 0
       m_Trans:
-        x: 1.54177129
+        x: 2.42930412
         y: 0.00100202241
-        z: 0.436118662
+        z: 0.972160995
     Behaviour:
       classesName:
         - TrashCollectable
@@ -2071,173 +2251,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.0378000028
-        y: 0.0379999988
-        z: 0.0378000028
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 1.60000002
+        x: 1.84000003
         y: 0
-        z: -3.77999997
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    BoxCollider:
-      size:
-        x: 0.100000001
-        y: 1
-        z: 5.5
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 165
-    entity name:
-      name: plain_wall_Copy_Copy_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0500000007
-        y: 1.22000003
-        z: 5.5
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 1.23709714
-        y: 0.609116018
-        z: -1.69720793
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    BoxCollider:
-      size:
-        x: 0.200000003
-        y: 2
-        z: 7.0999999
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 166
-    entity name:
-      name: plain_wall_Copy_Copy_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0500000007
-        y: 2.22000003
-        z: 7.5
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 2.30959368
-        y: 1.09025753
-        z: -1.88451314
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    BoxCollider:
-      size:
-        x: 0.100000001
-        y: 1
-        z: 1
-      CenterOffset:
-        x: 0
-        y: 0
-        z: 0
-      isTrigger: false
-      friction: 0.5
-      restitution: 0
-      density: 1
-    Scene ID:
-      Scene ID: 169
-    entity name:
-      name: end_block_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0499999896
-        y: 1
-        z: 1.11000001
-      m_Rotate:
-        x: 0
-        y: 89.9999771
-        z: 0
-      m_Trans:
-        x: 1.81754529
-        y: 0.485636622
-        z: 1.84829223
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
+        z: -3.29465437
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -2257,17 +2281,17 @@ entities:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.0378000028
-        y: 0.0379999988
-        z: 0.0378000028
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 1.60000002
+        x: 3.33500886
         y: 0
-        z: 0
+        z: 1.19892859
   - Scene ID:
       Scene ID: 172
     entity name:
@@ -2415,7 +2439,7 @@ entities:
         z: 1
         w: 1
       rotation: 0
-      visible: true
+      visible: false
   - Scene ID:
       Scene ID: 199
     Relationship:
@@ -2452,7 +2476,7 @@ entities:
         z: 1
         w: 1
       rotation: 0
-      visible: true
+      visible: false
   - Scene ID:
       Scene ID: 201
     Relationship:
@@ -2489,4 +2513,488 @@ entities:
         z: 1
         w: 1
       rotation: 0
+      visible: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 220
+    entity name:
+      name: wall2_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0100000435
+        y: 0.00150000001
+        z: 0.000999957789
+      m_Rotate:
+        x: 89.9999466
+        y: -6.83018879e-06
+        z: -89.9999466
+      m_Trans:
+        x: 1.27942502
+        y: 1.08590317
+        z: 0.869413257
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 221
+    entity name:
+      name: concrete_floor2_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.83976305
+        y: 0
+        z: 1.19892859
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 222
+    entity name:
+      name: concrete_floor_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.84000003
+        y: 0
+        z: -0.298999995
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 223
+    entity name:
+      name: concrete_floor_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.33500004
+        y: 0
+        z: -3.29500008
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 224
+    entity name:
+      name: concrete_floor_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.33500004
+        y: 0
+        z: -1.79871809
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 225
+    entity name:
+      name: wall1_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000003
+        y: 0.00300000003
+        z: 0.00300000003
+      m_Rotate:
+        x: -179.999893
+        y: -5.00895567e-06
+        z: -179.999893
+      m_Trans:
+        x: 1.25978875
+        y: 0
+        z: -1.39900887
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 226
+    entity name:
+      name: concrete_floor_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.84000003
+        y: 0
+        z: -4.79331732
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5d4d71a7b3687b79a4b0ee3edea
+        type: 4838001395392124604
+      m_MaterialGuid:
+        concrete_material:
+          guid: 5d6270379868756dd5ed6f03f2a
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 227
+    entity name:
+      name: concrete_floor_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0149999997
+        y: 0.0149999997
+        z: 0.0149999997
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.33500004
+        y: 0
+        z: -4.79300022
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.300999999
+        y: 1.79999995
+        z: 2.5999999
+      CenterOffset:
+        x: 0
+        y: 0.75999999
+        z: 0.400000006
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 228
+    entity name:
+      name: wall2_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00299999933
+        y: 0.00300000003
+        z: 0.00299999933
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: 0
+      m_Trans:
+        x: 3.08787394
+        y: -8.26499786e-07
+        z: 1.96965039
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 229
+    entity name:
+      name: wall2_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999419
+        y: 0.00300000003
+        z: 0.000999999349
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: 0
+      m_Trans:
+        x: 1.28199995
+        y: -8.26499786e-07
+        z: 1.7227155
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: dbf75d2740c85cdd17e6904fc0a
+        type: 4838001395392124604
+      m_MaterialGuid:
+        mural_wall_material:
+          guid: 7a9ac1c72d7b37c3a5527669e05
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 230
+    entity name:
+      name: wall2_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.010000037
+        y: 0.00149999838
+        z: 0.000999956974
+      m_Rotate:
+        x: 89.9999466
+        y: -6.83018879e-06
+        z: -89.9999466
+      m_Trans:
+        x: 1.27942502
+        y: 1.23550665
+        z: 0.877964318
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.201000005
+        y: 1.10000002
+        z: 3
+      CenterOffset:
+        x: 0.0399999991
+        y: 0
+        z: -0.0299999993
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 231
+    entity name:
+      name: wall_collider
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.300000012
+        y: 1.20000005
+        z: 2.9000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.19894159
+        y: 0.58003056
+        z: -0.465511918
+  - Scene ID:
+      Scene ID: 232
+    entity name:
+      name: UI_Text1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 71.5029984
+        z: 0
+      m_Trans:
+        x: 2.23928642
+        y: 0.55885011
+        z: -0.557437718
+    TextMeshComponent:
+      fontGuid:
+        guid: ff7f5c7366bb0f067a65ea8155
+        type: 10090887602259309668
+      text: Pick Up Trash (E)
+      billboardMode: "\x02"
+      fontSize: 16
+      referenceDistance: 5
+      alignment: "\x01"
+      lineSpacing: 1
+      letterSpacing: 0
+      maxWidth: 0
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      outlineWidth: 0
+      outlineColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+      glowStrength: 0
+      glowColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 0.5
+      sdfThreshold: 0.5
+      smoothing: 0.0399999991
+      visible: true
+  - Scene ID:
+      Scene ID: 233
+    entity name:
+      name: UI_Text2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: -179.999893
+        y: -5.00895567e-06
+        z: -179.999893
+      m_Trans:
+        x: 2.43583322
+        y: 0.568670392
+        z: 1.51915157
+    TextMeshComponent:
+      fontGuid:
+        guid: ff7f5c7366bb0f067a65ea8155
+        type: 10090887602259309668
+      text: Throw Trash (E)
+      billboardMode: "\x02"
+      fontSize: 16
+      referenceDistance: 5
+      alignment: "\x01"
+      lineSpacing: 1
+      letterSpacing: 0
+      maxWidth: 0
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      outlineWidth: 0
+      outlineColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+      glowStrength: 0
+      glowColor:
+        x: 0
+        y: 0
+        z: 0
+        w: 0.5
+      sdfThreshold: 0.5
+      smoothing: 0.0399999991
       visible: true

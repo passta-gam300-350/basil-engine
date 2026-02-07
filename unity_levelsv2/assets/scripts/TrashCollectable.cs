@@ -55,7 +55,7 @@ public class TrashCollectable : Behavior
         
         if (distance <= collect_distance && playerController.wantsToCollect)
         {
-            if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
+            if (TrashBag.instance.trashInHand >= TrashBag.instance.maxTrashInHand)
             {
                 Logger.Log("Hands are full!");
                 return;
@@ -66,7 +66,7 @@ public class TrashCollectable : Behavior
             gameObject.transform.position = new Vector3(1000, 1000, 1000);
             GameObject.Destroy(gameObject);
 
-            GameManager.instance.ShowCollected();
+            TrashBag.instance.CollectTrash();
             PlayTrashSound();
         }
         //Logger.Log("Distance" + distance);

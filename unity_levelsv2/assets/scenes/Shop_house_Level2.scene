@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 238
+  slot: 243
   guid: 00
   dependencies: ~
 render_settings:
@@ -309,7 +309,7 @@ entities:
       m_Trans:
         x: 0.78593719
         y: 1.37888134
-        z: 1.87807584
+        z: 1.82161343
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -2288,7 +2288,7 @@ entities:
         z: 0
       m_Trans:
         x: 1.12142539
-        y: 1.59308362
+        y: 1.50330663
         z: -1.9597789
     MaterialOverridesComponent:
       floatOverrides:
@@ -3972,3 +3972,278 @@ entities:
         x: -2.21818972
         y: -1.29499078
         z: -1.56885839
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 238
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0
+        y: 0
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 2
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: Light
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0627383441
+        y: 0.0467202552
+        z: 0.649445951
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 28.3079109
+      m_Trans:
+        x: -2.42673731
+        y: 2.13616109
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 239
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0
+        y: 0
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 2
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: Light_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.062738426
+        y: 0.0467202701
+        z: 0.649445951
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.21594
+        y: 2.26854062
+        z: 0.512046516
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 240
+    LightComponent:
+      Type: 2
+      Color:
+        x: 0.914590716
+        y: 0.647201419
+        z: 0.123681307
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.5
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -111
+        z: -1
+      "[Point/Spot] Range": 0.5
+      "[Spot] Inner Cone Angle": 23
+      "[Spot] Outer Cone Angle": 26
+    entity name:
+      name: Light_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0627383664
+        y: 0.0467202626
+        z: 0.0499497205
+      m_Rotate:
+        x: 0
+        y: -0
+        z: -1.03738117
+      m_Trans:
+        x: 5.10055113
+        y: 1.47033191
+        z: -1.28310668
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 241
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: 0
+        y: 0
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 2
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: Light_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.062738426
+        y: 0.0467202701
+        z: 0.649445951
+      m_Rotate:
+        x: 0
+        y: -0
+        z: -36.7232666
+      m_Trans:
+        x: -0.564462543
+        y: 1.92821527
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 242
+    LightComponent:
+      Type: 2
+      Color:
+        x: 0.914590716
+        y: 0.647201419
+        z: 0.123681307
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.5
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -111
+        z: -1
+      "[Point/Spot] Range": 0.5
+      "[Spot] Inner Cone Angle": 23
+      "[Spot] Outer Cone Angle": 26
+    entity name:
+      name: Light_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0627383664
+        y: 0.0467202626
+        z: 0.0499497205
+      m_Rotate:
+        x: 0
+        y: -0
+        z: -1.03738117
+      m_Trans:
+        x: 1.49638927
+        y: 1.5466491
+        z: -1.33781683
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
