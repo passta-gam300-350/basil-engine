@@ -173,7 +173,7 @@ entities:
       audioAssetGuid:
         guid: 3ace2f97d9dad0293bbb279c491
         type: 17099568057112876377
-      volume: 1
+      volume: 1.29999995
       isLooping: true
       is3D: true
       isStreaming: false

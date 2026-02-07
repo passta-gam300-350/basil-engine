@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 238
+  slot: 243
   guid: 00
   dependencies: ~
 render_settings:
@@ -37,6 +37,39 @@ render_settings:
   exposure_min: 0.100000001
   exposure_max: 2
 entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e466c73278a961e6c2cf254a0
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 9ab9a3d7614a9dd141c3a2473ff
+          type: 175488002581160416
+        standardSurface7:
+          guid: 9ad52e37edb89da9712c6069961
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 28
+    entity name:
+      name: cardboard_closed_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00379999983
+        y: 0.0037999996
+        z: 0.00379999983
+      m_Rotate:
+        x: 0
+        y: 64.6001205
+        z: 0
+      m_Trans:
+        x: -1.06446028
+        y: 0.0739276782
+        z: -1.19146311
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -115,102 +148,6 @@ entities:
           x: 1
           y: 1
           z: 1
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e466c73278a961e6c2cf254a0
-        type: 4838001395392124604
-      m_MaterialGuid:
-        standardSurface1:
-          guid: 9ab9a3d7614a9dd141c3a2473ff
-          type: 175488002581160416
-        standardSurface7:
-          guid: 9ad52e37edb89da9712c6069961
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 28
-    entity name:
-      name: cardboard_closed_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00379999983
-        y: 0.0037999996
-        z: 0.00379999983
-      m_Rotate:
-        x: 0
-        y: 64.6001205
-        z: 0
-      m_Trans:
-        x: -1.06446028
-        y: 0.0739276782
-        z: -1.19146311
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e466c73278a961e6c2cf254a0
-        type: 4838001395392124604
-      m_MaterialGuid:
-        standardSurface1:
-          guid: 9ab9a3d7614a9dd141c3a2473ff
-          type: 175488002581160416
-        standardSurface7:
-          guid: 9ad52e37edb89da9712c6069961
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 154
-    entity name:
-      name: cardboard_closed_2
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00300000212
-        y: 0.00400000019
-        z: 0.00499999616
-      m_Rotate:
-        x: -179.999496
-        y: 85.6772156
-        z: -179.999496
-      m_Trans:
-        x: 5.39686155
-        y: 0.00180469092
-        z: -0.415896475
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
-        type: 4838001395392124604
-      m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 26
-    entity name:
-      name: floor_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0361046046
-        y: 0.0361046046
-        z: 0.0361046046
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -3.84771633
-        y: 0
-        z: 0.279230326
   - Scene ID:
       Scene ID: 146
     entity name:
@@ -281,6 +218,108 @@ entities:
       classesName:
         - Dustbin
   - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e466c73278a961e6c2cf254a0
+        type: 4838001395392124604
+      m_MaterialGuid:
+        standardSurface1:
+          guid: 9ab9a3d7614a9dd141c3a2473ff
+          type: 175488002581160416
+        standardSurface7:
+          guid: 9ad52e37edb89da9712c6069961
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 154
+    entity name:
+      name: cardboard_closed_2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00300000212
+        y: 0.00400000019
+        z: 0.00499999616
+      m_Rotate:
+        x: -179.999496
+        y: 85.6772156
+        z: -179.999496
+      m_Trans:
+        x: 5.39686155
+        y: 0.00180469092
+        z: -0.415896475
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e468d7500b81165d791634200
+        type: 4838001395392124604
+      m_MaterialGuid:
+        openPBR_shader1:
+          guid: 98f196a704f962aa1cab73c4773
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 26
+    entity name:
+      name: floor_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0361046046
+        y: 0.0361046046
+        z: 0.0361046046
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.84771633
+        y: 0
+        z: 0.279230326
+  - Scene ID:
+      Scene ID: 152
+    entity name:
+      name: ambience_traffic
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2f075dbacc951c03bdff7a6
+        type: 17099568057112876377
+      volume: 0.519999981
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
       isPrimitive: true
@@ -320,9 +359,9 @@ entities:
           y: 0.951241732
           z: 0.608540893
   - Scene ID:
-      Scene ID: 152
+      Scene ID: 144
     entity name:
-      name: ambience_traffic
+      name: footstep_7
     TransformComponent:
       m_Scale:
         x: 1
@@ -336,14 +375,11 @@ entities:
         x: 0
         y: 0
         z: 0
-    Behaviour:
-      classesName:
-        - PlayAudioLoop
     AudioComponent:
       audioAssetGuid:
-        guid: 3ace2f075dbacc951c03bdff7a6
+        guid: 3a87de27659b4ccc0494f5f9313
         type: 17099568057112876377
-      volume: 0.519999981
+      volume: 0.150000006
       isLooping: false
       is3D: true
       isStreaming: false
@@ -392,9 +428,9 @@ entities:
         y: 4.89915983e-05
         z: 1.00314844
   - Scene ID:
-      Scene ID: 144
+      Scene ID: 150
     entity name:
-      name: footstep_7
+      name: trash_bag_1
     TransformComponent:
       m_Scale:
         x: 1
@@ -410,9 +446,9 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 3a87de27659b4ccc0494f5f9313
+        guid: 3b267b977ffad9b36b8bd00d6ca
         type: 17099568057112876377
-      volume: 0.150000006
+      volume: 0.300000012
       isLooping: false
       is3D: true
       isStreaming: false
@@ -466,42 +502,6 @@ entities:
           x: 1
           y: 0.951241732
           z: 0.608540893
-  - Scene ID:
-      Scene ID: 150
-    entity name:
-      name: trash_bag_1
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 3b267b977ffad9b36b8bd00d6ca
-        type: 17099568057112876377
-      volume: 0.300000012
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -721,6 +721,42 @@ entities:
     Behaviour:
       classesName:
         - TrashCollectable
+  - Scene ID:
+      Scene ID: 139
+    entity name:
+      name: footstep_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87daf7882b91bd917cc59ff20
+        type: 17099568057112876377
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -760,9 +796,9 @@ entities:
           value: 0.4
           is_user_type: false
   - Scene ID:
-      Scene ID: 139
+      Scene ID: 140
     entity name:
-      name: footstep_2
+      name: footstep_3
     TransformComponent:
       m_Scale:
         x: 1
@@ -778,7 +814,7 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 3a87daf7882b91bd917cc59ff20
+        guid: 3a87dbb7de9aac1ef1f1102f778
         type: 17099568057112876377
       volume: 0.150000006
       isLooping: false
@@ -829,9 +865,9 @@ entities:
       classesName:
         - TrashCollectable
   - Scene ID:
-      Scene ID: 140
+      Scene ID: 141
     entity name:
-      name: footstep_3
+      name: footstep_4
     TransformComponent:
       m_Scale:
         x: 1
@@ -847,7 +883,7 @@ entities:
         z: 0
     AudioComponent:
       audioAssetGuid:
-        guid: 3a87dbb7de9aac1ef1f1102f778
+        guid: 3a87dc675f5beb502e8823e8a41
         type: 17099568057112876377
       volume: 0.150000006
       isLooping: false
@@ -903,42 +939,6 @@ entities:
     Behaviour:
       classesName:
         - KiteInteractablePoint
-  - Scene ID:
-      Scene ID: 141
-    entity name:
-      name: footstep_4
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 3a87dc675f5beb502e8823e8a41
-        type: 17099568057112876377
-      volume: 0.150000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -969,13 +969,6 @@ entities:
         x: -2.61813545
         y: -1.26840389
         z: -1.74767101
-  - Scene ID:
-      Scene ID: 74
-    entity name:
-      name: GameManager
-    Behaviour:
-      classesName:
-        - GameManager
   - Scene ID:
       Scene ID: 138
     entity name:
@@ -1012,6 +1005,13 @@ entities:
         x: 0
         y: 0
         z: 0
+  - Scene ID:
+      Scene ID: 74
+    entity name:
+      name: GameManager
+    Behaviour:
+      classesName:
+        - GameManager
   - Scene ID:
       Scene ID: 96
     entity name:
@@ -1258,6 +1258,36 @@ entities:
           x: 1
           y: 0.951241732
           z: 0.608540893
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e468d7500b81165d791634200
+        type: 4838001395392124604
+      m_MaterialGuid:
+        openPBR_shader1:
+          guid: 98f196a704f962aa1cab73c4773
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 181
+    entity name:
+      name: floor_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0410000011
+        y: 0.0410000011
+        z: 0.0410000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.06751871
+        y: 0
+        z: 0.0616332293
   - RigidBodyComponent:
       motionType: "\x01"
       mass: 1
@@ -1333,68 +1363,6 @@ entities:
       classesName:
         - PlayerController3D
   - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
-        type: 4838001395392124604
-      m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 181
-    entity name:
-      name: floor_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0410000011
-        y: 0.0410000011
-        z: 0.0410000011
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 4.06751871
-        y: 0
-        z: 0.0616332293
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 55
-    Relationship:
-      parent: 53
-    entity name:
-      name: Body
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0.00570702553
-  - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
       isPrimitive: true
@@ -1445,33 +1413,26 @@ entities:
           guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 185
+      Scene ID: 55
+    Relationship:
+      parent: 53
     entity name:
-      name: ceiling_Copy
+      name: Body
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 1.35000002
-        y: 0.0500000007
-        z: 1.56772161
+        x: 1
+        y: 1
+        z: 1
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 0.711878955
-        y: 1.51698911
-        z: 1.08828509
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 0.951241732
-          z: 0.608540893
+        x: 0
+        y: 0
+        z: 0.00570702553
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -1519,24 +1480,24 @@ entities:
           guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 186
+      Scene ID: 185
     entity name:
       name: ceiling_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.0500009619
-        y: 4.00012684
-        z: 1.80000532
+        x: 1.35000002
+        y: 0.0500000007
+        z: 1.56772161
       m_Rotate:
-        x: -89.9998779
-        y: 1.70754702e-05
-        z: -127.236816
+        x: 0
+        y: -0
+        z: 0
       m_Trans:
-        x: -0.626259565
-        y: 2.02952909
-        z: -0.11625018
+        x: 0.711878955
+        y: 1.51698911
+        z: 1.08828509
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
@@ -1590,6 +1551,45 @@ entities:
         z: 1
       m_Yaw: 0
       m_Pitch: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 186
+    entity name:
+      name: ceiling_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0500009619
+        y: 4.00012684
+        z: 1.80000532
+      m_Rotate:
+        x: -89.9998779
+        y: 1.70754702e-05
+        z: -127.236816
+      m_Trans:
+        x: -0.626259565
+        y: 2.02952909
+        z: -0.11625018
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 1
+          y: 0.951241732
+          z: 0.608540893
   - Scene ID:
       Scene ID: 59
     entity name:
@@ -3972,3 +3972,278 @@ entities:
         x: -2.21818972
         y: -1.29499078
         z: -1.56885839
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 238
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 5
+      "[Dir/Spot] Direction":
+        x: 0
+        y: 0
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 2
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: Light
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0627383441
+        y: 0.0467202552
+        z: 0.649445951
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 28.3079109
+      m_Trans:
+        x: -2.42673731
+        y: 2.13616109
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 239
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 2
+      "[Dir/Spot] Direction":
+        x: 0
+        y: 0
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 2
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: Light_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.062738426
+        y: 0.0467202701
+        z: 0.649445951
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.21594
+        y: 2.26854062
+        z: 0.512046516
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 240
+    LightComponent:
+      Type: 2
+      Color:
+        x: 0.914590716
+        y: 0.647201419
+        z: 0.123681307
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.5
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -111
+        z: -1
+      "[Point/Spot] Range": 0.5
+      "[Spot] Inner Cone Angle": 23
+      "[Spot] Outer Cone Angle": 26
+    entity name:
+      name: Light_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0627383664
+        y: 0.0467202626
+        z: 0.0499497205
+      m_Rotate:
+        x: 0
+        y: -0
+        z: -1.03738117
+      m_Trans:
+        x: 5.10055113
+        y: 1.47033191
+        z: -1.28310668
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 241
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 5
+      "[Dir/Spot] Direction":
+        x: 0
+        y: 0
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 2
+      "[Spot] Outer Cone Angle": 0
+    entity name:
+      name: Light_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.062738426
+        y: 0.0467202701
+        z: 0.649445951
+      m_Rotate:
+        x: 0
+        y: -0
+        z: -36.7232666
+      m_Trans:
+        x: -0.564462543
+        y: 1.92821527
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 242
+    LightComponent:
+      Type: 2
+      Color:
+        x: 0.914590716
+        y: 0.647201419
+        z: 0.123681307
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.5
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -111
+        z: -1
+      "[Point/Spot] Range": 0.5
+      "[Spot] Inner Cone Angle": 23
+      "[Spot] Outer Cone Angle": 26
+    entity name:
+      name: Light_Copy_Copy_Copy
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0627383664
+        y: 0.0467202626
+        z: 0.0499497205
+      m_Rotate:
+        x: 0
+        y: -0
+        z: -1.03738117
+      m_Trans:
+        x: 1.49638927
+        y: 1.5466491
+        z: -1.33781683
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
