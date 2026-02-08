@@ -64,5 +64,5 @@ private:
 
     // Configuration
     static constexpr uint32_t SPOT_SHADOW_MAP_SIZE = 1024;  // 1K resolution (can increase to 2K)
-    static constexpr size_t MAX_SPOT_LIGHTS = 4;  // Maximum supported spot lights
+    static constexpr size_t MAX_SPOT_LIGHTS = 15;  // Maximum supported spot lights (16 total 2D shadows - 1 for directional)
 };
