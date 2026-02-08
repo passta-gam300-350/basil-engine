@@ -617,9 +617,9 @@ entities:
           type: 175488002581160416
     BoxCollider:
       size:
-        x: 0.200000003
-        y: 1.5
-        z: 3.9000001
+        x: 3.5999999
+        y: 2.29999995
+        z: 0.201000005
       CenterOffset:
         x: 0
         y: 0
@@ -4491,12 +4491,12 @@ entities:
     TransformComponent:
       m_Scale:
         x: 0.00149999966
-        y: 0.0014999999
-        z: 0.00149999978
+        y: 0.00149999978
+        z: 0.00149999966
       m_Rotate:
-        x: 0
-        y: -89.9999771
-        z: 0
+        x: -179.999893
+        y: 90
+        z: 179.999893
       m_Trans:
         x: -1.03963172
         y: 0.362641215
@@ -6135,6 +6135,19 @@ entities:
         standardSurface1:
           guid: 7c41b037caa9c2e2737b69c9532
           type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2
+        y: 1.10000002
+        z: 0.300000012
+      CenterOffset:
+        x: 0
+        y: 0.639999986
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
     Scene ID:
       Scene ID: 239
     entity name:
