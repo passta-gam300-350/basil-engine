@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   ManagedScene.cpp
+\author Team PASSTA
+		Jia Hao Yeo (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3451 / UXG3450
+\date   2026/02/01
+\brief This file contains the definition for the ManagedScene class, which
+is responsible for managing scenes from managed code (C#).
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Bindings/ManagedScene.hpp"
 
 #include "Engine.hpp"
@@ -5,9 +21,6 @@
 #include "Scene/Scene.hpp"
 void ManagedScene::LoadSceneIndex(int32_t index)
 {
-	// Implementation for loading a scene by its index
-	// This is a placeholder implementation
-	// Actual implementation would interact with the engine's scene management system
 
 	auto& Engine = ::Engine::Instance();
 
@@ -15,10 +28,7 @@ void ManagedScene::LoadSceneIndex(int32_t index)
 }
 void ManagedScene::LoadSceneName(MonoString* name)
 {
-	// Implementation for loading a scene by its name
-	// This is a placeholder implementation
-	// Actual implementation would convert MonoString to std::string
-	// and interact with the engine's scene management system
+	
 
 	auto& Engine = ::Engine::Instance();
 	char* name_cstr = mono_string_to_utf8(name);
@@ -31,6 +41,6 @@ void ManagedScene::LoadSceneName(MonoString* name)
 
 void ManagedScene::ExitApplication()
 {
-	// TODO: Implementation for exiting the application
+
 	Engine::ShouldExit();
 }
