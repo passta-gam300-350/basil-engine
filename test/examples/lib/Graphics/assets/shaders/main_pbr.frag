@@ -80,7 +80,7 @@ uniform int u_NumSpotLights = 2;
 
 uniform PointLight u_PointLights[8];
 uniform DirectionalLight u_DirectionalLights[4];
-uniform SpotLight u_SpotLights[4];
+uniform SpotLight u_SpotLights[15];
 
 // Camera
 uniform vec3 u_ViewPos;
@@ -497,7 +497,7 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     }
 
     // Spot lights (with shadows)
-    for (int i = 0; i < u_NumSpotLights && i < 4; ++i) {
+    for (int i = 0; i < u_NumSpotLights && i < 15; ++i) {
         // Direct lighting (with shadow support)
         Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
 
