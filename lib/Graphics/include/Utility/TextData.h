@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*!
 \file   TextData.h
-\author Claude Code
+\author Team PASSTA
 \par    Course : CSD3401 / UXG3400
 \date   2026/01/16
 \brief  Declares data structures for submitting text elements to the graphics library
