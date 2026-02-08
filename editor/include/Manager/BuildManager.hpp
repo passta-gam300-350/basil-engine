@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   BuildManager.hpp
+\author Team PASSTA
+		Chew Bangxin Steven (bangxinsteven.chew\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration of the BuildManager class, which
+manages the game build.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef EDITOR_BUILD_MANAGER_H
 #define EDITOR_BUILD_MANAGER_H
 

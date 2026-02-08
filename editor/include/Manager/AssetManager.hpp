@@ -6,8 +6,8 @@
 
 \par    Course : CSD3401 / UXG3400
 \date   2025/10/04
-\brief This file contains the declaration of the WorkplaceManager class, which
-manages multiple workplaces (projects) within the editor.
+\brief This file contains the declaration of the AssetManager class, which
+manages the asset pipeline from editor to engine.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents
