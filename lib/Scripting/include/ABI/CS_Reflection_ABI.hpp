@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   CS_Reflection_ABI.hpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  C# reflection ABI definitions
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef CS_REFLECTION_ABI_HPP
 #define CS_REFLECTION_ABI_HPP
 
