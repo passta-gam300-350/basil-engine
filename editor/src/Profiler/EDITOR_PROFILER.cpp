@@ -234,7 +234,7 @@ void EditorProfiler::RenderDetailedTab(int profilerIndex, const char* threadName
 		ImVec2 graphMin = ImGui::GetItemRectMin();
 		ImVec2 graphMax = ImGui::GetItemRectMax();
 		float graphWidth = graphMax.x - graphMin.x;
-		float graphHeight = graphMax.y - graphMin.y;
+		[[maybe_unused]] float graphHeight = graphMax.y - graphMin.y;
 
 		for (const SpikeInfo& spike : activeData.recentSpikes) {
 			if (spike.systemName.empty()) {  // Only mark frame spikes on graph
@@ -427,8 +427,8 @@ void EditorProfiler::RenderDetailedTab(int profilerIndex, const char* threadName
 				ImGui::TextColored(nameColor, "%s", systemName.c_str());
 
 				// Create overlay text with current stats
-				char overlay[128];
-				sprintf_s(overlay, "Current: %.2f ms | Avg: %.2f ms | Min: %.2f ms | Max: %.2f ms",
+				char overlay1[128];
+				sprintf_s(overlay1, "Current: %.2f ms | Avg: %.2f ms | Min: %.2f ms | Max: %.2f ms",
 				          currentMs, avgMs, minMs, maxMs);
 
 				// Draw the graph
@@ -437,7 +437,7 @@ void EditorProfiler::RenderDetailedTab(int profilerIndex, const char* threadName
 					historyFloat.data(),
 					static_cast<int>(historyFloat.size()),
 					0,
-					overlay,
+					overlay1,
 					0.0f,                        // Min Y (auto-scale from 0)
 					static_cast<float>(maxMs * 1.2f),  // Max Y (20% padding above max)
 					ImVec2(0, 60)                // Size (auto width, 60px height)

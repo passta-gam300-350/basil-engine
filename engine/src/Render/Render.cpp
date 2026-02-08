@@ -247,7 +247,7 @@ void RenderSystem::Update(ecs::world& world) {
 	auto sceneWorldTextElements = world.filter_entities<TextMeshComponent, TransformMtxComponent>();
 
 	// Debug: Log entity counts
-	int objectCount = visibleEntityIDs.size();
+	int objectCount = int(visibleEntityIDs.size());
 	int lightCount = 0;
 	for (auto light : sceneLights)
 	{ 
@@ -1521,7 +1521,7 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<FontAtlas>, font_atlas,
 			fontData.font_name, textureID, fontData.glyphs.size());
 		return fontAtlas;
 	},
-	[](std::shared_ptr<FontAtlas>& atlas) {
+	[](std::shared_ptr<FontAtlas>&) {
 		// Cleanup handled by FontAtlas destructor (deletes GPU texture)
 	});
 

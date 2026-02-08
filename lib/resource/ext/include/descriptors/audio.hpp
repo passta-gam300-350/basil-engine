@@ -9,7 +9,7 @@ struct AudioDescriptor {
     AudioResourceData audio;
 };
 
-inline AudioResourceData CreateAudio(AudioDescriptor const& audioDesc, std::string const& path = {}, std::string const& serializedescpath = {}) {
+inline AudioResourceData CreateAudio(AudioDescriptor const& audioDesc, [[maybe_unused]] std::string const& path = {}, std::string const& serializedescpath = {}) {
     // Copy data and include source path for runtime access
     AudioResourceData data = audioDesc.audio;
     data.sourcePath = audioDesc.base.m_source;

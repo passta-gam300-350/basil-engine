@@ -294,7 +294,7 @@ std::optional<SerializedPropertyValue> ComponentRegistry::MetaAnyToPropertyValue
 
 entt::meta_any ComponentRegistry::PropertyValueToMetaAny(
     const SerializedPropertyValue& value,
-    entt::meta_type targetType)
+    entt::meta_type)
 {
     // Try to convert variant to meta_any
     return std::visit([&](auto&& val) -> entt::meta_any {

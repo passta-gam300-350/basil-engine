@@ -263,7 +263,7 @@ void TextRenderer::UpdateWorldBatchSSBO(WorldFontBatch& batch)
     batch.dirty = false;
 }
 
-void TextRenderer::RenderBatch(RenderPass& renderPass, const FontBatch& batch, const FrameData& frameData)
+void TextRenderer::RenderBatch(RenderPass& renderPass, const FontBatch& batch, const FrameData& /*frameData*/)
 {
     if (batch.glyphInstances.empty() || !batch.ssbo) {
         return;
@@ -355,7 +355,7 @@ void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData
     // Note: This should be handled by the render pipeline state management
 }
 
-void TextRenderer::RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch& batch, const FrameData& frameData)
+void TextRenderer::RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch& batch, const FrameData& /*frameData*/)
 {
     if (batch.glyphInstances.empty() || !batch.ssbo) {
         spdlog::warn("TextRenderer::RenderWorldBatch() - Skipping: glyphs={}, ssbo={}",
@@ -370,7 +370,7 @@ void TextRenderer::RenderWorldBatch(RenderPass& renderPass, const WorldFontBatch
     }
 
     // Log first glyph details for debugging
-    const auto& firstGlyph = batch.glyphInstances[0];
+    //const auto& firstGlyph = batch.glyphInstances[0];
     /*spdlog::info("TextRenderer::RenderWorldBatch() - VAO={}, SSBO={}, atlas={}, glyphs={}",
         m_QuadVAO, batch.ssbo->GetSSBOHandle(), batch.atlasTextureID, batch.glyphInstances.size());
     spdlog::info("  First glyph: pos=({:.2f},{:.2f},{:.2f}), size=({:.4f},{:.4f}), color=({:.2f},{:.2f},{:.2f},{:.2f})",
@@ -623,7 +623,7 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
     const float PIXELS_PER_WORLD_UNIT = 100.0f;
     float pixelsToWorldUnits = distanceScale / PIXELS_PER_WORLD_UNIT;
     float fontScale = worldText.fontSize / static_cast<float>(fontAtlas->GetBaseFontSize());
-    float worldFontScale = fontScale * pixelsToWorldUnits;
+    //float worldFontScale = fontScale * pixelsToWorldUnits;
 
     // Calculate billboard basis vectors based on billboard mode
     glm::vec3 billboardRight, billboardUp;
@@ -828,7 +828,7 @@ char32_t TextRenderer::DecodeUTF8(const char*& str)
 }
 
 std::vector<std::string> TextRenderer::WrapText(const std::string& text, const FontAtlas* fontAtlas,
-                                                  float fontSize, float maxWidth)
+                                                  float /*fontSize*/, float maxWidth)
 {
     std::vector<std::string> lines;
     if (maxWidth <= 0.0f || !fontAtlas) {

@@ -89,7 +89,7 @@ void EditorMain::Render_SceneManifest()
 			auto& index = sceneManifests[i].index;
 			if (index <= 0)
 			{
-				index = i;
+				index = int(i);
 			} else if (index >= static_cast<int>(sceneManifests.size()))
 			{
 				index = static_cast<int>(sceneManifests.size()) - 1;

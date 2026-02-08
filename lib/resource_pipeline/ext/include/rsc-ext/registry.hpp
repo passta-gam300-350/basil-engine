@@ -192,7 +192,7 @@ namespace rp {
 			std::string ext{ pos == std::string::npos ? "" : str.substr(pos) };
 			std::string desc_name{ str + ".desc" };
 			auto imp{ Instance().m_known_file_ext_importer };
-			auto& inst{ Instance() };
+			[[maybe_unused]] auto& inst{ Instance() };
 			std::uint64_t descimpid{};
 			for (auto& [xname, imp_id] : imp) {
 				if (xname == ext) {

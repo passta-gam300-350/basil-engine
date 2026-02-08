@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   AssetManager.hpp
+\author Team PASSTA
+		Chew Bangxin Steven (bangxinsteven.chew\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration of the WorkplaceManager class, which
+manages multiple workplaces (projects) within the editor.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef EDITOR_ASSET_MANAGER_H
 #define EDITOR_ASSET_MANAGER_H
 

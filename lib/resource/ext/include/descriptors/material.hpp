@@ -10,7 +10,7 @@ struct MaterialDescriptor {
 	MaterialResourceData material;
 };
 
-inline MaterialResourceData CreateMaterial(MaterialDescriptor const& matDesc, std::string const& path = {}, std::string const& serialisedescpath = {}) {
+inline MaterialResourceData CreateMaterial(MaterialDescriptor const& matDesc, [[maybe_unused]] std::string const& path = {}, std::string const& serialisedescpath = {}) {
 	//SerializeBinary(matDesc.material, matDesc.base.m_guid, ".material", path);
 	if (!serialisedescpath.empty())
 		rp::serialization::yaml_serializer::serialize(matDesc, serialisedescpath);

@@ -60,6 +60,7 @@ public:
 	static void Init(std::string const& cfg = {});
 	static void InitInheritWindow(std::string const& cfg, GLFWwindow*);
 	static void InitWithoutWindow(std::string const& cfg = {}, bool is_precompiled = false);
+	static void LoadEmbeddedIcon();
 	static void Update();
 	static void CoreUpdate();
 	static void UpdateDebug();

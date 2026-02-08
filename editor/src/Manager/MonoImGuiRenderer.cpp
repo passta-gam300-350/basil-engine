@@ -255,7 +255,7 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 	return modified;
 }
 
-void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info)
+void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, [[maybe_unused]] CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info)
 {
 
 	MonoObject* gameObjRef = nullptr;
@@ -330,8 +330,8 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, CSKlas
 					rp::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", data);
 					CSKlassInstance* goInstance = MonoEntityManager::GetInstance().GetInstance(id);
 					//Set NativeID field
-					CSKlass::FieldInfo* nativeIDField = gameObjectKlass->ResolveField("NativeID");
-					mono_field_set_value(goInstance->Object(), nativeIDField->field, &nativeIDValue);
+					CSKlass::FieldInfo* nativeIDField1 = gameObjectKlass->ResolveField("NativeID");
+					mono_field_set_value(goInstance->Object(), nativeIDField1->field, &nativeIDValue);
 					//Set GameObject field in the script instance
 					mono_field_set_value(inst, info->field, (goInstance->Object()));
 					nativeID = nativeIDValue;
@@ -376,7 +376,7 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, CSKlas
 
 }
 
-void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info)
+void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, [[maybe_unused]] CSKlass* klass, CSKlassInstance* instance, CSKlass::FieldInfo* info)
 {
 	MonoObject* gameObjRef = nullptr;
 	MonoObject* inst = instance->Object();
