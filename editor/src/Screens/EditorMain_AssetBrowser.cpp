@@ -394,9 +394,9 @@ void EditorMain::Render_AssetBrowser()
 						}
 						if (ImGui::MenuItem("Delete Asset"))
 						{
-							std::string filename = filePair.second.substr(0, filePair.second.find_last_of("."));
-							if (std::filesystem::exists(filename)) {
-								std::filesystem::remove(filename);
+							std::string filename1 = filePair.second.substr(0, filePair.second.find_last_of("."));
+							if (std::filesystem::exists(filename1)) {
+								std::filesystem::remove(filename1);
 							}
 							m_AssetManager->ExportAssetList();
 						}

@@ -186,8 +186,8 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 			if (!frame) break;
 		}
 	}
-	vc.currentTime = video_time;
-	vc.duration = plm_get_duration(ptr);
+	vc.currentTime = float(video_time);
+	vc.duration = float(plm_get_duration(ptr));
 	rvd.m_VidResource->m_StreamSync.release();
 	static bool entered = false;
 	spdlog::info("{}, {}, {}", static_cast<float>(audio_time), vc.duration, vc.duration - audio_time);
@@ -227,7 +227,7 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 	return rgb;
 }
 
-void FreeSoundChannel(entt::registry& registry, entt::entity entity) {
+void FreeSoundChannel([[maybe_unused]] entt::registry& registry, entt::entity entity) {
 	ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
 	auto& vidc = ecsEntity.get<VideoComponent>();
 	RuntimeVideoData* ptr = ResourceRegistry::Instance().Get<RuntimeVideoData>(vidc.videoGuid.m_guid);
@@ -337,10 +337,10 @@ void VideoSystem::FixedUpdate(ecs::world&) {
 //    }
 
 FMOD_RESULT F_CALLBACK pcmsetpos_callback(
-	FMOD_SOUND* sound,
-	int subsound,
+	[[maybe_unused]] FMOD_SOUND* sound,
+	[[maybe_unused]] int subsound,
 	unsigned int position,
-	FMOD_TIMEUNIT postype
+	[[maybe_unused]] FMOD_TIMEUNIT postype
 ) {
 	// Non-seekable stream: just accept and do nothing
 	std::cout << "Seeking to position: " << position << " (ignoring as stream is non-seekable)" << std::endl;
@@ -372,7 +372,7 @@ extern "C" FMOD_RESULT F_CALLBACK pcmReadCallback(FMOD_SOUND* sound, void* data,
 		}
 
 		// Convert float [-1.0, 1.0] to PCM16
-		for (int i = 0; i < samples->count * 2 && samplesDecoded < samplesNeeded; i++) {
+		for (int i = 0; i < int(samples->count) * 2 && samplesDecoded < samplesNeeded; i++) {
 			float s = samples->interleaved[i];
 			if (s > 1.0f) s = 1.0f;
 			if (s < -1.0f) s = -1.0f;

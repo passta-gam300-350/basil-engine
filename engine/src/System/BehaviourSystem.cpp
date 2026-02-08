@@ -139,9 +139,9 @@ void BehaviourSystem::Update(ecs::world& world, float)
 					ManagedConsole::LogError(excStr);
 					// Unload the script instance to prevent further errors
 					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
-					auto instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
+					auto instance2 = MonoEntityManager::GetInstance().GetInstance(scriptID);
 					if (it != component.scriptIDs.end()) {
-						instance->Reset();
+						instance2->Reset();
 						component.scriptIDs.erase(it);
 					}
 
@@ -453,7 +453,7 @@ namespace
 				return true;
 			}
 
-			uint64_t nativeID = entityOpt.value().get_uuid();
+			[[maybe_unused]] uint64_t nativeID = entityOpt.value().get_uuid();
 			CSKlass* gameObjectKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
 			if (!gameObjectKlass)
 			{

@@ -243,7 +243,7 @@ private:
 	bool scene_change_by_index = false;
 	bool scene_change_by_file = false;
 
-	uint32_t requested_index = -1;
+	uint32_t requested_index = std::uint32_t(-1);
 	std::string requested_file = "";
 
 

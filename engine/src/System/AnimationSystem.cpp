@@ -23,7 +23,7 @@ Technology is prohibited.
 
 void animationSystem::FixedUpdate(ecs::world& world)
 {
-	float dt = Engine::GetDeltaTime();
+	float dt = float(Engine::GetDeltaTime());
 	// SKELETAL ANIMATION //
 	auto skeletalEntities = world.filter_entities<AnimationComponent, SkeletonComponent>();
 	for (auto eachAEntity : skeletalEntities)
@@ -65,7 +65,6 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		skeleton& skel = skeletonComponent.skeletonData;
 		anim->updateAnimation(dt, skel);
 		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
-		int i{};
 	}
 	// SIMPLE ANIMATION //
 	auto simpleAnimationEntites = world.filter_entities<AnimationComponent, TransformComponent>(ecs::exclude<SkeletonComponent>);
@@ -118,7 +117,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 	}
 }
 
-void FreeAnimatorOnDestroy(entt::registry& registry, entt::entity entity) {
+void FreeAnimatorOnDestroy([[maybe_unused]] entt::registry& registry, entt::entity entity) {
 	ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
 	auto& anc = ecsEntity.get<AnimationComponent>();
 	CleanupSkeletalAnimation(anc);
@@ -238,6 +237,6 @@ void CleanupSkeletalAnimation(AnimationComponent& animComp)
 	}
 }
 
-REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel& bc) {return; })
-REGISTER_RESOURCE_TYPE_ALIASE(animationContainer, animationcont, LoadAnimationContainer, [](animationContainer& ac) {return; })
-REGISTER_RESOURCE_TYPE_ALIASE(skeleton, skeleton, LoadSkeleton, [](skeleton& ac) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel&) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(animationContainer, animationcont, LoadAnimationContainer, [](animationContainer&) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(skeleton, skeleton, LoadSkeleton, [](skeleton&) {return; })

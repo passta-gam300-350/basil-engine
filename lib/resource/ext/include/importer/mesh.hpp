@@ -256,7 +256,7 @@ inline SkeletonDescriptor ExtractSkeleton(const aiScene* scene, std::unordered_m
     return skelDesc;
 }
 
-inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, aiScene const* scene, std::unordered_map<std::string, int> const& boneMap) {
+inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, [[maybe_unused]] aiScene const* scene, std::unordered_map<std::string, int> const& boneMap) {
     AnimationDescriptor anidesc;
     aiString const& name = anim->mName;
 
@@ -282,8 +282,8 @@ inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, aiScene const* sc
         anidesc.anim.m_channels.emplace_back(chldata);
     }
 
-    anidesc.anim.m_duration = anim->mDuration;
-    anidesc.anim.m_ticks_per_sec = anim->mTicksPerSecond;
+    anidesc.anim.m_duration = float(anim->mDuration);
+    anidesc.anim.m_ticks_per_sec = float(anim->mTicksPerSecond);
     anidesc.base.m_guid = rp::Guid::generate();
     anidesc.base.m_importer = "animation";
     anidesc.base.m_name = name.C_Str() + std::string(".animation");
@@ -425,7 +425,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         aiProcess_GenSmoothNormals |
         aiProcess_CalcTangentSpace |
         aiProcess_LimitBoneWeights |
-        desc.is_skinned ? 0 : aiProcess_JoinIdenticalVertices
+        (desc.is_skinned ? 0 : aiProcess_JoinIdenticalVertices)
     );
 
     if (!scene || !scene->HasMeshes()) {
@@ -443,7 +443,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
     std::vector<MaterialDescriptor> extractedMaterials;
     std::vector<TextureDescriptor> extractedTextures{ desc.extract_textures ? ExtractEmbeddedTexture(scene, parent) : std::vector<TextureDescriptor>{} };
 
-    aiNode* nd = scene->mRootNode;
+    [[maybe_unused]] aiNode* nd = scene->mRootNode;
 
     std::unordered_map<std::string, int> boneMap;
     if (desc.is_skinned) {

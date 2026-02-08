@@ -714,7 +714,7 @@ void EditorMain::Render_PhysicsDebugPanel()
 	}
 
 	auto& entityHandles = engineService.m_cont->m_entities_snapshot;
-	auto& entityNames = engineService.m_cont->m_names_snapshot;
+	[[maybe_unused]] auto& entityNames = engineService.m_cont->m_names_snapshot;
 
 	for (size_t i = 0; i < entityHandles.size(); ++i) {
 		auto ehdl = entityHandles[i];
@@ -930,14 +930,18 @@ void EditorMain::Render_ExporterSettings()
 		//temp static
 		static std::atomic_bool buildStarted{};
 		static BuildConfiguration config{ [](std::string name, std::string dir) {
-			auto config = BuildManager::LoadBuildConfiguration();
-			if (config.output_name.empty()) {
-				config.output_name = name;
+			auto config1 = BuildManager::LoadBuildConfiguration();
+			if (config1.output_name.empty()) {
+				config1.output_name = name;
 			};
-			if (config.output_dir.empty() || !std::filesystem::exists(config.output_dir)) {
-				config.output_dir = dir;
+			if (config1.output_dir.empty() || !std::filesystem::exists(config1.output_dir)) {
+				config1.output_dir = dir;
 			};
-			return config;
+			std::string iconfpath = std::string(Engine::getWorkingDir().data()) + "/" + config1.icon_relative_path;
+			if (config1.icon_relative_path.empty() || !std::filesystem::exists(iconfpath)) {
+				config1.icon_relative_path = "/Icon.ico";
+			};
+			return config1;
 			}(Editor::GetInstance().GetConfig().workspace_name, std::string(Engine::getWorkingDir().data()) + "/build")};
 		static std::shared_ptr<BuildContext> buildCtx{ std::make_shared<BuildContext>() };
 		static std::unique_ptr<std::future<void>> fut_ptr{}; //hack

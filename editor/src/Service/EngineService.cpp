@@ -787,7 +787,7 @@ void EngineContainerService::set_on_load()
 {
 	ExecuteOnEngineThread([]
 	{
-		Engine::SetOnLoadCallBack([](ecs::world& w)
+		Engine::SetOnLoadCallBack([]([[maybe_unused]] ecs::world& w)
 		{
 			BehaviourSystem::Instance().Reload();
 			
@@ -799,7 +799,7 @@ void EngineContainerService::set_on_unload()
 {
 	ExecuteOnEngineThread([]
 	{
-		Engine::SetOnUnloadCallBack([](ecs::world& w)
+		Engine::SetOnUnloadCallBack([]([[maybe_unused]] ecs::world& w)
 		{
 			
 			BehaviourSystem::Instance().firstRun = true;

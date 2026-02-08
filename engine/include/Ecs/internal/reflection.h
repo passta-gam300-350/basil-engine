@@ -591,7 +591,7 @@ void DeserializeEntity(entt::registry& reg, const Node& entity_node, entt::entit
 	const auto& components = entity_node;
 
 	auto types = ReflectionRegistry::types();
-	auto& tn = ReflectionRegistry::TypeNames();
+	[[maybe_unused]] auto& tn = ReflectionRegistry::TypeNames();
 
 	for (auto& [type_id, meta_type] : ReflectionRegistry::types()) {
 		std::string comp_name = ReflectionRegistry::GetTypeName(meta_type.id());

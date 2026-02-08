@@ -1151,7 +1151,7 @@ JPH::RefConst<JPH::Shape> PhysicsSystem::CreateShapeFromCollider(ecs::entity ent
         // Get mesh data - either from renderer or custom data
         if (meshCollider.useRendererMesh && world.has_all_components_in_entity<MeshRendererComponent>(entity)) {
             // Extract mesh data from MeshRendererComponent
-            auto& meshRenderer = entity.get<MeshRendererComponent>();
+            [[maybe_unused]] auto& meshRenderer = entity.get<MeshRendererComponent>();
             
             // TODO: You need to implement mesh data extraction based on your asset system
             // This is a placeholder - you'll need to load the actual mesh data from your mesh GUID

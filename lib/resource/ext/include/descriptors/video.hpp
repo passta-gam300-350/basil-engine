@@ -8,7 +8,7 @@ struct VideoDescriptor {
     rp::descriptor_base base;
 };
 
-inline VideoResourceData CreateVideo(VideoDescriptor const& vidDesc, std::string const& path = {}, std::string const& serializedescpath = {}) {
+inline VideoResourceData CreateVideo(VideoDescriptor const& vidDesc, [[maybe_unused]] std::string const& path = {}, std::string const& serializedescpath = {}) {
     // Copy data and include source path for runtime access
     VideoResourceData data{};
     std::string rpath{ rp::utility::resolve_path(vidDesc.base.m_source) };

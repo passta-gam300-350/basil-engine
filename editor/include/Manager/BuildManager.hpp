@@ -11,6 +11,7 @@
 struct BuildConfiguration {
 	std::string output_dir;
 	std::string output_name;
+	std::string icon_relative_path; //relative path //should warn if dne
 	bool strip_unused_assets; //not supported in m4
 	bool fullscreen;
 };
