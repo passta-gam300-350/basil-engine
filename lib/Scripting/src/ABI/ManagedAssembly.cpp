@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   ManagedAssembly.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Managed assembly implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "ABI/ManagedAssembly.hpp"
 #include "ABI/CSAssembly.hpp"
 #include <cassert>

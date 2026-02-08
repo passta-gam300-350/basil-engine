@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   x86_bindings.h
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  x86 SIMD type bindings
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef INTRIN_SIMD_TYPES_H
 #define INTRIN_SIMD_TYPES_H
 #include <immintrin.h>
