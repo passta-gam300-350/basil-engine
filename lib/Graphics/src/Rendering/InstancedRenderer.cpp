@@ -559,7 +559,7 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
             if (!m_SkinnedInstanceSSBO)
             {
                 m_SkinnedInstanceSSBO = std::make_unique<ShaderStorageBuffer>(
-                    &instanceData, sizeof(InstanceData), GL_DYNAMIC_DRAW);
+                    &instanceData, uint32_t(sizeof(InstanceData)), GL_DYNAMIC_DRAW);
             }
             else
             {
@@ -925,7 +925,7 @@ void InstancedRenderer::UploadBoneMatrices(const glm::mat4* matrices, uint32_t c
     {
         m_BoneMatrixSSBO = std::make_unique<ShaderStorageBuffer>(
             nullptr,
-            MAX_TOTAL_BONES * sizeof(glm::mat4),
+            MAX_TOTAL_BONES * uint32_t(sizeof(glm::mat4)),
             GL_DYNAMIC_DRAW
         );
     }

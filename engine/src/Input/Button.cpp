@@ -40,7 +40,7 @@ bool Button::isHovered() const
     return this->hovered;
 }
 
-void Button::update(float mouseX, float mouseY, bool mousePressed)
+void Button::update(float, float, bool)
 {
     InputManager* input = InputManager::Get_Instance();
 

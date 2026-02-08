@@ -17,7 +17,7 @@ system:
 resource:
   resource threads: 4
   resource list: ~
-  root directory: C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\bin
+  root directory: C:\Users\Steven\source\repos\academic\gam300\gam300\bin
   enable globbing: false
 logger:
   name: Engine

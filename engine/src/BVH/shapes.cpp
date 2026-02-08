@@ -643,7 +643,7 @@ Sphere Sphere::centroid(glm::vec3 const* points, size_t const& count)
     {
         centroid += points[i];
     }
-    centroid /= count;
+    centroid /= float(count);
     // 2nd pass: Find most extreme point as radius
     float radius = 0;
     for (size_t i = 0; i < count; i++)

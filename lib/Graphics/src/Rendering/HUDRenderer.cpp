@@ -181,7 +181,7 @@ void HUDRenderer::UpdateBatchSSBO(TextureBatch& batch)
 
     // Debug: Log instance data being uploaded
     for (size_t i = 0; i < batch.instances.size(); ++i) {
-        const auto& inst = batch.instances[i];
+        //const auto& inst = batch.instances[i];
         /*spdlog::info("HUDRenderer::UpdateBatchSSBO() - Instance {}: pos=({},{}), size=({},{}), color=({},{},{},{})",
             i, inst.position.x, inst.position.y, inst.size.x, inst.size.y,
             inst.color.r, inst.color.g, inst.color.b, inst.color.a);*/
@@ -202,7 +202,7 @@ void HUDRenderer::UpdateBatchSSBO(TextureBatch& batch)
     batch.dirty = false;
 }
 
-void HUDRenderer::RenderBatch(RenderPass& renderPass, const TextureBatch& batch, const FrameData& frameData)
+void HUDRenderer::RenderBatch(RenderPass& renderPass, const TextureBatch& batch, const FrameData& /*frameData*/)
 {
     if (batch.instances.empty() || !batch.ssbo) {
         spdlog::warn("HUDRenderer::RenderBatch() - empty instances or no SSBO");

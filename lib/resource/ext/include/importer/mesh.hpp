@@ -267,15 +267,15 @@ inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, [[maybe_unused]] 
         chldata.m_name = chl->mNodeName.C_Str();
         for (std::uint32_t i{}; i < chl->mNumPositionKeys; i++) {
             auto poskey = chl->mPositionKeys[i];
-            chldata.m_positions.emplace(poskey.mTime, ToVec3(poskey.mValue));
+            chldata.m_positions.emplace(float(poskey.mTime), ToVec3(poskey.mValue));
         }
         for (std::uint32_t i{}; i < chl->mNumRotationKeys; i++) {
             auto rotkey = chl->mRotationKeys[i];
-            chldata.m_rotations.emplace(rotkey.mTime, ToQuat(rotkey.mValue));
+            chldata.m_rotations.emplace(float(rotkey.mTime), ToQuat(rotkey.mValue));
         }
         for (std::uint32_t i{}; i < chl->mNumScalingKeys; i++) {
             auto sclkey = chl->mScalingKeys[i];
-            chldata.m_scales.emplace(sclkey.mTime, ToVec3(sclkey.mValue));
+            chldata.m_scales.emplace(float(sclkey.mTime), ToVec3(sclkey.mValue));
         }
         auto res_it = boneMap.find(chldata.m_name);
         chldata.m_id = (res_it==boneMap.end()) ? 0 : res_it->second;
