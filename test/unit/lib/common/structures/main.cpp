@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   main.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Common structures unit tests
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -78,7 +92,7 @@ TEST(RAIIAtomicBuffer, DestructorFreesMemoryViaAllocator) {
         EXPECT_NE(buf.m_buf.load(), nullptr);
         // Scope end triggers destructor
     }
-    // We can’t directly inspect buf internals post-dtor, but we can at least assert
+    // We canï¿½t directly inspect buf internals post-dtor, but we can at least assert
     // allocation count >= deallocation count when object goes out of scope if implementation uses allocator.
     // If allocator is used for a single buffer, expect exactly one alloc and one dealloc.
     // Relax if your implementation allocates control blocks separately.
@@ -148,7 +162,7 @@ TEST(SPMCDeque, InterleaveTakeAndStealMaintainsEndsCorrectness) {
 TEST(SPMCDeque, ResizePreservesOrderAcrossPushTake) {
     ebr::spmc_deque<int, std::allocator<int>> dq;
     // Push enough elements to trigger resize internally
-    // We don’t know initial capacity; push a large number to force at least one resize.
+    // We donï¿½t know initial capacity; push a large number to force at least one resize.
     const int N = 1024;
     for (int i = 1; i <= N; ++i) dq.push(i);
 
