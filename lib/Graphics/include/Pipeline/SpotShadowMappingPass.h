@@ -66,6 +66,6 @@ private:
 
     // Configuration
     static constexpr uint32_t SPOT_SHADOW_MAP_SIZE = 1024;  // 1K resolution (directional uses 2K)
-    static constexpr size_t MAX_SPOT_LIGHTS = 63;  // Max spot lights (layers 1-63, layer 0 reserved for directional)
+    static constexpr size_t MAX_SPOT_LIGHTS = 15;  // Max spot lights (layers 1-15, layer 0 reserved for directional)
     static constexpr int FIRST_SPOT_LAYER = 1;  // Spot lights start at layer 1 (layer 0 = directional)
 };

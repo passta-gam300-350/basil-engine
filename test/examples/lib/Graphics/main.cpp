@@ -138,6 +138,14 @@ bool GraphicsTestDriver::Initialize()
     // Create scene renderer (owns all graphics systems now)
     m_SceneRenderer = std::make_unique<SceneRenderer>();
 
+    // ===== PERFORMANCE DIAGNOSTIC: Disable shadows to test if they're the bottleneck =====
+    // Uncomment these lines to disable shadow passes and test FPS impact:
+    //m_SceneRenderer->EnablePass("DirectionalShadowPass", false);
+    //m_SceneRenderer->EnablePass("SpotShadowPass", false);
+    //m_SceneRenderer->EnablePass("PointShadowPass", false);
+    //spdlog::warn("DIAGNOSTIC: All shadow passes DISABLED for performance testing");
+    // ==================================================================================
+
     // Setup resize callback to render during window resize (prevents black flashes)
     m_Window->SetResizeCallback([this]() {
         // Simple render during resize - reuse last frame's data
