@@ -614,14 +614,23 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
     // Calculate distance from camera to text
     float distanceToCamera = glm::length(worldText.worldPosition - worldText.cameraPosition);
 
-    // Unity-style font scaling: actualSize = (fontSize * referenceDistance) / distanceToCamera
-    // This makes text appear at the specified pixel size when at reference distance
-    float distanceScale = worldText.referenceDistance / std::max(distanceToCamera, 0.01f);
+    // Calculate pixels-to-world-units conversion based on sizing mode
+    float pixelsToWorldUnits;
+    if (worldText.sizingMode == TextSizingMode::ScreenConstant) {
+        // Screen-constant sizing: text maintains constant screen-space size regardless of distance
+        // Formula: worldSize = (pixelSize / screenHeight) * (2 * distance * tan(FOV/2))
+        // This converts pixel size to world-space size at the text's distance from camera
+        float tanHalfFOV = std::tan(worldText.cameraFOV * 0.5f);
+        pixelsToWorldUnits = (2.0f * distanceToCamera * tanHalfFOV) / worldText.screenHeight;
+    } else {
+        // Distance-scaled sizing (original Unity-style behavior)
+        // Formula: actualSize = (fontSize * referenceDistance) / distanceToCamera
+        // This makes text appear at the specified pixel size when at reference distance
+        float distanceScale = worldText.referenceDistance / std::max(distanceToCamera, 0.01f);
+        const float PIXELS_PER_WORLD_UNIT = 100.0f;  // Unity's default: 100 pixels = 1 world unit
+        pixelsToWorldUnits = distanceScale / PIXELS_PER_WORLD_UNIT;
+    }
 
-    // Unity-style "Pixels Per Unit" - 100 pixels = 1 world unit (Unity's default)
-    // fontSize 100 at reference distance = ~1 world unit height
-    const float PIXELS_PER_WORLD_UNIT = 100.0f;
-    float pixelsToWorldUnits = distanceScale / PIXELS_PER_WORLD_UNIT;
     float fontScale = worldText.fontSize / static_cast<float>(fontAtlas->GetBaseFontSize());
     //float worldFontScale = fontScale * pixelsToWorldUnits;
 

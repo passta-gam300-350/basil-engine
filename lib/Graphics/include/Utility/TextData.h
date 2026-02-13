@@ -115,6 +115,14 @@ enum class TextBillboardMode {
 };
 
 /**
+ * @brief Text sizing modes for world-space text
+ */
+enum class TextSizingMode {
+    DistanceScaled,  ///< Text scales with distance (original Unity-style behavior)
+    ScreenConstant   ///< Text maintains constant screen-space size (like HUD text)
+};
+
+/**
  * @brief Data structure for submitting world-space text elements
  *
  * Represents text positioned in 3D world space (not screen space).
@@ -145,6 +153,11 @@ struct WorldTextElementData {
     glm::vec3 cameraPosition = glm::vec3(0.0f);
     glm::vec3 cameraForward = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    float cameraFOV = glm::radians(60.0f);  ///< Camera field of view in radians (for screen-constant sizing)
+    float screenHeight = 1080.0f;           ///< Viewport height in pixels (for screen-constant sizing)
+
+    // Sizing mode
+    TextSizingMode sizingMode = TextSizingMode::ScreenConstant;
 
     // Text alignment (for multi-line text)
     TextAlignment alignment = TextAlignment::Center;

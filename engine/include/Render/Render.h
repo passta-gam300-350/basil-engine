@@ -219,9 +219,17 @@ struct TextMeshComponent {
         Cylindrical   ///< Rotates to face camera but constrained to Y-axis (stays upright)
     } billboardMode = BillboardMode::Full;
 
+    /**
+     * @brief Text sizing mode determines how text size changes with distance
+     */
+    enum class TextSizingMode : uint8_t {
+        DistanceScaled,  ///< Text scales with distance (original Unity-style behavior)
+        ScreenConstant   ///< Text maintains constant screen-space size (like HUD text)
+    } sizingMode = TextSizingMode::ScreenConstant;
+
     // Font sizing (Unity-style: pixels at reference distance)
     float fontSize = 16.0f;         ///< Font size in pixels at reference distance
-    float referenceDistance = 10.0f; ///< Distance at which fontSize is measured (in world units)
+    float referenceDistance = 10.0f; ///< Distance at which fontSize is measured (in world units, only used in DistanceScaled mode)
 
     /**
      * @brief Text alignment for multi-line text

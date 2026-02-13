@@ -558,7 +558,7 @@ void RenderSystem::Update(ecs::world& world) {
 		// Extract world position from transform matrix
 		glm::vec3 worldPosition = glm::vec3(transform.m_Mtx[3]);
 
-		// Get camera data for billboard calculation
+		// Get camera data for billboard calculation and text sizing
 		glm::vec3 cameraPosition = hasGameCamera
 			? CameraSystem::Instance().GetActiveCameraData().position
 			: editorCameraSnapshot.position;
@@ -568,6 +568,12 @@ void RenderSystem::Update(ecs::world& world) {
 		glm::vec3 cameraUp = hasGameCamera
 			? CameraSystem::Instance().GetActiveCameraData().up
 			: editorCameraSnapshot.up;
+		float cameraFOV = hasGameCamera
+			? glm::radians(CameraSystem::Instance().GetActiveCameraData().fov)
+			: glm::radians(editorCameraSnapshot.fov);
+		float screenHeight = hasGameCamera
+			? static_cast<float>(m_gameViewportHeight)
+			: static_cast<float>(m_editorViewportHeight);
 
 		// Build WorldTextElementData from component
 		WorldTextElementData worldTextData;
@@ -587,6 +593,9 @@ void RenderSystem::Update(ecs::world& world) {
 		worldTextData.cameraPosition = cameraPosition;
 		worldTextData.cameraForward = cameraForward;
 		worldTextData.cameraUp = cameraUp;
+		worldTextData.cameraFOV = cameraFOV;
+		worldTextData.screenHeight = screenHeight;
+		worldTextData.sizingMode = static_cast<TextSizingMode>(worldText.sizingMode);
 		worldTextData.alignment = static_cast<TextAlignment>(worldText.alignment);
 		worldTextData.lineSpacing = worldText.lineSpacing;
 		worldTextData.letterSpacing = worldText.letterSpacing;
