@@ -42,45 +42,38 @@ uniform bool u_HasEmissiveMap = false;
 uniform bool u_HasSpecularMap = false;
 uniform bool u_HasHeightMap = false;
 
-// Multi-light system for instanced rendering
-struct PointLight {
-    vec3 position;
-    vec3 color;
-    float intensity;           // Diffuse intensity (ogldev-style)
-    float ambientIntensity;    // Per-light ambient contribution (ogldev-style)
-    float constant;
-    float linear;
-    float quadratic;
+// ===== UNIFIED LIGHT SYSTEM (SSBO-BASED, UNLIMITED LIGHTS) =====
+// Unified light data structure (must match C++ LightData struct)
+struct LightData {
+    int type;               // 4 bytes - 0=directional, 1=point, 2=spot
+    float _pad0;            // 4 bytes - padding for alignment
+    float _pad1;            // 4 bytes - padding for alignment
+    float _pad2;            // 4 bytes - padding for alignment
+    vec3 position;          // 12 bytes
+    float intensity;        // 4 bytes - Diffuse intensity (ogldev-style)
+    vec3 direction;         // 12 bytes
+    float ambientIntensity; // 4 bytes - Per-light ambient contribution
+    vec3 color;             // 12 bytes
+    float cutOff;           // 4 bytes - Spot inner cutoff (cos angle)
+    float outerCutOff;      // 4 bytes - Spot outer cutoff (cos angle)
+    float constant;         // 4 bytes - Attenuation constant
+    float linear;           // 4 bytes - Attenuation linear
+    float quadratic;        // 4 bytes - Attenuation quadratic
+    // Total: 80 bytes per light (std430 aligned)
 };
 
-struct DirectionalLight {
-    vec3 direction;
-    vec3 color;
-    float intensity;           // Diffuse intensity (ogldev-style)
-    float ambientIntensity;    // Per-light ambient contribution (ogldev-style)
+// Light types (must match C++ enum)
+const int LIGHT_TYPE_DIRECTIONAL = 0;
+const int LIGHT_TYPE_POINT = 1;
+const int LIGHT_TYPE_SPOT = 2;
+
+// SSBO containing all lights (binding = 3)
+layout(std430, binding = 3) buffer LightBuffer {
+    LightData lights[];
 };
 
-struct SpotLight {
-    vec3 position;
-    vec3 direction;
-    vec3 color;
-    float intensity;           // Diffuse intensity (ogldev-style)
-    float ambientIntensity;    // Per-light ambient contribution (ogldev-style)
-    float cutOff;
-    float outerCutOff;
-    float constant;
-    float linear;
-    float quadratic;
-};
-
-// Light uniforms
-uniform int u_NumPointLights = 4;
-uniform int u_NumDirectionalLights = 1;
-uniform int u_NumSpotLights = 2;
-
-uniform PointLight u_PointLights[8];
-uniform DirectionalLight u_DirectionalLights[4];
-uniform SpotLight u_SpotLights[15];
+// Number of active lights in the SSBO
+uniform int u_NumLights = 0;
 
 // Camera
 uniform vec3 u_ViewPos;
@@ -347,8 +340,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// Calculate contribution from a single point light
-vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
+// Calculate contribution from a point light (using unified SSBO)
+vec3 calculatePointLight(LightData light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
 {
     vec3 N = normalize(normal);
     vec3 L = normalize(light.position - fragPos);
@@ -383,8 +376,8 @@ vec3 calculatePointLight(PointLight light, vec3 albedo, vec3 normal, vec3 fragPo
     return lightContribution * (1.0 - shadowFactor);
 }
 
-// Calculate contribution from a directional light
-vec3 calculateDirectionalLight(DirectionalLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
+// Calculate contribution from a directional light (using unified SSBO)
+vec3 calculateDirectionalLight(LightData light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
 {
     vec3 N = normalize(normal);
     vec3 L = normalize(-light.direction);
@@ -416,8 +409,8 @@ vec3 calculateDirectionalLight(DirectionalLight light, vec3 albedo, vec3 normal,
     return lightContribution * (1.0 - shadowFactor);
 }
 
-// Calculate contribution from a spot light (supports shadows)
-vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
+// Calculate contribution from a spot light (using unified SSBO, supports shadows)
+vec3 calculateSpotLight(LightData light, vec3 albedo, vec3 normal, vec3 fragPos, vec3 viewDir, float metallic, float roughness, vec3 F0, int lightIndex)
 {
     vec3 N = normalize(normal);
     vec3 L = normalize(light.position - fragPos);
@@ -459,7 +452,7 @@ vec3 calculateSpotLight(SpotLight light, vec3 albedo, vec3 normal, vec3 fragPos,
     return lightContribution * (1.0 - shadowFactor);
 }
 
-// Multi-light PBR lighting calculation (ogldev-style with per-light ambient)
+// Multi-light PBR lighting calculation (unified SSBO, ogldev-style with per-light ambient)
 vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao)
 {
     vec3 N = normalize(normal);
@@ -475,37 +468,48 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     // Accumulate per-light ambient contribution (ogldev-style)
     vec3 totalAmbient = vec3(0.0);
 
-    // Point lights (with individual shadows via cubemaps)
-    for (int i = 0; i < u_NumPointLights && i < 8; ++i) {
-        // Direct lighting
-        Lo += calculatePointLight(u_PointLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
+    // Track light type indices for shadow mapping
+    int directionalLightIndex = 0;
+    int pointLightIndex = 0;
+    int spotLightIndex = 0;
 
-        // Per-light ambient (ogldev-style: attenuated by distance)
-        float distance = length(u_PointLights[i].position - fs_in.FragPos);
-        float attenuation = 1.0 / (u_PointLights[i].constant + u_PointLights[i].linear * distance +
-                                   u_PointLights[i].quadratic * (distance * distance));
-        totalAmbient += u_PointLights[i].color * u_PointLights[i].ambientIntensity * attenuation * albedo * ao;
-    }
+    // Iterate through all lights in SSBO (UNLIMITED!)
+    for (int i = 0; i < u_NumLights; ++i) {
+        LightData light = lights[i];
 
-    // Directional lights (with individual shadows)
-    for (int i = 0; i < u_NumDirectionalLights && i < 4; ++i) {
-        // Direct lighting
-        Lo += calculateDirectionalLight(u_DirectionalLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
+        if (light.type == LIGHT_TYPE_DIRECTIONAL) {
+            // Directional light
+            Lo += calculateDirectionalLight(light, albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, directionalLightIndex);
 
-        // Per-light ambient (ogldev-style: no attenuation for directional)
-        totalAmbient += u_DirectionalLights[i].color * u_DirectionalLights[i].ambientIntensity * albedo * ao;
-    }
+            // Per-light ambient (no attenuation for directional)
+            totalAmbient += light.color * light.ambientIntensity * albedo * ao;
 
-    // Spot lights (with shadows)
-    for (int i = 0; i < u_NumSpotLights && i < 15; ++i) {
-        // Direct lighting (with shadow support)
-        Lo += calculateSpotLight(u_SpotLights[i], albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, i);
+            directionalLightIndex++;
+        }
+        else if (light.type == LIGHT_TYPE_POINT) {
+            // Point light
+            Lo += calculatePointLight(light, albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, pointLightIndex);
 
-        // Per-light ambient (ogldev-style: attenuated by distance)
-        float distance = length(u_SpotLights[i].position - fs_in.FragPos);
-        float attenuation = 1.0 / (u_SpotLights[i].constant + u_SpotLights[i].linear * distance +
-                                   u_SpotLights[i].quadratic * (distance * distance));
-        totalAmbient += u_SpotLights[i].color * u_SpotLights[i].ambientIntensity * attenuation * albedo * ao;
+            // Per-light ambient (attenuated by distance)
+            float distance = length(light.position - fs_in.FragPos);
+            float attenuation = 1.0 / (light.constant + light.linear * distance +
+                                       light.quadratic * (distance * distance));
+            totalAmbient += light.color * light.ambientIntensity * attenuation * albedo * ao;
+
+            pointLightIndex++;
+        }
+        else if (light.type == LIGHT_TYPE_SPOT) {
+            // Spot light
+            Lo += calculateSpotLight(light, albedo, normal, fs_in.FragPos, V, metallic, roughness, F0, spotLightIndex);
+
+            // Per-light ambient (attenuated by distance)
+            float distance = length(light.position - fs_in.FragPos);
+            float attenuation = 1.0 / (light.constant + light.linear * distance +
+                                       light.quadratic * (distance * distance));
+            totalAmbient += light.color * light.ambientIntensity * attenuation * albedo * ao;
+
+            spotLightIndex++;
+        }
     }
 
     // Add global ambient as fallback (can be set to 0 if using only per-light ambient)
