@@ -574,6 +574,10 @@ void RenderSystem::Update(ecs::world& world) {
 		float screenHeight = hasGameCamera
 			? static_cast<float>(m_gameViewportHeight)
 			: static_cast<float>(m_editorViewportHeight);
+		// Fallback: use frameData viewport height (defaults to 720, always valid)
+		if (screenHeight <= 0.0f) {
+			screenHeight = static_cast<float>(frameData.viewportHeight);
+		}
 
 		// Build WorldTextElementData from component
 		WorldTextElementData worldTextData;
@@ -595,7 +599,6 @@ void RenderSystem::Update(ecs::world& world) {
 		worldTextData.cameraUp = cameraUp;
 		worldTextData.cameraFOV = cameraFOV;
 		worldTextData.screenHeight = screenHeight;
-		worldTextData.sizingMode = static_cast<TextSizingMode>(worldText.sizingMode);
 		worldTextData.alignment = static_cast<TextAlignment>(worldText.alignment);
 		worldTextData.lineSpacing = worldText.lineSpacing;
 		worldTextData.letterSpacing = worldText.letterSpacing;
