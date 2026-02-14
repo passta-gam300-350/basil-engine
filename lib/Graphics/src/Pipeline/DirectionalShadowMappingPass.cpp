@@ -73,10 +73,6 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
         return;
     }
 
-    // CRITICAL: Clear command buffer to prevent accumulation across frames
-    // Without this, commands accumulate exponentially causing severe performance degradation
-    ClearCommands();
-
     // Bind temp FBO and attach to layer 0 of shadow texture array
     glBindFramebuffer(GL_FRAMEBUFFER, m_TempFBO);
     glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowTextureArray, 0, SHADOW_LAYER_INDEX);
@@ -161,15 +157,6 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
 
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
-
-    // CRITICAL: Memory barrier to ensure shadow texture array writes complete
-    // before subsequent passes (spot shadows, main rendering) read from the same texture array.
-    // Without this, GPU experiences read-after-write hazards causing severe stalls.
-    RenderCommands::MemoryBarrierData barrierCmd{
-        GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT
-    };
-    Submit(barrierCmd);
-    ExecuteCommands();  // Execute the barrier
 
     // Unbind FBO
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

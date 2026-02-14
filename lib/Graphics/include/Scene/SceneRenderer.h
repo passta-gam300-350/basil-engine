@@ -209,6 +209,6 @@ private:
 
     // Unified shadow texture array (directional + spot shadows)
     uint32_t m_Shadow2DTextureArray = 0;
-    static constexpr uint32_t SHADOW_ARRAY_LAYERS = 16;  // Support up to 16 2D shadows (1 directional + 15 spot)
-    static constexpr uint32_t SHADOW_MAP_SIZE = 1024;     // 1024x1024 per shadow map (optimized for laptop GPUs)
+    static constexpr uint32_t SHADOW_ARRAY_LAYERS = 64;  // Support up to 64 2D shadows (directional + spot)
+    static constexpr uint32_t SHADOW_MAP_SIZE = 2048;     // 2048x2048 per shadow map
 };

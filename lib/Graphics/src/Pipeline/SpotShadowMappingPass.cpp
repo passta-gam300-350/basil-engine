@@ -171,15 +171,6 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
         ExecuteCommands();
     }
 
-    // CRITICAL: Memory barrier to ensure shadow texture array writes complete
-    // before MainRenderingPass reads from the same texture array.
-    // Without this, GPU experiences read-after-write hazards causing severe stalls.
-    RenderCommands::MemoryBarrierData barrierCmd{
-        GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT
-    };
-    Submit(barrierCmd);
-    ExecuteCommands();  // Execute the barrier
-
     // Unbind framebuffer after all spot lights
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
