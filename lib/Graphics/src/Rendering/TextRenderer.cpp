@@ -314,7 +314,7 @@ void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData
     }*/
 
     if (!m_WorldTextShader) {
-        //spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world text shader set!");
+        spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world text shader set!");
         return;
     }
 
