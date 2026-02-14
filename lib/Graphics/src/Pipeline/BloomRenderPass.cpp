@@ -337,15 +337,6 @@ uint32_t BloomRenderPass::GetBloomMip(int index) const
 
 void BloomRenderPass::OnResize(uint32_t newWidth, uint32_t newHeight)
 {
-	// OPTIMIZATION: Skip resize if dimensions haven't changed
-	// Prevents expensive mip chain recreation (6+ framebuffers with GPU texture allocation)
-	if (m_Initialized &&
-		m_SrcViewportSize.x == static_cast<int>(newWidth) &&
-		m_SrcViewportSize.y == static_cast<int>(newHeight))
-	{
-		return; // Already at target size - no-op
-	}
-
 	// Viewport size changed - recreate mip chain
 	spdlog::info("BloomRenderPass: Viewport size changed to {}x{}, recreating mip chain", newWidth, newHeight);
 
