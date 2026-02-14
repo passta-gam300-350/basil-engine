@@ -1,7 +1,0 @@
-base:
-  m_guid: 27b75867ee0bf9dc5918542839e
-  m_importer: .texture
-  m_source: materials\CardboardBoxOpen_standardSurface7_BaseColor.png
-  m_name: CardboardBoxOpen_standardSurface7_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
