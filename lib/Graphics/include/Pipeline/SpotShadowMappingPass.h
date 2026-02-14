@@ -27,19 +27,20 @@ class Shader;
  * Spot Shadow Mapping Pass - Renders depth maps from spot light perspective
  *
  * Similar to directional shadow mapping but uses PERSPECTIVE projection.
- * Renders scene geometry to layers 1-N of the shared shadow texture array.
+ * Renders scene geometry to 2D depth framebuffers from each spot light's position.
+ * Populates FrameData::spotShadowMaps and spotShadowMatrices for main pass.
  *
  * Key Features:
  * - Perspective projection (FOV = 2 × outer cutoff angle)
- * - Supports multiple spot lights (uses texture array layers 1-63)
+ * - Supports multiple spot lights with separate shadow maps
  * - Uses instanced rendering for efficiency
- * - Shares 2048×2048 depth texture array with directional shadows
+ * - 1024×1024 depth-only framebuffers
  */
 class SpotShadowMappingPass : public RenderPass {
 public:
     SpotShadowMappingPass();
     SpotShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader);
-    ~SpotShadowMappingPass() override;
+    ~SpotShadowMappingPass() = default;
 
     // Context-based execution
     void Execute(RenderContext& context) override;
@@ -47,10 +48,10 @@ public:
     // Set shadow depth shader (instanced version!)
     void SetShadowDepthShader(std::shared_ptr<Shader> shader) { m_ShadowDepthShader = shader; }
 
-    // Set shadow texture array (called by SceneRenderer during initialization)
-    void SetShadowTextureArray(uint32_t textureArray) { m_ShadowTextureArray = textureArray; }
-
 private:
+    // Initialization
+    void InitializeFramebuffers();
+
     // Helper methods for matrix calculation
     glm::mat4 CalculateSpotLightViewMatrix(const glm::vec3& position, const glm::vec3& direction);
     glm::mat4 CalculateSpotLightProjectionMatrix(float outerCutoffDegrees, float range);
@@ -58,14 +59,10 @@ private:
     // Shader storage
     std::shared_ptr<Shader> m_ShadowDepthShader;
 
-    // Shadow texture array (shared with directional pass)
-    uint32_t m_ShadowTextureArray = 0;
-
-    // Temporary FBO for rendering to texture array layers
-    uint32_t m_TempFBO = 0;
+    // Multiple framebuffers for multiple spot lights
+    std::vector<std::shared_ptr<FrameBuffer>> m_SpotShadowFramebuffers;
 
     // Configuration
-    static constexpr uint32_t SPOT_SHADOW_MAP_SIZE = 1024;  // 1K resolution (directional uses 2K)
-    static constexpr size_t MAX_SPOT_LIGHTS = 63;  // Max spot lights (layers 1-63, layer 0 reserved for directional)
-    static constexpr int FIRST_SPOT_LAYER = 1;  // Spot lights start at layer 1 (layer 0 = directional)
+    static constexpr uint32_t SPOT_SHADOW_MAP_SIZE = 1024;  // 1K resolution (can increase to 2K)
+    static constexpr size_t MAX_SPOT_LIGHTS = 15;  // Maximum supported spot lights (16 total 2D shadows - 1 for directional)
 };

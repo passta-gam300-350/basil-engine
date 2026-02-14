@@ -187,14 +187,6 @@ namespace RenderCommands {
         std::string uniformName;
     };
 
-    struct BindTexture2DArrayData
-    {
-        uint32_t textureID;
-        uint32_t textureUnit;
-        std::shared_ptr<Shader> shader;
-        std::string uniformName;
-    };
-
     struct DrawArraysData {
         uint32_t vao;
         uint32_t vertexCount;
@@ -331,7 +323,6 @@ using VariantRenderCommand = std::variant<
     RenderCommands::BindCubemapData,
     RenderCommands::BindTextureIDData,
     RenderCommands::BindTexture3DData,
-    RenderCommands::BindTexture2DArrayData,
     RenderCommands::DrawArraysData,
     RenderCommands::DrawArraysInstancedData,
     RenderCommands::DispatchComputeData,
@@ -404,7 +395,6 @@ private:
     void ExecuteCommand(const RenderCommands::BindCubemapData &cmd);
     void ExecuteCommand(const RenderCommands::BindTextureIDData &cmd);
     void ExecuteCommand(const RenderCommands::BindTexture3DData &cmd);
-    void ExecuteCommand(const RenderCommands::BindTexture2DArrayData &cmd);
     void ExecuteCommand(const RenderCommands::DrawArraysData &cmd);
     void ExecuteCommand(const RenderCommands::DrawArraysInstancedData &cmd);
     void ExecuteCommand(const RenderCommands::DispatchComputeData &cmd);

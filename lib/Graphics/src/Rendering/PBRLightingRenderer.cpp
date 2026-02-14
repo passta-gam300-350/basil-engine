@@ -402,15 +402,16 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
         };
         renderPass.Submit(numShadowsCmd);
 
-        // Bind 2D shadow texture array (directional/spot shadows in layers)
-        if (frameData.shadow2DTextureArray != 0) {
-            RenderCommands::BindTexture2DArrayData arrayCmd{
-                frameData.shadow2DTextureArray,
-                8,  // Texture unit 8
+        // Bind 2D shadow textures (directional/spot) to individual slots
+        // TODO: Replace with sampler2DArray once implemented
+        for (size_t i = 0; i < frameData.shadow2DTextures.size() && i < 16; ++i) {
+            std::string uniformName = "u_Shadow2DTextures[" + std::to_string(i) + "]";
+            renderPass.Submit(RenderCommands::BindTextureIDData{
+                frameData.shadow2DTextures[i],
+                static_cast<uint32_t>(8 + i),  // Texture units 8-23
                 shader,
-                "u_Shadow2DTextureArray"
-            };
-            renderPass.Submit(arrayCmd);
+                uniformName
+            });
         }
 
         // Bind cubemap shadow textures (point) to individual slots
@@ -451,8 +452,9 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
         }
         // ===== END OFFSET TEXTURE BINDING =====
 
-        spdlog::debug("PBRLightingRenderer: Uploaded {} shadows to SSBO with random sampling (texture array + {} cubemaps)",
+        spdlog::debug("PBRLightingRenderer: Uploaded {} shadows ({} 2D, {} cubemap) to SSBO with random sampling",
                       frameData.shadowDataArray.size(),
+                      frameData.shadow2DTextures.size(),
                       frameData.shadowCubemapTextures.size());
     } else {
         // No shadows - set count to 0

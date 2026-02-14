@@ -28,10 +28,8 @@ uniform sampler2D u_EmissiveMap;   // Slot 5
 uniform sampler2D u_SpecularMap;   // Slot 6
 uniform sampler2D u_HeightMap;     // Slot 7
 
-// ===== UNIFIED SHADOW TEXTURE SYSTEM (TEXTURE ARRAYS) =====
-// Texture array for 2D shadows (directional/spot) - UNLIMITED shadows!
-uniform sampler2DArray u_Shadow2DTextureArray;   // Layered texture array - slot 8
-// Cubemap array for point shadows (can support more, but keeping individual for now)
+// Unified shadow texture arrays
+uniform sampler2D u_Shadow2DTextures[16];        // 2D depth maps (directional/spot) - slots 8-23
 uniform samplerCube u_ShadowCubemapTextures[8];  // Cubemap depth maps (point) - slots 24-31
 
 // Texture availability flags (set by texture slot system)
@@ -154,8 +152,8 @@ float Calculate2DShadow(vec3 fragPos, vec3 normal, vec3 lightDir, mat4 lightSpac
     vec2 f = mod(gl_FragCoord.xy, vec2(u_ShadowMapOffsetTextureSize));
     offsetCoord.yz = ivec2(f);
 
-    // Get texel size for shadow map sampling (use texture array size)
-    vec2 texelSize = 1.0 / vec2(textureSize(u_Shadow2DTextureArray, 0).xy);
+    // Get texel size for shadow map sampling
+    vec2 texelSize = 1.0 / textureSize(u_Shadow2DTextures[textureIndex], 0);
 
     float currentDepth = projCoords.z;
     float shadow = 0.0;
@@ -169,14 +167,14 @@ float Calculate2DShadow(vec3 fragPos, vec3 normal, vec3 lightDir, mat4 lightSpac
         // Fetch 4 offset values from 3D texture (RGBA = 2 offset pairs)
         vec4 offsets = texelFetch(u_ShadowMapOffsetTexture, offsetCoord, 0) * u_ShadowMapRandomRadius;
 
-        // Sample 1: Use RG channels as offset (use vec3 for texture array: uv + layer)
+        // Sample 1: Use RG channels as offset
         vec2 sampleCoord = projCoords.xy + offsets.rg * texelSize;
-        float depth = texture(u_Shadow2DTextureArray, vec3(sampleCoord, textureIndex)).r;
+        float depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
         shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
 
         // Sample 2: Use BA channels as offset
         sampleCoord = projCoords.xy + offsets.ba * texelSize;
-        depth = texture(u_Shadow2DTextureArray, vec3(sampleCoord, textureIndex)).r;
+        depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
         shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
     }
 
@@ -191,14 +189,14 @@ float Calculate2DShadow(vec3 fragPos, vec3 normal, vec3 lightDir, mat4 lightSpac
             offsetCoord.x = i;
             vec4 offsets = texelFetch(u_ShadowMapOffsetTexture, offsetCoord, 0) * u_ShadowMapRandomRadius;
 
-            // Sample 1: RG channels (use vec3 for texture array: uv + layer)
+            // Sample 1: RG channels
             vec2 sampleCoord = projCoords.xy + offsets.rg * texelSize;
-            float depth = texture(u_Shadow2DTextureArray, vec3(sampleCoord, textureIndex)).r;
+            float depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
             shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
 
             // Sample 2: BA channels
             sampleCoord = projCoords.xy + offsets.ba * texelSize;
-            depth = texture(u_Shadow2DTextureArray, vec3(sampleCoord, textureIndex)).r;
+            depth = texture(u_Shadow2DTextures[textureIndex], sampleCoord).r;
             shadow += (currentDepth - bias > depth) ? 1.0 : 0.0;
         }
 

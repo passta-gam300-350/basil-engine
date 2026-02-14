@@ -25,29 +25,18 @@ SpotShadowMappingPass::SpotShadowMappingPass()
     : RenderPass("SpotShadowPass"),
       m_ShadowDepthShader(nullptr)
 {
-    // Create temporary FBO for rendering to texture array layers
-    glGenFramebuffers(1, &m_TempFBO);
-    spdlog::info("SpotShadowMappingPass: Created temp FBO for texture array layers {}-{} (max {} lights)",
-                 FIRST_SPOT_LAYER, FIRST_SPOT_LAYER + MAX_SPOT_LIGHTS - 1, MAX_SPOT_LIGHTS);
+    InitializeFramebuffers();
+    spdlog::info("SpotShadowMappingPass: Initialized with {} framebuffers (size: {}x{})",
+                 MAX_SPOT_LIGHTS, SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
 }
 
 SpotShadowMappingPass::SpotShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
     : RenderPass("SpotShadowPass"),
       m_ShadowDepthShader(shadowDepthShader)
 {
-    // Create temporary FBO for rendering to texture array layers
-    glGenFramebuffers(1, &m_TempFBO);
-    spdlog::info("SpotShadowMappingPass: Created temp FBO for texture array layers {}-{}",
-                 FIRST_SPOT_LAYER, FIRST_SPOT_LAYER + MAX_SPOT_LIGHTS - 1);
-}
-
-SpotShadowMappingPass::~SpotShadowMappingPass()
-{
-    if (m_TempFBO != 0)
-    {
-        glDeleteFramebuffers(1, &m_TempFBO);
-        m_TempFBO = 0;
-    }
+    InitializeFramebuffers();
+    spdlog::info("SpotShadowMappingPass: Initialized with shader and {} framebuffers",
+                 MAX_SPOT_LIGHTS);
 }
 
 void SpotShadowMappingPass::Execute(RenderContext& context)
@@ -69,18 +58,13 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
         return;
     }
 
-    if (m_ShadowTextureArray == 0) {
-        spdlog::warn("SpotShadowMappingPass: Shadow texture array not set, skipping");
-        return;
-    }
-
     // Clear command buffer to prevent accumulation across frames
     ClearCommands();
 
     // Render shadow map for each spot light
     for (size_t i = 0; i < spotLights.size(); ++i) {
         const auto* spotLight = spotLights[i];
-        int layerIndex = FIRST_SPOT_LAYER + static_cast<int>(i);  // Spot lights use layers 1, 2, 3...
+        auto& shadowFBO = m_SpotShadowFramebuffers[i];
 
         // Calculate spot light view matrix (look from position toward direction)
         glm::mat4 spotView = CalculateSpotLightViewMatrix(
@@ -100,24 +84,16 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
         ShadowData spotShadow;
         spotShadow.shadowType = ShadowData::Spot;
         spotShadow.lightSpaceMatrix = spotLightSpaceMatrix;
-        spotShadow.textureIndex = layerIndex;  // Use appropriate layer in texture array
+        spotShadow.textureIndex = static_cast<int32_t>(context.frameData.shadow2DTextures.size());
         spotShadow.farPlane = 0.0f;  // Not used for spot lights
         spotShadow.intensity = 0.8f;  // Default shadow intensity
 
-        // Store shadow data (no longer storing individual texture IDs)
+        // Store shadow data and texture ID
         context.frameData.shadowDataArray.push_back(spotShadow);
+        context.frameData.shadow2DTextures.push_back(shadowFBO->GetDepthAttachmentRendererID());
 
-        // Bind temp FBO and attach to appropriate layer of shadow texture array
-        glBindFramebuffer(GL_FRAMEBUFFER, m_TempFBO);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowTextureArray, 0, layerIndex);
-
-        // Verify framebuffer is complete
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            spdlog::error("SpotShadowMappingPass: Framebuffer incomplete for layer {} (status: 0x{:X})", layerIndex, status);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            continue;  // Skip this light
-        }
+        // Bind this spot light's framebuffer
+        shadowFBO->Bind();
 
         // Set viewport to match shadow map size
         glViewport(0, 0, SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE);
@@ -169,13 +145,30 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
 
         // Execute all commands submitted to this pass's command buffer
         ExecuteCommands();
-    }
 
-    // Unbind framebuffer after all spot lights
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // Unbind framebuffer
+        shadowFBO->Unbind();
+    }
 }
 
-// InitializeFramebuffers() removed - now using shared texture array instead of individual FBOs
+void SpotShadowMappingPass::InitializeFramebuffers()
+{
+    // Pre-allocate framebuffers for maximum number of spot lights (consistent with PointShadowMappingPass)
+    m_SpotShadowFramebuffers.reserve(MAX_SPOT_LIGHTS);
+
+    for (size_t i = 0; i < MAX_SPOT_LIGHTS; ++i) {
+        FBOSpecs specs{
+            SPOT_SHADOW_MAP_SIZE, SPOT_SHADOW_MAP_SIZE,
+            {
+                // Depth-only framebuffer (same as directional shadows)
+                { FBOTextureFormat::DEPTH24STENCIL8 }
+            }
+        };
+
+        auto fbo = std::make_shared<FrameBuffer>(specs);
+        m_SpotShadowFramebuffers.push_back(fbo);
+    }
+}
 
 glm::mat4 SpotShadowMappingPass::CalculateSpotLightViewMatrix(
     const glm::vec3& position,
