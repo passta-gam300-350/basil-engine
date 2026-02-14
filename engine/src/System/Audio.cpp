@@ -96,6 +96,28 @@ bool AudioSystem::Init(void* extraDriverData) {
     spdlog::info("Audio: Setting 3D parameters");
     FMOD_ErrorCheck(m_system->set3DSettings(DOPPLERSCALE, DISTANCEFACTOR, ROLLOFFSCALE)); //TEMP (Set saved 3D settings)
 
+    // Setup channel groups (MASTER/BGM/SFX/UI/AMBIENT)
+    m_masterGroup = nullptr;
+    m_groups.clear();
+    FMOD_ErrorCheck(m_system->getMasterChannelGroup(&m_masterGroup));
+    if (m_masterGroup) {
+        auto makeGroup = [&](AudioGroup g, const char* name) {
+            FMOD::ChannelGroup* cg = nullptr;
+            FMOD_ErrorCheck(m_system->createChannelGroup(name, &cg));
+            if (cg) {
+                // Route into master for global volume/mute control
+                FMOD_ErrorCheck(m_masterGroup->addGroup(cg));
+                m_groups[g] = cg;
+            }
+        };
+        makeGroup(AudioGroup::BGM, "BGM");
+        makeGroup(AudioGroup::SFX, "SFX");
+        makeGroup(AudioGroup::UI, "UI");
+        makeGroup(AudioGroup::AMBIENT, "AMBIENT");
+    } else {
+        spdlog::warn("Audio: Failed to acquire master channel group; audio groups disabled");
+    }
+
     m_listenerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
     m_listenerVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
     m_listenerLastPosition = m_listenerPosition;
@@ -181,6 +203,15 @@ void AudioSystem::Exit() {
         if (pair.second)
             FMOD_ErrorCheck(pair.second->release());
     m_loadedSounds.clear();
+
+    // Release channel groups (master is owned by FMOD system)
+    for (auto& kv : m_groups) {
+        if (kv.second) {
+            FMOD_ErrorCheck(kv.second->release());
+        }
+    }
+    m_groups.clear();
+    m_masterGroup = nullptr;
 
     spdlog::info("Audio: Releasing system");
     if (m_system) {
@@ -367,6 +398,7 @@ void AudioComponent::UpdatePosition(const glm::vec3& newPosition) {
     position = newPosition;
     FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
+        if (!is3D) return;
         const FMOD_VECTOR pos = ToFMOD(newPosition);
         const FMOD_VECTOR vel = ToFMOD(velocity);
         FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
@@ -377,6 +409,7 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
     velocity = newVelocity;
     FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
+        if (!is3D) return;
         const FMOD_VECTOR pos = ToFMOD(position);
         const FMOD_VECTOR vel = ToFMOD(newVelocity);
         FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
@@ -409,7 +442,15 @@ bool AudioComponent::Play() {
 
     // Start new playback
     FMOD::Channel* newChannel = nullptr;
-    FMOD_RESULT result = system->playSound(sound, 0, true, &newChannel);
+    // Route to the requested channel group (default MASTER)
+    FMOD::ChannelGroup* targetGroup = audioSys.m_masterGroup;
+    if (group != AudioGroup::MASTER) {
+        auto it = audioSys.m_groups.find(group);
+        if (it != audioSys.m_groups.end()) {
+            targetGroup = it->second;
+        }
+    }
+    FMOD_RESULT result = system->playSound(sound, targetGroup, true, &newChannel);
 
     if (result != FMOD_OK) {
         spdlog::error("AudioComponent: Failed to create channel: {}", FMOD_ErrorString(result));
@@ -417,10 +458,34 @@ bool AudioComponent::Play() {
     }
 
     if (newChannel) {
-        const FMOD_VECTOR pos = ToFMOD(position);
-        const FMOD_VECTOR vel = ToFMOD(velocity);
-        FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
-        FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
+        // Apply per-component playback settings onto the CHANNEL (not the shared Sound).
+        // Note: Streaming is decided at load time (createStream vs createSample). Toggling
+        // AudioComponent::isStreaming at runtime won't change the already-loaded Sound.
+        {
+            FMOD_MODE soundMode{};
+            if (sound->getMode(&soundMode) == FMOD_OK) {
+                const bool loadedStreaming = (soundMode & FMOD_CREATESTREAM) != 0;
+                if (loadedStreaming != isStreaming) {
+                    spdlog::warn("AudioComponent: isStreaming={} but loaded sound streaming={} (streaming is set at load time; reimport/reload asset to change)",
+                                 isStreaming, loadedStreaming);
+                }
+            }
+        }
+
+        // 2D/3D + looping are best treated as per-channel settings.
+        {
+            FMOD_MODE mode = FMOD_DEFAULT;
+            mode |= is3D ? FMOD_3D : FMOD_2D;
+            mode |= isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+            FMOD_ErrorCheck(newChannel->setMode(mode));
+        }
+
+        if (is3D) {
+            const FMOD_VECTOR pos = ToFMOD(position);
+            const FMOD_VECTOR vel = ToFMOD(velocity);
+            FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
+            FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
+        }
         FMOD_ErrorCheck(newChannel->setVolume(volume));
         FMOD_ErrorCheck(newChannel->setLoopCount(isLooping ? -1 : 0));
         FMOD_ErrorCheck(newChannel->setPaused(false));
@@ -491,25 +556,17 @@ bool AudioComponent::Stop() {
 
 void AudioComponent::SetLoop(bool loop) {
     isLooping = loop;
-    
-    // Update the sound's loop mode (affects future playbacks)
+
+    // IMPORTANT: Do not mutate the shared FMOD::Sound loop mode here.
+    // Multiple AudioComponents can reference the same Sound handle via the ResourceRegistry.
+    // Looping should be treated as a per-channel playback setting.
     AudioSystem& audioSys = AudioSystem::GetInstance();
-    FMOD::Sound* sound = audioSys.GetSound(soundHandle);
-    if (sound) {
-        FMOD_MODE mode;
-        FMOD_RESULT result = sound->getMode(&mode);
-        if (result == FMOD_OK) {
-            // Clear existing loop flags
-            mode &= ~(FMOD_LOOP_OFF | FMOD_LOOP_NORMAL | FMOD_LOOP_BIDI);
-            // Set new loop mode
-            mode |= loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
-            FMOD_ErrorCheck(sound->setMode(mode));
-        }
-    }
-    
-    // Update the channel's loop count (affects current playback)
     FMOD::Channel* channel = audioSys.GetChannel(this);
     if (channel) {
+        FMOD_MODE mode = FMOD_DEFAULT;
+        mode |= is3D ? FMOD_3D : FMOD_2D;
+        mode |= loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+        FMOD_ErrorCheck(channel->setMode(mode));
         FMOD_ErrorCheck(channel->setLoopCount(loop ? -1 : 0));
     }
 }

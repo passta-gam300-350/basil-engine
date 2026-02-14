@@ -919,7 +919,24 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			}
 		}
 		else {
-			if (meta_type.is_enum())
+			// Specialized UI for AudioGroup enum
+			if (AudioGroup* audioGroup = value.try_cast<AudioGroup>()) {
+				const char* groupNames[] = { "MASTER", "BGM", "SFX", "UI", "AMBIENT" };
+				int currentGroup = static_cast<int>(*audioGroup);
+				
+				if (ImGui::BeginCombo(field_name.c_str(), groupNames[currentGroup])) {
+					for (int i = 0; i < 5; ++i) {
+						bool selected = (i == currentGroup);
+						if (ImGui::Selectable(groupNames[i], selected)) {
+							*audioGroup = static_cast<AudioGroup>(i);
+							is_dirty = true;
+						}
+						if (selected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+			}
+			else if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
 				void(*assignment_by_type)(void*, const void*) { nullptr };

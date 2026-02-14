@@ -228,9 +228,15 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&ScriptProperty::is_user_type, "is_user_type">
 	);
 
+	// Audio groups
+	//RegisterReflectionComponent<AudioGroup>("AudioGroup");
+
 	RegisterReflectionComponent<AudioComponent>(
 		"AudioComponent",
 		MemberRegistrationV<&AudioComponent::audioAssetGuid, "audioAssetGuid">,
+		//audio group
+		//filter array
+		MemberRegistrationV<&AudioComponent::group, "group">,
 		MemberRegistrationV<&AudioComponent::volume, "volume">,
 		MemberRegistrationV<&AudioComponent::isLooping, "isLooping">,
 		MemberRegistrationV<&AudioComponent::is3D, "is3D">,
