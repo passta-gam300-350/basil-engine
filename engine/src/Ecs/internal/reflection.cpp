@@ -308,12 +308,14 @@ void ReflectionRegistry::SetupEngineTypes()
 	// Register TextMeshComponent enums
 	RegisterReflectionComponent<TextMeshComponent::BillboardMode>("TextMeshComponent::BillboardMode");
 	RegisterReflectionComponent<TextMeshComponent::Alignment>("TextMeshComponent::Alignment");
+	RegisterReflectionComponent<TextMeshComponent::TextSizingMode>("TextMeshComponent::TextSizingMode");
 
 	RegisterReflectionComponent<TextMeshComponent>(
 		"TextMeshComponent",
 		MemberRegistrationV<&TextMeshComponent::m_FontGuid, "fontGuid">,
 		MemberRegistrationV<&TextMeshComponent::text, "text">,
 		MemberRegistrationV<&TextMeshComponent::billboardMode, "billboardMode">,
+		MemberRegistrationV<&TextMeshComponent::sizingMode, "sizingMode">,
 		MemberRegistrationV<&TextMeshComponent::fontSize, "fontSize">,
 		MemberRegistrationV<&TextMeshComponent::referenceDistance, "referenceDistance">,
 		MemberRegistrationV<&TextMeshComponent::alignment, "alignment">,
