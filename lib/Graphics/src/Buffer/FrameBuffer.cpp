@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   FrameBuffer.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Framebuffer implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include <Buffer/FrameBuffer.h>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
@@ -310,6 +324,18 @@ void FrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
 		spdlog::error("Cannot resize framebuffer to zero dimensions!");
 		return;
+	}
+
+	// CRITICAL OPTIMIZATION: Skip resize if dimensions haven't changed
+	// Prevents unnecessary GPU texture deletion/recreation during window resize events
+	// Without this, maximizing window causes massive frame drops due to:
+	// - glDeleteTextures (all color/depth attachments)
+	// - glGenTextures + glTexImage2D (expensive GPU memory allocation)
+	// - Framebuffer recreation
+	// For 4x MSAA 1920x1080 RGB16F buffer, this saves ~50MB GPU reallocation per frame!
+	if (m_Specifications.Width == width && m_Specifications.Height == height)
+	{
+		return; // Already at target size - no-op
 	}
 
 	m_Specifications.Width = width;

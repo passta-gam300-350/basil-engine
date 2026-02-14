@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   BloomRenderPass.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Bloom render pass implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "../../include/Pipeline/BloomRenderPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
@@ -323,6 +337,15 @@ uint32_t BloomRenderPass::GetBloomMip(int index) const
 
 void BloomRenderPass::OnResize(uint32_t newWidth, uint32_t newHeight)
 {
+	// OPTIMIZATION: Skip resize if dimensions haven't changed
+	// Prevents expensive mip chain recreation (6+ framebuffers with GPU texture allocation)
+	if (m_Initialized &&
+		m_SrcViewportSize.x == static_cast<int>(newWidth) &&
+		m_SrcViewportSize.y == static_cast<int>(newHeight))
+	{
+		return; // Already at target size - no-op
+	}
+
 	// Viewport size changed - recreate mip chain
 	spdlog::info("BloomRenderPass: Viewport size changed to {}x{}, recreating mip chain", newWidth, newHeight);
 

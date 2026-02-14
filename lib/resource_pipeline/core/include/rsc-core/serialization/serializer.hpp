@@ -89,6 +89,9 @@ namespace rp {
 			~in_archive() {}
 			template <typename Type>
 			Type read(YAML::Node const& cnd) {
+				if (!cnd.IsDefined() || cnd.IsNull()) {
+					return Type{}; //node deos not exist, default value
+				}
 				if constexpr (std::is_enum_v<Type>) {
 					return reflection::map_enum_value<Type>(cnd.as<std::string>());
 				}
@@ -116,6 +119,7 @@ namespace rp {
 					}
 					else {
 						Type v{};
+						v.reserve(cnd.size());
 						for (auto it = cnd.begin(); it != cnd.end(); ++it) {
 							v.emplace(v.end(), read<typename Type::value_type>(*it));
 						}

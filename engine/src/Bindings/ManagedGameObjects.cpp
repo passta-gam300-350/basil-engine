@@ -1,3 +1,19 @@
+/******************************************************************************/
+/*!
+\file   ManagedGameObjects.cpp
+\author Team PASSTA
+		Jia Hao Yeo (jiahao.yeo\@digipen.edu)
+\par    Course : CSD3451 / UXG3450
+\date   2026/02/01
+\brief This file contains the definition for the ManagedGameObjects class, which
+is responsible for managing game objects from managed code (C#).
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Bindings/ManagedGameObjects.hpp"
 
 #include <mono/metadata/object.h>

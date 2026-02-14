@@ -153,7 +153,7 @@ void EditorMain::Render_SceneExplorer()
 			// Render tree node - use label format for normal mode, empty for rename mode
 			bool nodeOpen;
 			bool labelClicked = false;
-			bool labelRightClicked = false;
+			[[maybe_unused]] bool labelRightClicked = false;
 
 			if (m_RenamingEntityUID == entityUID) {
 				// Rename mode - empty TreeNodeEx + input field

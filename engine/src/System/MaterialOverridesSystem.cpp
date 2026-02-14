@@ -35,7 +35,7 @@ void MaterialOverridesSystem::Init() {
     spdlog::info("MaterialOverridesSystem: Initialization complete");
 }
 
-void MaterialOverridesSystem::Update(ecs::world& world, float dt) {
+void MaterialOverridesSystem::Update(ecs::world& world, float) {
     PF_SYSTEM("MaterialOverrides System");
     auto& renderSystem = Engine::GetRenderSystem();
 

@@ -121,6 +121,12 @@ public:
     void SetBackgroundColor(const glm::vec4& color);
     glm::vec4 GetBackgroundColor() const;
 
+    // Light cube visualization configuration
+    void SetDefaultLightCubeSize(float size);
+    float GetDefaultLightCubeSize() const;
+    void SetShowLightCubes(bool show);
+    bool GetShowLightCubes() const;
+
     // HDR configuration API
     void SetHDRComputeShader(const std::shared_ptr<Shader>& shader) const;
     void SetToneMappingShader(const std::shared_ptr<Shader>& shader) const;
@@ -166,10 +172,17 @@ public:
     // Debug info (read-only access for debugging/logging)
     const FrameData& GetFrameDataReadOnly() const { return m_FrameData; }
 
+    // Shadow texture array access (for shadow passes)
+    uint32_t GetShadow2DTextureArray() const { return m_Shadow2DTextureArray; }
+
 private:
     void InitializeRenderingCoordinators();
 
     void InitializeDefaultPipeline();
+
+    // Shadow texture array management
+    void CreateShadow2DTextureArray();
+    void DestroyShadow2DTextureArray();
 
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
@@ -193,4 +206,9 @@ private:
     std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
     std::unique_ptr<HUDRenderer> m_HUDRenderer;
     std::unique_ptr<TextRenderer> m_TextRenderer;
+
+    // Unified shadow texture array (directional + spot shadows)
+    uint32_t m_Shadow2DTextureArray = 0;
+    static constexpr uint32_t SHADOW_ARRAY_LAYERS = 16;  // Support up to 16 2D shadows (1 directional + 15 spot)
+    static constexpr uint32_t SHADOW_MAP_SIZE = 1024;     // 1024x1024 per shadow map (optimized for laptop GPUs)
 };

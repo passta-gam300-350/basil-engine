@@ -2548,6 +2548,36 @@
 "kite_scene_kite_scene_mat_Roughness.png":
   "m_guid": "36fd7b1781ba8f62eddc741118a"
   "m_typeindex": "126269861530532084"
+"kitegame1_1.png":
+  "m_guid": "b8d61b37464976ab04129b85358"
+  "m_typeindex": "126269861530532084"
+"kitegame1_2.png":
+  "m_guid": "b8d61bf7ae8981b29a8150eda1a"
+  "m_typeindex": "126269861530532084"
+"kitegame1_3.png":
+  "m_guid": "b8d61c876afb39250b744e897c4"
+  "m_typeindex": "126269861530532084"
+"kitegame2_1.png":
+  "m_guid": "b8d61d07f1785578584b9ad4f48"
+  "m_typeindex": "126269861530532084"
+"kitegame2_2.png":
+  "m_guid": "b8d61d87ffd85a1056ab343c2e4"
+  "m_typeindex": "126269861530532084"
+"kitegame3_1.png":
+  "m_guid": "b8d61e17f709be8c3d9c5b23ca1"
+  "m_typeindex": "126269861530532084"
+"kitegame4_1.png":
+  "m_guid": "b8d61ea72249272fed178c39468"
+  "m_typeindex": "126269861530532084"
+"kitegame4_2.png":
+  "m_guid": "b8d61f47009ad110abf8dc937b5"
+  "m_typeindex": "126269861530532084"
+"kitegame5_1.png":
+  "m_guid": "b8d61fd7d6c9f71c0c81911a6bd"
+  "m_typeindex": "126269861530532084"
+"kitegame5_2.png":
+  "m_guid": "b8d62057ef79c35c3f9322eaa53"
+  "m_typeindex": "126269861530532084"
 "level1_ground.obj":
   "m_guid": "5d4d71a7b3687b79a4b0ee3edea"
   "m_typeindex": "4838001395392124604"

@@ -152,6 +152,9 @@ void EditorMain::Render_MenuBar()
 		ImGui::MenuItem("Open Project", "Ctrl+Alt+O");
 		ImGui::MenuItem("Save Project", "Ctrl+Alt+S");
 		ImGui::MenuItem("Save Project As", "Ctrl+Alt+Shift+S");
+		if (ImGui::MenuItem("Build Project", "Ctrl+Alt+B")) {
+			showExporter = true;
+		}
 		ImGui::Separator();
 		if (ImGui::MenuItem("Exit", "Alt+F4")) {
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -366,6 +369,6 @@ void EditorMain::Render_MenuBar()
 	ImGui::EndMainMenuBar();
 
 	Render_AboutUI();
-
+	Render_ExporterSettings();
 
 }

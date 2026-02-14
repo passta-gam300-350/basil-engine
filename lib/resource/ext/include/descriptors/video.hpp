@@ -8,7 +8,7 @@ struct VideoDescriptor {
     rp::descriptor_base base;
 };
 
-inline VideoResourceData CreateVideo(VideoDescriptor const& vidDesc, std::string const& path = {}, std::string const& serializedescpath = {}) {
+inline VideoResourceData CreateVideo(VideoDescriptor const& vidDesc, [[maybe_unused]] std::string const& path = {}, std::string const& serializedescpath = {}) {
     // Copy data and include source path for runtime access
     VideoResourceData data{};
     std::string rpath{ rp::utility::resolve_path(vidDesc.base.m_source) };
@@ -19,7 +19,7 @@ inline VideoResourceData CreateVideo(VideoDescriptor const& vidDesc, std::string
         file.seekg(0, std::ios::beg);
         file.read(reinterpret_cast<char*>(data.m_VidData.Raw()), data.m_VidData.Size());
 
-        SerializeBinary(data, vidDesc.base.m_guid, ".video", path);
+        //SerializeBinary(data, vidDesc.base.m_guid, ".video", path);
 
         // Serialize descriptor to YAML
         if (!serializedescpath.empty())

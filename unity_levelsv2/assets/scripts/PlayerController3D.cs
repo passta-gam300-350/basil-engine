@@ -15,7 +15,7 @@ public class PlayerController3D : Behavior
     public float footstepInterval = 0.5f; // Time between footsteps in seconds
 
     public float mouseSensitivity = 0.075f;
-    public float baseMoveSpeed = 4f;   // normal speed with no trash
+    public float baseMoveSpeed = 1.5f;   // normal speed with no trash
     public float speedMultiplier = 1f; // modified by GameManager
 
     public bool disabled = false;
@@ -123,8 +123,8 @@ public class PlayerController3D : Behavior
                 mopVisual.visibility = onMopEnabled;
 
             // Trash bag visual (opposite of mop)
-            if (GameManager.instance != null)
-                GameManager.instance.SetBagVisibility(!onMopEnabled);
+            if (TrashBag.instance != null)
+                TrashBag.instance.SetVisible(!onMopEnabled);
 
             Logger.Log(
                 "Mop: " + (onMopEnabled ? "shown" : "hidden") +

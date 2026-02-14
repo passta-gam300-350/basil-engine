@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   MainRenderingPass.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Main rendering pass implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "../../include/Pipeline/MainRenderingPass.h"
 #include "../../include/Pipeline/RenderContext.h"
 #include "../../include/Core/RenderCommandBuffer.h"
@@ -350,13 +364,16 @@ void MainRenderingPass::RenderLightCubes(RenderContext& context)
 
     // Render each light as a cube (all light types: Directional, Point, Spot)
     for (const auto& light : context.lights) {
-        // Use fixed cube size (intensity-based scaling disabled)
-        float cubeSize = m_BaseLightCubeSize;
+        // Use per-light size if specified (any component non-zero), otherwise use default uniform size
+        glm::vec3 cubeSize = (glm::length(light.visualSize) > 0.0f)
+            ? light.visualSize
+            : glm::vec3(m_BaseLightCubeSize);
 
-        // Calculate transform matrix for light position with fixed scaling
+        // Calculate transform matrix with full TRS (Translate-Rotate-Scale)
         glm::mat4 modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, light.position);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(cubeSize));
+        modelMatrix = modelMatrix * glm::mat4_cast(glm::quat(glm::radians(light.visualRotation)));
+        modelMatrix = glm::scale(modelMatrix, cubeSize);
 
         // Set uniforms using the available SetUniformsData command
         RenderCommands::SetUniformsData uniformsCmd{

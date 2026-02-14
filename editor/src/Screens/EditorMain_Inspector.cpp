@@ -780,6 +780,9 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 	auto type = comp.type();
 	auto field_table = ReflectionRegistry::GetFieldNames(type.id());
 
+	// Detect if this is a TransformComponent for custom drag speed
+	bool isTransformComponent = (type.id() == ToTypeName("TransformComponent"));
+
 	int i{};
 
 	for (auto [id, data] : type.data()) {
@@ -879,6 +882,9 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				field_name.find("tint") != std::string::npos);
 
 			if (!isColorField) {
+				// Use slower drag speed for TransformComponent fields (0.1 vs 1.0)
+				float dragSpeed = isTransformComponent ? 0.1f : 1.0f;
+
 				ImGui::Text("%s", field_name.c_str());
 				ImGui::SameLine(150);  // Align input fields
 
@@ -889,7 +895,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text("X");
 				ImGui::PopStyleColor();
 				ImGui::SameLine();
-				if (ImGui::DragFloat("##X", &vec3_ptr->x)) is_dirty = true;
+				if (ImGui::DragFloat("##X", &vec3_ptr->x, dragSpeed)) is_dirty = true;
 				ImGui::SameLine();
 
 				// Y component (green label)
@@ -897,7 +903,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text("Y");
 				ImGui::PopStyleColor();
 				ImGui::SameLine();
-				if (ImGui::DragFloat("##Y", &vec3_ptr->y)) is_dirty = true;
+				if (ImGui::DragFloat("##Y", &vec3_ptr->y, dragSpeed)) is_dirty = true;
 				ImGui::SameLine();
 
 				// Z component (blue label)
@@ -905,7 +911,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text("Z");
 				ImGui::PopStyleColor();
 				ImGui::SameLine();
-				if (ImGui::DragFloat("##Z", &vec3_ptr->z)) is_dirty = true;
+				if (ImGui::DragFloat("##Z", &vec3_ptr->z, dragSpeed)) is_dirty = true;
 
 				ImGui::PopItemWidth();
 				ImGui::PopID();
@@ -962,7 +968,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				if (ImGui::BeginCombo(field_name.c_str(), std::string(meta_type.func("to_enum_name"_tn).invoke({}, enum_value).cast<const std::string_view>()).c_str())) {
 					auto names{ meta_type.func("enum_values"_tn).invoke({}).cast<std::span<const std::pair<std::string_view, std::uint32_t>>>() };
 					for (auto [enum_name, enum_val] : names) {
-						bool selected = (enum_val == enum_value);
+						bool selected = (int(enum_val) == enum_value);
 						if (ImGui::Selectable(std::string(enum_name).c_str(), selected)) {
 							enum_value = enum_val;
 							is_dirty = true;

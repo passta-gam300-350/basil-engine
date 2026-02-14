@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   ComponentRegistry.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Component registry implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Prefab/ComponentRegistry.hpp"
 #include "Ecs/ecs.h"
 #include <glm/glm.hpp>
@@ -294,7 +308,7 @@ std::optional<SerializedPropertyValue> ComponentRegistry::MetaAnyToPropertyValue
 
 entt::meta_any ComponentRegistry::PropertyValueToMetaAny(
     const SerializedPropertyValue& value,
-    entt::meta_type targetType)
+    entt::meta_type)
 {
     // Try to convert variant to meta_any
     return std::visit([&](auto&& val) -> entt::meta_any {

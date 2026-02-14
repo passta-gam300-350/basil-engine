@@ -184,7 +184,7 @@ public class PuzzleManager : Behavior
     {
         if (Input.GetMouse(0) || Input.GetKey(KeyCode.F))
         {
-            Logger.Log("Mouse clicked");
+            
             if (grabbedObject == null)
             {
                 Vector2 mousePosition = Input.mousePosition;
@@ -265,7 +265,6 @@ public class PuzzleManager : Behavior
         }
         else if (gameMode == 2)
         {
-            // Kite puzzle logic would go here
             PuzzleGame2();
         }
     }

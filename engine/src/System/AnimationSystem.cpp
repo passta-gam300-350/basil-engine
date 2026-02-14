@@ -23,7 +23,7 @@ Technology is prohibited.
 
 void animationSystem::FixedUpdate(ecs::world& world)
 {
-	float dt = Engine::GetDeltaTime();
+	float dt = float(Engine::GetDeltaTime());
 	// SKELETAL ANIMATION //
 	auto skeletalEntities = world.filter_entities<AnimationComponent, SkeletonComponent>();
 	for (auto eachAEntity : skeletalEntities)
@@ -52,6 +52,12 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		if (!animationComponent.animationdata.m_guid || !skeletonComponent.skeletondata.m_guid) {
 			delete animationComponent.animatorInstance;
 			animationComponent.animatorInstance = nullptr;
+			continue;
+		}
+		if (animationComponent.animatorInstance->currentAnimation != ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid)) {
+			CleanupSkeletalAnimation(animationComponent);
+			skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
+			InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
 			continue;
 		}
 
@@ -111,6 +117,31 @@ void animationSystem::FixedUpdate(ecs::world& world)
 	}
 }
 
+void FreeAnimatorOnDestroy([[maybe_unused]] entt::registry& registry, entt::entity entity) {
+	ecs::entity const ecsEntity = Engine::GetWorld().impl.entity_cast(entity);
+	auto& anc = ecsEntity.get<AnimationComponent>();
+	CleanupSkeletalAnimation(anc);
+}
+
+void animationSystem::Init()
+{
+	auto world = Engine::GetWorld();
+	entt::registry& registry = world.impl.get_registry();
+
+	registry.on_construct<AnimationComponent>().disconnect();
+	registry.on_destroy<AnimationComponent>().disconnect();
+	registry.on_destroy<AnimationComponent>().connect<FreeAnimatorOnDestroy>();
+}
+
+void animationSystem::Exit()
+{
+	auto world = Engine::GetWorld();
+	auto animationen = world.filter_entities<AnimationComponent>();
+	for (auto e : animationen) {
+		e.remove<AnimationComponent>();
+	}
+}
+
 boneChannel LoadBoneChannel(const char* data) {
 	AnimationResourceData animResData = rp::serialization::serializer<"bin">::deserialize<AnimationResourceData>(
 		reinterpret_cast<const std::byte*>(data)
@@ -155,13 +186,13 @@ animationContainer LoadAnimationContainer(const char* data) {
 	for (AnimationResourceData::Channel chl : animData.m_channels) {
 		boneChannel bc{ chl.m_name, chl.m_id };
 		for (auto const& poskey : chl.m_positions) {
-			bc.addPositionKeyframe(poskey.first / 1000, poskey.second);
+			bc.addPositionKeyframe(poskey.first, poskey.second);
 		}
 		for (auto const& rotkey : chl.m_rotations) {
-			bc.addRotationKeyframe(rotkey.first / 1000, rotkey.second);
+			bc.addRotationKeyframe(rotkey.first, rotkey.second);
 		}
 		for (auto const& sclkey : chl.m_scales) {
-			bc.addScaleKeyframe(sclkey.first / 1000, sclkey.second);
+			bc.addScaleKeyframe(sclkey.first, sclkey.second);
 		}
 		ac.channels.emplace_back(bc);
 	}
@@ -206,6 +237,6 @@ void CleanupSkeletalAnimation(AnimationComponent& animComp)
 	}
 }
 
-REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel& bc) {return; })
-REGISTER_RESOURCE_TYPE_ALIASE(animationContainer, animationcont, LoadAnimationContainer, [](animationContainer& ac) {return; })
-REGISTER_RESOURCE_TYPE_ALIASE(skeleton, skeleton, LoadSkeleton, [](skeleton& ac) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(boneChannel, animation, LoadBoneChannel, [](boneChannel&) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(animationContainer, animationcont, LoadAnimationContainer, [](animationContainer&) {return; })
+REGISTER_RESOURCE_TYPE_ALIASE(skeleton, skeleton, LoadSkeleton, [](skeleton&) {return; })

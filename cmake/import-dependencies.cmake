@@ -208,7 +208,7 @@ macro(import_tinyddsloader)
 
     FetchContent_MakeAvailable(tinyddsloader)
     add_library(tinyddsloader INTERFACE)
-    target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
+    #target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
     target_include_directories(tinyddsloader INTERFACE SYSTEM $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
     set_target_properties(tinyddsloader PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
@@ -582,6 +582,18 @@ macro(import_mono)
     ENDIF()
 endmacro()
 
+macro(import_mono_prod)
+    FetchContent_Declare(
+        mono_prod
+        GIT_REPOSITORY https://github.com/Silver1713/mono_prod.git
+        GIT_TAG master
+    )
+    FetchContent_GetProperties(mono_prod) 
+    if(NOT mono_prod_POPULATED) 
+        FetchContent_Populate(mono_prod) 
+    endif()
+endmacro()
+
 macro(import_xml)
     FetchContent_Declare(
         pugixml
@@ -606,7 +618,7 @@ macro(import_plmpeg)
     )
     FETCHCONTENT_MAKEAVAILABLE(plmpeg)
     add_library(plmpeg INTERFACE ${plmpeg_SOURCE_DIR}/pl_mpeg.h)
-    target_include_directories(plmpeg INTERFACE ${plmpeg_SOURCE_DIR})
+    target_include_directories(plmpeg SYSTEM INTERFACE ${plmpeg_SOURCE_DIR})
 endmacro()
 
 function(hide_dependencies)
@@ -715,6 +727,7 @@ macro(import_dependencies)
     import_msdfgen()
     import_fmod()
     import_mono()
+    import_mono_prod()
     import_xml()
     import_jolt()
     import_plmpeg()

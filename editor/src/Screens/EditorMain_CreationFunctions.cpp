@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   EditorMain_CreationFunctions.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Editor creation functions implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Screens\EditorMain.hpp"
 
 #include "component/Identification.hpp"
@@ -187,7 +201,7 @@ void EditorMain::CreatePhysicsCube()
 		materialOverrides2.floatOverrides["u_MetallicValue"] = 0.0f; // Non-metallic (dielectric materials like plastic/wood)
 		materialOverrides2.floatOverrides["u_RoughnessValue"] = 0.7f; // Slightly rough for diffuse appearance
 		world.add_component_to_entity<MaterialOverridesComponent>(entity2, materialOverrides2);
-		auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
+		//auto RigidBody = &world.get_component_from_entity<RigidBodyComponent>(entity2);
 		// Creating Cube
 		entity2.add<BoxCollider>();
 		}); // End of ExecuteOnEngineThread lambda

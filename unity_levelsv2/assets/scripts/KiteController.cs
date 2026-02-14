@@ -9,6 +9,7 @@ using BasilEngine.SceneManagement;
 public class KiteController : Behavior
 {
     private Rigidbody rb;
+    private KiteGameHudVO voHud;
 
     private bool canMove = false; // player cannot move at start
     private bool introStarted = false;
@@ -42,6 +43,10 @@ public class KiteController : Behavior
             rb.UseGravity = false;
             rb.Drag = 0;
         }
+
+        GameObject hudObj = GameObject.Find("VOHudManager");
+        if (hudObj != null)
+            voHud = hudObj.transform.GetComponent<KiteGameHudVO>();
 
         GameObject voObj = GameObject.Find("KiteIntroVO1");
         if (voObj != null)
@@ -104,6 +109,7 @@ public class KiteController : Behavior
         if (!introStarted && introAudio != null)
         {
             introAudio.Play();
+            if (voHud != null) voHud.Play("Intro");
             introStarted = true;
             canMove = false; // ensure player cannot move while VO plays
             introTimer = introDuration; // set timer to clip length in seconds
@@ -190,18 +196,22 @@ public class KiteController : Behavior
         if (kitesHitCount == 1 && fatherWin1 != null)
         {
             fatherWin1.Play();
+            if (voHud != null) voHud.Play("Father1");
         }
         else if (kitesHitCount == 2 && fatherWin2 != null)
         {
             fatherWin2.Play();
+            if (voHud != null) voHud.Play("Father2");
         }
         else if (kitesHitCount == 3 && fatherWin3 != null)
         {
             fatherWin3.Play();
+            if (voHud != null) voHud.Play("Father3");
         }
         else if (kitesHitCount == 4 && fatherWinCombine != null)
         {
             fatherWinCombine.Play();
+            if (voHud != null) voHud.Play("Ending");
             waitingForFinalVO = true;
             finalVOTimer = finalVODuration;
         }

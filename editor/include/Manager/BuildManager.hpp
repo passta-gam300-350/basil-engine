@@ -1,0 +1,58 @@
+/******************************************************************************/
+/*!
+\file   BuildManager.hpp
+\author Team PASSTA
+		Chew Bangxin Steven (bangxinsteven.chew\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration of the BuildManager class, which
+manages the game build.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
+#ifndef EDITOR_BUILD_MANAGER_H
+#define EDITOR_BUILD_MANAGER_H
+
+#include <atomic>
+#include <memory>
+#include <string>
+#include <future>
+
+//simple m4 build system. this will be fleshed out in m5
+//yaml build
+struct BuildConfiguration {
+	std::string output_dir;
+	std::string output_name;
+	std::string icon_relative_path; //relative path //should warn if dne
+	bool strip_unused_assets; //not supported in m4
+	bool fullscreen;
+};
+
+enum class BuildState : std::uint8_t {
+	IDLE,
+	QUEUED,
+	IN_PROGRESS,
+	SUCCESS,
+	FAILED,
+	ABORTED
+};
+
+//contract between caller and async callee. ensures caller resource lifetime does not cause problems for callee
+struct BuildContext {
+	std::atomic<BuildState> m_state;
+	std::atomic_int m_progress100;
+};
+
+//stateless for now (simple impl)
+struct BuildManager {
+	static std::future<void> BuildAsync(BuildConfiguration, std::shared_ptr<BuildContext>);
+	static BuildConfiguration LoadBuildConfiguration();
+	static void SaveBuildConfiguration(BuildConfiguration const&);
+};
+
+#endif

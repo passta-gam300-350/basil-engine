@@ -77,7 +77,7 @@ void JoltDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::
 }
 
 void JoltDebugRenderer::DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3,
-                                      JPH::ColorArg inColor, ECastShadow inCastShadow)
+                                      JPH::ColorArg inColor, ECastShadow /*inCastShadow*/)
 {
     // Stub: Draw triangle edges as lines for basic visualization
     if (!m_enabled)
@@ -128,10 +128,10 @@ JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Vertex* i
     return batch;
 }
 
-void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds,
-                                      float inLODScaleSq, JPH::ColorArg inModelColor,
-                                      const GeometryRef& inGeometry, ECullMode inCullMode,
-                                      ECastShadow inCastShadow, EDrawMode inDrawMode)
+void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& /*inWorldSpaceBounds*/,
+                                      float /*inLODScaleSq*/, JPH::ColorArg inModelColor,
+                                      const GeometryRef& inGeometry, ECullMode /*inCullMode*/,
+                                      ECastShadow /*inCastShadow*/, EDrawMode /*inDrawMode*/)
 {
     if (!m_enabled || inGeometry == nullptr)
     {
@@ -207,8 +207,8 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
     }
 }
 
-void JoltDebugRenderer::DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString,
-                                    JPH::ColorArg inColor, float inHeight)
+void JoltDebugRenderer::DrawText3D(JPH::RVec3Arg /*inPosition*/, const std::string_view& /*inString*/,
+                                    JPH::ColorArg /*inColor*/, float /*inHeight*/)
 {
     // Stub: Not implemented for basic line rendering
     // 3D text rendering would require a font system

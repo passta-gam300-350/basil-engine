@@ -24,6 +24,8 @@ Technology is prohibited.
 struct animationSystem : public ecs::SystemBase
 {
 	void FixedUpdate(ecs::world& world) override;
+    void Init() override;
+    void Exit() override;
 };
 
 void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent& skelComp, const skeleton& skeletonData, animationContainer* animation);

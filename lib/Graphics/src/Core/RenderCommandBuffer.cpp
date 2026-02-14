@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   RenderCommandBuffer.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Render command buffer implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Core/RenderCommandBuffer.h"
 #include "Resources/TextureSlotManager.h"
 #include <algorithm>
@@ -404,6 +418,24 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexture3DData
     // Bind 3D texture to specified texture unit
     glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
     glBindTexture(GL_TEXTURE_3D, cmd.textureID);
+
+    // Set uniform sampler to point to the texture unit
+    cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
+}
+
+void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexture2DArrayData &cmd)
+{
+    assert(cmd.shader && "BindTexture2DArrayData command must have a valid shader");
+    assert(cmd.shader->ID != 0 && "Shader program must be compiled and linked");
+    assert(cmd.textureUnit < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS && "Texture unit exceeds OpenGL limits");
+    assert(!cmd.uniformName.empty() && "Uniform name cannot be empty");
+
+    // Ensure shader is active
+    cmd.shader->use();
+
+    // Bind 2D texture array to specified texture unit
+    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));

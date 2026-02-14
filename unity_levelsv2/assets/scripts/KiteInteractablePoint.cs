@@ -23,7 +23,7 @@ public class KiteInteractablePoint : Behavior
         float distance = Vector3.DistanceSqr(transform.position, player.transform.position);
         if (distance <= interact_distance && Input.GetKeyPress(KeyCode.E))
         {
-            if (GameManager.instance.trashInHand >= GameManager.instance.maxTrashInHand)
+            if (TrashBag.instance.trashInHand >= TrashBag.instance.maxTrashInHand)
             {
                 Logger.Log("No hands to use!");
                 return;
@@ -41,6 +41,7 @@ public class KiteInteractablePoint : Behavior
                 CameraManager.instance.ActivateKiteCamera();
                 PuzzleManager.manager.KitePuzzle();
                 GameManager.instance.DisableControls();
+                GameManager.instance.ShowMouse();
             }
             else
             {
@@ -48,6 +49,7 @@ public class KiteInteractablePoint : Behavior
                 CameraManager.instance.ActivatePlayerCamera();
                 GameManager.instance.EnableControls();
                 PuzzleManager.manager.Explore();
+                GameManager.instance.HideMouse();
             }
 
 

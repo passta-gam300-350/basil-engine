@@ -9,13 +9,13 @@ struct AudioDescriptor {
     AudioResourceData audio;
 };
 
-inline AudioResourceData CreateAudio(AudioDescriptor const& audioDesc, std::string const& path = {}, std::string const& serializedescpath = {}) {
+inline AudioResourceData CreateAudio(AudioDescriptor const& audioDesc, [[maybe_unused]] std::string const& path = {}, std::string const& serializedescpath = {}) {
     // Copy data and include source path for runtime access
     AudioResourceData data = audioDesc.audio;
     data.sourcePath = audioDesc.base.m_source;
 
     // Serialize to binary (.audio file)
-    SerializeBinary(data, audioDesc.base.m_guid, ".audio", path);
+    //SerializeBinary(data, audioDesc.base.m_guid, ".audio", path);
 
     // Serialize descriptor to YAML
     if (!serializedescpath.empty())

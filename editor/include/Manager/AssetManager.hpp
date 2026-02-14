@@ -1,3 +1,20 @@
+/******************************************************************************/
+/*!
+\file   AssetManager.hpp
+\author Team PASSTA
+		Chew Bangxin Steven (bangxinsteven.chew\@digipen.edu)
+
+\par    Course : CSD3401 / UXG3400
+\date   2025/10/04
+\brief This file contains the declaration of the AssetManager class, which
+manages the asset pipeline from editor to engine.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef EDITOR_ASSET_MANAGER_H
 #define EDITOR_ASSET_MANAGER_H
 
@@ -28,6 +45,8 @@ struct AssetManager {
 	std::atomic<bool> m_ShouldClose;
 	std::atomic<std::chrono::steady_clock::time_point> m_LastNotificationTime;
 	std::atomic<bool> m_NeedsRescan;
+
+	std::function<void(std::string const&)> m_ActivityCallback;
 
 	// Prefab synchronization tracking
 	std::vector<std::string> m_ChangedPrefabs;  ///< List of prefab file paths that have changed

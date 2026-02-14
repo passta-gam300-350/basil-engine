@@ -40,6 +40,8 @@ public class MainMenuManager : Behavior
         audio.Looping = true;
         audio.Play();
         isFadingIn = true;
+
+        Input.CursorHidden = true;
     }
     public void Update()
     {
@@ -130,7 +132,7 @@ public class MainMenuManager : Behavior
                     Scene.LoadSceneByIndex(1);
                     break;
                 case MenuStates.QUIT_SELECT:
-                    Logger.Log("QUIT!");
+                    Scene.Quit();
                     break;
             }
         }

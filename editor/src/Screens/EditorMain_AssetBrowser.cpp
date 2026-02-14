@@ -1,6 +1,7 @@
 #include"Screens/EditorMain.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include "Profiler/profiler.hpp"
+#include <stack>
 
 void EditorMain::Render_AssetBrowser()
 {
@@ -391,6 +392,14 @@ void EditorMain::Render_AssetBrowser()
 							m_AssetManager->LoadImportSettings(filePair.second);
 							ShowImportSettingsMenu = true;
 						}
+						if (ImGui::MenuItem("Delete Asset"))
+						{
+							std::string filename1 = filePair.second.substr(0, filePair.second.find_last_of("."));
+							if (std::filesystem::exists(filename1)) {
+								std::filesystem::remove(filename1);
+							}
+							m_AssetManager->ExportAssetList();
+						}
 						ImGui::EndPopup();
 					}
 
@@ -515,6 +524,12 @@ void EditorMain::Render_AssetBrowser()
 						{
 							m_AssetManager->LoadImportSettings(filePair.second);
 							ShowImportSettingsMenu = true;
+						}
+						if (ImGui::MenuItem("Delete Asset"))
+						{
+							if (std::filesystem::exists(filePair.second)) {
+								std::filesystem::remove(filePair.second);
+							}
 						}
 						ImGui::EndPopup();
 					}
@@ -679,6 +694,8 @@ void EditorMain::Render_Resources()
 
 		ImGui::Columns(resColumns, 0, false);
 
+		std::stack<std::string> deleteStack;
+
 		for (auto [assetname, guid] : m_AssetManager->m_AssetNameGuid)
 		{
 			ImGui::PushID(assetname.c_str());
@@ -733,6 +750,18 @@ void EditorMain::Render_Resources()
 				ImGui::PopStyleColor();
 			}
 
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (ImGui::MenuItem("Delete Resource"))
+				{
+					engineService.ExecuteOnEngineThread([guid] {
+						ResourceRegistry::Instance().Unload(guid);
+						});
+					deleteStack.push(assetname);
+				}
+				ImGui::EndPopup();
+			}
+
 			// Handle selection
 			if (clicked) {
 				m_SelectedResourceName = assetname;
@@ -749,6 +778,18 @@ void EditorMain::Render_Resources()
 		// Detect click on empty space to deselect
 		if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 			m_SelectedResourceName = "";
+		}
+
+		while (!deleteStack.empty()) {
+			auto res = m_AssetManager->m_AssetNameGuid.find(deleteStack.top());
+			deleteStack.pop();
+			if (res != m_AssetManager->m_AssetNameGuid.end()) {
+				std::string filename = rp::utility::output_path() + "/" + res->second.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetResourceExt(res->second.m_typeindex);
+				if (std::filesystem::exists(filename)) {
+					std::filesystem::remove(filename);
+				}
+				m_AssetManager->m_AssetNameGuid.erase(res);
+			}
 		}
 	}
 	ImGui::EndChild();

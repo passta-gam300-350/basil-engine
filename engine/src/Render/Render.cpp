@@ -247,7 +247,7 @@ void RenderSystem::Update(ecs::world& world) {
 	auto sceneWorldTextElements = world.filter_entities<TextMeshComponent, TransformMtxComponent>();
 
 	// Debug: Log entity counts
-	int objectCount = visibleEntityIDs.size();
+	int objectCount = int(visibleEntityIDs.size());
 	int lightCount = 0;
 	for (auto light : sceneLights)
 	{ 
@@ -351,9 +351,6 @@ void RenderSystem::Update(ecs::world& world) {
 						renderData.boneMatrices = skelComp.finalBoneMatrices.data();
 						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
 						renderData.isSkinned = true;
-						spdlog::info("[AnimTest] bones={}, isSkinned={}, ptr={}",
-							renderData.boneCount, renderData.isSkinned,
-							(void*)renderData.boneMatrices);
 					}
 				} 
 
@@ -425,7 +422,7 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	for (auto light : sceneLights) {
-		auto [lightComponent, position] {light.get<LightComponent, TransformComponent>()};
+		auto [lightComponent, transform] {light.get<LightComponent, TransformComponent>()};
 		SubmittedLightData lightData;
 		lightData.type = lightComponent.m_Type;
 		lightData.color = lightComponent.m_Color;
@@ -436,7 +433,9 @@ void RenderSystem::Update(ecs::world& world) {
 		lightData.outerCone = lightComponent.m_OuterCone;
 		lightData.diffuseIntensity = lightComponent.m_Intensity;
 		lightData.range = lightComponent.m_Range;
-		lightData.position = position.m_Translation;
+		lightData.position = transform.m_Translation;
+		lightData.visualSize = transform.m_Scale * 0.3f;
+		lightData.visualRotation = transform.m_Rotation;
 		m_SceneRenderer->SubmitLight(lightData);
 	}
 
@@ -1288,6 +1287,10 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			vert[i].TexCoords = mesh.vertices[i].TexCoords;
 			vert[i].Tangent = mesh.vertices[i].Tangent;
 			vert[i].Bitangent = mesh.vertices[i].Bitangent;
+			for (int a{}; a < 4; a++) {
+				vert[i].m_Weights[a] = mesh.vertices[i].m_Weights[a];
+				vert[i].m_BoneIDs[a] = mesh.vertices[i].m_BoneIDs[a];
+			}
 		}
 		std::vector<unsigned int> indices{};
 		for (const auto& matslot : mesh.materials) {
@@ -1518,7 +1521,7 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<FontAtlas>, font_atlas,
 			fontData.font_name, textureID, fontData.glyphs.size());
 		return fontAtlas;
 	},
-	[](std::shared_ptr<FontAtlas>& atlas) {
+	[](std::shared_ptr<FontAtlas>&) {
 		// Cleanup handled by FontAtlas destructor (deletes GPU texture)
 	});
 

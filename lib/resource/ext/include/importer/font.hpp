@@ -273,7 +273,7 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 	                            raw_image.format;
 
 	if (fontDesc.compression != FontAtlasCompression::NONE) {
-		HRESULT hr = DirectX::Compress(raw_image, target_format, DirectX::TEX_COMPRESS_PARALLEL, DirectX::TEX_THRESHOLD_DEFAULT, compressed_image);
+		[[maybe_unused]] HRESULT hr = DirectX::Compress(raw_image, target_format, DirectX::TEX_COMPRESS_PARALLEL, DirectX::TEX_THRESHOLD_DEFAULT, compressed_image);
 		assert(!FAILED(hr) && "Atlas compression failed");
 	}
 	else {
@@ -282,7 +282,7 @@ inline FontAtlasResourceData ImportFont(FontDescriptor const& fontDesc) {
 
 	// Save to DDS blob
 	DirectX::Blob dds_blob;
-	HRESULT hr = DirectX::SaveToDDSMemory(compressed_image.GetImages(), compressed_image.GetImageCount(), compressed_image.GetMetadata(), DirectX::DDS_FLAGS_NONE, dds_blob);
+	[[maybe_unused]] HRESULT hr = DirectX::SaveToDDSMemory(compressed_image.GetImages(), compressed_image.GetImageCount(), compressed_image.GetMetadata(), DirectX::DDS_FLAGS_NONE, dds_blob);
 	assert(!FAILED(hr) && "Failed to save DDS");
 
 	fontData.atlas_texture_data.AllocateExact(dds_blob.GetBufferSize());

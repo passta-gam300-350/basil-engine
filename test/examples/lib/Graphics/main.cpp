@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   main.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Graphics library test driver
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 /*
  * ===============================================
  * GRAPHICS TEST DRIVER - CONFIGURATION GUIDE
@@ -123,6 +137,14 @@ bool GraphicsTestDriver::Initialize()
 
     // Create scene renderer (owns all graphics systems now)
     m_SceneRenderer = std::make_unique<SceneRenderer>();
+
+    // ===== PERFORMANCE DIAGNOSTIC: Disable shadows to test if they're the bottleneck =====
+    // Uncomment these lines to disable shadow passes and test FPS impact:
+    //m_SceneRenderer->EnablePass("DirectionalShadowPass", false);
+    //m_SceneRenderer->EnablePass("SpotShadowPass", false);
+    //m_SceneRenderer->EnablePass("PointShadowPass", false);
+    //spdlog::warn("DIAGNOSTIC: All shadow passes DISABLED for performance testing");
+    // ==================================================================================
 
     // Setup resize callback to render during window resize (prevents black flashes)
     m_Window->SetResizeCallback([this]() {
@@ -256,24 +278,24 @@ void GraphicsTestDriver::Run()
 
         // Submit HUD test elements (using pre-loaded textures)
         // Test with pause menu background
-        HUDElementData pauseBg;
-        pauseBg.textureID = m_PauseMenuTexture;
-        pauseBg.position = glm::vec2(1280.0f / 2.0f, 720.0f / 2.0f);  // Center of screen
-        pauseBg.size = glm::vec2(512.0f, 384.0f);
-        pauseBg.anchor = HUDAnchor::Center;
-        pauseBg.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);  // Slightly transparent
-        pauseBg.layer = 0;
-        m_SceneRenderer->SubmitHUDElement(pauseBg);
+        //HUDElementData pauseBg;
+        //pauseBg.textureID = m_PauseMenuTexture;
+        //pauseBg.position = glm::vec2(1280.0f / 2.0f, 720.0f / 2.0f);  // Center of screen
+        //pauseBg.size = glm::vec2(512.0f, 384.0f);
+        //pauseBg.anchor = HUDAnchor::Center;
+        //pauseBg.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);  // Slightly transparent
+        //pauseBg.layer = 0;
+        //m_SceneRenderer->SubmitHUDElement(pauseBg);
 
         // Add resume button
-        HUDElementData resumeBtn;
+        /*HUDElementData resumeBtn;
         resumeBtn.textureID = m_ResumeButtonTexture;
         resumeBtn.position = glm::vec2(1280.0f / 2.0f, 300.0f);
         resumeBtn.size = glm::vec2(256.0f, 64.0f);
         resumeBtn.anchor = HUDAnchor::Center;
         resumeBtn.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         resumeBtn.layer = 1;
-        m_SceneRenderer->SubmitHUDElement(resumeBtn);
+        m_SceneRenderer->SubmitHUDElement(resumeBtn);*/
 
         // Update camera data manually
         if (m_Camera) {

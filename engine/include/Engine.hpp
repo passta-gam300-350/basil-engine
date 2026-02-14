@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   Engine.hpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  Main engine class declaration
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #ifndef Engine_HPP
 #define Engine_HPP
 
@@ -60,6 +74,7 @@ public:
 	static void Init(std::string const& cfg = {});
 	static void InitInheritWindow(std::string const& cfg, GLFWwindow*);
 	static void InitWithoutWindow(std::string const& cfg = {}, bool is_precompiled = false);
+	static void LoadEmbeddedIcon();
 	static void Update();
 	static void CoreUpdate();
 	static void UpdateDebug();
@@ -80,7 +95,7 @@ public:
 	static Logger::Sink* GetSink();
 	static bool WindowShouldClose();
 
-	static void GenerateDefaultConfig();
+	static void GenerateDefaultConfig(std::string_view sv = "");
 	//static void CreateDefaultResources();
 
 	static void ReportLastError();

@@ -139,6 +139,7 @@ void Engine::Init(std::string const& cfg ) {
 
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
+	animationSystem().Init();
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
@@ -352,6 +353,7 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
+	animationSystem().Init();
 	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
 	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
 	//		std::string filename = entry.path().stem().string();
@@ -384,7 +386,8 @@ void Engine::Exit() {
 	}
 	ResourceSystem::Release();
 	Scheduler::Release();
-	AudioSystem::GetInstance().Exit();
+	AudioSystem::GetInstance().Exit(); // [TEMP]
+	animationSystem().Exit();
 	InstancePtr().reset();
 	MonoEntityManager::GetInstance().ClearAll();
 	WorldRegistry::Clear();
@@ -402,7 +405,7 @@ double Engine::GetLastDeltaTime() {
 	return Instance().m_Info.m_ActualDeltaTime;
 }
 
-void Engine::GenerateDefaultConfig() {
+void Engine::GenerateDefaultConfig(std::string_view name) {
 	YAML::Node root{  };
 	YAML::Node window{  };
 	YAML::Node logger{  };
@@ -418,7 +421,7 @@ void Engine::GenerateDefaultConfig() {
 	root["system"] = SystemRegistry::GetDefaultConfig();
 	root["resource"] = ResourceSystem::GetDefaultConfig();
 	root["logger"] = logger;
-	std::ofstream ofs{ DEFAULT_CONFIG_NAME.data() };
+	std::ofstream ofs{ name.empty() ? DEFAULT_CONFIG_NAME.data()  : std::string(name.begin(), name.end())};
 	ofs << root;
 }
 
@@ -556,4 +559,81 @@ void Engine::SyncActiveSceneRenderSettings()
 	renderSystem.m_SceneRenderer->SetBloomStrength(settings.bloomStrength);
 	renderSystem.m_SceneRenderer->SetToneMappingMethod(settings.toneMapMethod);
 	renderSystem.m_SceneRenderer->SetExposureClampRange(settings.exposureMin, settings.exposureMax);
+}
+
+bool loadEmbeddedIcon(GLFWimage& image, HINSTANCE hInstance, LPCSTR resourceName) {
+	// Find the group icon resource
+	HRSRC hRes = FindResourceA(hInstance, resourceName, RT_GROUP_ICON);
+	if (!hRes) {
+		std::cerr << "FindResource failed.\n";
+		return false;
+	}
+
+	HGLOBAL hGlobal = LoadResource(hInstance, hRes);
+	if (!hGlobal) {
+		std::cerr << "LoadResource failed.\n";
+		return false;
+	}
+
+	// Lock resource and get pointer
+	BYTE* pData = (BYTE*)LockResource(hGlobal);
+	if (!pData) {
+		std::cerr << "LockResource failed.\n";
+		return false;
+	}
+
+	// Extract the first icon from the group
+	HICON hIcon = LoadIconA(hInstance, resourceName);
+	if (!hIcon) {
+		std::cerr << "LoadIcon failed.\n";
+		return false;
+	}
+
+	// Convert HICON to raw pixels
+	ICONINFO iconInfo;
+	if (!GetIconInfo(hIcon, &iconInfo)) {
+		std::cerr << "GetIconInfo failed.\n";
+		return false;
+	}
+
+	BITMAP bmpColor;
+	GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmpColor);
+
+	int width = bmpColor.bmWidth;
+	int height = bmpColor.bmHeight;
+
+	std::vector<unsigned char> pixels(width * height * 4);
+
+	HDC hDC = GetDC(NULL);
+	BITMAPINFO bmi = {};
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = width;
+	bmi.bmiHeader.biHeight = -height; // top-down DIB
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	GetDIBits(hDC, iconInfo.hbmColor, 0, height, pixels.data(), &bmi, DIB_RGB_COLORS);
+	ReleaseDC(NULL, hDC);
+
+	// Fill GLFWimage
+	image.width = width;
+	image.height = height;
+	image.pixels = new unsigned char[width * height * 4];
+	memcpy(image.pixels, pixels.data(), width * height * 4);
+
+	// Cleanup
+	DeleteObject(iconInfo.hbmColor);
+	DeleteObject(iconInfo.hbmMask);
+
+	return true;
+}
+
+void Engine::LoadEmbeddedIcon() {
+	// Load icon from embedded resource
+	GLFWimage icon;
+	if (loadEmbeddedIcon(icon, GetModuleHandle(NULL), "MAINICON")) {
+		glfwSetWindowIcon(Engine::GetWindowInstance().GetNativeWindow(), 1, &icon);
+		delete[] icon.pixels;
+	}
 }

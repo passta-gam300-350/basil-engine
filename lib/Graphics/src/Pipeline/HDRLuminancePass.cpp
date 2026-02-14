@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   HDRLuminancePass.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  HDR luminance pass implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Pipeline/HDRLuminancePass.h"
 #include "Pipeline/RenderContext.h"
 #include <spdlog/spdlog.h>
@@ -227,6 +241,13 @@ void HDRLuminancePass::InitializeBuffer(uint32_t width, uint32_t height)
 
 void HDRLuminancePass::OnResize(uint32_t newWidth, uint32_t newHeight)
 {
+    // OPTIMIZATION: Skip resize if dimensions haven't changed
+    // Prevents expensive SSBO recreation with persistent mapping
+    if (m_LastWidth == newWidth && m_LastHeight == newHeight)
+    {
+        return; // Already at target size - no-op
+    }
+
     // Viewport size changed - recreate SSBO
     spdlog::info("HDRLuminancePass: Viewport size changed to {}x{}, recreating luminance buffer", newWidth, newHeight);
 

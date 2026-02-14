@@ -1,3 +1,17 @@
+/******************************************************************************/
+/*!
+\file   HUDRenderer.cpp
+\author Team PASSTA
+\par    Course : CSD3401 / UXG3400
+\date   2026/01/16
+\brief  HUD renderer implementation
+
+Copyright (C) 2026 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents
+without the prior written consent of DigiPen Institute of
+Technology is prohibited.
+*/
+/******************************************************************************/
 #include "Rendering/HUDRenderer.h"
 #include "Pipeline/RenderPass.h"
 #include "Utility/FrameData.h"
@@ -181,7 +195,7 @@ void HUDRenderer::UpdateBatchSSBO(TextureBatch& batch)
 
     // Debug: Log instance data being uploaded
     for (size_t i = 0; i < batch.instances.size(); ++i) {
-        const auto& inst = batch.instances[i];
+        //const auto& inst = batch.instances[i];
         /*spdlog::info("HUDRenderer::UpdateBatchSSBO() - Instance {}: pos=({},{}), size=({},{}), color=({},{},{},{})",
             i, inst.position.x, inst.position.y, inst.size.x, inst.size.y,
             inst.color.r, inst.color.g, inst.color.b, inst.color.a);*/
@@ -202,7 +216,7 @@ void HUDRenderer::UpdateBatchSSBO(TextureBatch& batch)
     batch.dirty = false;
 }
 
-void HUDRenderer::RenderBatch(RenderPass& renderPass, const TextureBatch& batch, const FrameData& frameData)
+void HUDRenderer::RenderBatch(RenderPass& renderPass, const TextureBatch& batch, const FrameData& /*frameData*/)
 {
     if (batch.instances.empty() || !batch.ssbo) {
         spdlog::warn("HUDRenderer::RenderBatch() - empty instances or no SSBO");
