@@ -30,8 +30,7 @@ class Shader;
  * Directional Shadow Mapping Pass - Renders depth maps from directional light perspective
  *
  * Renders scene geometry to depth-only framebuffer from the perspective of
- * the primary directional light. Populates FrameData::shadowMaps[0] and
- * shadowMatrices[0] for use by the main rendering pass.
+ * the primary directional light. Uses layer 0 of the shared shadow texture array.
  *
  * Uses pass ID 0 to ensure execution before main rendering pass (pass ID 1).
  */
@@ -39,13 +38,16 @@ class DirectionalShadowMappingPass : public RenderPass {
 public:
     DirectionalShadowMappingPass();
     DirectionalShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader);
-    ~DirectionalShadowMappingPass() = default;
+    ~DirectionalShadowMappingPass() override;
 
     // Context-based execution
     void Execute(RenderContext& context) override;
 
     // Set shadow depth shader (alternative to constructor injection)
     void SetShadowDepthShader(std::shared_ptr<Shader> shader) { m_ShadowDepthShader = shader; }
+
+    // Set shadow texture array (called by SceneRenderer during initialization)
+    void SetShadowTextureArray(uint32_t textureArray) { m_ShadowTextureArray = textureArray; }
 
 private:
     // Helper methods
@@ -65,6 +67,13 @@ private:
     size_t m_CachedTransformHash = 0;  // Hash of all transform positions and scales
     bool m_BoundsDirty = true;
 
+    // Shadow texture array (shared with other shadow passes)
+    uint32_t m_ShadowTextureArray = 0;
+
+    // Temporary FBO for rendering to texture array layer
+    uint32_t m_TempFBO = 0;
+
     // Configuration
-    static constexpr uint32_t SHADOW_MAP_SIZE = 2048;
+    static constexpr uint32_t SHADOW_MAP_SIZE = 1024;  // Matches shared array size
+    static constexpr int SHADOW_LAYER_INDEX = 0;  // Directional light uses layer 0
 };

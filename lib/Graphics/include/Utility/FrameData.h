@@ -50,13 +50,14 @@ struct DebugLine
  */
 struct FrameData
 {
-    // UNIFIED SHADOW DATA (SSBO-based, supports 50+ lights)
+    // UNIFIED SHADOW DATA (SSBO-based, supports UNLIMITED lights!)
     // This vector stores shadow metadata for all active shadows (directional, point, spot)
     std::vector<ShadowData> shadowDataArray;
 
-    // Shadow texture IDs (for texture arrays)
-    // Index corresponds to shadowDataArray[i].textureIndex
-    std::vector<uint32_t> shadow2DTextures;       // 2D depth maps (directional/spot)
+    // Shadow texture IDs
+    // 2D texture array (directional/spot shadows use textureIndex to index into array layers)
+    uint32_t shadow2DTextureArray = 0;            // Single layered texture array for all 2D shadows
+    // Cubemap textures (point shadows - still individual textures for now)
     std::vector<uint32_t> shadowCubemapTextures;  // Cubemap depth maps (point)
 
     // Main rendering output (includes debug overlay when enabled)

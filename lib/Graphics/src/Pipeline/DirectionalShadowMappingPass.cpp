@@ -24,27 +24,30 @@ Technology is prohibited.
 #include <functional>  // For std::hash
 
 DirectionalShadowMappingPass::DirectionalShadowMappingPass()
-    : RenderPass("DirectionalShadowPass", FBOSpecs{
-        SHADOW_MAP_SIZE, SHADOW_MAP_SIZE,
-        {
-            // Depth-only framebuffer for shadow mapping
-            { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
-    }),
-    m_ShadowDepthShader(nullptr)
+    : RenderPass("DirectionalShadowPass"),  // No base FBO - we manage temp FBO manually
+      m_ShadowDepthShader(nullptr)
 {
+    // Create temporary FBO for rendering to texture array layer
+    glGenFramebuffers(1, &m_TempFBO);
+    spdlog::info("DirectionalShadowMappingPass: Created temp FBO for texture array layer {}", SHADOW_LAYER_INDEX);
 }
 
 DirectionalShadowMappingPass::DirectionalShadowMappingPass(std::shared_ptr<Shader> shadowDepthShader)
-    : RenderPass("DirectionalShadowPass", FBOSpecs{
-        SHADOW_MAP_SIZE, SHADOW_MAP_SIZE,
-        {
-            // Depth-only framebuffer for shadow mapping
-            { FBOTextureFormat::DEPTH24STENCIL8 }
-        }
-    }),
-    m_ShadowDepthShader(shadowDepthShader)
+    : RenderPass("DirectionalShadowPass"),  // No base FBO - we manage temp FBO manually
+      m_ShadowDepthShader(shadowDepthShader)
 {
+    // Create temporary FBO for rendering to texture array layer
+    glGenFramebuffers(1, &m_TempFBO);
+    spdlog::info("DirectionalShadowMappingPass: Created temp FBO for texture array layer {}", SHADOW_LAYER_INDEX);
+}
+
+DirectionalShadowMappingPass::~DirectionalShadowMappingPass()
+{
+    if (m_TempFBO != 0)
+    {
+        glDeleteFramebuffers(1, &m_TempFBO);
+        m_TempFBO = 0;
+    }
 }
 
 void DirectionalShadowMappingPass::Execute(RenderContext& context)
@@ -65,8 +68,29 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
         return;
     }
 
-    // Begin shadow pass - bind depth framebuffer
-    Begin();
+    if (m_ShadowTextureArray == 0) {
+        spdlog::warn("DirectionalShadowMappingPass: Shadow texture array not set, skipping");
+        return;
+    }
+
+    // CRITICAL: Clear command buffer to prevent accumulation across frames
+    // Without this, commands accumulate exponentially causing severe performance degradation
+    ClearCommands();
+
+    // Bind temp FBO and attach to layer 0 of shadow texture array
+    glBindFramebuffer(GL_FRAMEBUFFER, m_TempFBO);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowTextureArray, 0, SHADOW_LAYER_INDEX);
+
+    // Verify framebuffer is complete
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        spdlog::error("DirectionalShadowMappingPass: Framebuffer incomplete (status: 0x{:X})", status);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        return;
+    }
+
+    // Set viewport to match shadow map size
+    glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
     // Setup command buffer with systems from context
     SetupCommandBuffer(context);
@@ -86,13 +110,12 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
     ShadowData dirShadow;
     dirShadow.shadowType = ShadowData::Directional;
     dirShadow.lightSpaceMatrix = lightSpaceMatrix;
-    dirShadow.textureIndex = static_cast<int32_t>(context.frameData.shadow2DTextures.size());
+    dirShadow.textureIndex = SHADOW_LAYER_INDEX;  // Use layer 0 of texture array
     dirShadow.farPlane = 0.0f;  // Not used for directional lights
     dirShadow.intensity = 0.8f;  // Default shadow intensity
 
-    // Store shadow data and texture ID
+    // Store shadow data (no longer storing individual texture IDs)
     context.frameData.shadowDataArray.push_back(dirShadow);
-    context.frameData.shadow2DTextures.push_back(GetFramebuffer()->GetDepthAttachmentRendererID());
 
     // Clear depth buffer
     RenderCommands::ClearData clearCmd{
@@ -139,8 +162,17 @@ void DirectionalShadowMappingPass::Execute(RenderContext& context)
     // Execute all commands submitted to this pass's command buffer
     ExecuteCommands();
 
-    // End shadow pass
-    End();
+    // CRITICAL: Memory barrier to ensure shadow texture array writes complete
+    // before subsequent passes (spot shadows, main rendering) read from the same texture array.
+    // Without this, GPU experiences read-after-write hazards causing severe stalls.
+    RenderCommands::MemoryBarrierData barrierCmd{
+        GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT
+    };
+    Submit(barrierCmd);
+    ExecuteCommands();  // Execute the barrier
+
+    // Unbind FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 glm::mat4 DirectionalShadowMappingPass::CalculateLightViewMatrix(const glm::vec3& lightDirection, const glm::vec3& sceneCenter)
