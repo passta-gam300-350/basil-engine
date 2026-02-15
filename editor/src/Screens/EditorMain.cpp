@@ -542,6 +542,13 @@ void EditorMain::update()
 		// Focus state is tracked by Render_Scene() and Render_Game() from previous frame
 		snapshot.renderSceneViewport = g_SceneViewportFocused;
 		snapshot.renderGameViewport = g_GameViewportFocused;
+
+		// Debug: Log snapshot values every 60 frames
+		static int debugFrameCounter = 0;
+		if (debugFrameCounter++ % 60 == 0) {
+			spdlog::info("EditorMain::update: Setting snapshot - renderSceneViewport={}, renderGameViewport={}",
+				snapshot.renderSceneViewport, snapshot.renderGameViewport);
+		}
 	}
 }
 
