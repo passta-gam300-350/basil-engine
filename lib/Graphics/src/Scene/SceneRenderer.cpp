@@ -269,7 +269,7 @@ void SceneRenderer::Render()
     }
 
     // Set fog data pointer in frame data for access by rendering systems
-    m_FrameData.fogData = &m_FogData;
+    m_FrameData.fogData = &m_FogData; // currently not used, but is filled with data
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
