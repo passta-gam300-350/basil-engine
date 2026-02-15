@@ -326,6 +326,18 @@ void FrameBuffer::Resize(uint32_t width, uint32_t height)
 		return;
 	}
 
+	// CRITICAL OPTIMIZATION: Skip resize if dimensions haven't changed
+	// Prevents unnecessary GPU texture deletion/recreation during window resize events
+	// Without this, maximizing window causes massive frame drops due to:
+	// - glDeleteTextures (all color/depth attachments)
+	// - glGenTextures + glTexImage2D (expensive GPU memory allocation)
+	// - Framebuffer recreation
+	// For 4x MSAA 1920x1080 RGB16F buffer, this saves ~50MB GPU reallocation per frame!
+	if (m_Specifications.Width == width && m_Specifications.Height == height)
+	{
+		return; // Already at target size - no-op
+	}
+
 	m_Specifications.Width = width;
 	m_Specifications.Height = height;
 
