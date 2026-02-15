@@ -185,9 +185,9 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
 
     // Load HUD test textures (once during initialization)
@@ -770,7 +770,7 @@ void GraphicsTestDriver::SetupEditorDemo()
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
     const int gridSize = 3;
-    const float spacing = 150.0f;
+    const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f;
 
     // Create cube mesh primitive
@@ -820,26 +820,26 @@ void GraphicsTestDriver::SetupEditorDemo()
     spdlog::info("Created 3x3 cube grid: {} cubes", gridSize * gridSize);
 
     // 2.5. CREATE GROUND PLANE TO CATCH SHADOWS
-    auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(20.0f, 20.0f, 1, 1));
-    RenderableData groundPlane;
-    groundPlane.mesh = planeMesh;
-    groundPlane.material = m_ResourceManager->GetMaterial("RedMaterial");
+    //auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 1, 1));
+    //RenderableData groundPlane;
+    //groundPlane.mesh = planeMesh;
+    //groundPlane.material = m_ResourceManager->GetMaterial("WhiteMaterial");
 
-    // Create property block for the ground plane with a neutral gray color
+    //// Create property block for the ground plane with a neutral gray color
     //auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
-    //groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 1.0f, 1.0f));  // Neutral gray
+    //groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.8f, 0.8f));  // Neutral gray
     //groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
     //groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
     //groundPlane.propertyBlock = groundPropertyBlock;
 
-    // Position plane below cubes (cubes are at y=0, so plane at y=-0.6 is below them)
-    groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-    groundPlane.visible = true;
-    groundPlane.objectID = objectID++;
-    groundPlane.modelInstanceID = modelInstanceID++;
+    //// Position plane below cubes (cubes are at y=0, so plane at y=-2.0 is below them)
+    //groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    //groundPlane.visible = true;
+    //groundPlane.objectID = objectID++;
+    //groundPlane.modelInstanceID = modelInstanceID++;
 
-    m_SceneObjects.push_back(groundPlane);
-    spdlog::info("Added ground plane at y=-0.6 to catch shadows");
+    //m_SceneObjects.push_back(groundPlane);
+    //spdlog::info("Added ground plane at y=-2.0 to catch shadows");
 
     m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
@@ -862,8 +862,8 @@ void GraphicsTestDriver::SetupEditorDemo()
 
     // Set ambient light
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.01f));
-    spdlog::info("Spotlight created at (0, 10, 0) pointing down with intensity 3.0");
-    spdlog::info("Ambient light set to (0.03, 0.03, 0.03)");
+    spdlog::info("Directional light created with intensity 2.5");
+    spdlog::info("Ambient light set to (0.01, 0.01, 0.01)");
 
     // 4. DISABLE SKYBOX - Editor doesn't use skybox
     m_SceneRenderer->EnableSkybox(false);
