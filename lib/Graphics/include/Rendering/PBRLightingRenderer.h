@@ -174,9 +174,10 @@ private:
     std::unique_ptr<OffsetTexture> m_ShadowOffsetTexture;
 
     // Shadow quality configuration
-    int m_ShadowFilterSize = 8;        // 8x8 = 64 samples (balanced quality/performance)
+    // OPTIMIZED FOR TEXTURE ARRAYS: Lower sample count and radius for better cache coherency
+    int m_ShadowFilterSize = 4;        // 4x4 = 16 samples (optimized for texture array performance)
     int m_ShadowOffsetTextureSize = 16; // 16x16 screen-space tiling
-    float m_ShadowRandomRadius = 15.0f; // Softness control (1.0-20.0 range)
+    float m_ShadowRandomRadius = 5.0f; // Reduced for better texture cache locality with arrays
 
     // PERFORMANCE: Track which shader has lighting set up to avoid redundant uniform uploads
     std::shared_ptr<Shader> m_LastLightingShader;

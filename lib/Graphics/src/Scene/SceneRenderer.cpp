@@ -1154,9 +1154,10 @@ void SceneRenderer::CreateShadow2DTextureArray()
     float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-    // Enable hardware PCF (percentage closer filtering)
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    // Hardware PCF disabled for better performance on some GPUs
+    // (Software PCF is still active via shader-based adaptive sampling)
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 

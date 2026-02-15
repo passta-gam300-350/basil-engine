@@ -74,6 +74,6 @@ private:
     uint32_t m_TempFBO = 0;
 
     // Configuration
-    static constexpr uint32_t SHADOW_MAP_SIZE = 2048;
+    static constexpr uint32_t SHADOW_MAP_SIZE = 1024;  // Matches shared array size
     static constexpr int SHADOW_LAYER_INDEX = 0;  // Directional light uses layer 0
 };
