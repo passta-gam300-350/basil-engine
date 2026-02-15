@@ -28,6 +28,8 @@ Technology is prohibited.
 #include <Utility/TextData.h>  // For text rendering
 #include <Rendering/HUDRenderer.h>  // For HUD renderer methods
 #include <Rendering/TextRenderer.h>  // For text renderer methods
+#include <Rendering/WorldUIRenderer.h>  // For world UI renderer methods
+#include <Utility/WorldUIData.h>  // For world UI rendering
 #include "Component/SkeletonComponent.hpp" // skeleton component
 #include "Messaging/Messaging_System.h"
 
@@ -115,6 +117,9 @@ RenderSystem::RenderSystem() {
 	}
 	if (m_ShaderLibrary->GetWorldTextShader()) {
 		m_SceneRenderer->SetWorldTextShader(m_ShaderLibrary->GetWorldTextShader());
+	}
+	if (m_ShaderLibrary->GetWorldUIShader()) {
+		m_SceneRenderer->SetWorldUIShader(m_ShaderLibrary->GetWorldUIShader());
 	}
 	// Editor resolve shader not needed - using simple glBlitFramebuffer instead
 	// if (m_ShaderLibrary->GetEditorResolveShader()) {
@@ -245,6 +250,7 @@ void RenderSystem::Update(ecs::world& world) {
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
 	auto sceneTextElements = world.filter_entities<TextComponent>();
 	auto sceneWorldTextElements = world.filter_entities<TextMeshComponent, TransformMtxComponent>();
+	auto sceneWorldUIElements = world.filter_entities<WorldUIComponent, TransformMtxComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = int(visibleEntityIDs.size());
@@ -620,6 +626,52 @@ void RenderSystem::Update(ecs::world& world) {
 	/*if (worldTextEntityCount > 0) {
 		spdlog::info("RenderSystem: Processed {} world text entities", worldTextEntityCount);
 	}*/
+
+	// ========== WORLD UI ELEMENT SUBMISSION (3D UI QUADS) ==========
+	for (auto worldUIEntity : sceneWorldUIElements) {
+		auto [worldUI, transform] = worldUIEntity.get<WorldUIComponent, TransformMtxComponent>();
+
+		if (!worldUI.visible) continue;
+
+		WorldUIElementData worldUIData;
+
+		// Load texture from ResourceRegistry (same pattern as HUD)
+		if (worldUI.m_TextureGuid.m_guid != rp::null_guid) {
+			auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(worldUI.m_TextureGuid.m_guid);
+			if (texturePtr && *texturePtr) {
+				worldUIData.textureID = (*texturePtr)->id;
+			} else {
+				worldUIData.textureID = 0;
+			}
+		} else {
+			worldUIData.textureID = 0;
+		}
+
+		// Extract world position from transform matrix
+		worldUIData.worldPosition = glm::vec3(transform.m_Mtx[3]);
+		worldUIData.size = worldUI.size;
+		worldUIData.billboardMode = static_cast<WorldUIBillboardMode>(worldUI.billboardMode);
+
+		// For non-billboard mode, extract rotation from transform matrix
+		if (worldUI.billboardMode == WorldUIComponent::BillboardMode::None) {
+			worldUIData.customRotation = glm::mat3(transform.m_Mtx);
+		}
+
+		// Camera data for billboard calculation
+		worldUIData.cameraPosition = hasGameCamera
+			? CameraSystem::Instance().GetActiveCameraData().position
+			: editorCameraSnapshot.position;
+		worldUIData.cameraUp = hasGameCamera
+			? CameraSystem::Instance().GetActiveCameraData().up
+			: editorCameraSnapshot.up;
+
+		worldUIData.color = worldUI.color;
+		worldUIData.layer = worldUI.layer;
+		worldUIData.visible = worldUI.visible;
+		worldUIData.entityID = static_cast<uint32_t>(worldUIEntity);
+
+		m_SceneRenderer->SubmitWorldUI(worldUIData);
+	}
 
 	// Enable/disable HUD pass based on presence of HUD or text elements
 	// Note: EndFrame() is called by SceneRenderer::Render() before rendering

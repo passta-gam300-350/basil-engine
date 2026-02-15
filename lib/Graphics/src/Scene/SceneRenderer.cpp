@@ -26,6 +26,7 @@ Technology is prohibited.
 #include "Rendering/PBRLightingRenderer.h"
 #include "Rendering/HUDRenderer.h"
 #include "Rendering/TextRenderer.h"
+#include "Rendering/WorldUIRenderer.h"
 #include "Pipeline/PresentPass.h"
 //#include "Pipeline/ShadowMappingPass.h"
 #include "Rendering/ParticleRenderer.h"
@@ -97,6 +98,12 @@ void SceneRenderer::SubmitWorldText(const WorldTextElementData& worldText) {
     }
 }
 
+void SceneRenderer::SubmitWorldUI(const WorldUIElementData& worldUI) {
+    if (m_WorldUIRenderer) {
+        m_WorldUIRenderer->SubmitElement(worldUI);
+    }
+}
+
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
@@ -114,6 +121,9 @@ void SceneRenderer::ClearFrame()
     }
     if (m_TextRenderer) {
         m_TextRenderer->BeginFrame();
+    }
+    if (m_WorldUIRenderer) {
+        m_WorldUIRenderer->BeginFrame();
     }
 
 	// Clear SSBO-based shadow data (will be repopulated by enabled shadow passes)
@@ -236,6 +246,9 @@ void SceneRenderer::InitializeRenderingCoordinators()
 
     m_TextRenderer = std::make_unique<TextRenderer>();
     assert(m_TextRenderer && "Failed to create TextRenderer");
+
+    m_WorldUIRenderer = std::make_unique<WorldUIRenderer>();
+    assert(m_WorldUIRenderer && "Failed to create WorldUIRenderer");
 }
 
 void SceneRenderer::Render()
@@ -267,6 +280,9 @@ void SceneRenderer::Render()
     if (m_TextRenderer) {
         m_TextRenderer->EndFrame();
     }
+    if (m_WorldUIRenderer) {
+        m_WorldUIRenderer->EndFrame();
+    }
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
@@ -280,7 +296,8 @@ void SceneRenderer::Render()
         *m_TextureSlotManager,   // ref to texture slot manager
         *m_ParticleRenderer,     // ref to particle renderer
         *m_HUDRenderer,          // ref to HUD renderer
-        *m_TextRenderer          // ref to text renderer
+        *m_TextRenderer,         // ref to text renderer
+        *m_WorldUIRenderer       // ref to world UI renderer
     );
 
     // Execute the single pipeline
@@ -413,7 +430,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer, *m_WorldUIRenderer);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -923,6 +940,18 @@ void SceneRenderer::SetWorldTextShader(const std::shared_ptr<Shader>& shader) co
     {
         m_TextRenderer->SetWorldTextShader(shader);
         spdlog::info("SceneRenderer: World text shader configured");
+    }
+}
+
+void SceneRenderer::SetWorldUIShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "World UI shader cannot be null");
+    assert(shader->ID != 0 && "World UI shader must be compiled and linked");
+
+    if (m_WorldUIRenderer)
+    {
+        m_WorldUIRenderer->SetWorldUIShader(shader);
+        spdlog::info("SceneRenderer: World UI shader configured");
     }
 }
 

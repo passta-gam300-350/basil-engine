@@ -328,4 +328,18 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&TextMeshComponent::smoothing, "smoothing">,
 		MemberRegistrationV<&TextMeshComponent::visible, "visible">
 	);
+
+	// Register WorldUIComponent enums
+	RegisterReflectionComponent<WorldUIComponent::BillboardMode>("WorldUIComponent::BillboardMode");
+
+	RegisterReflectionComponent<WorldUIComponent>(
+		"WorldUIComponent",
+		MemberRegistrationV<&WorldUIComponent::m_TextureGuid, "textureGuid">,
+		MemberRegistrationV<&WorldUIComponent::size, "size">,
+		MemberRegistrationV<&WorldUIComponent::billboardMode, "billboardMode">,
+		MemberRegistrationV<&WorldUIComponent::color, "color">,
+		MemberRegistrationV<&WorldUIComponent::layer, "layer">,
+		MemberRegistrationV<&WorldUIComponent::visible, "visible">,
+		MemberRegistrationV<&WorldUIComponent::interactable, "interactable">
+	);
 }

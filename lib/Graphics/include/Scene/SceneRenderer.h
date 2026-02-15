@@ -23,6 +23,7 @@ Technology is prohibited.
 #include "../utility/Particle.h"
 #include "../Utility/HUDData.h"
 #include "../Utility/TextData.h"
+#include "../Utility/WorldUIData.h"
 #include "../Resources/ResourceManager.h"
 #include "../Resources/TextureSlotManager.h"
 #include <memory>
@@ -38,6 +39,7 @@ class OutlineRenderPass;
 class ParticleRenderer;
 class HUDRenderer;
 class TextRenderer;
+class WorldUIRenderer;
 
 class SceneRenderer {
 public:
@@ -55,6 +57,7 @@ public:
     void SubmitHUDElement(const HUDElementData& hudElement);
     void SubmitText(const TextElementData& textElement);
     void SubmitWorldText(const WorldTextElementData& worldText);
+    void SubmitWorldUI(const WorldUIElementData& worldUI);
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -80,6 +83,7 @@ public:
     ParticleRenderer* GetParticleRenderer() const { return m_ParticleRenderer.get(); }
     HUDRenderer* GetHUDRenderer() const { return m_HUDRenderer.get(); }
     TextRenderer* GetTextRenderer() const { return m_TextRenderer.get(); }
+    WorldUIRenderer* GetWorldUIRenderer() const { return m_WorldUIRenderer.get(); }
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
     void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
@@ -93,6 +97,7 @@ public:
     void SetHUDShader(const std::shared_ptr<Shader>& shader) const;
     void SetTextShader(const std::shared_ptr<Shader>& shader) const;
     void SetWorldTextShader(const std::shared_ptr<Shader>& shader) const;
+    void SetWorldUIShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
@@ -206,6 +211,7 @@ private:
     std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
     std::unique_ptr<HUDRenderer> m_HUDRenderer;
     std::unique_ptr<TextRenderer> m_TextRenderer;
+    std::unique_ptr<WorldUIRenderer> m_WorldUIRenderer;
 
     // Unified shadow texture array (directional + spot shadows)
     uint32_t m_Shadow2DTextureArray = 0;

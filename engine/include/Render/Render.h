@@ -257,6 +257,27 @@ struct TextMeshComponent {
     bool visible = true;          ///< Visibility toggle
 };
 
+/**
+ * @struct WorldUIComponent
+ * @brief Component for rendering world-space UI quads (textured or solid color).
+ * Supports billboard modes (Full, Cylindrical, None). Uses Transform for positioning.
+ */
+struct WorldUIComponent {
+    rp::BasicIndexedGuid m_TextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };
+
+    glm::vec2 size = glm::vec2(1.0f);  ///< World-space size (width, height in units)
+
+    enum class BillboardMode : uint8_t {
+        None,         ///< No billboarding - uses entity's transform rotation
+        Full,         ///< Always faces camera (rotates on all axes)
+        Cylindrical   ///< Rotates to face camera but constrained to Y-axis
+    } billboardMode = BillboardMode::Full;
+
+    glm::vec4 color = glm::vec4(1.0f);  ///< Tint or solid color (RGBA)
+    uint8_t layer = 0;                   ///< Layer for depth sorting
+    bool visible = true;                 ///< Visibility toggle
+    bool interactable = true;            ///< Whether raycasts can hit this element
+};
 
 struct Camera_Calculation_Update : Message {
     glm::mat4 viewMat4;
