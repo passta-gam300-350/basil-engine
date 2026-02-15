@@ -174,8 +174,8 @@ private:
     std::unique_ptr<OffsetTexture> m_ShadowOffsetTexture;
 
     // Shadow quality configuration
-    // OPTIMIZED FOR TEXTURE ARRAYS: Lower sample count and radius for better cache coherency
-    int m_ShadowFilterSize = 4;        // 4x4 = 16 samples (optimized for texture array performance)
+    // OPTIMIZED FOR TEXTURE ARRAYS: Balanced sample count and radius for quality/performance
+    int m_ShadowFilterSize = 6;        // 6x6 = 36 samples (balanced quality/performance for texture arrays)
     int m_ShadowOffsetTextureSize = 16; // 16x16 screen-space tiling
     float m_ShadowRandomRadius = 5.0f; // Reduced for better texture cache locality with arrays
 
