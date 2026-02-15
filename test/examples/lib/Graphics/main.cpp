@@ -185,9 +185,9 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
 
     // Load HUD test textures (once during initialization)
@@ -1409,6 +1409,31 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
             case GLFW_KEY_B:
                 s_Instance->m_SceneRenderer->ToggleRenderPass("SpotShadowPass");
                 break;
+
+            // ===== FOG CONTROLS (OGLDev Tutorial 39-style) =====
+            case GLFW_KEY_F4:
+                spdlog::info("Fog: DISABLED");
+                s_Instance->m_SceneRenderer->DisableFog();
+                break;
+
+            case GLFW_KEY_F5:
+                spdlog::info("Fog: LINEAR (start=10m, end=50m, gray)");
+                s_Instance->m_SceneRenderer->SetLinearFog(10.0f, 50.0f, glm::vec3(0.5f, 0.5f, 0.5f));
+                break;
+
+            case GLFW_KEY_F6:
+                spdlog::info("Fog: EXPONENTIAL (end=50m, density=0.05, gray)");
+                s_Instance->m_SceneRenderer->SetExpFog(50.0f, 0.05f, glm::vec3(0.5f, 0.5f, 0.5f));
+                break;
+
+            case GLFW_KEY_F7:
+                spdlog::info("Fog: EXPONENTIAL SQUARED (end=50m, density=0.05, gray)");
+                s_Instance->m_SceneRenderer->SetExpSquaredFog(50.0f, 0.05f, glm::vec3(0.5f, 0.5f, 0.5f));
+                break;
+
+            case GLFW_KEY_F8:
+                s_Instance->PrintFogInfo();
+                break;
         }
     }
 }
@@ -1578,6 +1603,44 @@ void GraphicsTestDriver::PrintHDRInfo() const
     }
 
     spdlog::info("=======================");
+}
+
+void GraphicsTestDriver::PrintFogInfo() const
+{
+    spdlog::info("=== Fog Information (OGLDev Tutorial 39) ===");
+
+    if (m_SceneRenderer) {
+        const FogData& fog = m_SceneRenderer->GetFogData();
+
+        // Fog type
+        const char* typeNames[] = {"NONE (Disabled)", "LINEAR", "EXPONENTIAL", "EXPONENTIAL SQUARED"};
+        int typeIndex = static_cast<int>(fog.type);
+        spdlog::info("  Fog Type: {}", typeNames[typeIndex]);
+
+        if (fog.IsEnabled()) {
+            spdlog::info("  Fog Color: ({:.2f}, {:.2f}, {:.2f})", fog.color.r, fog.color.g, fog.color.b);
+
+            if (fog.type == FogType::Linear) {
+                spdlog::info("  Start Distance: {:.1f}m", fog.start);
+                spdlog::info("  End Distance: {:.1f}m", fog.end);
+            } else {
+                spdlog::info("  End Distance: {:.1f}m", fog.end);
+                spdlog::info("  Density: {:.3f}", fog.density);
+            }
+        }
+
+        spdlog::info("");
+        spdlog::info("  Keyboard Controls:");
+        spdlog::info("    F4 - Disable Fog");
+        spdlog::info("    F5 - Linear Fog");
+        spdlog::info("    F6 - Exponential Fog");
+        spdlog::info("    F7 - Exponential Squared Fog");
+        spdlog::info("    F8 - Print this info");
+    } else {
+        spdlog::warn("Scene renderer not available!");
+    }
+
+    spdlog::info("==========================================");
 }
 
 void GraphicsTestDriver::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

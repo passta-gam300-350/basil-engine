@@ -20,6 +20,7 @@ Technology is prohibited.
 #include "../Buffer/FrameBuffer.h"
 #include "AABB.h"
 #include "ShadowData.h"
+#include "FogData.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -80,6 +81,9 @@ struct FrameData
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
     glm::vec3 cameraPosition = glm::vec3(0.0f);
+
+    // Fog data (OGLDev Tutorial 39-style atmospheric fog)
+    const FogData* fogData = nullptr;  // Pointer to fog configuration (owned by SceneRenderer)
 
     // Camera context tracking for dual viewport rendering
     enum class CameraContext

@@ -88,6 +88,13 @@ uniform float u_RoughnessValue = 0.5;
 // Ambient lighting
 uniform vec3 u_AmbientLight = vec3(0.03);
 
+// Fog uniforms (OGLDev Tutorial 39-style)
+uniform int u_FogType = 0;                    // 0=None, 1=Linear, 2=Exp, 3=ExpSquared
+uniform float u_FogStart = 10.0;              // Linear fog start distance
+uniform float u_FogEnd = 50.0;                // Fog end distance (all types)
+uniform float u_FogDensity = 0.05;            // Exponential fog density
+uniform vec3 u_FogColor = vec3(0.5, 0.5, 0.5); // Fog color
+
 // Blend mode control (true = opaque pass, false = transparent pass)
 uniform bool u_IsOpaquePass = true;
 
@@ -520,6 +527,55 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     return totalAmbient + Lo;
 }
 
+// ===== FOG FUNCTIONS (OGLDev Tutorial 39-style) =====
+
+// Fog type constants (must match C++ FogType enum)
+const int FOG_TYPE_NONE = 0;
+const int FOG_TYPE_LINEAR = 1;
+const int FOG_TYPE_EXPONENTIAL = 2;
+const int FOG_TYPE_EXPONENTIAL_SQUARED = 3;
+
+// Linear fog: interpolates linearly between start and end distances
+float CalcLinearFogFactor()
+{
+    float cameraToPixelDist = length(fs_in.FragPos - u_ViewPos);
+    float fogRange = u_FogEnd - u_FogStart;
+    float fogDist = u_FogEnd - cameraToPixelDist;
+    float fogFactor = fogDist / fogRange;
+    return clamp(fogFactor, 0.0, 1.0); // 0.0 = full fog, 1.0 = no fog
+}
+
+// Exponential fog: density increases exponentially with distance
+float CalcExpFogFactor()
+{
+    float cameraToPixelDist = length(fs_in.FragPos - u_ViewPos);
+    float distRatio = 4.0 * cameraToPixelDist / u_FogEnd;
+    float fogFactor = exp(-distRatio * u_FogDensity);
+    return fogFactor;
+}
+
+// Exponential squared fog: smoother density falloff (most natural-looking)
+float CalcExpSquaredFogFactor()
+{
+    float cameraToPixelDist = length(fs_in.FragPos - u_ViewPos);
+    float distRatio = 4.0 * cameraToPixelDist / u_FogEnd;
+    float fogFactor = exp(-distRatio * u_FogDensity * distRatio * u_FogDensity);
+    return fogFactor;
+}
+
+// Calculate fog factor based on current fog type
+float CalcFogFactor()
+{
+    if (u_FogType == FOG_TYPE_LINEAR) {
+        return CalcLinearFogFactor();
+    } else if (u_FogType == FOG_TYPE_EXPONENTIAL) {
+        return CalcExpFogFactor();
+    } else if (u_FogType == FOG_TYPE_EXPONENTIAL_SQUARED) {
+        return CalcExpSquaredFogFactor();
+    }
+    return 1.0; // No fog
+}
+
 void main() {
     // Sample traditional textures
     vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
@@ -562,6 +618,12 @@ void main() {
 
     // Add emissive
     color += emissive;
+
+    // Apply fog (OGLDev Tutorial 39-style)
+    if (u_FogType != FOG_TYPE_NONE) {
+        float fogFactor = CalcFogFactor(); // 0.0 = full fog, 1.0 = no fog
+        color = mix(u_FogColor, color, fogFactor);
+    }
 
     // Output raw HDR color to HDR framebuffer with appropriate alpha
     // Opaque pass: Force alpha = 1.0 to prevent texture alpha from affecting visibility

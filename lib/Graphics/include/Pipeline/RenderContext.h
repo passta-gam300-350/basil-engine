@@ -19,6 +19,7 @@ Technology is prohibited.
 
 #include "../Utility/FrameData.h"
 #include "../Utility/RenderData.h"
+#include "../Utility/FogData.h"
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -49,6 +50,7 @@ struct RenderContext {
     const std::vector<RenderableData>& renderables;
     const std::vector<SubmittedLightData>& lights;
     const glm::vec3& ambientLight;
+    const FogData& fogData;
 
     // Shared frame data (mutable) - communication between passes
     FrameData& frameData;
@@ -71,6 +73,7 @@ struct RenderContext {
         const std::vector<RenderableData>& renderables_,
         const std::vector<SubmittedLightData>& lights_,
         const glm::vec3& ambientLight_,
+        const FogData& fogData_,
         FrameData& frameData_,
         InstancedRenderer& instancedRenderer_,
         PBRLightingRenderer& pbrLighting_,
@@ -82,6 +85,7 @@ struct RenderContext {
     ) : renderables(renderables_)
       , lights(lights_)
       , ambientLight(ambientLight_)
+      , fogData(fogData_)
       , frameData(frameData_)
       , instancedRenderer(instancedRenderer_)
       , pbrLighting(pbrLighting_)
