@@ -172,10 +172,17 @@ public:
     // Debug info (read-only access for debugging/logging)
     const FrameData& GetFrameDataReadOnly() const { return m_FrameData; }
 
+    // Shadow texture array access (for shadow passes)
+    uint32_t GetShadow2DTextureArray() const { return m_Shadow2DTextureArray; }
+
 private:
     void InitializeRenderingCoordinators();
 
     void InitializeDefaultPipeline();
+
+    // Shadow texture array management
+    void CreateShadow2DTextureArray();
+    void DestroyShadow2DTextureArray();
 
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
@@ -199,4 +206,9 @@ private:
     std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
     std::unique_ptr<HUDRenderer> m_HUDRenderer;
     std::unique_ptr<TextRenderer> m_TextRenderer;
+
+    // Unified shadow texture array (directional + spot shadows)
+    uint32_t m_Shadow2DTextureArray = 0;
+    static constexpr uint32_t SHADOW_ARRAY_LAYERS = 64;  // Support up to 64 2D shadows (directional + spot)
+    static constexpr uint32_t SHADOW_MAP_SIZE = 2048;     // 2048x2048 per shadow map
 };
