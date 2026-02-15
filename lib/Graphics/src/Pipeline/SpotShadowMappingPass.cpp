@@ -169,6 +169,13 @@ void SpotShadowMappingPass::Execute(RenderContext& context)
 
         // Execute all commands submitted to this pass's command buffer
         ExecuteCommands();
+
+        // CRITICAL: Clear commands after execution to prevent accumulation across lights
+        // Without this, each subsequent light re-executes ALL previous lights' commands!
+        // Light 1: 20 commands executed
+        // Light 2: 40 commands executed (20 old + 20 new) ❌
+        // Light 3: 60 commands executed (40 old + 20 new) ❌
+        ClearCommands();
     }
 
     // CRITICAL: Memory barrier to ensure shadow texture array writes complete
