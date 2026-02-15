@@ -515,6 +515,10 @@ void EditorMain::init()
 }
 
 
+// Forward declarations for viewport focus tracking (defined in EditorMain_Viewport.cpp)
+extern bool g_SceneViewportFocused;
+extern bool g_GameViewportFocused;
+
 void EditorMain::update()
 {
 	if (!active) return;
@@ -533,6 +537,11 @@ void EditorMain::update()
 		snapshot.nearPlane = m_EditorCamera->m_Near;
 		snapshot.farPlane = m_EditorCamera->m_Far;
 		snapshot.isPerspective = (m_EditorCamera->m_Type == EditorCamera::CameraType::PERSPECTIVE);
+
+		// Viewport rendering optimization: only render focused viewport
+		// Focus state is tracked by Render_Scene() and Render_Game() from previous frame
+		snapshot.renderSceneViewport = g_SceneViewportFocused;
+		snapshot.renderGameViewport = g_GameViewportFocused;
 	}
 }
 

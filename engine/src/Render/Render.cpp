@@ -626,8 +626,11 @@ void RenderSystem::Update(ecs::world& world) {
 
 	// ========== DUAL RENDERING (Unity-style) ==========
 	// Render scene twice: once with editor camera, once with game camera
+	// OPTIMIZATION: Only render focused viewport (skip inactive to reduce lag)
 
 	// --- FIRST RENDER PASS: Editor Camera (Scene viewport) ---
+	// Only render if Scene viewport is focused (optimization)
+	if (editorCameraSnapshot.renderSceneViewport)
 	{
 		// Set camera context to EDITOR
 		frameData.currentCamera = FrameData::CameraContext::EDITOR;
@@ -672,8 +675,8 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 
 	// --- SECOND RENDER PASS: Game Camera (Game viewport) ---
-	// Only render if a game camera exists in the scene
-	if (hasGameCamera)
+	// Only render if Game viewport is focused AND a game camera exists (optimization)
+	if (editorCameraSnapshot.renderGameViewport && hasGameCamera)
 	{
 		// Set camera context to GAME
 		frameData.currentCamera = FrameData::CameraContext::GAME;
