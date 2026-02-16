@@ -138,19 +138,27 @@ void InputManager::Error_Callback(int , char const* description)
 void InputManager::Update()
 {
     PF_SYSTEM("Input System");
+
     typedText.clear();
     scrollXOffset = 0.0;
     scrollYOffset = 0.0;
 
     mouseConsumed = false;
+    keyTriggeredStates.clear();
 
-    //for (auto& keyState : keyReleasedStates)
-    //    keyState.second = false;
+    for (auto& [key, curr] : keyPressedStates)
+    {
+        bool prev = keyPressedStatesLastFrame[key];
+        keyTriggeredStates[key] = (curr && !prev);
+    }
+
+    keyPressedStatesLastFrame = keyPressedStates;
 
     for (auto& mouseState : mouseReleasedStates)
         mouseState.second = false;
 
-    keyPressedStatesLastFrame = keyPressedStates;
+    // for (auto& keyState : keyReleasedStates)
+    //     keyState.second = false;
 }
 
 void InputManager::GamePadUpdate()
@@ -260,13 +268,8 @@ bool InputManager::Is_KeyReleased(int key) const
 
 bool InputManager::Is_KeyTriggered(int key) const
 {
-    auto current = keyPressedStates.find(key);
-    auto previous = keyPressedStatesLastFrame.find(key);
-
-    bool curr = (current != keyPressedStates.end()) ? current->second : false;
-    bool prev = (previous != keyPressedStatesLastFrame.end()) ? previous->second : false;
-
-    return curr && !prev;
+    auto it = keyTriggeredStates.find(key);
+    return (it != keyTriggeredStates.end()) ? it->second : false;
 }
 
 

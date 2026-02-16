@@ -428,6 +428,8 @@ class InputManager
         std::unordered_map<int, bool> keyPressedStatesLastFrame;
         std::unordered_map<int, bool> mousePressedStates;
         std::unordered_map<int, bool> mouseReleasedStates;
+        std::unordered_map<int, bool> keyTriggeredStates;
+
         GLboolean mouseButton;
         double mouseXPosition;
         double mouseYPosition;
