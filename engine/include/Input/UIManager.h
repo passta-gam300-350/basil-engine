@@ -9,37 +9,26 @@ Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
-#pragma once
-#include <vector>
-#include <memory>
-#include "Button.h"
-#include "InputManager.h"
 
-class Button;
+#pragma once
+#include "ecs/ecs.h"
 
 class UIManager
 {
-    public:
-        static UIManager* Get_Instance();
-        static void Destroy_Instance();
+public:
+    static UIManager* Get_Instance();
+    static void Destroy_Instance();
 
-        // Life cycle
-        void OpenUI();
-        void CloseUI();
-        bool IsUIOpen() const;
+    void OpenUI();
+    void CloseUI();
+    bool IsUIOpen() const noexcept;
 
-        void Update();
-        void Render();
+    // Runs UI interaction
+    void Update(ecs::world w);
 
-        // Elements
-        void AddButton(std::shared_ptr<Button> button);
-        void Clear();
+private:
+    UIManager() = default;
 
-    private:
-        UIManager() = default;
-
-        static UIManager* instance;
-
-        bool uiOpen = false;
-        std::vector<std::shared_ptr<Button>> buttons;
+    static UIManager* instance;
+    bool uiOpen = false;
 };

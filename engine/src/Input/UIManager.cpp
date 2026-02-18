@@ -13,6 +13,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
 
 #include "Input/UIManager.h"
+#include "Input/InputManager.h"
+#include "Input/Button.h"
+#include <GLFW/glfw3.h>
 
 UIManager* UIManager::instance = nullptr;
 
@@ -41,43 +44,44 @@ void UIManager::CloseUI()
     InputManager::Get_Instance()->SetInputContext(InputManager::InputContext::Gameplay);
 }
 
-bool UIManager::IsUIOpen() const
+bool UIManager::IsUIOpen() const noexcept
 {
     return uiOpen;
 }
 
-void UIManager::AddButton(std::shared_ptr<Button> button)
-{
-    buttons.push_back(button);
-}
-
-void UIManager::Clear()
-{
-    buttons.clear();
-}
-
-void UIManager::Update()
-{
-    if (!uiOpen)
-        return;
-    double mouseX{}, mouseY{};
-	InputManager::Get_Instance()->Get_MousePosition(mouseX, mouseY);
-	bool mousePress = InputManager::Get_Instance()->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT);
-
-    for (auto& button : buttons)
-    {
-        button->update(static_cast<float>(mouseX), static_cast<float>(mouseY), mousePress);
-    }
-        
-}
-
-void UIManager::Render()
+void UIManager::Update(ecs::world w)
 {
     if (!uiOpen)
         return;
 
-    for (auto& button : buttons)
+    auto& reg = w.impl.get_registry();
+    auto view = reg.view<Button>();
+
+    InputManager* input = InputManager::Get_Instance();
+
+    float mx{}, my{};
+    input->Get_MousePosition(mx, my);
+
+    for (auto entity : view)
     {
-        button->render();
+        auto& btn = view.get<Button>(entity);
+
+        btn.hovered =
+            mx >= btn.x && mx <= btn.x + btn.width &&
+            my >= btn.y && my <= btn.y + btn.height;
+
+        if (btn.hovered &&
+            input->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT) &&
+            !btn.pressed)
+        {
+            btn.pressed = true;
+            input->Consume_Mouse();
+
+            if (btn.onClick)
+                btn.onClick();
+        }
+
+        if (input->Is_MouseReleased(GLFW_MOUSE_BUTTON_LEFT))
+            btn.pressed = false;
     }
 }

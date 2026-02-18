@@ -13,26 +13,23 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <functional>
 #include <string>
 
-class Button
+struct Button
 {
-    public:
-        Button();
-        Button(float x, float y, float width, float height, const std::string& text);
+    Button() noexcept = default;
+    Button(float x, float y, float width, float height, const std::string& text);
 
-        void setOnClick(std::function<void()> callback);
+    void setOnClick(std::function<void()> callback);
 
-        void update(float mouseX, float mouseY, bool mousePressed);
-        void render() const;
+    bool isHovered() const noexcept;
 
-        bool isHovered() const;
+    float x{};
+    float y{};
+    float width{};
+    float height{};
+    std::string text{};
 
-    
-        float x, y;
-        float width, height;
-        std::string text;
+    bool hovered{};
+    bool pressed{};
 
-        bool hovered;
-        bool pressed;
-
-        std::function<void()> onClick;
+    std::function<void()> onClick{};
 };
