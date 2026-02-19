@@ -52,7 +52,7 @@ void HUDRenderPass::Execute(RenderContext& context)
     }
 
     // Setup GL state for HUD rendering
-    glDisable(GL_DEPTH_TEST);       // HUD always on top
+    glDisable(GL_DEPTH_TEST);       // HUD always on top of 3D scene
     glDepthMask(GL_FALSE);          // Don't write to depth buffer
     glEnable(GL_BLEND);             // Enable alpha blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

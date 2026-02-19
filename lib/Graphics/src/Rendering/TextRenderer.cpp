@@ -44,7 +44,7 @@ TextRenderer::~TextRenderer()
 void TextRenderer::BeginFrame()
 {
     // Clear all batches for new frame (use resize(0) to preserve capacity)
-    for (auto& [atlasID, batch] : m_FontBatches) {
+    for (auto& [key, batch] : m_FontBatches) {
         batch.glyphInstances.resize(0);  // Clear without deallocating
         batch.dirty = true;
     }
@@ -64,9 +64,9 @@ void TextRenderer::SubmitText(const TextElementData& textElement)
         return;
     }
 
-    // Get font batch (or create new one)
+    // Get font batch (or create new one), keyed by (layer, atlasID) for sorted draw order
     uint32_t atlasTextureID = textElement.fontAtlas->GetTextureID();
-    auto [it, inserted] = m_FontBatches.try_emplace(atlasTextureID);
+    auto [it, inserted] = m_FontBatches.try_emplace(std::make_pair(textElement.layer, atlasTextureID));
     auto& batch = it->second;
 
     if (inserted) {
@@ -105,7 +105,7 @@ void TextRenderer::SubmitWorldText(const WorldTextElementData& worldText)
 void TextRenderer::EndFrame()
 {
     // Update SSBOs for all dirty batches (screen-space)
-    for (auto& [atlasID, batch] : m_FontBatches) {
+    for (auto& [key, batch] : m_FontBatches) {
         if (batch.dirty && !batch.glyphInstances.empty()) {
             UpdateBatchSSBO(batch);
         }
@@ -158,7 +158,8 @@ void TextRenderer::RenderToPass(RenderPass& renderPass, const FrameData& frameDa
     renderPass.Submit(referenceResolutionCmd);
 
     // ========== PER-BATCH RENDERING ==========
-    for (const auto& [atlasID, batch] : m_FontBatches) {
+    // std::map iterates in (layer, atlasID) order — lower layers render first (painter's algorithm)
+    for (const auto& [key, batch] : m_FontBatches) {
         if (!batch.glyphInstances.empty()) {
             RenderBatch(renderPass, batch, frameData);
         }
@@ -592,8 +593,8 @@ void TextRenderer::LayoutText(const TextElementData& textElement, FontBatch& bat
         // the top-left of each glyph relative to the baseline. Text block anchoring
         // is handled via cursor position adjustment in CalculateAnchorOffset().
         glyphInstance.anchor = static_cast<uint32_t>(TextAnchor::TopLeft);
-        glyphInstance.padding[0] = 0.0f;
-        glyphInstance.padding[1] = 0.0f;
+        glyphInstance.layer = static_cast<float>(textElement.layer) / 255.0f;
+        glyphInstance._pad = 0.0f;
 
         batch.glyphInstances.push_back(glyphInstance);
         m_TotalGlyphs++;
