@@ -651,6 +651,26 @@ void EditorMain::Render_Components()
 
 					ImGui::EndDisabled();
 					ImGui::Text("Status: %s", audioComp->isPlaying ? (audioComp->isPaused ? "Paused" : "Playing") : "Stopped");
+
+					ImGui::Separator();
+					ImGui::Text("Filter");
+					const char* filterTypeNames[] = { "None", "Lowpass", "Highpass", "Echo" };
+					int currentFilter = static_cast<int>(audioComp->filterParams.type);
+					if (ImGui::Combo("Filter Type", &currentFilter, filterTypeNames, 4)) {
+						audioComp->filterParams.type = static_cast<AudioFilterType>(currentFilter);
+						is_dirty = true;
+					}
+					if (audioComp->filterParams.type == AudioFilterType::Lowpass || audioComp->filterParams.type == AudioFilterType::Highpass) {
+						if (ImGui::SliderFloat("Cutoff (Hz)", &audioComp->filterParams.cutoffHz, 10.0f, 22050.0f, "%.0f"))
+							is_dirty = true;
+						if (ImGui::SliderFloat("Resonance", &audioComp->filterParams.resonance, 0.5f, 10.0f, "%.2f"))
+							is_dirty = true;
+					} else if (audioComp->filterParams.type == AudioFilterType::Echo) {
+						if (ImGui::SliderFloat("Delay (ms)", &audioComp->filterParams.echoDelayMs, 1.0f, 5000.0f, "%.0f"))
+							is_dirty = true;
+						if (ImGui::SliderFloat("Feedback", &audioComp->filterParams.echoFeedback, 0.0f, 1.0f, "%.2f"))
+							is_dirty = true;
+					}
 				}
 			}
 
@@ -1015,7 +1035,20 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 			}
 			else if (float* vf = value.try_cast<float>()) {
-				if (ImGui::DragFloat(field_name.c_str(), vf)) {
+				if (type.id() == ToTypeName("AudioComponent") && field_name == "volume") {
+					const float minLinear = 1e-6f;
+					float linearClamped = (*vf <= 0.f) ? minLinear : *vf;
+					float db = VolumeTodB(linearClamped);
+					const float dbMin = -60.f, dbMax = 12.f;
+					if (ImGui::DragFloat(field_name.c_str(), &db, 0.5f, dbMin, dbMax, "%.1f dB")) {
+						*vf = dbToVolume(db);
+						is_dirty = true;
+					}
+					if (ImGui::IsItemHovered()) {
+						ImGui::SetTooltip("Volume in decibels (0 dB = normal, negative = quieter, positive = louder)");
+					}
+				}
+				else if (ImGui::DragFloat(field_name.c_str(), vf)) {
 					is_dirty = true;
 				}
 			}

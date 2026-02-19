@@ -33,6 +33,17 @@ public:
 	static void Play(uint64_t handle);
 	static void Pause(uint64_t handle);
 	static void Stop(uint64_t handle);
+
+	// Filter (per-channel DSP)
+	static void SetFilterType(uint64_t handle, std::uint8_t filterType);
+	static std::uint8_t GetFilterType(uint64_t handle);
+	static void SetFilterCutoff(uint64_t handle, float cutoffHz);
+	static float GetFilterCutoff(uint64_t handle);
+	static void SetFilterResonance(uint64_t handle, float resonance);
+	static float GetFilterResonance(uint64_t handle);
+
+	// Channel (mix group) volume: percent delta, e.g. +10 = increase by 10%, -20 = decrease by 20%
+	static void AdjustChannelVolume(std::uint8_t channel, float percentDelta);
 };
 
 #endif //!AUDIOBINDING_HPP

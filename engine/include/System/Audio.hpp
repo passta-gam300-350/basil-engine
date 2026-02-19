@@ -48,10 +48,23 @@ struct AudioComponent;
 
 // AudioGroup enum is now defined in <native/audio.h> for resource system compatibility
 
+// Filter type for per-component DSP (no FMOD types in header)
+enum class AudioFilterType : std::uint8_t {
+    None = 0,
+    Lowpass,
+    Highpass,
+    Echo
+};
+
+struct AudioFilterParams {
+    AudioFilterType type = AudioFilterType::None;
+    float cutoffHz = 5000.0f;
+    float resonance = 1.0f;
+    float echoDelayMs = 500.0f;
+    float echoFeedback = 0.5f;
+};
+
 // Helper functions
-// FMOD uses a left-handed coordinate system (+X right, +Y up, +Z forward)
-// while our engine/world is right-handed. To keep spatial audio consistent
-// with rendering, we flip the Z axis when converting between glm and FMOD.
 inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, -v.z }; }
 inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, -v.z }; }
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
@@ -94,6 +107,9 @@ public:
     // State
     bool IsInitialized() const;
 
+    // Channel (mix group) volume: percent delta, e.g. +10 = increase by 10%, -20 = decrease by 20%
+    void AdjustChannelVolume(AudioGroup channel, float percentDelta);
+
     // Non-copyable
     AudioSystem(const AudioSystem&) = delete;
     AudioSystem& operator=(const AudioSystem&) = delete;
@@ -101,6 +117,10 @@ public:
 private:
     // Private constructor (singleton)
     AudioSystem();
+
+    // Filter DSP lifecycle (used by AudioComponent and UnregisterComponent)
+    bool ApplyFilterToChannel(AudioComponent* comp, FMOD::Channel* channel, const AudioFilterParams& params);
+    void RemoveFilterDsp(AudioComponent* comp, FMOD::Channel* channel);
 
     // Member variables - all state encapsulated in class
     FMOD::System* m_system;
@@ -114,6 +134,9 @@ private:
 
     // Channel management (moved from AudioComponent)
     std::unordered_map<AudioComponent*, FMOD::Channel*> m_componentChannels;
+
+    // Per-component filter DSP (created on Play, released on Stop/Unregister)
+    std::unordered_map<AudioComponent*, FMOD::DSP*> m_componentFilterDsp;
 
     // Mixing groups
     FMOD::ChannelGroup* m_masterGroup = nullptr;
@@ -152,6 +175,9 @@ struct AudioComponent
     bool is3D = true;
     bool isStreaming = false;
     bool playOnAwake = false;
+
+    // Per-channel filter (FMOD DSP; DSP instance tracked in AudioSystem)
+    AudioFilterParams filterParams;
 
     // Playback state (updated by AudioSystem)
     bool isPlaying = false;

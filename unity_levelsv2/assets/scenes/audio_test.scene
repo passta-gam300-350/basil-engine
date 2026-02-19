@@ -2941,11 +2941,11 @@ entities:
         guid: 3ace2db7c809ca2f573f49919e7
         type: 17099568057112876377
       group: "\x00"
-      volume: 1
+      volume: 1.18850219
       isLooping: true
-      is3D: true
+      is3D: false
       isStreaming: false
-      playOnAwake: true
+      playOnAwake: false
       minDistance: 1
       maxDistance: 1000
       position:
