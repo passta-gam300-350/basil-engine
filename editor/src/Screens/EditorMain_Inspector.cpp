@@ -297,6 +297,7 @@ void EditorMain::Render_Components()
 		ImGui::Separator();
 	}
 
+	static std::queue<std::function<void()>> next_frame_queue{};
 	static const ReflectionRegistry::TypeID skip_name_component{ internal_type_map[entt::type_index<ecs::entity::entity_name_t>::value()] };
 	static const ReflectionRegistry::TypeID skip_sceneid_component{ internal_type_map[entt::type_index<SceneIDComponent>::value()] };
 	static const ReflectionRegistry::TypeID skip_relationship_component{ std::find_if(ReflectionRegistry::types().begin(), ReflectionRegistry::types().end(), [](auto const& kv) {return kv.second.id() == ToTypeName("Relationship"); })->first };
@@ -354,6 +355,20 @@ void EditorMain::Render_Components()
 	if (hudIt != internal_type_map.end())
 	{
 		hud_component = hudIt->second;
+	}
+
+	ReflectionRegistry::TypeID mesh_component{};
+	auto meshIt = internal_type_map.find(entt::type_index<MeshRendererComponent>::value());
+	if (meshIt != internal_type_map.end())
+	{
+		mesh_component = meshIt->second;
+	}
+
+	while (!next_frame_queue.empty()) {
+		ul.unlock();
+		engineService.ExecuteOnEngineThread(next_frame_queue.front());
+		ul.lock();
+		next_frame_queue.pop();
 	}
 
 	for (auto const& [type_id, uptr] : component_list) {
@@ -598,8 +613,30 @@ void EditorMain::Render_Components()
 				ImGui::Spacing();
 				continue;
 			}
-
+			rp::Guid meshGuidOld = rp::null_guid;
+			if (mesh_component && type_id == mesh_component) {
+				if (MeshRendererComponent* meshptr = comp.try_cast<MeshRendererComponent>()) {
+					meshGuidOld = meshptr->m_MeshGuid.m_guid;
+				}
+			}
 			Render_Component_Member(comp, is_dirty);
+			if (is_dirty && mesh_component && type_id == mesh_component) {
+				if (MeshRendererComponent* meshptr = comp.try_cast<MeshRendererComponent>()) {
+					if (meshptr->m_MeshGuid.m_guid != meshGuidOld) {
+						meshptr->isPrimitive = false;
+						next_frame_queue.push([this, entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
+							ecs::entity entity{ entityHandle };
+							if (entity.all<MeshRendererComponent>()) {
+								MeshRendererComponent& mesh = entity.get<MeshRendererComponent>();
+								for (auto& [name, guid] : mesh.m_MaterialGuid) {
+									guid = m_AssetManager->ResolveAssetGuid(name);
+								}
+								mesh.hasAttachedMaterial = true;
+							}
+							});
+					}
+				}
+			}
 
 			// Special UI section for AudioComponent playback controls
 			if (audio_component && type_id == audio_component) {
@@ -782,7 +819,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 
 	// Detect if this is a TransformComponent for custom drag speed
 	bool isTransformComponent = (type.id() == ToTypeName("TransformComponent"));
-
+	
 	int i{};
 
 	for (auto [id, data] : type.data()) {

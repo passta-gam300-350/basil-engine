@@ -10,6 +10,7 @@
 #include <descriptors/audio.hpp>
 #include <importer/importer.hpp>  // Registers native suffixes for GetResourceExt()
 #include <glm/glm.hpp>
+#include <future>
 #include "Screens/EditorMain.hpp"
 #include <ranges>
 
@@ -142,8 +143,77 @@ std::vector<std::string> AssetManager::GetAssetTypeNames(ResourceType ty) {
 	return asstype;
 }
 
+std::vector<std::string> trackDirectory(const std::wstring& path, std::atomic_bool& tracker) {
+	HANDLE hDir = CreateFileW(
+		path.c_str(),
+		FILE_LIST_DIRECTORY,
+		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		NULL,
+		OPEN_EXISTING,
+		FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, // overlapped mode
+		NULL
+	);
+
+	std::vector<std::string> files;
+
+	if (hDir == INVALID_HANDLE_VALUE) {
+		std::cerr << "Failed to open directory\n";
+		return files;
+	}
+
+	char buffer[1024];
+	DWORD bytesReturned;
+	OVERLAPPED overlapped = {};
+	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	while (tracker.load()) {
+		ResetEvent(overlapped.hEvent);
+
+		BOOL ok = ReadDirectoryChangesW(
+			hDir,
+			buffer,
+			sizeof(buffer),
+			TRUE,
+			FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
+			&bytesReturned,
+			&overlapped,
+			NULL
+		);
+
+		if (!ok) {
+			std::cerr << "ReadDirectoryChangesW failed\n";
+			break;
+		}
+
+		// Wait up to 2 seconds for a change
+		DWORD result = WaitForSingleObject(overlapped.hEvent, 2000);
+		if (result == WAIT_TIMEOUT) {
+			// No changes detected in this period, loop continues non-blocking
+			continue;
+		}
+
+		if (result == WAIT_OBJECT_0) {
+			// Change detected, process buffer
+			FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)buffer;
+			files.emplace_back(std::string(wstring_to_string(std::wstring(fni->FileName, fni->FileNameLength / sizeof(WCHAR))).data()));
+		}
+	}
+
+	CloseHandle(overlapped.hEvent);
+	CloseHandle(hDir);
+
+	return files;
+}
+
 rp::BasicIndexedGuid AssetManager::ImportAsset(std::string const& rdesc) {
 	auto importertype{ rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(rdesc) };
+	std::atomic_bool importnewfiles{};
+	std::future<std::vector<std::string>> fut{};
+	//hack
+	if (importertype == rp::utility::type_hash<ModelDescriptor>::value()) {
+		importnewfiles = rp::serialization::yaml_serializer::deserialize<ModelDescriptor>(rdesc).import_extracted;
+		fut = std::async(std::launch::async, trackDirectory, string_to_wstring(getParentPath(rdesc)), std::ref(importnewfiles));
+	}
 	auto biguid{ rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc) };
 	auto file_path{ normalizePath(m_ImportedAssetPath + "/" + biguid.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetImporterSuffix(importertype)) };
 	if (ResourceSystem::Instance().m_MappedIO.find(file_path) != ResourceSystem::Instance().m_MappedIO.end()) {
@@ -157,6 +227,17 @@ rp::BasicIndexedGuid AssetManager::ImportAsset(std::string const& rdesc) {
 	fentry.m_Path = file_path;
 	fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 	ResourceSystem::Instance().m_FileEntries.emplace(fentry.m_Guid, fentry);
+	importnewfiles = false;
+	if (fut.valid()) {
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(1000ms);
+		for (auto const& file : fut.get()) {
+			std::string ext = getFileExtension(file);
+			if (ext == ".desc") {
+				ImportAsset(getParentPath(rdesc) + "/" + file);
+			}
+		}
+	}
 	return biguid;
 }
 

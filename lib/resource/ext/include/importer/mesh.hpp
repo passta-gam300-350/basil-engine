@@ -114,6 +114,46 @@ inline std::vector<TextureDescriptor> ExtractEmbeddedTexture(aiScene const* scen
     return embedded_tex;
 }
 
+bool IsMaterialTransparent(const aiMaterial* mat) {
+    if (!mat) return false;
+
+    // 1. Check opacity
+    float opacity = 1.0f;
+    if (mat->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
+        if (opacity < 1.0f) {
+            return true;
+        }
+    }
+
+    // 2. Check transparency factor
+    float transparencyFactor = 1.0f;
+    if (mat->Get(AI_MATKEY_TRANSPARENCYFACTOR, transparencyFactor) == AI_SUCCESS) {
+        if (transparencyFactor < 1.0f) {
+            return true;
+        }
+    }
+
+    // 3. Check transparent color
+    aiColor4D transparentColor(0, 0, 0, 0);
+    if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transparentColor) == AI_SUCCESS) {
+        if (transparentColor.a < 1.0f) {
+            return true;
+        }
+    }
+
+    // 4. Check if diffuse/base color texture has alpha channel
+    aiString texPath;
+    if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+        // Assimp doesn’t expose alpha directly here.
+        // You’d need to load the texture image and inspect its pixel format.
+        // For example, if you use stb_image or another loader, check if it has 4 channels.
+        // If so, you can decide based on alpha values.
+    }
+
+    return false;
+}
+
+
 // --- helper: extract material into MaterialDescriptor ---
 inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& base_path, std::vector<TextureDescriptor> const& embeddedTexturesGuid) {
     MaterialDescriptor matDesc{};
@@ -183,6 +223,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
 
     matDesc.material.vert_name = "main_pbr.vert";
     matDesc.material.frag_name = "main_pbr.frag";
+    matDesc.material.blend_mode = IsMaterialTransparent(aimat) ? 1 : 0;
 
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();
