@@ -690,8 +690,20 @@ void RenderSystem::Update(ecs::world& world) {
 
 	// ========== DUAL RENDERING (Unity-style) ==========
 	// Render scene twice: once with editor camera, once with game camera
+	// OPTIMIZATION: Only render focused viewport (skip inactive to reduce lag)
+
+	// Debug: Log rendering decisions every 60 frames
+	static int frameCounter = 0;
+	if (frameCounter++ % 60 == 0) {
+		spdlog::info("RenderSystem: renderSceneViewport={}, renderGameViewport={}, hasGameCamera={}",
+			editorCameraSnapshot.renderSceneViewport,
+			editorCameraSnapshot.renderGameViewport,
+			hasGameCamera);
+	}
 
 	// --- FIRST RENDER PASS: Editor Camera (Scene viewport) ---
+	// Only render if Scene viewport is focused (optimization)
+	if (editorCameraSnapshot.renderSceneViewport)
 	{
 		// Set camera context to EDITOR
 		frameData.currentCamera = FrameData::CameraContext::EDITOR;
@@ -734,10 +746,16 @@ void RenderSystem::Update(ecs::world& world) {
 		// Render with editor camera
 		m_SceneRenderer->Render();
 	}
+	else
+	{
+		if (frameCounter % 60 == 1) {
+			spdlog::info("RenderSystem: SKIPPING Scene viewport render (not focused)");
+		}
+	}
 
 	// --- SECOND RENDER PASS: Game Camera (Game viewport) ---
-	// Only render if a game camera exists in the scene
-	if (hasGameCamera)
+	// Only render if Game viewport is focused AND a game camera exists (optimization)
+	if (editorCameraSnapshot.renderGameViewport && hasGameCamera)
 	{
 		// Set camera context to GAME
 		frameData.currentCamera = FrameData::CameraContext::GAME;
@@ -781,9 +799,17 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 	else
 	{
+		if (frameCounter % 60 == 1) {
+			if (!hasGameCamera) {
+				spdlog::info("RenderSystem: SKIPPING Game viewport render (no game camera)");
+			} else {
+				spdlog::info("RenderSystem: SKIPPING Game viewport render (not focused)");
+			}
+		}
 		// No game camera - clear buffer so editor displays "No active game camera" message
-		m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
-		spdlog::debug("RenderSystem: No active game camera found, Game viewport will be empty");
+		if (!hasGameCamera) {
+			m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
+		}
 	}
 
 	// Re-enable both passes for next frame

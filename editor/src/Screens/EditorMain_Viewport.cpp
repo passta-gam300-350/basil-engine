@@ -13,12 +13,28 @@
 #include "Profiler/profiler.hpp"
 
 // ============================================================================
+// VIEWPORT FOCUS TRACKING (for rendering optimization)
+// ============================================================================
+// Track which viewport is focused to skip rendering inactive viewports
+// Updated every frame by Render_Scene() and Render_Game()
+// Note: Non-static for external linkage (accessed by EditorMain.cpp)
+bool g_SceneViewportFocused = true;   // Scene viewport focused (default: true)
+bool g_GameViewportFocused = false;   // Game viewport focused (default: false)
+
+// ============================================================================
 // GAME VIEWPORT RENDERING
 // ============================================================================
 void EditorMain::Render_Game()
 {
 	PF_EDITOR_SCOPE("Render_Game");
 	ImGui::Begin("Game", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+	// Track Game viewport focus state for rendering optimization
+	bool wasFocused = g_GameViewportFocused;
+	g_GameViewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+	if (wasFocused != g_GameViewportFocused) {
+		spdlog::info("Game viewport focus changed: {}", g_GameViewportFocused ? "FOCUSED" : "UNFOCUSED");
+	}
 
 	// Get frame data from engine thread
 	auto& frameData = engineService.GetFrameData();
@@ -163,6 +179,13 @@ void EditorMain::Render_Scene()
 	float deltaTime = static_cast<float>(engineService.GetDeltaTime());
 
 	ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+	// Track Scene viewport focus state for rendering optimization
+	bool wasFocused = g_SceneViewportFocused;
+	g_SceneViewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+	if (wasFocused != g_SceneViewportFocused) {
+		spdlog::info("Scene viewport focus changed: {}", g_SceneViewportFocused ? "FOCUSED" : "UNFOCUSED");
+	}
 
 	// Get viewport size for aspect ratio
 	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
