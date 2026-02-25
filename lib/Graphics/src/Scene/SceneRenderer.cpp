@@ -18,6 +18,7 @@ Technology is prohibited.
 #include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
 #include "Pipeline/GameResolvePass.h"
+#include "Pipeline/RenderTextureResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/HUDRenderPass.h"
 #include "Pipeline/RenderContext.h"
@@ -219,7 +220,12 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto gameResolvePass = std::make_shared<GameResolvePass>();
     mainPipeline->AddPass(gameResolvePass);
 
-    // 14. Add present pass (executes last)
+    // 14. Add render texture resolve pass (captures secondary camera output for HUD/WorldUI use)
+    auto renderTextureResolvePass = std::make_shared<RenderTextureResolvePass>();
+    mainPipeline->AddPass(renderTextureResolvePass);
+    mainPipeline->EnablePass("RenderTextureResolvePass", false);  // Disabled by default, enabled per-frame
+
+    // 15. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 

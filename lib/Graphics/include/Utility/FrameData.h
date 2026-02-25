@@ -73,6 +73,7 @@ struct FrameData
     // Editor display buffer (resolved from mainColorBuffer for ImGui sampling)
     std::shared_ptr<FrameBuffer> editorResolvedBuffer;     // Non-MSAA resolved for ImGui (Scene viewport)
     std::shared_ptr<FrameBuffer> gameResolvedBuffer;       // Non-MSAA resolved for ImGui (Game viewport)
+    std::shared_ptr<FrameBuffer> renderTextureCameraBuffer; // Non-MSAA resolved output for render texture cameras
 
     // Post-processing chain
     std::shared_ptr<FrameBuffer> postProcessBuffer;

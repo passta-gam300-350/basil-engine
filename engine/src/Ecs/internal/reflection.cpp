@@ -275,7 +275,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&HUDComponent::color, "color">,
 		MemberRegistrationV<&HUDComponent::rotation, "rotation">,
 		MemberRegistrationV<&HUDComponent::layer, "layer">,
-		MemberRegistrationV<&HUDComponent::visible, "visible">
+		MemberRegistrationV<&HUDComponent::visible, "visible">,
+		MemberRegistrationV<&HUDComponent::m_useRenderTexture, "m_useRenderTexture">
 	);
 
 	// Register TextComponent enums
@@ -340,6 +341,15 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&WorldUIComponent::color, "color">,
 		MemberRegistrationV<&WorldUIComponent::layer, "layer">,
 		MemberRegistrationV<&WorldUIComponent::visible, "visible">,
-		MemberRegistrationV<&WorldUIComponent::interactable, "interactable">
+		MemberRegistrationV<&WorldUIComponent::interactable, "interactable">,
+		MemberRegistrationV<&WorldUIComponent::m_useRenderTexture, "m_useRenderTexture">
+	);
+
+	// Register RenderTextureCameraComponent
+	RegisterReflectionComponent<RenderTextureCameraComponent>(
+		"RenderTextureCameraComponent",
+		MemberRegistrationV<&RenderTextureCameraComponent::width, "width">,
+		MemberRegistrationV<&RenderTextureCameraComponent::height, "height">
+		// outputTextureID is runtime-only, not serialized
 	);
 }
