@@ -829,6 +829,10 @@ public:
         float nearPlane{ 0.1f };
         float farPlane{ 1000.0f };
         bool isPerspective{ true };
+
+        // Viewport rendering control - only render focused viewport to optimize performance
+        bool renderSceneViewport{ true };   ///< Render Scene viewport (editor camera)
+        bool renderGameViewport{ false };   ///< Render Game viewport (game camera)
     };
 
     /**

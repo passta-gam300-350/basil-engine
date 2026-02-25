@@ -20,7 +20,8 @@ Technology is prohibited.
 #include "../Resources/FontAtlas.h"
 #include <memory>
 #include <vector>
-#include <unordered_map>
+#include <map>
+#include <utility>
 #include <glm/glm.hpp>
 
 // Forward declarations
@@ -55,7 +56,8 @@ public:
         glm::vec4 glowColor;        // Glow/shadow color
         float rotation;             // Rotation (radians)
         uint32_t anchor;            // Anchor point
-        float padding[2];           // Alignment padding to 128 bytes
+        float layer;                // Normalized layer depth (0.0=back, 1.0=front)
+        float _pad;                 // Alignment padding
         // Total: 128 bytes (aligned to vec4)
     };
 
@@ -126,8 +128,8 @@ private:
         bool dirty = true;
     };
 
-    // Font batches (key = atlasTextureID)
-    std::unordered_map<uint32_t, FontBatch> m_FontBatches;
+    // Font batches keyed by (layer, atlasTextureID) — map order gives correct back-to-front draw sequence
+    std::map<std::pair<uint8_t, uint32_t>, FontBatch> m_FontBatches;
 
     // World-space batch storage per font atlas
     struct WorldFontBatch {

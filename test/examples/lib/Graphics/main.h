@@ -120,6 +120,7 @@ private:
     void PrintRenderPassStatus() const;
     void PrintPointShadowInfo() const;
     void PrintHDRInfo() const;
+    void PrintFogInfo() const;
 
     // Render pass controls
     void ToggleSkybox();

@@ -24,6 +24,7 @@ Technology is prohibited.
 #include "../Utility/HUDData.h"
 #include "../Utility/TextData.h"
 #include "../Utility/WorldUIData.h"
+#include "../Utility/FogData.h"
 #include "../Resources/ResourceManager.h"
 #include "../Resources/TextureSlotManager.h"
 #include <memory>
@@ -166,6 +167,13 @@ public:
     // Camera control facade
     void SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos);
 
+    // Fog control (OGLDev Tutorial 39-style fog rendering)
+    void SetLinearFog(float start, float end, const glm::vec3& color);
+    void SetExpFog(float end, float density, const glm::vec3& color);
+    void SetExpSquaredFog(float end, float density, const glm::vec3& color);
+    void DisableFog();
+    const FogData& GetFogData() const { return m_FogData; }
+
     // Debug rendering facade
     void EnablePhysicsDebugVisualization(bool enable);  // Control physics debug line rendering
 
@@ -193,6 +201,9 @@ private:
     std::vector<RenderableData> m_SubmittedRenderables;
     std::vector<SubmittedLightData> m_SubmittedLights;
     glm::vec3 m_AmbientLight = glm::vec3(0.03f);
+
+    // Fog configuration
+    FogData m_FogData;
 
     // Single render pipeline
     std::unique_ptr<RenderPipeline> m_Pipeline;

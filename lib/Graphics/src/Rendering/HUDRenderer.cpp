@@ -42,7 +42,7 @@ HUDRenderer::~HUDRenderer()
 void HUDRenderer::BeginFrame()
 {
     // Clear all batches for new frame (use resize(0) to preserve capacity)
-    for (auto& [textureID, batch] : m_TextureBatches) {
+    for (auto& [key, batch] : m_TextureBatches) {
         batch.instances.resize(0);  // Clear without deallocating
         batch.dirty = true;
     }
@@ -67,11 +67,11 @@ void HUDRenderer::SubmitElement(const HUDElementData& element)
     instanceData.color = element.color;
     instanceData.rotation = glm::radians(element.rotation);  // Convert to radians
     instanceData.anchor = static_cast<uint32_t>(element.anchor);
-    instanceData.padding[0] = 0.0f;
-    instanceData.padding[1] = 0.0f;
+    instanceData.layer = static_cast<float>(element.layer) / 255.0f;
+    instanceData._pad = 0.0f;
 
-    // Add to appropriate texture batch (use try_emplace to avoid unnecessary allocations)
-    auto [it, inserted] = m_TextureBatches.try_emplace(element.textureID);
+    // Add to appropriate texture batch keyed by (layer, textureID) for sorted draw order
+    auto [it, inserted] = m_TextureBatches.try_emplace(std::make_pair(element.layer, element.textureID));
     auto& batch = it->second;
     if (inserted) {
         batch.textureID = element.textureID;
@@ -90,7 +90,7 @@ void HUDRenderer::EndFrame()
         m_TotalElements, m_TextureBatches.size());*/
 
     // Update SSBOs for all dirty batches
-    for (auto& [textureID, batch] : m_TextureBatches) {
+    for (auto& [key, batch] : m_TextureBatches) {
         if (batch.dirty && !batch.instances.empty()) {
             /*spdlog::info("HUDRenderer::EndFrame() - updating batch for textureID={}, instances={}",
                 textureID, batch.instances.size());*/
@@ -138,11 +138,8 @@ void HUDRenderer::RenderToPass(RenderPass& renderPass, const FrameData& frameDat
     renderPass.Submit(referenceResolutionCmd);
 
     // ========== PER-BATCH RENDERING ==========
-    // Sort batches by layer (stored in first instance of each batch)
-    // For simplicity, we'll render in texture ID order
-    // TODO: Implement proper layer-based sorting across batches
-
-    for (const auto& [textureID, batch] : m_TextureBatches) {
+    // std::map iterates in (layer, textureID) order — lower layers render first (painter's algorithm)
+    for (const auto& [key, batch] : m_TextureBatches) {
         if (!batch.instances.empty()) {
             RenderBatch(renderPass, batch, frameData);
         }
