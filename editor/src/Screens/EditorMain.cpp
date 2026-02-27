@@ -540,7 +540,7 @@ void EditorMain::update()
 
 		// Viewport rendering optimization: only render focused viewport
 		// Focus state is tracked by Render_Scene() and Render_Game() from previous frame
-		snapshot.renderSceneViewport = g_SceneViewportFocused;
+		snapshot.renderSceneViewport = true;  // Always render scene viewport so inspector edits update immediately
 		snapshot.renderGameViewport = g_GameViewportFocused;
 
 		// Debug: Log snapshot values every 60 frames
