@@ -31,6 +31,7 @@ Technology is prohibited.
 #include <Rendering/WorldUIRenderer.h>  // For world UI renderer methods
 #include <Utility/WorldUIData.h>  // For world UI rendering
 #include "Component/SkeletonComponent.hpp" // skeleton component
+#include "Component/AnimationComponent.hpp"
 #include "Messaging/Messaging_System.h"
 
 #include <Resources/MaterialInstanceManager.h>
@@ -317,7 +318,7 @@ void RenderSystem::Update(ecs::world& world) {
 		// - Component properties: Used for editor/serialization (synced to base material)
 		// - Material instances: Runtime copy-on-write for per-entity customization
 
-		const auto shared_ptr_visitor = [&](std::shared_ptr<Mesh>& meshResourcePtr, std::shared_ptr<Material> const& materialResourcePtr)
+		const auto shared_ptr_visitor = [&](std::shared_ptr<Mesh>& meshResourcePtr, std::shared_ptr<Material> const& materialResourcePtr, glm::mat4 const& local = glm::mat4{1.f})
 			// Render the entity
 			{
 				// Material customization is now handled by MaterialPropertyBlocks
@@ -327,7 +328,7 @@ void RenderSystem::Update(ecs::world& world) {
 				RenderableData renderData;
 				renderData.mesh = meshResourcePtr;
 				renderData.material = materialResourcePtr;
-				renderData.transform = transform.m_Mtx;
+				renderData.transform = transform.m_Mtx * local;
 				renderData.visible = visible.m_IsVisible;
 				renderData.renderLayer = 1;
 
@@ -386,23 +387,75 @@ void RenderSystem::Update(ecs::world& world) {
 					mesh.m_MaterialGuid.clear();
 					mesh.m_MaterialGuid.emplace("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
 				}
-				shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
+				if (obj.all<AnimationBoneChannelTransformComponent>()) {
+					AnimationBoneChannelTransformComponent& data = obj.get<AnimationBoneChannelTransformComponent>();
+					shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second), data.bone_trans.empty() ? glm::mat4(1.f) : data.bone_trans[0]);
+				}
+				else {
+					shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
+				}
 			}
 			else {
+				std::vector<glm::mat4> node_global;
+				rp::BasicIndexedGuid partialndguid = mesh.m_MeshGuid;
+				MeshMetaRuntimeData* nodedataptr{};
+				partialndguid.m_guid.m_low += 1;
+				if (ResourceRegistry::Instance().Exists(partialndguid) && !obj.all<SkeletonComponent>()) {
+					MeshMetaRuntimeData& nodedata = *(nodedataptr = ResourceRegistry::Instance().Get<MeshMetaRuntimeData>(partialndguid.m_guid));
+					node_global.resize(nodedata.node_local_bind.size());
+					if (obj.all<AnimationBoneChannelTransformComponent>()) {
+						AnimationBoneChannelTransformComponent& data = obj.get<AnimationBoneChannelTransformComponent>();
+						for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
+							int parent = nodedata.node_parent[node];
+
+							auto it = data.bone_trans.find(node);
+							if (parent < 0) {
+								// Root node
+								node_global[node] = ((it != data.bone_trans.end()) ? it->second : nodedata.node_local_bind[node]);
+							}
+							else {
+								// Use cached parent transform
+								node_global[node] = node_global[parent] * ((it != data.bone_trans.end()) ?  it->second: nodedata.node_local_bind[node]);
+							}
+						}
+					}
+					else {
+						for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
+							int parent = nodedata.node_parent[node];
+							if (parent < 0) {
+								// Root node
+								node_global[node] = nodedata.node_local_bind[node];
+							}
+							else {
+								// Use cached parent transform
+								node_global[node] = node_global[parent] * nodedata.node_local_bind[node];
+							}
+						}
+					}
+				}
+
+				int matmeshidx{};
+
 				// Multi-slot mesh: match materials by slot name to preserve user assignments
 				// Only add missing slots, never clear existing assignments
 				for (auto& [slotName, meshPtr] : *var) {
 					// Check if this slot exists in the component's material map
 					auto matIt = mesh.m_MaterialGuid.find(slotName);
-
+					
 					if (matIt == mesh.m_MaterialGuid.end()) {
 						// Slot doesn't exist - add it with null GUID (will use default material)
 						mesh.m_MaterialGuid.emplace(slotName, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
 						matIt = mesh.m_MaterialGuid.find(slotName);
 					}
 
-					// Submit renderable with material from this slot
-					shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
+					if (node_global.empty()||nodedataptr==nullptr) {
+						// Submit renderable with material from this slot
+						shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
+					}
+					else {
+						// Submit renderable with material from this slot
+						shared_ptr_visitor(meshPtr, materialLoader(matIt->second), node_global[nodedataptr->mesh_node_idx[matmeshidx++]]);
+					}
 				}
 
 				// Clean up slots that don't exist in mesh anymore (optional)
@@ -1396,10 +1449,47 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 
 void UnloadMeshFromResource(std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>&) {}
 
+MeshMetaRuntimeData loadmeta(const char* data) {
+	// Deserialize MeshMetaData from binary
+	MeshMetaData metadata = rp::serialization::serializer<"bin">::deserialize<MeshMetaData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	MeshMetaRuntimeData res;
+	res.mesh_node_idx = metadata.mesh_node_idx;
+	res.node_parent = metadata.node_parent;
+	res.node_local_bind.reserve(metadata.node_local_bind.size());
+	for (auto const& [a, b, c, d] : metadata.node_local_bind) {
+		res.node_local_bind.emplace_back(glm::mat4(a, b, c, d));
+	}
+	return res;
+}
+
+//[](const char* data)->MeshMetaRuntimeData {
+//	// Deserialize MeshMetaData from binary
+//	MeshMetaData metadata = rp::serialization::serializer<"bin">::deserialize<MeshMetaData>(
+//		reinterpret_cast<const std::byte*>(data)
+//	);
+//	MeshMetaRuntimeData res;
+//	res.mesh_node_idx = metadata.mesh_node_idx;
+//	res.node_parent = metadata.node_parent;
+//	res.node_local_bind.resize(metadata.node_local_bind.size());
+//	for (auto const& [a, b, c, d] : metadata.node_local_bind) {
+//		res.node_local_bind.emplace_back(glm::mat4(a, b, c, d));
+//	}
+//	return res;
+//	}
 using Meshes = std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>;
  
 // ========== Resource Type Registrations ==========
 REGISTER_RESOURCE_TYPE_ALIASE(Meshes, mesh, LoadMeshFromResource, UnloadMeshFromResource)
+
+REGISTER_RESOURCE_TYPE_ALIASE(MeshMetaRuntimeData, meshmeta,
+	loadmeta
+	,
+	[](MeshMetaRuntimeData&) {
+		// Cleanup - Material destructor handles GPU resource cleanup
+		// No additional cleanup needed
+	});
 
 REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 	[](const char* data)->std::shared_ptr<Material> {
