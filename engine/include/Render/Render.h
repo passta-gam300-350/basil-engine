@@ -130,6 +130,7 @@ struct HUDComponent {
     float rotation = 0.0f;              ///< Rotation in degrees (clockwise, around anchor point)
     uint8_t layer = 0;                 ///< Layer for depth sorting (higher values render on top)
     bool visible = true;                ///< Visibility toggle
+    bool m_useRenderTexture = false;    ///< If true, display render texture camera output instead of m_TextureGuid
 };
 
 /**
@@ -277,6 +278,25 @@ struct WorldUIComponent {
     uint8_t layer = 0;                   ///< Layer for depth sorting
     bool visible = true;                 ///< Visibility toggle
     bool interactable = true;            ///< Whether raycasts can hit this element
+    bool m_useRenderTexture = false;     ///< If true, display render texture camera output instead of m_TextureGuid
+};
+
+/**
+ * @struct RenderTextureCameraComponent
+ * @brief Marks a camera entity as a render texture source.
+ *
+ * Attach this alongside a CameraComponent to render that camera's view to a texture
+ * each frame. The resulting texture can be displayed by HUDComponent or WorldUIComponent
+ * when m_useRenderTexture = true.
+ *
+ * Only one RenderTextureCameraComponent is active at a time (the first active one found).
+ */
+struct RenderTextureCameraComponent {
+    uint32_t width = 1280;   ///< Render texture width in pixels
+    uint32_t height = 720;   ///< Render texture height in pixels
+
+    // Runtime only - set by RenderSystem each frame, not serialized
+    uint32_t outputTextureID = 0;  ///< OpenGL texture ID of the rendered output
 };
 
 struct Camera_Calculation_Update : Message {

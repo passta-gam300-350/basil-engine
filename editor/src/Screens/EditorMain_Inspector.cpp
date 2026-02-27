@@ -1013,11 +1013,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text(field_name.c_str());
 				ImGui::SameLine(150);
 				ImGui::SetNextItemWidth(-1);
-				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
 					auto& vec = *static_cast<std::vector<std::string>*>(data);
-					if (idx < 0 || idx >= vec.size()) return false;
-					*out_text = vec[idx].c_str();
-					return true;
+					if (idx < 0 || idx >= vec.size()) return "";
+					return vec[idx].c_str();
 					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
 					// Check if selected item is valid and not empty (instead of checking index)
 					if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
@@ -1345,11 +1344,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::Text(field_name.c_str());
 							ImGui::SameLine(150);
 							ImGui::SetNextItemWidth(-1);
-							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
 								auto& vec = *static_cast<std::vector<std::string>*>(data);
-								if (idx < 0 || idx >= vec.size()) return false;
-								*out_text = vec[idx].c_str();
-								return true;
+								if (idx < 0 || idx >= vec.size()) return "";
+								return vec[idx].c_str();
 								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
 								// Check if selected item is valid and not empty (instead of checking index)
 								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
@@ -1385,11 +1383,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::Text(name.c_str());
 							ImGui::SameLine(150);
 							ImGui::SetNextItemWidth(-1);
-							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
 								auto& vec = *static_cast<std::vector<std::string>*>(data);
-								if (idx < 0 || idx >= vec.size()) return false;
-								*out_text = vec[idx].c_str();
-								return true;
+								if (idx < 0 || idx >= vec.size()) return "";
+								return vec[idx].c_str();
 								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
 								// Check if selected item is valid and not empty (instead of checking index)
 								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
