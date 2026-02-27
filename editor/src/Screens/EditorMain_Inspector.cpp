@@ -1065,6 +1065,13 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
 
+				// Special handling for texture dimensions (width/height)
+				// Clamp to 8192 to prevent GPU texture size limits and crashes
+				if (field_name.find("width") != std::string::npos ||
+				    field_name.find("height") != std::string::npos) {
+					maxValue = 8192;
+				}
+
 				// With custom format
 				if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
 					is_dirty = true;

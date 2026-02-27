@@ -675,6 +675,21 @@ void RenderSystem::Update(ecs::world& world) {
 		// Extract world position from transform matrix
 		worldUIData.worldPosition = glm::vec3(transform.m_Mtx[3]);
 		worldUIData.size = worldUI.size;
+
+		// Preserve aspect ratio for render textures to prevent distortion
+		if (worldUI.m_useRenderTexture && worldUIData.textureID != 0) {
+			// Find the render texture camera to get its dimensions
+			for (auto rtCamEntity : sceneRenderTextureCameras) {
+				auto& rtCam = rtCamEntity.get<RenderTextureCameraComponent>();
+				if (rtCam.outputTextureID == worldUIData.textureID && rtCam.height > 0) {
+					float rtAspectRatio = static_cast<float>(rtCam.width) / static_cast<float>(rtCam.height);
+					worldUIData.size.x = worldUI.size.x;
+					worldUIData.size.y = worldUI.size.x / rtAspectRatio;
+					break;
+				}
+			}
+		}
+
 		worldUIData.billboardMode = static_cast<WorldUIBillboardMode>(worldUI.billboardMode);
 
 		// For non-billboard mode, extract rotation from transform matrix
