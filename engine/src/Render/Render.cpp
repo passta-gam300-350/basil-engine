@@ -718,13 +718,13 @@ void RenderSystem::Update(ecs::world& world) {
 	// OPTIMIZATION: Only render focused viewport (skip inactive to reduce lag)
 
 	// Debug: Log rendering decisions every 60 frames
-	static int frameCounter = 0;
-	if (frameCounter++ % 60 == 0) {
-		spdlog::info("RenderSystem: renderSceneViewport={}, renderGameViewport={}, hasGameCamera={}",
-			editorCameraSnapshot.renderSceneViewport,
-			editorCameraSnapshot.renderGameViewport,
-			hasGameCamera);
-	}
+	//static int frameCounter = 0;
+	//if (frameCounter++ % 60 == 0) {
+	//	spdlog::info("RenderSystem: renderSceneViewport={}, renderGameViewport={}, hasGameCamera={}",
+	//		editorCameraSnapshot.renderSceneViewport,
+	//		editorCameraSnapshot.renderGameViewport,
+	//		hasGameCamera);
+	//}
 
 	// --- FIRST RENDER PASS: Editor Camera (Scene viewport) ---
 	// Only render if Scene viewport is focused (optimization)
@@ -773,9 +773,9 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 	else
 	{
-		if (frameCounter % 60 == 1) {
+		/*if (frameCounter % 60 == 1) {
 			spdlog::info("RenderSystem: SKIPPING Scene viewport render (not focused)");
-		}
+		}*/
 	}
 
 	// --- SECOND RENDER PASS: Game Camera (Game viewport) ---
@@ -824,13 +824,13 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 	else
 	{
-		if (frameCounter % 60 == 1) {
-			if (!hasGameCamera) {
-				spdlog::info("RenderSystem: SKIPPING Game viewport render (no game camera)");
-			} else {
-				spdlog::info("RenderSystem: SKIPPING Game viewport render (not focused)");
-			}
-		}
+		//if (frameCounter % 60 == 1) {
+		//	if (!hasGameCamera) {
+		//		spdlog::info("RenderSystem: SKIPPING Game viewport render (no game camera)");
+		//	} else {
+		//		spdlog::info("RenderSystem: SKIPPING Game viewport render (not focused)");
+		//	}
+		//}
 		// No game camera - clear buffer so editor displays "No active game camera" message
 		if (!hasGameCamera) {
 			m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
