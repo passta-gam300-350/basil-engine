@@ -12,7 +12,8 @@ struct HUDInstanceData
     vec4 color;         // Tint color
     float rotation;     // Rotation (radians)
     uint anchor;        // Anchor point (0-8)
-    float padding[2];   // Alignment padding
+    float layer;        // Normalized layer depth (0.0=back, 1.0=front)
+    float _pad;         // Alignment padding
 };
 
 // Instance data from SSBO
@@ -87,9 +88,10 @@ void main()
     // Screen coords: (0,0) = top-left, (width,height) = bottom-right
     vec2 ndc;
     ndc.x = (screenPos.x / u_ReferenceResolution.x) * 2.0 - 1.0;  // 0..refWidth -> -1..1
-    ndc.y = 1.0 - (screenPos.y / u_ReferenceResolution.y) * 2.0;  // 0..refHeight -> 1..-1 (flip Y)
+    ndc.y = (screenPos.y / u_ReferenceResolution.y) * 2.0 - 1.0;  // 0..refHeight -> 1..-1 (flip Y)
 
-    gl_Position = vec4(ndc, 0.0, 1.0);
+    float z = 1.0 - instance.layer * 0.998;
+    gl_Position = vec4(ndc, z, 1.0);
 
     // Pass texture coordinates and color to fragment shader
     vTexCoord = aTexCoord;

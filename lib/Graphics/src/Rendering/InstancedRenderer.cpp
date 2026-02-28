@@ -465,6 +465,8 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
         spdlog::warn("PBRLightingRenderer not available for lighting setup");
     }
 
+    // 5. Submit fog commands (OGLDev Tutorial 39-style)
+    SubmitFogCommands(renderPass, shader, frameData);
 
     // 6. Bind textures (if any)
 	std::vector<Texture> materialTextures = meshInstances.material->GetAllTextures();
@@ -950,4 +952,59 @@ void InstancedRenderer::UploadBoneMatrices(const glm::mat4* matrices, uint32_t c
 
     // Bind to shader binding point
     m_BoneMatrixSSBO->BindBase(BONE_SSBO_BINDING);
+}
+
+// ===== FOG RENDERING (OGLDev Tutorial 39-style) =====
+
+void InstancedRenderer::SubmitFogCommands(RenderPass& renderPass, std::shared_ptr<Shader> shader, const FrameData& frameData)
+{
+    // Check if fog data is available
+    if (!frameData.fogData) {
+        return;  // No fog data, skip
+    }
+
+    const FogData& fog = *frameData.fogData;
+
+    // Submit fog type uniform
+    RenderCommands::SetUniformIntData fogTypeCmd{
+        shader,
+        "u_FogType",
+        static_cast<int>(fog.type)
+    };
+    renderPass.Submit(fogTypeCmd);
+
+    // Submit fog parameters (only if fog is enabled)
+    if (fog.IsEnabled()) {
+        // Submit fog start distance (Linear fog only, but always set for simplicity)
+        RenderCommands::SetUniformFloatData fogStartCmd{
+            shader,
+            "u_FogStart",
+            fog.start
+        };
+        renderPass.Submit(fogStartCmd);
+
+        // Submit fog end distance (all fog types use this)
+        RenderCommands::SetUniformFloatData fogEndCmd{
+            shader,
+            "u_FogEnd",
+            fog.end
+        };
+        renderPass.Submit(fogEndCmd);
+
+        // Submit fog density (Exponential fog types only, but always set)
+        RenderCommands::SetUniformFloatData fogDensityCmd{
+            shader,
+            "u_FogDensity",
+            fog.density
+        };
+        renderPass.Submit(fogDensityCmd);
+
+        // Submit fog color
+        RenderCommands::SetUniformVec3Data fogColorCmd{
+            shader,
+            "u_FogColor",
+            fog.color
+        };
+        renderPass.Submit(fogColorCmd);
+    }
 }

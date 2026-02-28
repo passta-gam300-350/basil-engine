@@ -31,6 +31,7 @@ Technology is prohibited.
 #include <Rendering/WorldUIRenderer.h>  // For world UI renderer methods
 #include <Utility/WorldUIData.h>  // For world UI rendering
 #include "Component/SkeletonComponent.hpp" // skeleton component
+#include "Component/AnimationComponent.hpp"
 #include "Messaging/Messaging_System.h"
 
 #include <Resources/MaterialInstanceManager.h>
@@ -222,12 +223,15 @@ void RenderSystem::Update(ecs::world& world) {
 	float gameCameraFar = 1000.f;
 	bool hasGameCamera = false;
 
-	auto cameraQuery = world.query_components<CameraComponent, TransformComponent>();
-	for (auto [cam, trans] : cameraQuery) {
+	auto cameraQuery = world.filter_entities<CameraComponent, TransformComponent>();
+	for (auto camEntity : cameraQuery) {
+		// Skip render texture cameras — they have their own dedicated render pass
+		if (camEntity.all<RenderTextureCameraComponent>()) continue;
+
+		auto& cam   = camEntity.get<CameraComponent>();
+		auto& trans = camEntity.get<TransformComponent>();
+
 		if (cam.m_IsActive) {
-
-
-
 			gameCameraPos = trans.m_Translation;
 			gameCameraFront = cam.m_Front;
 			gameCameraUp = cam.m_Up;
@@ -251,6 +255,7 @@ void RenderSystem::Update(ecs::world& world) {
 	auto sceneTextElements = world.filter_entities<TextComponent>();
 	auto sceneWorldTextElements = world.filter_entities<TextMeshComponent, TransformMtxComponent>();
 	auto sceneWorldUIElements = world.filter_entities<WorldUIComponent, TransformMtxComponent>();
+	auto sceneRenderTextureCameras = world.filter_entities<RenderTextureCameraComponent, CameraComponent, TransformMtxComponent>();
 
 	// Debug: Log entity counts
 	int objectCount = int(visibleEntityIDs.size());
@@ -317,7 +322,7 @@ void RenderSystem::Update(ecs::world& world) {
 		// - Component properties: Used for editor/serialization (synced to base material)
 		// - Material instances: Runtime copy-on-write for per-entity customization
 
-		const auto shared_ptr_visitor = [&](std::shared_ptr<Mesh>& meshResourcePtr, std::shared_ptr<Material> const& materialResourcePtr)
+		const auto shared_ptr_visitor = [&](std::shared_ptr<Mesh>& meshResourcePtr, std::shared_ptr<Material> const& materialResourcePtr, glm::mat4 const& local = glm::mat4{1.f})
 			// Render the entity
 			{
 				// Material customization is now handled by MaterialPropertyBlocks
@@ -327,7 +332,7 @@ void RenderSystem::Update(ecs::world& world) {
 				RenderableData renderData;
 				renderData.mesh = meshResourcePtr;
 				renderData.material = materialResourcePtr;
-				renderData.transform = transform.m_Mtx;
+				renderData.transform = transform.m_Mtx * local;
 				renderData.visible = visible.m_IsVisible;
 				renderData.renderLayer = 1;
 
@@ -386,23 +391,75 @@ void RenderSystem::Update(ecs::world& world) {
 					mesh.m_MaterialGuid.clear();
 					mesh.m_MaterialGuid.emplace("unnamed slot", static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
 				}
-				shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
+				if (obj.all<AnimationBoneChannelTransformComponent>()) {
+					AnimationBoneChannelTransformComponent& data = obj.get<AnimationBoneChannelTransformComponent>();
+					shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second), data.bone_trans.empty() ? glm::mat4(1.f) : data.bone_trans[0]);
+				}
+				else {
+					shared_ptr_visitor(var, materialLoader(mesh.m_MaterialGuid.begin()->second));
+				}
 			}
 			else {
+				std::vector<glm::mat4> node_global;
+				rp::BasicIndexedGuid partialndguid = mesh.m_MeshGuid;
+				MeshMetaRuntimeData* nodedataptr{};
+				partialndguid.m_guid.m_low += 1;
+				if (ResourceRegistry::Instance().Exists(partialndguid) && !obj.all<SkeletonComponent>()) {
+					MeshMetaRuntimeData& nodedata = *(nodedataptr = ResourceRegistry::Instance().Get<MeshMetaRuntimeData>(partialndguid.m_guid));
+					node_global.resize(nodedata.node_local_bind.size());
+					if (obj.all<AnimationBoneChannelTransformComponent>()) {
+						AnimationBoneChannelTransformComponent& data = obj.get<AnimationBoneChannelTransformComponent>();
+						for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
+							int parent = nodedata.node_parent[node];
+
+							auto it = data.bone_trans.find(node);
+							if (parent < 0) {
+								// Root node
+								node_global[node] = ((it != data.bone_trans.end()) ? it->second : nodedata.node_local_bind[node]);
+							}
+							else {
+								// Use cached parent transform
+								node_global[node] = node_global[parent] * ((it != data.bone_trans.end()) ?  it->second: nodedata.node_local_bind[node]);
+							}
+						}
+					}
+					else {
+						for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
+							int parent = nodedata.node_parent[node];
+							if (parent < 0) {
+								// Root node
+								node_global[node] = nodedata.node_local_bind[node];
+							}
+							else {
+								// Use cached parent transform
+								node_global[node] = node_global[parent] * nodedata.node_local_bind[node];
+							}
+						}
+					}
+				}
+
+				int matmeshidx{};
+
 				// Multi-slot mesh: match materials by slot name to preserve user assignments
 				// Only add missing slots, never clear existing assignments
 				for (auto& [slotName, meshPtr] : *var) {
 					// Check if this slot exists in the component's material map
 					auto matIt = mesh.m_MaterialGuid.find(slotName);
-
+					
 					if (matIt == mesh.m_MaterialGuid.end()) {
 						// Slot doesn't exist - add it with null GUID (will use default material)
 						mesh.m_MaterialGuid.emplace(slotName, static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"material">{}));
 						matIt = mesh.m_MaterialGuid.find(slotName);
 					}
 
-					// Submit renderable with material from this slot
-					shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
+					if (node_global.empty()||nodedataptr==nullptr) {
+						// Submit renderable with material from this slot
+						shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
+					}
+					else {
+						// Submit renderable with material from this slot
+						shared_ptr_visitor(meshPtr, materialLoader(matIt->second), node_global[nodedataptr->mesh_node_idx[matmeshidx++]]);
+					}
 				}
 
 				// Clean up slots that don't exist in mesh anymore (optional)
@@ -458,8 +515,18 @@ void RenderSystem::Update(ecs::world& world) {
 
 		HUDElementData hudData;
 
-		// Check for null GUID (0 = solid color quad, no texture)
-		if (hud.m_TextureGuid.m_guid != rp::null_guid) {
+		// Determine texture: render texture camera output or asset GUID
+		if (hud.m_useRenderTexture) {
+			// Use first active render texture camera's output
+			hudData.textureID = 0;
+			for (auto rtCamEntity : sceneRenderTextureCameras) {
+				auto& rtCam = rtCamEntity.get<RenderTextureCameraComponent>();
+				if (rtCam.outputTextureID != 0) {
+					hudData.textureID = rtCam.outputTextureID;
+					break;
+				}
+			}
+		} else if (hud.m_TextureGuid.m_guid != rp::null_guid) {
 			// Get texture from ResourceRegistry (synchronous)
 			auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(hud.m_TextureGuid.m_guid);
 			if (texturePtr && *texturePtr) {
@@ -635,8 +702,19 @@ void RenderSystem::Update(ecs::world& world) {
 
 		WorldUIElementData worldUIData;
 
-		// Load texture from ResourceRegistry (same pattern as HUD)
-		if (worldUI.m_TextureGuid.m_guid != rp::null_guid) {
+		// Determine texture: render texture camera output or asset GUID
+		if (worldUI.m_useRenderTexture) {
+			// Use first active render texture camera's output
+			worldUIData.textureID = 0;
+			for (auto rtCamEntity : sceneRenderTextureCameras) {
+				auto& rtCam = rtCamEntity.get<RenderTextureCameraComponent>();
+				if (rtCam.outputTextureID != 0) {
+					worldUIData.textureID = rtCam.outputTextureID;
+					break;
+				}
+			}
+		} else if (worldUI.m_TextureGuid.m_guid != rp::null_guid) {
+			// Load texture from ResourceRegistry (same pattern as HUD)
 			auto* texturePtr = registry.Get<std::shared_ptr<Texture>>(worldUI.m_TextureGuid.m_guid);
 			if (texturePtr && *texturePtr) {
 				worldUIData.textureID = (*texturePtr)->id;
@@ -650,6 +728,21 @@ void RenderSystem::Update(ecs::world& world) {
 		// Extract world position from transform matrix
 		worldUIData.worldPosition = glm::vec3(transform.m_Mtx[3]);
 		worldUIData.size = worldUI.size;
+
+		// Preserve aspect ratio for render textures to prevent distortion
+		if (worldUI.m_useRenderTexture && worldUIData.textureID != 0) {
+			// Find the render texture camera to get its dimensions
+			for (auto rtCamEntity : sceneRenderTextureCameras) {
+				auto& rtCam = rtCamEntity.get<RenderTextureCameraComponent>();
+				if (rtCam.outputTextureID == worldUIData.textureID && rtCam.height > 0) {
+					float rtAspectRatio = static_cast<float>(rtCam.width) / static_cast<float>(rtCam.height);
+					worldUIData.size.x = worldUI.size.x;
+					worldUIData.size.y = worldUI.size.x / rtAspectRatio;
+					break;
+				}
+			}
+		}
+
 		worldUIData.billboardMode = static_cast<WorldUIBillboardMode>(worldUI.billboardMode);
 
 		// For non-billboard mode, extract rotation from transform matrix
@@ -690,8 +783,20 @@ void RenderSystem::Update(ecs::world& world) {
 
 	// ========== DUAL RENDERING (Unity-style) ==========
 	// Render scene twice: once with editor camera, once with game camera
+	// OPTIMIZATION: Only render focused viewport (skip inactive to reduce lag)
+
+	// Debug: Log rendering decisions every 60 frames
+	//static int frameCounter = 0;
+	//if (frameCounter++ % 60 == 0) {
+	//	spdlog::info("RenderSystem: renderSceneViewport={}, renderGameViewport={}, hasGameCamera={}",
+	//		editorCameraSnapshot.renderSceneViewport,
+	//		editorCameraSnapshot.renderGameViewport,
+	//		hasGameCamera);
+	//}
 
 	// --- FIRST RENDER PASS: Editor Camera (Scene viewport) ---
+	// Only render if Scene viewport is focused (optimization)
+	if (editorCameraSnapshot.renderSceneViewport)
 	{
 		// Set camera context to EDITOR
 		frameData.currentCamera = FrameData::CameraContext::EDITOR;
@@ -734,10 +839,16 @@ void RenderSystem::Update(ecs::world& world) {
 		// Render with editor camera
 		m_SceneRenderer->Render();
 	}
+	else
+	{
+		/*if (frameCounter % 60 == 1) {
+			spdlog::info("RenderSystem: SKIPPING Scene viewport render (not focused)");
+		}*/
+	}
 
 	// --- SECOND RENDER PASS: Game Camera (Game viewport) ---
-	// Only render if a game camera exists in the scene
-	if (hasGameCamera)
+	// Only render if Game viewport is focused AND a game camera exists (optimization)
+	if (editorCameraSnapshot.renderGameViewport && hasGameCamera)
 	{
 		// Set camera context to GAME
 		frameData.currentCamera = FrameData::CameraContext::GAME;
@@ -781,14 +892,68 @@ void RenderSystem::Update(ecs::world& world) {
 	}
 	else
 	{
+		//if (frameCounter % 60 == 1) {
+		//	if (!hasGameCamera) {
+		//		spdlog::info("RenderSystem: SKIPPING Game viewport render (no game camera)");
+		//	} else {
+		//		spdlog::info("RenderSystem: SKIPPING Game viewport render (not focused)");
+		//	}
+		//}
 		// No game camera - clear buffer so editor displays "No active game camera" message
-		m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
-		spdlog::debug("RenderSystem: No active game camera found, Game viewport will be empty");
+		if (!hasGameCamera) {
+			m_SceneRenderer->GetFrameData().gameResolvedBuffer.reset();
+		}
 	}
 
 	// Re-enable both passes for next frame
 	m_SceneRenderer->EnablePass("EditorResolvePass", true);
 	m_SceneRenderer->EnablePass("GameResolvePass", true);
+
+	// --- THIRD RENDER PASS: Render Texture Camera ---
+	// Renders the first active RenderTextureCameraComponent entity to a texture for HUD/WorldUI use.
+	for (auto rtCamEntity : sceneRenderTextureCameras) {
+		auto& rtCam     = rtCamEntity.get<RenderTextureCameraComponent>();
+		auto& cam       = rtCamEntity.get<CameraComponent>();
+		auto& transform = rtCamEntity.get<TransformMtxComponent>();
+
+		// No m_IsActive check — having RenderTextureCameraComponent is the activation signal.
+		// Direction vectors are computed from the transform matrix so this works regardless
+		// of whether CameraSystem has processed this entity.
+		frameData.currentCamera = FrameData::CameraContext::GAME;
+		frameData.viewportWidth  = rtCam.width;
+		frameData.viewportHeight = rtCam.height;
+
+		glm::vec3 pos   = glm::vec3(transform.m_Mtx[3]);
+		glm::vec3 front = glm::normalize(glm::vec3(transform.m_Mtx[2]));
+		glm::vec3 up    = glm::normalize(glm::vec3(transform.m_Mtx[1]));
+		glm::mat4 view  = glm::lookAt(pos, pos + front, up);
+		glm::mat4 proj  = glm::perspective(
+			glm::radians(cam.m_Fov),
+			static_cast<float>(rtCam.width) / static_cast<float>(rtCam.height),
+			cam.m_Near, cam.m_Far
+		);
+
+		CameraSystem::SetCachedMatrices(view, proj);
+		CameraSystem::SetViewportSize(glm::vec2{ static_cast<float>(rtCam.width), static_cast<float>(rtCam.height) });
+
+		frameData.viewMatrix       = view;
+		frameData.projectionMatrix = proj;
+		frameData.cameraPosition   = pos;
+
+		m_SceneRenderer->EnablePass("EditorResolvePass",          false);
+		m_SceneRenderer->EnablePass("GameResolvePass",            false);
+		m_SceneRenderer->EnablePass("RenderTextureResolvePass",   true);
+
+		m_SceneRenderer->Render();
+
+		// Store resulting texture ID back into the component for HUD/WorldUI to consume
+		if (frameData.renderTextureCameraBuffer) {
+			rtCam.outputTextureID = frameData.renderTextureCameraBuffer->GetColorAttachmentRendererID(0);
+		}
+
+		m_SceneRenderer->EnablePass("RenderTextureResolvePass", false);
+		break;  // MVP: only the first active render texture camera is rendered
+	}
 
 	//clear frame data AFTER rendering (so particles submitted before render are included)
 	m_SceneRenderer->ClearFrame();
@@ -1370,10 +1535,47 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 
 void UnloadMeshFromResource(std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>&) {}
 
+MeshMetaRuntimeData loadmeta(const char* data) {
+	// Deserialize MeshMetaData from binary
+	MeshMetaData metadata = rp::serialization::serializer<"bin">::deserialize<MeshMetaData>(
+		reinterpret_cast<const std::byte*>(data)
+	);
+	MeshMetaRuntimeData res;
+	res.mesh_node_idx = metadata.mesh_node_idx;
+	res.node_parent = metadata.node_parent;
+	res.node_local_bind.reserve(metadata.node_local_bind.size());
+	for (auto const& [a, b, c, d] : metadata.node_local_bind) {
+		res.node_local_bind.emplace_back(glm::mat4(a, b, c, d));
+	}
+	return res;
+}
+
+//[](const char* data)->MeshMetaRuntimeData {
+//	// Deserialize MeshMetaData from binary
+//	MeshMetaData metadata = rp::serialization::serializer<"bin">::deserialize<MeshMetaData>(
+//		reinterpret_cast<const std::byte*>(data)
+//	);
+//	MeshMetaRuntimeData res;
+//	res.mesh_node_idx = metadata.mesh_node_idx;
+//	res.node_parent = metadata.node_parent;
+//	res.node_local_bind.resize(metadata.node_local_bind.size());
+//	for (auto const& [a, b, c, d] : metadata.node_local_bind) {
+//		res.node_local_bind.emplace_back(glm::mat4(a, b, c, d));
+//	}
+//	return res;
+//	}
 using Meshes = std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>;
  
 // ========== Resource Type Registrations ==========
 REGISTER_RESOURCE_TYPE_ALIASE(Meshes, mesh, LoadMeshFromResource, UnloadMeshFromResource)
+
+REGISTER_RESOURCE_TYPE_ALIASE(MeshMetaRuntimeData, meshmeta,
+	loadmeta
+	,
+	[](MeshMetaRuntimeData&) {
+		// Cleanup - Material destructor handles GPU resource cleanup
+		// No additional cleanup needed
+	});
 
 REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 	[](const char* data)->std::shared_ptr<Material> {

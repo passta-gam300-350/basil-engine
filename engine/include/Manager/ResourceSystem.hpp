@@ -339,6 +339,8 @@ struct ResourceRegistry {
         return pool ? pool->m_Vt.m_Unload(pool->m_Pool, biguid.m_guid) : false;
     }
 
+    bool Exists(rp::BasicIndexedGuid biguid) const;
+
     /**
      * @brief Register an in-memory resource (for editor-created assets without files)
      *
@@ -623,6 +625,10 @@ ResourceHandle ResourcePool<T, A>::GetHandle(rp::Guid guid) {
     async_dispatch_job_wrapper(m_Loader, mmio_ptr);
     m_GuidSlots.emplace(guid, idx);
     return MakeHandle(idx);
+}
+
+inline bool ResourceRegistry::Exists(rp::BasicIndexedGuid biguid) const {
+    return ResourceSystem::Instance().m_FileEntries.find(biguid.m_guid) != ResourceSystem::Instance().m_FileEntries.end();
 }
 
 #endif //!ENGINE_RESOURCE_SYSTEM_HPP

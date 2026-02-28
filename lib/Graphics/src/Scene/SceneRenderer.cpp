@@ -18,6 +18,7 @@ Technology is prohibited.
 #include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
 #include "Pipeline/GameResolvePass.h"
+#include "Pipeline/RenderTextureResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/HUDRenderPass.h"
 #include "Pipeline/RenderContext.h"
@@ -219,7 +220,12 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto gameResolvePass = std::make_shared<GameResolvePass>();
     mainPipeline->AddPass(gameResolvePass);
 
-    // 14. Add present pass (executes last)
+    // 14. Add render texture resolve pass (captures secondary camera output for HUD/WorldUI use)
+    auto renderTextureResolvePass = std::make_shared<RenderTextureResolvePass>();
+    mainPipeline->AddPass(renderTextureResolvePass);
+    mainPipeline->EnablePass("RenderTextureResolvePass", false);  // Disabled by default, enabled per-frame
+
+    // 15. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -284,11 +290,15 @@ void SceneRenderer::Render()
         m_WorldUIRenderer->EndFrame();
     }
 
+    // Set fog data pointer in frame data for access by rendering systems
+    m_FrameData.fogData = &m_FogData; // currently not used, but is filled with data
+
     // Create context with references to our data - NO COPYING!
     RenderContext context(
         m_SubmittedRenderables,  // const ref to renderables
         m_SubmittedLights,       // const ref to lights
         m_AmbientLight,          // const ref to ambient light
+        m_FogData,               // const ref to fog data
         m_FrameData,             // mutable ref to frame data
         *m_InstancedRenderer,    // ref to instanced renderer
         *m_PBRLightingRenderer,  // ref to PBR lighting
@@ -430,7 +440,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer, *m_WorldUIRenderer);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FogData, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer, *m_WorldUIRenderer);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -810,6 +820,37 @@ void SceneRenderer::SetCameraData(const glm::mat4& view, const glm::mat4& proj, 
     m_FrameData.viewMatrix = view;
     m_FrameData.projectionMatrix = proj;
     m_FrameData.cameraPosition = pos;
+}
+
+// ===== Fog Control (OGLDev Tutorial 39-style) =====
+
+void SceneRenderer::SetLinearFog(float start, float end, const glm::vec3& color)
+{
+    m_FogData.type = FogType::Linear;
+    m_FogData.start = start;
+    m_FogData.end = end;
+    m_FogData.color = color;
+}
+
+void SceneRenderer::SetExpFog(float end, float density, const glm::vec3& color)
+{
+    m_FogData.type = FogType::Exponential;
+    m_FogData.end = end;
+    m_FogData.density = density;
+    m_FogData.color = color;
+}
+
+void SceneRenderer::SetExpSquaredFog(float end, float density, const glm::vec3& color)
+{
+    m_FogData.type = FogType::ExponentialSquared;
+    m_FogData.end = end;
+    m_FogData.density = density;
+    m_FogData.color = color;
+}
+
+void SceneRenderer::DisableFog()
+{
+    m_FogData.Disable();
 }
 
 void SceneRenderer::EnablePhysicsDebugVisualization(bool enable)
