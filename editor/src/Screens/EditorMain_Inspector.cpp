@@ -796,29 +796,13 @@ void EditorMain::Render_Components()
 				}
 			}
 
-			// Special UI section for Button component preview
 			if (button_component && type_id == button_component) {
 				if (Button* buttonComp = reinterpret_cast<Button*>(uptr.get())) {
 					ImGui::Separator();
-					ImGui::Text("Button Preview");
-
-					const float previewWidth = buttonComp->width > 1.0f ? buttonComp->width : 120.0f;
-					const float previewHeight = buttonComp->height > 1.0f ? buttonComp->height : 32.0f;
-					const char* label = buttonComp->text.empty() ? "Button" : buttonComp->text.c_str();
-
-					ImGui::BeginDisabled(previewWidth <= 0.0f || previewHeight <= 0.0f);
-					const bool clicked = ImGui::Button(label, ImVec2(previewWidth, previewHeight));
-					ImGui::EndDisabled();
-
-					buttonComp->hovered = ImGui::IsItemHovered();
-					buttonComp->pressed = clicked;
-
+					ImGui::Text("Runtime Status");
 					ImGui::Text("Hovered: %s", buttonComp->hovered ? "Yes" : "No");
-					ImGui::Text("Clicked: %s", clicked ? "Yes" : "No");
-
-					if (buttonComp->width <= 1.0f || buttonComp->height <= 1.0f) {
-						ImGui::TextDisabled("Set width/height above 1 to preview the runtime hitbox accurately.");
-					}
+					ImGui::Text("Pressed: %s", buttonComp->pressed ? "Yes" : "No");
+					ImGui::TextDisabled("Status is updated by ButtonSystem at runtime.");
 				}
 			}
 

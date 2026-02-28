@@ -10,12 +10,26 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
 #pragma once
+#include <cstdint>
 #include <functional>
 #include <string>
 
 class Button
 {
     public:
+        enum class Anchor : std::uint8_t
+        {
+            TopLeft,
+            TopCenter,
+            TopRight,
+            CenterLeft,
+            Center,
+            CenterRight,
+            BottomLeft,
+            BottomCenter,
+            BottomRight
+        };
+
         Button();
         Button(float x, float y, float width, float height, const std::string& text);
 
@@ -29,6 +43,7 @@ class Button
     
         float x, y;
         float width, height;
+        Anchor anchor;
         std::string text;
 
         bool hovered;

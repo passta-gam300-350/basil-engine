@@ -255,12 +255,15 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&AudioComponent::velocity, "velocity">
 	);
 
+	RegisterReflectionComponent<Button::Anchor>("Button::Anchor");
+
 	RegisterReflectionComponent<Button>(
 		"ButtonComponent",
 		MemberRegistrationV<&Button::x, "position_x">,
 		MemberRegistrationV<&Button::y, "position_y">,
 		MemberRegistrationV<&Button::width, "width">,
 		MemberRegistrationV<&Button::height, "height">,
+		MemberRegistrationV<&Button::anchor, "anchor">,
 		MemberRegistrationV<&Button::text, "Text">
 
 	);

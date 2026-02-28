@@ -14,8 +14,31 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input/InputManager.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <utility>
 
-Button::Button() : x(),y(),width(),height(),hovered(),pressed()
+namespace
+{
+    std::pair<float, float> GetAnchorFactors(Button::Anchor anchor)
+    {
+        switch (anchor)
+        {
+        // Match HUD shader anchor semantics exactly.
+        case Button::Anchor::TopLeft: return { 0.0f, 1.0f };
+        case Button::Anchor::TopCenter: return { 0.5f, 1.0f };
+        case Button::Anchor::TopRight: return { 1.0f, 1.0f };
+        case Button::Anchor::CenterLeft: return { 0.0f, 0.5f };
+        case Button::Anchor::Center: return { 0.5f, 0.5f };
+        case Button::Anchor::CenterRight: return { 1.0f, 0.5f };
+        case Button::Anchor::BottomLeft: return { 0.0f, 0.0f };
+        case Button::Anchor::BottomCenter: return { 0.5f, 0.0f };
+        case Button::Anchor::BottomRight: return { 1.0f, 0.0f };
+        }
+
+        return { 0.0f, 0.0f };
+    }
+}
+
+Button::Button() : x(),y(),width(),height(),anchor(Anchor::TopLeft),hovered(),pressed()
 {
 	
 }
@@ -25,6 +48,7 @@ Button::Button(float x, float y, float width, float height, const std::string& t
       y(y),
       width(width),
       height(height),
+      anchor(Anchor::TopLeft),
       text(text),
       hovered(false),
       pressed(false)
@@ -43,12 +67,17 @@ bool Button::isHovered() const
 void Button::update(float mouseX, float mouseY, bool mousePressed)
 {
     InputManager* input = InputManager::Get_Instance();
+    auto [anchorX, anchorY] = GetAnchorFactors(anchor);
+    const float left = x - (width * anchorX);
+    const float top = y - (height * anchorY);
+    const float right = left + width;
+    const float bottom = top + height;
 
     // AABB hit test
-    this->hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    this->hovered = mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom;
 
     // Fire once on press
-    if (this->hovered && mousePressed && !this->pressed)
+    if (this->hovered && mousePressed && !this->pressed && !input->Is_MouseConsumed())
     {
         this->pressed = true;
 
