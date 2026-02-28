@@ -38,7 +38,7 @@ namespace
     }
 }
 
-Button::Button() : x(),y(),width(),height(),anchor(Anchor::TopLeft),hovered(),pressed()
+Button::Button() : x(),y(),width(),height(),anchor(Anchor::TopLeft),hovered(),pressed(),clicked()
 {
 	
 }
@@ -52,6 +52,8 @@ Button::Button(float x, float y, float width, float height, const std::string& t
       text(text),
       hovered(false),
       pressed(false)
+      ,
+      clicked(false)
 {}
 
 void Button::setOnClick(std::function<void()> callback)
@@ -67,6 +69,7 @@ bool Button::isHovered() const
 void Button::update(float mouseX, float mouseY, bool mousePressed)
 {
     InputManager* input = InputManager::Get_Instance();
+    clicked = false;
     auto [anchorX, anchorY] = GetAnchorFactors(anchor);
     const float left = x - (width * anchorX);
     const float top = y - (height * anchorY);
@@ -80,6 +83,7 @@ void Button::update(float mouseX, float mouseY, bool mousePressed)
     if (this->hovered && mousePressed && !this->pressed && !input->Is_MouseConsumed())
     {
         this->pressed = true;
+        this->clicked = true;
 
         // UI consumes the mouse so gameplay won't see
         input->Consume_Mouse();
