@@ -49,7 +49,8 @@ struct AudioComponent;
 // AudioGroup enum is now defined in <native/audio.h> for resource system compatibility
 
 // Filter type for per-component DSP (no FMOD types in header)
-enum class AudioFilterType : std::uint8_t {
+// Backed by int for simpler interop with managed code
+enum class AudioFilterType {
     None = 0,
     Lowpass,
     Highpass,

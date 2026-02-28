@@ -77,18 +77,18 @@ void ManagedAudio::Stop(uint64_t handle)
 	audio.Stop();
 }
 
-void ManagedAudio::SetFilterType(uint64_t handle, std::uint8_t filterType)
+void ManagedAudio::SetFilterType(uint64_t handle, int filterType)
 {
 	ecs::entity entity{ handle };
 	auto& audio = entity.get<AudioComponent>();
 	audio.filterParams.type = static_cast<AudioFilterType>(filterType);
 }
 
-std::uint8_t ManagedAudio::GetFilterType(uint64_t handle)
+int ManagedAudio::GetFilterType(uint64_t handle)
 {
 	ecs::entity entity{ handle };
 	auto& audio = entity.get<AudioComponent>();
-	return static_cast<std::uint8_t>(audio.filterParams.type);
+	return static_cast<int>(audio.filterParams.type);
 }
 
 void ManagedAudio::SetFilterCutoff(uint64_t handle, float cutoffHz)

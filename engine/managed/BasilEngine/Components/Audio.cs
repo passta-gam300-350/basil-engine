@@ -162,8 +162,9 @@ namespace BasilEngine.Components
 
         /// <summary>
         /// Filter type for per-channel DSP: None, Lowpass, Highpass, Echo.
+        /// Backed by int to simplify native interop.
         /// </summary>
-        public enum FilterType : byte
+        public enum FilterType
         {
             None = 0,
             Lowpass,
@@ -174,12 +175,12 @@ namespace BasilEngine.Components
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("SetFilterType")]
         [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
-        private static extern void SetFilterType(UInt64 handle, byte filterType);
+        private static extern void SetFilterType(UInt64 handle, int filterType);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("GetFilterType")]
         [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
-        private static extern byte GetFilterType(UInt64 handle);
+        private static extern int GetFilterType(UInt64 handle);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         [NativeMethod("SetFilterCutoff")]
@@ -204,10 +205,10 @@ namespace BasilEngine.Components
         /// <summary>
         /// Filter type (None, Lowpass, Highpass, Echo). Applied when playing.
         /// </summary>
-        public FilterType FilterType
+        public FilterType Filter
         {
             get => (FilterType)GetFilterType(NativeID);
-            set => SetFilterType(NativeID, (byte)value);
+            set => SetFilterType(NativeID, (int)value);
         }
 
         /// <summary>

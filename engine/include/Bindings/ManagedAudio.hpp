@@ -35,8 +35,8 @@ public:
 	static void Stop(uint64_t handle);
 
 	// Filter (per-channel DSP)
-	static void SetFilterType(uint64_t handle, std::uint8_t filterType);
-	static std::uint8_t GetFilterType(uint64_t handle);
+	static void SetFilterType(uint64_t handle, int filterType);
+	static int GetFilterType(uint64_t handle);
 	static void SetFilterCutoff(uint64_t handle, float cutoffHz);
 	static float GetFilterCutoff(uint64_t handle);
 	static void SetFilterResonance(uint64_t handle, float resonance);
