@@ -40,18 +40,15 @@ bool Button::isHovered() const
     return this->hovered;
 }
 
-void Button::update(float, float, bool)
+void Button::update(float mouseX, float mouseY, bool mousePressed)
 {
     InputManager* input = InputManager::Get_Instance();
 
-    float mx, my;
-    input->Get_MousePosition(mx, my);
-
     // AABB hit test
-    this->hovered = mx >= x && mx <= x + width && my >= y && my <= y + height;
+    this->hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
 
     // Fire once on press
-    if (this->hovered && input->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT) && !this->pressed)
+    if (this->hovered && mousePressed && !this->pressed)
     {
         this->pressed = true;
 
@@ -62,7 +59,7 @@ void Button::update(float, float, bool)
     }
 
     // Reset press state on release
-    if (input->Is_MouseReleased(GLFW_MOUSE_BUTTON_LEFT))
+    if (input->Is_MouseReleased(GLFW_MOUSE_BUTTON_LEFT) || !mousePressed)
         this->pressed = false;
 }
 

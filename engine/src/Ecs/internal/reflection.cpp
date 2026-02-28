@@ -259,6 +259,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		"ButtonComponent",
 		MemberRegistrationV<&Button::x, "position_x">,
 		MemberRegistrationV<&Button::y, "position_y">,
+		MemberRegistrationV<&Button::width, "width">,
+		MemberRegistrationV<&Button::height, "height">,
 		MemberRegistrationV<&Button::text, "Text">
 
 	);
