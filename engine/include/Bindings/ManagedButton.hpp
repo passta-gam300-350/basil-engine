@@ -23,6 +23,8 @@ public:
     static bool GetHovered(uint64_t handle);
     static bool GetPressed(uint64_t handle);
     static bool GetClicked(uint64_t handle);
+    static bool GetDisabled(uint64_t handle);
+    static void SetDisabled(uint64_t handle, bool disabled);
 };
 
 #endif

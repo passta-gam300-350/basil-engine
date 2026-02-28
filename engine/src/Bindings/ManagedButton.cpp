@@ -34,3 +34,27 @@ bool ManagedButton::GetClicked(uint64_t handle)
     ecs::entity entity{ handle };
     return entity.any<Button>() ? entity.get<Button>().clicked : false;
 }
+
+bool ManagedButton::GetDisabled(uint64_t handle)
+{
+    ecs::entity entity{ handle };
+    return entity.any<Button>() ? entity.get<Button>().disabled : false;
+}
+
+void ManagedButton::SetDisabled(uint64_t handle, bool disabled)
+{
+    ecs::entity entity{ handle };
+    if (!entity.any<Button>())
+    {
+        return;
+    }
+
+    Button& button = entity.get<Button>();
+    button.disabled = disabled;
+    if (disabled)
+    {
+        button.hovered = false;
+        button.pressed = false;
+        button.clicked = false;
+    }
+}

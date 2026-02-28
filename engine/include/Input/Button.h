@@ -49,6 +49,7 @@ class Button
         bool hovered;
         bool pressed;
         bool clicked;
+        bool disabled;
 
         std::function<void()> onClick;
 };

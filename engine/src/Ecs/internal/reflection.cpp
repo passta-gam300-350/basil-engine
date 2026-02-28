@@ -264,6 +264,7 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&Button::width, "width">,
 		MemberRegistrationV<&Button::height, "height">,
 		MemberRegistrationV<&Button::anchor, "anchor">,
+		MemberRegistrationV<&Button::disabled, "disabled">,
 		MemberRegistrationV<&Button::text, "Text">
 
 	);

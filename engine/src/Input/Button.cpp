@@ -38,7 +38,7 @@ namespace
     }
 }
 
-Button::Button() : x(),y(),width(),height(),anchor(Anchor::TopLeft),hovered(),pressed(),clicked()
+Button::Button() : x(),y(),width(),height(),anchor(Anchor::TopLeft),hovered(),pressed(),clicked(),disabled()
 {
 	
 }
@@ -51,9 +51,9 @@ Button::Button(float x, float y, float width, float height, const std::string& t
       anchor(Anchor::TopLeft),
       text(text),
       hovered(false),
-      pressed(false)
-      ,
-      clicked(false)
+      pressed(false),
+      clicked(false),
+      disabled(false)
 {}
 
 void Button::setOnClick(std::function<void()> callback)
@@ -70,6 +70,14 @@ void Button::update(float mouseX, float mouseY, bool mousePressed)
 {
     InputManager* input = InputManager::Get_Instance();
     clicked = false;
+
+    if (disabled)
+    {
+        hovered = false;
+        pressed = false;
+        return;
+    }
+
     auto [anchorX, anchorY] = GetAnchorFactors(anchor);
     const float left = x - (width * anchorX);
     const float top = y - (height * anchorY);

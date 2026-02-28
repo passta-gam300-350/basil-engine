@@ -34,6 +34,14 @@ void ButtonSystem::Update(ecs::world& world, float)
     {
         Button& button = world.get_component_from_entity<Button>(entity);
 
+        if (button.disabled)
+        {
+            button.hovered = false;
+            button.pressed = false;
+            button.clicked = false;
+            continue;
+        }
+
         if (entity.all<HUDComponent>())
         {
             const HUDComponent& hud = entity.get<HUDComponent>();
@@ -47,6 +55,7 @@ void ButtonSystem::Update(ecs::world& world, float)
             {
                 button.hovered = false;
                 button.pressed = false;
+                button.clicked = false;
                 continue;
             }
         }
