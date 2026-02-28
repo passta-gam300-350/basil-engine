@@ -1013,11 +1013,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text(field_name.c_str());
 				ImGui::SameLine(150);
 				ImGui::SetNextItemWidth(-1);
-				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
 					auto& vec = *static_cast<std::vector<std::string>*>(data);
-					if (idx < 0 || idx >= vec.size()) return false;
-					*out_text = vec[idx].c_str();
-					return true;
+					if (idx < 0 || idx >= vec.size()) return "";
+					return vec[idx].c_str();
 					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
 					// Check if selected item is valid and not empty (instead of checking index)
 					if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
@@ -1065,6 +1064,13 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
+
+				// Special handling for texture dimensions (width/height)
+				// Clamp to 8192 to prevent GPU texture size limits and crashes
+				if (field_name.find("width") != std::string::npos ||
+				    field_name.find("height") != std::string::npos) {
+					maxValue = 8192;
+				}
 
 				// With custom format
 				if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
@@ -1345,11 +1351,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::Text(field_name.c_str());
 							ImGui::SameLine(150);
 							ImGui::SetNextItemWidth(-1);
-							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
 								auto& vec = *static_cast<std::vector<std::string>*>(data);
-								if (idx < 0 || idx >= vec.size()) return false;
-								*out_text = vec[idx].c_str();
-								return true;
+								if (idx < 0 || idx >= vec.size()) return "";
+								return vec[idx].c_str();
 								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
 								// Check if selected item is valid and not empty (instead of checking index)
 								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
@@ -1385,11 +1390,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::Text(name.c_str());
 							ImGui::SameLine(150);
 							ImGui::SetNextItemWidth(-1);
-							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx, const char** out_text) {
+							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
 								auto& vec = *static_cast<std::vector<std::string>*>(data);
-								if (idx < 0 || idx >= vec.size()) return false;
-								*out_text = vec[idx].c_str();
-								return true;
+								if (idx < 0 || idx >= vec.size()) return "";
+								return vec[idx].c_str();
 								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
 								// Check if selected item is valid and not empty (instead of checking index)
 								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {

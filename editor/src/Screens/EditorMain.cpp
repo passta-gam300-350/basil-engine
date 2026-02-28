@@ -544,11 +544,11 @@ void EditorMain::update()
 		snapshot.renderGameViewport = g_GameViewportFocused;
 
 		// Debug: Log snapshot values every 60 frames
-		static int debugFrameCounter = 0;
-		if (debugFrameCounter++ % 60 == 0) {
-			spdlog::info("EditorMain::update: Setting snapshot - renderSceneViewport={}, renderGameViewport={}",
-				snapshot.renderSceneViewport, snapshot.renderGameViewport);
-		}
+		//static int debugFrameCounter = 0;
+		//if (debugFrameCounter++ % 60 == 0) {
+		//	spdlog::info("EditorMain::update: Setting snapshot - renderSceneViewport={}, renderGameViewport={}",
+		//		snapshot.renderSceneViewport, snapshot.renderGameViewport);
+		//}
 	}
 }
 
