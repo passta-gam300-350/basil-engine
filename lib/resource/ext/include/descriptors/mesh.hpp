@@ -15,6 +15,7 @@ Technology is prohibited.
 #ifndef RESOURCE_DESCRIPTOR_MESH
 #define RESOURCE_DESCRIPTOR_MESH
 
+#include <native/mesh.h>
 #include <rsc-ext/descriptor.hpp>
 #include "serialization/serializer.h"
 
@@ -24,6 +25,7 @@ struct ModelDescriptor {
 	bool extract_material{ true }; //extracts material in pbr. if false, materials are not created but material slots are still allocated
 	bool extract_animation{ true }; //extracts material in pbr. if false, materials are not created but material slots are still allocated
 	bool extract_textures{ true }; //extracts material in pbr. if false, materials are not created but material slots are still allocated
+	bool import_extracted{ true }; //imports extracted stuff
 	bool is_skinned{ false };
 	//bool merge_material{ false }; //merge all material slots into 1 material slot with material atlas (texture baking) //TODO: m3 maybe
 	glm::vec3 scale{1.f};
@@ -33,5 +35,18 @@ struct ModelDescriptor {
 	//float lod_reduction;
 	//unsigned int lod_count;
 };
+
+struct ModelNodeDescriptor {
+	rp::descriptor_base base;
+	MeshMetaData meta; //node meta
+};
+
+inline MeshMetaData CreateNodeData(ModelNodeDescriptor const& ndDesc, [[maybe_unused]] std::string const& path = {}, std::string const& serialisedescpath = {}) {
+	//SerializeBinary(animDesc.anim, animDesc.base.m_guid, ".animation", path);
+	if (!serialisedescpath.empty())
+		rp::serialization::yaml_serializer::serialize(ndDesc, serialisedescpath);
+	return ndDesc.meta;
+}
+RegisterResourceTypeImporter(ModelNodeDescriptor, MeshMetaData, "meshmeta", ".meshmeta", CreateNodeData, "")
 
 #endif

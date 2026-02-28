@@ -98,7 +98,65 @@ textMesh.billboardMode = TextMeshComponent::BillboardMode::None;
 
 ---
 
-### Font Sizing (Unity-Style Distance Scaling)
+### Text Sizing Mode
+
+#### `sizingMode`
+```cpp
+enum class TextSizingMode {
+    DistanceScaled,  // Text scales with distance (original Unity-style behavior)
+    ScreenConstant   // Text maintains constant screen-space size (like HUD text)
+} sizingMode = TextSizingMode::ScreenConstant;
+```
+
+| Property | Value |
+|----------|-------|
+| **Type** | Enum (2 options) |
+| **Default** | `ScreenConstant` |
+| **Purpose** | Controls how text size changes with camera distance |
+
+**Options**:
+- **`DistanceScaled`**: Text scales with perspective (appears smaller when farther away, larger when closer) - Unity-style behavior using `referenceDistance`
+- **`ScreenConstant`**: Text maintains constant screen-space pixel size regardless of distance - like HUD/UI overlays in 3D space
+
+**Formulas**:
+
+**DistanceScaled mode**:
+```
+actualSize = (fontSize * referenceDistance) / distanceToCamera
+```
+
+**ScreenConstant mode**:
+```
+actualSize = (fontSize / screenHeight) * (2 * distance * tan(FOV/2))
+```
+
+**Comparison**:
+
+| Distance | DistanceScaled (fontSize=16, refDist=10) | ScreenConstant (fontSize=16) |
+|----------|------------------------------------------|------------------------------|
+| 5 units  | 32 pixels (2× larger)                   | 16 pixels (constant)         |
+| 10 units | 16 pixels (reference)                   | 16 pixels (constant)         |
+| 20 units | 8 pixels (2× smaller)                   | 16 pixels (constant)         |
+
+**Use Cases**:
+- **ScreenConstant**: Player name tags, damage numbers, UI labels that should always be readable
+- **DistanceScaled**: Environmental text, signs that should feel part of the world
+
+**Example**:
+```cpp
+// Player name tag - always readable regardless of distance
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::ScreenConstant;
+textMesh.fontSize = 18.0f;  // Always 18 pixels on screen
+
+// World sign - scales naturally with perspective
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::DistanceScaled;
+textMesh.fontSize = 24.0f;
+textMesh.referenceDistance = 15.0f;  // 24 pixels at 15 units away
+```
+
+---
+
+### Font Sizing Parameters
 
 #### `fontSize`
 ```cpp
@@ -109,13 +167,15 @@ float fontSize = 16.0f;
 |----------|-------|
 | **Type** | Float (pixels) |
 | **Default** | `16.0` |
-| **Purpose** | Font size in pixels **at the reference distance** |
+| **Purpose** | Font size in pixels |
 
-**Description**: Text appears at this pixel size when the camera is exactly `referenceDistance` units away.
+**Description**:
+- In **ScreenConstant mode**: Text always appears at exactly this pixel size on screen
+- In **DistanceScaled mode**: Text appears at this pixel size when camera is at `referenceDistance`
 
 **Example**:
 ```cpp
-textMesh.fontSize = 32.0f;  // Text appears twice as large as 16.0
+textMesh.fontSize = 32.0f;  // 32 pixels on screen (ScreenConstant), or 32 pixels at refDist (DistanceScaled)
 ```
 
 #### `referenceDistance`
@@ -127,24 +187,23 @@ float referenceDistance = 10.0f;
 |----------|-------|
 | **Type** | Float (world units) |
 | **Default** | `10.0` |
-| **Purpose** | Distance at which `fontSize` is accurate |
+| **Purpose** | Distance at which `fontSize` is accurate **(only used in DistanceScaled mode)** |
 
-**Description**: Controls distance-based scaling of text.
+**Description**: Controls distance-based scaling when `sizingMode = DistanceScaled`. Ignored in ScreenConstant mode.
 
-**Formula**:
+**Formula** (DistanceScaled mode only):
 ```
 actualSize = (fontSize * referenceDistance) / distanceToCamera
 ```
 
-**Behavior**:
+**Behavior** (DistanceScaled mode):
 - At 10 units away: Text is 16 pixels tall
 - At 5 units away: Text is 32 pixels tall (2× larger)
 - At 20 units away: Text is 8 pixels tall (2× smaller)
 
-**Use Case**: Keeps text readable at consistent pixel size regardless of distance, similar to Unity's TextMesh.
-
 **Example**:
 ```cpp
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::DistanceScaled;
 textMesh.fontSize = 24.0f;
 textMesh.referenceDistance = 15.0f;
 // Text will be 24 pixels tall when camera is 15 units away
@@ -483,8 +542,8 @@ auto& textMesh = textEntity.add<TextMeshComponent>();
 textMesh.text = "Hello World";
 
 // Configure size and scaling
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::ScreenConstant;  // Constant screen size
 textMesh.fontSize = 24.0f;
-textMesh.referenceDistance = 10.0f;
 
 // Configure orientation
 textMesh.billboardMode = TextMeshComponent::BillboardMode::Full;
@@ -515,6 +574,7 @@ transform.m_Translation = glm::vec3(0, 5, 0);  // 5 units above origin
 ### Player Name Tag
 ```cpp
 textMesh.text = playerName;
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::ScreenConstant;  // Always readable
 textMesh.fontSize = 18.0f;
 textMesh.billboardMode = TextMeshComponent::BillboardMode::Full;
 textMesh.alignment = TextMeshComponent::Alignment::Center;
@@ -526,6 +586,7 @@ textMesh.outlineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 ### Damage Number
 ```cpp
 textMesh.text = "-50";
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::ScreenConstant;  // Consistent visibility
 textMesh.fontSize = 32.0f;
 textMesh.billboardMode = TextMeshComponent::BillboardMode::Full;
 textMesh.color = glm::vec4(1.0f, 0.2f, 0.2f, 1.0f);  // Red
@@ -536,7 +597,9 @@ textMesh.glowColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.8f);
 ### Location Sign
 ```cpp
 textMesh.text = "Town Square";
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::DistanceScaled;  // Feels part of world
 textMesh.fontSize = 28.0f;
+textMesh.referenceDistance = 20.0f;
 textMesh.billboardMode = TextMeshComponent::BillboardMode::Cylindrical;
 textMesh.alignment = TextMeshComponent::Alignment::Center;
 textMesh.color = glm::vec4(0.9f, 0.8f, 0.6f, 1.0f);  // Beige
@@ -546,7 +609,9 @@ textMesh.outlineWidth = 0.08f;
 ### Wall Text (No Billboard)
 ```cpp
 textMesh.text = "Emergency Exit";
+textMesh.sizingMode = TextMeshComponent::TextSizingMode::DistanceScaled;  // Natural perspective
 textMesh.fontSize = 20.0f;
+textMesh.referenceDistance = 5.0f;
 textMesh.billboardMode = TextMeshComponent::BillboardMode::None;
 textMesh.color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);  // Green
 ```
@@ -572,8 +637,9 @@ textMesh.color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);  // Green
 - Minimize per-frame text content changes
 
 ### Distance Scaling
-- Text size automatically adjusts with camera distance
-- Uses Unity-style `fontSize * referenceDistance / distance` formula
+- **ScreenConstant mode** (default): Text maintains constant pixel size, no distance calculations
+- **DistanceScaled mode**: Uses Unity-style `fontSize * referenceDistance / distance` formula
+- ScreenConstant mode is slightly more expensive (requires FOV and distance calculations)
 - No LOD system - all glyphs rendered regardless of distance
 
 ### Billboard Calculations

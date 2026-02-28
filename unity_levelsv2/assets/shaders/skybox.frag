@@ -5,23 +5,10 @@ out vec4 FragColor;
 in vec3 TexCoords;
 
 uniform samplerCube u_Skybox;
-uniform float u_Exposure = 1.0;           // HDR exposure multiplier
-uniform vec3 u_Tint = vec3(1.0);          // Color tint
-uniform mat4 u_RotationMatrix = mat4(1.0); // Rotation matrix
+uniform vec3 u_Tint;
+uniform float u_Exposure;
 
 void main() {
-    // Apply rotation to texture coordinates
-    // Negate Y to correct OpenGL cubemap orientation for top/bottom faces
-    vec3 rotatedCoords = (u_RotationMatrix * vec4(TexCoords.x, -TexCoords.y, TexCoords.z, 1.0)).xyz;
-
-    // Sample cubemap with rotated coordinates
-    vec3 color = texture(u_Skybox, rotatedCoords).rgb;
-
-    // Apply tint
-    color *= u_Tint;
-
-    // Apply HDR exposure
-    color *= u_Exposure;
-
-    FragColor = vec4(color, 1.0);
+    vec3 color = texture(u_Skybox, TexCoords).rgb;
+    FragColor = vec4(color * u_Tint * u_Exposure, 1.0);
 }

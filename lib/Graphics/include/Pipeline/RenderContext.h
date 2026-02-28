@@ -19,6 +19,7 @@ Technology is prohibited.
 
 #include "../Utility/FrameData.h"
 #include "../Utility/RenderData.h"
+#include "../Utility/FogData.h"
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -31,6 +32,7 @@ class TextureSlotManager;
 class ParticleRenderer;
 class HUDRenderer;
 class TextRenderer;
+class WorldUIRenderer;
 /**
  * RenderContext - Single source of truth for all rendering data
  *
@@ -49,6 +51,7 @@ struct RenderContext {
     const std::vector<RenderableData>& renderables;
     const std::vector<SubmittedLightData>& lights;
     const glm::vec3& ambientLight;
+    const FogData& fogData;
 
     // Shared frame data (mutable) - communication between passes
     FrameData& frameData;
@@ -61,6 +64,7 @@ struct RenderContext {
     ParticleRenderer& particleRenderer;
     HUDRenderer& hudRenderer;
     TextRenderer& textRenderer;
+    WorldUIRenderer& worldUIRenderer;
     // HDR pipeline data (mutable) - set by HDR passes
     uint32_t hdrTextureID = 0;        // Set by MainRenderingPass
     float avgLuminance = 0.5f;        // Set by HDRLuminancePass
@@ -71,6 +75,7 @@ struct RenderContext {
         const std::vector<RenderableData>& renderables_,
         const std::vector<SubmittedLightData>& lights_,
         const glm::vec3& ambientLight_,
+        const FogData& fogData_,
         FrameData& frameData_,
         InstancedRenderer& instancedRenderer_,
         PBRLightingRenderer& pbrLighting_,
@@ -78,10 +83,12 @@ struct RenderContext {
         TextureSlotManager& textureSlotManager_,
         ParticleRenderer& particleRenderer_,
         HUDRenderer& hudRenderer_,
-        TextRenderer& textRenderer_
+        TextRenderer& textRenderer_,
+        WorldUIRenderer& worldUIRenderer_
     ) : renderables(renderables_)
       , lights(lights_)
       , ambientLight(ambientLight_)
+      , fogData(fogData_)
       , frameData(frameData_)
       , instancedRenderer(instancedRenderer_)
       , pbrLighting(pbrLighting_)
@@ -89,7 +96,8 @@ struct RenderContext {
       , textureSlotManager(textureSlotManager_)
       , particleRenderer(particleRenderer_)
       , hudRenderer(hudRenderer_)
-      , textRenderer(textRenderer_){}
+      , textRenderer(textRenderer_)
+      , worldUIRenderer(worldUIRenderer_){}
 
     // Delete copy constructor and assignment to prevent accidental copying
     RenderContext(const RenderContext&) = delete;

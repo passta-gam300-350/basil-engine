@@ -21,6 +21,7 @@ Technology is prohibited.
 #include "../../include/Scene/SceneRenderer.h"
 #include "../../include/Resources/PrimitiveGenerator.h"
 #include "../../include/Rendering/TextRenderer.h"
+#include "../../include/Rendering/WorldUIRenderer.h"
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -192,7 +193,10 @@ void MainRenderingPass::Execute(RenderContext& context)
     // Render world text
     context.textRenderer.RenderWorldTextToPass(*this, context.frameData);
 
-    // Restore state after world text
+    // Render world-space UI elements (same blending/depth state as world text)
+    context.worldUIRenderer.RenderToPass(*this, context.frameData);
+
+    // Restore state after world text and world UI
     Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });  // Re-enable face culling
     Submit(RenderCommands::SetBlendingData{ false });  // Disable blending
     Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });  // Restore depth writing

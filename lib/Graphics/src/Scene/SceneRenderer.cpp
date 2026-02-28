@@ -18,6 +18,7 @@ Technology is prohibited.
 #include "Pipeline/OutlineRenderPass.h"
 #include "Pipeline/EditorResolvePass.h"
 #include "Pipeline/GameResolvePass.h"
+#include "Pipeline/RenderTextureResolvePass.h"
 #include "Pipeline/PickingRenderPass.h"
 #include "Pipeline/HUDRenderPass.h"
 #include "Pipeline/RenderContext.h"
@@ -26,6 +27,7 @@ Technology is prohibited.
 #include "Rendering/PBRLightingRenderer.h"
 #include "Rendering/HUDRenderer.h"
 #include "Rendering/TextRenderer.h"
+#include "Rendering/WorldUIRenderer.h"
 #include "Pipeline/PresentPass.h"
 //#include "Pipeline/ShadowMappingPass.h"
 #include "Rendering/ParticleRenderer.h"
@@ -97,6 +99,12 @@ void SceneRenderer::SubmitWorldText(const WorldTextElementData& worldText) {
     }
 }
 
+void SceneRenderer::SubmitWorldUI(const WorldUIElementData& worldUI) {
+    if (m_WorldUIRenderer) {
+        m_WorldUIRenderer->SubmitElement(worldUI);
+    }
+}
+
 void SceneRenderer::SubmitLight(const SubmittedLightData& light) {
     m_SubmittedLights.push_back(light);
 }
@@ -114,6 +122,9 @@ void SceneRenderer::ClearFrame()
     }
     if (m_TextRenderer) {
         m_TextRenderer->BeginFrame();
+    }
+    if (m_WorldUIRenderer) {
+        m_WorldUIRenderer->BeginFrame();
     }
 
 	// Clear SSBO-based shadow data (will be repopulated by enabled shadow passes)
@@ -209,7 +220,12 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto gameResolvePass = std::make_shared<GameResolvePass>();
     mainPipeline->AddPass(gameResolvePass);
 
-    // 14. Add present pass (executes last)
+    // 14. Add render texture resolve pass (captures secondary camera output for HUD/WorldUI use)
+    auto renderTextureResolvePass = std::make_shared<RenderTextureResolvePass>();
+    mainPipeline->AddPass(renderTextureResolvePass);
+    mainPipeline->EnablePass("RenderTextureResolvePass", false);  // Disabled by default, enabled per-frame
+
+    // 15. Add present pass (executes last)
     auto presentPass = std::make_shared<PresentPass>();
     mainPipeline->AddPass(presentPass);
 
@@ -236,6 +252,9 @@ void SceneRenderer::InitializeRenderingCoordinators()
 
     m_TextRenderer = std::make_unique<TextRenderer>();
     assert(m_TextRenderer && "Failed to create TextRenderer");
+
+    m_WorldUIRenderer = std::make_unique<WorldUIRenderer>();
+    assert(m_WorldUIRenderer && "Failed to create WorldUIRenderer");
 }
 
 void SceneRenderer::Render()
@@ -267,12 +286,19 @@ void SceneRenderer::Render()
     if (m_TextRenderer) {
         m_TextRenderer->EndFrame();
     }
+    if (m_WorldUIRenderer) {
+        m_WorldUIRenderer->EndFrame();
+    }
+
+    // Set fog data pointer in frame data for access by rendering systems
+    m_FrameData.fogData = &m_FogData; // currently not used, but is filled with data
 
     // Create context with references to our data - NO COPYING!
     RenderContext context(
         m_SubmittedRenderables,  // const ref to renderables
         m_SubmittedLights,       // const ref to lights
         m_AmbientLight,          // const ref to ambient light
+        m_FogData,               // const ref to fog data
         m_FrameData,             // mutable ref to frame data
         *m_InstancedRenderer,    // ref to instanced renderer
         *m_PBRLightingRenderer,  // ref to PBR lighting
@@ -280,7 +306,8 @@ void SceneRenderer::Render()
         *m_TextureSlotManager,   // ref to texture slot manager
         *m_ParticleRenderer,     // ref to particle renderer
         *m_HUDRenderer,          // ref to HUD renderer
-        *m_TextRenderer          // ref to text renderer
+        *m_TextRenderer,         // ref to text renderer
+        *m_WorldUIRenderer       // ref to world UI renderer
     );
 
     // Execute the single pipeline
@@ -413,7 +440,7 @@ PickingResult SceneRenderer::QueryObjectPicking(const MousePickingQuery& query)
         auto pickingPass = std::dynamic_pointer_cast<PickingRenderPass>(m_Pipeline->GetPass("PickingPass"));
         if (pickingPass && pickingPass->IsEnabled()) {
             // Create temporary context for picking query
-            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer);
+            RenderContext context(m_SubmittedRenderables, m_SubmittedLights, m_AmbientLight, m_FogData, m_FrameData, *m_InstancedRenderer, *m_PBRLightingRenderer, *m_ResourceManager, *m_TextureSlotManager, *m_ParticleRenderer, *m_HUDRenderer, *m_TextRenderer, *m_WorldUIRenderer);
 
             return pickingPass->QueryPicking(query, context);
         }
@@ -795,6 +822,37 @@ void SceneRenderer::SetCameraData(const glm::mat4& view, const glm::mat4& proj, 
     m_FrameData.cameraPosition = pos;
 }
 
+// ===== Fog Control (OGLDev Tutorial 39-style) =====
+
+void SceneRenderer::SetLinearFog(float start, float end, const glm::vec3& color)
+{
+    m_FogData.type = FogType::Linear;
+    m_FogData.start = start;
+    m_FogData.end = end;
+    m_FogData.color = color;
+}
+
+void SceneRenderer::SetExpFog(float end, float density, const glm::vec3& color)
+{
+    m_FogData.type = FogType::Exponential;
+    m_FogData.end = end;
+    m_FogData.density = density;
+    m_FogData.color = color;
+}
+
+void SceneRenderer::SetExpSquaredFog(float end, float density, const glm::vec3& color)
+{
+    m_FogData.type = FogType::ExponentialSquared;
+    m_FogData.end = end;
+    m_FogData.density = density;
+    m_FogData.color = color;
+}
+
+void SceneRenderer::DisableFog()
+{
+    m_FogData.Disable();
+}
+
 void SceneRenderer::EnablePhysicsDebugVisualization(bool enable)
 {
     assert(m_Pipeline && "Pipeline must be initialized");
@@ -923,6 +981,18 @@ void SceneRenderer::SetWorldTextShader(const std::shared_ptr<Shader>& shader) co
     {
         m_TextRenderer->SetWorldTextShader(shader);
         spdlog::info("SceneRenderer: World text shader configured");
+    }
+}
+
+void SceneRenderer::SetWorldUIShader(const std::shared_ptr<Shader>& shader) const
+{
+    assert(shader && "World UI shader cannot be null");
+    assert(shader->ID != 0 && "World UI shader must be compiled and linked");
+
+    if (m_WorldUIRenderer)
+    {
+        m_WorldUIRenderer->SetWorldUIShader(shader);
+        spdlog::info("SceneRenderer: World UI shader configured");
     }
 }
 

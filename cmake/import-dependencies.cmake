@@ -256,7 +256,7 @@ macro(import_imgui)
     FetchContent_Declare(
         imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG docking
+        GIT_TAG 934c6a5f5ef2355d6df25395d555cb71f790c4e9
     )
 
     FetchContent_MakeAvailable(imgui)

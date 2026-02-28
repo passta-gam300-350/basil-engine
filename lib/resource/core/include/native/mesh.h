@@ -54,4 +54,19 @@ public:
     std::vector<Mesh> meshes;
 };
 
+struct mtx44 { glm::vec4 a, b, c, d; }; //placeholder. until i add private struct interface support to reflection lib
+
+//node hierarchies //just use the same guid for now
+struct MeshMetaData {
+    std::vector<int> mesh_node_idx; //mesh idx -> node id
+    std::vector<mtx44> node_local_bind; //node id indexing
+    std::vector<int> node_parent;
+};
+
+struct MeshMetaRuntimeData {
+    std::vector<int> mesh_node_idx; //mesh idx -> node id
+    std::vector<glm::mat4> node_local_bind; //node id indexing
+    std::vector<int> node_parent;
+};
+
 #endif

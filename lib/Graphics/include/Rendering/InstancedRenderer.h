@@ -122,6 +122,7 @@ private:
 
     void UpdateInstanceSSBO(const std::string& meshId);
     void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData, bool isOpaque);
+    void SubmitFogCommands(RenderPass& renderPass, std::shared_ptr<Shader> shader, const FrameData& frameData);
     bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
     void UpdateTransformHashes(const std::vector<RenderableData>& renderables);
     void UpdatePropertyBlockHashes(const std::vector<RenderableData>& renderables);

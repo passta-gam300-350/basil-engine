@@ -35,11 +35,6 @@ public:
         glm::vec4 m_inv_bind_c2; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
         glm::vec4 m_inv_bind_c3; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
         glm::vec4 m_inv_bind_c4; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
-        glm::vec4 local_c1; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
-        glm::vec4 local_c2; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
-        glm::vec4 local_c3; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
-        glm::vec4 local_c4; //i too lazy to update the reflection lib to work with private member pure interface accessors such as glm::mat4. this thing is gonna get copy constructed either ways
-
     };
     std::vector<Bone> m_bones;
     std::string m_name;

@@ -154,6 +154,8 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 	renderSnapshot.nearPlane = m_editorCameraSnapshot.nearPlane;
 	renderSnapshot.farPlane = m_editorCameraSnapshot.farPlane;
 	renderSnapshot.isPerspective = m_editorCameraSnapshot.isPerspective;
+	renderSnapshot.renderSceneViewport = m_editorCameraSnapshot.renderSceneViewport;
+	renderSnapshot.renderGameViewport = m_editorCameraSnapshot.renderGameViewport;
 	Engine::GetRenderSystem().SetEditorCameraSnapshot(renderSnapshot);
 
 	ecs::world w{ Engine::GetWorld() };

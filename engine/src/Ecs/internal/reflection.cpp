@@ -289,7 +289,8 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&HUDComponent::color, "color">,
 		MemberRegistrationV<&HUDComponent::rotation, "rotation">,
 		MemberRegistrationV<&HUDComponent::layer, "layer">,
-		MemberRegistrationV<&HUDComponent::visible, "visible">
+		MemberRegistrationV<&HUDComponent::visible, "visible">,
+		MemberRegistrationV<&HUDComponent::m_useRenderTexture, "m_useRenderTexture">
 	);
 
 	// Register TextComponent enums
@@ -322,7 +323,6 @@ void ReflectionRegistry::SetupEngineTypes()
 	// Register TextMeshComponent enums
 	RegisterReflectionComponent<TextMeshComponent::BillboardMode>("TextMeshComponent::BillboardMode");
 	RegisterReflectionComponent<TextMeshComponent::Alignment>("TextMeshComponent::Alignment");
-
 	RegisterReflectionComponent<TextMeshComponent>(
 		"TextMeshComponent",
 		MemberRegistrationV<&TextMeshComponent::m_FontGuid, "fontGuid">,
@@ -342,5 +342,28 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&TextMeshComponent::sdfThreshold, "sdfThreshold">,
 		MemberRegistrationV<&TextMeshComponent::smoothing, "smoothing">,
 		MemberRegistrationV<&TextMeshComponent::visible, "visible">
+	);
+
+	// Register WorldUIComponent enums
+	RegisterReflectionComponent<WorldUIComponent::BillboardMode>("WorldUIComponent::BillboardMode");
+
+	RegisterReflectionComponent<WorldUIComponent>(
+		"WorldUIComponent",
+		MemberRegistrationV<&WorldUIComponent::m_TextureGuid, "textureGuid">,
+		MemberRegistrationV<&WorldUIComponent::size, "size">,
+		MemberRegistrationV<&WorldUIComponent::billboardMode, "billboardMode">,
+		MemberRegistrationV<&WorldUIComponent::color, "color">,
+		MemberRegistrationV<&WorldUIComponent::layer, "layer">,
+		MemberRegistrationV<&WorldUIComponent::visible, "visible">,
+		MemberRegistrationV<&WorldUIComponent::interactable, "interactable">,
+		MemberRegistrationV<&WorldUIComponent::m_useRenderTexture, "m_useRenderTexture">
+	);
+
+	// Register RenderTextureCameraComponent
+	RegisterReflectionComponent<RenderTextureCameraComponent>(
+		"RenderTextureCameraComponent",
+		MemberRegistrationV<&RenderTextureCameraComponent::width, "width">,
+		MemberRegistrationV<&RenderTextureCameraComponent::height, "height">
+		// outputTextureID is runtime-only, not serialized
 	);
 }

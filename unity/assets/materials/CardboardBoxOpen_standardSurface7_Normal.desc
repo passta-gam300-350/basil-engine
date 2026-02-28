@@ -1,7 +1,0 @@
-base:
-  m_guid: 27b825371869f761546e28748a6
-  m_importer: .texture
-  m_source: materials\CardboardBoxOpen_standardSurface7_Normal.png
-  m_name: CardboardBoxOpen_standardSurface7_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

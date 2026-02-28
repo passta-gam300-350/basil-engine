@@ -22,7 +22,8 @@ Technology is prohibited.
 #include "../Resources/Shader.h"
 #include <memory>
 #include <vector>
-#include <unordered_map>
+#include <map>
+#include <utility>
 #include <glm/glm.hpp>
 
 // Forward declarations
@@ -50,7 +51,8 @@ public:
         glm::vec4 color;            // Tint color
         float rotation;             // Rotation (radians)
         uint32_t anchor;            // Anchor point (cast from HUDAnchor)
-        float padding[2];           // Alignment padding to 64 bytes
+        float layer;                // Normalized layer depth (0.0=back, 1.0=front)
+        float _pad;                 // Alignment padding
         // Total: 48 bytes (aligned to vec4)
     };
 
@@ -89,8 +91,8 @@ private:
         bool dirty = true;
     };
 
-    // Texture batches (key = textureID, 0 = no texture)
-    std::unordered_map<uint32_t, TextureBatch> m_TextureBatches;
+    // Texture batches keyed by (layer, textureID) — map order gives correct back-to-front draw sequence
+    std::map<std::pair<uint8_t, uint32_t>, TextureBatch> m_TextureBatches;
 
     // HUD shader (orthographic projection)
     std::shared_ptr<Shader> m_HUDShader;

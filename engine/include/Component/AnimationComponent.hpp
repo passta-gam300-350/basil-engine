@@ -39,6 +39,11 @@ struct AnimationComponent
 	animator* animatorInstance = nullptr;
 };
 
+struct AnimationBoneChannelTransformComponent {
+	std::unordered_map<int, glm::mat4> bone_trans;
+	bool is_active;
+};
+
 // Register animationState first 
 RegisterReflectionTypeBegin(animationState, "animationState")
 MemberRegistrationV<&animationState::isPlaying, "IsPlaying">,
