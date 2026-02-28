@@ -23,6 +23,8 @@ Technology is prohibited.
 #include "../utility/Particle.h"
 #include "../Utility/HUDData.h"
 #include "../Utility/TextData.h"
+#include "../Utility/WorldUIData.h"
+#include "../Utility/FogData.h"
 #include "../Resources/ResourceManager.h"
 #include "../Resources/TextureSlotManager.h"
 #include <memory>
@@ -38,6 +40,7 @@ class OutlineRenderPass;
 class ParticleRenderer;
 class HUDRenderer;
 class TextRenderer;
+class WorldUIRenderer;
 
 class SceneRenderer {
 public:
@@ -55,6 +58,7 @@ public:
     void SubmitHUDElement(const HUDElementData& hudElement);
     void SubmitText(const TextElementData& textElement);
     void SubmitWorldText(const WorldTextElementData& worldText);
+    void SubmitWorldUI(const WorldUIElementData& worldUI);
     void SetAmbientLight(const glm::vec3& ambient) { m_AmbientLight = ambient; }
     
     // Clear submitted data (call at start of frame)
@@ -80,6 +84,7 @@ public:
     ParticleRenderer* GetParticleRenderer() const { return m_ParticleRenderer.get(); }
     HUDRenderer* GetHUDRenderer() const { return m_HUDRenderer.get(); }
     TextRenderer* GetTextRenderer() const { return m_TextRenderer.get(); }
+    WorldUIRenderer* GetWorldUIRenderer() const { return m_WorldUIRenderer.get(); }
     // Configuration methods for application layer
     void SetShadowDepthShader(const std::shared_ptr<Shader>& shader) const;
     void SetPointShadowShader(const std::shared_ptr<Shader>& shader) const;
@@ -93,6 +98,7 @@ public:
     void SetHUDShader(const std::shared_ptr<Shader>& shader) const;
     void SetTextShader(const std::shared_ptr<Shader>& shader) const;
     void SetWorldTextShader(const std::shared_ptr<Shader>& shader) const;
+    void SetWorldUIShader(const std::shared_ptr<Shader>& shader) const;
 
     // Picking functionality
     PickingResult QueryObjectPicking(const MousePickingQuery& query);
@@ -161,6 +167,13 @@ public:
     // Camera control facade
     void SetCameraData(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos);
 
+    // Fog control (OGLDev Tutorial 39-style fog rendering)
+    void SetLinearFog(float start, float end, const glm::vec3& color);
+    void SetExpFog(float end, float density, const glm::vec3& color);
+    void SetExpSquaredFog(float end, float density, const glm::vec3& color);
+    void DisableFog();
+    const FogData& GetFogData() const { return m_FogData; }
+
     // Debug rendering facade
     void EnablePhysicsDebugVisualization(bool enable);  // Control physics debug line rendering
 
@@ -172,15 +185,25 @@ public:
     // Debug info (read-only access for debugging/logging)
     const FrameData& GetFrameDataReadOnly() const { return m_FrameData; }
 
+    // Shadow texture array access (for shadow passes)
+    uint32_t GetShadow2DTextureArray() const { return m_Shadow2DTextureArray; }
+
 private:
     void InitializeRenderingCoordinators();
 
     void InitializeDefaultPipeline();
 
+    // Shadow texture array management
+    void CreateShadow2DTextureArray();
+    void DestroyShadow2DTextureArray();
+
     // Frame-submitted data
     std::vector<RenderableData> m_SubmittedRenderables;
     std::vector<SubmittedLightData> m_SubmittedLights;
     glm::vec3 m_AmbientLight = glm::vec3(0.03f);
+
+    // Fog configuration
+    FogData m_FogData;
 
     // Single render pipeline
     std::unique_ptr<RenderPipeline> m_Pipeline;
@@ -199,4 +222,10 @@ private:
     std::unique_ptr<ParticleRenderer> m_ParticleRenderer;
     std::unique_ptr<HUDRenderer> m_HUDRenderer;
     std::unique_ptr<TextRenderer> m_TextRenderer;
+    std::unique_ptr<WorldUIRenderer> m_WorldUIRenderer;
+
+    // Unified shadow texture array (directional + spot shadows)
+    uint32_t m_Shadow2DTextureArray = 0;
+    static constexpr uint32_t SHADOW_ARRAY_LAYERS = 16;  // Support up to 16 2D shadows (1 directional + 15 spot)
+    static constexpr uint32_t SHADOW_MAP_SIZE = 1024;     // 1024x1024 per shadow map (optimized for laptop GPUs)
 };

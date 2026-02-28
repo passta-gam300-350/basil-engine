@@ -20,6 +20,7 @@ Technology is prohibited.
 #include "../Buffer/FrameBuffer.h"
 #include "AABB.h"
 #include "ShadowData.h"
+#include "FogData.h"
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
@@ -50,13 +51,14 @@ struct DebugLine
  */
 struct FrameData
 {
-    // UNIFIED SHADOW DATA (SSBO-based, supports 50+ lights)
+    // UNIFIED SHADOW DATA (SSBO-based, supports UNLIMITED lights!)
     // This vector stores shadow metadata for all active shadows (directional, point, spot)
     std::vector<ShadowData> shadowDataArray;
 
-    // Shadow texture IDs (for texture arrays)
-    // Index corresponds to shadowDataArray[i].textureIndex
-    std::vector<uint32_t> shadow2DTextures;       // 2D depth maps (directional/spot)
+    // Shadow texture IDs
+    // 2D texture array (directional/spot shadows use textureIndex to index into array layers)
+    uint32_t shadow2DTextureArray = 0;            // Single layered texture array for all 2D shadows
+    // Cubemap textures (point shadows - still individual textures for now)
     std::vector<uint32_t> shadowCubemapTextures;  // Cubemap depth maps (point)
 
     // Main rendering output (includes debug overlay when enabled)
@@ -71,6 +73,7 @@ struct FrameData
     // Editor display buffer (resolved from mainColorBuffer for ImGui sampling)
     std::shared_ptr<FrameBuffer> editorResolvedBuffer;     // Non-MSAA resolved for ImGui (Scene viewport)
     std::shared_ptr<FrameBuffer> gameResolvedBuffer;       // Non-MSAA resolved for ImGui (Game viewport)
+    std::shared_ptr<FrameBuffer> renderTextureCameraBuffer; // Non-MSAA resolved output for render texture cameras
 
     // Post-processing chain
     std::shared_ptr<FrameBuffer> postProcessBuffer;
@@ -79,6 +82,9 @@ struct FrameData
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
     glm::vec3 cameraPosition = glm::vec3(0.0f);
+
+    // Fog data (OGLDev Tutorial 39-style atmospheric fog)
+    const FogData* fogData = nullptr;  // Pointer to fog configuration (owned by SceneRenderer)
 
     // Camera context tracking for dual viewport rendering
     enum class CameraContext

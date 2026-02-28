@@ -77,6 +77,9 @@ bool ShaderLibrary::Initialize() {
     if (!LoadWorldTextShader()) {
         spdlog::warn("ShaderLibrary: World text shader not loaded - world-space text rendering will be disabled");
     }
+    if (!LoadWorldUIShader()) {
+        spdlog::warn("ShaderLibrary: World UI shader not loaded - world-space UI rendering will be disabled");
+    }
 
     if (success) {
         spdlog::info("ShaderLibrary: Essential shaders loaded successfully");
@@ -375,5 +378,18 @@ bool ShaderLibrary::LoadWorldTextShader() {
     }
 
     spdlog::info("ShaderLibrary: World SDF text shader loaded successfully");
+    return true;
+}
+
+bool ShaderLibrary::LoadWorldUIShader() {
+    m_WorldUIShader = Load("world_ui",
+        "assets/shaders/world_ui.vert",
+        "assets/shaders/world_ui.frag");
+
+    if (!m_WorldUIShader) {
+        return false;
+    }
+
+    spdlog::info("ShaderLibrary: World UI shader loaded successfully");
     return true;
 }

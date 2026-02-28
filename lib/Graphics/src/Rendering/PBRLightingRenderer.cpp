@@ -23,7 +23,8 @@ Technology is prohibited.
 #include <cassert>
 
 PBRLightingRenderer::PBRLightingRenderer()
-    : m_ShadowSSBO(std::make_unique<TypedShaderStorageBuffer<ShadowData>>())
+    : m_LightSSBO(std::make_unique<TypedShaderStorageBuffer<LightData>>())
+    , m_ShadowSSBO(std::make_unique<TypedShaderStorageBuffer<ShadowData>>())
 {
     // Create offset texture for random shadow sampling
     // Using custom values: 16x16 tiling with 8x8 samples = 64 samples per pixel
@@ -32,7 +33,7 @@ PBRLightingRenderer::PBRLightingRenderer()
         m_ShadowFilterSize          // 8x8 filter = 64 total samples
     );
 
-    spdlog::info("PBRLightingRenderer: Initialized as lighting system with SSBO shadow support");
+    spdlog::info("PBRLightingRenderer: Initialized with UNLIMITED light support via SSBO");
     spdlog::info("PBRLightingRenderer: Random shadow sampling enabled ({}x{} samples, radius {})",
                  m_ShadowFilterSize, m_ShadowFilterSize, m_ShadowRandomRadius);
 }
@@ -248,58 +249,107 @@ void PBRLightingRenderer::SubmitLightingCommands(RenderPass& renderPass,
     };
     renderPass.Submit(ambientCmd);
 
-    // 2. Convert and submit point lights
-    std::vector<RenderCommands::PointLightData> pointLightData;
-    pointLightData.reserve(m_PointLights.size());
-    for (const auto& light : m_PointLights) {
-        pointLightData.push_back({
-            light.position,
-            light.color,
-            light.intensity,
-            light.ambientIntensity,
-            light.constant,
-            light.linear,
-            light.quadratic
-        });
-    }
-    RenderCommands::SetPointLightsData pointLightsCmd{shader, pointLightData};
-    renderPass.Submit(pointLightsCmd);
+    // 2. Convert legacy light structures to unified SSBO format
+    std::vector<LightData> unifiedLights;
+    unifiedLights.reserve(m_DirectionalLights.size() + m_PointLights.size() + m_SpotLights.size());
 
-    // 3. Convert and submit directional lights
-    std::vector<RenderCommands::DirectionalLightData> dirLightData;
-    dirLightData.reserve(m_DirectionalLights.size());
+    // Convert directional lights
     for (const auto& light : m_DirectionalLights) {
-        dirLightData.push_back({
-            light.direction,
-            light.color,
-            light.intensity,
-            light.ambientIntensity
-        });
+        LightData data;
+        data.type = static_cast<int32_t>(LightType::Directional);
+        data._pad0 = data._pad1 = data._pad2 = 0.0f;  // Padding
+        data.position = glm::vec3(0.0f);  // Not used for directional
+        data.direction = light.direction;
+        data.color = light.color;
+        data.intensity = light.intensity;
+        data.ambientIntensity = light.ambientIntensity;
+        data.cutOff = 0.0f;  // Not used for directional
+        data.outerCutOff = 0.0f;
+        data.constant = 1.0f;  // Not used for directional
+        data.linear = 0.0f;
+        data.quadratic = 0.0f;
+        unifiedLights.push_back(data);
     }
-    RenderCommands::SetDirectionalLightsData dirLightsCmd{shader, dirLightData};
-    renderPass.Submit(dirLightsCmd);
 
-    // 4. Convert and submit spot lights
-    std::vector<RenderCommands::SpotLightData> spotLightData;
-    spotLightData.reserve(m_SpotLights.size());
+    // Convert point lights
+    for (const auto& light : m_PointLights) {
+        LightData data;
+        data.type = static_cast<int32_t>(LightType::Point);
+        data._pad0 = data._pad1 = data._pad2 = 0.0f;  // Padding
+        data.position = light.position;
+        data.direction = glm::vec3(0.0f);  // Not used for point
+        data.color = light.color;
+        data.intensity = light.intensity;
+        data.ambientIntensity = light.ambientIntensity;
+        data.cutOff = 0.0f;  // Not used for point
+        data.outerCutOff = 0.0f;
+        data.constant = light.constant;
+        data.linear = light.linear;
+        data.quadratic = light.quadratic;
+        unifiedLights.push_back(data);
+    }
+
+    // Convert spot lights
     for (const auto& light : m_SpotLights) {
-        spotLightData.push_back({
-            light.position,
-            light.direction,
-            light.color,
-            light.intensity,
-            light.ambientIntensity,
-            light.cutOff,
-            light.outerCutOff,
-            light.constant,
-            light.linear,
-            light.quadratic
-        });
+        LightData data;
+        data.type = static_cast<int32_t>(LightType::Spot);
+        data._pad0 = data._pad1 = data._pad2 = 0.0f;  // Padding
+        data.position = light.position;
+        data.direction = light.direction;
+        data.color = light.color;
+        data.intensity = light.intensity;
+        data.ambientIntensity = light.ambientIntensity;
+        data.cutOff = light.cutOff;
+        data.outerCutOff = light.outerCutOff;
+        data.constant = light.constant;
+        data.linear = light.linear;
+        data.quadratic = light.quadratic;
+        unifiedLights.push_back(data);
     }
-    RenderCommands::SetSpotLightsData spotLightsCmd{shader, spotLightData};
-    renderPass.Submit(spotLightsCmd);
 
-    // 5. Submit material properties (if material provided)
+    // 3. Upload to SSBO if we have lights
+    if (!unifiedLights.empty()) {
+        // Ensure buffer is large enough before uploading
+        uint32_t requiredSize = static_cast<uint32_t>(unifiedLights.size() * sizeof(LightData));
+        if (m_LightSSBO->GetSize() < requiredSize) {
+            // Allocate with some headroom to reduce reallocations
+            m_LightSSBO->Resize(requiredSize * 2);
+        }
+
+        // Upload light data to GPU
+        m_LightSSBO->SetData(unifiedLights);
+
+        // Bind SSBO to binding point 3 (matches shader layout)
+        RenderCommands::BindSSBOData ssboCmd{
+            m_LightSSBO->GetSSBOHandle(),
+            3  // Binding point 3 for light data
+        };
+        renderPass.Submit(ssboCmd);
+
+        // Set number of lights
+        RenderCommands::SetUniformIntData numLightsCmd{
+            shader,
+            "u_NumLights",
+            static_cast<int>(unifiedLights.size())
+        };
+        renderPass.Submit(numLightsCmd);
+
+        spdlog::debug("PBRLightingRenderer: Uploaded {} lights to SSBO ({} directional, {} point, {} spot)",
+                      unifiedLights.size(),
+                      m_DirectionalLights.size(),
+                      m_PointLights.size(),
+                      m_SpotLights.size());
+    } else {
+        // No lights - set count to 0
+        RenderCommands::SetUniformIntData numLightsCmd{
+            shader,
+            "u_NumLights",
+            0
+        };
+        renderPass.Submit(numLightsCmd);
+    }
+
+    // 4. Submit material properties (if material provided)
     // Note: For instanced rendering, materials are per-instance in SSBO, so we skip this
     if (material) {
         RenderCommands::SetMaterialPBRData materialCmd{
@@ -352,16 +402,15 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
         };
         renderPass.Submit(numShadowsCmd);
 
-        // Bind 2D shadow textures (directional/spot) to individual slots
-        // TODO: Replace with sampler2DArray once implemented
-        for (size_t i = 0; i < frameData.shadow2DTextures.size() && i < 16; ++i) {
-            std::string uniformName = "u_Shadow2DTextures[" + std::to_string(i) + "]";
-            renderPass.Submit(RenderCommands::BindTextureIDData{
-                frameData.shadow2DTextures[i],
-                static_cast<uint32_t>(8 + i),  // Texture units 8-23
+        // Bind 2D shadow texture array (directional/spot shadows in layers)
+        if (frameData.shadow2DTextureArray != 0) {
+            RenderCommands::BindTexture2DArrayData arrayCmd{
+                frameData.shadow2DTextureArray,
+                8,  // Texture unit 8
                 shader,
-                uniformName
-            });
+                "u_Shadow2DTextureArray"
+            };
+            renderPass.Submit(arrayCmd);
         }
 
         // Bind cubemap shadow textures (point) to individual slots
@@ -402,9 +451,8 @@ void PBRLightingRenderer::SubmitShadowCommands(RenderPass& renderPass,
         }
         // ===== END OFFSET TEXTURE BINDING =====
 
-        spdlog::debug("PBRLightingRenderer: Uploaded {} shadows ({} 2D, {} cubemap) to SSBO with random sampling",
+        spdlog::debug("PBRLightingRenderer: Uploaded {} shadows to SSBO with random sampling (texture array + {} cubemaps)",
                       frameData.shadowDataArray.size(),
-                      frameData.shadow2DTextures.size(),
                       frameData.shadowCubemapTextures.size());
     } else {
         // No shadows - set count to 0

@@ -138,6 +138,14 @@ bool GraphicsTestDriver::Initialize()
     // Create scene renderer (owns all graphics systems now)
     m_SceneRenderer = std::make_unique<SceneRenderer>();
 
+    // ===== PERFORMANCE DIAGNOSTIC: Disable shadows to test if they're the bottleneck =====
+    // Uncomment these lines to disable shadow passes and test FPS impact:
+    //m_SceneRenderer->EnablePass("DirectionalShadowPass", false);
+    //m_SceneRenderer->EnablePass("SpotShadowPass", false);
+    //m_SceneRenderer->EnablePass("PointShadowPass", false);
+    //spdlog::warn("DIAGNOSTIC: All shadow passes DISABLED for performance testing");
+    // ==================================================================================
+
     // Setup resize callback to render during window resize (prevents black flashes)
     m_Window->SetResizeCallback([this]() {
         // Simple render during resize - reuse last frame's data
@@ -762,7 +770,7 @@ void GraphicsTestDriver::SetupEditorDemo()
     std::vector<std::string> materials = {"RedMaterial", "GreenMaterial", "BlueMaterial",
                                           "GoldMaterial", "WhiteMaterial"};
     const int gridSize = 3;
-    const float spacing = 150.0f;
+    const float spacing = 3.0f;
     const float startOffset = -(gridSize - 1) * spacing * 0.5f;
 
     // Create cube mesh primitive
@@ -812,26 +820,26 @@ void GraphicsTestDriver::SetupEditorDemo()
     spdlog::info("Created 3x3 cube grid: {} cubes", gridSize * gridSize);
 
     // 2.5. CREATE GROUND PLANE TO CATCH SHADOWS
-    auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(20.0f, 20.0f, 1, 1));
-    RenderableData groundPlane;
-    groundPlane.mesh = planeMesh;
-    groundPlane.material = m_ResourceManager->GetMaterial("RedMaterial");
+    //auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 1, 1));
+    //RenderableData groundPlane;
+    //groundPlane.mesh = planeMesh;
+    //groundPlane.material = m_ResourceManager->GetMaterial("WhiteMaterial");
 
-    // Create property block for the ground plane with a neutral gray color
+    //// Create property block for the ground plane with a neutral gray color
     //auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
-    //groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 1.0f, 1.0f));  // Neutral gray
+    //groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.8f, 0.8f));  // Neutral gray
     //groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
     //groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
     //groundPlane.propertyBlock = groundPropertyBlock;
 
-    // Position plane below cubes (cubes are at y=0, so plane at y=-0.6 is below them)
-    groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-    groundPlane.visible = true;
-    groundPlane.objectID = objectID++;
-    groundPlane.modelInstanceID = modelInstanceID++;
+    //// Position plane below cubes (cubes are at y=0, so plane at y=-2.0 is below them)
+    //groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    //groundPlane.visible = true;
+    //groundPlane.objectID = objectID++;
+    //groundPlane.modelInstanceID = modelInstanceID++;
 
-    m_SceneObjects.push_back(groundPlane);
-    spdlog::info("Added ground plane at y=-0.6 to catch shadows");
+    //m_SceneObjects.push_back(groundPlane);
+    //spdlog::info("Added ground plane at y=-2.0 to catch shadows");
 
     m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
@@ -854,8 +862,8 @@ void GraphicsTestDriver::SetupEditorDemo()
 
     // Set ambient light
     m_SceneRenderer->SetAmbientLight(glm::vec3(0.01f));
-    spdlog::info("Spotlight created at (0, 10, 0) pointing down with intensity 3.0");
-    spdlog::info("Ambient light set to (0.03, 0.03, 0.03)");
+    spdlog::info("Directional light created with intensity 2.5");
+    spdlog::info("Ambient light set to (0.01, 0.01, 0.01)");
 
     // 4. DISABLE SKYBOX - Editor doesn't use skybox
     m_SceneRenderer->EnableSkybox(false);
@@ -1401,6 +1409,31 @@ void GraphicsTestDriver::KeyCallback(GLFWwindow* window, int key, int scancode, 
             case GLFW_KEY_B:
                 s_Instance->m_SceneRenderer->ToggleRenderPass("SpotShadowPass");
                 break;
+
+            // ===== FOG CONTROLS (OGLDev Tutorial 39-style) =====
+            case GLFW_KEY_F4:
+                spdlog::info("Fog: DISABLED");
+                s_Instance->m_SceneRenderer->DisableFog();
+                break;
+
+            case GLFW_KEY_F5:
+                spdlog::info("Fog: LINEAR (start=10m, end=50m, gray)");
+                s_Instance->m_SceneRenderer->SetLinearFog(10.0f, 50.0f, glm::vec3(0.5f, 0.5f, 0.5f));
+                break;
+
+            case GLFW_KEY_F6:
+                spdlog::info("Fog: EXPONENTIAL (end=50m, density=0.05, gray)");
+                s_Instance->m_SceneRenderer->SetExpFog(50.0f, 0.05f, glm::vec3(0.5f, 0.5f, 0.5f));
+                break;
+
+            case GLFW_KEY_F7:
+                spdlog::info("Fog: EXPONENTIAL SQUARED (end=50m, density=0.05, gray)");
+                s_Instance->m_SceneRenderer->SetExpSquaredFog(50.0f, 0.05f, glm::vec3(0.5f, 0.5f, 0.5f));
+                break;
+
+            case GLFW_KEY_F8:
+                s_Instance->PrintFogInfo();
+                break;
         }
     }
 }
@@ -1570,6 +1603,44 @@ void GraphicsTestDriver::PrintHDRInfo() const
     }
 
     spdlog::info("=======================");
+}
+
+void GraphicsTestDriver::PrintFogInfo() const
+{
+    spdlog::info("=== Fog Information (OGLDev Tutorial 39) ===");
+
+    if (m_SceneRenderer) {
+        const FogData& fog = m_SceneRenderer->GetFogData();
+
+        // Fog type
+        const char* typeNames[] = {"NONE (Disabled)", "LINEAR", "EXPONENTIAL", "EXPONENTIAL SQUARED"};
+        int typeIndex = static_cast<int>(fog.type);
+        spdlog::info("  Fog Type: {}", typeNames[typeIndex]);
+
+        if (fog.IsEnabled()) {
+            spdlog::info("  Fog Color: ({:.2f}, {:.2f}, {:.2f})", fog.color.r, fog.color.g, fog.color.b);
+
+            if (fog.type == FogType::Linear) {
+                spdlog::info("  Start Distance: {:.1f}m", fog.start);
+                spdlog::info("  End Distance: {:.1f}m", fog.end);
+            } else {
+                spdlog::info("  End Distance: {:.1f}m", fog.end);
+                spdlog::info("  Density: {:.3f}", fog.density);
+            }
+        }
+
+        spdlog::info("");
+        spdlog::info("  Keyboard Controls:");
+        spdlog::info("    F4 - Disable Fog");
+        spdlog::info("    F5 - Linear Fog");
+        spdlog::info("    F6 - Exponential Fog");
+        spdlog::info("    F7 - Exponential Squared Fog");
+        spdlog::info("    F8 - Print this info");
+    } else {
+        spdlog::warn("Scene renderer not available!");
+    }
+
+    spdlog::info("==========================================");
 }
 
 void GraphicsTestDriver::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

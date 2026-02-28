@@ -6,9 +6,10 @@ out vec3 TexCoords;
 
 uniform mat4 u_Projection;
 uniform mat4 u_View;
+uniform mat4 u_RotationMatrix;
 
 void main() {
-    TexCoords = aPos;
+    TexCoords = vec3(u_RotationMatrix * vec4(aPos.x, -aPos.y, aPos.z, 0.0));
 
     // Remove translation from view matrix for skybox effect
     mat4 rotView = mat4(mat3(u_View));

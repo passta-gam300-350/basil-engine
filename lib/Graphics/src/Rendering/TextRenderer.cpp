@@ -44,7 +44,7 @@ TextRenderer::~TextRenderer()
 void TextRenderer::BeginFrame()
 {
     // Clear all batches for new frame (use resize(0) to preserve capacity)
-    for (auto& [atlasID, batch] : m_FontBatches) {
+    for (auto& [key, batch] : m_FontBatches) {
         batch.glyphInstances.resize(0);  // Clear without deallocating
         batch.dirty = true;
     }
@@ -64,9 +64,9 @@ void TextRenderer::SubmitText(const TextElementData& textElement)
         return;
     }
 
-    // Get font batch (or create new one)
+    // Get font batch (or create new one), keyed by (layer, atlasID) for sorted draw order
     uint32_t atlasTextureID = textElement.fontAtlas->GetTextureID();
-    auto [it, inserted] = m_FontBatches.try_emplace(atlasTextureID);
+    auto [it, inserted] = m_FontBatches.try_emplace(std::make_pair(textElement.layer, atlasTextureID));
     auto& batch = it->second;
 
     if (inserted) {
@@ -105,7 +105,7 @@ void TextRenderer::SubmitWorldText(const WorldTextElementData& worldText)
 void TextRenderer::EndFrame()
 {
     // Update SSBOs for all dirty batches (screen-space)
-    for (auto& [atlasID, batch] : m_FontBatches) {
+    for (auto& [key, batch] : m_FontBatches) {
         if (batch.dirty && !batch.glyphInstances.empty()) {
             UpdateBatchSSBO(batch);
         }
@@ -158,7 +158,8 @@ void TextRenderer::RenderToPass(RenderPass& renderPass, const FrameData& frameDa
     renderPass.Submit(referenceResolutionCmd);
 
     // ========== PER-BATCH RENDERING ==========
-    for (const auto& [atlasID, batch] : m_FontBatches) {
+    // std::map iterates in (layer, atlasID) order — lower layers render first (painter's algorithm)
+    for (const auto& [key, batch] : m_FontBatches) {
         if (!batch.glyphInstances.empty()) {
             RenderBatch(renderPass, batch, frameData);
         }
@@ -314,7 +315,7 @@ void TextRenderer::RenderWorldTextToPass(RenderPass& renderPass, const FrameData
     }*/
 
     if (!m_WorldTextShader) {
-        spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world text shader set!");
+        //spdlog::warn("TextRenderer::RenderWorldTextToPass() - No world text shader set!");
         return;
     }
 
@@ -592,8 +593,8 @@ void TextRenderer::LayoutText(const TextElementData& textElement, FontBatch& bat
         // the top-left of each glyph relative to the baseline. Text block anchoring
         // is handled via cursor position adjustment in CalculateAnchorOffset().
         glyphInstance.anchor = static_cast<uint32_t>(TextAnchor::TopLeft);
-        glyphInstance.padding[0] = 0.0f;
-        glyphInstance.padding[1] = 0.0f;
+        glyphInstance.layer = static_cast<float>(textElement.layer) / 255.0f;
+        glyphInstance._pad = 0.0f;
 
         batch.glyphInstances.push_back(glyphInstance);
         m_TotalGlyphs++;
@@ -614,16 +615,20 @@ void TextRenderer::LayoutWorldText(const WorldTextElementData& worldText, WorldF
     // Calculate distance from camera to text
     float distanceToCamera = glm::length(worldText.worldPosition - worldText.cameraPosition);
 
-    // Unity-style font scaling: actualSize = (fontSize * referenceDistance) / distanceToCamera
-    // This makes text appear at the specified pixel size when at reference distance
-    float distanceScale = worldText.referenceDistance / std::max(distanceToCamera, 0.01f);
+    // Screen-constant sizing: text maintains constant screen-space size regardless of distance
+    // Formula: worldSize = (pixelSize / screenHeight) * (2 * distance * tan(FOV/2))
+    float pixelsToWorldUnits;
+    if (worldText.screenHeight > 0.0f) {
+        float tanHalfFOV = std::tan(worldText.cameraFOV * 0.5f);
+        pixelsToWorldUnits = (2.0f * distanceToCamera * tanHalfFOV) / worldText.screenHeight;
+    } else {
+        // Fallback when viewport height is unknown
+        float distanceScale = worldText.referenceDistance / std::max(distanceToCamera, 0.01f);
+        const float PIXELS_PER_WORLD_UNIT = 100.0f;
+        pixelsToWorldUnits = distanceScale / PIXELS_PER_WORLD_UNIT;
+    }
 
-    // Unity-style "Pixels Per Unit" - 100 pixels = 1 world unit (Unity's default)
-    // fontSize 100 at reference distance = ~1 world unit height
-    const float PIXELS_PER_WORLD_UNIT = 100.0f;
-    float pixelsToWorldUnits = distanceScale / PIXELS_PER_WORLD_UNIT;
     float fontScale = worldText.fontSize / static_cast<float>(fontAtlas->GetBaseFontSize());
-    //float worldFontScale = fontScale * pixelsToWorldUnits;
 
     // Calculate billboard basis vectors based on billboard mode
     glm::vec3 billboardRight, billboardUp;

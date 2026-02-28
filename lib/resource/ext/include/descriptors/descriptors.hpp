@@ -15,11 +15,21 @@ inline rp::Guid GetOldGuidOrGenerate(rp::descriptor_base base, std::string const
 	return guid ? guid : rp::Guid::generate();
 }
 
+inline rp::Guid GetOldGuidOrGenerateV2(rp::descriptor_base base, std::string const& filepath = "") {
+	std::string descfilename = filepath.empty() ? base.m_name + ".desc" : filepath;
+	rp::Guid guid{};
+	if (std::filesystem::exists(descfilename)) {
+		YAML::Node nd = YAML::LoadFile(descfilename);
+		if (nd.IsDefined() && !nd.IsNull() && nd["base"].IsDefined() && nd["base"]["m_guid"].IsDefined())
+			guid = rp::Guid::to_guid(nd["base"]["m_guid"].as<std::string>());
+	}
+	return guid ? guid : rp::Guid::generate();
+}
 
 template <typename Descriptor>
 inline void SaveOrOverwriteDescriptors(Descriptor& desc, std::string parent) {
 	std::string descfilenpath = std::filesystem::path(parent + "/" + desc.base.m_name + ".desc").lexically_normal().string();
-	desc.base.m_guid = GetOldGuidOrGenerate(desc.base, descfilenpath);
+	desc.base.m_guid = GetOldGuidOrGenerateV2(desc.base, descfilenpath);
 	rp::serialization::yaml_serializer::serialize(desc, descfilenpath);
 }
 

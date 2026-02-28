@@ -130,6 +130,7 @@ struct HUDComponent {
     float rotation = 0.0f;              ///< Rotation in degrees (clockwise, around anchor point)
     uint8_t layer = 0;                 ///< Layer for depth sorting (higher values render on top)
     bool visible = true;                ///< Visibility toggle
+    bool m_useRenderTexture = false;    ///< If true, display render texture camera output instead of m_TextureGuid
 };
 
 /**
@@ -219,9 +220,9 @@ struct TextMeshComponent {
         Cylindrical   ///< Rotates to face camera but constrained to Y-axis (stays upright)
     } billboardMode = BillboardMode::Full;
 
-    // Font sizing (Unity-style: pixels at reference distance)
-    float fontSize = 16.0f;         ///< Font size in pixels at reference distance
-    float referenceDistance = 10.0f; ///< Distance at which fontSize is measured (in world units)
+    // Font sizing
+    float fontSize = 16.0f;         ///< Font size in pixels (screen-constant: maintains this size on screen regardless of distance)
+    float referenceDistance = 10.0f; ///< Reference distance for fallback sizing (in world units)
 
     /**
      * @brief Text alignment for multi-line text
@@ -257,6 +258,46 @@ struct TextMeshComponent {
     bool visible = true;          ///< Visibility toggle
 };
 
+/**
+ * @struct WorldUIComponent
+ * @brief Component for rendering world-space UI quads (textured or solid color).
+ * Supports billboard modes (Full, Cylindrical, None). Uses Transform for positioning.
+ */
+struct WorldUIComponent {
+    rp::BasicIndexedGuid m_TextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };
+
+    glm::vec2 size = glm::vec2(1.0f);  ///< World-space size (width, height in units)
+
+    enum class BillboardMode : uint8_t {
+        None,         ///< No billboarding - uses entity's transform rotation
+        Full,         ///< Always faces camera (rotates on all axes)
+        Cylindrical   ///< Rotates to face camera but constrained to Y-axis
+    } billboardMode = BillboardMode::Full;
+
+    glm::vec4 color = glm::vec4(1.0f);  ///< Tint or solid color (RGBA)
+    uint8_t layer = 0;                   ///< Layer for depth sorting
+    bool visible = true;                 ///< Visibility toggle
+    bool interactable = true;            ///< Whether raycasts can hit this element
+    bool m_useRenderTexture = false;     ///< If true, display render texture camera output instead of m_TextureGuid
+};
+
+/**
+ * @struct RenderTextureCameraComponent
+ * @brief Marks a camera entity as a render texture source.
+ *
+ * Attach this alongside a CameraComponent to render that camera's view to a texture
+ * each frame. The resulting texture can be displayed by HUDComponent or WorldUIComponent
+ * when m_useRenderTexture = true.
+ *
+ * Only one RenderTextureCameraComponent is active at a time (the first active one found).
+ */
+struct RenderTextureCameraComponent {
+    uint32_t width = 1280;   ///< Render texture width in pixels
+    uint32_t height = 720;   ///< Render texture height in pixels
+
+    // Runtime only - set by RenderSystem each frame, not serialized
+    uint32_t outputTextureID = 0;  ///< OpenGL texture ID of the rendered output
+};
 
 struct Camera_Calculation_Update : Message {
     glm::mat4 viewMat4;
@@ -808,6 +849,10 @@ public:
         float nearPlane{ 0.1f };
         float farPlane{ 1000.0f };
         bool isPerspective{ true };
+
+        // Viewport rendering control - only render focused viewport to optimize performance
+        bool renderSceneViewport{ true };   ///< Render Scene viewport (editor camera)
+        bool renderGameViewport{ false };   ///< Render Game viewport (game camera)
     };
 
     /**

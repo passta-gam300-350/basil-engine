@@ -142,6 +142,12 @@ public:
     std::shared_ptr<Shader> GetWorldTextShader() const { return m_WorldTextShader; }
 
     /**
+     * @brief Get shader for world-space UI quad rendering
+     * @return World UI shader, or nullptr if not loaded
+     */
+    std::shared_ptr<Shader> GetWorldUIShader() const { return m_WorldUIShader; }
+
+    /**
      * @brief Load a shader by name
      * @param name Unique shader identifier
      * @param vertPath Path to vertex shader
@@ -218,6 +224,7 @@ private:
     std::shared_ptr<Shader> m_HUDShader;             // HUD/UI screen-space rendering
     std::shared_ptr<Shader> m_TextShader;            // SDF text rendering
     std::shared_ptr<Shader> m_WorldTextShader;       // World-space SDF text rendering
+    std::shared_ptr<Shader> m_WorldUIShader;         // World-space UI quad rendering
     // Named shader cache for custom/additional shaders
     std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
 
@@ -237,6 +244,7 @@ private:
     bool LoadHUDShader();
     bool LoadTextShader();
     bool LoadWorldTextShader();
+    bool LoadWorldUIShader();
 };
 
 #endif // ENGINE_SHADER_LIBRARY_HPP
