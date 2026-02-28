@@ -398,7 +398,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 				}
 
 				desc_name = desc_name + ".desc";
-				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio" || ext_name == ".video") {
+				if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".audio" || ext_name == ".video" || ext_name == ".bin") {
 					continue;
 				}
 				std::lock_guard lg{ m_DescriptorListMtx };
@@ -563,7 +563,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					m_NeedsRescan = true;
 					descriptor_filepath = nfile + ".desc";
 					dir_path = getParentPath(nfile);
-					if (!std::filesystem::exists(descriptor_filepath)) {
+					if (!std::filesystem::exists(descriptor_filepath) && file_ext != ".bin") {
 						rp::ResourceTypeImporterRegistry::CreateDefaultDescriptor(nfile, m_RootPath);
 						{
 							std::lock_guard lg{ m_DescriptorListMtx };
@@ -635,7 +635,7 @@ void AssetManager::RescanDirectory() {
 			std::string desc_name = file_path + ".desc";
 
 			// Skip files we don't process
-			if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl") {
+			if (ext_name == ".texture" || ext_name == ".mesh" || ext_name == ".desc" || ext_name == ".mtl" || ext_name == ".bin") {
 				continue;
 			}
 

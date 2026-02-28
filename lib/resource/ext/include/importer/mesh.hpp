@@ -477,13 +477,13 @@ inline void getNodeMap(const aiScene* scene, std::unordered_map<std::string, int
 // --- main ImportModel ---
 inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescriptor const& desc) {
     Assimp::Importer importer;
-    importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4); // Limit to 4 bones per vertex
+    //importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4); // Limit to 4 bones per vertex
     const aiScene* scene = importer.ReadFile(
         rp::utility::resolve_path(desc.base.m_source),
         aiProcess_Triangulate |
         aiProcess_GenSmoothNormals |
         aiProcess_CalcTangentSpace |
-        aiProcess_LimitBoneWeights |
+        //aiProcess_LimitBoneWeights |
         aiProcess_JoinIdenticalVertices
     );
 
