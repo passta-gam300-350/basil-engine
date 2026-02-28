@@ -88,6 +88,12 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		{
 			continue;
 		}
+		if (!eachAEntity.all<AnimationBoneChannelTransformComponent>()) {
+			eachAEntity.add<AnimationBoneChannelTransformComponent>();
+		}
+		AnimationBoneChannelTransformComponent& boneTransformComponent = eachAEntity.get<AnimationBoneChannelTransformComponent>();
+		animationContainer& cont = *ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+
 		animationComponent.currentTime += animationComponent.ticksPerSecond * dt * animationComponent.state.playbackSpeed;
 		if (animationComponent.currentTime > animationComponent.duration)
 		{
@@ -101,19 +107,15 @@ void animationSystem::FixedUpdate(ecs::world& world)
 				animationComponent.state.isPlaying = false;
 			}
 		}
-		boneChannel* bchannel = ResourceRegistry::Instance().Get<boneChannel>(animationComponent.animationdata.m_guid);
-		bchannel->update(animationComponent.currentTime);
-		glm::mat4 localMatrix = bchannel->getLocalTransform();
-		glm::vec3 scale;
-		glm::quat rotation;
-		glm::vec3 translation;
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(localMatrix, scale, rotation, translation, skew, perspective);
-		transformComponent.m_Translation = translation;
-		transformComponent.m_Rotation = glm::degrees(glm::eulerAngles(rotation));
-		transformComponent.m_Scale = scale;
-		transformComponent.isDirty = true;
+
+		if (boneTransformComponent.bone_trans.size() != cont.channels.size()) {
+			boneTransformComponent.bone_trans.clear();
+		}
+		
+		for (auto& bchannel : cont.channels) {
+			bchannel.update(animationComponent.currentTime);
+			boneTransformComponent.bone_trans[bchannel.getID()] = bchannel.getLocalTransform();
+		}
 	}
 }
 
