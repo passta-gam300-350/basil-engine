@@ -16,6 +16,7 @@ Technology is prohibited.
 
 #include "Input/Button.h"
 #include "ecs/internal/entity.h"
+#include "ecs/internal/world.h"
 
 bool ManagedButton::GetHovered(uint64_t handle)
 {

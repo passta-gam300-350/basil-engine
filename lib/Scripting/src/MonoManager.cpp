@@ -201,16 +201,22 @@ std::vector<std::shared_ptr<CSKlass>> MonoManager::LoadKlassesFromAssembly(Manag
 
 
 void MonoManager::Attach() {
-
 	MonoDomain* rootDomain = mono_get_root_domain();
 	if (mono_domain_get() == rootDomain)
+	{
 		return;
+	}
+
 	mono_thread_attach(rootDomain);
 	mono_domain_set(rootDomain, false);
 }
 
 void MonoManager::Detach() {
 	MonoThread* thread = mono_thread_current();
+	if (!thread)
+	{
+		return;
+	}
 	mono_thread_detach(thread);
 }
 MonoManager::~MonoManager()

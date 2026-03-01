@@ -72,10 +72,9 @@ rp::Guid MonoEntityManager::AddKlass(std::shared_ptr<CSKlass> klass) {
 }
 
 rp::Guid MonoEntityManager::AddKlass(const char* klassName, const char* klassNamespace, bool isBackend) {
-
-	if (false)
-		MonoManager::GetLoader()->Enable_BackEnd();
-	else MonoManager::GetLoader()->Enable_Game();
+	// Current runtime model loads both BasilEngine.dll and GameAssembly.dll into the game domain.
+	// `isBackend` selects the owning managed assembly record, not a separate runtime domain.
+	MonoManager::GetLoader()->Enable_Game();
 
 	auto klass = MonoManager::GetKlass(MonoEntityManager::GetInstance().GetAssembly((isBackend) ? BACKEND_ASSEMBLY_ID : PRIMARY_ASSEMBLY_ID), klassName, klassNamespace);
 
@@ -98,19 +97,20 @@ MonoEntityManager::ScriptID MonoEntityManager::GetEngineAssembly()
 rp::Guid MonoEntityManager::AddInstance(const char* klassName, const char* klassNamespace, void* args[], bool isBackend, uint64_t ID) {
 	// Check if klass exists
 	auto klass = GetNamedKlass(klassName, klassNamespace);
-	if (klass) {
-		auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klass, args);
-		//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klass, args);
+	MonoLoader* loader = MonoManager::GetLoader();
+	// Current runtime model instantiates both engine-facing and game-facing managed objects in gameDomain.
+	// `isBackend` still selects BasilEngine.dll vs GameAssembly.dll metadata, but not the execution domain.
+	MonoDomain* targetDomain = loader->GetGameDomain();
+	loader->Enable_Game();
 
-	} else
+	if (!klass)
 	{
 		AddNamedKlass(klassName, klassNamespace, isBackend);
 	}
 	auto klassPtr = GetNamedKlass(klassName, klassNamespace);
-	auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetActiveDomain(), *klassPtr, args);
-	//auto instance = MonoManager::CreateInstance(MonoManager::GetLoader()->GetGameDomain(), *klassPtr, args);
+	auto instance = MonoManager::CreateInstance(targetDomain, *klassPtr, args);
 
-	if (klass->IsDerivedFrom("BasilEngine.Components.Behavior"))
+	if (klassPtr->IsDerivedFrom("BasilEngine.Components.Behavior"))
 	{
 		CSKlass* NativeClass = GetNamedKlass("NativeObject", "BasilEngine");
 		if (!NativeClass)
