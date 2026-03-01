@@ -63,7 +63,16 @@ void animationSystem::FixedUpdate(ecs::world& world)
 
 		animator* anim = animationComponent.animatorInstance;
 		skeleton& skel = skeletonComponent.skeletonData;
+
+		// Sync component state to animator so editor changes take effect
+		anim->state = animationComponent.state;
+
 		anim->updateAnimation(dt, skel);
+
+		// Sync back so animator changes (e.g. non-loop finished) reflect in editor
+		animationComponent.state = anim->state;
+		animationComponent.currentTime = anim->currentTime;
+
 		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
 	}
 	// SIMPLE ANIMATION //
