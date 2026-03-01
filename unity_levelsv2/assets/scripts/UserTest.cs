@@ -48,12 +48,11 @@ public class UserTest : Behavior
             Logger.Log("Valid KiteController component found!");
             kiteController.windSpeed -= 0.1f;
         }
+        Logger.Log("Oh hey! I added a new edits to it. NOw is changed again!");
     }
 
     public void FixedUpdate()
     {
 
     }
-
-
 }

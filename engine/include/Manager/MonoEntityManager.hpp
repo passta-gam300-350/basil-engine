@@ -53,9 +53,14 @@ class MonoEntityManager {
 	std::unordered_map<std::string, ScriptID> m_NamedKlassMap;
 
 	MonoTypeRegistry m_TypeRegistry;
+	std::string m_PrimaryAssemblyPath;
+	std::string m_BackendAssemblyPath;
 
 	bool preCompiled = false;
 	bool useDefault = true;
+
+	void ResetRuntimeState();
+	void LoadRuntimeAssemblies();
 
 public:
 	
@@ -100,6 +105,7 @@ public:
 	void AddKlassFromAssembly(ScriptID assemblyID);
 
 	void SetPreCompiled(bool val);
+	void ReloadGameDomain();
 
 	MonoTypeRegistry& GetTypeRegistry() {
 		return m_TypeRegistry;

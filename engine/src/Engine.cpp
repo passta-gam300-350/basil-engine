@@ -21,6 +21,7 @@
 #include <glad/glad.h>
 #include "Render/VideoPlayback.hpp"
 #include "System/AnimationSystem.hpp"
+#include "System/ButtonSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
@@ -143,6 +144,7 @@ void Engine::Init(std::string const& cfg ) {
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
 	animationSystem().Init();
+	ButtonSystem::Instance().Init();
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
@@ -206,6 +208,7 @@ void Engine::CoreUpdate() {
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
+	ButtonSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	InputManager::Get_Instance()->Update();
