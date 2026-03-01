@@ -79,6 +79,21 @@ void MonoLoader::Enable_Compiler()
 	AttachAndSwitchDomain(compilerDomain);
 }
 
+void MonoLoader::ReloadGameDomain()
+{
+	MonoDomain* safeDomain = backendDomain ? backendDomain : mono_get_root_domain();
+	AttachAndSwitchDomain(safeDomain);
+
+	if (gameDomain)
+	{
+		mono_domain_unload(gameDomain);
+		gameDomain = nullptr;
+	}
+
+	char name[255] = "GameDomain";
+	gameDomain = mono_domain_create_appdomain(name, nullptr);
+}
+
 void MonoLoader::Exit()
 {
 

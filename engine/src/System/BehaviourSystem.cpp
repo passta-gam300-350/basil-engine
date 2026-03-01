@@ -79,6 +79,7 @@ void BehaviourSystem::Init()
 
 void BehaviourSystem::Reload()
 {
+	spdlog::info("BehaviourSystem: Reloading managed behaviour instances");
 	auto world = Engine::GetWorld();
 
 	auto entities = world.filter_entities<behaviour>();
@@ -109,6 +110,7 @@ void BehaviourSystem::Reload()
 	
 
 	firstRun = true;
+	spdlog::info("BehaviourSystem: Managed behaviour reload complete");
 }
 
 void BehaviourSystem::Update(ecs::world& world, float)

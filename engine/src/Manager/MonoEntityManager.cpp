@@ -27,6 +27,8 @@ Technology is prohibited.
 #include "Manager/MonoReflectionRegistry.hpp"
 #include "Reflection/MonoReflectionBackend.hpp"
 #include "MonoResolver/MonoTypeDescriptor.hpp"
+#include "System/BehaviourSystem.hpp"
+#include "spdlog/spdlog.h"
 
 #include <filesystem>
 #include <iostream>
@@ -331,21 +333,74 @@ void MonoEntityManager::SetPreCompiled(bool val)
 	MonoManager::disableCompile(val);
 }
 
-
-// Invalidate all script id and clear all maps and vectors
-void MonoEntityManager::ClearAll() {
-	m_Assemblies.clear();
-	m_Klasses.clear();
-	for (auto& instance : m_Instances) {
-		instance->Reset();
+void MonoEntityManager::ResetRuntimeState()
+{
+	spdlog::info("MonoEntityManager: Clearing managed runtime state");
+	for (auto& instance : m_Instances)
+	{
+		if (instance)
+		{
+			instance->Reset();
+		}
 	}
+
 	m_Instances.clear();
+	m_Klasses.clear();
+	m_Assemblies.clear();
 	m_AssemblyMap.clear();
 	m_EntityInstanceMap.clear();
 	m_EntityMap.clear();
 	m_NamedKlassMap.clear();
 	m_TypeRegistry = MonoTypeRegistry{};
+	PRIMARY_ASSEMBLY_ID = {};
+	BACKEND_ASSEMBLY_ID = {};
 	MonoReflectionRegistry::Instance().Clear();
+}
+
+void MonoEntityManager::LoadRuntimeAssemblies()
+{
+	if (m_PrimaryAssemblyPath.empty() || m_BackendAssemblyPath.empty())
+	{
+		spdlog::warn("MonoEntityManager: Skipping runtime assembly load because assembly paths are empty");
+		return;
+	}
+
+	spdlog::info("MonoEntityManager: Loading runtime assemblies into game domain");
+	spdlog::info("MonoEntityManager: GameAssembly path: {}", m_PrimaryAssemblyPath);
+	spdlog::info("MonoEntityManager: BasilEngine path: {}", m_BackendAssemblyPath);
+	PRIMARY_ASSEMBLY_ID = AddAssembly(m_PrimaryAssemblyPath.c_str());
+	BACKEND_ASSEMBLY_ID = AddAssembly(m_BackendAssemblyPath.c_str());
+
+	AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
+	AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
+	spdlog::info("MonoEntityManager: Runtime assemblies loaded and klass cache rebuilt");
+}
+
+void MonoEntityManager::ReloadGameDomain()
+{
+	spdlog::info("MonoEntityManager: Starting hot reload");
+	ResetRuntimeState();
+
+	if (MonoLoader* loader = MonoManager::GetLoader())
+	{
+		loader->ReloadGameDomain();
+	}
+
+	LoadRuntimeAssemblies();
+
+	if (BehaviourSystem::Instance().isActive)
+	{
+		spdlog::info("MonoEntityManager: Recreating behaviour script instances after domain reload");
+		BehaviourSystem::Instance().Reload();
+	}
+
+	spdlog::info("MonoEntityManager: Hot reload complete");
+}
+
+
+// Invalidate all script id and clear all maps and vectors
+void MonoEntityManager::ClearAll() {
+	ResetRuntimeState();
 }
 
 const char* scriptBuckets[] = {
@@ -369,6 +424,7 @@ void MonoEntityManager::initialize() {
 }
 
 void MonoEntityManager::StartCompilation() {
+	spdlog::info("MonoEntityManager: StartCompilation triggered");
 	if (useDefault && !preCompiled) {
 		for (const char* bucket : scriptBuckets) {
 			MonoManager::AddSearchDirectories(bucket);
@@ -392,11 +448,15 @@ void MonoEntityManager::StartCompilation() {
 
 	std::string asmAbs = std::filesystem::absolute(asmPath).string();
 	std::string backendAbs = std::filesystem::absolute(backendPath).string();
+	m_PrimaryAssemblyPath = asmAbs;
+	m_BackendAssemblyPath = backendAbs;
 
 	if (preCompiled) {
 		std::cout << "Using pre-compiled assemblies." << std::endl;
+		spdlog::info("MonoEntityManager: Using precompiled managed assemblies");
 	}
 	else {
+		spdlog::info("MonoEntityManager: Compiling managed scripts");
 		MonoManager::StartCompilation();
 
 
@@ -404,12 +464,17 @@ void MonoEntityManager::StartCompilation() {
 
 	if (preCompiled)
 	{
-		PRIMARY_ASSEMBLY_ID = AddAssembly(asmAbs.c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
+		if (m_Assemblies.empty())
+		{
+			spdlog::info("MonoEntityManager: Initial managed assembly load");
+			LoadRuntimeAssemblies();
+		}
+		else
+		{
+			spdlog::info("MonoEntityManager: Precompiled assembly refresh requested");
+			ReloadGameDomain();
+		}
 
-		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
-		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
-		
 		return;
 	}
 
@@ -418,20 +483,28 @@ void MonoEntityManager::StartCompilation() {
 	
 
 	if (logs.empty()) {
-		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
-
-		// Load all klasses from assemblies - Backend first
-		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
-		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
+		if (m_Assemblies.empty())
+		{
+			spdlog::info("MonoEntityManager: Initial managed assembly load after successful compile");
+			LoadRuntimeAssemblies();
+		}
+		else
+		{
+			spdlog::info("MonoEntityManager: Managed compile succeeded, reloading game domain");
+			ReloadGameDomain();
+		}
 	}
 	else {
-		PRIMARY_ASSEMBLY_ID = AddAssembly(asmPath.string().c_str());
-		BACKEND_ASSEMBLY_ID = AddAssembly(backendAbs.c_str());
-
-		// Load all klasses from assemblies - Backend first
-		AddKlassFromAssembly(BACKEND_ASSEMBLY_ID);
-		AddKlassFromAssembly(PRIMARY_ASSEMBLY_ID);
+		if (m_Assemblies.empty())
+		{
+			spdlog::info("MonoEntityManager: Initial managed assembly load with diagnostics present");
+			LoadRuntimeAssemblies();
+		}
+		else
+		{
+			spdlog::info("MonoEntityManager: Managed compile produced diagnostics, reloading game domain");
+			ReloadGameDomain();
+		}
 		std::cout << "Info generated, see logs above." << std::endl;
 	}
 }
