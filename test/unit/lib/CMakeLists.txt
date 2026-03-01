@@ -1,3 +1,4 @@
 add_subdirectory(common)
 add_subdirectory(JobSystem)
 add_subdirectory(Graphics)
+add_subdirectory(resourcelib)
