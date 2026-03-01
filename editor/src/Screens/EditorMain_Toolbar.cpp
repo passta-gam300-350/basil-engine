@@ -59,6 +59,7 @@ void EditorMain::Render_StartStop()
 				PhysicsSystem::Instance().isActive = true;
 				//PhysicsSystem::Instance().DisableObservers();
 				BehaviourSystem::Instance().isActive = true;
+				BehaviourSystem::Instance().Reload();
 				spdlog::info("Physics Active");
 
 

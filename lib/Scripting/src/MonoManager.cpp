@@ -134,6 +134,7 @@ bool MonoManager::disableCompile(bool v)
 void MonoManager::StartCompilation()
 {
 	if (m_PreCompiled) return; // Skip compilation if precompiled
+	m_Compiler->ClearLog();
 	m_Compiler->CollectScripts();
 	m_Compiler->CompileAllScripts();
 	m_Compiler->WaitAll();
