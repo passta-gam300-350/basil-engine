@@ -116,6 +116,121 @@ entities:
           y: 1
           z: 1
   - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 210
+    entity name:
+      name: KeyItem1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.150044188
+        y: 0.150000006
+        z: 0.150000006
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.08787346
+        y: 0.522605956
+        z: 0.775533319
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.894391
+          y: 1
+          z: 0.0427046418
+  - Scene ID:
+      Scene ID: 146
+    entity name:
+      name: footstep_9
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87df67f919e1d9beefb0dcb95
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46877d2caea1c5491392d609
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trash can:
+          guid: 9f6579373688678038425892980
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 18
+    entity name:
+      name: dustbin
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00432447577
+        y: 0.00339634554
+        z: 0.00432538148
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: -4.01942301
+        y: 0.0467115752
+        z: -1.12206256
+    Behaviour:
+      classesName:
+        - Dustbin
+  - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
       isPrimitive: false
@@ -176,111 +291,6 @@ entities:
         y: 0
         z: 0.279230326
   - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 210
-    entity name:
-      name: KeyItem1
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.150044188
-        y: 0.150000006
-        z: 0.150000006
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: -4.08787346
-        y: 0.522605956
-        z: 0.775533319
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 0.894391
-          y: 1
-          z: 0.0427046418
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e46877d2caea1c5491392d609
-        type: 4838001395392124604
-      m_MaterialGuid:
-        trash can:
-          guid: 9f6579373688678038425892980
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 18
-    entity name:
-      name: dustbin
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00432447577
-        y: 0.00339634554
-        z: 0.00432538148
-      m_Rotate:
-        x: 0
-        y: 89.9999771
-        z: 0
-      m_Trans:
-        x: -4.01942301
-        y: 0.0467115752
-        z: -1.12206256
-    Behaviour:
-      classesName:
-        - Dustbin
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e469a764aa833695e340fcc10
-        type: 4838001395392124604
-      m_MaterialGuid:
-        chair_top:
-          guid: 9ea769d734d8442a958a1a5e515
-          type: 175488002581160416
-        PandaMat3:
-          guid: 9ec93bb7a05acf9221ae785acd1
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 16
-    entity name:
-      name: kitchen_chair
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00300000003
-        y: 0.00233920012
-        z: 0.00300000003
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 3.71503711
-        y: 4.89915983e-05
-        z: 1.00314844
-  - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
       isPrimitive: false
@@ -310,6 +320,134 @@ entities:
         x: -3.57602596
         y: 0.0150900045
         z: -0.635036707
+  - Scene ID:
+      Scene ID: 144
+    entity name:
+      name: footstep_7
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87de27659b4ccc0494f5f9313
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 216
+    entity name:
+      name: KeyItem7
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.150044188
+        y: 0.150000006
+        z: 0.150000006
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 5.33506727
+        y: 0.228817672
+        z: -1.32512259
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.894391
+          y: 1
+          z: 0.0427046418
+  - Scene ID:
+      Scene ID: 152
+    entity name:
+      name: ambience_traffic
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2f075dbacc951c03bdff7a6
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.519999981
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -377,7 +515,7 @@ entities:
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -392,36 +530,6 @@ entities:
         x: 0
         y: 0
         z: 0
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
-        type: 4838001395392124604
-      m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 0
-    entity name:
-      name: floor
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0410000011
-        y: 0.0410000011
-        z: 0.0410000011
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0.0616332293
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -461,6 +569,36 @@ entities:
           x: 0.78039217
           y: 0.31764707
           z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e468d7500b81165d791634200
+        type: 4838001395392124604
+      m_MaterialGuid:
+        openPBR_shader1:
+          guid: 98f196a704f962aa1cab73c4773
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 0
+    entity name:
+      name: floor
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0410000011
+        y: 0.0410000011
+        z: 0.0410000011
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0.0616332293
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -555,45 +693,6 @@ entities:
         y: 10.4424181
         z: 0
   - MeshRendererComponent:
-      m_PrimitiveType: "\x01"
-      hasAttachedMaterial: false
-      isPrimitive: true
-      m_MeshGuid:
-        guid: 00
-        type: 4838001395392124604
-      m_MaterialGuid:
-        unnamed slot:
-          guid: 00
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 198
-    entity name:
-      name: Bed_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 1.44914031
-        y: 0.192553043
-        z: 0.727498889
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 5.03568029
-        y: 0.066262424
-        z: -1.47134078
-    MaterialOverridesComponent:
-      floatOverrides:
-        u_MetallicValue: 0
-        u_RoughnessValue: 0.699999988
-      vec3Overrides:
-        u_AlbedoColor:
-          x: 1
-          y: 1
-          z: 1
-  - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
       isPrimitive: false
@@ -627,38 +726,87 @@ entities:
       classesName:
         - TrashCollectable
   - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
       m_MeshGuid:
-        guid: 98e469a764aa833695e340fcc10
+        guid: 00
         type: 4838001395392124604
       m_MaterialGuid:
-        chair_top:
-          guid: 9ea769d734d8442a958a1a5e515
-          type: 175488002581160416
-        PandaMat3:
-          guid: 9ec93bb7a05acf9221ae785acd1
+        unnamed slot:
+          guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 201
+      Scene ID: 203
     entity name:
-      name: kitchen_chair_Copy
+      name: Table_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00300000003
-        y: 0.00233920012
-        z: 0.00300000003
+        x: 0.503033102
+        y: 0.0316193514
+        z: 0.560033143
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 2.9297626
-        y: 4.90596431e-05
-        z: 1.09042406
+        x: 3.35424805
+        y: 0.334143132
+        z: 0.718960643
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 1
+          y: 0.884341598
+          z: 0.5
+  - Scene ID:
+      Scene ID: 139
+    entity name:
+      name: footstep_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87daf7882b91bd917cc59ff20
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -709,33 +857,76 @@ entities:
           guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 203
+      Scene ID: 204
     entity name:
-      name: Table_Copy
+      name: LivingTable
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.503033102
-        y: 0.0316193514
-        z: 0.560033143
+        x: 0.348696977
+        y: 0.141832292
+        z: 1.3430835
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 3.35424805
-        y: 0.334143132
-        z: 0.718960643
+        x: -3.04415417
+        y: 0.0332674533
+        z: 0.222268716
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
         u_RoughnessValue: 0.699999988
       vec3Overrides:
         u_AlbedoColor:
-          x: 1
-          y: 0.884341598
-          z: 0.5
+          x: 0.871886134
+          y: 0.132283017
+          z: 0.0992895439
+  - Scene ID:
+      Scene ID: 140
+    entity name:
+      name: footstep_3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dbb7de9aac1ef1f1102f778
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -802,6 +993,49 @@ entities:
         x: -0.530414999
         y: -0.00197717547
         z: -1.63027954
+  - Scene ID:
+      Scene ID: 141
+    entity name:
+      name: footstep_4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dc675f5beb502e8823e8a41
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -841,56 +1075,6 @@ entities:
     Behaviour:
       classesName:
         - KiteInteractablePoint
-  - Scene ID:
-      Scene ID: 74
-    entity name:
-      name: GameManager
-    Behaviour:
-      classesName:
-        - GameManager
-  - Scene ID:
-      Scene ID: 138
-    entity name:
-      name: footstep_1
-    TransformComponent:
-      m_Scale:
-        x: 1
-        y: 1
-        z: 1
-      m_Rotate:
-        x: 0
-        y: 0
-        z: 0
-      m_Trans:
-        x: 0
-        y: 0
-        z: 0
-    AudioComponent:
-      audioAssetGuid:
-        guid: 3a87d9f77cba090c4d50000925b
-        type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
-      isLooping: false
-      is3D: true
-      isStreaming: false
-      playOnAwake: false
-      filterParams:
-        type: "\x00"
-        cutoffHz: 5000
-        resonance: 1
-        echoDelayMs: 500
-        echoFeedback: 0.5
-      minDistance: 1
-      maxDistance: 1000
-      position:
-        x: 0
-        y: 0
-        z: 0
-      velocity:
-        x: 0
-        y: 0
-        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -930,36 +1114,56 @@ entities:
           x: 1
           y: 0.886274517
           z: 0.501960814
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e46bb75f49fdc9ff91c281af1
-        type: 4838001395392124604
-      m_MaterialGuid:
-        rubbish:
-          guid: 9ccc1257d638a8b8f37818a0553
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 224
+  - Scene ID:
+      Scene ID: 138
     entity name:
-      name: trash16
-    VisibilityComponent:
-      m_IsVisible: true
+      name: footstep_1
     TransformComponent:
       m_Scale:
-        x: 0.00475000031
-        y: 0.00474999985
-        z: 0.00475000031
+        x: 1
+        y: 1
+        z: 1
       m_Rotate:
-        x: -2.89424606e-05
-        y: 41.5233688
-        z: 0.000186942358
+        x: 0
+        y: 0
+        z: 0
       m_Trans:
-        x: 1.29739821
-        y: 0.00139217498
-        z: 1.10326123
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87d9f77cba090c4d50000925b
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 74
+    entity name:
+      name: GameManager
+    Behaviour:
+      classesName:
+        - GameManager
   - Scene ID:
       Scene ID: 96
     entity name:
@@ -1025,37 +1229,31 @@ entities:
       hasAttachedMaterial: true
       isPrimitive: false
       m_MeshGuid:
-        guid: 1227985796f81e4d5c327308919
+        guid: 98e468d7500b81165d791634200
         type: 4838001395392124604
       m_MaterialGuid:
-        tin_plastic_clear:
-          guid: 19df4a572a084171defbcaee86e
-          type: 175488002581160416
-        standardSurface1:
-          guid: 1a1f94a7051a6c8f0740656eafa
-          type: 175488002581160416
-        tin_top:
-          guid: 1a070777bafad0d466ac7f3bc60
+        openPBR_shader1:
+          guid: 98f196a704f962aa1cab73c4773
           type: 175488002581160416
     Scene ID:
-      Scene ID: 41
+      Scene ID: 181
     entity name:
-      name: tin_wafer
+      name: floor_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.00770478416
-        y: 0.0077047511
-        z: 0.00770471618
+        x: 0.0410000011
+        y: 0.0410000011
+        z: 0.0410000011
       m_Rotate:
-        x: 23.3168201
-        y: -1.10990577e-05
-        z: -89.9999466
+        x: 0
+        y: -0
+        z: 0
       m_Trans:
-        x: -0.735861778
-        y: 0.505368292
-        z: -1.39960706
+        x: 4.06751871
+        y: 0
+        z: 0.0616332293
   - RigidBodyComponent:
       motionType: "\x01"
       mass: 1
@@ -1124,83 +1322,12 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: -4.90613937
-        y: 0.415343314
-        z: -0.149395198
+        x: -2.22721076
+        y: 0.415377229
+        z: -1.05303359
     Behaviour:
       classesName:
         - PlayerController3D
-      scriptProperties:
-        - name: PlayerController3D.baseMoveSpeed
-          type: System.Single
-          value: 1.5
-          is_user_type: false
-        - name: PlayerController3D.canCollectTrash
-          type: System.Boolean
-          value: true
-          is_user_type: false
-        - name: PlayerController3D.disabled
-          type: System.Boolean
-          value: false
-          is_user_type: false
-        - name: PlayerController3D.footstepInterval
-          type: System.Single
-          value: 0.5
-          is_user_type: false
-        - name: PlayerController3D.interactionsLocked
-          type: System.Boolean
-          value: false
-          is_user_type: false
-        - name: PlayerController3D.mouseSensitivity
-          type: System.Single
-          value: 0.075
-          is_user_type: false
-        - name: PlayerController3D.onMopEnabled
-          type: System.Boolean
-          value: false
-          is_user_type: false
-        - name: PlayerController3D.speedMultiplier
-          type: System.Single
-          value: 1
-          is_user_type: false
-        - name: PlayerController3D.wantsToCollect
-          type: System.Boolean
-          value: false
-          is_user_type: false
-        - name: PlayerController3D.wantsToMop
-          type: System.Boolean
-          value: false
-          is_user_type: false
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e468d7500b81165d791634200
-        type: 4838001395392124604
-      m_MaterialGuid:
-        openPBR_shader1:
-          guid: 98f196a704f962aa1cab73c4773
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 181
-    entity name:
-      name: floor_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.0410000011
-        y: 0.0410000011
-        z: 0.0410000011
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 4.06751871
-        y: 0
-        z: 0.0616332293
   - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
@@ -1409,6 +1536,122 @@ entities:
           x: 0.5
           y: 0.5
           z: 1
+  - Scene ID:
+      Scene ID: 142
+    entity name:
+      name: footstep_5
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dcf78cea2f96732a3732cf7
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46bb75f49fdc9ff91c281af1
+        type: 4838001395392124604
+      m_MaterialGuid:
+        rubbish:
+          guid: 9ccc1257d638a8b8f37818a0553
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 207
+    entity name:
+      name: trash10
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00475000124
+        y: 0.00474999985
+        z: 0.00475000124
+      m_Rotate:
+        x: 6.92109461e-05
+        y: -75.6163712
+        z: 0.000292897923
+      m_Trans:
+        x: -1.40231049
+        y: 0.00159434276
+        z: -0.707422316
+  - Scene ID:
+      Scene ID: 143
+    entity name:
+      name: footstep_6
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dd9731eb51cc72a38ccca74
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.150000006
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -1467,7 +1710,7 @@ entities:
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -1549,7 +1792,7 @@ entities:
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -1631,7 +1874,7 @@ entities:
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -1713,7 +1956,7 @@ entities:
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -1795,7 +2038,7 @@ entities:
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -2039,102 +2282,6 @@ entities:
           y: 1
           z: 1
   - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e469a764aa833695e340fcc10
-        type: 4838001395392124604
-      m_MaterialGuid:
-        chair_top:
-          guid: 9ea769d734d8442a958a1a5e515
-          type: 175488002581160416
-        PandaMat3:
-          guid: 9ec93bb7a05acf9221ae785acd1
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 199
-    entity name:
-      name: kitchen_chair_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00300000003
-        y: 0.00233920012
-        z: 0.00300000003
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 2.94176102
-        y: -6.10351562e-05
-        z: 0.297821015
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e469a764aa833695e340fcc10
-        type: 4838001395392124604
-      m_MaterialGuid:
-        chair_top:
-          guid: 9ea769d734d8442a958a1a5e515
-          type: 175488002581160416
-        PandaMat3:
-          guid: 9ec93bb7a05acf9221ae785acd1
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 200
-    entity name:
-      name: kitchen_chair_Copy
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00300000003
-        y: 0.00233920012
-        z: 0.00300000003
-      m_Rotate:
-        x: 0
-        y: -0
-        z: 0
-      m_Trans:
-        x: 3.78704786
-        y: 0
-        z: 0.275569558
-  - MeshRendererComponent:
-      m_PrimitiveType: "\x00"
-      hasAttachedMaterial: true
-      isPrimitive: false
-      m_MeshGuid:
-        guid: 98e46bb75f49fdc9ff91c281af1
-        type: 4838001395392124604
-      m_MaterialGuid:
-        rubbish:
-          guid: 9ccc1257d638a8b8f37818a0553
-          type: 175488002581160416
-    Scene ID:
-      Scene ID: 207
-    entity name:
-      name: trash10
-    VisibilityComponent:
-      m_IsVisible: true
-    TransformComponent:
-      m_Scale:
-        x: 0.00475000124
-        y: 0.00474999985
-        z: 0.00475000124
-      m_Rotate:
-        x: 6.92109461e-05
-        y: -75.6163712
-        z: 0.000292897923
-      m_Trans:
-        x: -1.40231049
-        y: 0.00159434276
-        z: -0.707422316
-  - MeshRendererComponent:
       m_PrimitiveType: "\x01"
       hasAttachedMaterial: false
       isPrimitive: true
@@ -2146,33 +2293,33 @@ entities:
           guid: 00
           type: 175488002581160416
     Scene ID:
-      Scene ID: 216
+      Scene ID: 198
     entity name:
-      name: KeyItem7
+      name: Bed_Copy
     VisibilityComponent:
       m_IsVisible: true
     TransformComponent:
       m_Scale:
-        x: 0.150044188
-        y: 0.150000006
-        z: 0.150000006
+        x: 1.44914031
+        y: 0.192553043
+        z: 0.727498889
       m_Rotate:
         x: 0
         y: -0
         z: 0
       m_Trans:
-        x: 5.33506727
-        y: 0.228817672
-        z: -1.32512259
+        x: 5.03568029
+        y: 0.066262424
+        z: -1.47134078
     MaterialOverridesComponent:
       floatOverrides:
         u_MetallicValue: 0
         u_RoughnessValue: 0.699999988
       vec3Overrides:
         u_AlbedoColor:
-          x: 0.894391
+          x: 1
           y: 1
-          z: 0.0427046418
+          z: 1
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -2353,6 +2500,36 @@ entities:
         x: -2.46746063
         y: 0.00139000185
         z: 0.923225999
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 98e46bb75f49fdc9ff91c281af1
+        type: 4838001395392124604
+      m_MaterialGuid:
+        rubbish:
+          guid: 9ccc1257d638a8b8f37818a0553
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 224
+    entity name:
+      name: trash16
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00475000031
+        y: 0.00474999985
+        z: 0.00475000031
+      m_Rotate:
+        x: -2.89424606e-05
+        y: 41.5233688
+        z: 0.000186942358
+      m_Trans:
+        x: 1.29739821
+        y: 0.00139217498
+        z: 1.10326123
   - MeshRendererComponent:
       m_PrimitiveType: "\x00"
       hasAttachedMaterial: true
@@ -2972,24 +3149,21 @@ entities:
         y: -0
         z: 0
       m_Trans:
-        x: 0
-        y: 0.57510072
-        z: 0
-    Behaviour:
-      classesName:
-        - PlayAudio
+        x: -0.127342895
+        y: 0.451047838
+        z: -0.0630957335
     AudioComponent:
       audioAssetGuid:
-        guid: 3ace2db7c809ca2f573f49919e7
+        guid: 00
         type: 17099568057112876377
       group: "\x00"
-      volume: 1.18850219
-      isLooping: true
-      is3D: false
+      volume: 1
+      isLooping: false
+      is3D: true
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: "\x00"
+        type: 0
         cutoffHz: 5000
         resonance: 1
         echoDelayMs: 500
@@ -2997,9 +3171,9 @@ entities:
       minDistance: 1
       maxDistance: 1000
       position:
-        x: 0
-        y: 0.57510072
-        z: 0
+        x: -0.127342895
+        y: 0.451047838
+        z: -0.0630957335
       velocity:
         x: 0
         y: 0
