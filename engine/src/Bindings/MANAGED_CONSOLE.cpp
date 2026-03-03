@@ -33,8 +33,21 @@ void ManagedConsole::Shutdown() {
 void ManagedConsole::LogInfo(MonoString* mono_message) {
 	
 	auto message = mono_string_to_utf8(mono_message);
+	LogInfo(std::string{ message ? message : "" });
+	mono_free(message);
+}
+void ManagedConsole::LogWarning(MonoString* mono_message) {
+	auto message = mono_string_to_utf8(mono_message);
+	LogWarning(std::string{ message ? message : "" });
+	mono_free(message);
+}
+void ManagedConsole::LogError(MonoString* mono_message) {
+	auto message = mono_string_to_utf8(mono_message);
+	LogError(std::string{ message ? message : "" });
+	mono_free(message);
+}
 
-
+void ManagedConsole::LogInfo(std::string const& message) {
 	auto it = std::find_if(s_Messages.begin(), s_Messages.end(), [&message](const std::pair<int, Message>& msg) {
 		return msg.second.type == Message::Type::Info && msg.second.content == message;
 	});
@@ -43,12 +56,11 @@ void ManagedConsole::LogInfo(MonoString* mono_message) {
 		s_Messages.push_back({ 1, { Message::Type::Info, message } });
 	}
 	else {
-		it->first += 1; // Increment count
+		it->first += 1;
 	}
-	mono_free(message);
 }
-void ManagedConsole::LogWarning(MonoString* mono_message) {
-	auto message = mono_string_to_utf8(mono_message);
+
+void ManagedConsole::LogWarning(std::string const& message) {
 	auto it = std::find_if(s_Messages.begin(), s_Messages.end(), [&message](const std::pair<int, Message>& msg) {
 		return msg.second.type == Message::Type::Warning && msg.second.content == message;
 	});
@@ -57,12 +69,11 @@ void ManagedConsole::LogWarning(MonoString* mono_message) {
 		s_Messages.push_back({ 1, { Message::Type::Warning, message } });
 	}
 	else {
-		it->first += 1; // Increment count
+		it->first += 1;
 	}
-	mono_free(message);
 }
-void ManagedConsole::LogError(MonoString* mono_message) {
-	auto message = mono_string_to_utf8(mono_message);
+
+void ManagedConsole::LogError(std::string const& message) {
 	auto it = std::find_if(s_Messages.begin(), s_Messages.end(), [&message](const std::pair<int, Message>& msg) {
 		return msg.second.type == Message::Type::Error && msg.second.content == message;
 	});
@@ -71,10 +82,8 @@ void ManagedConsole::LogError(MonoString* mono_message) {
 		s_Messages.push_back({ 1, { Message::Type::Error, message } });
 	}
 	else {
-		it->first += 1; // Increment count
+		it->first += 1;
 	}
-
-	mono_free(message);
 }
 
 

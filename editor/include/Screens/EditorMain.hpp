@@ -32,6 +32,7 @@ Technology is prohibited.
 #include "Profiler/EDITOR_PROFILER.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <atomic>
 #include <components/behaviour.hpp>
 #include "Render/Camera.h"
 #include "Service/FileService.hpp"
@@ -141,6 +142,7 @@ public:
 	void Render_EngineConsole();     // Engine Console panel (spdlog)
 	void Render_Profiler();          // Profiler panel
 	void Render_PhysicsDebugPanel(); // Physics debug panel
+	void Render_ScriptCompileModal();
 
 	// ========================================================================
 	// ASSET BROWSER
@@ -228,6 +230,12 @@ private:
 	// ASSET MANAGEMENT
 	// ========================================================================
 	std::unique_ptr<AssetManager> m_AssetManager;
+	bool m_ScriptHotReloadPending = false;
+	bool m_ScriptHotReloadDeferredUntilEdit = false;
+	bool m_ShowScriptCompileModal = false;
+	std::atomic<bool> m_ScriptHotReloadInFlight = false;
+	std::chrono::steady_clock::time_point m_LastScriptChangeTime{};
+	static constexpr std::chrono::milliseconds m_ScriptHotReloadDebounce{ 750 };
 
 	// Prefab override detection
 	PrefabOverrideContext m_PrefabContext;

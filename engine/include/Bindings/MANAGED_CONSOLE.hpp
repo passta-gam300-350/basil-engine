@@ -57,6 +57,9 @@ public:
 	static void LogInfo(MonoString* message);
 	static void LogWarning(MonoString* message);
 	static void LogError(MonoString* message);
+	static void LogInfo(std::string const& message);
+	static void LogWarning(std::string const& message);
+	static void LogError(std::string const& message);
 
 
 	static std::vector<std::pair<int, Message>> TryGetMessages(unsigned filters=0x7);

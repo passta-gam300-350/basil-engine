@@ -10,6 +10,7 @@
 #include "System/Audio.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
+#include "Input/Button.h"
 
 #include "System/BehaviourSystem.hpp"
 #include "Profiler/profiler.hpp"
@@ -374,6 +375,15 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				//}
 			}
 		}
+		else if (!is_delete) {
+			auto metaIt = ReflectionRegistry::types().find(type_id);
+			if (metaIt != ReflectionRegistry::types().end()) {
+				auto emplaceFunc = metaIt->second.func("emplace"_tn);
+				if (emplaceFunc) {
+					emplaceFunc.invoke({}, entt::forward_as_meta(w.impl.get_registry()), enttntt);
+				}
+			}
+		}
 		//else {
 		//	spdlog::warn("EngineService: No storage found for type {} (type_id={})",
 		//	             componentName, type_id);
@@ -571,6 +581,21 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 				temp.emplace_back(std::make_pair(it->first, type_name_reg[it->second.id()]));
 			}
 		}
+
+		auto internalIt = ReflectionRegistry::InternalID().find(entt::type_index<Button>::value());
+		if (internalIt != ReflectionRegistry::InternalID().end()) {
+			const ReflectionRegistry::TypeID buttonTypeId = internalIt->second;
+			const bool alreadyListed = std::find_if(temp.begin(), temp.end(),
+				[buttonTypeId](const auto& entry) { return entry.first == buttonTypeId; }) != temp.end();
+
+			if (!alreadyListed) {
+				auto typeIt = type_reg.find(buttonTypeId);
+				if (typeIt != type_reg.end()) {
+					temp.emplace_back(buttonTypeId, type_name_reg[typeIt->second.id()]);
+				}
+			}
+		}
+
 		return temp;
 	}()};
 	return s_id_type_name_list;

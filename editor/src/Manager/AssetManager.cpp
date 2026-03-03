@@ -51,6 +51,32 @@ static std::map<rp::BasicIndexedGuid, std::string> reverseMapGuid(const std::map
 	return r;
 }
 
+namespace {
+bool EndsWith(const std::string& value, const std::string& suffix)
+{
+	return value.size() >= suffix.size() &&
+		value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool IsGeneratedScriptArtifact(const std::filesystem::path& path)
+{
+	const std::string normalized = path.lexically_normal().generic_string();
+	const std::string filename = path.filename().string();
+
+	if (normalized.find("/managed/") != std::string::npos ||
+		normalized.find("/bin/") != std::string::npos ||
+		normalized.find("/obj/") != std::string::npos) {
+		return true;
+	}
+
+	return EndsWith(filename, ".g.cs") ||
+		EndsWith(filename, ".designer.cs") ||
+		EndsWith(filename, ".csproj") ||
+		EndsWith(filename, ".dll") ||
+		EndsWith(filename, ".pdb");
+}
+}
+
 bool hideFolder(const std::wstring& path) {
 	DWORD attrs = GetFileAttributesW(path.c_str());
 	if (attrs == INVALID_FILE_ATTRIBUTES) return false;
@@ -497,6 +523,7 @@ void AssetManager::FileIndexingWorkerLoop() {
 					continue;
 				}
 
+				const std::filesystem::path changedPath{ nfile };
 				std::string file_ext{ getFileExtension(nfile) };
 
 				// Legacy stuff, we needd to handle generated descriptors as well
@@ -513,6 +540,10 @@ void AssetManager::FileIndexingWorkerLoop() {
 				switch (fni->Action) {
 				case FILE_ACTION_MODIFIED:
 				case FILE_ACTION_ADDED:
+					if (IsGeneratedScriptArtifact(changedPath)) {
+						break;
+					}
+
 					if (fni->Action == FILE_ACTION_MODIFIED) {
 						std::wcout << L"Modified: " << filename << "\n";
 					}
@@ -520,6 +551,15 @@ void AssetManager::FileIndexingWorkerLoop() {
 						std::wcout << L"New file: " << filename << "\n";
 					}
 					if (file_ext.empty()) {
+						break;
+					}
+
+					if (file_ext == ".cs") {
+						std::wcout << L"C# script changed: " << filename << "\n";
+						std::lock_guard lg{ m_ChangedScriptsMtx };
+						if (std::find(m_ChangedScripts.begin(), m_ChangedScripts.end(), nfile) == m_ChangedScripts.end()) {
+							m_ChangedScripts.push_back(nfile);
+						}
 						break;
 					}
 
@@ -665,5 +705,12 @@ std::vector<std::string> AssetManager::GetAndClearChangedPrefabs() {
 	std::lock_guard lg{ m_ChangedPrefabsMtx };
 	std::vector<std::string> changed = std::move(m_ChangedPrefabs);
 	m_ChangedPrefabs.clear();
+	return changed;
+}
+
+std::vector<std::string> AssetManager::GetAndClearChangedScripts() {
+	std::lock_guard lg{ m_ChangedScriptsMtx };
+	std::vector<std::string> changed = std::move(m_ChangedScripts);
+	m_ChangedScripts.clear();
 	return changed;
 }

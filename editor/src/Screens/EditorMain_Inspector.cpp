@@ -1,6 +1,7 @@
 #include "Screens/EditorMain.hpp"
 #include "System/PrefabSystem.hpp"
 #include "System/Audio.hpp"
+#include "Input/Button.h"
 
 #include <Scene/Scene.hpp>
 #include <Component/Behaviour.hpp>
@@ -355,6 +356,13 @@ void EditorMain::Render_Components()
 	if (hudIt != internal_type_map.end())
 	{
 		hud_component = hudIt->second;
+	}
+
+	ReflectionRegistry::TypeID button_component{};
+	auto buttonIt = internal_type_map.find(entt::type_index<Button>::value());
+	if (buttonIt != internal_type_map.end())
+	{
+		button_component = buttonIt->second;
 	}
 
 	ReflectionRegistry::TypeID mesh_component{};
@@ -785,6 +793,16 @@ void EditorMain::Render_Components()
 					if (!hasTexture && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
 						ImGui::SetTooltip("Assign a texture to use Set Native Size");
 					}
+				}
+			}
+
+			if (button_component && type_id == button_component) {
+				if (Button* buttonComp = reinterpret_cast<Button*>(uptr.get())) {
+					ImGui::Separator();
+					ImGui::Text("Runtime Status");
+					ImGui::Text("Hovered: %s", buttonComp->hovered ? "Yes" : "No");
+					ImGui::Text("Pressed: %s", buttonComp->pressed ? "Yes" : "No");
+					ImGui::TextDisabled("Status is updated by ButtonSystem at runtime.");
 				}
 			}
 
