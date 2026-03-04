@@ -600,6 +600,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 				GuizmoEntityTransform = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformComponent>(selected) : nullptr;
 				GuizmoEntityTransformMTX = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformMtxComponent>(selected) : nullptr;
 				GuizmoEntityParentTransformMTX = SceneGraph::HasParent(selected) ? SceneGraph::GetParent(selected).all<TransformMtxComponent>() ? &SceneGraph::GetParent(selected).get<TransformMtxComponent>() : nullptr : nullptr;
+				Engine::SyncEntityTransformToPhysics(selected);
 			}
 			});
 

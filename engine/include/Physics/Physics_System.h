@@ -126,12 +126,19 @@ public:
 	JPH::BodyID GetBodyID(ecs::entity entity) const;
 
 	// ========================================================================
+	// ECS QUERIES
+	// ========================================================================
+	bool HasCollider(ecs::entity ent);
+	CollisionBase* GetColliderBasePtr(ecs::entity ent);
+
+	// ========================================================================
 	// TRANSFORM SYNCHRONIZATION
 	// ========================================================================
 	void SyncTransformsToPhysics(ecs::world& world);        // 1. Syncs transform data from ecs to internal jolt data
 	                                                        // 2. Calls the update for jolt's internal engine, collision call back are also called by jolt when it detect collision
 	void SyncTransformsFromPhysics(ecs::world& world);      // 3. Syncs the new internal jolt data to transform
 	void ProcessCollisionEvents(ecs::world& world);         // 4. Process the queue of collision events to prevent conflict like deleting an entity if it is the result of a collision callback
+	void SyncEntityTransformsToPhysics(ecs::entity ent);
 
 	// ========================================================================
 	// OBSERVER SYSTEM

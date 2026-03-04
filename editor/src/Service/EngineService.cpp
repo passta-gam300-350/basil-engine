@@ -253,6 +253,10 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
 
+				if (meta_type.info().hash() == entt::type_hash<TransformComponent>::value()) {
+					Engine::SyncEntityTransformToPhysics(inspected_entity);
+				}
+
 				// Special handling for AudioComponent: Load sound from GUID if needed
 				if (meta_type.info().hash() == entt::type_hash<AudioComponent>::value()) {
 					AudioComponent* audioComp = static_cast<AudioComponent*>(dest);

@@ -289,6 +289,36 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
     }
 }
 
+void PhysicsSystem::SyncEntityTransformsToPhysics(ecs::entity ent) {
+    if (!m_bodyInterface) return;
+    
+    if (ent.all<TransformComponent>())
+    {
+        if (!HasCollider(ent)) { return; }
+        auto Transform {ent.get<TransformComponent>()};
+        [](ecs::entity e, glm::vec3 scl) {
+            if (e.all<BoxCollider>()) {
+                e.get<BoxCollider>().size = scl;
+            }
+            if (e.all<SphereCollider>()) {
+                auto& sph = e.get<SphereCollider>();
+                sph.radius = 0.5f * std::max({ scl.x, scl.y, scl.z });
+            }
+            if (e.all<CapsuleCollider>()) {
+                auto& cap = e.get<CapsuleCollider>();
+                float sclfx = std::max({ scl.x, scl.z });
+                cap.SetRadius(0.5f * sclfx);
+                cap.SetHeight(1.f * scl.y);
+            }
+            if (e.all<MeshCollider>()) {
+                //e.get<MeshCollider>(); //not supported
+            }
+            } (ent, Transform.m_Scale);
+        m_bodyInterface->SetShape(m_entityToBodyID[ent], CreateShapeFromCollider(ent), true, JPH::EActivation::Activate);
+        m_bodyInterface->SetPositionAndRotation(m_entityToBodyID[ent], PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerDegreesToJoltQuat(Transform.m_Rotation), JPH::EActivation::Activate);
+    }
+}
+
 void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
 
@@ -1606,6 +1636,27 @@ void PhysicsSystem::RecreateBodyWithNewShape(ecs::entity entity, ecs::world& wor
 
         spdlog::debug("PhysicsSystem: Recreated body {} for {} for entity {}", oldBodyID.GetIndexAndSequenceNumber(), newBodyID.GetIndexAndSequenceNumber(), entity.get_uuid());
     }
+}
+
+
+bool PhysicsSystem::HasCollider(ecs::entity ent) {
+    return ent.any<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>();
+}
+
+CollisionBase* PhysicsSystem::GetColliderBasePtr(ecs::entity ent) {
+    if (ent.all<BoxCollider>()) {
+        return &ent.get<BoxCollider>();
+    }
+    if (ent.all<SphereCollider>()) {
+        return &ent.get<SphereCollider>();
+    }
+    if (ent.all<CapsuleCollider>()) {
+        return &ent.get<CapsuleCollider>();
+    }
+    if (ent.all<MeshCollider>()) {
+        return &ent.get<MeshCollider>();
+    }
+    return nullptr;
 }
 
 // =============================================================================

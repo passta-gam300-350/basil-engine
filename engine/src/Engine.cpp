@@ -568,6 +568,10 @@ void Engine::SyncActiveSceneRenderSettings()
 	renderSystem.m_SceneRenderer->SetExposureClampRange(settings.exposureMin, settings.exposureMax);
 }
 
+void Engine::SyncEntityTransformToPhysics(ecs::entity entity) {
+	PhysicsSystem::Instance().SyncEntityTransformsToPhysics(entity);
+}
+
 bool loadEmbeddedIcon(GLFWimage& image, HINSTANCE hInstance, LPCSTR resourceName) {
 	// Find the group icon resource
 	HRSRC hRes = FindResourceA(hInstance, resourceName, RT_GROUP_ICON);
