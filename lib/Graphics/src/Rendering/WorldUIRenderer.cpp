@@ -171,6 +171,10 @@ void WorldUIRenderer::UpdateBatchSSBO(TextureBatch& batch)
             GL_DYNAMIC_DRAW
         );
     } else {
+        if (instanceDataSize > batch.ssbo->GetSize()) {
+            uint32_t newSize = instanceDataSize * 2;
+            batch.ssbo->Resize(newSize);
+		}
         batch.ssbo->SetData(batch.instances.data(), instanceDataSize, 0);
     }
 
