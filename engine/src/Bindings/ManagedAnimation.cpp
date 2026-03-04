@@ -33,6 +33,10 @@ void ManagedAnimation::Play(uint64_t handle)
     {
         anim.animatorInstance->play();
     }
+    else
+    {
+        anim.state.isPlaying = true;
+    }
 }
 
 void ManagedAnimation::Pause(uint64_t handle)
@@ -46,6 +50,10 @@ void ManagedAnimation::Pause(uint64_t handle)
     if (anim.animatorInstance)
     {
         anim.animatorInstance->pause();
+    }
+    else
+    {
+        anim.state.isPlaying = false;
     }
 }
 
@@ -61,6 +69,11 @@ void ManagedAnimation::Stop(uint64_t handle)
     {
         anim.animatorInstance->stop();
     }
+    else
+    {
+        anim.state.isPlaying = false;
+        anim.currentTime = 0.0f;
+    }
 }
 
 void ManagedAnimation::SetLoop(uint64_t handle, bool loop)
@@ -74,6 +87,10 @@ void ManagedAnimation::SetLoop(uint64_t handle, bool loop)
     if (anim.animatorInstance)
     {
         anim.animatorInstance->setLoop(loop);
+    }
+    else
+    {
+        anim.state.loop = loop;
     }
 }
 
@@ -89,6 +106,10 @@ void ManagedAnimation::SetPlaybackSpeed(uint64_t handle, float speed)
     {
         anim.animatorInstance->setPlayBackSpeed(speed);
     }
+    else
+    {
+        anim.state.playbackSpeed = speed;
+    }
 }
 
 bool ManagedAnimation::IsAnimationFinished(uint64_t handle)
@@ -103,7 +124,8 @@ bool ManagedAnimation::IsAnimationFinished(uint64_t handle)
     {
         return anim.animatorInstance->isAnimationFinished();
     }
-    return true;
+    // Simple animation: finished when non-looping and at/past duration
+    return (!anim.state.loop) && (anim.currentTime >= anim.duration);
 }
 
 bool ManagedAnimation::PlayAnimation(uint64_t handle, MonoString* animationName, bool shouldLoop)
