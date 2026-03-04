@@ -90,6 +90,20 @@ std::optional<Scene> Scene::LoadYAMLNode(YAML::Node const& nd) {
 			scn.m_renderSettings.exposureMin = renderSettings["exposure_min"].as<float>();
 		if (renderSettings["exposure_max"])
 			scn.m_renderSettings.exposureMax = renderSettings["exposure_max"].as<float>();
+
+		// Deserialize fog settings
+		if (renderSettings["fog"]) {
+			const auto& fogNode = renderSettings["fog"];
+			if (fogNode["type"])    scn.m_renderSettings.fog.type    = static_cast<FogType>(fogNode["type"].as<int>());
+			if (fogNode["start"])   scn.m_renderSettings.fog.start   = fogNode["start"].as<float>();
+			if (fogNode["end"])     scn.m_renderSettings.fog.end     = fogNode["end"].as<float>();
+			if (fogNode["density"]) scn.m_renderSettings.fog.density = fogNode["density"].as<float>();
+			if (fogNode["color"] && fogNode["color"].size() == 3) {
+				scn.m_renderSettings.fog.color.r = fogNode["color"][0].as<float>();
+				scn.m_renderSettings.fog.color.g = fogNode["color"][1].as<float>();
+				scn.m_renderSettings.fog.color.b = fogNode["color"][2].as<float>();
+			}
+		}
 	}
 
 	YAML::Node const& entities{ nd["entities"] };
