@@ -21,6 +21,7 @@
 #include <glad/glad.h>
 #include "Render/VideoPlayback.hpp"
 #include "System/AnimationSystem.hpp"
+#include "System/ButtonSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
@@ -143,6 +144,7 @@ void Engine::Init(std::string const& cfg ) {
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
 	animationSystem().Init();
+	ButtonSystem::Instance().Init();
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
@@ -206,6 +208,7 @@ void Engine::CoreUpdate() {
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
+	ButtonSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	InputManager::Get_Instance()->Update();
@@ -563,6 +566,23 @@ void Engine::SyncActiveSceneRenderSettings()
 	renderSystem.m_SceneRenderer->SetBloomStrength(settings.bloomStrength);
 	renderSystem.m_SceneRenderer->SetToneMappingMethod(settings.toneMapMethod);
 	renderSystem.m_SceneRenderer->SetExposureClampRange(settings.exposureMin, settings.exposureMax);
+
+	// Sync fog settings to renderer
+	const auto& fog = settings.fog;
+	switch (fog.type) {
+		case FogType::Linear:
+			renderSystem.m_SceneRenderer->SetLinearFog(fog.start, fog.end, fog.color);
+			break;
+		case FogType::Exponential:
+			renderSystem.m_SceneRenderer->SetExpFog(fog.end, fog.density, fog.color);
+			break;
+		case FogType::ExponentialSquared:
+			renderSystem.m_SceneRenderer->SetExpSquaredFog(fog.end, fog.density, fog.color);
+			break;
+		default:
+			renderSystem.m_SceneRenderer->DisableFog();
+			break;
+	}
 }
 
 bool loadEmbeddedIcon(GLFWimage& image, HINSTANCE hInstance, LPCSTR resourceName) {

@@ -51,6 +51,8 @@ struct AssetManager {
 	// Prefab synchronization tracking
 	std::vector<std::string> m_ChangedPrefabs;  ///< List of prefab file paths that have changed
 	std::mutex m_ChangedPrefabsMtx;              ///< Mutex for thread-safe access to changed prefabs list
+	std::vector<std::string> m_ChangedScripts;   ///< List of C# source files that have changed
+	std::mutex m_ChangedScriptsMtx;              ///< Mutex for thread-safe access to changed scripts list
 
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
@@ -114,6 +116,7 @@ struct AssetManager {
 
 	// Prefab synchronization methods
 	std::vector<std::string> GetAndClearChangedPrefabs();
+	std::vector<std::string> GetAndClearChangedScripts();
 };
 
 #endif

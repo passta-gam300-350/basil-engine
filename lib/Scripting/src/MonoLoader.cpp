@@ -24,6 +24,27 @@ Technology is prohibited.
 #include <cassert>
 #include <mono/metadata/threads.h>
 
+namespace
+{
+	void AttachAndSwitchDomain(MonoDomain* domain)
+	{
+		if (!domain)
+		{
+			return;
+		}
+
+		MonoThread* currentThread = mono_thread_current();
+		if (!currentThread)
+		{
+			mono_thread_attach(mono_get_root_domain());
+		}
+
+		if (mono_domain_get() != domain)
+		{
+			mono_domain_set(domain, false);
+		}
+	}
+}
 
 void MonoLoader::Initialize(std::string const& assembly_dir, std::string const& config_dir)
 {
@@ -37,7 +58,7 @@ void MonoLoader::Initialize(std::string const& assembly_dir, std::string const& 
 	char name2[255] = "CompilerDomain";
 	compilerDomain = mono_domain_create_appdomain(name2, nullptr);
 
-	mono_thread_attach(backendDomain);
+	AttachAndSwitchDomain(backendDomain);
 
 	
 
@@ -46,26 +67,31 @@ void MonoLoader::Initialize(std::string const& assembly_dir, std::string const& 
 
 void MonoLoader::Enable_BackEnd()
 {
-	MonoThread* currentThread = mono_thread_current();
-	if (!currentThread)
-	{
-		currentThread = mono_thread_attach(mono_get_root_domain());
-	}
-	mono_domain_set(backendDomain, false);
+	AttachAndSwitchDomain(backendDomain);
 }
 
 void MonoLoader::Enable_Game()
 {
-	MonoThread* currentThread = mono_thread_current();
-	if (!currentThread)
-	{
-		currentThread = mono_thread_attach(mono_get_root_domain());
-	}
-	mono_domain_set(gameDomain, false);
+	AttachAndSwitchDomain(gameDomain);
 }
 void MonoLoader::Enable_Compiler()
 {
-	mono_domain_set(compilerDomain, false);
+	AttachAndSwitchDomain(compilerDomain);
+}
+
+void MonoLoader::ReloadGameDomain()
+{
+	MonoDomain* safeDomain = backendDomain ? backendDomain : mono_get_root_domain();
+	AttachAndSwitchDomain(safeDomain);
+
+	if (gameDomain)
+	{
+		mono_domain_unload(gameDomain);
+		gameDomain = nullptr;
+	}
+
+	char name[255] = "GameDomain";
+	gameDomain = mono_domain_create_appdomain(name, nullptr);
 }
 
 void MonoLoader::Exit()

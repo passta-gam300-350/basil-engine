@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 #include <GLFW/glfw3.h>
+#include <atomic>
 #include <string>
 #include <unordered_map>
 #include <iostream>
@@ -379,6 +380,7 @@ class InputManager
         * @param[out] ypos A reference to a float representing the y-coordinate.
         */
         void Get_MousePosition(float& xpos, float& ypos) const;
+        void Set_MouseOverride(float xpos, float ypos, bool enabled);
 
         /**
         * @brief Retrieves the current scroll offset.
@@ -454,6 +456,9 @@ class InputManager
         // To switch between gameplay and UI input
         InputContext currentContext = InputContext::Gameplay;
         bool mouseConsumed = false;
+        std::atomic<bool> mouseOverrideEnabled{ false };
+        std::atomic<float> mouseOverrideX{ 0.0f };
+        std::atomic<float> mouseOverrideY{ 0.0f };
 
         // UI
         /*

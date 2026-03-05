@@ -20,6 +20,7 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include "Engine.hpp"
 #include <rsc-core/rp.hpp>
+#include <Utility/FogData.h>
 
 namespace {
 	static constexpr const char CurrentSceneVersion[] = "v0.0.1";
@@ -59,6 +60,9 @@ struct SceneRenderSettings {
 	int toneMapMethod = 2;                         // Tone mapping method: 0=None, 1=Reinhard, 2=ACES, 3=Exposure
 	float exposureMin = 0.1f;                      // HDR exposure minimum clamp
 	float exposureMax = 2.0f;                      // HDR exposure maximum clamp
+
+	// Atmospheric fog
+	FogData fog;                                   // Fog mode + parameters (disabled by default)
 };
 
 struct SceneComponent {
@@ -182,6 +186,19 @@ struct Scene
 		renderSettings["tone_map_method"] = m_renderSettings.toneMapMethod;
 		renderSettings["exposure_min"] = m_renderSettings.exposureMin;
 		renderSettings["exposure_max"] = m_renderSettings.exposureMax;
+
+		// Serialize fog settings
+		YAML::Node fogNode;
+		fogNode["type"]    = static_cast<int>(m_renderSettings.fog.type);
+		fogNode["start"]   = m_renderSettings.fog.start;
+		fogNode["end"]     = m_renderSettings.fog.end;
+		fogNode["density"] = m_renderSettings.fog.density;
+		YAML::Node fogColor;
+		fogColor.push_back(m_renderSettings.fog.color.r);
+		fogColor.push_back(m_renderSettings.fog.color.g);
+		fogColor.push_back(m_renderSettings.fog.color.b);
+		fogNode["color"]   = fogColor;
+		renderSettings["fog"] = fogNode;
 
 		root["render_settings"] = renderSettings;
 

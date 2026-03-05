@@ -207,6 +207,10 @@ void HUDRenderer::UpdateBatchSSBO(TextureBatch& batch)
         );
     } else {
         // Update existing SSBO
+        if (instanceDataSize > batch.ssbo->GetSize()) {
+            uint32_t newSize = instanceDataSize * 2;
+            batch.ssbo->Resize(newSize);
+		}
         batch.ssbo->SetData(batch.instances.data(), instanceDataSize, 0);
     }
 

@@ -23,8 +23,63 @@ Technology is prohibited.
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/debug-helpers.h>
+#include <mono/metadata/object.h>
 #include <mono/metadata/threads.h>
 
+namespace {
+bool EndsWith(const std::string& value, const std::string& suffix)
+{
+	return value.size() >= suffix.size() &&
+		value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+std::string MonoObjectToString(MonoObject* object)
+{
+	if (!object) {
+		return {};
+	}
+
+	MonoObject* stringifyException = nullptr;
+	MonoString* monoText = mono_object_to_string(object, &stringifyException);
+	if (!monoText || stringifyException) {
+		return "Managed exception occurred during script compilation.";
+	}
+
+	char* utf8 = mono_string_to_utf8(monoText);
+	if (!utf8) {
+		return "Managed exception occurred during script compilation.";
+	}
+
+	std::string result = utf8;
+	mono_free(utf8);
+	return result;
+}
+
+bool InvokeCompilerMethod(MonoMethod* method, void** args, std::string& failure)
+{
+	MonoObject* exception = nullptr;
+	MonoObject* result = mono_runtime_invoke(method, nullptr, args, &exception);
+	if (exception) {
+		failure = MonoObjectToString(exception);
+		return false;
+	}
+
+	if (!result) {
+		return true;
+	}
+
+	MonoClass* resultClass = mono_object_get_class(result);
+	if (resultClass == mono_get_boolean_class()) {
+		void* raw = mono_object_unbox(result);
+		if (!raw || *static_cast<mono_bool*>(raw) == 0) {
+			failure = "Managed script compilation emit failed.";
+			return false;
+		}
+	}
+
+	return true;
+}
+}
 
 void ScriptCompiler::Init(MonoLoader* ptrLoader, std::string const& compiler_dir)
 {
@@ -50,6 +105,16 @@ void ScriptCompiler::Init(MonoLoader* ptrLoader, std::string const& compiler_dir
 std::vector<std::string> const& ScriptCompiler::GetLogs() const
 {
 	return log;
+}
+
+bool ScriptCompiler::LastCompileSucceeded() const
+{
+	return m_LastCompileSucceeded;
+}
+
+std::string const& ScriptCompiler::GetLastCompileFailure() const
+{
+	return m_LastCompileFailure;
 }
 
 size_t ScriptCompiler::GetCurrentThreadID() const
@@ -88,6 +153,9 @@ bool ScriptCompiler::IsDebugCompile() const
 void ScriptCompiler::ClearLog()
 {
 	log.clear();
+	diagnostics.clear();
+	m_LastCompileSucceeded = true;
+	m_LastCompileFailure.clear();
 }
 
 void ScriptCompiler::AddScript(std::string const& path)
@@ -124,6 +192,8 @@ void ScriptCompiler::RemoveScript(std::string const& path)
 
 void ScriptCompiler::CompileAsync()
 {
+	m_LastCompileSucceeded = true;
+	m_LastCompileFailure.clear();
 
 	MonoDomain* compiler_d = loader->GetCompilerDomain();
 	// Build a arr of paths to be converted to mono string array
@@ -176,7 +246,11 @@ void ScriptCompiler::CompileAsync()
 
 	std::string n = mono_method_full_name(current_method, true);
 	std::cout << "Invoking method: " << n << std::endl;
-	mono_runtime_invoke(current_method, nullptr, args, nullptr);
+	if (!InvokeCompilerMethod(current_method, args, m_LastCompileFailure))
+	{
+		m_LastCompileSucceeded = false;
+		return;
+	}
 
 	MonoMethod* compileMethod = mono_class_get_method_from_name(compilerKlass, "Compile", 0);
 	if (!compileMethod)
@@ -186,7 +260,11 @@ void ScriptCompiler::CompileAsync()
 	}
 	std::string f = mono_method_full_name(compileMethod, true);
 	std::cout << "Invoking method: " << f << std::endl;
-	mono_runtime_invoke(compileMethod, nullptr, nullptr, nullptr);
+	if (!InvokeCompilerMethod(compileMethod, nullptr, m_LastCompileFailure))
+	{
+		m_LastCompileSucceeded = false;
+		return;
+	}
 
 	MonoMethod* emitMethod = mono_class_get_method_from_name(compilerKlass, "Emit", 0);
 	if (!emitMethod)
@@ -196,7 +274,11 @@ void ScriptCompiler::CompileAsync()
 	}
 	std::string g = mono_method_full_name(emitMethod, true);
 	std::cout << "Invoking method: " << g << std::endl;
-	mono_runtime_invoke(emitMethod, nullptr, nullptr, nullptr);
+	if (!InvokeCompilerMethod(emitMethod, nullptr, m_LastCompileFailure))
+	{
+		m_LastCompileSucceeded = false;
+		return;
+	}
 }
 
 void ScriptCompiler::CompileAllScripts()
@@ -250,6 +332,21 @@ void ScriptCompiler::CollectScripts(std::string const& id)
 	std::vector<std::string>& dirs = search_directories[id];
 	for (const auto& dir : dirs) {
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(dir)) {
+			if (!entry.is_regular_file() || entry.path().extension() != ".cs") {
+				continue;
+			}
+
+			const std::filesystem::path path = entry.path();
+			const std::string filename = path.filename().string();
+			const std::string normalized = path.lexically_normal().generic_string();
+			if (normalized.find("/bin/") != std::string::npos ||
+				normalized.find("/obj/") != std::string::npos ||
+				normalized.find("/managed/") != std::string::npos ||
+				EndsWith(filename, ".g.cs") ||
+				EndsWith(filename, ".designer.cs")) {
+				continue;
+			}
+
 			if (entry.is_regular_file() && entry.path().extension() == ".cs") {
 				AddScript(entry.path().string());
 			}
@@ -279,6 +376,7 @@ void ScriptCompiler::GetManagedLogs()
 		return;
 	}
 	log.clear();
+	diagnostics.clear();
 	uint64_t length = mono_array_length(arr);
 	for (uint64_t i = 0; i < length; ++i)
 	{

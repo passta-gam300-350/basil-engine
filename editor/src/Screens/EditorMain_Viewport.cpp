@@ -73,6 +73,8 @@ void EditorMain::Render_Game()
 
 	if (frameData.gameResolvedBuffer)
 	{
+		const ImVec2 viewportPos = ImGui::GetCursorScreenPos();
+
 		// Get texture from game framebuffer
 		GLuint textureID = frameData.gameResolvedBuffer->GetColorAttachmentRendererID(0);
 
@@ -83,9 +85,28 @@ void EditorMain::Render_Game()
 			ImVec2(0, 1),  // UV coordinates flipped vertically
 			ImVec2(1, 0)
 		);
+
+		const bool viewportHovered = ImGui::IsItemHovered();
+		if (viewportHovered && viewportSize.x > 0.0f && viewportSize.y > 0.0f)
+		{
+			const ImVec2 mousePos = ImGui::GetMousePos();
+			const float localX = mousePos.x - viewportPos.x;
+			const float localY = mousePos.y - viewportPos.y;
+
+			// Match HUD's fixed reference resolution space used by the shader path.
+			const float gameSpaceX = (localX / viewportSize.x) * 1920.0f;
+			const float gameSpaceY = 1080.0f - ((localY / viewportSize.y) * 1080.0f);
+			InputManager::Get_Instance()->Set_MouseOverride(gameSpaceX, gameSpaceY, true);
+		}
+		else
+		{
+			InputManager::Get_Instance()->Set_MouseOverride(0.0f, 0.0f, false);
+		}
 	}
 	else
 	{
+		InputManager::Get_Instance()->Set_MouseOverride(0.0f, 0.0f, false);
+
 		// No game camera or game buffer not initialized
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No active game camera");
 		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Add a Camera component with 'Is Active' enabled to see the game view");
