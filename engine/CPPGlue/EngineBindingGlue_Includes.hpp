@@ -7,6 +7,7 @@
 #include "BasilEngine_Time_GLUE_GEN.hpp"
 #include "BasilEngine_SceneManagement_Scene_GLUE_GEN.hpp"
 #include "BasilEngine_Debug_Logger_GLUE_GEN.hpp"
+#include "BasilEngine_Components_Animation_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Audio_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Camera_GLUE_GEN.hpp"
 #include "BasilEngine_Components_Component_GLUE_GEN.hpp"

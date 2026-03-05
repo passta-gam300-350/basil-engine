@@ -23,6 +23,8 @@ Technology is prohibited.
 #include <native/animation.h>
 
 #include <rsc-core/rp.hpp>
+#include "ecs/internal/reflection.h"
+
 
 RegisterResourceTypeForward(AnimationResourceData, "animation", unusedanimationstuff)
 

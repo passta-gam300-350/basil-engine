@@ -20,6 +20,7 @@ Technology is prohibited.
 #include <iostream>
 
 #include "ABI/CSKlass.hpp"
+#include "Component/AnimationComponent.hpp"
 #include "Component/VideoComponent.hpp"
 #include "components/behaviour.hpp"
 #include "components/transform.h"
@@ -173,6 +174,21 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		}, [](ecs::entity& entity)
 		{
 			entity.remove<HUDComponent>();
+		});
+		return id;
+	}
+	if (strName == "Animation")
+	{
+		componentMapped[strName] = 1000000 + registerCount++; // ID for Animation component
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			// Placeholder for Animation component check
+			bool result = entity.any<AnimationComponent>(); // Replace with actual Animation	 component
+			return result;
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<AnimationComponent>();
 		});
 		return id;
 	}

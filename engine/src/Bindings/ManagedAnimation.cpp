@@ -20,6 +20,7 @@ Technology is prohibited.
 #include "ecs/ecs.h"
 #include "Component/AnimationComponent.hpp"
 #include "Animation/Animation.h"
+#include "spdlog/spdlog.h"
 
 void ManagedAnimation::Play(uint64_t handle)
 {
