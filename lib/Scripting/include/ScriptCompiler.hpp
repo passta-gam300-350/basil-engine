@@ -76,6 +76,8 @@ class ScriptCompiler {
 
 	
 	std::string compiler_path;
+	bool m_LastCompileSucceeded = true;
+	std::string m_LastCompileFailure;
 
 public:
 
@@ -99,6 +101,8 @@ public:
 	void CompileAllScripts();
 
 	std::vector<std::string> const& GetLogs() const;
+	bool LastCompileSucceeded() const;
+	std::string const& GetLastCompileFailure() const;
 
 	void SetMaxThread(size_t max);
 	size_t GetMaxThread() const;

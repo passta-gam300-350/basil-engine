@@ -79,6 +79,7 @@ void BehaviourSystem::Init()
 
 void BehaviourSystem::Reload()
 {
+	spdlog::info("BehaviourSystem: Reloading managed behaviour instances");
 	auto world = Engine::GetWorld();
 
 	auto entities = world.filter_entities<behaviour>();
@@ -109,6 +110,7 @@ void BehaviourSystem::Reload()
 	
 
 	firstRun = true;
+	spdlog::info("BehaviourSystem: Managed behaviour reload complete");
 }
 
 void BehaviourSystem::Update(ecs::world& world, float)
@@ -608,7 +610,15 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 			case CollisionCallback::OnCollisionExit:
 				inst->Invoke("OnCollisionExit", argsCollision, nullptr, 1);
 				break;
-			 
+			case CollisionCallback::OnTriggerEnter:
+				inst->Invoke("OnTriggerEnter", argsCollision, nullptr, 1);
+				break;
+			case CollisionCallback::OnTriggerStay:
+				inst->Invoke("OnTriggerStay", argsCollision, nullptr, 1);
+				break;
+			case CollisionCallback::OnTriggerExit:
+				inst->Invoke("OnTriggerExit", argsCollision, nullptr, 1);
+				break;
 			}
 		}
 	}

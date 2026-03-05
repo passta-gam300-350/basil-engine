@@ -22,6 +22,7 @@ Technology is prohibited.
 #include "ABI/CSKlass.hpp"
 #include "Component/AnimationComponent.hpp"
 #include "Component/VideoComponent.hpp"
+#include "Input/Button.h"
 #include "components/behaviour.hpp"
 #include "components/transform.h"
 #include "Manager/MonoEntityManager.hpp"
@@ -189,6 +190,20 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		}, [](ecs::entity& entity)
 		{
 			entity.remove<AnimationComponent>();
+		});
+		return id;
+	}
+
+	if (strName == "Button")
+	{
+		componentMapped[strName] = 1000000 + registerCount++;
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			return entity.any<Button>();
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<Button>();
 		});
 		return id;
 	}
