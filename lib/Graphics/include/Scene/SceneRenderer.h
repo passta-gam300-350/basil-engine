@@ -152,6 +152,10 @@ public:
     void SetExposureClampRange(float minExposure, float maxExposure);
     void GetExposureClampRange(float& outMin, float& outMax) const;
 
+    // Gamma correction configuration
+    void SetGamma(float gamma);
+    float GetGamma() const;
+
     // Facade methods for decoupling (avoid exposing internal coordinators/pipeline)
     void ToggleRenderPass(const std::string& passName);
     void SetShadowIntensity(float directional, float point, float spot);
