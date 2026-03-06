@@ -1,7 +1,7 @@
 scene:
   name: Scene
   version: v0.0.1
-  slot: 245
+  slot: 247
   guid: 00
   dependencies: ~
 render_settings:
@@ -175,10 +175,10 @@ entities:
       audioAssetGuid:
         guid: 3a87df67f919e1d9beefb0dcb95
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -341,10 +341,10 @@ entities:
       audioAssetGuid:
         guid: 3a87de27659b4ccc0494f5f9313
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -413,12 +413,12 @@ entities:
         z: 1
       m_Rotate:
         x: 0
-        y: 0
+        y: -0
         z: 0
       m_Trans:
         x: 0
         y: 0
-        z: 0
+        z: 3.70821071
     Behaviour:
       classesName:
         - PlayAudioLoop
@@ -427,23 +427,23 @@ entities:
         guid: 3ace2f075dbacc951c03bdff7a6
         type: 17099568057112876377
       group: "\x00"
-      volume: 0.519999981
+      volume: 1.58489323
       isLooping: false
       is3D: true
       isStreaming: false
       playOnAwake: false
       filterParams:
-        type: 0
-        cutoffHz: 5000
+        type: 1
+        cutoffHz: 2875
         resonance: 1
         echoDelayMs: 500
         echoFeedback: 0.5
-      minDistance: 1
-      maxDistance: 1000
+      minDistance: 3
+      maxDistance: 4
       position:
         x: 0
         y: 0
-        z: 0
+        z: 3.70821071
       velocity:
         x: 0
         y: 0
@@ -785,10 +785,10 @@ entities:
       audioAssetGuid:
         guid: 3a87daf7882b91bd917cc59ff20
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -905,10 +905,10 @@ entities:
       audioAssetGuid:
         guid: 3a87dbb7de9aac1ef1f1102f778
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -1014,10 +1014,10 @@ entities:
       audioAssetGuid:
         guid: 3a87dc675f5beb502e8823e8a41
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -1135,10 +1135,10 @@ entities:
       audioAssetGuid:
         guid: 3a87d9f77cba090c4d50000925b
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -1557,10 +1557,10 @@ entities:
       audioAssetGuid:
         guid: 3a87dcf78cea2f96732a3732cf7
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -1630,10 +1630,10 @@ entities:
       audioAssetGuid:
         guid: 3a87dd9731eb51cc72a38ccca74
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -1703,10 +1703,10 @@ entities:
       audioAssetGuid:
         guid: 3a87dec7b9580e58322f0c923e7
         type: 17099568057112876377
-      group: "\x00"
-      volume: 0.150000006
+      group: "\x02"
+      volume: 0.354813367
       isLooping: false
-      is3D: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -3152,14 +3152,17 @@ entities:
         x: -0.127342895
         y: 0.451047838
         z: -0.0630957335
+    Behaviour:
+      classesName:
+        - PlayAudio
     AudioComponent:
       audioAssetGuid:
-        guid: 00
+        guid: 3ace3017ca7a25afbc7b2c6fb33
         type: 17099568057112876377
-      group: "\x00"
-      volume: 1
-      isLooping: false
-      is3D: true
+      group: "\x01"
+      volume: 1.25892544
+      isLooping: true
+      is3D: false
       isStreaming: false
       playOnAwake: false
       filterParams:
@@ -3174,6 +3177,56 @@ entities:
         x: -0.127342895
         y: 0.451047838
         z: -0.0630957335
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 245
+    entity name:
+      name: ambience_koi
+  - Scene ID:
+      Scene ID: 246
+    entity name:
+      name: sfx_pickup_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.130156651
+        y: 0.43553111
+        z: 0.30196923
+    Behaviour:
+      classesName:
+        - PlayAudio
+    AudioComponent:
+      audioAssetGuid:
+        guid: 297b7a7e499786676475865962
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 1.41253757
+      isLooping: true
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 0.0500000007
+      maxDistance: 0.400000006
+      position:
+        x: -0.130156651
+        y: 0.43553111
+        z: 0.30196923
       velocity:
         x: 0
         y: 0
