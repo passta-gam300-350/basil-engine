@@ -46,13 +46,13 @@ public:
     // Configuration
     void SetToneMappingShader(std::shared_ptr<Shader> shader);
     void SetMethod(Method method) { m_Method = method; }
-    void EnableGammaCorrection(bool enable) { m_GammaCorrection = enable; }
+    void SetGamma(float gamma) { m_Gamma = gamma; }
     void SetBloomStrength(float strength) { m_BloomStrength = strength; }
     void EnableBloom(bool enable) { m_BloomEnabled = enable; }
 
     // Getters
     Method GetMethod() const { return m_Method; }
-    bool IsGammaCorrectionEnabled() const { return m_GammaCorrection; }
+    float GetGamma() const { return m_Gamma; }
     float GetBloomStrength() const { return m_BloomStrength; }
     bool IsBloomEnabled() const { return m_BloomEnabled; }
 
@@ -61,7 +61,7 @@ private:
 
     // Configuration (exposure/luminance come from context!)
     Method m_Method = Method::ACES;  // Changed from Exposure to ACES for better color preservation and softer highlights
-    bool m_GammaCorrection = true;
+    float m_Gamma = 2.2f;  // Standard sRGB gamma
 
     // Bloom configuration
     float m_BloomStrength = 0.04f;
