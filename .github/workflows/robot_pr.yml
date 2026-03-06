@@ -47,7 +47,7 @@ jobs:
         run: cmake -S . -B build -A x64
 
       - name: 4. Build Project
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --target editor
 
       - name: 5. Auto-merge Pull Request
         if: github.event_name == 'pull_request'
