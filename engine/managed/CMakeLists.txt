@@ -15,16 +15,7 @@ file(GLOB_RECURSE MANAGED_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 set(DOTNET_BUILDCONFIG RELEASE)
 
-execute_process(
-    COMMAND ${TOOL_DOTNET} msbuild ${CSPROJPath}
-            /t:PrintTargetPath           # <-- call our print target
-            /p:Configuration=${DOTNET_BUILDCONFIG}
-            /nologo
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_VARIABLE DOTNET_OUTPUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
+set(DOTNET_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/${ASM_NAME}/bin/${DOTNET_BUILDCONFIG}/net48/${ASM_NAME}.dll")
 
 message(STATUS "Managed output: ${DOTNET_OUTPUT}")
 

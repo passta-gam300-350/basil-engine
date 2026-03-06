@@ -1,0 +1,43 @@
+# GitHub Actions Workflow: CI Build Check
+#
+# This workflow runs on pull requests to the main branch.
+# It verifies the project builds successfully before allowing merge.
+#
+# Steps:
+# 1. Triggers on pull_request targeting main.
+# 2. Cancels older, redundant builds on the same branch.
+# 3. Checks out the code.
+# 4. Clones the external 'mono' dependency.
+# 5. Configures the C++ project using CMake for x64 architecture.
+# 6. Compiles the editor in Release mode.
+
+name: CI Build Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+# Cancel in-progress runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Check
+    runs-on: windows-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Install Dependencies (Mono)
+        run: git clone https://github.com/Silver1713/MONO.git dep/vendor/mono
+        shell: bash
+
+      - name: 3. Configure CMake
+        run: cmake -S . -B build -A x64
+
+      - name: 4. Build Editor and Engine
+        run: cmake --build build --config Release --target editor engine
