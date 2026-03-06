@@ -17,9 +17,11 @@ system:
 resource:
   resource threads: 4
   resource list: ~
-  root directory: C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\bin
+  root directory: C:\Projects\gam300\bin
   enable globbing: false
 logger:
   name: Engine
   output file: ""
   severity: 2
+render:
+  gamma: 2.20000005

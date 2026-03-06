@@ -198,7 +198,7 @@ void SceneRenderer::InitializeDefaultPipeline()
 
     // 9. Add tone mapping pass (HDR → LDR conversion with bloom compositing)
     auto toneMapPass = std::make_shared<ToneMapRenderPass>();
-    toneMapPass->EnableGammaCorrection(true);  // Enable manual gamma - outputs RGB8 to avoid ImGui brightness issues
+    toneMapPass->SetGamma(2.2f);  // Standard sRGB gamma - outputs RGB8 to avoid ImGui brightness issues
     mainPipeline->AddPass(toneMapPass);
     //mainPipeline->EnablePass("ToneMapPass", true);  // Disabled by default
 
@@ -1191,6 +1191,33 @@ void SceneRenderer::GetExposureClampRange(float& outMin, float& outMax) const
     // Default values
     outMin = 0.1f;
     outMax = 2.0f;
+}
+
+void SceneRenderer::SetGamma(float gamma)
+{
+    assert(m_Pipeline && "Pipeline must be initialized before setting gamma");
+
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            toneMapPass->SetGamma(gamma);
+        }
+    }
+}
+
+float SceneRenderer::GetGamma() const
+{
+    if (m_Pipeline)
+    {
+        auto toneMapPass = std::dynamic_pointer_cast<ToneMapRenderPass>(m_Pipeline->GetPass("ToneMapPass"));
+        if (toneMapPass)
+        {
+            return toneMapPass->GetGamma();
+        }
+    }
+    return 2.2f; // Default standard sRGB gamma
 }
 
 // ===== SHADOW TEXTURE ARRAY MANAGEMENT =====
