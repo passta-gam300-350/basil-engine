@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7bb2e7995b38728bfdec7d15f
-  m_importer: .texture
-  m_source: materials\kite\rightflag\flap_right_Roughness.png
-  m_name: flap_right_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

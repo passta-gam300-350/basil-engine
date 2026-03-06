@@ -1,7 +1,0 @@
-base:
-  m_guid: dc3b6af7d12a35201ca40ea3bdb
-  m_importer: .texture
-  m_source: hud\Main Menu\MainMenu_Background.png
-  m_name: MainMenu_Background.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

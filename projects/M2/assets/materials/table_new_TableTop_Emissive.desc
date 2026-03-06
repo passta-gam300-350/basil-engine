@@ -1,7 +1,0 @@
-base:
-  m_guid: 3c0b666774f845ba92198d0d390
-  m_importer: .texture
-  m_source: materials\table_new_TableTop_Emissive.png
-  m_name: table_new_TableTop_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

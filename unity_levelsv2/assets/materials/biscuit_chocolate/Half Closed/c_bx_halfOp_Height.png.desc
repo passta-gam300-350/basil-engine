@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7a6bf7aab9e3c2b8101124956
-  m_importer: .texture
-  m_source: materials\biscuit_chocolate\Half Closed\c_bx_halfOp_Height.png
-  m_name: c_bx_halfOp_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

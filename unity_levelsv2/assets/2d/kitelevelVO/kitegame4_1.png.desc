@@ -1,7 +1,0 @@
-base:
-  m_guid: b8d61ea72249272fed178c39468
-  m_importer: .texture
-  m_source: 2d\kitelevelVO\kitegame4_1.png
-  m_name: kitegame4_1.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

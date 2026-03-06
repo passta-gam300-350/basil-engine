@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b8fa7a4994825c8d6517f112
-  m_importer: .texture
-  m_source: materials\kite\enemy4\kite_enemy4_mat_Emissive.png
-  m_name: kite_enemy4_mat_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

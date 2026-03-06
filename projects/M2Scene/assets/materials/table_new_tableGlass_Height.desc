@@ -1,7 +1,0 @@
-base:
-  m_guid: 469fdee7ae2b37a6742176e9a21
-  m_importer: .texture
-  m_source: materials\table_new_tableGlass_Height.png
-  m_name: table_new_tableGlass_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

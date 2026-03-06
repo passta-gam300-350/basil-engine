@@ -1,7 +1,0 @@
-base:
-  m_guid: 82929ea778485fd144d5758b840
-  m_importer: .texture
-  m_source: materials\new_ceiling_light\light_Roughness.png
-  m_name: light_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

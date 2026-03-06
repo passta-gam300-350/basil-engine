@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf7458724586d9cff1519faf4c
-  m_importer: .texture
-  m_source: materials\new_wall\wall_Normal.png
-  m_name: wall_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

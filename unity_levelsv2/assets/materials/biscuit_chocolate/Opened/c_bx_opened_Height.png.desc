@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7a7287358a2cdfd09044a3e58
-  m_importer: .texture
-  m_source: materials\biscuit_chocolate\Opened\c_bx_opened_Height.png
-  m_name: c_bx_opened_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

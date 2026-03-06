@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7afd5796087f689187901ee56
-  m_importer: .texture
-  m_source: materials\floorBrush2\floorBrush2_Floorbrush_Height.png
-  m_name: floorBrush2_Floorbrush_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

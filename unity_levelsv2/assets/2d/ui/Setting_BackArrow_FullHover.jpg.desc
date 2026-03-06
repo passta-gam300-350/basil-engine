@@ -1,7 +1,0 @@
-base:
-  m_guid: fef96d4713cb1f305ddb2a8fdba
-  m_importer: .texture
-  m_source: 2d\ui\Setting_BackArrow_FullHover.jpg
-  m_name: Setting_BackArrow_FullHover.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

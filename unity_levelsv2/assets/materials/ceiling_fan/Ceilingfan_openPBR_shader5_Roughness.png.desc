@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7ae0277719d3387a82079b4e5
-  m_importer: .texture
-  m_source: materials\ceiling_fan\Ceilingfan_openPBR_shader5_Roughness.png
-  m_name: Ceilingfan_openPBR_shader5_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

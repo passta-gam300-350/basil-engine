@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7cc337d6498f69e3240c1880d
-  m_importer: .texture
-  m_source: materials\trashbag\trashbag1_trashbag1_Roughness.png
-  m_name: trashbag1_trashbag1_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b73c737c995d5ac3a7c47761
-  m_importer: .texture
-  m_source: materials\kite\bottomflag\flap_btm_Normal.png
-  m_name: flap_btm_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

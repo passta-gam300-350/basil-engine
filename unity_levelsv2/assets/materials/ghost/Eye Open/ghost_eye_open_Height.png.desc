@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b0b67eacb4d635ee44a1ab4c
-  m_importer: .texture
-  m_source: materials\ghost\Eye Open\ghost_eye_open_Height.png
-  m_name: ghost_eye_open_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

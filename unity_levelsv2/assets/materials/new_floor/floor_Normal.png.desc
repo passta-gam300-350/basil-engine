@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf736e7119866cbc66f5adc191
-  m_importer: .texture
-  m_source: materials\new_floor\floor_Normal.png
-  m_name: floor_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

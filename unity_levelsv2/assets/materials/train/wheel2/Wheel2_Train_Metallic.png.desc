@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7cb157ca2b89d48d29484e3db
-  m_importer: .texture
-  m_source: materials\train\wheel2\Wheel2_Train_Metallic.png
-  m_name: Wheel2_Train_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

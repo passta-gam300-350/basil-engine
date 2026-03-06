@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf7353737dabfe0386c64b5801
-  m_importer: .texture
-  m_source: materials\new_floor\floor_Emissive.png
-  m_name: floor_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

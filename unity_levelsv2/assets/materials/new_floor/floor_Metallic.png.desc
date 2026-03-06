@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf736577a9996b8476fb9aacc6
-  m_importer: .texture
-  m_source: materials\new_floor\floor_Metallic.png
-  m_name: floor_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

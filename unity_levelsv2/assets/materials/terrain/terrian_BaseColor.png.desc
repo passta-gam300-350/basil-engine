@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c716766fada0e4c1c4c98962
-  m_importer: .texture
-  m_source: materials\terrain\terrian_BaseColor.png
-  m_name: terrian_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
