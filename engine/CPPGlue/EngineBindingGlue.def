@@ -1,5 +1,6 @@
 //LIBRARY "EngineGlueGen"
 // EXPORTS
+BasilEngine_Engine_GLUE_GEN::Bind();
 BasilEngine_GameObject_GLUE_GEN::Bind();
 BasilEngine_Input_GLUE_GEN::Bind();
 BasilEngine_Physics_GLUE_GEN::Bind();
