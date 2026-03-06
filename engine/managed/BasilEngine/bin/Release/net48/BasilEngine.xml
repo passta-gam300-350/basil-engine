@@ -20,6 +20,51 @@
             <param name="b">Second operand.</param>
             <returns>Sum of the inputs.</returns>
         </member>
+        <member name="M:BasilEngine.Components.Animation.Play">
+            <summary>
+            Resumes playing the current animation.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.Pause">
+            <summary>
+            Pauses the current animation.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.Stop">
+            <summary>
+            Stops the current animation and resets it to the start.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.Loop">
+            <summary>
+            Whether the animation should loop.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.PlaybackSpeed">
+            <summary>
+            Speed multiplier for animation playback.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.IsFinished">
+            <summary>
+            Whether the current non-looping animation has finished playing.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.Play(System.String,System.Boolean)">
+            <summary>
+            Plays an animation by name.
+            </summary>
+            <param name="animationName">Name of the animation clip.</param>
+            <param name="shouldLoop">Whether the animation should loop.</param>
+            <returns>True if the animation was found and started playing.</returns>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.HasAnimation(System.String)">
+            <summary>
+            Checks if an animation clip exists by name.
+            </summary>
+            <param name="animationName">Name of the animation clip.</param>
+            <returns>True if found.</returns>
+        </member>
         <member name="P:BasilEngine.Components.Audio.Volume">
             <summary>
             Volume multiplier for this audio source.

@@ -46,9 +46,9 @@ class Button
         float width, height;
         Anchor anchor;
         std::string text;
-        rp::BasicIndexedGuid defaultTextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };
-        rp::BasicIndexedGuid hoverTextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };
-        rp::BasicIndexedGuid pressedTextureGuid{ static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"texture">{}) };
+        rp::BasicIndexedGuid defaultTextureGuid{ rp::null_guid, rp::utility::compute_string_hash("texture") };
+        rp::BasicIndexedGuid hoverTextureGuid{ rp::null_guid, rp::utility::compute_string_hash("texture") };
+        rp::BasicIndexedGuid pressedTextureGuid{ rp::null_guid, rp::utility::compute_string_hash("texture") };
 
         bool hovered;
         bool pressed;

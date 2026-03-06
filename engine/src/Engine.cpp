@@ -566,6 +566,23 @@ void Engine::SyncActiveSceneRenderSettings()
 	renderSystem.m_SceneRenderer->SetBloomStrength(settings.bloomStrength);
 	renderSystem.m_SceneRenderer->SetToneMappingMethod(settings.toneMapMethod);
 	renderSystem.m_SceneRenderer->SetExposureClampRange(settings.exposureMin, settings.exposureMax);
+
+	// Sync fog settings to renderer
+	const auto& fog = settings.fog;
+	switch (fog.type) {
+		case FogType::Linear:
+			renderSystem.m_SceneRenderer->SetLinearFog(fog.start, fog.end, fog.color);
+			break;
+		case FogType::Exponential:
+			renderSystem.m_SceneRenderer->SetExpFog(fog.end, fog.density, fog.color);
+			break;
+		case FogType::ExponentialSquared:
+			renderSystem.m_SceneRenderer->SetExpSquaredFog(fog.end, fog.density, fog.color);
+			break;
+		default:
+			renderSystem.m_SceneRenderer->DisableFog();
+			break;
+	}
 }
 
 bool loadEmbeddedIcon(GLFWimage& image, HINSTANCE hInstance, LPCSTR resourceName) {

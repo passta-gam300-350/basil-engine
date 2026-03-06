@@ -117,6 +117,9 @@ void EditorMain::Render_SceneExplorer()
 			if (isSelected) {
 				flags |= ImGuiTreeNodeFlags_Selected;
 			}
+			if (node.m_children.empty()) {
+				flags |= ImGuiTreeNodeFlags_Leaf;
+			}
 
 			// Highlight selected entity with different color
 			if (isSelected && node.m_entity_handle) { //root node handle is null
@@ -474,6 +477,22 @@ void EditorMain::Render_SceneExplorer()
 					ImGui::EndPopup();
 				}
 
+
+			if (ImGui::BeginDragDropSource()) {
+				// Payload can be any data type (e.g., pointer, ID, struct)
+				ImGui::SetDragDropPayload("SCENE_HIERARCHY", &node, sizeof(SceneGraphNode));
+				ImGui::Text("Dragging %s", node.m_entity_name.c_str());
+				ImGui::EndDragDropSource();
+			}
+
+			if (ImGui::BeginDragDropTarget()) {
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY")) {
+					const SceneGraphNode& dropped_node = *(const SceneGraphNode*)payload->Data;
+					engineService.make_parent_entity(node.m_entity_handle, dropped_node.m_entity_handle);
+				}
+				ImGui::EndDragDropTarget();
+			}
+
 			if (nodeOpen) {
 				// Push style colors back for rendering children
 				if (current_style) {
@@ -492,21 +511,6 @@ void EditorMain::Render_SceneExplorer()
 				// Pop the selection highlight color if it was applied (for children)
 				ImGui::PopStyleColor(stylect);
 				stylect = 0;
-			}
-
-			if (ImGui::BeginDragDropSource()) {
-				// Payload can be any data type (e.g., pointer, ID, struct)
-				ImGui::SetDragDropPayload("SCENE_HIERARCHY", &node, sizeof(SceneGraphNode));
-				ImGui::Text("Dragging %s", node.m_entity_name.c_str());
-				ImGui::EndDragDropSource();
-			}
-
-			if (ImGui::BeginDragDropTarget()) {
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY")) {
-					const SceneGraphNode& dropped_node = *(const SceneGraphNode*)payload->Data;
-					engineService.make_parent_entity(node.m_entity_handle, dropped_node.m_entity_handle);
-				}
-				ImGui::EndDragDropTarget();
 			}
 
 			} };

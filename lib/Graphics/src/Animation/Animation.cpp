@@ -283,7 +283,7 @@ void animator::updateAnimation(float deltaTime, skeleton const& theSkeleton)
     assert(currentAnimation->duration > 0.0f && "Animation duration must be positive");
     assert(currentAnimation->ticksPerSecond > 0.0f && "Animation ticks per second must be positive");
     assert(deltaTime >= 0.0f && "Delta time cannot be negative");
-    assert(state.playbackSpeed > 0.0f && "Playback speed must be positive");
+    assert(state.playbackSpeed >= 0.0f && "Playback speed must be positive");
 
     if (blend.isActive == true)
     {
