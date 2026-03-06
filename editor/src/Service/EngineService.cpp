@@ -11,6 +11,7 @@
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
 #include "Input/Button.h"
+#include <Physics/Physics_Components.h>
 
 #include "System/BehaviourSystem.hpp"
 #include "Profiler/profiler.hpp"
@@ -250,8 +251,33 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 					dest_vid->backgroundColor = src_vid->backgroundColor;
 				}
 
+				if (meta_type.info().hash() == entt::type_hash<TransformComponent>::value()) {
+					TransformComponent* dest_trans = static_cast<TransformComponent*>(dest);
+					TransformComponent* src_trans = static_cast<TransformComponent*>(src);
+					if (src_trans->m_Scale != dest_trans->m_Scale) {
+						Engine::ResizeEntityPhysicsCollider(inspected_entity, src_trans->m_Scale, dest_trans->m_Scale);
+					}
+				}
+
+				bool shouldFitCollider{};
+				if (meta_type.info().hash() == entt::type_hash<MeshRendererComponent>::value()) {
+					MeshRendererComponent* dest_mesh = static_cast<MeshRendererComponent*>(dest);
+					MeshRendererComponent* src_mesh = static_cast<MeshRendererComponent*>(src);
+					if (src_mesh->m_MeshGuid != dest_mesh->m_MeshGuid) {
+						shouldFitCollider = true;
+					}
+				}
+
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
+
+				if (shouldFitCollider) {
+					Engine::FitEntityColliderToMesh(inspected_entity);
+				}
+
+				if (meta_type.info().hash() == entt::type_hash<TransformComponent>::value()) {
+					Engine::SyncEntityTransformToPhysics(inspected_entity);
+				}
 
 				// Special handling for AudioComponent: Load sound from GUID if needed
 				if (meta_type.info().hash() == entt::type_hash<AudioComponent>::value()) {
@@ -349,7 +375,6 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		ecs::entity entity{ ehdl };
 		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
 
-
 		if (auto* storage = w.impl.get_registry().storage(type_id)) {
 			//bool alreadyExists = storage->contains(enttntt);
 			//spdlog::info("EngineService: Storage found for {}, component already exists={}",
@@ -361,6 +386,11 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				}
 				else {
 					storage->push(enttntt);
+					if (type_id == entt::type_hash<BoxCollider>::value() ||
+						type_id == entt::type_hash<SphereCollider>::value() ||
+						type_id == entt::type_hash<CapsuleCollider>::value() ||
+						type_id == entt::type_hash<MeshCollider>::value())
+						Engine::FitEntityColliderToMesh(entity);
 				}
 				//spdlog::info("EngineService: Added {} to entity {}", componentName, ehdl);
 			}
@@ -383,6 +413,11 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 					emplaceFunc.invoke({}, entt::forward_as_meta(w.impl.get_registry()), enttntt);
 				}
 			}
+			if (type_id == entt::type_hash<BoxCollider>::value() || 
+				type_id == entt::type_hash<SphereCollider>::value() || 
+				type_id == entt::type_hash<CapsuleCollider>::value() || 
+				type_id == entt::type_hash<MeshCollider>::value())
+				Engine::FitEntityColliderToMesh(entity);
 		}
 		//else {
 		//	spdlog::warn("EngineService: No storage found for type {} (type_id={})",

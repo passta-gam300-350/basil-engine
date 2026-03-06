@@ -128,5 +128,5 @@ MemberRegistrationV<&VideoComponent::fullscreenMode, "Render Fullscreen Mode">,
 MemberRegistrationV<&VideoComponent::backgroundTexture, "Background Texture">,
 MemberRegistrationV<&VideoComponent::backgroundColor, "Background Color">,
 MemberRegistrationV<&VideoComponent::bgvisible, "Background Visible">,
-MemberRegistrationV<&VideoComponent::renderLayer, "Render Layer">
+MemberRegistrationV<&VideoComponent::renderLayer, "layer">
 RegisterReflectionTypeEnd
