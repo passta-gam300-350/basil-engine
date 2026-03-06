@@ -616,7 +616,19 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
 			{
 				// Break down the edited matrix so we can save the values
+				glm::vec3 old_scale = GuizmoEntityTransform->m_Scale;
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityParentTransformMTX ? glm::inverse(GuizmoEntityParentTransformMTX->m_Mtx) * GuizmoEntityTransformMTX->m_Mtx : GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+				glm::vec3 new_scale = GuizmoEntityTransform->m_Scale;
+				if (old_scale != new_scale) {
+					engineService.ExecuteOnEngineThread([&, old_scale, new_scale]() {
+						auto world = Engine::GetWorld();
+						if (m_SelectedEntityID) {
+							auto selected = world.impl.entity_cast(entt::entity(m_SelectedEntityID));
+							Engine::ResizeEntityPhysicsCollider(selected, new_scale, old_scale);
+						}
+						});
+				}
+				
 				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff
 				//EditingID = selectedEnitityID; // Set the Id

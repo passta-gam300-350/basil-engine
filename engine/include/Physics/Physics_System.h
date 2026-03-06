@@ -139,6 +139,8 @@ public:
 	void SyncTransformsFromPhysics(ecs::world& world);      // 3. Syncs the new internal jolt data to transform
 	void ProcessCollisionEvents(ecs::world& world);         // 4. Process the queue of collision events to prevent conflict like deleting an entity if it is the result of a collision callback
 	void SyncEntityTransformsToPhysics(ecs::entity ent);
+	void ResizeEntityPhysics(ecs::entity ent, glm::vec3 new_scale, glm::vec3 old_scale = glm::vec3(1.f));
+	void FitEntityColliderToMesh(ecs::entity ent, glm::vec3 scl = glm::vec3(1.f));
 
 	// ========================================================================
 	// OBSERVER SYSTEM
