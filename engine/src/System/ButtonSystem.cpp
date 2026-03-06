@@ -4,6 +4,33 @@
 #include "Input/InputManager.h"
 #include "Profiler/profiler.hpp"
 
+namespace
+{
+    bool IsValidTextureGuid(const rp::BasicIndexedGuid& guid)
+    {
+        return guid.m_guid != rp::null_guid;
+    }
+
+    const rp::BasicIndexedGuid* ResolveButtonTexture(const Button& button)
+    {
+        if (button.pressed && IsValidTextureGuid(button.pressedTextureGuid))
+        {
+            return &button.pressedTextureGuid;
+        }
+
+        if (button.hovered && IsValidTextureGuid(button.hoverTextureGuid))
+        {
+            return &button.hoverTextureGuid;
+        }
+
+        if (IsValidTextureGuid(button.defaultTextureGuid))
+        {
+            return &button.defaultTextureGuid;
+        }
+
+        return nullptr;
+    }
+}
 
 ButtonSystem& ButtonSystem::Instance()
 {
@@ -44,7 +71,7 @@ void ButtonSystem::Update(ecs::world& world, float)
 
         if (entity.all<HUDComponent>())
         {
-            const HUDComponent& hud = entity.get<HUDComponent>();
+            HUDComponent& hud = entity.get<HUDComponent>();
             button.x = hud.position.x;
             button.y = hud.position.y;
             button.width = hud.size.x;
@@ -61,6 +88,15 @@ void ButtonSystem::Update(ecs::world& world, float)
         }
 
         button.update(mouseX, mouseY, mousePressed);
+
+        if (entity.all<HUDComponent>())
+        {
+            HUDComponent& hud = entity.get<HUDComponent>();
+            if (const rp::BasicIndexedGuid* textureGuid = ResolveButtonTexture(button))
+            {
+                hud.m_TextureGuid = *textureGuid;
+            }
+        }
     }
 }
 
