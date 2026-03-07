@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c9f574f4990652e32c229aa1
-  m_importer: .texture
-  m_source: materials\train\body\TrainBody_Train_Roughness.png
-  m_name: TrainBody_Train_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

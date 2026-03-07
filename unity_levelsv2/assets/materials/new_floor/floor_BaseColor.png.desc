@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf734b7cde9386d723b6cdbb82
-  m_importer: .texture
-  m_source: materials\new_floor\floor_BaseColor.png
-  m_name: floor_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

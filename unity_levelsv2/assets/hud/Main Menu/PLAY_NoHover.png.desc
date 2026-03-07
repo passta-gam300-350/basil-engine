@@ -1,7 +1,0 @@
-base:
-  m_guid: dc3b6b87675a43e6122d9a15ac1
-  m_importer: .texture
-  m_source: hud\Main Menu\PLAY_NoHover.png
-  m_name: PLAY_NoHover.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

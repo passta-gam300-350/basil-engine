@@ -610,6 +610,20 @@ void Engine::SyncActiveSceneRenderSettings()
 	}
 }
 
+void Engine::SyncEntityTransformToPhysics(ecs::entity entity) {
+	PhysicsSystem::Instance().SyncEntityTransformsToPhysics(entity);
+}
+
+void Engine::ResizeEntityPhysicsCollider(ecs::entity entity, glm::vec3 new_scale, glm::vec3 old_scale) {
+	PhysicsSystem::Instance().ResizeEntityPhysics(entity, new_scale, old_scale);
+}
+
+void Engine::FitEntityColliderToMesh(ecs::entity entity) {
+	if (entity.all<TransformComponent>()) {
+		PhysicsSystem::Instance().FitEntityColliderToMesh(entity, entity.get<TransformComponent>().m_Scale);
+	}
+}
+
 bool loadEmbeddedIcon(GLFWimage& image, HINSTANCE hInstance, LPCSTR resourceName) {
 	// Find the group icon resource
 	HRSRC hRes = FindResourceA(hInstance, resourceName, RT_GROUP_ICON);

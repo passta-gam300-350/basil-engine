@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c35e7328b5a6cc105cbcf3fe
-  m_importer: .texture
-  m_source: materials\puddle\Puddle1_puddle_Metallic.png
-  m_name: Puddle1_puddle_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

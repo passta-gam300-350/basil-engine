@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7a4807b1a8841c116ff6055e1
-  m_importer: .texture
-  m_source: materials\biscuit_cheese\Closed\ch_bx_tape_Height.png
-  m_name: ch_bx_tape_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

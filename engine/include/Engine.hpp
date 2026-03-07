@@ -109,6 +109,10 @@ public:
 	// Unity-style skybox system - sync active scene's render settings to renderer
 	static void SyncActiveSceneRenderSettings();
 
+	static void SyncEntityTransformToPhysics(ecs::entity);
+	static void ResizeEntityPhysicsCollider(ecs::entity entity, glm::vec3 new_scale, glm::vec3 old_scale = glm::vec3(1.f));
+	static void FitEntityColliderToMesh(ecs::entity entity);
+
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
 	

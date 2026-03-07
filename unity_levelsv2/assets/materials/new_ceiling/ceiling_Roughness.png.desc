@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf734175fb87e43eda0ea81572
-  m_importer: .texture
-  m_source: materials\new_ceiling\ceiling_Roughness.png
-  m_name: ceiling_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

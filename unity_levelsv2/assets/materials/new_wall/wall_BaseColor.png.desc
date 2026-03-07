@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf743378169c2f19ea375a413a
-  m_importer: .texture
-  m_source: materials\new_wall\wall_BaseColor.png
-  m_name: wall_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7a58e7115a67d0e5a26012c2f
-  m_importer: .texture
-  m_source: materials\biscuit_cheese\Opened\ch_bx_opened_Metallic.png
-  m_name: ch_bx_opened_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

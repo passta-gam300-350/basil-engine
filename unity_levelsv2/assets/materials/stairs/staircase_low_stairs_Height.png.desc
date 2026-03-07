@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c4e775399cc0170622a4269b
-  m_importer: .texture
-  m_source: materials\stairs\staircase_low_stairs_Height.png
-  m_name: staircase_low_stairs_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

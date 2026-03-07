@@ -24,7 +24,7 @@ add_custom_command(
   COMMAND ${TOOL_DOTNET} build ${CSPROJPath} -c ${DOTNET_BUILDCONFIG}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS ${CSPROJPath} ${MANAGED_FILES}
-  COMMENT "Building EngineAPI.dll"
+  COMMENT "Building BasilEngine.dll"
   VERBATIM USES_TERMINAL 
 )
 

@@ -289,6 +289,155 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
     }
 }
 
+struct ColliderFit {
+    glm::vec3 extents{ 1.f };
+    glm::vec3 offset{ 0.f };
+};
+
+std::pair<std::unordered_map<rp::Guid, ResourceHandle>&, std::unordered_map<ResourceHandle, ColliderFit>&> GetMeshFittingCache() {
+    static std::unordered_map<rp::Guid, ResourceHandle> guid_to_handle;
+    static std::unordered_map<ResourceHandle, ColliderFit> handle_to_fit;
+    return { guid_to_handle, handle_to_fit };
+}
+
+//very expensive o(n)
+AABB ComputeExactAABBTransformed(std::vector<Vertex> const& vert, glm::mat4 const& tfm) {
+    glm::vec3 b_min{ std::numeric_limits<float>::max() };
+    glm::vec3 b_max{ -std::numeric_limits<float>::max() };
+    for (Vertex const& v : vert) {
+        glm::vec3 tv = glm::vec3(tfm * glm::vec4(v.Position, 1.f));
+        b_min = glm::min(tv, b_min);
+        b_max = glm::max(tv, b_max);
+    }
+    return AABB{ b_min, b_max };
+}
+
+ColliderFit ComputeMeshFit(rp::Guid guid, ResourceHandle* hdl = nullptr) {
+    rp::BasicIndexedGuid partialndguid{ guid, 0ul };
+    partialndguid.m_guid.m_low += 1;
+    std::vector<glm::mat4> node_global;
+    ColliderFit fit{};
+    auto meshes = ResourceRegistry::Instance().Get<std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>>(guid, hdl);
+    if (!meshes)
+        return fit;
+    MeshMetaRuntimeData* nodedataptr{};
+    if (ResourceRegistry::Instance().Exists(partialndguid)) {
+        MeshMetaRuntimeData& nodedata = *(nodedataptr = ResourceRegistry::Instance().Get<MeshMetaRuntimeData>(partialndguid.m_guid));
+        node_global.resize(nodedata.node_local_bind.size());
+        for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
+            int parent = nodedata.node_parent[node];
+            if (parent < 0) {
+                // Root node
+                node_global[node] = nodedata.node_local_bind[node];
+            }
+            else {
+                // Use cached parent transform
+                node_global[node] = node_global[parent] * nodedata.node_local_bind[node];
+            }
+        }
+    }
+    glm::vec3 b_min{ std::numeric_limits<float>::max() };
+    glm::vec3 b_max{ -std::numeric_limits<float>::max() };
+    std::vector < std::pair < glm::vec3, glm::vec3 >> aabbs;
+    if (!node_global.empty() && nodedataptr) {
+        int matmeshidx{};
+        for (auto [meshname, mesh] : *meshes) {
+            // 1. approximate fit (too big, o(1) complexity)
+            AABB aabb = mesh->GetAABB().Transform(node_global[nodedataptr->mesh_node_idx[matmeshidx++]]);
+            
+            // 2. exact fit (very expensive, o(n) complexity)
+            //AABB aabb = ComputeExactAABBTransformed(mesh->vertices, node_global[nodedataptr->mesh_node_idx[matmeshidx++]]);
+
+            b_min = glm::min(aabb.min, b_min);
+            b_max = glm::max(aabb.max, b_max);
+            aabbs.emplace_back(std::pair<glm::vec3, glm::vec3>{ aabb.min, aabb.max });
+        }
+    }
+    else {
+        for (auto [meshname, mesh] : *meshes) {
+            AABB const& aabb = mesh->GetAABB();
+            b_min = glm::min(aabb.min, b_min);
+            b_max = glm::max(aabb.max, b_max);
+        }
+    }
+    fit.extents = b_max - b_min;
+    fit.offset = (b_max + b_min) / 2.f;
+    rp::serialization::yaml_serializer::serialize(aabbs, "testfitaabb.yaml");
+    rp::serialization::yaml_serializer::serialize(fit, "testfit.yaml");
+    return fit;
+}
+
+std::optional<ColliderFit> FindUpdateFitFromCache(rp::Guid guid) {
+    auto [g2h, h2f] { GetMeshFittingCache() };
+    ResourceHandle mhdl{ ResourceRegistry::Instance().Find<std::vector<std::pair<std::string, std::shared_ptr<Mesh>>>>(guid) };
+    if (auto hit{ g2h.find(guid) }; hit != g2h.end()) {
+        if (hit->second != mhdl) {
+            h2f.erase(hit->second);
+            g2h.erase(guid);
+            ColliderFit fit = ComputeMeshFit(guid, &mhdl);
+            h2f.emplace(mhdl, fit);
+            g2h.emplace(guid, mhdl);
+        }
+    }
+    else {
+        ColliderFit fit = ComputeMeshFit(guid, &mhdl);
+        h2f.emplace(mhdl, fit);
+        g2h.emplace(guid, mhdl);
+    }
+    
+    auto hitf = h2f.find(mhdl);
+    return hitf != h2f.end() ? std::make_optional(hitf->second) : std::nullopt;
+}
+
+ColliderFit GetMeshFittings(ecs::entity ent) {
+    ColliderFit fit;
+    if (!ent.all<MeshRendererComponent>())
+        return fit;
+    MeshRendererComponent& mesh_comp = ent.get<MeshRendererComponent>();
+    if (!mesh_comp.m_MeshGuid.m_guid)
+        return fit;
+    auto res = FindUpdateFitFromCache(mesh_comp.m_MeshGuid.m_guid);
+    return res ? res.value() : fit;
+}
+
+void PhysicsSystem::ResizeEntityPhysics(ecs::entity ent, glm::vec3 new_scale, glm::vec3 old_scale) {
+    if (!HasCollider(ent)) { return; }
+    auto bid = GetBodyID(ent);
+    if (bid.IsInvalid()) { return; }
+    if (glm::compMin(old_scale) < FLT_EPSILON) {
+        old_scale = glm::vec3(1.f); //prevents inf; //should log
+    }
+    [](ecs::entity e, glm::vec3 ratio_scl) {
+        if (e.all<BoxCollider>()) {
+            e.get<BoxCollider>().size *= ratio_scl;
+        }
+        if (e.all<SphereCollider>()) {
+            auto& sph = e.get<SphereCollider>();
+            sph.radius *= std::max({ ratio_scl.x, ratio_scl.y, ratio_scl.z });
+        }
+        if (e.all<CapsuleCollider>()) {
+            auto& cap = e.get<CapsuleCollider>();
+            float sclfx = std::max({ ratio_scl.x, ratio_scl.z });
+            cap.SetRadius(0.5f * sclfx);
+            cap.SetHeight(1.f * ratio_scl.y);
+        }
+        if (e.all<MeshCollider>()) {
+            //e.get<MeshCollider>(); //not supported
+        }
+        } (ent, new_scale/old_scale);
+    m_bodyInterface->SetShape(bid, CreateShapeFromCollider(ent), true, JPH::EActivation::Activate);
+}
+
+void PhysicsSystem::SyncEntityTransformsToPhysics(ecs::entity ent) {
+    if (!m_bodyInterface) return;
+    auto bid = GetBodyID(ent);
+    if (!bid.IsInvalid() && ent.all<TransformComponent>())
+    {
+        auto Transform {ent.get<TransformComponent>()};
+        m_bodyInterface->SetPositionAndRotation(bid, PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerDegreesToJoltQuat(Transform.m_Rotation), JPH::EActivation::Activate);
+    }
+}
+
 void PhysicsSystem::SyncTransformsFromPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
 
@@ -1606,6 +1755,54 @@ void PhysicsSystem::RecreateBodyWithNewShape(ecs::entity entity, ecs::world& wor
 
         spdlog::debug("PhysicsSystem: Recreated body {} for {} for entity {}", oldBodyID.GetIndexAndSequenceNumber(), newBodyID.GetIndexAndSequenceNumber(), entity.get_uuid());
     }
+}
+
+void PhysicsSystem::FitEntityColliderToMesh(ecs::entity ent, glm::vec3 scl) {
+    if (HasCollider(ent)) {
+        ColliderFit fit = GetMeshFittings(ent);
+        if (ent.all<BoxCollider>()) {
+            auto& box = ent.get<BoxCollider>();
+            box.size = fit.extents * scl;
+            box.center = fit.offset * scl;
+        }
+        if (ent.all<SphereCollider>()) {
+            auto& sph = ent.get<SphereCollider>();
+            sph.radius = glm::compMax(fit.extents * scl) / 2.f; //use ritters or something for a btr bv
+            sph.center = fit.offset * scl;
+        }
+        if (ent.all<CapsuleCollider>()) {
+            auto& cap = ent.get<CapsuleCollider>();
+            cap.mRadius = std::max(fit.extents.x*scl.x, fit.extents.z*scl.z)/2.f; //use ritters or something for a btr bv
+            cap.mHeight = fit.extents.y * scl.y;
+            cap.center = fit.offset * scl;
+        }
+        if (ent.all<MeshCollider>()) {
+            //return &ent.get<MeshCollider>();
+        }
+        if (auto bodyId = GetBodyID(ent); !bodyId.IsInvalid()) {
+            m_bodyInterface->SetShape(bodyId, CreateShapeFromCollider(ent), true, JPH::EActivation::Activate);
+        }
+    }
+}
+
+bool PhysicsSystem::HasCollider(ecs::entity ent) {
+    return ent.any<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>();
+}
+
+CollisionBase* PhysicsSystem::GetColliderBasePtr(ecs::entity ent) {
+    if (ent.all<BoxCollider>()) {
+        return &ent.get<BoxCollider>();
+    }
+    if (ent.all<SphereCollider>()) {
+        return &ent.get<SphereCollider>();
+    }
+    if (ent.all<CapsuleCollider>()) {
+        return &ent.get<CapsuleCollider>();
+    }
+    if (ent.all<MeshCollider>()) {
+        return &ent.get<MeshCollider>();
+    }
+    return nullptr;
 }
 
 // =============================================================================

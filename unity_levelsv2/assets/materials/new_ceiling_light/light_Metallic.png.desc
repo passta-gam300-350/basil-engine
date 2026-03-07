@@ -1,7 +1,0 @@
-base:
-  m_guid: 82929e87035bd65f4a8b83d323e
-  m_importer: .texture
-  m_source: materials\new_ceiling_light\light_Metallic.png
-  m_name: light_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

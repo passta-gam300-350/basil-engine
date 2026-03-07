@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b06b71a9bfd9c0bc61e2bbeb
-  m_importer: .texture
-  m_source: materials\ghost\Eye Close\ghost_eye_close_Normal.png
-  m_name: ghost_eye_close_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

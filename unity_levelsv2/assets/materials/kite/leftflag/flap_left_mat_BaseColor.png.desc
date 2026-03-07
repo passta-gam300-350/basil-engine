@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b9e27ceda509c9d61f739d5b
-  m_importer: .texture
-  m_source: materials\kite\leftflag\flap_left_mat_BaseColor.png
-  m_name: flap_left_mat_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

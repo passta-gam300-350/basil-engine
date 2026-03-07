@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7ca43722280f0de48e217d8d6
-  m_importer: .texture
-  m_source: materials\train\carryon\Carryon_Train_Roughness.png
-  m_name: Carryon_Train_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

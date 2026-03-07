@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7d18b7bfc87f11fb78f97d595
-  m_importer: .texture
-  m_source: materials\wall_open\wall_open_wall_BaseColor.png
-  m_name: wall_open_wall_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

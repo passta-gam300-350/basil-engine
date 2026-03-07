@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7ba967573995d0d5e0398ede5
-  m_importer: .texture
-  m_source: materials\kite\player\kite_player_mat_Metallic.png
-  m_name: kite_player_mat_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -1,7 +1,0 @@
-base:
-  m_guid: fe5f12477dd9e04761b8c8fb078
-  m_importer: .texture
-  m_source: 2d\ui\MainMenu_Background.jpg
-  m_name: MainMenu_Background.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

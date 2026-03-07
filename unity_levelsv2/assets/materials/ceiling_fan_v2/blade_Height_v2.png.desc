@@ -1,7 +1,0 @@
-base:
-  m_guid: 7c539d77f97a7d23ea750b006d2
-  m_importer: .texture
-  m_source: materials\ceiling_fan_v2\blade_Height_v2.png
-  m_name: blade_Height_v2.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

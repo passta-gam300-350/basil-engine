@@ -1,23 +1,19 @@
-# GitHub Actions Workflow: CI-CD
+# GitHub Actions Workflow: CI Build Check
 #
-# This workflow runs on pushes and pull requests to the main branch.
-# It is designed to build the project and automatically merge PRs.
+# This workflow runs on pull requests to the main branch.
+# It verifies the project builds successfully before allowing merge.
 #
-# It performs the following steps:
-# 1. Triggers on push to main or pull_request targeting main.
+# Steps:
+# 1. Triggers on pull_request targeting main.
 # 2. Cancels older, redundant builds on the same branch.
 # 3. Checks out the code.
 # 4. Clones the external 'mono' dependency.
 # 5. Configures the C++ project using CMake for x64 architecture.
-# 6. Compiles the project in Release mode.
-# 7. If running on a pull request and the build is successful, it automatically squashes and merges the PR.
+# 6. Compiles the editor in Release mode.
 
-name: CI-CD
+name: CI Build Check
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -28,12 +24,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-merge:
-    name: Build and Merge
+  build:
+    name: Build Check
     runs-on: windows-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: 1. Checkout Repository
@@ -46,12 +39,5 @@ jobs:
       - name: 3. Configure CMake
         run: cmake -S . -B build -A x64
 
-      - name: 4. Build Project
-        run: cmake --build build --config Release
-
-      - name: 5. Auto-merge Pull Request
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: 4. Build Editor and Engine
+        run: cmake --build build --config Release --target editor engine

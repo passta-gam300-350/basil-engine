@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c48579b3a9792adecc148919
-  m_importer: .texture
-  m_source: materials\spool\standardSurface1_Height.png
-  m_name: standardSurface1_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

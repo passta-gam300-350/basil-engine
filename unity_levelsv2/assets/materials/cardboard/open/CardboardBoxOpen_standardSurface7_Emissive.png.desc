@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7ac9c76efaac2535557f412c3
-  m_importer: .texture
-  m_source: materials\cardboard\open\CardboardBoxOpen_standardSurface7_Emissive.png
-  m_name: CardboardBoxOpen_standardSurface7_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
