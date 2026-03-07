@@ -52,6 +52,7 @@ public:
 	void Enable_BackEnd();
 	void Enable_Game();
 	void Enable_Compiler();
+	void ReloadGameDomain();
 	void Exit();
 
 	~MonoLoader();

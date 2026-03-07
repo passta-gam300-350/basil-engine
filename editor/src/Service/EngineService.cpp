@@ -10,6 +10,8 @@
 #include "System/Audio.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <Scene/Scene.hpp>
+#include "Input/Button.h"
+#include <Physics/Physics_Components.h>
 
 #include "System/BehaviourSystem.hpp"
 #include "Profiler/profiler.hpp"
@@ -249,8 +251,33 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 					dest_vid->backgroundColor = src_vid->backgroundColor;
 				}
 
+				if (meta_type.info().hash() == entt::type_hash<TransformComponent>::value()) {
+					TransformComponent* dest_trans = static_cast<TransformComponent*>(dest);
+					TransformComponent* src_trans = static_cast<TransformComponent*>(src);
+					if (src_trans->m_Scale != dest_trans->m_Scale) {
+						Engine::ResizeEntityPhysicsCollider(inspected_entity, src_trans->m_Scale, dest_trans->m_Scale);
+					}
+				}
+
+				bool shouldFitCollider{};
+				if (meta_type.info().hash() == entt::type_hash<MeshRendererComponent>::value()) {
+					MeshRendererComponent* dest_mesh = static_cast<MeshRendererComponent*>(dest);
+					MeshRendererComponent* src_mesh = static_cast<MeshRendererComponent*>(src);
+					if (src_mesh->m_MeshGuid != dest_mesh->m_MeshGuid) {
+						shouldFitCollider = true;
+					}
+				}
+
 				// Assign using meta system (properly handles copy constructors)
 				dest_any.assign(src_any);
+
+				if (shouldFitCollider) {
+					Engine::FitEntityColliderToMesh(inspected_entity);
+				}
+
+				if (meta_type.info().hash() == entt::type_hash<TransformComponent>::value()) {
+					Engine::SyncEntityTransformToPhysics(inspected_entity);
+				}
 
 				// Special handling for AudioComponent: Load sound from GUID if needed
 				if (meta_type.info().hash() == entt::type_hash<AudioComponent>::value()) {
@@ -348,7 +375,6 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		ecs::entity entity{ ehdl };
 		entt::entity enttntt{ ecs::world::detail::entt_entity_cast(entity) };
 
-
 		if (auto* storage = w.impl.get_registry().storage(type_id)) {
 			//bool alreadyExists = storage->contains(enttntt);
 			//spdlog::info("EngineService: Storage found for {}, component already exists={}",
@@ -360,6 +386,11 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				}
 				else {
 					storage->push(enttntt);
+					if (type_id == entt::type_hash<BoxCollider>::value() ||
+						type_id == entt::type_hash<SphereCollider>::value() ||
+						type_id == entt::type_hash<CapsuleCollider>::value() ||
+						type_id == entt::type_hash<MeshCollider>::value())
+						Engine::FitEntityColliderToMesh(entity);
 				}
 				//spdlog::info("EngineService: Added {} to entity {}", componentName, ehdl);
 			}
@@ -373,6 +404,20 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				//	             componentName, ehdl);
 				//}
 			}
+		}
+		else if (!is_delete) {
+			auto metaIt = ReflectionRegistry::types().find(type_id);
+			if (metaIt != ReflectionRegistry::types().end()) {
+				auto emplaceFunc = metaIt->second.func("emplace"_tn);
+				if (emplaceFunc) {
+					emplaceFunc.invoke({}, entt::forward_as_meta(w.impl.get_registry()), enttntt);
+				}
+			}
+			if (type_id == entt::type_hash<BoxCollider>::value() || 
+				type_id == entt::type_hash<SphereCollider>::value() || 
+				type_id == entt::type_hash<CapsuleCollider>::value() || 
+				type_id == entt::type_hash<MeshCollider>::value())
+				Engine::FitEntityColliderToMesh(entity);
 		}
 		//else {
 		//	spdlog::warn("EngineService: No storage found for type {} (type_id={})",
@@ -571,6 +616,21 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 				temp.emplace_back(std::make_pair(it->first, type_name_reg[it->second.id()]));
 			}
 		}
+
+		auto internalIt = ReflectionRegistry::InternalID().find(entt::type_index<Button>::value());
+		if (internalIt != ReflectionRegistry::InternalID().end()) {
+			const ReflectionRegistry::TypeID buttonTypeId = internalIt->second;
+			const bool alreadyListed = std::find_if(temp.begin(), temp.end(),
+				[buttonTypeId](const auto& entry) { return entry.first == buttonTypeId; }) != temp.end();
+
+			if (!alreadyListed) {
+				auto typeIt = type_reg.find(buttonTypeId);
+				if (typeIt != type_reg.end()) {
+					temp.emplace_back(buttonTypeId, type_name_reg[typeIt->second.id()]);
+				}
+			}
+		}
+
 		return temp;
 	}()};
 	return s_id_type_name_list;

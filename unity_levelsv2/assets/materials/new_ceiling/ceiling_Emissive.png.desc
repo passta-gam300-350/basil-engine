@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf73157c05873e2b85141a6afc
-  m_importer: .texture
-  m_source: materials\new_ceiling\ceiling_Emissive.png
-  m_name: ceiling_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

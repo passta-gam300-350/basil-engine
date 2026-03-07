@@ -10,26 +10,46 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 **************************************************************************/
 #pragma once
+#include <cstdint>
 #include <functional>
 #include <string>
 
-struct Button
+class Button
 {
-    Button() noexcept = default;
-    Button(float x, float y, float width, float height, const std::string& text);
+    public:
+        enum class Anchor : std::uint8_t
+        {
+            TopLeft,
+            TopCenter,
+            TopRight,
+            CenterLeft,
+            Center,
+            CenterRight,
+            BottomLeft,
+            BottomCenter,
+            BottomRight
+        };
 
-    void setOnClick(std::function<void()> callback);
+        Button();
+        Button(float x, float y, float width, float height, const std::string& text);
 
-    bool isHovered() const noexcept;
+        void setOnClick(std::function<void()> callback);
 
-    float x{};
-    float y{};
-    float width{};
-    float height{};
-    std::string text{};
+        void update(float mouseX, float mouseY, bool mousePressed);
+        void render() const;
 
-    bool hovered{};
-    bool pressed{};
+        bool isHovered() const;
 
-    std::function<void()> onClick{};
+    
+        float x, y;
+        float width, height;
+        Anchor anchor;
+        std::string text;
+
+        bool hovered;
+        bool pressed;
+        bool clicked;
+        bool disabled;
+
+        std::function<void()> onClick;
 };

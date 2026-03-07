@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c9247107a55c504a33974386
-  m_importer: .texture
-  m_source: materials\tin\wafer\biscuit_tin_tin_plastic_clear_Metallic.png
-  m_name: biscuit_tin_tin_plastic_clear_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

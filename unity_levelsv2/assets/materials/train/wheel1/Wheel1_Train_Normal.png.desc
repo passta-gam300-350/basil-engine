@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7cadb7d208e6368b64afe7e46
-  m_importer: .texture
-  m_source: materials\train\wheel1\Wheel1_Train_Normal.png
-  m_name: Wheel1_Train_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

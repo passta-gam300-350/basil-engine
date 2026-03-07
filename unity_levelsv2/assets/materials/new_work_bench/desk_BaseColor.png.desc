@@ -1,7 +1,0 @@
-base:
-  m_guid: 82929f87b8ea8a030d005121b10
-  m_importer: .texture
-  m_source: materials\new_work_bench\desk_BaseColor.png
-  m_name: desk_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

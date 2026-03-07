@@ -1,7 +1,0 @@
-base:
-  m_guid: 129707c47e938f8548dca4026ff7
-  m_importer: .texture
-  m_source: 2d\ui\pause menu\screens\Pause_Restart_Yes.jpg
-  m_name: Pause_Restart_Yes.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

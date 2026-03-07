@@ -21,6 +21,7 @@
 #include <glad/glad.h>
 #include "Render/VideoPlayback.hpp"
 #include "System/AnimationSystem.hpp"
+#include "System/ButtonSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 
 #ifdef _WIN32
@@ -111,6 +112,10 @@ void Engine::Init(std::string const& cfg ) {
 		spdlog::level::level_enum sink_severity{ logger["severity"] ? static_cast<spdlog::level::level_enum>(logger["severity"].as<int>()) : spdlog::level::info };
 		Instance().m_Sink.reset(new Logger::Sink{ sink_name, sink_file, sink_severity });
 	}
+	if (YAML::Node render{ root["render"] }; render) {
+		float gamma{ render["gamma"] ? render["gamma"].as<float>() : 2.2f };
+		Instance().m_Gamma = gamma;
+	}
 	else {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{} });
 	}
@@ -143,6 +148,7 @@ void Engine::Init(std::string const& cfg ) {
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
 	animationSystem().Init();
+	ButtonSystem::Instance().Init();
 
 	std::string manifest_path = std::string{ Engine::getWorkingDir() } + "/scene_manifest.order";
 	Instance().GetSceneRegistry().ReadManifest(manifest_path);
@@ -206,6 +212,7 @@ void Engine::CoreUpdate() {
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
 	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
+	ButtonSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	InputManager::Get_Instance()->Update();
@@ -413,6 +420,7 @@ void Engine::GenerateDefaultConfig(std::string_view name) {
 	YAML::Node root{  };
 	YAML::Node window{  };
 	YAML::Node logger{  };
+	YAML::Node render{  };
 	window["width"] = DEFAULT_RESOLUTION_WIDTH;
 	window["height"] = DEFAULT_RESOLUTION_HEIGHT;
 	window["fullscreen"] = DEFAULT_WINDOW_MODE;
@@ -421,10 +429,12 @@ void Engine::GenerateDefaultConfig(std::string_view name) {
 	logger["name"] = std::string(DEFAULT_SINK_NAME);
 	logger["output file"] = std::string(DEFAULT_OUTPUT_FILE);
 	logger["severity"] = DEFAULT_LOG_SEVERITY;
+	render["gamma"] = 2.2f;
 	root["window"] = window;
 	root["system"] = SystemRegistry::GetDefaultConfig();
 	root["resource"] = ResourceSystem::GetDefaultConfig();
 	root["logger"] = logger;
+	root["render"] = render;
 	std::ofstream ofs{ name.empty() ? DEFAULT_CONFIG_NAME.data()  : std::string(name.begin(), name.end())};
 	ofs << root;
 }
@@ -470,6 +480,21 @@ void Engine::BeginFrame()
 void Engine::EndFrame()
 {
 	PF_END_FRAME();
+}
+
+void Engine::SetGamma(float gamma)
+{
+	Instance().m_Gamma = gamma;
+
+	// Immediately sync to renderer if initialized
+	if (Instance().m_RenderSystem) {
+		Instance().m_RenderSystem->m_SceneRenderer->SetGamma(gamma);
+	}
+}
+
+float Engine::GetGamma()
+{
+	return Instance().m_Gamma;
 }
 
 void Engine::SyncActiveSceneRenderSettings()
@@ -563,6 +588,40 @@ void Engine::SyncActiveSceneRenderSettings()
 	renderSystem.m_SceneRenderer->SetBloomStrength(settings.bloomStrength);
 	renderSystem.m_SceneRenderer->SetToneMappingMethod(settings.toneMapMethod);
 	renderSystem.m_SceneRenderer->SetExposureClampRange(settings.exposureMin, settings.exposureMax);
+
+	// Sync global gamma setting (not per-scene)
+	renderSystem.m_SceneRenderer->SetGamma(Instance().m_Gamma);
+
+	// Sync fog settings to renderer
+	const auto& fog = settings.fog;
+	switch (fog.type) {
+		case FogType::Linear:
+			renderSystem.m_SceneRenderer->SetLinearFog(fog.start, fog.end, fog.color);
+			break;
+		case FogType::Exponential:
+			renderSystem.m_SceneRenderer->SetExpFog(fog.end, fog.density, fog.color);
+			break;
+		case FogType::ExponentialSquared:
+			renderSystem.m_SceneRenderer->SetExpSquaredFog(fog.end, fog.density, fog.color);
+			break;
+		default:
+			renderSystem.m_SceneRenderer->DisableFog();
+			break;
+	}
+}
+
+void Engine::SyncEntityTransformToPhysics(ecs::entity entity) {
+	PhysicsSystem::Instance().SyncEntityTransformsToPhysics(entity);
+}
+
+void Engine::ResizeEntityPhysicsCollider(ecs::entity entity, glm::vec3 new_scale, glm::vec3 old_scale) {
+	PhysicsSystem::Instance().ResizeEntityPhysics(entity, new_scale, old_scale);
+}
+
+void Engine::FitEntityColliderToMesh(ecs::entity entity) {
+	if (entity.all<TransformComponent>()) {
+		PhysicsSystem::Instance().FitEntityColliderToMesh(entity, entity.get<TransformComponent>().m_Scale);
+	}
 }
 
 bool loadEmbeddedIcon(GLFWimage& image, HINSTANCE hInstance, LPCSTR resourceName) {

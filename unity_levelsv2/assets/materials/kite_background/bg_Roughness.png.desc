@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7bcff764db0a1ca73b6af3a61
-  m_importer: .texture
-  m_source: materials\kite_background\bg_Roughness.png
-  m_name: bg_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

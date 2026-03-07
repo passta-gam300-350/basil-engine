@@ -9,7 +9,7 @@ uniform sampler2D u_BloomTexture;
 uniform float u_Exposure = 1.0;
 uniform float u_AvgLuminance = 0.5;
 uniform int u_Method = 3;  // 0=None, 1=Reinhard, 2=ACES, 3=Exposure
-uniform bool u_EnableGamma = true;
+uniform float u_Gamma = 2.2;  // Gamma correction value (2.2 = standard sRGB)
 uniform int u_BloomEnabled = 0;
 uniform float u_BloomStrength = 0.04;
 
@@ -48,8 +48,8 @@ vec3 ExposureToneMapping(vec3 hdrColor, float exposure) {
 }
 
 // Gamma Correction (Linear � sRGB)
-vec3 GammaCorrection(vec3 color) {
-    return pow(color, vec3(1.0 / 2.2));
+vec3 GammaCorrection(vec3 color, float gamma) {
+    return pow(color, vec3(1.0 / gamma));
 }
 
 // ===== Main =====
@@ -88,9 +88,9 @@ void main()
             mapped = Reinhard(hdrColor);
     }
 
-    // Apply gamma correction if enabled
-    if (u_EnableGamma) {
-        mapped = GammaCorrection(mapped);
+    // Apply gamma correction if gamma > 0.0
+    if (u_Gamma > 0.0) {
+        mapped = GammaCorrection(mapped, u_Gamma);
     }
 
     FragColor = vec4(mapped, 1.0);

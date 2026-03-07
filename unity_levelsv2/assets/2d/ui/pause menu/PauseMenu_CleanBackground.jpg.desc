@@ -1,7 +1,0 @@
-base:
-  m_guid: 1247c2bd78f2abaedff9db54bb0b
-  m_importer: .texture
-  m_source: 2d\ui\pause menu\PauseMenu_CleanBackground.jpg
-  m_name: PauseMenu_CleanBackground.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

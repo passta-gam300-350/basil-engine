@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7cf3a778d8fc835f99ff3289c
-  m_importer: .texture
-  m_source: materials\tree\05\tree_05_Normal.png
-  m_name: tree_05_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

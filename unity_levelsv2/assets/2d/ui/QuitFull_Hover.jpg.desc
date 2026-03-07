@@ -1,7 +1,0 @@
-base:
-  m_guid: fef96cb7ff8bd6aa86f295121b1
-  m_importer: .texture
-  m_source: 2d\ui\QuitFull_Hover.jpg
-  m_name: QuitFull_Hover.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

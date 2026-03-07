@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b9cd7a769d23a3023adb8e1a
-  m_importer: .texture
-  m_source: materials\kite\kite_Roughness.png
-  m_name: kite_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

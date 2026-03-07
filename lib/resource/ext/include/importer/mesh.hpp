@@ -19,6 +19,8 @@
 #include "descriptors/skeleton.hpp"
 #include <native/mesh.h>
 
+#include <stb_image.h>
+
 // --- helper: build transform matrix ---
 inline glm::mat4 BuildTransform(ModelDescriptor const& desc) {
     glm::mat4 T(1.0f);
@@ -87,10 +89,11 @@ void saveRawTexture(const aiTexture* tex, const std::string& filename) {
     out.close();
 }
 
-inline std::vector<TextureDescriptor> ExtractEmbeddedTexture(aiScene const* scene, std::string const& parent = "", std::string const& default_prefix = "") {
+inline std::pair<std::vector<TextureDescriptor>, std::vector<bool>> ExtractEmbeddedTexture(aiScene const* scene, std::string const& parent = "", std::string const& default_prefix = "") {
     std::vector<TextureDescriptor> embedded_tex;
+    std::vector<bool> is_transparent;
     if (!scene->HasTextures()) {
-        return embedded_tex;
+        return { embedded_tex, is_transparent };
     }
 
     embedded_tex.reserve(scene->mNumTextures);
@@ -100,27 +103,36 @@ inline std::vector<TextureDescriptor> ExtractEmbeddedTexture(aiScene const* scen
         baseName = baseName.empty() ? default_prefix+std::to_string(i) : baseName;
         TextureDescriptor texdesc;
         std::string filename{parent};
+        texdesc.base.m_importer = "texture";
+        texdesc.base.m_importer_type = rp::utility::type_hash<TextureDescriptor>::value();
 
         if (tex->mHeight == 0) {
             // Compressed texture
             std::string ext = tex->achFormatHint; // e.g. "png", "jpg"
             filename = filename + "/" + (texdesc.base.m_name = baseName + "." + ext);
+            int x{};
+            int y{}; 
+            int comp{};
+            int status = stbi_info_from_memory(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, &x, &y, &comp);
+            texdesc.base.m_source = rp::utility::get_relative_path(filename, rp::utility::working_path());
+            is_transparent.emplace_back((status && (comp == 2 || comp == 4)));
+            SaveOrOverwriteDescriptors(texdesc, parent);
             saveCompressedTexture(tex, filename);
         }
         else {
             // Raw BGRA texture
             filename = filename + "/" + (texdesc.base.m_name = baseName + ".tga");
+            texdesc.base.m_source = rp::utility::get_relative_path(filename, rp::utility::working_path());
+            SaveOrOverwriteDescriptors(texdesc, parent);
             saveRawTexture(tex, filename);
+            is_transparent.emplace_back(true);
         }
-        texdesc.base.m_source = rp::utility::get_relative_path(filename, rp::utility::working_path());
-        texdesc.base.m_importer = "texture";
-        texdesc.base.m_importer_type = rp::utility::type_hash<TextureDescriptor>::value();
         embedded_tex.emplace_back(texdesc);
     }
-    return embedded_tex;
+    return { embedded_tex, is_transparent };
 }
 
-bool IsMaterialTransparent(const aiMaterial* mat) {
+bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans, std::string const& basepath) {
     if (!mat) return false;
 
     // 1. Check opacity
@@ -147,6 +159,21 @@ bool IsMaterialTransparent(const aiMaterial* mat) {
         }
     }
 
+    int blendFunc; 
+    if (mat->Get(AI_MATKEY_BLEND_FUNC, blendFunc) == AI_SUCCESS) { 
+        if (blendFunc != aiBlendMode_Default) {
+            return true;
+        }
+    }
+
+    aiColor4D diffuse;
+    if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS) {
+        if (diffuse.a < 1.0f) {
+            return true;
+        }
+    }
+
+
     // 4. Check if diffuse/base color texture has alpha channel
     aiString texPath;
     if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
@@ -154,6 +181,21 @@ bool IsMaterialTransparent(const aiMaterial* mat) {
         // You’d need to load the texture image and inspect its pixel format.
         // For example, if you use stb_image or another loader, check if it has 4 channels.
         // If so, you can decide based on alpha values.
+        int index{};
+        if (*texPath.C_Str() == '*') {
+            if (int index = std::stoi(texPath.C_Str()+1); index < trans.size()) {
+                return trans[index];
+            }
+            return false;
+        }
+        else {
+            int x{};
+            int y{};
+            int comp{};
+            int len{};
+            int status = stbi_info((basepath + '\\' + texPath.C_Str()).c_str(), &x, &y, &comp);
+            return (status && (comp == 2 || comp == 4));
+        }
     }
 
     return false;
@@ -161,7 +203,7 @@ bool IsMaterialTransparent(const aiMaterial* mat) {
 
 
 // --- helper: extract material into MaterialDescriptor ---
-inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& base_path, std::vector<TextureDescriptor> const& embeddedTexturesGuid) {
+inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& base_path, std::vector<TextureDescriptor> const& embeddedTexturesGuid, std::vector<bool> const& embeddedTextureTrans) {
     MaterialDescriptor matDesc{};
     aiString name;
     if (AI_SUCCESS == aimat->Get(AI_MATKEY_NAME, name)) {
@@ -191,7 +233,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     }
 
     const auto getTextureGuid{ [](std::string const& texname) {
-        if (std::string desc_path{texname.substr(0, texname.rfind('.')) + ".desc"}; std::filesystem::exists(desc_path)) {
+        if (std::string desc_path{texname + ".desc"}; std::filesystem::exists(desc_path)) {
             return rp::serialization::yaml_serializer::deserialize<TextureDescriptor>(desc_path).base.m_guid;
         }
         else {
@@ -229,7 +271,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
 
     matDesc.material.vert_name = "main_pbr.vert";
     matDesc.material.frag_name = "main_pbr.frag";
-    matDesc.material.blend_mode = IsMaterialTransparent(aimat) ? 1 : 0;
+    matDesc.material.blend_mode = IsMaterialTransparent(aimat, embeddedTextureTrans, base_path) ? 1 : 0;
 
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();
@@ -336,7 +378,7 @@ inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, [[maybe_unused]] 
 }
 
 // --- helper: process one aiMesh ---
-inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, glm::mat4 const& transform, bool extract_material, std::unordered_map<std::string, int> const& boneMap, std::vector<TextureDescriptor> const& embeddedTextures, std::vector<MaterialDescriptor>& outMaterials, std::string const& base_path)
+inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, glm::mat4 const& transform, bool extract_material, std::unordered_map<std::string, int> const& boneMap, std::vector<TextureDescriptor> const& embeddedTextures, std::vector<bool> const& embeddedTextureTrans, std::vector<MaterialDescriptor>& outMaterials, std::string const& base_path)
 {
     MeshResourceData::Mesh out;
 
@@ -443,7 +485,7 @@ inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, gl
         unsigned int matIndex = mesh->mMaterialIndex;
         if (matIndex < scene->mNumMaterials) {
             aiMaterial* aimat = scene->mMaterials[matIndex];
-            MaterialDescriptor matDesc = ExtractMaterial(aimat, base_path, embeddedTextures);
+            MaterialDescriptor matDesc = ExtractMaterial(aimat, base_path, embeddedTextures, embeddedTextureTrans);
             slot.material_guid = matDesc.base.m_guid;
             slot.material_slot_name = matDesc.base.m_name;
             outMaterials.push_back(std::move(matDesc));
@@ -512,13 +554,13 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         getNodeMap(scene, boneMap);
     }
 
-    std::vector<TextureDescriptor> extractedTextures{ desc.extract_textures ? ExtractEmbeddedTexture(scene, parent, desc.base.m_name) : std::vector<TextureDescriptor>{} };
+    auto [extractedTextures, extractedTexturesTrans] { desc.extract_textures ? ExtractEmbeddedTexture(scene, parent, desc.base.m_name) : std::pair{std::vector<TextureDescriptor>{}, std::vector<bool>{}} };
     if (desc.extract_textures) {
-        for (auto& texdesc : extractedTextures) {
+        /*for (auto& texdesc : extractedTextures) {
             SaveOrOverwriteDescriptors(texdesc, parent);
-        }
+        }*/ //done in ExtractEmbeddedTexture()
     }
-    auto processNodes = [&desc, &parent_path, &extractedMaterials, &extractedTextures, &boneMap, &mdl_node_desc](aiScene const* sceneptr, glm::mat4 const& basetransform) {
+    auto processNodes = [&desc, &parent_path, &extractedMaterials, &extractedTextures, &extractedTexturesTrans, &boneMap, &mdl_node_desc](aiScene const* sceneptr, glm::mat4 const& basetransform) {
         auto processNode = [&](aiNode const* ndptr, aiScene const* sptr, glm::mat4 const& parentTransform, std::vector<std::pair<rp::Guid, MeshResourceData>>& mres, int parentidx, auto nodeFn) {
             if (!ndptr)
                 return;
@@ -529,7 +571,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
             mdl_node_desc.meta.node_local_bind.emplace_back(mtx44{nodeLocalTransform[0], nodeLocalTransform[1], nodeLocalTransform[2], nodeLocalTransform[3]});
             mdl_node_desc.meta.node_parent.emplace_back(parentidx);
             for (unsigned int m = 0; m < ndptr->mNumMeshes; m++) {
-                MeshResourceData::Mesh mesh = ProcessMesh(sptr->mMeshes[ndptr->mMeshes[m]], sptr, nodeWorldTransform, desc.extract_material, boneMap, extractedTextures, extractedMaterials, parent_path);
+                MeshResourceData::Mesh mesh = ProcessMesh(sptr->mMeshes[ndptr->mMeshes[m]], sptr, nodeWorldTransform, desc.extract_material, boneMap, extractedTextures, extractedTexturesTrans, extractedMaterials, parent_path);
                 if (desc.merge_mesh) {
                     if (mres.empty()) {
                         MeshResourceData mrdata;

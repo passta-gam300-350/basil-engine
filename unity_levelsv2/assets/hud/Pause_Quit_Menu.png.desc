@@ -1,7 +1,0 @@
-base:
-  m_guid: 109e5e347250877de2171046a390
-  m_importer: .texture
-  m_source: hud\Pause_Quit_Menu.png
-  m_name: Pause_Quit_Menu.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

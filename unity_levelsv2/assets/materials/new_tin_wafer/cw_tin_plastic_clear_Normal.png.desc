@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c29478b89c4dd0dd82704b90
-  m_importer: .texture
-  m_source: materials\new_tin_wafer\cw_tin_plastic_clear_Normal.png
-  m_name: cw_tin_plastic_clear_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

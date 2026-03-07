@@ -139,10 +139,10 @@ void ToneMapRenderPass::Execute(RenderContext& context)
     };
     Submit(methodCmd);
 
-    RenderCommands::SetUniformBoolData gammaCmd{
+    RenderCommands::SetUniformFloatData gammaCmd{
         m_ToneMappingShader,
-        "u_EnableGamma",
-        m_GammaCorrection
+        "u_Gamma",
+        m_Gamma
     };
     Submit(gammaCmd);
 

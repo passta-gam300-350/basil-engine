@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf7338748ebb49624c820c3d4c
-  m_importer: .texture
-  m_source: materials\new_ceiling\ceiling_Normal.png
-  m_name: ceiling_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

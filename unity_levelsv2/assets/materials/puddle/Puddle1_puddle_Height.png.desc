@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c34c7d97a40afe1814db111c
-  m_importer: .texture
-  m_source: materials\puddle\Puddle1_puddle_Height.png
-  m_name: Puddle1_puddle_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

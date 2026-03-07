@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7a4947b6ba5427045d0361954
-  m_importer: .texture
-  m_source: materials\biscuit_cheese\Closed\ch_bx_tape_Metallic.png
-  m_name: ch_bx_tape_Metallic.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

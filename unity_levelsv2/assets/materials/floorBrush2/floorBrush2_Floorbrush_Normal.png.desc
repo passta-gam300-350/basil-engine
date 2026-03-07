@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7aff675819a371a12594ca657
-  m_importer: .texture
-  m_source: materials\floorBrush2\floorBrush2_Floorbrush_Normal.png
-  m_name: floorBrush2_Floorbrush_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

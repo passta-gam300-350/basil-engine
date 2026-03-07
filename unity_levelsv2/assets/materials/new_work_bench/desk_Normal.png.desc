@@ -1,7 +1,0 @@
-base:
-  m_guid: 82929fc79699cf2aec48b522b58
-  m_importer: .texture
-  m_source: materials\new_work_bench\desk_Normal.png
-  m_name: desk_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

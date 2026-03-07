@@ -287,6 +287,13 @@ bool InputManager::Is_MouseReleased(int button) const
 
 void InputManager::Get_MousePosition(double& xpos, double& ypos) const
 {
+    if (mouseOverrideEnabled.load())
+    {
+        xpos = static_cast<double>(mouseOverrideX.load());
+        ypos = static_cast<double>(mouseOverrideY.load());
+        return;
+    }
+
     xpos = mouseXPosition;
     ypos = mouseYPosition;
     #ifdef _DEBUG
@@ -296,11 +303,28 @@ void InputManager::Get_MousePosition(double& xpos, double& ypos) const
 
 void InputManager::Get_MousePosition(float& xpos, float& ypos) const
 {
+    if (mouseOverrideEnabled.load())
+    {
+        xpos = mouseOverrideX.load();
+        ypos = mouseOverrideY.load();
+        return;
+    }
+
     xpos = static_cast<float>(mouseXPosition);
     ypos = static_cast<float>(mouseYPosition);
     #ifdef _DEBUG
         //std::cout << "Mouse cursor position: (" << xpos << ", " << ypos << ")" << std::endl;
     #endif
+}
+
+void InputManager::Set_MouseOverride(float xpos, float ypos, bool enabled)
+{
+    mouseOverrideEnabled.store(enabled);
+    if (enabled)
+    {
+        mouseOverrideX.store(xpos);
+        mouseOverrideY.store(ypos);
+    }
 }
 
 void InputManager::Get_ScrollOffset(double& xoffset, double& yoffset) const

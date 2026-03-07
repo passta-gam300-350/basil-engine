@@ -1,7 +1,0 @@
-base:
-  m_guid: 129707a479dbb0ece368f0d188d5
-  m_importer: .texture
-  m_source: 2d\ui\pause menu\screens\Pause_Quit_Yes.jpg
-  m_name: Pause_Quit_Yes.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8
