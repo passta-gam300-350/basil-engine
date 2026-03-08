@@ -43,6 +43,8 @@ Parameters:
 Character name
 BehaviorTreeTypes enum value
 
+Example agent in Agent.cpp
+
 -------------------------------------------------------------------------------
 Create / Modify a Behaviour Tree file - .bht file
 
