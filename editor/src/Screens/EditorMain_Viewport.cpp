@@ -96,7 +96,7 @@ void EditorMain::Render_Game()
 			// Match HUD's fixed reference resolution space used by the shader path.
 			const float gameSpaceX = (localX / viewportSize.x) * 1920.0f;
 			const float gameSpaceY = 1080.0f - ((localY / viewportSize.y) * 1080.0f);
-			InputManager::Get_Instance()->Set_MouseOverride(gameSpaceX, gameSpaceY, true);
+			//InputManager::Get_Instance()->Set_MouseOverride(gameSpaceX, gameSpaceY, true);
 		}
 		else
 		{
