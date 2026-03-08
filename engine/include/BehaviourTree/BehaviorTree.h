@@ -3,6 +3,7 @@
 \file		BehaviorTree.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\co-author  Saminathan Aaron Nicholas fro CSD3451
 \summary	Behavior tree declarations
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -31,3 +32,14 @@ private:
     BehaviorNode *rootNode;
     const char *treeName;
 };
+
+/*
+Creating a tree for a character:
+    Class character
+    {
+        private:
+            BehaviorTree* tree;
+    }
+
+Register new nodes in Nodes.def
+*/
