@@ -15,6 +15,7 @@
 
 #include "System/BehaviourSystem.hpp"
 #include "Profiler/profiler.hpp"
+#include "Component/MaterialOverridesComponent.hpp"
 
 void EngineContainerService::EngineContainer::engine_service() {
 	MonoEntityManager::GetInstance().initialize();
@@ -411,6 +412,19 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 				auto emplaceFunc = metaIt->second.func("emplace"_tn);
 				if (emplaceFunc) {
 					emplaceFunc.invoke({}, entt::forward_as_meta(w.impl.get_registry()), enttntt);
+
+					// Initialize MaterialOverridesComponent with default PBR properties
+					if (type_id == entt::type_hash<MaterialOverridesComponent>::value()) {
+						ecs::entity entity{ ehdl };
+						if (entity.all<MaterialOverridesComponent>()) {
+							MaterialOverridesComponent& component = entity.get<MaterialOverridesComponent>();
+							// Populate with standard PBR properties by default
+							component.floatOverrides["u_MetallicValue"] = 0.7f;
+							component.floatOverrides["u_RoughnessValue"] = 0.3f;
+							component.floatOverrides["u_NormalStrength"] = 1.0f;
+							component.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.7f, 0.6f);
+						}
+					}
 				}
 			}
 			if (type_id == entt::type_hash<BoxCollider>::value() || 
