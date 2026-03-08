@@ -3,6 +3,7 @@
 \file		BehaviorNode.cpp
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\co-author  Saminathan Aaron Nicholas for CSD3451
 \summary	Base behavior tree node implementation
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -11,9 +12,9 @@ written consent of DigiPen Institute of Technology is prohibited.
 */
 /******************************************************************************/
 
-#include <pch.h>
+// #include <pch.h>
 #include "BehaviorNode.h"
-#include "Agent/BehaviorAgent.h"
+#include "BehaviorAgent.h"
 
 void BehaviorNode::set_debug_info(const char *n, const char *s)
 {

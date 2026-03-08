@@ -16,7 +16,7 @@
 #include "Decorator/D_InvertedRepeater.h"
 #include "Decorator/D_RepeatFourTimes.h"
 
-// Student Decorator Nodes
+// Decorator Nodes
 #include "Decorator/My_RepeatTwoTimes.h"
 #include "Decorator/My_RepeatThreeTimes.h"
 
@@ -28,7 +28,7 @@
 #include "Leaf/L_MoveToRandomPosition.h"
 #include "Leaf/L_PlaySound.h"
 
-// Student Leaf Nodes
+// Leaf Nodes
 #include "Leaf/My_Idle.h"
 #include "Leaf/My_wait.h"
 #include "Leaf/My_MoveToFurthestFromMouse.h"

@@ -3,6 +3,7 @@
 \file		NodeInfo.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\co-author  Saminathan Aaron Nicholas for CSD3451
 \summary	Helper functions for behavior node details
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -13,7 +14,7 @@ written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 #include "BehaviorNode.h"
-#include "../Student/Project_1/NodeHeaders.h"
+#include "NodeHeaders.h"
 
 enum class NodeTypes
 {
@@ -21,8 +22,7 @@ enum class NodeTypes
     #define REGISTER_DECORATOR(Name, Summary) Name,
     #define REGISTER_LEAF(Name, Summary) Name,
 
-    //#include "../Student/Project_1/Nodes.def"
-    #include "../Source/Student/Project_1/Nodes.def"
+    #include "Nodes.def"
     NUM_ENTRIES
 
     #undef REGISTER_CONTROLFLOW
@@ -36,7 +36,7 @@ static const char *nodeNames[] =
     #define REGISTER_DECORATOR(Name, Summary) #Name,
     #define REGISTER_LEAF(Name, Summary) #Name,
 
-    #include "../Source/Student/Project_1/Nodes.def"
+    #include "Nodes.def"
     "Invalid"
 
     #undef REGISTER_CONTROLFLOW
@@ -50,7 +50,7 @@ static const char *nodeSummaries[] =
     #define REGISTER_DECORATOR(Name, Summary) Summary,
     #define REGISTER_LEAF(Name, Summary) Summary,
 
-    #include "../Source/Student/Project_1/Nodes.def"
+    #include "Nodes.def"
     "Invalid"
 
     #undef REGISTER_CONTROLFLOW
@@ -64,7 +64,7 @@ static BehaviorNode *nodePrototypes[] =
     #define REGISTER_DECORATOR(Name, Summary) new (Name)(),
     #define REGISTER_LEAF(Name, Summary) new (Name)(),
 
-    #include "../Source/Student/Project_1/Nodes.def"
+    #include "Nodes.def"
     nullptr
 
     #undef REGISTER_CONTROLFLOW

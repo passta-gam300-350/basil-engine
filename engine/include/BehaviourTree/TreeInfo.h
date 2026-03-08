@@ -3,6 +3,7 @@
 \file		TreeInfo.h
 \project	CS380/CS580 AI Framework
 \author		Dustin Holmes
+\co-author  Saminathan Aaron Nicholas for CSD3451
 \summary	Helper functions for behavior tree details
 
 Copyright (C) 2018 DigiPen Institute of Technology.
@@ -18,7 +19,7 @@ enum class BehaviorTreeTypes
     #define TREENAME(Name) Name,
     #define TREENODE(Node, Depth)
     
-    #include "../Student/Project_1/Trees.def"
+    #include "Trees.def"
     NUM_ENTRIES
 
     #undef TREENAME
@@ -30,7 +31,7 @@ static const char *behaviorTreeNames[] =
     #define TREENAME(Name) #Name,
     #define TREENODE(Node, Depth)
 
-    #include "../Student/Project_1/Trees.def"
+    #include "Trees.def"
     "Invalid"
 
     #undef TREENAME
