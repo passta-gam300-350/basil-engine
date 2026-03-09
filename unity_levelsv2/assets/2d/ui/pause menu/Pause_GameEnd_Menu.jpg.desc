@@ -1,7 +1,0 @@
-base:
-  m_guid: 1247c2dd7968a106f43890ba4ce9
-  m_importer: .texture
-  m_source: 2d\ui\pause menu\Pause_GameEnd_Menu.jpg
-  m_name: Pause_GameEnd_Menu.jpg
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

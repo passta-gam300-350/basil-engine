@@ -1,7 +1,0 @@
-base:
-  m_guid: 469fdc57fdbb35170add9f250b2
-  m_importer: .texture
-  m_source: materials\table_new_TableDetails_Normal.png
-  m_name: table_new_TableDetails_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

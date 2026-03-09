@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c33173c28aaf22a2661ec3ad
-  m_importer: .texture
-  m_source: materials\puddle\Puddle1_puddle_Emissive.png
-  m_name: Puddle1_puddle_Emissive.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

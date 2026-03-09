@@ -1,7 +1,0 @@
-base:
-  m_guid: dc3b6cd7633888e1f1aa72b250a
-  m_importer: .texture
-  m_source: hud\Main Menu\SETTINGS_NoHover.png
-  m_name: SETTINGS_NoHover.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -319,6 +319,7 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         glm::vec3 albedoColor = renderable.material->GetAlbedoColor();
         float metallicValue = renderable.material->GetMetallicValue();
         float roughnessValue = renderable.material->GetRoughnessValue();
+        float normalStrength = renderable.material->GetNormalStrength();
 
         // Apply property block overrides if present
         if (renderable.propertyBlock) {
@@ -344,6 +345,11 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", overrideRoughness)) {
                 roughnessValue = overrideRoughness;
             }
+
+            float overrideNormalStrength;
+            if (renderable.propertyBlock->TryGetFloat("u_NormalStrength", overrideNormalStrength)) {
+                normalStrength = overrideNormalStrength;
+            }
         }
 
         instanceData.color = glm::vec4(albedoColor, 1.0f);
@@ -351,6 +357,10 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         instanceData.flags = 0;
         instanceData.metallic = metallicValue;
         instanceData.roughness = roughnessValue;
+        instanceData.normalStrength = normalStrength;
+        instanceData.padding = 0.0f;
+        instanceData.padding2 = 0.0f;
+        instanceData.padding3 = 0.0f;
 
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
@@ -569,8 +579,12 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
             instanceData.color = glm::vec4(albedo, 1.0f);
             instanceData.metallic = renderable->material->GetMetallicValue();
             instanceData.roughness = renderable->material->GetRoughnessValue();
+            instanceData.normalStrength = renderable->material->GetNormalStrength();
             instanceData.materialId = 0;
             instanceData.flags = 0;
+            instanceData.padding = 0.0f;
+            instanceData.padding2 = 0.0f;
+            instanceData.padding3 = 0.0f;
 
             if (!m_SkinnedInstanceSSBO)
             {

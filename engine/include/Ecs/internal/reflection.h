@@ -722,6 +722,11 @@ namespace {											\
 	inline int TYPE##_reflection_register = []() {	\
 		RegisterReflectionComponent<TYPE>(TYPENAME);\
 		return 1;}();}	
+#define RegisterReflectionTypeEnumAlias(TYPE, ALIAS, TYPENAME)	\
+namespace {											\
+	inline int ALIAS##_reflection_register = []() {	\
+		RegisterReflectionComponent<TYPE>(TYPENAME);\
+		return 1;}();}	
 #define RegisterReflectionTypeBegin(TYPE, TYPENAME) \
 namespace {											\
 	inline int TYPE##_reflection_register = []() {	\

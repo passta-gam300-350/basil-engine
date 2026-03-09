@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c4a27d14934052f5e972d5fb
-  m_importer: .texture
-  m_source: materials\spool\standardSurface1_Normal.png
-  m_name: standardSurface1_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

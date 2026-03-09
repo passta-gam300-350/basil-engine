@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c62f7426932a0f289bf480af
-  m_importer: .texture
-  m_source: materials\table\table_new_tableGlass_BaseColor.png
-  m_name: table_new_tableGlass_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

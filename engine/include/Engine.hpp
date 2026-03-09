@@ -43,6 +43,9 @@ class Engine
 	on_world_load_cb m_OnWorldLoadCallback{};
 	on_world_unload_cb m_OnWorldUnloadCallback{};
 
+	// Global render settings
+	float m_Gamma = 2.2f;  // Standard sRGB gamma value
+
 public:
 	struct Info {
 
@@ -106,6 +109,10 @@ public:
 	// Unity-style skybox system - sync active scene's render settings to renderer
 	static void SyncActiveSceneRenderSettings();
 
+	static void SyncEntityTransformToPhysics(ecs::entity);
+	static void ResizeEntityPhysicsCollider(ecs::entity entity, glm::vec3 new_scale, glm::vec3 old_scale = glm::vec3(1.f));
+	static void FitEntityColliderToMesh(ecs::entity entity);
+
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
 	
@@ -148,6 +155,10 @@ public:
 	{
 		return Instance().m_WorkingDirectory;
 	}
+
+	// Global render settings
+	static void SetGamma(float gamma);
+	static float GetGamma();
 };
 
 

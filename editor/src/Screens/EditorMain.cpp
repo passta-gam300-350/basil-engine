@@ -522,33 +522,69 @@ extern bool g_GameViewportFocused;
 void EditorMain::update()
 {
 	if (!active) return;
-	PF_EDITOR_SYSTEM("WaitForEngineSnapshot");
-	std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
+	{
+		PF_EDITOR_SYSTEM("WaitForEngineSnapshot");
+		std::lock_guard lg{ engineService.m_cont->m_mtx }; //wait for snapshot
 
-	// Update editor camera snapshot for engine thread (Phase 1: Snapshot pattern)
-	if (m_EditorCamera) {
-		auto& snapshot = engineService.m_cont->m_editorCameraSnapshot;
-		snapshot.position = m_EditorCamera->GetPosition();
-		snapshot.front = m_EditorCamera->GetForward();
-		snapshot.up = m_EditorCamera->GetUp();
-		snapshot.right = m_EditorCamera->GetRight();
-		snapshot.fov = m_EditorCamera->m_Fov;
-		snapshot.aspectRatio = m_EditorCamera->m_AspectRatio;
-		snapshot.nearPlane = m_EditorCamera->m_Near;
-		snapshot.farPlane = m_EditorCamera->m_Far;
-		snapshot.isPerspective = (m_EditorCamera->m_Type == EditorCamera::CameraType::PERSPECTIVE);
+		// Update editor camera snapshot for engine thread (Phase 1: Snapshot pattern)
+		if (m_EditorCamera) {
+			auto& snapshot = engineService.m_cont->m_editorCameraSnapshot;
+			snapshot.position = m_EditorCamera->GetPosition();
+			snapshot.front = m_EditorCamera->GetForward();
+			snapshot.up = m_EditorCamera->GetUp();
+			snapshot.right = m_EditorCamera->GetRight();
+			snapshot.fov = m_EditorCamera->m_Fov;
+			snapshot.aspectRatio = m_EditorCamera->m_AspectRatio;
+			snapshot.nearPlane = m_EditorCamera->m_Near;
+			snapshot.farPlane = m_EditorCamera->m_Far;
+			snapshot.isPerspective = (m_EditorCamera->m_Type == EditorCamera::CameraType::PERSPECTIVE);
 
-		// Viewport rendering optimization: only render focused viewport
-		// Focus state is tracked by Render_Scene() and Render_Game() from previous frame
-		snapshot.renderSceneViewport = true;  // Always render scene viewport so inspector edits update immediately
-		snapshot.renderGameViewport = g_GameViewportFocused;
+			// Viewport rendering optimization: only render focused viewport
+			// Focus state is tracked by Render_Scene() and Render_Game() from previous frame
+			snapshot.renderSceneViewport = true;  // Always render scene viewport so inspector edits update immediately
+			snapshot.renderGameViewport = g_GameViewportFocused;
+		}
+	}
 
-		// Debug: Log snapshot values every 60 frames
-		//static int debugFrameCounter = 0;
-		//if (debugFrameCounter++ % 60 == 0) {
-		//	spdlog::info("EditorMain::update: Setting snapshot - renderSceneViewport={}, renderGameViewport={}",
-		//		snapshot.renderSceneViewport, snapshot.renderGameViewport);
-		//}
+	if (m_AssetManager)
+	{
+		auto changedScripts = m_AssetManager->GetAndClearChangedScripts();
+		if (!changedScripts.empty())
+		{
+			m_ScriptHotReloadPending = true;
+			m_LastScriptChangeTime = std::chrono::steady_clock::now();
+			if (isPlaying || isPaused)
+			{
+				m_ScriptHotReloadDeferredUntilEdit = true;
+				spdlog::info("EditorMain: Detected {} changed C# script(s) during play mode, deferring reload until edit mode", changedScripts.size());
+			}
+			else
+			{
+				spdlog::info("EditorMain: Detected {} changed C# script(s), scheduling hot reload", changedScripts.size());
+			}
+		}
+	}
+
+	if (m_ScriptHotReloadPending && !m_ScriptHotReloadInFlight)
+	{
+		if (isPlaying || isPaused)
+		{
+			return;
+		}
+
+		const auto now = std::chrono::steady_clock::now();
+		if (now - m_LastScriptChangeTime >= m_ScriptHotReloadDebounce)
+		{
+			m_ScriptHotReloadPending = false;
+			m_ScriptHotReloadDeferredUntilEdit = false;
+			m_ScriptHotReloadInFlight = true;
+			m_ShowScriptCompileModal = true;
+			spdlog::info("EditorMain: Triggering managed script recompile and reload");
+			engineService.ExecuteOnEngineThread([this]() {
+				MonoEntityManager::GetInstance().StartCompilation();
+				m_ScriptHotReloadInFlight = false;
+			});
+		}
 	}
 }
 
@@ -633,6 +669,7 @@ void EditorMain::render()
 		Render_Scene();
 		Render_Game();
 		Render_CameraControls();
+		Render_ScriptCompileModal();
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar();
@@ -676,6 +713,38 @@ bool EditorMain::isWindowClosed()
 bool EditorMain::Activate()
 {
 	return true;
+}
+
+void EditorMain::Render_ScriptCompileModal()
+{
+	if (m_ShowScriptCompileModal)
+	{
+		ImGui::OpenPopup("Compiling Scripts");
+	}
+
+	const bool popupOpen = ImGui::BeginPopupModal("Compiling Scripts", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+	if (!popupOpen)
+	{
+		return;
+	}
+
+	static constexpr const char* spinnerFrames[] = { "|", "/", "-", "\\" };
+	const auto ticks = static_cast<std::size_t>(ImGui::GetTime() * 8.0);
+	const char* spinner = spinnerFrames[ticks % (sizeof(spinnerFrames) / sizeof(spinnerFrames[0]))];
+
+	if (m_ScriptHotReloadInFlight)
+	{
+		ImGui::Text("%s Recompiling and reloading managed scripts...", spinner);
+		ImGui::Spacing();
+		ImGui::TextDisabled("Hot reload is running on the engine thread.");
+	}
+	else
+	{
+		m_ShowScriptCompileModal = false;
+		ImGui::CloseCurrentPopup();
+	}
+
+	ImGui::EndPopup();
 }
 
 

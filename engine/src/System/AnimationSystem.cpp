@@ -63,7 +63,16 @@ void animationSystem::FixedUpdate(ecs::world& world)
 
 		animator* anim = animationComponent.animatorInstance;
 		skeleton& skel = skeletonComponent.skeletonData;
+
+		// Sync component state to animator so editor changes take effect
+		anim->state = animationComponent.state;
+
 		anim->updateAnimation(dt, skel);
+
+		// Sync back so animator changes (e.g. non-loop finished) reflect in editor
+		animationComponent.state = anim->state;
+		animationComponent.currentTime = anim->currentTime;
+
 		skeletonComponent.finalBoneMatrices = anim->finalBoneMatrices;
 	}
 	// SIMPLE ANIMATION //
@@ -84,15 +93,27 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		{
 			continue;
 		}
-		if (animationComponent.duration <= 0.0f)
-		{
-			continue;
-		}
 		if (!eachAEntity.all<AnimationBoneChannelTransformComponent>()) {
 			eachAEntity.add<AnimationBoneChannelTransformComponent>();
 		}
 		AnimationBoneChannelTransformComponent& boneTransformComponent = eachAEntity.get<AnimationBoneChannelTransformComponent>();
-		animationContainer& cont = *ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+		animationContainer* cont_ptr = ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+
+		if (!cont_ptr) {
+			//warn
+			continue;
+		}
+
+		animationContainer& cont = *cont_ptr;
+
+		animationComponent.duration = cont_ptr->duration;
+		animationComponent.ticksPerSecond = cont_ptr->ticksPerSecond;
+
+
+		if (animationComponent.duration <= 0.0f || animationComponent.ticksPerSecond <= 0.0f)
+		{
+			continue;
+		}
 
 		animationComponent.currentTime += animationComponent.ticksPerSecond * dt * animationComponent.state.playbackSpeed;
 		if (animationComponent.currentTime > animationComponent.duration)

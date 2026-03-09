@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7be0178349fe4d893ad2415b0
-  m_importer: .texture
-  m_source: materials\metal_rack\Metal_Pillar_Mat_BaseColor.png
-  m_name: Metal_Pillar_Mat_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

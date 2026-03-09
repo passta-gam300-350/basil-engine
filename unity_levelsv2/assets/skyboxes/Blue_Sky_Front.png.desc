@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7d9e07a08ae82df502cd92b85
-  m_importer: .texture
-  m_source: skyboxes\Blue_Sky_Front.png
-  m_name: Blue_Sky_Front.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

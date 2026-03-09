@@ -1,7 +1,0 @@
-base:
-  m_guid: dc3b6c370f89d36237af38fe79c
-  m_importer: .texture
-  m_source: hud\Main Menu\QUIT_NoHover.png
-  m_name: QUIT_NoHover.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

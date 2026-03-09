@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7a69a7e329980d8189d5c250c
-  m_importer: .texture
-  m_source: materials\biscuit_chocolate\Half Closed\c_bx_halfOp_BaseColor.png
-  m_name: c_bx_halfOp_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

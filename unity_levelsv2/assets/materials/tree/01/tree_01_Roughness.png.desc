@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7cdc27e2a923ebcbfd55d2971
-  m_importer: .texture
-  m_source: materials\tree\01\tree_01_Roughness.png
-  m_name: tree_01_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

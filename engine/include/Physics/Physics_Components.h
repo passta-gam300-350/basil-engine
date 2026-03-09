@@ -348,7 +348,7 @@ struct MeshCollider : public CollisionBase {
 	// ========================================================================
 	// COLLISION MODE ENUM
 	// ========================================================================
-	enum CollisionMode {
+	enum CollisionMode : std::uint8_t {
 		MESH,           // Uses exact mesh geometry (static/kinematic only - expensive but accurate)
 		CONVEX_HULL     // Uses convex hull approximation (works for dynamic - faster, less accurate)
 	};
@@ -438,6 +438,8 @@ MemberRegistrationV<&SphereCollider::friction, "friction">,
 MemberRegistrationV<&SphereCollider::restitution, "restitution">,
 MemberRegistrationV<&SphereCollider::density, "density">
 RegisterReflectionTypeEnd
+
+RegisterReflectionTypeEnumAlias(MeshCollider::CollisionMode, MeshCollisionMode, "MeshColliderMode")
 
 RegisterReflectionTypeBegin(MeshCollider, "MeshCollider")
 	MemberRegistrationV<&MeshCollider::center, "CenterOffset">,

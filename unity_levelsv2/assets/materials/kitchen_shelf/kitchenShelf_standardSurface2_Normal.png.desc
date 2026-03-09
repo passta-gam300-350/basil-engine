@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7b63a7bfea45c25a9c8d1a705
-  m_importer: .texture
-  m_source: materials\kitchen_shelf\kitchenShelf_standardSurface2_Normal.png
-  m_name: kitchenShelf_standardSurface2_Normal.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

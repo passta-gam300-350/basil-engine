@@ -13,6 +13,7 @@ in VS_OUT {
     vec4 InstanceColor;
     float InstanceMetallic;
     float InstanceRoughness;
+    float InstanceNormalStrength;
 } fs_in;
 
 // Output
@@ -84,12 +85,20 @@ uniform vec3 u_ViewPos;
 uniform vec3 u_AlbedoColor = vec3(0.8, 0.8, 0.8);
 uniform float u_MetallicValue = 0.0;
 uniform float u_RoughnessValue = 0.5;
+// Note: u_NormalStrength moved to per-instance data (fs_in.InstanceNormalStrength)
 
 // Ambient lighting
 uniform vec3 u_AmbientLight = vec3(0.03);
 
 // Blend mode control (true = opaque pass, false = transparent pass)
 uniform bool u_IsOpaquePass = true;
+
+// Fog uniforms (OGLDev Tutorial 39-style)
+uniform int   u_FogType    = 0;      // 0=None 1=Linear 2=Exponential 3=Exponential²
+uniform float u_FogStart   = 10.0;   // Start distance (Linear only)
+uniform float u_FogEnd     = 50.0;   // End distance
+uniform float u_FogDensity = 0.05;   // Density (Exponential modes)
+uniform vec3  u_FogColor   = vec3(0.5);
 
 // PBR constants
 const float PI = 3.14159265359;
@@ -289,6 +298,9 @@ vec3 getNormalFromMap() {
 
     // Unpack RG from [0,1] to [-1,1]
     tangentNormal.xy = tangentNormal.xy * 2.0 - 1.0;
+
+    // Apply normal strength/bump scale (Unity-style) - per-instance via SSBO
+    tangentNormal.xy *= fs_in.InstanceNormalStrength;
 
     // Reconstruct Z component for BC5/2-channel normal maps
     // Since normals are unit vectors: x² + y² + z² = 1
@@ -520,6 +532,19 @@ vec3 calculateMultiLightPBR(vec3 albedo, vec3 normal, float metallic, float roug
     return totalAmbient + Lo;
 }
 
+// Returns fog blend factor: 1.0 = no fog, 0.0 = fully fogged
+float computeFogFactor(float dist) {
+    if (u_FogType == 1) {                                              // Linear
+        return clamp((u_FogEnd - dist) / (u_FogEnd - u_FogStart), 0.0, 1.0);
+    } else if (u_FogType == 2) {                                       // Exponential
+        return clamp(exp(-u_FogDensity * dist), 0.0, 1.0);
+    } else if (u_FogType == 3) {                                       // Exponential²
+        float f = u_FogDensity * dist;
+        return clamp(exp(-(f * f)), 0.0, 1.0);
+    }
+    return 1.0; // No fog
+}
+
 void main() {
     // Sample traditional textures
     vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
@@ -562,6 +587,13 @@ void main() {
 
     // Add emissive
     color += emissive;
+
+    // Apply atmospheric fog (blended in HDR space before tone mapping)
+    if (u_FogType != 0) {
+        float dist      = length(u_ViewPos - fs_in.FragPos);
+        float fogFactor = computeFogFactor(dist);
+        color = mix(u_FogColor, color, fogFactor);
+    }
 
     // Output raw HDR color to HDR framebuffer with appropriate alpha
     // Opaque pass: Force alpha = 1.0 to prevent texture alpha from affecting visibility

@@ -29,6 +29,20 @@ struct ResourceHandle {
     std::uint32_t m_Index{};
     std::uint32_t m_Generation{};
     explicit operator bool() const noexcept { return m_Generation != 0; }
+    operator std::uint64_t() const noexcept { return std::uint64_t(m_Index) << 32 | m_Generation; }
+    bool operator==(ResourceHandle const& other) {
+        return other.m_Index == m_Index && other.m_Generation == m_Generation;
+    }
+    bool operator!=(ResourceHandle const& other) {
+        return !(*this==other);
+    }
+};
+
+template <>
+struct std::hash<ResourceHandle> {
+    auto operator()(ResourceHandle hdl) const {
+        return std::hash<std::uint64_t>()(std::uint64_t(hdl));
+    }
 };
 
 using ResourceTypeId_t = std::uintptr_t;

@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7cb5a731cb620c6951193f294
-  m_importer: .texture
-  m_source: materials\train\wheel3\Wheel3_Train_Height.png
-  m_name: Wheel3_Train_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

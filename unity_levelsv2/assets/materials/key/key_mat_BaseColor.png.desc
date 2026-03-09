@@ -1,7 +1,0 @@
-base:
-  m_guid: 7c539ee7822bfa78c365500b368
-  m_importer: .texture
-  m_source: materials\key\key_mat_BaseColor.png
-  m_name: key_mat_BaseColor.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

@@ -1,7 +1,0 @@
-base:
-  m_guid: dbf737a724f9b72e7a221cf5725
-  m_importer: .texture
-  m_source: materials\new_floor\floor_Roughness.png
-  m_name: floor_Roughness.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

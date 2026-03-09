@@ -1,7 +1,0 @@
-base:
-  m_guid: 6d7c2d77e2f997f27a0ecb7123c
-  m_importer: .texture
-  m_source: materials\new_tin_wafer\cw_tin_top_Height.png
-  m_name: cw_tin_top_Height.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

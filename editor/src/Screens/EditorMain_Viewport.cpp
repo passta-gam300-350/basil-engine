@@ -73,6 +73,8 @@ void EditorMain::Render_Game()
 
 	if (frameData.gameResolvedBuffer)
 	{
+		const ImVec2 viewportPos = ImGui::GetCursorScreenPos();
+
 		// Get texture from game framebuffer
 		GLuint textureID = frameData.gameResolvedBuffer->GetColorAttachmentRendererID(0);
 
@@ -83,9 +85,28 @@ void EditorMain::Render_Game()
 			ImVec2(0, 1),  // UV coordinates flipped vertically
 			ImVec2(1, 0)
 		);
+
+		const bool viewportHovered = ImGui::IsItemHovered();
+		if (viewportHovered && viewportSize.x > 0.0f && viewportSize.y > 0.0f)
+		{
+			const ImVec2 mousePos = ImGui::GetMousePos();
+			const float localX = mousePos.x - viewportPos.x;
+			const float localY = mousePos.y - viewportPos.y;
+
+			// Match HUD's fixed reference resolution space used by the shader path.
+			const float gameSpaceX = (localX / viewportSize.x) * 1920.0f;
+			const float gameSpaceY = 1080.0f - ((localY / viewportSize.y) * 1080.0f);
+			InputManager::Get_Instance()->Set_MouseOverride(gameSpaceX, gameSpaceY, true);
+		}
+		else
+		{
+			InputManager::Get_Instance()->Set_MouseOverride(0.0f, 0.0f, false);
+		}
 	}
 	else
 	{
+		InputManager::Get_Instance()->Set_MouseOverride(0.0f, 0.0f, false);
+
 		// No game camera or game buffer not initialized
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No active game camera");
 		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Add a Camera component with 'Is Active' enabled to see the game view");
@@ -579,6 +600,7 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 				GuizmoEntityTransform = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformComponent>(selected) : nullptr;
 				GuizmoEntityTransformMTX = selected.all<TransformComponent>() ? &world.get_component_from_entity<TransformMtxComponent>(selected) : nullptr;
 				GuizmoEntityParentTransformMTX = SceneGraph::HasParent(selected) ? SceneGraph::GetParent(selected).all<TransformMtxComponent>() ? &SceneGraph::GetParent(selected).get<TransformMtxComponent>() : nullptr : nullptr;
+				Engine::SyncEntityTransformToPhysics(selected);
 			}
 			});
 
@@ -594,7 +616,19 @@ void EditorMain::Gizmos(ImVec2 viewportPos, ImVec2 viewportSize)
 			if (ImGuizmo::IsUsing()) // While we are using the gizmos
 			{
 				// Break down the edited matrix so we can save the values
+				glm::vec3 old_scale = GuizmoEntityTransform->m_Scale;
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(GuizmoEntityParentTransformMTX ? glm::inverse(GuizmoEntityParentTransformMTX->m_Mtx) * GuizmoEntityTransformMTX->m_Mtx : GuizmoEntityTransformMTX->m_Mtx), glm::value_ptr(GuizmoEntityTransform->m_Translation), glm::value_ptr(GuizmoEntityTransform->m_Rotation), glm::value_ptr(GuizmoEntityTransform->m_Scale));
+				glm::vec3 new_scale = GuizmoEntityTransform->m_Scale;
+				if (old_scale != new_scale) {
+					engineService.ExecuteOnEngineThread([&, old_scale, new_scale]() {
+						auto world = Engine::GetWorld();
+						if (m_SelectedEntityID) {
+							auto selected = world.impl.entity_cast(entt::entity(m_SelectedEntityID));
+							Engine::ResizeEntityPhysicsCollider(selected, new_scale, old_scale);
+						}
+						});
+				}
+				
 				//GuizmoEntityTransformMTX->m_Mtx = transmtx;
 				//isEditing = true; // Indicate that we are editing stuff
 				//EditingID = selectedEnitityID; // Set the Id

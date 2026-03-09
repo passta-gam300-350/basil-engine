@@ -624,6 +624,57 @@ void EditorMain::Render_SceneSettings()
 
 	ImGui::Separator();
 
+	// Fog settings
+	ImGui::Text("Fog");
+
+	auto& fogSettings = renderSettings.fog;
+	const char* fogTypes[] = { "None", "Linear", "Exponential", "Exponential Squared" };
+	int fogType = static_cast<int>(fogSettings.type);
+	if (ImGui::Combo("Fog Mode", &fogType, fogTypes, 4)) {
+		engineService.ExecuteOnEngineThread([fogType]() {
+			auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+			scene.GetRenderSettings().fog.type = static_cast<FogType>(fogType);
+			});
+	}
+
+	if (fogSettings.type != FogType::None) {
+		glm::vec3 fogColor = fogSettings.color;
+		if (ImGui::ColorEdit3("Fog Color", &fogColor.x)) {
+			engineService.ExecuteOnEngineThread([fogColor]() {
+				auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+				scene.GetRenderSettings().fog.color = fogColor;
+				});
+		}
+
+		float fogEnd = fogSettings.end;
+		if (ImGui::DragFloat("Fog End", &fogEnd, 1.0f, 0.0f, 10000.0f, "%.1f")) {
+			engineService.ExecuteOnEngineThread([fogEnd]() {
+				auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+				scene.GetRenderSettings().fog.end = fogEnd;
+				});
+		}
+
+		if (fogSettings.type == FogType::Linear) {
+			float fogStart = fogSettings.start;
+			if (ImGui::DragFloat("Fog Start", &fogStart, 1.0f, 0.0f, fogSettings.end, "%.1f")) {
+				engineService.ExecuteOnEngineThread([fogStart]() {
+					auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+					scene.GetRenderSettings().fog.start = fogStart;
+					});
+			}
+		} else {
+			float fogDensity = fogSettings.density;
+			if (ImGui::DragFloat("Fog Density", &fogDensity, 0.001f, 0.0f, 1.0f, "%.4f")) {
+				engineService.ExecuteOnEngineThread([fogDensity]() {
+					auto& scene = Engine::GetSceneRegistry().GetActiveScene().value().get();
+					scene.GetRenderSettings().fog.density = fogDensity;
+					});
+			}
+		}
+	}
+
+	ImGui::Separator();
+
 	ImGui::End();
 }
 
