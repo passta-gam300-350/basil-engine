@@ -21,6 +21,7 @@ Technology is prohibited.
 #include <cassert>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 #include "../../vendor/fmod/api/core/inc/fmod.hpp"
 #include "../../vendor/fmod/api/core/inc/fmod_errors.h"
 #include "Ecs/ecs.h"
@@ -45,9 +46,28 @@ RegisterResourceTypeForward(int, "audio", audiodefine)
 // Forward declaration
 struct AudioComponent;
 
+// AudioGroup enum is now defined in <native/audio.h> for resource system compatibility
+
+// Filter type for per-component DSP (no FMOD types in header)
+// Backed by int for simpler interop with managed code
+enum class AudioFilterType {
+    None = 0,
+    Lowpass,
+    Highpass,
+    Echo
+};
+
+struct AudioFilterParams {
+    AudioFilterType type = AudioFilterType::None;
+    float cutoffHz = 5000.0f;
+    float resonance = 1.0f;
+    float echoDelayMs = 500.0f;
+    float echoFeedback = 0.5f;
+};
+
 // Helper functions
-inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, v.z }; }
-inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, v.z }; }
+inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, -v.z }; }
+inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, -v.z }; }
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
 	if (result != FMOD_OK) {
         spdlog::warn("Audio: {}", FMOD_ErrorString(result));
@@ -88,6 +108,9 @@ public:
     // State
     bool IsInitialized() const;
 
+    // Channel (mix group) volume: percent delta, e.g. +10 = increase by 10%, -20 = decrease by 20%
+    void AdjustChannelVolume(AudioGroup channel, float percentDelta);
+
     // Non-copyable
     AudioSystem(const AudioSystem&) = delete;
     AudioSystem& operator=(const AudioSystem&) = delete;
@@ -95,6 +118,10 @@ public:
 private:
     // Private constructor (singleton)
     AudioSystem();
+
+    // Filter DSP lifecycle (used by AudioComponent and UnregisterComponent)
+    bool ApplyFilterToChannel(AudioComponent* comp, FMOD::Channel* channel, const AudioFilterParams& params);
+    void RemoveFilterDsp(AudioComponent* comp, FMOD::Channel* channel);
 
     // Member variables - all state encapsulated in class
     FMOD::System* m_system;
@@ -108,6 +135,13 @@ private:
 
     // Channel management (moved from AudioComponent)
     std::unordered_map<AudioComponent*, FMOD::Channel*> m_componentChannels;
+
+    // Per-component filter DSP (created on Play, released on Stop/Unregister)
+    std::unordered_map<AudioComponent*, FMOD::DSP*> m_componentFilterDsp;
+
+    // Mixing groups
+    FMOD::ChannelGroup* m_masterGroup = nullptr;
+    std::unordered_map<AudioGroup, FMOD::ChannelGroup*> m_groups;
 
     // Listener state
     glm::vec3 m_listenerPosition;
@@ -134,11 +168,17 @@ struct AudioComponent
     float maxDistance = MAXDISTANCE;
 
     // Audio properties
+    // [NEW]
+    //FMOD::Group* group = set to master;
+    AudioGroup group = AudioGroup::MASTER;
     float volume = 1.0f;
     bool isLooping = false;
     bool is3D = true;
     bool isStreaming = false;
     bool playOnAwake = false;
+
+    // Per-channel filter (FMOD DSP; DSP instance tracked in AudioSystem)
+    AudioFilterParams filterParams;
 
     // Playback state (updated by AudioSystem)
     bool isPlaying = false;

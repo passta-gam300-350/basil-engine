@@ -1,0 +1,26 @@
+base:
+  m_guid: 1580452a7904bc75397bbcf6afa9
+  m_importer: material
+  m_source: ""
+  m_name: bg_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: bg
+  albedo:
+    x: 0.5
+    y: 0.5
+    z: 0.5
+  metallic: 0.699999988
+  roughness: 0.4375
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_DiffuseMap: 8b34617070bd510149329e65dc
+    u_HeightMap: 8b34617070bd510149329e65dc
+    u_NormalMap: 8b34617070bd510149329e65dc
+    u_EmissiveMap: 8b34617070bd510149329e65dc
+    u_SpecularMap: 8b34617070bd510149329e65dc

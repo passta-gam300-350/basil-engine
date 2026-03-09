@@ -1,0 +1,26 @@
+base:
+  m_guid: 15809212786d95420b49219ba78a
+  m_importer: material
+  m_source: ""
+  m_name: tin_top_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: tin_top
+  albedo:
+    x: 0.871999979
+    y: 0.273200005
+    z: 0
+  metallic: 0.699999988
+  roughness: 1
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_DiffuseMap: 00
+    u_HeightMap: 00
+    u_NormalMap: 00
+    u_EmissiveMap: 00
+    u_SpecularMap: 00

@@ -1,0 +1,53 @@
+base:
+  m_guid: 6d7d8a07a3a99d896b5080769cf
+  m_importer: .meshmeta
+  m_source: ""
+  m_name: tree_01.obj.meta
+  m_importer_type: 12104794290149977968
+meta:
+  mesh_node_idx:
+    - 1
+  node_local_bind:
+    - a:
+        x: 1
+        y: 0
+        z: 0
+        w: 0
+      b:
+        x: 0
+        y: 1
+        z: 0
+        w: 0
+      c:
+        x: 0
+        y: 0
+        z: 1
+        w: 0
+      d:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+    - a:
+        x: 1
+        y: 0
+        z: 0
+        w: 0
+      b:
+        x: 0
+        y: 1
+        z: 0
+        w: 0
+      c:
+        x: 0
+        y: 0
+        z: 1
+        w: 0
+      d:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+  node_parent:
+    - -1
+    - 0

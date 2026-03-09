@@ -280,9 +280,32 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 					Engine::SyncEntityTransformToPhysics(inspected_entity);
 				}
 
-				// Special handling for AudioComponent: Load sound from GUID if needed
+				// Special handling for AudioComponent: apply runtime changes and
+				// ensure the correct sound is loaded from the GUID.
 				if (meta_type.info().hash() == entt::type_hash<AudioComponent>::value()) {
 					AudioComponent* audioComp = static_cast<AudioComponent*>(dest);
+
+					// Make inspector-edited parameters immediately affect the live FMOD channel.
+					// Without this, changes to isLooping / volume / is3D etc. only updated the
+					// plain data struct and had no effect until scripts called the C# bindings.
+					if (AudioSystem::GetInstance().IsInitialized()) {
+						// Volume / gain
+						audioComp->SetVolume(audioComp->volume);
+
+						// Looping + 2D/3D mode are driven through the channel mode.
+						// This also makes inspector edits to is3D take effect on the
+						// currently playing instance (if any).
+						audioComp->SetLoop(audioComp->isLooping);
+
+						// Distance range & positional data for 3D sounds
+						audioComp->SetDistanceRange(audioComp->minDistance, audioComp->maxDistance);
+						if (audioComp->is3D) {
+							audioComp->UpdatePosition(audioComp->position);
+							audioComp->UpdateVelocity(audioComp->velocity);
+						}
+					}
+
+					// Load / reload sound based on GUID when needed.
 					//spdlog::info("AudioComponent writeback: soundHandle={}, GUID={}, isInitialized={}",
 					//             audioComp->soundHandle, audioComp->audioAssetGuid.m_guid.to_hex(), audioComp->isInitialized);
 

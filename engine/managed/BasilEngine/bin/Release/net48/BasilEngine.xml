@@ -20,6 +20,12 @@
             <param name="b">Second operand.</param>
             <returns>Sum of the inputs.</returns>
         </member>
+        <member name="M:BasilEngine.Components.Audio.AdjustChannelVolume(BasilEngine.Components.Audio.AudioChannel,System.Single)">
+            <summary>
+            Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
+            </summary>
+            <param name="channel">Mix group (Master, BGM, SFX, UI, Ambient).</param>
+            <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
         <member name="M:BasilEngine.Components.Animation.Play">
             <summary>
             Resumes playing the current animation.
@@ -88,6 +94,32 @@
         <member name="M:BasilEngine.Components.Audio.Stop">
             <summary>
             Stops playback and resets the cursor to the start.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Audio.AudioChannel">
+            <summary>
+            Mix channel (group) for global volume control. Matches native AudioGroup.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Audio.FilterType">
+            <summary>
+            Filter type for per-channel DSP: None, Lowpass, Highpass, Echo.
+            Backed by int to simplify native interop.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.Filter">
+            <summary>
+            Filter type (None, Lowpass, Highpass, Echo). Applied when playing.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.FilterCutoffHz">
+            <summary>
+            Filter cutoff frequency in Hz (10–22050). Used when a filter is active.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.FilterResonance">
+            <summary>
+            Filter resonance (0.5–10). Used for Lowpass/Highpass filters.
             </summary>
         </member>
         <member name="T:BasilEngine.Components.Camera.CameraType">

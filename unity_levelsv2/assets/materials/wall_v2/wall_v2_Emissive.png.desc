@@ -1,0 +1,7 @@
+base:
+  m_guid: 11ec795d720e867a58257c6c2655
+  m_importer: .texture
+  m_source: materials\wall_v2\wall_v2_Emissive.png
+  m_name: wall_v2_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
