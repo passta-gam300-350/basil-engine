@@ -11,6 +11,11 @@ struct InstanceData {
     uint flags;            // 4 bytes (not used)
     float metallic;        // 4 bytes (not used)
     float roughness;       // 4 bytes (not used)
+    float normalStrength;  // 4 bytes (not used)
+    float padding;         // 4 bytes
+    float padding2;        // 4 bytes (pad to multiple of 16)
+    float padding3;        // 4 bytes
+    // Total: 112 bytes per instance (16-byte aligned)
 };
 
 // SSBO containing all instance data

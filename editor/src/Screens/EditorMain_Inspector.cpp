@@ -710,7 +710,7 @@ void EditorMain::Render_Components()
 							"Add properties like 'u_MetallicValue' (float), 'u_AlbedoColor' (vec3), etc.");
 					}
 					ImGui::SameLine();
-					if (ImGui::Button("Populate from Material")) {
+					if (ImGui::Button("Load Standard Properties")) {
 						ul.unlock();
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
 							ecs::entity entity{ entityHandle };
@@ -721,22 +721,22 @@ void EditorMain::Render_Components()
 								// Clear existing overrides
 								overrides.ClearAll();
 
-								// For now, populate with standard PBR properties
-								// These are the common properties that most materials have
+								// Populate with standard PBR properties using default values
 								overrides.floatOverrides["u_MetallicValue"] = 0.7f;  // Default metallic
 								overrides.floatOverrides["u_RoughnessValue"] = 0.3f;  // Default roughness
+								overrides.floatOverrides["u_NormalStrength"] = 1.0f;  // Default normal strength
 								overrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.7f, 0.6f);  // Default albedo
 
-								spdlog::info("Populated MaterialOverridesComponent with standard PBR properties");
+								spdlog::info("Loaded standard PBR properties to MaterialOverridesComponent");
 							}
 							else {
-								spdlog::warn("Entity must have both MeshRendererComponent and MaterialOverridesComponent to populate overrides");
+								spdlog::warn("Entity must have both MeshRendererComponent and MaterialOverridesComponent to load properties");
 							}
 							});
 						ul.lock();
 					}
 					ImGui::SameLine();
-					ImGui::TextDisabled("Adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_AlbedoColor)");
+					ImGui::TextDisabled("Clears all overrides and adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_NormalStrength, u_AlbedoColor)");
 				}
 			}
 
@@ -1126,9 +1126,39 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 						std::vector<std::string> keysToDelete;
 						for (auto& [key, val] : *map_float) {
 							ImGui::PushID(idx++);
-							if (ImGui::InputFloat(key.c_str(), &val)) {
-								is_dirty = true;
+
+							// Property-specific UI with sliders and tooltips
+							if (key == "u_NormalStrength") {
+								if (ImGui::SliderFloat("u_NormalStrength", &val, 0.0f, 2.0f, "%.2f")) {
+									is_dirty = true;
+								}
+								if (ImGui::IsItemHovered()) {
+									ImGui::SetTooltip("Normal map bump strength\n0.0 = flat (no bump)\n1.0 = full strength (default)\n2.0 = exaggerated");
+								}
 							}
+							else if (key == "u_MetallicValue") {
+								if (ImGui::SliderFloat("u_MetallicValue", &val, 0.0f, 1.0f, "%.2f")) {
+									is_dirty = true;
+								}
+								if (ImGui::IsItemHovered()) {
+									ImGui::SetTooltip("Metallic property\n0.0 = dielectric (plastic, wood)\n1.0 = metal");
+								}
+							}
+							else if (key == "u_RoughnessValue") {
+								if (ImGui::SliderFloat("u_RoughnessValue", &val, 0.0f, 1.0f, "%.2f")) {
+									is_dirty = true;
+								}
+								if (ImGui::IsItemHovered()) {
+									ImGui::SetTooltip("Surface roughness\n0.0 = smooth/glossy\n1.0 = rough/matte");
+								}
+							}
+							else {
+								// Default: text input for unknown properties
+								if (ImGui::InputFloat(key.c_str(), &val)) {
+									is_dirty = true;
+								}
+							}
+
 							ImGui::SameLine();
 							if (ImGui::SmallButton("X")) {
 								keysToDelete.push_back(key);
@@ -1147,7 +1177,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 						ImGui::OpenPopup("AddFloatOverride");
 					}
 					if (ImGui::IsItemHovered()) {
-						ImGui::SetTooltip("Common float properties:\n- u_MetallicValue\n- u_RoughnessValue");
+						ImGui::SetTooltip("Common float properties:\n- u_MetallicValue (0-1)\n- u_RoughnessValue (0-1)\n- u_NormalStrength (0-2)");
 					}
 
 					static char propertyName[128] = "";

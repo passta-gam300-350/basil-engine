@@ -58,12 +58,14 @@ public:
     const glm::vec3& GetAlbedoColor() const { return m_AlbedoColor; }
     float GetMetallicValue() const { return m_MetallicValue; }
     float GetRoughnessValue() const { return m_RoughnessValue; }
+    float GetNormalStrength() const { return m_NormalStrength; }
     BlendingMode GetBlendMode() const { return m_BlendMode; }
 
     void SetAlbedoColor(const glm::vec3& color) { m_AlbedoColor = color; }
     void SetAlbedoColorSRGB(const glm::vec3& srgbColor);
     void SetMetallicValue(float metallic) { m_MetallicValue = metallic; }
     void SetRoughnessValue(float roughness) { m_RoughnessValue = roughness; }
+    void SetNormalStrength(float strength) { m_NormalStrength = strength; }
     void SetBlendMode(BlendingMode mode) { m_BlendMode = mode; }
 
     // Apply all PBR properties to the shader at once
@@ -103,6 +105,7 @@ private:
     glm::vec3 m_AlbedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
     float m_MetallicValue = 0.7f;
     float m_RoughnessValue = 0.3f;
+    float m_NormalStrength = 1.0f;
     BlendingMode m_BlendMode = BlendingMode::Opaque;
 
     // Performance optimization: Cache uniform locations to avoid repeated glGetUniformLocation calls

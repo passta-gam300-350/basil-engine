@@ -225,6 +225,7 @@ void Material::ApplyPBRProperties()
     SetVec3("u_AlbedoColor", m_AlbedoColor);
     SetFloat("u_MetallicValue", m_MetallicValue);
     SetFloat("u_RoughnessValue", m_RoughnessValue);
+    SetFloat("u_NormalStrength", m_NormalStrength);
 
     // Note: Texture flags (u_HasDiffuseMap, etc.) are handled by bindless texture system
     // The bindless system uploads texture handles to SSBO and sets the appropriate flags
