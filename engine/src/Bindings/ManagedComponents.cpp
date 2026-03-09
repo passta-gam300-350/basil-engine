@@ -207,7 +207,19 @@ uint32_t ManagedComponents::ManagedRegisterComponent(MonoString* name)
 		});
 		return id;
 	}
-
+	if (strName == "WorldUI")
+	{
+		componentMapped[strName] = 1000000 + registerCount++;
+		unsigned id = componentMapped[strName];
+		RegisterComponentType(id, [](ecs::entity const& entity)
+		{
+			return entity.any<WorldUIComponent>();
+		}, [](ecs::entity& entity)
+		{
+			entity.remove<WorldUIComponent>();
+		});
+		return id;
+	}
 
 
 
