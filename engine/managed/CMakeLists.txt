@@ -17,6 +17,17 @@ set(DOTNET_BUILDCONFIG RELEASE)
 
 set(DOTNET_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/${ASM_NAME}/bin/${DOTNET_BUILDCONFIG}/net48/${ASM_NAME}.dll")
 
+# run dotnet build on the csproj file and then run CSBridge to generate the glue code
+message(STATUS "Building managed code: ${CSPROJPath}")
+add_custom_command(
+  OUTPUT "${DOTNET_OUTPUT}"
+  COMMAND ${TOOL_DOTNET} build ${CSPROJPath} -c ${DOTNET_BUILDCONFIG}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${CSPROJPath} ${MANAGED_FILES}
+  COMMENT "Building BasilEngine.dll"
+  VERBATIM USES_TERMINAL 
+)
+
 message(STATUS "Managed output: ${DOTNET_OUTPUT}")
 
 if (TRUE)

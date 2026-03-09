@@ -279,7 +279,10 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&Button::height, "height">,
 		MemberRegistrationV<&Button::anchor, "anchor">,
 		MemberRegistrationV<&Button::disabled, "disabled">,
-		MemberRegistrationV<&Button::text, "Text">
+		MemberRegistrationV<&Button::text, "Text">,
+		MemberRegistrationV<&Button::defaultTextureGuid, "defaultTextureGuid">,
+		MemberRegistrationV<&Button::hoverTextureGuid, "hoverTextureGuid">,
+		MemberRegistrationV<&Button::pressedTextureGuid, "pressedTextureGuid">
 
 	);
 

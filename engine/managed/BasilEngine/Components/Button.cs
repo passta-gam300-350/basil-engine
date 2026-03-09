@@ -33,9 +33,9 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedButton", StaticAccessorType.DoubleColon)]
         private static extern void SetDisabledInternal(UInt64 handle, bool disabled);
 
-        public bool Hovered => GetHoveredInternal(NativeID);
-        public bool Pressed => GetPressedInternal(NativeID);
-        public bool Clicked => GetClickedInternal(NativeID);
+        public bool Hovered => GetHoveredInternal(NativeID); // Expose the hovered state of the button as a read-only property
+        public bool Pressed => GetPressedInternal(NativeID); // Expose the pressed state of the button as a read-only property
+        public bool Clicked => GetClickedInternal(NativeID); // Expose the clicked state of the button as a read-only property
         public bool Disabled
         {
             get => GetDisabledInternal(NativeID);

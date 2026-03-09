@@ -1,5 +1,5 @@
-﻿namespace BasilEngine;
-using Engine.Bindings;
+﻿using Engine.Bindings;
+namespace BasilEngine;
 using System.Runtime.CompilerServices;
 
     [Disabled]
