@@ -264,7 +264,27 @@ void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::ve
         // Note: View and projection matrices are set by the shadow pass itself
         // We only need to bind SSBO and draw
 
-        // 3. Draw all instances
+        // 3. Set face culling based on material cull mode (shadows respect material culling)
+        if (meshInstances.material) {
+            CullMode cullMode = meshInstances.material->GetCullMode();
+            RenderCommands::SetFaceCullingData cullCmd;
+            switch (cullMode) {
+                case CullMode::Back:
+                    cullCmd.enable = true;
+                    cullCmd.cullFace = GL_BACK;
+                    break;
+                case CullMode::Front:
+                    cullCmd.enable = true;
+                    cullCmd.cullFace = GL_FRONT;
+                    break;
+                case CullMode::Off:
+                    cullCmd.enable = false;
+                    break;
+            }
+            renderPass.Submit(cullCmd);
+        }
+
+        // 4. Draw all instances
         uint32_t indexCount = meshInstances.mesh->GetIndexCount();
         uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
         uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
@@ -478,7 +498,25 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     // 5. Submit fog commands (OGLDev Tutorial 39-style)
     SubmitFogCommands(renderPass, shader, frameData);
 
-    // 6. Bind textures (if any)
+    // 6. Set face culling based on material cull mode
+    CullMode cullMode = meshInstances.material->GetCullMode();
+    RenderCommands::SetFaceCullingData cullCmd;
+    switch (cullMode) {
+        case CullMode::Back:
+            cullCmd.enable = true;
+            cullCmd.cullFace = GL_BACK;
+            break;
+        case CullMode::Front:
+            cullCmd.enable = true;
+            cullCmd.cullFace = GL_FRONT;
+            break;
+        case CullMode::Off:
+            cullCmd.enable = false;
+            break;
+    }
+    renderPass.Submit(cullCmd);
+
+    // 7. Bind textures (if any)
 	std::vector<Texture> materialTextures = meshInstances.material->GetAllTextures();
     if (materialTextures.size() > 0)
     {
@@ -487,7 +525,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
     renderPass.Submit(texturesCmd);
 
-    // 7. Draw all instances
+    // 8. Draw all instances
     uint32_t indexCount = meshInstances.mesh->GetIndexCount();
     uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
     uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
@@ -603,7 +641,24 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         // Restore GL state that CleanupGPUState may have changed
         renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
         renderPass.Submit(RenderCommands::SetBlendingData{ false });
-        renderPass.Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
+
+        // Set face culling based on material cull mode
+        CullMode cullMode = renderable->material->GetCullMode();
+        RenderCommands::SetFaceCullingData cullCmd;
+        switch (cullMode) {
+            case CullMode::Back:
+                cullCmd.enable = true;
+                cullCmd.cullFace = GL_BACK;
+                break;
+            case CullMode::Front:
+                cullCmd.enable = true;
+                cullCmd.cullFace = GL_FRONT;
+                break;
+            case CullMode::Off:
+                cullCmd.enable = false;
+                break;
+        }
+        renderPass.Submit(cullCmd);
 
         RenderCommands::BindShaderData bindShaderCmd{ shader };
         renderPass.Submit(bindShaderCmd);

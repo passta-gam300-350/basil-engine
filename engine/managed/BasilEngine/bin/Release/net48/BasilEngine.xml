@@ -20,12 +20,6 @@
             <param name="b">Second operand.</param>
             <returns>Sum of the inputs.</returns>
         </member>
-        <member name="M:BasilEngine.Components.Audio.AdjustChannelVolume(BasilEngine.Components.Audio.AudioChannel,System.Single)">
-            <summary>
-            Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
-            </summary>
-            <param name="channel">Mix group (Master, BGM, SFX, UI, Ambient).</param>
-            <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
         <member name="M:BasilEngine.Components.Animation.Play">
             <summary>
             Resumes playing the current animation.
@@ -70,6 +64,13 @@
             </summary>
             <param name="animationName">Name of the animation clip.</param>
             <returns>True if found.</returns>
+        </member>
+        <member name="M:BasilEngine.Components.Audio.AdjustChannelVolume(BasilEngine.Components.Audio.AudioChannel,System.Single)">
+            <summary>
+            Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
+            </summary>
+            <param name="channel">Mix group (Master, BGM, SFX, UI, Ambient).</param>
+            <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
         </member>
         <member name="P:BasilEngine.Components.Audio.Volume">
             <summary>
