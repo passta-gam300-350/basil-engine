@@ -264,7 +264,27 @@ void InstancedRenderer::RenderShadowToPass(RenderPass& renderPass, const std::ve
         // Note: View and projection matrices are set by the shadow pass itself
         // We only need to bind SSBO and draw
 
-        // 3. Draw all instances
+        // 3. Set face culling based on material cull mode (shadows respect material culling)
+        if (meshInstances.material) {
+            CullMode cullMode = meshInstances.material->GetCullMode();
+            RenderCommands::SetFaceCullingData cullCmd;
+            switch (cullMode) {
+                case CullMode::Back:
+                    cullCmd.enable = true;
+                    cullCmd.cullFace = GL_BACK;
+                    break;
+                case CullMode::Front:
+                    cullCmd.enable = true;
+                    cullCmd.cullFace = GL_FRONT;
+                    break;
+                case CullMode::Off:
+                    cullCmd.enable = false;
+                    break;
+            }
+            renderPass.Submit(cullCmd);
+        }
+
+        // 4. Draw all instances
         uint32_t indexCount = meshInstances.mesh->GetIndexCount();
         uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
         uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
@@ -319,6 +339,7 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         glm::vec3 albedoColor = renderable.material->GetAlbedoColor();
         float metallicValue = renderable.material->GetMetallicValue();
         float roughnessValue = renderable.material->GetRoughnessValue();
+        float normalStrength = renderable.material->GetNormalStrength();
 
         // Apply property block overrides if present
         if (renderable.propertyBlock) {
@@ -344,6 +365,11 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
             if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", overrideRoughness)) {
                 roughnessValue = overrideRoughness;
             }
+
+            float overrideNormalStrength;
+            if (renderable.propertyBlock->TryGetFloat("u_NormalStrength", overrideNormalStrength)) {
+                normalStrength = overrideNormalStrength;
+            }
         }
 
         instanceData.color = glm::vec4(albedoColor, 1.0f);
@@ -351,6 +377,10 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         instanceData.flags = 0;
         instanceData.metallic = metallicValue;
         instanceData.roughness = roughnessValue;
+        instanceData.normalStrength = normalStrength;
+        instanceData.padding = 0.0f;
+        instanceData.padding2 = 0.0f;
+        instanceData.padding3 = 0.0f;
 
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
@@ -468,7 +498,25 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     // 5. Submit fog commands (OGLDev Tutorial 39-style)
     SubmitFogCommands(renderPass, shader, frameData);
 
-    // 6. Bind textures (if any)
+    // 6. Set face culling based on material cull mode
+    CullMode cullMode = meshInstances.material->GetCullMode();
+    RenderCommands::SetFaceCullingData cullCmd;
+    switch (cullMode) {
+        case CullMode::Back:
+            cullCmd.enable = true;
+            cullCmd.cullFace = GL_BACK;
+            break;
+        case CullMode::Front:
+            cullCmd.enable = true;
+            cullCmd.cullFace = GL_FRONT;
+            break;
+        case CullMode::Off:
+            cullCmd.enable = false;
+            break;
+    }
+    renderPass.Submit(cullCmd);
+
+    // 7. Bind textures (if any)
 	std::vector<Texture> materialTextures = meshInstances.material->GetAllTextures();
     if (materialTextures.size() > 0)
     {
@@ -477,7 +525,7 @@ void InstancedRenderer::RenderInstancedMeshToPass(RenderPass& renderPass, const 
     RenderCommands::BindTexturesData texturesCmd{meshInstances.mesh->textures, shader};
     renderPass.Submit(texturesCmd);
 
-    // 7. Draw all instances
+    // 8. Draw all instances
     uint32_t indexCount = meshInstances.mesh->GetIndexCount();
     uint32_t instanceCount = static_cast<uint32_t>(meshInstances.instances.size());
     uint32_t vaoHandle = meshInstances.mesh->GetVertexArray()->GetVAOHandle();
@@ -569,8 +617,12 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
             instanceData.color = glm::vec4(albedo, 1.0f);
             instanceData.metallic = renderable->material->GetMetallicValue();
             instanceData.roughness = renderable->material->GetRoughnessValue();
+            instanceData.normalStrength = renderable->material->GetNormalStrength();
             instanceData.materialId = 0;
             instanceData.flags = 0;
+            instanceData.padding = 0.0f;
+            instanceData.padding2 = 0.0f;
+            instanceData.padding3 = 0.0f;
 
             if (!m_SkinnedInstanceSSBO)
             {
@@ -589,7 +641,24 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         // Restore GL state that CleanupGPUState may have changed
         renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
         renderPass.Submit(RenderCommands::SetBlendingData{ false });
-        renderPass.Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
+
+        // Set face culling based on material cull mode
+        CullMode cullMode = renderable->material->GetCullMode();
+        RenderCommands::SetFaceCullingData cullCmd;
+        switch (cullMode) {
+            case CullMode::Back:
+                cullCmd.enable = true;
+                cullCmd.cullFace = GL_BACK;
+                break;
+            case CullMode::Front:
+                cullCmd.enable = true;
+                cullCmd.cullFace = GL_FRONT;
+                break;
+            case CullMode::Off:
+                cullCmd.enable = false;
+                break;
+        }
+        renderPass.Submit(cullCmd);
 
         RenderCommands::BindShaderData bindShaderCmd{ shader };
         renderPass.Submit(bindShaderCmd);

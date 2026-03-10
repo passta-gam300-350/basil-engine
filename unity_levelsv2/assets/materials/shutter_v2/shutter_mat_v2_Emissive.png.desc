@@ -1,0 +1,7 @@
+base:
+  m_guid: 11ec793e7a218aea9730dc97a07e
+  m_importer: .texture
+  m_source: materials\shutter_v2\shutter_mat_v2_Emissive.png
+  m_name: shutter_mat_v2_Emissive.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

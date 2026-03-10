@@ -26,6 +26,7 @@ inline AudioResourceData CreateAudio(AudioDescriptor const& audioDesc, [[maybe_u
 
 // Register audio descriptor importer
 // Supported formats: .wav, .mp3, .ogg, .flac
+// [HALIS] Only do .ogg
 RegisterResourceTypeImporter(AudioDescriptor, AudioResourceData, "audio", ".audio", CreateAudio, ".wav", ".mp3", ".ogg", ".flac")
 
 #endif

@@ -696,6 +696,26 @@ void EditorMain::Render_Components()
 
 					ImGui::EndDisabled();
 					ImGui::Text("Status: %s", audioComp->isPlaying ? (audioComp->isPaused ? "Paused" : "Playing") : "Stopped");
+
+					ImGui::Separator();
+					ImGui::Text("Filter");
+					const char* filterTypeNames[] = { "None", "Lowpass", "Highpass", "Echo" };
+					int currentFilter = static_cast<int>(audioComp->filterParams.type);
+					if (ImGui::Combo("Filter Type", &currentFilter, filterTypeNames, 4)) {
+						audioComp->filterParams.type = static_cast<AudioFilterType>(currentFilter);
+						is_dirty = true;
+					}
+					if (audioComp->filterParams.type == AudioFilterType::Lowpass || audioComp->filterParams.type == AudioFilterType::Highpass) {
+						if (ImGui::SliderFloat("Cutoff (Hz)", &audioComp->filterParams.cutoffHz, 10.0f, 22050.0f, "%.0f"))
+							is_dirty = true;
+						if (ImGui::SliderFloat("Resonance", &audioComp->filterParams.resonance, 0.5f, 10.0f, "%.2f"))
+							is_dirty = true;
+					} else if (audioComp->filterParams.type == AudioFilterType::Echo) {
+						if (ImGui::SliderFloat("Delay (ms)", &audioComp->filterParams.echoDelayMs, 1.0f, 5000.0f, "%.0f"))
+							is_dirty = true;
+						if (ImGui::SliderFloat("Feedback", &audioComp->filterParams.echoFeedback, 0.0f, 1.0f, "%.2f"))
+							is_dirty = true;
+					}
 				}
 			}
 
@@ -710,7 +730,7 @@ void EditorMain::Render_Components()
 							"Add properties like 'u_MetallicValue' (float), 'u_AlbedoColor' (vec3), etc.");
 					}
 					ImGui::SameLine();
-					if (ImGui::Button("Populate from Material")) {
+					if (ImGui::Button("Load Standard Properties")) {
 						ul.unlock();
 						engineService.ExecuteOnEngineThread([entityHandle = engineService.m_cont->m_snapshot_entity_handle]() {
 							ecs::entity entity{ entityHandle };
@@ -721,22 +741,22 @@ void EditorMain::Render_Components()
 								// Clear existing overrides
 								overrides.ClearAll();
 
-								// For now, populate with standard PBR properties
-								// These are the common properties that most materials have
+								// Populate with standard PBR properties using default values
 								overrides.floatOverrides["u_MetallicValue"] = 0.7f;  // Default metallic
 								overrides.floatOverrides["u_RoughnessValue"] = 0.3f;  // Default roughness
+								overrides.floatOverrides["u_NormalStrength"] = 1.0f;  // Default normal strength
 								overrides.vec3Overrides["u_AlbedoColor"] = glm::vec3(0.8f, 0.7f, 0.6f);  // Default albedo
 
-								spdlog::info("Populated MaterialOverridesComponent with standard PBR properties");
+								spdlog::info("Loaded standard PBR properties to MaterialOverridesComponent");
 							}
 							else {
-								spdlog::warn("Entity must have both MeshRendererComponent and MaterialOverridesComponent to populate overrides");
+								spdlog::warn("Entity must have both MeshRendererComponent and MaterialOverridesComponent to load properties");
 							}
 							});
 						ul.lock();
 					}
 					ImGui::SameLine();
-					ImGui::TextDisabled("Adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_AlbedoColor)");
+					ImGui::TextDisabled("Clears all overrides and adds standard PBR properties (u_MetallicValue, u_RoughnessValue, u_NormalStrength, u_AlbedoColor)");
 				}
 			}
 
@@ -980,7 +1000,24 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			}
 		}
 		else {
-			if (meta_type.is_enum())
+			// Specialized UI for AudioGroup enum
+			if (AudioGroup* audioGroup = value.try_cast<AudioGroup>()) {
+				const char* groupNames[] = { "MASTER", "BGM", "SFX", "UI", "AMBIENT" };
+				int currentGroup = static_cast<int>(*audioGroup);
+				
+				if (ImGui::BeginCombo(field_name.c_str(), groupNames[currentGroup])) {
+					for (int i = 0; i < 5; ++i) {
+						bool selected = (i == currentGroup);
+						if (ImGui::Selectable(groupNames[i], selected)) {
+							*audioGroup = static_cast<AudioGroup>(i);
+							is_dirty = true;
+						}
+						if (selected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+			}
+			else if (meta_type.is_enum())
 			{
 				const void* val_ptr = value.base().data();
 				void(*assignment_by_type)(void*, const void*) { nullptr };
@@ -1031,11 +1068,15 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				ImGui::Text(field_name.c_str());
 				ImGui::SameLine(150);
 				ImGui::SetNextItemWidth(-1);
-				if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
-					auto& vec = *static_cast<std::vector<std::string>*>(data);
-					if (idx < 0 || idx >= vec.size()) return "";
-					return vec[idx].c_str();
-					}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+
+				std::vector<const char*> assetnames_cstr;
+				assetnames_cstr.reserve(assetnames.size());
+				for (auto& name : assetnames)
+				{
+					assetnames_cstr.push_back(name.c_str());
+				}
+
+				if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
 					// Check if selected item is valid and not empty (instead of checking index)
 					if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 						*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
@@ -1052,7 +1093,20 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				}
 			}
 			else if (float* vf = value.try_cast<float>()) {
-				if (ImGui::DragFloat(field_name.c_str(), vf)) {
+				if (type.id() == ToTypeName("AudioComponent") && field_name == "volume") {
+					const float minLinear = 1e-6f;
+					float linearClamped = (*vf <= 0.f) ? minLinear : *vf;
+					float db = VolumeTodB(linearClamped);
+					const float dbMin = -60.f, dbMax = 12.f;
+					if (ImGui::DragFloat(field_name.c_str(), &db, 0.5f, dbMin, dbMax, "%.1f dB")) {
+						*vf = dbToVolume(db);
+						is_dirty = true;
+					}
+					if (ImGui::IsItemHovered()) {
+						ImGui::SetTooltip("Volume in decibels (0 dB = normal, negative = quieter, positive = louder)");
+					}
+				}
+				else if (ImGui::DragFloat(field_name.c_str(), vf)) {
 					is_dirty = true;
 				}
 			}
@@ -1082,13 +1136,6 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			else if (uint32_t* vui = value.try_cast<uint32_t>()) {
 				uint32_t minValue = 0;
 				uint32_t maxValue = 2147483647; // UINT32_MAX
-
-				// Special handling for texture dimensions (width/height)
-				// Clamp to 8192 to prevent GPU texture size limits and crashes
-				if (field_name.find("width") != std::string::npos ||
-				    field_name.find("height") != std::string::npos) {
-					maxValue = 8192;
-				}
 
 				// With custom format
 				if (ImGui::SliderScalar(field_name.c_str(), ImGuiDataType_U32, vui, &minValue, &maxValue, "%u")) {
@@ -1126,9 +1173,39 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 						std::vector<std::string> keysToDelete;
 						for (auto& [key, val] : *map_float) {
 							ImGui::PushID(idx++);
-							if (ImGui::InputFloat(key.c_str(), &val)) {
-								is_dirty = true;
+
+							// Property-specific UI with sliders and tooltips
+							if (key == "u_NormalStrength") {
+								if (ImGui::SliderFloat("u_NormalStrength", &val, 0.0f, 2.0f, "%.2f")) {
+									is_dirty = true;
+								}
+								if (ImGui::IsItemHovered()) {
+									ImGui::SetTooltip("Normal map bump strength\n0.0 = flat (no bump)\n1.0 = full strength (default)\n2.0 = exaggerated");
+								}
 							}
+							else if (key == "u_MetallicValue") {
+								if (ImGui::SliderFloat("u_MetallicValue", &val, 0.0f, 1.0f, "%.2f")) {
+									is_dirty = true;
+								}
+								if (ImGui::IsItemHovered()) {
+									ImGui::SetTooltip("Metallic property\n0.0 = dielectric (plastic, wood)\n1.0 = metal");
+								}
+							}
+							else if (key == "u_RoughnessValue") {
+								if (ImGui::SliderFloat("u_RoughnessValue", &val, 0.0f, 1.0f, "%.2f")) {
+									is_dirty = true;
+								}
+								if (ImGui::IsItemHovered()) {
+									ImGui::SetTooltip("Surface roughness\n0.0 = smooth/glossy\n1.0 = rough/matte");
+								}
+							}
+							else {
+								// Default: text input for unknown properties
+								if (ImGui::InputFloat(key.c_str(), &val)) {
+									is_dirty = true;
+								}
+							}
+
 							ImGui::SameLine();
 							if (ImGui::SmallButton("X")) {
 								keysToDelete.push_back(key);
@@ -1147,7 +1224,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 						ImGui::OpenPopup("AddFloatOverride");
 					}
 					if (ImGui::IsItemHovered()) {
-						ImGui::SetTooltip("Common float properties:\n- u_MetallicValue\n- u_RoughnessValue");
+						ImGui::SetTooltip("Common float properties:\n- u_MetallicValue (0-1)\n- u_RoughnessValue (0-1)\n- u_NormalStrength (0-2)");
 					}
 
 					static char propertyName[128] = "";
@@ -1369,11 +1446,15 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::Text(field_name.c_str());
 							ImGui::SameLine(150);
 							ImGui::SetNextItemWidth(-1);
-							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
-								auto& vec = *static_cast<std::vector<std::string>*>(data);
-								if (idx < 0 || idx >= vec.size()) return "";
-								return vec[idx].c_str();
-								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+
+							std::vector<const char*> assetnames_cstr;
+							assetnames_cstr.reserve(assetnames.size());
+							for (auto& name : assetnames)
+							{
+								assetnames_cstr.push_back(name.c_str());
+							}
+
+							if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
 								// Check if selected item is valid and not empty (instead of checking index)
 								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
@@ -1408,11 +1489,15 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::Text(name.c_str());
 							ImGui::SameLine(150);
 							ImGui::SetNextItemWidth(-1);
-							if (ImGui::Combo("##guid selector", &current_item, [](void* data, int idx) -> const char* {
-								auto& vec = *static_cast<std::vector<std::string>*>(data);
-								if (idx < 0 || idx >= vec.size()) return "";
-								return vec[idx].c_str();
-								}, static_cast<void*>(&assetnames), static_cast<int>(assetnames.size()))) {
+
+							std::vector<const char*> assetnames_cstr;
+							assetnames_cstr.reserve(assetnames.size());
+							for (auto& n : assetnames)
+							{
+								assetnames_cstr.push_back(n.c_str());
+							}
+
+							if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
 								// Check if selected item is valid and not empty (instead of checking index)
 								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);

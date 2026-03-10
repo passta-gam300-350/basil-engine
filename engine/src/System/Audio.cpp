@@ -26,6 +26,43 @@ Technology is prohibited.
 
 namespace {
 
+static FMOD_DSP_TYPE ToFMODDSPType(AudioFilterType t) {
+    switch (t) {
+        case AudioFilterType::Lowpass: return FMOD_DSP_TYPE_LOWPASS;
+        case AudioFilterType::Highpass: return FMOD_DSP_TYPE_HIGHPASS;
+        case AudioFilterType::Echo: return FMOD_DSP_TYPE_ECHO;
+        default: return FMOD_DSP_TYPE_UNKNOWN;
+    }
+}
+
+static void SyncFilterParams(FMOD::DSP* dsp, AudioFilterType type, const AudioFilterParams& params) {
+    switch (type) {
+        case AudioFilterType::Lowpass: {
+            float cutoff = std::clamp(params.cutoffHz, 10.0f, 22050.0f);
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_LOWPASS_CUTOFF, cutoff));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_LOWPASS_RESONANCE, std::clamp(params.resonance, 0.5f, 10.0f)));
+            break;
+        }
+        case AudioFilterType::Highpass: {
+            float cutoff = std::clamp(params.cutoffHz, 10.0f, 22050.0f);
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_HIGHPASS_CUTOFF, cutoff));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_HIGHPASS_RESONANCE, std::clamp(params.resonance, 0.5f, 10.0f)));
+            break;
+        }
+        case AudioFilterType::Echo: {
+            float delayMs = std::clamp(params.echoDelayMs, 1.0f, 5000.0f);
+            float feedback = std::clamp(params.echoFeedback, 0.0f, 1.0f);
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_DELAY, delayMs));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_FEEDBACK, feedback));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_DRYLEVEL, 1.0f));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_WETLEVEL, 0.5f));
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 // Attempts to load the FMOD sound handle from the serialized audio GUID.
 // Needed because scenes only serialize the GUID, not the runtime soundHandle.
 bool EnsureSoundLoaded(AudioComponent& audio) {
@@ -95,6 +132,28 @@ bool AudioSystem::Init(void* extraDriverData) {
 
     spdlog::info("Audio: Setting 3D parameters");
     FMOD_ErrorCheck(m_system->set3DSettings(DOPPLERSCALE, DISTANCEFACTOR, ROLLOFFSCALE)); //TEMP (Set saved 3D settings)
+
+    // Setup channel groups (MASTER/BGM/SFX/UI/AMBIENT)
+    m_masterGroup = nullptr;
+    m_groups.clear();
+    FMOD_ErrorCheck(m_system->getMasterChannelGroup(&m_masterGroup));
+    if (m_masterGroup) {
+        auto makeGroup = [&](AudioGroup g, const char* name) {
+            FMOD::ChannelGroup* cg = nullptr;
+            FMOD_ErrorCheck(m_system->createChannelGroup(name, &cg));
+            if (cg) {
+                // Route into master for global volume/mute control
+                FMOD_ErrorCheck(m_masterGroup->addGroup(cg));
+                m_groups[g] = cg;
+            }
+        };
+        makeGroup(AudioGroup::BGM, "BGM");
+        makeGroup(AudioGroup::SFX, "SFX");
+        makeGroup(AudioGroup::UI, "UI");
+        makeGroup(AudioGroup::AMBIENT, "AMBIENT");
+    } else {
+        spdlog::warn("Audio: Failed to acquire master channel group; audio groups disabled");
+    }
 
     m_listenerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
     m_listenerVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -173,6 +232,13 @@ void AudioSystem::Exit() {
     }
     m_componentChannels.clear();
 
+    for (auto& pair : m_componentFilterDsp) {
+        if (pair.second) {
+            FMOD_ErrorCheck(pair.second->release());
+        }
+    }
+    m_componentFilterDsp.clear();
+
     spdlog::info("Audio: Unregistering audio components");
     m_components.clear();
 
@@ -181,6 +247,15 @@ void AudioSystem::Exit() {
         if (pair.second)
             FMOD_ErrorCheck(pair.second->release());
     m_loadedSounds.clear();
+
+    // Release channel groups (master is owned by FMOD system)
+    for (auto& kv : m_groups) {
+        if (kv.second) {
+            FMOD_ErrorCheck(kv.second->release());
+        }
+    }
+    m_groups.clear();
+    m_masterGroup = nullptr;
 
     spdlog::info("Audio: Releasing system");
     if (m_system) {
@@ -204,6 +279,24 @@ void AudioSystem::SetListenerPosition(const glm::vec3& position, const glm::vec3
 void AudioSystem::SetListenerOrientation(const glm::vec3& forward, const glm::vec3& up) noexcept {
     m_listenerForward = forward;
     m_listenerUp = up;
+}
+
+void AudioSystem::AdjustChannelVolume(AudioGroup channel, float percentDelta) {
+    FMOD::ChannelGroup* group = nullptr;
+    if (channel == AudioGroup::MASTER) {
+        group = m_masterGroup;
+    } else {
+        auto it = m_groups.find(channel);
+        if (it != m_groups.end())
+            group = it->second;
+    }
+    if (!group)
+        return;
+    float current = 0.0f;
+    FMOD_ErrorCheck(group->getVolume(&current));
+    float newVol = current * (1.0f + percentDelta / 100.0f);
+    newVol = std::clamp(newVol, 0.0f, 2.0f);
+    FMOD_ErrorCheck(group->setVolume(newVol));
 }
 
 int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, bool isLooping) {
@@ -297,8 +390,15 @@ void AudioSystem::RegisterComponent(AudioComponent* component) {
 
 void AudioSystem::UnregisterComponent(AudioComponent* component) {
     if (component) {
-        // Clean up channel if active
+        // Clean up filter DSP first (need channel to remove DSP)
+        FMOD::Channel* channel = nullptr;
         auto channelIt = m_componentChannels.find(component);
+        if (channelIt != m_componentChannels.end()) {
+            channel = channelIt->second;
+        }
+        this->RemoveFilterDsp(component, channel);
+
+        // Clean up channel if active
         if (channelIt != m_componentChannels.end()) {
             if (channelIt->second) {
                 channelIt->second->stop();
@@ -318,6 +418,55 @@ bool AudioSystem::IsInitialized() const { return m_initialized; }
 FMOD::Channel* AudioSystem::GetChannel(AudioComponent* component) const {
     auto it = m_componentChannels.find(component);
     return (it != m_componentChannels.end()) ? it->second : nullptr;
+}
+
+bool AudioSystem::ApplyFilterToChannel(AudioComponent* comp, FMOD::Channel* channel, const AudioFilterParams& params) {
+    if (params.type == AudioFilterType::None) return true;
+    if (!m_system || !channel) return false;
+    FMOD_DSP_TYPE dspType = ToFMODDSPType(params.type);
+    if (dspType == FMOD_DSP_TYPE_UNKNOWN) return true;
+    FMOD::DSP* dsp = nullptr;
+    if (m_system->createDSPByType(dspType, &dsp) != FMOD_OK || !dsp) return false;
+    switch (params.type) {
+        case AudioFilterType::Lowpass: {
+            float cutoff = std::clamp(params.cutoffHz, 10.0f, 22050.0f);
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_LOWPASS_CUTOFF, cutoff));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_LOWPASS_RESONANCE, std::clamp(params.resonance, 0.5f, 10.0f)));
+            break;
+        }
+        case AudioFilterType::Highpass: {
+            float cutoff = std::clamp(params.cutoffHz, 10.0f, 22050.0f);
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_HIGHPASS_CUTOFF, cutoff));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_HIGHPASS_RESONANCE, std::clamp(params.resonance, 0.5f, 10.0f)));
+            break;
+        }
+        case AudioFilterType::Echo: {
+            float delayMs = std::clamp(params.echoDelayMs, 1.0f, 5000.0f);
+            float feedback = std::clamp(params.echoFeedback, 0.0f, 1.0f);
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_DELAY, delayMs));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_FEEDBACK, feedback));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_DRYLEVEL, 1.0f));
+            FMOD_ErrorCheck(dsp->setParameterFloat(FMOD_DSP_ECHO_WETLEVEL, 0.5f));
+            break;
+        }
+        default:
+            break;
+    }
+    if (channel->addDSP(0, dsp) != FMOD_OK) {
+        dsp->release();
+        return false;
+    }
+    m_componentFilterDsp[comp] = dsp;
+    return true;
+}
+
+void AudioSystem::RemoveFilterDsp(AudioComponent* comp, FMOD::Channel* channel) {
+    auto it = m_componentFilterDsp.find(comp);
+    if (it == m_componentFilterDsp.end()) return;
+    FMOD::DSP* dsp = it->second;
+    m_componentFilterDsp.erase(it);
+    if (channel) FMOD_ErrorCheck(channel->removeDSP(dsp));
+    FMOD_ErrorCheck(dsp->release());
 }
 
 // ============================================================================
@@ -367,6 +516,7 @@ void AudioComponent::UpdatePosition(const glm::vec3& newPosition) {
     position = newPosition;
     FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
+        if (!is3D) return;
         const FMOD_VECTOR pos = ToFMOD(newPosition);
         const FMOD_VECTOR vel = ToFMOD(velocity);
         FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
@@ -377,6 +527,7 @@ void AudioComponent::UpdateVelocity(const glm::vec3& newVelocity) {
     velocity = newVelocity;
     FMOD::Channel* channel = AudioSystem::GetInstance().GetChannel(this);
     if (channel) {
+        if (!is3D) return;
         const FMOD_VECTOR pos = ToFMOD(position);
         const FMOD_VECTOR vel = ToFMOD(newVelocity);
         FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
@@ -409,7 +560,15 @@ bool AudioComponent::Play() {
 
     // Start new playback
     FMOD::Channel* newChannel = nullptr;
-    FMOD_RESULT result = system->playSound(sound, 0, true, &newChannel);
+    // Route to the requested channel group (default MASTER)
+    FMOD::ChannelGroup* targetGroup = audioSys.m_masterGroup;
+    if (group != AudioGroup::MASTER) {
+        auto it = audioSys.m_groups.find(group);
+        if (it != audioSys.m_groups.end()) {
+            targetGroup = it->second;
+        }
+    }
+    FMOD_RESULT result = system->playSound(sound, targetGroup, true, &newChannel);
 
     if (result != FMOD_OK) {
         spdlog::error("AudioComponent: Failed to create channel: {}", FMOD_ErrorString(result));
@@ -417,12 +576,41 @@ bool AudioComponent::Play() {
     }
 
     if (newChannel) {
-        const FMOD_VECTOR pos = ToFMOD(position);
-        const FMOD_VECTOR vel = ToFMOD(velocity);
-        FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
-        FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
+        // Apply per-component playback settings onto the CHANNEL (not the shared Sound).
+        // Note: Streaming is decided at load time (createStream vs createSample). Toggling
+        // AudioComponent::isStreaming at runtime won't change the already-loaded Sound.
+        {
+            FMOD_MODE soundMode{};
+            if (sound->getMode(&soundMode) == FMOD_OK) {
+                const bool loadedStreaming = (soundMode & FMOD_CREATESTREAM) != 0;
+                if (loadedStreaming != isStreaming) {
+                    spdlog::warn("AudioComponent: isStreaming={} but loaded sound streaming={} (streaming is set at load time; reimport/reload asset to change)",
+                                 isStreaming, loadedStreaming);
+                }
+            }
+        }
+
+        // 2D/3D + looping are best treated as per-channel settings.
+        {
+            FMOD_MODE mode = FMOD_DEFAULT;
+            mode |= is3D ? FMOD_3D : FMOD_2D;
+            mode |= isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+            FMOD_ErrorCheck(newChannel->setMode(mode));
+        }
+
+        if (is3D) {
+            const FMOD_VECTOR pos = ToFMOD(position);
+            const FMOD_VECTOR vel = ToFMOD(velocity);
+            FMOD_ErrorCheck(newChannel->set3DAttributes(&pos, &vel));
+            FMOD_ErrorCheck(newChannel->set3DMinMaxDistance(minDistance * DISTANCEFACTOR, maxDistance * DISTANCEFACTOR));
+        }
         FMOD_ErrorCheck(newChannel->setVolume(volume));
         FMOD_ErrorCheck(newChannel->setLoopCount(isLooping ? -1 : 0));
+
+        if (filterParams.type != AudioFilterType::None) {
+            audioSys.ApplyFilterToChannel(this, newChannel, filterParams);
+        }
+
         FMOD_ErrorCheck(newChannel->setPaused(false));
 
         // Store channel in AudioSystem
@@ -478,6 +666,8 @@ bool AudioComponent::Stop() {
     if (!channel)
         return false;
 
+    audioSys.RemoveFilterDsp(this, channel);
+
     if (channel->stop() == FMOD_OK) {
         audioSys.m_componentChannels.erase(this);
         isPlaying = false;
@@ -491,25 +681,17 @@ bool AudioComponent::Stop() {
 
 void AudioComponent::SetLoop(bool loop) {
     isLooping = loop;
-    
-    // Update the sound's loop mode (affects future playbacks)
+
+    // IMPORTANT: Do not mutate the shared FMOD::Sound loop mode here.
+    // Multiple AudioComponents can reference the same Sound handle via the ResourceRegistry.
+    // Looping should be treated as a per-channel playback setting.
     AudioSystem& audioSys = AudioSystem::GetInstance();
-    FMOD::Sound* sound = audioSys.GetSound(soundHandle);
-    if (sound) {
-        FMOD_MODE mode;
-        FMOD_RESULT result = sound->getMode(&mode);
-        if (result == FMOD_OK) {
-            // Clear existing loop flags
-            mode &= ~(FMOD_LOOP_OFF | FMOD_LOOP_NORMAL | FMOD_LOOP_BIDI);
-            // Set new loop mode
-            mode |= loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
-            FMOD_ErrorCheck(sound->setMode(mode));
-        }
-    }
-    
-    // Update the channel's loop count (affects current playback)
     FMOD::Channel* channel = audioSys.GetChannel(this);
     if (channel) {
+        FMOD_MODE mode = FMOD_DEFAULT;
+        mode |= is3D ? FMOD_3D : FMOD_2D;
+        mode |= loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+        FMOD_ErrorCheck(channel->setMode(mode));
         FMOD_ErrorCheck(channel->setLoopCount(loop ? -1 : 0));
     }
 }
@@ -555,6 +737,14 @@ void AudioComponent::InternalUpdate() {
     const FMOD_VECTOR vel = ToFMOD(velocity);
     FMOD_ErrorCheck(channel->set3DAttributes(&pos, &vel));
 
+    // Sync filter parameters if we have an active filter DSP
+    {
+        auto it = audioSys.m_componentFilterDsp.find(this);
+        if (it != audioSys.m_componentFilterDsp.end() && it->second && filterParams.type != AudioFilterType::None) {
+            SyncFilterParams(it->second, filterParams.type, filterParams);
+        }
+    }
+
     // Check playing state
     bool playing = false;
     FMOD_ErrorCheck(channel->isPlaying(&playing));
@@ -568,8 +758,9 @@ void AudioComponent::InternalUpdate() {
         }
     }
 
-    // Clean up finished channel
+    // Clean up finished channel and its filter DSP
     if (!playing) {
+        audioSys.RemoveFilterDsp(this, channel);
         audioSys.m_componentChannels.erase(this);
         isPlaying = false;
         isPaused = false;

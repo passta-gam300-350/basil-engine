@@ -241,14 +241,28 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&ScriptProperty::is_user_type, "is_user_type">
 	);
 
+	// Audio groups and filter
+	//RegisterReflectionComponent<AudioGroup>("AudioGroup");
+	RegisterReflectionComponent<AudioFilterType>("AudioFilterType");
+	RegisterReflectionComponent<AudioFilterParams>(
+		"AudioFilterParams",
+		MemberRegistrationV<&AudioFilterParams::type, "type">,
+		MemberRegistrationV<&AudioFilterParams::cutoffHz, "cutoffHz">,
+		MemberRegistrationV<&AudioFilterParams::resonance, "resonance">,
+		MemberRegistrationV<&AudioFilterParams::echoDelayMs, "echoDelayMs">,
+		MemberRegistrationV<&AudioFilterParams::echoFeedback, "echoFeedback">
+	);
+
 	RegisterReflectionComponent<AudioComponent>(
 		"AudioComponent",
 		MemberRegistrationV<&AudioComponent::audioAssetGuid, "audioAssetGuid">,
+		MemberRegistrationV<&AudioComponent::group, "group">,
 		MemberRegistrationV<&AudioComponent::volume, "volume">,
 		MemberRegistrationV<&AudioComponent::isLooping, "isLooping">,
 		MemberRegistrationV<&AudioComponent::is3D, "is3D">,
 		MemberRegistrationV<&AudioComponent::isStreaming, "isStreaming">,
 		MemberRegistrationV<&AudioComponent::playOnAwake, "playOnAwake">,
+		MemberRegistrationV<&AudioComponent::filterParams, "filterParams">,
 		MemberRegistrationV<&AudioComponent::minDistance, "minDistance">,
 		MemberRegistrationV<&AudioComponent::maxDistance, "maxDistance">,
 		MemberRegistrationV<&AudioComponent::position, "position">,
@@ -265,7 +279,10 @@ void ReflectionRegistry::SetupEngineTypes()
 		MemberRegistrationV<&Button::height, "height">,
 		MemberRegistrationV<&Button::anchor, "anchor">,
 		MemberRegistrationV<&Button::disabled, "disabled">,
-		MemberRegistrationV<&Button::text, "Text">
+		MemberRegistrationV<&Button::text, "Text">,
+		MemberRegistrationV<&Button::defaultTextureGuid, "defaultTextureGuid">,
+		MemberRegistrationV<&Button::hoverTextureGuid, "hoverTextureGuid">,
+		MemberRegistrationV<&Button::pressedTextureGuid, "pressedTextureGuid">
 
 	);
 

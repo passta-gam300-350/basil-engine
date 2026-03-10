@@ -13,6 +13,7 @@ in VS_OUT {
     vec4 InstanceColor;
     float InstanceMetallic;
     float InstanceRoughness;
+    float InstanceNormalStrength;
 } fs_in;
 
 // Output
@@ -296,6 +297,9 @@ vec3 getNormalFromMap() {
 
     // Unpack RG from [0,1] to [-1,1]
     tangentNormal.xy = tangentNormal.xy * 2.0 - 1.0;
+
+    // Apply per-instance normal strength (bump scale)
+    tangentNormal.xy *= fs_in.InstanceNormalStrength;
 
     // Reconstruct Z component for BC5/2-channel normal maps
     // Since normals are unit vectors: x² + y² + z² = 1

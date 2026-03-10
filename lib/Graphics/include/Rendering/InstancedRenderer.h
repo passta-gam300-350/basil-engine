@@ -44,7 +44,11 @@ public:
         uint32_t flags;             // 4 bytes
         float metallic;             // 4 bytes
         float roughness;            // 4 bytes
-        // Total: 96 bytes per instance (properly aligned)
+        float normalStrength;       // 4 bytes
+        float padding;              // 4 bytes
+        float padding2;             // 4 bytes (pad to 112 bytes - multiple of 16)
+        float padding3;             // 4 bytes
+        // Total: 112 bytes per instance (properly aligned to 16-byte boundary)
     };
     
     

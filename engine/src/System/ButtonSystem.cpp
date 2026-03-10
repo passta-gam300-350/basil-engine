@@ -1,9 +1,38 @@
 #include "System/ButtonSystem.hpp"
+#include "Render/Camera.h"
 #include "Render/Render.h"
+#include <Rendering/HUDRenderer.h>
 #include "Input/Button.h"
 #include "Input/InputManager.h"
 #include "Profiler/profiler.hpp"
 
+namespace
+{
+    bool IsValidTextureGuid(const rp::BasicIndexedGuid& guid)
+    {
+        return guid.m_guid != rp::null_guid;
+    }
+
+    const rp::BasicIndexedGuid* ResolveButtonTexture(const Button& button)
+    {
+        if (button.pressed && IsValidTextureGuid(button.pressedTextureGuid))
+        {
+            return &button.pressedTextureGuid;
+        }
+
+        if (button.hovered && IsValidTextureGuid(button.hoverTextureGuid))
+        {
+            return &button.hoverTextureGuid;
+        }
+
+        if (IsValidTextureGuid(button.defaultTextureGuid))
+        {
+            return &button.defaultTextureGuid;
+        }
+
+        return nullptr;
+    }
+}
 
 ButtonSystem& ButtonSystem::Instance()
 {
@@ -29,6 +58,17 @@ void ButtonSystem::Update(ecs::world& world, float)
     float mouseY = 0.0f;
     input->Get_MousePosition(mouseX, mouseY);
     const bool mousePressed = input->Is_MousePressed(GLFW_MOUSE_BUTTON_LEFT);
+    glm::vec2 viewportOffset = CameraSystem::GetCachedViewportOffset();
+    glm::vec2 viewportSize = CameraSystem::GetCachedViewport();
+    glm::vec2 hudReferenceResolution{ 1920.0f, 1080.0f };
+
+    if (auto* sceneRenderer = Engine::GetRenderSystem().GetSceneRenderer())
+    {
+        if (auto* hudRenderer = sceneRenderer->GetHUDRenderer())
+        {
+            hudReferenceResolution = hudRenderer->GetReferenceResolution();
+        }
+    }
 
     for (auto entity : world.filter_entities<Button>())
     {
@@ -44,7 +84,7 @@ void ButtonSystem::Update(ecs::world& world, float)
 
         if (entity.all<HUDComponent>())
         {
-            const HUDComponent& hud = entity.get<HUDComponent>();
+            HUDComponent& hud = entity.get<HUDComponent>();
             button.x = hud.position.x;
             button.y = hud.position.y;
             button.width = hud.size.x;
@@ -58,9 +98,32 @@ void ButtonSystem::Update(ecs::world& world, float)
                 button.clicked = false;
                 continue;
             }
+
+            float buttonMouseX = mouseX;
+            float buttonMouseY = mouseY;
+            if (viewportSize.x > 0.0f && viewportSize.y > 0.0f)
+            {
+                const float localX = mouseX - viewportOffset.x;
+                const float localY = mouseY - viewportOffset.y;
+                buttonMouseX = (localX / viewportSize.x) * hudReferenceResolution.x;
+                buttonMouseY = hudReferenceResolution.y - ((localY / viewportSize.y) * hudReferenceResolution.y);
+            }
+
+            button.update(buttonMouseX, buttonMouseY, mousePressed);
+        }
+        else
+        {
+            button.update(mouseX, mouseY, mousePressed);
         }
 
-        button.update(mouseX, mouseY, mousePressed);
+        if (entity.all<HUDComponent>())
+        {
+            HUDComponent& hud = entity.get<HUDComponent>();
+            if (const rp::BasicIndexedGuid* textureGuid = ResolveButtonTexture(button))
+            {
+                hud.m_TextureGuid = *textureGuid;
+            }
+        }
     }
 }
 

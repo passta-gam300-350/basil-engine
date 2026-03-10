@@ -74,6 +74,10 @@ void EditorMain::Render_Game()
 	if (frameData.gameResolvedBuffer)
 	{
 		const ImVec2 viewportPos = ImGui::GetCursorScreenPos();
+		engineService.ExecuteOnEngineThread([viewportPos, viewportSize]() {
+			CameraSystem::SetViewportOffset(glm::vec2{ viewportPos.x, viewportPos.y });
+			CameraSystem::SetViewportSize(glm::vec2{ viewportSize.x, viewportSize.y });
+		});
 
 		// Get texture from game framebuffer
 		GLuint textureID = frameData.gameResolvedBuffer->GetColorAttachmentRendererID(0);
@@ -86,22 +90,7 @@ void EditorMain::Render_Game()
 			ImVec2(1, 0)
 		);
 
-		const bool viewportHovered = ImGui::IsItemHovered();
-		if (viewportHovered && viewportSize.x > 0.0f && viewportSize.y > 0.0f)
-		{
-			const ImVec2 mousePos = ImGui::GetMousePos();
-			const float localX = mousePos.x - viewportPos.x;
-			const float localY = mousePos.y - viewportPos.y;
-
-			// Match HUD's fixed reference resolution space used by the shader path.
-			const float gameSpaceX = (localX / viewportSize.x) * 1920.0f;
-			const float gameSpaceY = 1080.0f - ((localY / viewportSize.y) * 1080.0f);
-			InputManager::Get_Instance()->Set_MouseOverride(gameSpaceX, gameSpaceY, true);
-		}
-		else
-		{
-			InputManager::Get_Instance()->Set_MouseOverride(0.0f, 0.0f, false);
-		}
+		InputManager::Get_Instance()->Set_MouseOverride(0.0f, 0.0f, false);
 	}
 	else
 	{

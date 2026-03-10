@@ -12,6 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <rsc-core/rp.hpp>
 #include <string>
 
 class Button
@@ -45,6 +46,9 @@ class Button
         float width, height;
         Anchor anchor;
         std::string text;
+        rp::BasicIndexedGuid defaultTextureGuid{ rp::null_guid, rp::utility::compute_string_hash("texture") };
+        rp::BasicIndexedGuid hoverTextureGuid{ rp::null_guid, rp::utility::compute_string_hash("texture") };
+        rp::BasicIndexedGuid pressedTextureGuid{ rp::null_guid, rp::utility::compute_string_hash("texture") };
 
         bool hovered;
         bool pressed;

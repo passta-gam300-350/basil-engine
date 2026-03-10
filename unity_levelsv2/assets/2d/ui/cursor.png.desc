@@ -1,0 +1,7 @@
+base:
+  m_guid: f4f63377ed481809a0312d36265
+  m_importer: .texture
+  m_source: 2d\ui\cursor.png
+  m_name: cursor.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8

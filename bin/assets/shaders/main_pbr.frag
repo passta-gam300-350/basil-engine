@@ -14,6 +14,7 @@ in VS_OUT {
     float InstanceMetallic;
     float InstanceRoughness;
     float BoneVisibility;
+    float InstanceNormalStrength;
 } fs_in;
 
 // Output
@@ -85,6 +86,7 @@ uniform vec3 u_ViewPos;
 uniform vec3 u_AlbedoColor = vec3(0.8, 0.8, 0.8);
 uniform float u_MetallicValue = 0.0;
 uniform float u_RoughnessValue = 0.5;
+// Note: u_NormalStrength moved to per-instance data (fs_in.InstanceNormalStrength)
 
 // Ambient lighting
 uniform vec3 u_AmbientLight = vec3(0.03);
@@ -297,6 +299,9 @@ vec3 getNormalFromMap() {
 
     // Unpack RG from [0,1] to [-1,1]
     tangentNormal.xy = tangentNormal.xy * 2.0 - 1.0;
+
+    // Apply normal strength/bump scale (Unity-style) - per-instance via SSBO
+    tangentNormal.xy *= fs_in.InstanceNormalStrength;
 
     // Reconstruct Z component for BC5/2-channel normal maps
     // Since normals are unit vectors: x² + y² + z² = 1

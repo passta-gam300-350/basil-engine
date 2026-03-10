@@ -1,0 +1,13 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl wall_v2
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+illum 1
+map_Kd wall_v2_BaseColor.png
+map_Ks wall_v2_Metallic.png
+map_Ns wall_v2_Roughness.png
+map_Ke wall_v2_Emissive.png
+map_d wall_v2_Height.png
+map_Bump wall_v2_Normal.png
