@@ -13,6 +13,7 @@ in VS_OUT {
     vec4 InstanceColor;
     float InstanceMetallic;
     float InstanceRoughness;
+    float BoneVisibility;
 } fs_in;
 
 // Output
@@ -541,11 +542,19 @@ float computeFogFactor(float dist) {
 }
 
 void main() {
+    // Discard fragments hidden by bone visibility (spritesheet flipbook support)
+    if (fs_in.BoneVisibility < 0.5)
+        discard;
+
     // Sample traditional textures
     vec4 albedo = vec4(fs_in.InstanceColor.rgb, 1.0);
     if (u_HasDiffuseMap) {
         albedo *= texture(u_DiffuseMap, fs_in.TexCoords);
     }
+
+    // Discard transparent fragments (fixes black background on sprites/spritesheets)
+    if (albedo.a < 0.1)
+        discard;
 
     float metallic = fs_in.InstanceMetallic;
     if (u_HasMetallicMap) {

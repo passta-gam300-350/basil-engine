@@ -50,6 +50,7 @@ out VS_OUT {
     vec4 InstanceColor;
     float InstanceMetallic;
     float InstanceRoughness;
+    float BoneVisibility;
 } vs_out;
 
 void main()
@@ -63,20 +64,33 @@ void main()
     vec3 skinnedNormal = aNormal;
     vec3 skinnedTangent = aTangent;
     vec3 skinnedBitangent = aBitangent;
+    vs_out.BoneVisibility = 1.0;
     if (u_EnableSkinning)
     {
-        mat4 skinMatrix =
-        boneMatrices[u_BoneOffset + aBoneIDs.x] * aWeights.x +
-        boneMatrices[u_BoneOffset + aBoneIDs.y] * aWeights.y +
-        boneMatrices[u_BoneOffset + aBoneIDs.z] * aWeights.z +
-        boneMatrices[u_BoneOffset + aBoneIDs.w] * aWeights.w;
+        float totalWeight = aWeights.x + aWeights.y + aWeights.z + aWeights.w;
+        if (totalWeight > 0.0)
+        {
+            mat4 skinMatrix =
+            boneMatrices[u_BoneOffset + max(aBoneIDs.x, 0)] * aWeights.x +
+            boneMatrices[u_BoneOffset + max(aBoneIDs.y, 0)] * aWeights.y +
+            boneMatrices[u_BoneOffset + max(aBoneIDs.z, 0)] * aWeights.z +
+            boneMatrices[u_BoneOffset + max(aBoneIDs.w, 0)] * aWeights.w;
 
-        skinnedPos = vec3(skinMatrix * vec4(aPos, 1.0));
+            skinnedPos = vec3(skinMatrix * vec4(aPos, 1.0));
 
-        mat3 skinMatrix3 = mat3(skinMatrix);
-        skinnedNormal = skinMatrix3 * aNormal;
-        skinnedTangent = skinMatrix3 * aTangent;
-        skinnedBitangent = skinMatrix3 * aBitangent;
+            // Bone visibility: if skinning displaced vertex in Y, treat as hidden
+            // This supports spritesheet flipbook animations where bones toggle Y to show/hide
+            float yDisplacement = abs(skinnedPos.y - aPos.y);
+            if (yDisplacement > 0.5)
+                vs_out.BoneVisibility = 0.0;
+            else
+                skinnedPos.y = aPos.y; // Snap Y back to prevent visual jitter during transition
+
+            mat3 skinMatrix3 = mat3(skinMatrix);
+            skinnedNormal = skinMatrix3 * aNormal;
+            skinnedTangent = skinMatrix3 * aTangent;
+            skinnedBitangent = skinMatrix3 * aBitangent;
+        }
     }
     // Transform vertex to world space using instance matrix
     vec4 worldPos = model * vec4(skinnedPos, 1.0);

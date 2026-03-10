@@ -177,8 +177,8 @@ bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans
     // 4. Check if diffuse/base color texture has alpha channel
     aiString texPath;
     if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-        // Assimp doesn’t expose alpha directly here.
-        // You’d need to load the texture image and inspect its pixel format.
+        // Assimp doesnï¿½t expose alpha directly here.
+        // Youï¿½d need to load the texture image and inspect its pixel format.
         // For example, if you use stb_image or another loader, check if it has 4 channels.
         // If so, you can decide based on alpha values.
         int index{};
@@ -426,8 +426,9 @@ inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, gl
             std::string boneName(bone->mName.C_Str());
 
             auto it = boneMap.find(boneName);
-            if (it == boneMap.end())
+            if (it == boneMap.end()) {
                 continue;
+            }
 
             int boneID = it->second;
 
@@ -604,10 +605,19 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                         }
                     }
                 }
-                else { //guid for this stuff is broken should be stable and not regenerated
-                    MeshResourceData mrdata;
-                    mrdata.meshes.push_back(mesh);
-                    mres.emplace_back(std::pair<rp::Guid, MeshResourceData>(rp::Guid::generate(), std::move(mrdata)));
+                else {
+                    // Keep all submeshes in a single MeshResourceData with the descriptor's GUID
+                    if (mres.empty()) {
+                        MeshResourceData mrdata;
+                        mrdata.meshes.emplace_back(mesh);
+                        mres.emplace_back(std::pair<rp::Guid, MeshResourceData>(desc.base.m_guid, std::move(mrdata)));
+                    }
+                    else {
+                        mres[0].second.meshes.emplace_back(mesh);
+                    }
+                    for (auto& slot : mesh.materials) {
+                        mdl_node_desc.meta.mesh_node_idx.emplace_back(nodeid);
+                    }
                 }
             }
             for (unsigned int i = 0; i < ndptr->mNumChildren; i++) {
