@@ -47,7 +47,8 @@ jobs:
           key: ${{ runner.os }}-mono
 
       - name: 2. Install Dependencies (Mono)
-        run: if [ ! -d "dep/vendor/mono" ]; then
+        run: |
+          if [ ! -d "dep/vendor/mono" ]; then
             git clone https://github.com/Silver1713/MONO.git dep/vendor/mono
           fi
         shell: bash
