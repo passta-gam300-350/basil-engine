@@ -37,13 +37,23 @@ jobs:
         with: 
           path: build
           key: ${{ runner.os }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+      
+      - name: Cache Mono Dependency
+        uses: actions/cache@v4
+        with:
+          path: dep/vendor/mono
+          key: ${{ runner.os }}-mono
 
       - name: 2. Install Dependencies (Mono)
-        run: git clone https://github.com/Silver1713/MONO.git dep/vendor/mono
+        run: if [ ! -d "dep/vendor/mono" ]; then
+            git clone https://github.com/Silver1713/MONO.git dep/vendor/mono
+          fi
         shell: bash
 
       - name: 3. Configure CMake
         run: cmake -S . -B build -A x64
 
       - name: 4. Build Editor and Engine
-        run: cmake --build build --config Release --target editor engine
+        run: cmake --build build --config Release --target editor engine --parallel
