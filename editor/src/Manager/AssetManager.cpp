@@ -251,6 +251,11 @@ rp::BasicIndexedGuid AssetManager::ImportAsset(std::string const& rdesc) {
 	ResourceSystem::FileEntry fentry{};
 	fentry.m_Guid = biguid.m_guid;
 	fentry.m_Path = file_path;
+	if (!std::filesystem::exists(fentry.m_Path)) {
+		std::cerr << "Import produced no output file: " << fentry.m_Path << " (from " << rdesc << ")\n";
+		importnewfiles = false;
+		return biguid;
+	}
 	fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 	ResourceSystem::Instance().m_FileEntries.emplace(fentry.m_Guid, fentry);
 	importnewfiles = false;
@@ -385,6 +390,10 @@ void AssetManager::ImportAssetList() {
 		ResourceSystem::FileEntry fentry{};
 		fentry.m_Guid = typed.m_guid;
 		fentry.m_Path = m_ImportedAssetPath + "/" + typed.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetResourceExt(typed.m_typeindex);
+		if (!std::filesystem::exists(fentry.m_Path)) {
+			std::cerr << "Asset file missing, skipping: " << fentry.m_Path << " (" << name << ")\n";
+			continue;
+		}
 		fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 		ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
 	}
@@ -618,18 +627,23 @@ void AssetManager::FileIndexingWorkerLoop() {
 					}
 					dir_path = getParentPath(nfile);
 					descriptor_filepath = nfile + ".desc";
-					if (std::filesystem::exists(descriptor_filepath)) {
-						std::filesystem::remove(descriptor_filepath);
-						{
-							std::lock_guard lg{ m_DescriptorListMtx };
-							auto files = GetFiles(dir_path);
-							for (auto it = files.first; it != files.second; ++it) {
-								if (normalizePath(it->second) == descriptor_filepath) {
-									m_FileList.erase(it); // erase just this one
-									break;
+					try {
+						if (std::filesystem::exists(descriptor_filepath)) {
+							std::filesystem::remove(descriptor_filepath);
+							{
+								std::lock_guard lg{ m_DescriptorListMtx };
+								auto files = GetFiles(dir_path);
+								for (auto it = files.first; it != files.second; ++it) {
+									if (normalizePath(it->second) == descriptor_filepath) {
+										m_FileList.erase(it); // erase just this one
+										break;
+									}
 								}
 							}
 						}
+					}
+					catch (const std::filesystem::filesystem_error& e) {
+						std::cerr << "Failed to remove descriptor: " << e.what() << "\n";
 					}
 					break;
 				case FILE_ACTION_RENAMED_OLD_NAME:

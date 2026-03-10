@@ -45,7 +45,10 @@ void animationSystem::FixedUpdate(ecs::world& world)
 			//what if animation changed
 			if (animationComponent.animationdata.m_guid && skeletonComponent.skeletondata.m_guid) {
 				skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
-				InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
+				animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+				if (skel && animCont) {
+					InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, animCont);
+				}
 			}
 			continue;
 		}
