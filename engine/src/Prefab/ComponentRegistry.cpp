@@ -270,6 +270,10 @@ std::optional<SerializedPropertyValue> ComponentRegistry::MetaAnyToPropertyValue
     if (auto ptr = metaValue.try_cast<bool>())
         return *ptr;
 
+    // uint8_t (promote to int since SerializedPropertyValue has no uint8_t slot)
+    if (auto ptr = metaValue.try_cast<uint8_t>())
+        return static_cast<int>(*ptr);
+
     // int
     if (auto ptr = metaValue.try_cast<int>())
         return *ptr;
