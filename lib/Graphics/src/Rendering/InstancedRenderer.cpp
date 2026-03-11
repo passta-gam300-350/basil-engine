@@ -146,6 +146,12 @@ void InstancedRenderer::UpdateInstanceSSBO(uint64_t meshId)
     } else {
         // Update existing SSBO with full instance data
         assert(ssbo->GetSSBOHandle() != 0 && "Existing SSBO handle must be valid");
+
+        if (instanceDataSize > ssbo->GetSize())
+        {
+            // Resize if new data exceeds current buffer size (reallocates GPU memory)
+            ssbo->Resize(instanceDataSize);
+		}
         ssbo->SetData(instances.data(), instanceDataSize, 0);
     }
 
