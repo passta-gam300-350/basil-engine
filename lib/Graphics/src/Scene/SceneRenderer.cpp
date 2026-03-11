@@ -152,20 +152,20 @@ void SceneRenderer::InitializeDefaultPipeline()
     auto shadowPass = std::make_shared<DirectionalShadowMappingPass>();
     shadowPass->SetShadowTextureArray(m_Shadow2DTextureArray);  // Pass shared texture array
     mainPipeline->AddPass(shadowPass);
-    //mainPipeline->EnablePass("DirectionalShadowPass", false);
+    mainPipeline->EnablePass("DirectionalShadowPass", false);
 
     // 2. Add point shadow mapping pass (geometry shader method)
     // Point shadow pass will need shader to be set after creation by the application
     auto pointShadowPass = std::make_shared<PointShadowMappingPass>();
     mainPipeline->AddPass(pointShadowPass);
-    //mainPipeline->EnablePass("PointShadowPass", false);
+    mainPipeline->EnablePass("PointShadowPass", false);
 
     // 3. Add spot shadow mapping pass (perspective projection, uses shared texture array)
     // Spot shadow pass will need shader to be set after creation by the application
     auto spotShadowPass = std::make_shared<SpotShadowMappingPass>();
     spotShadowPass->SetShadowTextureArray(m_Shadow2DTextureArray);  // Pass shared texture array
     mainPipeline->AddPass(spotShadowPass);
-    //mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
+    mainPipeline->EnablePass("SpotShadowPass", false);  // Disabled by default
 
     // 4. Add main rendering pass (HDR output - RGB16F with 4x MSAA)
     auto mainPass = std::make_shared<MainRenderingPass>();

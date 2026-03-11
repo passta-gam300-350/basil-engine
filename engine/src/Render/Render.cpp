@@ -136,6 +136,7 @@ RenderSystem::RenderSystem() {
 
 	// Initialize component initializer (simplified, no longer needs subsystem references)
 	m_ComponentInitializer = std::make_unique<ComponentInitializer>();
+	m_StaticNodeHierarchy = std::make_unique<StaticNodeHierarchyRepository>();
 
 	// Note: JoltDebugRenderer initialization deferred to InitJoltDebugRenderer()
 	// (must be called after PhysicsSystem::Init() because Jolt needs to be initialized first)
@@ -159,6 +160,7 @@ RenderSystem::~RenderSystem() {
 	m_PrimitiveManager.reset();
 	m_ShaderLibrary.reset();
 	m_SceneRenderer.reset();
+	m_StaticNodeHierarchy.reset();
 }
 
 void RenderSystem::Init() {
@@ -400,13 +402,15 @@ void RenderSystem::Update(ecs::world& world) {
 				}
 			}
 			else {
-				std::vector<glm::mat4> node_global;
+				StaticNodeHierarchy const* node_global = nullptr;
 				rp::BasicIndexedGuid partialndguid = mesh.m_MeshGuid;
 				MeshMetaRuntimeData* nodedataptr{};
+				StaticNodeHierarchy node_hier;
 				partialndguid.m_guid.m_low += 1;
 				if (ResourceRegistry::Instance().Exists(partialndguid) && !obj.all<SkeletonComponent>()) {
 					MeshMetaRuntimeData& nodedata = *(nodedataptr = ResourceRegistry::Instance().Get<MeshMetaRuntimeData>(partialndguid.m_guid));
-					node_global.resize(nodedata.node_local_bind.size());
+					node_hier.first.resize(nodedata.node_local_bind.size());
+					node_hier.second = nodedata.mesh_node_idx;
 					if (obj.all<AnimationBoneChannelTransformComponent>()) {
 						AnimationBoneChannelTransformComponent& data = obj.get<AnimationBoneChannelTransformComponent>();
 						for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
@@ -415,26 +419,22 @@ void RenderSystem::Update(ecs::world& world) {
 							auto it = data.bone_trans.find(node);
 							if (parent < 0) {
 								// Root node
-								node_global[node] = ((it != data.bone_trans.end()) ? it->second : nodedata.node_local_bind[node]);
+								node_hier.first[node] = ((it != data.bone_trans.end()) ? it->second : nodedata.node_local_bind[node]);
 							}
 							else {
 								// Use cached parent transform
-								node_global[node] = node_global[parent] * ((it != data.bone_trans.end()) ?  it->second: nodedata.node_local_bind[node]);
+								node_hier.first[node] = node_hier.first[parent] * ((it != data.bone_trans.end()) ?  it->second: nodedata.node_local_bind[node]);
 							}
 						}
+						node_global = &node_hier;
 					}
 					else {
-						for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
-							int parent = nodedata.node_parent[node];
-							if (parent < 0) {
-								// Root node
-								node_global[node] = nodedata.node_local_bind[node];
-							}
-							else {
-								// Use cached parent transform
-								node_global[node] = node_global[parent] * nodedata.node_local_bind[node];
-							}
+						if (!ExistsStaticNodeHierarchy(mesh.m_MeshGuid)) {
+							RegisterStaticNodeHierarchy(mesh.m_MeshGuid);
 						}
+						auto res = GetStaticNodeHierarchy(mesh.m_MeshGuid);
+						assert(res && "res is empty!");
+						node_global = res.value();
 					}
 				}
 
@@ -452,13 +452,13 @@ void RenderSystem::Update(ecs::world& world) {
 						matIt = mesh.m_MaterialGuid.find(slotName);
 					}
 
-					if (node_global.empty()||nodedataptr==nullptr) {
+					if (node_global==nullptr|| node_global->first.empty()) {
 						// Submit renderable with material from this slot
 						shared_ptr_visitor(meshPtr, materialLoader(matIt->second));
 					}
 					else {
 						// Submit renderable with material from this slot
-						shared_ptr_visitor(meshPtr, materialLoader(matIt->second), node_global[nodedataptr->mesh_node_idx[matmeshidx++]]);
+						shared_ptr_visitor(meshPtr, materialLoader(matIt->second), node_global->first[node_global->second[matmeshidx++]]);
 					}
 				}
 
@@ -1074,6 +1074,55 @@ void RenderSystem::DestroyMaterialInstance(uint64_t entityUID) {
 	m_MaterialInstanceManager->DestroyInstance(entityUID);
 }
 
+// ========== Static Transform Instance API Implementation ==========
+rp::Guid RenderSystem::ConvertGuidToStaticNodeGuid(rp::BasicIndexedGuid const& guid) {
+	rp::Guid nd_guid = guid.m_guid;
+	if (guid.m_typeindex == rp::utility::string_hash("mesh")) {
+		nd_guid.m_low += 1;
+	}
+	return nd_guid;
+}
+
+bool RenderSystem::ExistsStaticNodeHierarchy(rp::BasicIndexedGuid const& guid) const {
+	return m_StaticNodeHierarchy->find(ConvertGuidToStaticNodeGuid(guid)) != m_StaticNodeHierarchy->end();
+}
+typename RenderSystem::StaticNodeHierarchy const& RenderSystem::RegisterStaticNodeHierarchy(rp::BasicIndexedGuid const& guid) {
+	rp::Guid nd_guid = ConvertGuidToStaticNodeGuid(guid);
+	if (!ExistsStaticNodeHierarchy(guid)) {
+		StaticNodeHierarchy node_global;
+		//should if exist
+		assert(ResourceRegistry::Instance().Exists(rp::BasicIndexedGuid{ nd_guid, 0ul }) && "Node data does not exist for mesh!");
+		MeshMetaRuntimeData& nodedata = *(ResourceRegistry::Instance().Get<MeshMetaRuntimeData>(nd_guid));
+		node_global.first.resize(nodedata.node_local_bind.size());
+		node_global.second = nodedata.mesh_node_idx;
+		for (int node = 0; node < nodedata.node_local_bind.size(); ++node) {
+			int parent = nodedata.node_parent[node];
+			if (parent < 0) {
+				// Root node
+				node_global.first[node] = nodedata.node_local_bind[node];
+			}
+			else {
+				// Use cached parent transform
+				node_global.first[node] = node_global.first[parent] * nodedata.node_local_bind[node];
+			}
+		}
+		m_StaticNodeHierarchy->emplace(nd_guid, std::move(node_global));
+	}
+	return (*m_StaticNodeHierarchy)[nd_guid];
+}
+std::optional<typename RenderSystem::StaticNodeHierarchy const*> RenderSystem::GetStaticNodeHierarchy(rp::BasicIndexedGuid const& guid) const {
+	rp::Guid nd_guid = ConvertGuidToStaticNodeGuid(guid);
+	if (!ExistsStaticNodeHierarchy(guid))
+		return std::nullopt;
+	return std::make_optional(&((*m_StaticNodeHierarchy)[nd_guid]));
+}
+void RenderSystem::DestroyStaticNodeHierarchy(rp::BasicIndexedGuid const& guid) {
+	rp::Guid nd_guid = ConvertGuidToStaticNodeGuid(guid);
+	if (ExistsStaticNodeHierarchy(guid)) {
+		m_StaticNodeHierarchy->erase(nd_guid);
+	}
+}
+
 // ========== Material Property Block Management ==========
 
 std::shared_ptr<MaterialPropertyBlock> RenderSystem::GetPropertyBlock(uint64_t entityUID) {
@@ -1505,9 +1554,12 @@ void RenderSystem::BuildInteractableBVH(ecs::world& world)
 	spdlog::info("========== BuildInteractableBVH() END ==========");
 }
 
+using PerMeshCache = std::unordered_map<std::string, std::shared_ptr<Mesh>>;
+
 std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(const char* data) {
 	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
 	std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> meshes;
+	PerMeshCache local_cache; //one time no call;
 	for (const auto& mesh : dat.meshes) {
 		std::vector<Vertex> vert{}; vert.resize(mesh.vertices.size());
 		for (size_t i = 0; i < mesh.vertices.size(); ++i) {
@@ -1522,12 +1574,30 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			}
 		}
 		std::vector<unsigned int> indices{};
+		std::vector<Vertex> mat_vert{};
+
+		// per sub mesh (material) in mesh
 		for (const auto& matslot : mesh.materials) {
+			if (auto it = local_cache.find(matslot.material_slot_name); it != local_cache.end()) {
+				meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, it->second));
+				continue;
+			}
 			indices.resize(matslot.index_count);
+			unsigned int min_vert_idx{~0x0u};
+			unsigned int max_vert_idx{};
 			for (unsigned int i{}; i < matslot.index_count; i++) {
 				indices[i] = mesh.indices[i + matslot.index_begin];
+				min_vert_idx = std::min(min_vert_idx, mesh.indices[i + matslot.index_begin]);
+				max_vert_idx = std::max(max_vert_idx, mesh.indices[i + matslot.index_begin]);
 			}
-			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, std::make_shared<Mesh>(vert, indices, std::vector<Texture>{})));
+			for (unsigned int i{}; i < matslot.index_count; i++) {
+				indices[i]-= min_vert_idx;
+			}
+			mat_vert.resize(max_vert_idx + 1 - min_vert_idx);
+			mat_vert.assign(vert.begin() + min_vert_idx, vert.begin() + max_vert_idx + 1);
+			auto shptr = std::make_shared<Mesh>(mat_vert, indices, std::vector<Texture>{});
+			local_cache.emplace(matslot.material_slot_name, shptr);
+			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, shptr));
 		}
 	}
 	return meshes;
