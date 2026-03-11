@@ -1152,11 +1152,11 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
         // Check if this mesh has textures (indicating we should preserve them)
         if (mesh->textures.size() > 0) {
-            spdlog::info("Mesh {} has {} textures - creating textured material", meshIndex, mesh->textures.size());
-            for (size_t i = 0; i < mesh->textures.size(); ++i) {
-                spdlog::info("  Texture {}: type='{}', id={}, path='{}'",
-                           i, mesh->textures[i].type, mesh->textures[i].id, mesh->textures[i].path);
-            }
+            //spdlog::info("Mesh {} has {} textures - creating textured material", meshIndex, mesh->textures.size());
+            //for (size_t i = 0; i < mesh->textures.size(); ++i) {
+            //    spdlog::info("  Texture {}: type='{}', id={}, path='{}'",
+            //               i, mesh->textures[i].type, mesh->textures[i].id, mesh->textures[i].path);
+            //}
 
             // Create a material that will work with the existing textures
             auto shader = m_ResourceManager->GetShader("main_pbr");
@@ -1193,8 +1193,8 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
                     }
 
                     renderable.material->SetTexture(uniformName, texturePtr, static_cast<int>(i));
-                    spdlog::info("  -> Applied texture {} (ID: {}) as '{}' to material slot {}",
-                               mesh->textures[i].type, mesh->textures[i].id, uniformName, i);
+                    //spdlog::info("  -> Applied texture {} (ID: {}) as '{}' to material slot {}",
+                    //           mesh->textures[i].type, mesh->textures[i].id, uniformName, i);
                 }
 
                 // Detect glass materials by checking node name or texture paths
@@ -1219,7 +1219,7 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
                     renderable.material->SetMetallicValue(0.0f);
                     renderable.material->SetRoughnessValue(0.05f);  // Very smooth
                     renderable.material->SetBlendMode(BlendingMode::Transparent);
-                    spdlog::info("Detected glass material for mesh '{}' - enabling transparency", nodeName);
+                    //spdlog::info("Detected glass material for mesh '{}' - enabling transparency", nodeName);
                 } else {
                     // Regular textured material - use white albedo to show texture colors
                     renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -1229,7 +1229,7 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
             }
         } else {
             // No textures - use our custom colored material
-            spdlog::info("Mesh {} has no textures, using custom material: {}", meshIndex, materialName);
+            //spdlog::info("Mesh {} has no textures, using custom material: {}", meshIndex, materialName);
             renderable.material = m_ResourceManager->GetMaterial(materialName);
         }
 

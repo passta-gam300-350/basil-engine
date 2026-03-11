@@ -253,8 +253,8 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
                             textures.push_back(texture);
                             textures_loaded.push_back(texture);
 
-                            spdlog::debug("Loaded embedded texture {} ({}x{}, {} components)",
-                                        texturePath, width, height, nrComponents);
+                            //spdlog::debug("Loaded embedded texture {} ({}x{}, {} components)",
+                            //            texturePath, width, height, nrComponents);
                         } else {
                             spdlog::error("Failed to decode embedded texture: {}", texturePath);
                         }
@@ -276,8 +276,8 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
                         textures.push_back(texture);
                         textures_loaded.push_back(texture);
 
-                        spdlog::debug("Loaded embedded uncompressed texture {} ({}x{})",
-                                    texturePath, embeddedTexture->mWidth, embeddedTexture->mHeight);
+                        //spdlog::debug("Loaded embedded uncompressed texture {} ({}x{})",
+                        //            texturePath, embeddedTexture->mWidth, embeddedTexture->mHeight);
                     }
                 } else {
                     spdlog::error("Invalid embedded texture index: {}", texturePath);
