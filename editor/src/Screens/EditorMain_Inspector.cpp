@@ -646,7 +646,7 @@ void EditorMain::Render_Components()
 				}
 			}
 
-			// Special UI section for AudioComponent playback controls
+				// Special UI section for AudioComponent playback controls
 			if (audio_component && type_id == audio_component) {
 				if (AudioComponent* audioComp = reinterpret_cast<AudioComponent*>(uptr.get())) {
 					ImGui::Separator();

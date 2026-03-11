@@ -1680,6 +1680,9 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 		// Apply blend mode (0 = Opaque, 1 = Transparent)
 		material->SetBlendMode(static_cast<BlendingMode>(matData.blend_mode));
 
+		// Apply cull mode (0 = Off, 1 = Back, 2 = Front)
+		material->SetCullMode(static_cast<CullMode>(matData.cull_mode));
+
 		spdlog::info("Successfully loaded material '{}' from resource pipeline ({} textures)",
 			matData.material_name, textureUnit);
 		return material;
