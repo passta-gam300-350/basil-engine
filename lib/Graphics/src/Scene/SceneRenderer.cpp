@@ -114,6 +114,14 @@ void SceneRenderer::ClearFrame()
 {
     m_SubmittedRenderables.clear();
 	m_SubmittedLights.clear();
+
+    // OPTIMIZATION: Reset change tracking for this frame
+    // This allows HasRenderablesChanged() to be called multiple times per frame
+    // (shadow pass, main pass, etc.) but only do the expensive check once
+    if (m_InstancedRenderer) {
+        m_InstancedRenderer->ResetFrameChangeTracking();
+    }
+
     if (m_ParticleRenderer) {
         m_ParticleRenderer->ClearFrame();
     }
