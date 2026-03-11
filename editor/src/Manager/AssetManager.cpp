@@ -159,14 +159,29 @@ std::string AssetManager::getFileExtension(std::string const& file) {
 	return path.extension().string();
 }
 
-std::vector<std::string> AssetManager::GetAssetTypeNames(ResourceType ty) {
-	std::vector<std::string> asstype{};
-	for (auto [name, typed] : m_AssetNameGuid) {
-		if (typed.m_typeindex == ty) {
-			asstype.emplace_back(name);
-		}
+void AssetManager::RebuildAssetTypeCache() {
+	// This should already be called with m_AssetTypeCacheMtx locked
+	m_AssetTypeCache.clear();
+	for (auto const& [name, typed] : m_AssetNameGuid) {
+		m_AssetTypeCache[typed.m_typeindex].emplace_back(name);
 	}
-	return asstype;
+	m_AssetTypeCacheValid = true;
+}
+
+std::vector<std::string> AssetManager::GetAssetTypeNames(ResourceType ty) {
+	std::lock_guard lg{ m_AssetTypeCacheMtx };
+
+	// Rebuild cache if invalid
+	if (!m_AssetTypeCacheValid) {
+		RebuildAssetTypeCache();
+	}
+
+	// Return cached result (or empty vector if type doesn't exist)
+	auto it = m_AssetTypeCache.find(ty);
+	if (it != m_AssetTypeCache.end()) {
+		return it->second;
+	}
+	return {};
 }
 
 std::vector<std::string> trackDirectory(const std::wstring& path, std::atomic_bool& tracker) {
@@ -248,6 +263,13 @@ rp::BasicIndexedGuid AssetManager::ImportAsset(std::string const& rdesc) {
 	rp::ResourceTypeImporterRegistry::Import(importertype, rdesc, file_path);
 	rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc);
 	m_AssetNameGuid.emplace(rp::ResourceTypeImporterRegistry::GetDescriptorName(rdesc), biguid);
+
+	// Invalidate cache since we added a new asset
+	{
+		std::lock_guard lg{ m_AssetTypeCacheMtx };
+		m_AssetTypeCacheValid = false;
+	}
+
 	ResourceSystem::FileEntry fentry{};
 	fentry.m_Guid = biguid.m_guid;
 	fentry.m_Path = file_path;
@@ -387,6 +409,13 @@ void AssetManager::ImportAssetList() {
 	if (!std::filesystem::exists(assetfilename))
 		return;
 	m_AssetNameGuid = rp::serialization::yaml_serializer::deserialize<std::map<std::string, rp::BasicIndexedGuid>>(assetfilename);
+
+	// Invalidate cache since we loaded new assets
+	{
+		std::lock_guard lg{ m_AssetTypeCacheMtx };
+		m_AssetTypeCacheValid = false;
+	}
+
 	for (auto [name, typed] : m_AssetNameGuid) {
 		ResourceSystem::FileEntry fentry{};
 		fentry.m_Guid = typed.m_guid;

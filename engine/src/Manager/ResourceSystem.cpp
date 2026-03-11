@@ -7,7 +7,7 @@
 #include "Utility/StringConversion.hpp"
 
 namespace {
-    constexpr std::uint64_t DEFAULT_RESOURCE_THREADS{ 4 };
+    constexpr std::uint64_t DEFAULT_RESOURCE_THREADS{ 0 };
     const std::string DEFAULT_RESOURCE_PATH{ std::filesystem::current_path().string() };
     constexpr bool DEFAULT_IS_GLOBBING_ENABLED{false};
 }

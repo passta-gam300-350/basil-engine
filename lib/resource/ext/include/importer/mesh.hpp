@@ -20,6 +20,7 @@
 #include <native/mesh.h>
 
 #include <stb_image.h>
+#include <meshoptimizer.h>
 
 // --- helper: build transform matrix ---
 inline glm::mat4 BuildTransform(ModelDescriptor const& desc) {
@@ -588,6 +589,18 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                         MeshResourceData::Mesh& mergedMesh = mres[0].second.meshes[0];
                         unsigned int index_vertex_offset{ static_cast<unsigned int>(mergedMesh.vertices.size()) };
                         unsigned int index_size{ static_cast<unsigned int>(mergedMesh.indices.size()) };
+                        
+                        // Reorder for better GPU vertex cache usage
+                        meshopt_optimizeVertexCache(mesh.indices.data(), mesh.indices.data(), mesh.indices.size(), mesh.vertices.size());
+
+                        // Optimize overdraw (reduces pixel shading work)
+                        meshopt_optimizeOverdraw(mesh.indices.data(), mesh.indices.data(), mesh.indices.size(),
+                            &mesh.vertices[0].Position.x, mesh.vertices.size(), sizeof(MeshResourceData::Vertex), 1.05f);
+
+                        // Optimize vertex fetch (improves memory access)
+                        meshopt_optimizeVertexFetch(mesh.vertices.data(), mesh.indices.data(), mesh.indices.size(),
+                            mesh.vertices.data(), mesh.vertices.size(), sizeof(MeshResourceData::Vertex));
+
                         mergedMesh.vertices.insert(mergedMesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 
                         // append indices with offset
@@ -636,6 +649,23 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         SaveOrOverwriteDescriptors(matDesc, parent);
     }
         
+    if (!desc.merge_mesh) {
+        for (auto& [g, mesh] : result) {
+            for (auto& submesh : mesh.meshes) {
+                // Reorder for better GPU vertex cache usage
+                meshopt_optimizeVertexCache(submesh.indices.data(), submesh.indices.data(), submesh.indices.size(), submesh.vertices.size());
+
+                // Optimize overdraw (reduces pixel shading work)
+                meshopt_optimizeOverdraw(submesh.indices.data(), submesh.indices.data(), submesh.indices.size(),
+                    &submesh.vertices[0].Position.x, submesh.vertices.size(), sizeof(MeshResourceData::Vertex), 1.05f);
+
+                // Optimize vertex fetch (improves memory access)
+                meshopt_optimizeVertexFetch(submesh.vertices.data(), submesh.indices.data(), submesh.indices.size(),
+                    submesh.vertices.data(), submesh.vertices.size(), sizeof(MeshResourceData::Vertex));
+            }
+        }
+    }
+
     if (desc.extract_animation) {
         for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
             auto anim = scene->mAnimations[a];

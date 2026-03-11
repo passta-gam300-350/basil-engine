@@ -39,6 +39,11 @@ struct AssetManager {
 	std::mutex m_DescriptorListMtx;
 	std::unique_ptr<std::thread> m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
 
+	// Performance optimization: Cache asset names by type to avoid repeated full-map scans
+	std::unordered_map<ResourceType, std::vector<std::string>> m_AssetTypeCache;
+	std::mutex m_AssetTypeCacheMtx;
+	bool m_AssetTypeCacheValid = false;
+
 	std::unique_ptr<rp::DescriptorWrapper> m_InspectedDescriptor;
 	std::string m_InspectedDescriptorPath;
 
@@ -117,6 +122,10 @@ struct AssetManager {
 	// Prefab synchronization methods
 	std::vector<std::string> GetAndClearChangedPrefabs();
 	std::vector<std::string> GetAndClearChangedScripts();
+
+private:
+	// Rebuilds the asset type cache by scanning all assets
+	void RebuildAssetTypeCache();
 };
 
 #endif
