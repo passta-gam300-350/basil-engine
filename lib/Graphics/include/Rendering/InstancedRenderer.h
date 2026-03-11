@@ -58,9 +58,15 @@ public:
     
     // Instance management
     void BeginInstanceBatch();
-    void AddInstance(const std::string& meshId, const InstanceData& instance);
+    void AddInstance(uint64_t meshId, const InstanceData& instance);
     void EndInstanceBatch();
     void Clear();
+
+    // Helper to compute mesh ID from mesh + material pointers (zero allocations)
+    static inline uint64_t ComputeMeshId(const void* meshPtr, const void* materialPtr) {
+        return (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(meshPtr)) << 32)
+             | static_cast<uint64_t>(reinterpret_cast<uintptr_t>(materialPtr));
+    }
 
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque);
@@ -75,7 +81,7 @@ public:
     void ForceRebuildCache();
 
     // Mesh and material setup
-    void SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
+    void SetMeshData(uint64_t meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
     
     // Render skinned meshes (called after regular instanced rendering)
     void RenderSkinnedMeshes(RenderPass& renderPass, const FrameData& frameData);
@@ -103,8 +109,8 @@ private:
         bool dirty = true;
     };
     
-    std::unordered_map<std::string, MeshInstances> m_MeshInstances;
-    std::unordered_map<std::string, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
+    std::unordered_map<uint64_t, MeshInstances> m_MeshInstances;
+    std::unordered_map<uint64_t, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
 
     // Skinned renderables (rendered individually, not batched)
     std::vector<const RenderableData*> m_SkinnedRenderables;
@@ -124,8 +130,8 @@ private:
     std::vector<uintptr_t> m_LastMaterialPointers;  // Cache material pointers for material change detection
     std::vector<uintptr_t> m_LastMeshPointers;  // Cache mesh pointers for mesh change detection
 
-    void UpdateInstanceSSBO(const std::string& meshId);
-    void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData, bool isOpaque);
+    void UpdateInstanceSSBO(uint64_t meshId);
+    void RenderInstancedMeshToPass(RenderPass& renderPass, uint64_t meshId, const FrameData& frameData, bool isOpaque);
     void SubmitFogCommands(RenderPass& renderPass, std::shared_ptr<Shader> shader, const FrameData& frameData);
     bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
     void UpdateTransformHashes(const std::vector<RenderableData>& renderables);
