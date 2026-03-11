@@ -1563,7 +1563,6 @@ using PerMeshCache = std::unordered_map<std::string, std::shared_ptr<Mesh>>;
 std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(const char* data) {
 	MeshResourceData dat = rp::serialization::serializer<"bin">::deserialize<MeshResourceData>(reinterpret_cast<const std::byte*>(data));
 	std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> meshes;
-	PerMeshCache local_cache; //one time no call;
 	for (const auto& mesh : dat.meshes) {
 		std::vector<Vertex> vert{}; vert.resize(mesh.vertices.size());
 		for (size_t i = 0; i < mesh.vertices.size(); ++i) {
@@ -1582,10 +1581,6 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 
 		// per sub mesh (material) in mesh
 		for (const auto& matslot : mesh.materials) {
-			if (auto it = local_cache.find(matslot.material_slot_name); it != local_cache.end()) {
-				meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, it->second));
-				continue;
-			}
 			indices.resize(matslot.index_count);
 			unsigned int min_vert_idx{~0x0u};
 			unsigned int max_vert_idx{};
@@ -1599,9 +1594,7 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			}
 			mat_vert.resize(max_vert_idx + 1 - min_vert_idx);
 			mat_vert.assign(vert.begin() + min_vert_idx, vert.begin() + max_vert_idx + 1);
-			auto shptr = std::make_shared<Mesh>(mat_vert, indices, std::vector<Texture>{});
-			local_cache.emplace(matslot.material_slot_name, shptr);
-			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, shptr));
+			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, std::make_shared<Mesh>(mat_vert, indices, std::vector<Texture>{})));
 		}
 	}
 	return meshes;
