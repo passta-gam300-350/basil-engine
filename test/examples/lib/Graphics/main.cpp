@@ -45,6 +45,11 @@ Technology is prohibited.
  *                             // - Opaque cubes for reference
  *                             // - Move camera to test sorting from different angles
  *
+ *   SetupLevel1Demo();   // Level 1 layout - GLB MODEL TEST
+ *                        // - Loads lvl1_layout.glb (textures embedded, no PNGs needed)
+ *                        // - Directional light from directly above
+ *                        // - Camera positioned to view entire level
+ *
  * Each demo function sets up:
  *   - Scene objects
  *   - Lighting
@@ -78,6 +83,7 @@ Technology is prohibited.
 #include <random>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <cfloat>
 
@@ -185,10 +191,11 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
+    //SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
 
     // Load HUD test textures (once during initialization)
     m_PauseMenuTexture = TextureLoader::TextureFromFile("PauseMenu.png", "assets/hud/Pause", false);
@@ -1022,6 +1029,66 @@ void GraphicsTestDriver::SetupTransparencyDemo()
     spdlog::info("NOTE: Windows should blend correctly when viewed from different angles");
 }
 
+// ===== DEMO 5: LEVEL 1 - GLB MODEL WITH DIRECTIONAL LIGHT =====
+void GraphicsTestDriver::SetupLevel1Demo()
+{
+    m_ActiveDemo = DemoType::Tinbox;  // Reuse enum
+    spdlog::info("=== SETTING UP LEVEL 1 DEMO (GLB Model) ===");
+
+    // 1. CREATE CAMERA
+    m_Camera = std::make_unique<Camera>(CameraType::Perspective);
+    m_Camera->SetPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    // Position camera to get a good view of the level (adjust as needed)
+    m_Camera->SetPosition(glm::vec3(0.0f, 10.0f, 30.0f));
+    m_Camera->SetRotation(glm::vec3(-20.0f, -90.0f, 0.0f));
+    spdlog::info("Camera positioned at (0, 10, 30) looking at level");
+
+    // 2. LOAD LEVEL MODEL (GLB format - textures embedded)
+    auto levelModel = m_ResourceManager->LoadModel("lvl1",
+        "assets/models/lv1/lvl1_layout.glb");
+
+    if (!levelModel) {
+        spdlog::error("Failed to load lvl1_layout.glb model!");
+        return;
+    }
+    spdlog::info("Level 1 model loaded successfully: {} meshes", levelModel->meshes.size());
+
+    // 3. CREATE LEVEL INSTANCE
+    // GLB models typically have embedded textures, so we use white material to preserve them
+    CreateModelInstance("lvl1", "WhiteMaterial",
+                       glm::vec3(0.0f, 0.0f, 0.0f),  // Position at origin
+                       glm::vec3(0.01f),               // Scale down to 10% of original size
+                       false);                        // Whole-model selection
+    spdlog::info("Level 1 instance created: {} objects", m_SceneObjects.size());
+
+    // 4. CREATE DIRECTIONAL LIGHT FROM ABOVE
+    // Light coming from above at an angle to illuminate surfaces properly
+    m_SceneLights.push_back(CreateDirectionalLight(
+        glm::vec3(-0.2f, -1.0f, -0.3f),     // Direction: from above at an angle for better surface lighting
+        glm::vec3(1.0f, 0.98f, 0.95f),      // Color: bright white with slight warm tint
+        3.5f,                                // DiffuseIntensity: very bright to show textures
+        0.0f,                                // AmbientIntensity: no per-light ambient
+        glm::vec3(10.0f, 50.0f, 15.0f)      // Visual position: high above the scene
+    ));
+    spdlog::info("Directional light created (from above at angle, high intensity)");
+
+    // 5. SET AMBIENT LIGHT
+    m_SceneRenderer->SetAmbientLight(glm::vec3(0.4f));  // Higher ambient to ensure textures are visible
+    spdlog::info("Ambient light set to (0.4, 0.4, 0.4)");
+
+    // 6. CONFIGURE RENDERING
+    m_SceneRenderer->EnableSkybox(false);
+    m_SceneRenderer->SetBackgroundColor(glm::vec4(0.1f, 0.1f, 0.15f, 1.0f));  // Dark blue background
+    spdlog::info("Skybox disabled, background set to dark blue");
+
+    // 7. SETUP OUTLINE MODE
+    m_SceneRenderer->ClearOutlinedObjects();
+
+    spdlog::info("Level 1 demo setup complete: {} objects, {} lights",
+                 m_SceneObjects.size(), m_SceneLights.size());
+    spdlog::info("NOTE: GLB format has embedded textures - no external PNGs needed");
+}
+
 void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const std::string& materialName,
                                             const glm::vec3& position, const glm::vec3& scale,
                                             bool perNodeSelection)
@@ -1085,6 +1152,11 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
         // Check if this mesh has textures (indicating we should preserve them)
         if (mesh->textures.size() > 0) {
+            spdlog::info("Mesh {} has {} textures - creating textured material", meshIndex, mesh->textures.size());
+            for (size_t i = 0; i < mesh->textures.size(); ++i) {
+                spdlog::info("  Texture {}: type='{}', id={}, path='{}'",
+                           i, mesh->textures[i].type, mesh->textures[i].id, mesh->textures[i].path);
+            }
 
             // Create a material that will work with the existing textures
             auto shader = m_ResourceManager->GetShader("main_pbr");
@@ -1094,6 +1166,36 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
             if (shader) {
                 renderable.material = std::make_shared<Material>(shader, "TexturedMaterial_" + std::to_string(meshIndex));
+
+                // CRITICAL: Set mesh textures on the material
+                // The mesh has textures, but we need to tell the material to use them
+                // Map Assimp texture types to shader uniform names
+                std::unordered_map<std::string, std::string> textureTypeToUniform = {
+                    {"texture_diffuse", "u_DiffuseMap"},
+                    {"texture_normal", "u_NormalMap"},
+                    {"texture_metallic", "u_MetallicMap"},
+                    {"texture_roughness", "u_RoughnessMap"},
+                    {"texture_ao", "u_AOMap"},
+                    {"texture_emissive", "u_EmissiveMap"},
+                    {"texture_specular", "u_SpecularMap"},
+                    {"texture_height", "u_HeightMap"}
+                };
+
+                for (size_t i = 0; i < mesh->textures.size() && i < 8; ++i) {  // Support up to 8 texture slots
+                    // Create a shared_ptr from the mesh texture
+                    auto texturePtr = std::make_shared<Texture>(mesh->textures[i]);
+
+                    // Map Assimp texture type to shader uniform name
+                    std::string uniformName = mesh->textures[i].type;
+                    auto it = textureTypeToUniform.find(mesh->textures[i].type);
+                    if (it != textureTypeToUniform.end()) {
+                        uniformName = it->second;
+                    }
+
+                    renderable.material->SetTexture(uniformName, texturePtr, static_cast<int>(i));
+                    spdlog::info("  -> Applied texture {} (ID: {}) as '{}' to material slot {}",
+                               mesh->textures[i].type, mesh->textures[i].id, uniformName, i);
+                }
 
                 // Detect glass materials by checking node name or texture paths
                 const std::string& nodeName = model->meshNodeNames[meshIndex];
@@ -1119,7 +1221,7 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
                     renderable.material->SetBlendMode(BlendingMode::Transparent);
                     spdlog::info("Detected glass material for mesh '{}' - enabling transparency", nodeName);
                 } else {
-                    // Regular textured material
+                    // Regular textured material - use white albedo to show texture colors
                     renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
                     renderable.material->SetMetallicValue(0.0f);
                     renderable.material->SetRoughnessValue(0.5f);
