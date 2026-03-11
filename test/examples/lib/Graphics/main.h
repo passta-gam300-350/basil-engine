@@ -93,6 +93,7 @@ private:
     void SetupTinboxDemo();      // Tinbox grid - outline and PBR testing
     void SetupEditorDemo();      // 3x3 cube grid - matches editor's default scene
     void SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
+    void SetupLevel1Demo();      // Level 1 layout - GLB model with directional light
 
     // Resource loading
     bool LoadTestResources();

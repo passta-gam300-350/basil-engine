@@ -273,6 +273,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     matDesc.material.vert_name = "main_pbr.vert";
     matDesc.material.frag_name = "main_pbr.frag";
     matDesc.material.blend_mode = IsMaterialTransparent(aimat, embeddedTextureTrans, base_path) ? 1 : 0;
+	matDesc.material.cull_mode = 1; // default to back culling, can be extended to read from material properties if needed
 
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();

@@ -307,6 +307,7 @@ void AssetManager::CreateMaterialDescriptor(std::string const& material_name) {
 	matDesc.material.metallic = 0.0f;
 	matDesc.material.roughness = 0.5f;
 	matDesc.material.blend_mode = 0; // Opaque by default
+	matDesc.material.cull_mode = 1; // Back-face culling by default
 
 	matDesc.material.texture_properties["u_AOMap"];
 	matDesc.material.texture_properties["u_RoughnessMap"];

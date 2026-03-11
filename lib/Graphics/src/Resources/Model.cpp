@@ -18,6 +18,8 @@ Technology is prohibited.
 #include <Resources/Model.h>
 #include <Resources/Texture.h>
 #include <spdlog/spdlog.h>
+#include <glad/glad.h>
+#include <stb_image.h>
 
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 {
@@ -137,40 +139,40 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     // This matches standard MTL keywords: map_Kd, norm, map_Pm, map_Pr, etc.
 
     // 1. Diffuse/Albedo maps (map_Kd in MTL)
-    std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
     // 2. Normal maps - Support both 'norm' and 'map_Bump' keywords
     // 2a. Load from NORMALS type (norm keyword)
-    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal", scene);
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
     // 2b. Load from HEIGHT type (map_Bump/bump keyword - also used for bump/normal mapping)
-    std::vector<Texture> bumpMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+    std::vector<Texture> bumpMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
     textures.insert(textures.end(), bumpMaps.begin(), bumpMaps.end());
 
     // 3. Metallic maps (map_Pm in MTL - PBR standard)
-    std::vector<Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_metallic");
+    std::vector<Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_metallic", scene);
     textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
 
     // 4. Roughness maps (map_Pr in MTL - PBR standard)
-    std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness");
+    std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness", scene);
     textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
 
     // 5. Ambient Occlusion maps (map_Ka or dedicated AO keyword)
-    std::vector<Texture> aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao");
+    std::vector<Texture> aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
     textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
 
     // 6. Emissive maps (map_Ke in MTL)
-    std::vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive");
+    std::vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive", scene);
     textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
 
     // 7. Specular maps (map_Ks in MTL - legacy Phong workflow)
-    std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+    std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
     // 8. Displacement maps (disp in MTL - for actual geometric displacement)
-    std::vector<Texture> displacementMaps = loadMaterialTextures(material, aiTextureType_DISPLACEMENT, "texture_height");
+    std::vector<Texture> displacementMaps = loadMaterialTextures(material, aiTextureType_DISPLACEMENT, "texture_height", scene);
     textures.insert(textures.end(), displacementMaps.begin(), displacementMaps.end());
 
 
@@ -178,7 +180,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     return Mesh(vertices, indices, textures);
 }
 
-std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, const std::string& typeName)
+std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, const std::string& typeName, const aiScene *scene)
 {
     std::vector<Texture> textures;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
@@ -201,6 +203,88 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
             Texture texture;
             // Use gamma correction for diffuse/albedo textures (sRGB), but not for normal/roughness/metallic maps (linear)
             bool useGammaCorrection = (typeName == "texture_diffuse");
+
+            // Check if this is an embedded texture (path starts with '*')
+            std::string texturePath = str.C_Str();
+            if (!texturePath.empty() && texturePath[0] == '*') {
+                // Embedded texture (GLB format) - path is "*N" where N is the index
+                int textureIndex = std::atoi(texturePath.c_str() + 1);  // Skip '*' and parse index
+
+                if (scene != nullptr && textureIndex >= 0 && textureIndex < static_cast<int>(scene->mNumTextures)) {
+                    const aiTexture* embeddedTexture = scene->mTextures[textureIndex];
+
+                    // Create OpenGL texture from embedded data
+                    unsigned int textureID;
+                    glGenTextures(1, &textureID);
+
+                    if (embeddedTexture->mHeight == 0) {
+                        // Compressed format (PNG, JPG, etc. stored in memory)
+                        int width, height, nrComponents;
+                        unsigned char* data = stbi_load_from_memory(
+                            reinterpret_cast<unsigned char*>(embeddedTexture->pcData),
+                            embeddedTexture->mWidth,  // mWidth stores the size in bytes for compressed
+                            &width, &height, &nrComponents, 0
+                        );
+
+                        if (data) {
+                            GLenum format = GL_RGB;
+                            if (nrComponents == 1) format = GL_RED;
+                            else if (nrComponents == 3) format = GL_RGB;
+                            else if (nrComponents == 4) format = GL_RGBA;
+
+                            GLenum internalFormat = useGammaCorrection ?
+                                (nrComponents == 4 ? GL_SRGB_ALPHA : GL_SRGB) :
+                                format;
+
+                            glBindTexture(GL_TEXTURE_2D, textureID);
+                            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+                            glGenerateMipmap(GL_TEXTURE_2D);
+
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                            stbi_image_free(data);
+
+                            texture.id = textureID;
+                            texture.type = typeName;
+                            texture.path = texturePath;
+                            textures.push_back(texture);
+                            textures_loaded.push_back(texture);
+
+                            //spdlog::debug("Loaded embedded texture {} ({}x{}, {} components)",
+                            //            texturePath, width, height, nrComponents);
+                        } else {
+                            spdlog::error("Failed to decode embedded texture: {}", texturePath);
+                        }
+                    } else {
+                        // Uncompressed format (ARGB8888)
+                        glBindTexture(GL_TEXTURE_2D, textureID);
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, embeddedTexture->mWidth, embeddedTexture->mHeight,
+                                   0, GL_BGRA, GL_UNSIGNED_BYTE, embeddedTexture->pcData);
+                        glGenerateMipmap(GL_TEXTURE_2D);
+
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                        texture.id = textureID;
+                        texture.type = typeName;
+                        texture.path = texturePath;
+                        textures.push_back(texture);
+                        textures_loaded.push_back(texture);
+
+                        //spdlog::debug("Loaded embedded uncompressed texture {} ({}x{})",
+                        //            texturePath, embeddedTexture->mWidth, embeddedTexture->mHeight);
+                    }
+                } else {
+                    spdlog::error("Invalid embedded texture index: {}", texturePath);
+                }
+                continue;
+            }
+
             texture.id = TextureLoader::TextureFromFile(str.C_Str(), this->directory, useGammaCorrection);
             texture.type = typeName;
             texture.path = str.C_Str();
