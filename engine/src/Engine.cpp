@@ -225,12 +225,27 @@ void Engine::CoreUpdate() {
 	instance.m_SceneRegistry->PollRequestSceneChange();
 }
 
+void Engine::TickFrameClock()
+{
+	Engine& instance{ Instance() };
+	const double currentFrameTime = GetFrameTimestampSeconds();
+	if (instance.m_Info.m_LastFrameTime <= 0.0) {
+		instance.m_Info.m_LastFrameTime = currentFrameTime;
+	}
+
+	double frameDelta = currentFrameTime - instance.m_Info.m_LastFrameTime;
+	if (frameDelta < 0.0) {
+		frameDelta = 0.0;
+	}
+
+	instance.m_Info.m_LastFrameTime = currentFrameTime;
+	instance.m_Info.m_DeltaTime = frameDelta;
+	instance.m_Info.m_ActualDeltaTime = frameDelta;
+}
+
 void Engine::Update() {
 	try {
 		Engine& instance{ Instance() };
-		if (instance.m_Info.m_LastFrameTime <= 0.0) {
-			instance.m_Info.m_LastFrameTime = GetFrameTimestampSeconds();
-		}
 		//std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt }; 
 		while (instance.m_Info.m_State != Info::State::Error && instance.m_Info.m_State != Info::State::Exit) {
 			while (instance.m_Info.m_State == Info::State::Running) {
@@ -239,15 +254,7 @@ void Engine::Update() {
 					break;
 				}
 				{
-					const double currentFrameTime = GetFrameTimestampSeconds();
-					double frameDelta = currentFrameTime - instance.m_Info.m_LastFrameTime;
-					if (frameDelta < 0.0) {
-						frameDelta = 0.0;
-					}
-					instance.m_Info.m_LastFrameTime = currentFrameTime;
-					instance.m_Info.m_DeltaTime = frameDelta;
-					instance.m_Info.m_ActualDeltaTime = frameDelta;
-
+					TickFrameClock();
 					CoreUpdate();
 					UpdateDebug();
 					Engine::GetWindowInstance().SwapBuffers();

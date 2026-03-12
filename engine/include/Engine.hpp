@@ -83,6 +83,7 @@ public:
 	static void Update();
 	static void CoreUpdate();
 	static void UpdateDebug();
+	static void TickFrameClock();
 	static void Exit();
 
 	inline static void ShouldExit() {
