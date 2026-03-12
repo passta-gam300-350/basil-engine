@@ -33,6 +33,11 @@ public:
         return m_Count;
     }
 
+    uint32_t GetHandle() const
+    {
+        return m_IBOHandle;
+    }
+
     uint32_t GetIBOHandle() const
     {
         return m_IBOHandle;
