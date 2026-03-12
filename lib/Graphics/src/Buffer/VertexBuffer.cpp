@@ -21,9 +21,9 @@ Technology is prohibited.
 VertexBuffer::VertexBuffer(const void *data, uint32_t size)
 	: m_VBOHandle(0)
 {
-	glGenBuffers(1, &m_VBOHandle);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBOHandle);
-	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+	// DSA: Create and initialize buffer in one step, no binding required
+	glCreateBuffers(1, &m_VBOHandle);
+	glNamedBufferData(m_VBOHandle, size, data, GL_STATIC_DRAW);
 }
 
 VertexBuffer::~VertexBuffer()
@@ -43,6 +43,6 @@ void VertexBuffer::Unbind() const
 
 void VertexBuffer::SetData(const void *data, uint32_t size) const
 {
-	Bind();
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+	// DSA: Update buffer data without binding
+	glNamedBufferSubData(m_VBOHandle, 0, size, data);
 }

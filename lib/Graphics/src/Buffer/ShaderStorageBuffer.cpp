@@ -20,12 +20,11 @@ ShaderStorageBuffer::ShaderStorageBuffer(const void* data, uint32_t size, GLenum
     : m_Size(size), m_Usage(usage), m_IsMapped(false),
       m_IsPersistent(false), m_PersistentPtr(nullptr), m_PersistentFlags(0)
 {
-    glGenBuffers(1, &m_SSBOHandle);
+    // DSA: Create and initialize buffer in one step, no binding required
+    glCreateBuffers(1, &m_SSBOHandle);
 
     if (size > 0) {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, usage);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        glNamedBufferData(m_SSBOHandle, size, data, usage);
     }
 }
 
@@ -103,10 +102,9 @@ void ShaderStorageBuffer::SetData(const void* data, uint32_t size, uint32_t offs
 {
     assert(!m_IsMapped && "Cannot set data while buffer is mapped");
     assert(offset + size <= m_Size && "Data exceeds buffer size");
-    
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    // DSA: Update buffer data without binding
+    glNamedBufferSubData(m_SSBOHandle, offset, size, data);
 }
 
 void ShaderStorageBuffer::Resize(uint32_t newSize)
@@ -117,9 +115,8 @@ void ShaderStorageBuffer::Resize(uint32_t newSize)
     if (newSize == m_Size) return;
 
     m_Size = newSize;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, newSize, nullptr, m_Usage);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    // DSA: Resize buffer without binding
+    glNamedBufferData(m_SSBOHandle, newSize, nullptr, m_Usage);
 }
 
 void ShaderStorageBuffer::CreatePersistentBuffer(uint32_t size, GLbitfield flags)
@@ -131,21 +128,18 @@ void ShaderStorageBuffer::CreatePersistentBuffer(uint32_t size, GLbitfield flags
     m_Size = size;
     m_PersistentFlags = flags;
 
-    // Create immutable storage with glBufferStorage (GL 4.4+)
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-    glBufferStorage(GL_SHADER_STORAGE_BUFFER, size, nullptr, flags);
+    // DSA: Create immutable storage with glNamedBufferStorage (GL 4.5+)
+    glNamedBufferStorage(m_SSBOHandle, size, nullptr, flags);
 
-    // Map the buffer persistently
-    m_PersistentPtr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, flags);
+    // DSA: Map the buffer persistently without binding
+    m_PersistentPtr = glMapNamedBufferRange(m_SSBOHandle, 0, size, flags);
 
     if (!m_PersistentPtr) {
         spdlog::error("Failed to create persistent mapped buffer!");
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         return;
     }
 
     m_IsPersistent = true;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     spdlog::info("Created persistent mapped SSBO (size: {} bytes)", size);
 }
@@ -153,41 +147,38 @@ void ShaderStorageBuffer::CreatePersistentBuffer(uint32_t size, GLbitfield flags
 void* ShaderStorageBuffer::Map(GLenum access)
 {
     assert(!m_IsMapped && "Buffer already mapped");
-    
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-    void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, access);
-    
+
+    // DSA: Map buffer without binding
+    void* ptr = glMapNamedBuffer(m_SSBOHandle, access);
+
     if (ptr) {
         m_IsMapped = true;
     } else {
         spdlog::error("Failed to map SSBO");
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
-    
+
     return ptr;
 }
 
 void ShaderStorageBuffer::Unmap()
 {
     assert(m_IsMapped && "Buffer not mapped");
-    
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-    if (glUnmapBuffer(GL_SHADER_STORAGE_BUFFER)) {
+
+    // DSA: Unmap buffer without binding
+    if (glUnmapNamedBuffer(m_SSBOHandle)) {
         m_IsMapped = false;
     } else {
         spdlog::error("Failed to unmap SSBO - data corruption possible");
     }
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void ShaderStorageBuffer::GetData(void* data, uint32_t size, uint32_t offset) const
 {
     assert(!m_IsMapped && "Cannot get data while buffer is mapped");
     assert(offset + size <= m_Size && "Read exceeds buffer size");
-    
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    // DSA: Read buffer data without binding
+    glGetNamedBufferSubData(m_SSBOHandle, offset, size, data);
 }
 
 void ShaderStorageBuffer::MemoryBarrier(GLbitfield barriers)
