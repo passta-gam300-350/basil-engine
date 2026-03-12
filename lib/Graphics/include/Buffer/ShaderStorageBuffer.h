@@ -41,10 +41,6 @@ public:
     // Bind to specific binding point (for shader access)
     void BindBase(uint32_t bindingPoint) const;
 
-    // Bind for CPU operations (reading/writing)
-    void Bind() const;
-    void Unbind() const;
-
     // Update buffer data
     void SetData(const void* data, uint32_t size, uint32_t offset = 0);
 

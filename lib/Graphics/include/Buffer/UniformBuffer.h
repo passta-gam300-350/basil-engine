@@ -31,9 +31,6 @@ public:
     template<typename T>
     void Set(uint32_t offset, const T &data);
 
-    void Bind() const;
-    void Unbind() const;
-
 private:
 	uint32_t m_UBOHandle;
 	uint32_t m_Binding;

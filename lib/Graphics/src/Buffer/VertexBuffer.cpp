@@ -31,16 +31,6 @@ VertexBuffer::~VertexBuffer()
 	glDeleteBuffers(1, &m_VBOHandle);
 }
 
-void VertexBuffer::Bind() const
-{
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBOHandle);
-}
-
-void VertexBuffer::Unbind() const
-{
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void VertexBuffer::SetData(const void *data, uint32_t size) const
 {
 	// DSA: Update buffer data without binding
