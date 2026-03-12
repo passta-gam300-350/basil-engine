@@ -71,13 +71,8 @@ void RenderPass::End()
 	}
 }
 
-void RenderPass::Submit(const VariantRenderCommand& command)
-{
-	assert(m_PassCommandBuffer && "Command buffer must be valid before submitting commands");
-
-	// Submit command to this pass's isolated command buffer
-	m_PassCommandBuffer->Submit(command);
-}
+// Note: Submit() is now a template method in the header (RenderPass.h)
+// This eliminates VariantRenderCommand wrapping overhead
 
 void RenderPass::ExecuteCommands() const
 {

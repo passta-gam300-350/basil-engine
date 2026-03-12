@@ -1,0 +1,27 @@
+base:
+  m_guid: 14fdff37ce7ae5512bc971cf36e
+  m_importer: material
+  m_source: ""
+  m_name: biscuit_tin_wafer_cw_tin_top1_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: biscuit_tin_wafer_cw_tin_top1
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 1
+  roughness: 1
+  blend_mode: 0
+  cull_mode: 1
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_RoughnessMap: 14fd9f3721c8e4804660b0d69fd
+    u_DiffuseMap: 14fd9f07576968b8ab094fc1b52
+    u_NormalMap: 14fd9f771edbd2e585478fe9e0f
+    u_MetallicMap: 14fd9f3721c8e4804660b0d69fd
+    u_EmissiveMap: 14fd9f970399094876fc1dbf390
