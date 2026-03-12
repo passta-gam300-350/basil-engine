@@ -1,0 +1,27 @@
+base:
+  m_guid: 14fdec27f67a92525c70dcf972f
+  m_importer: material
+  m_source: ""
+  m_name: lvl1_floor_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: lvl1_floor
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 1
+  roughness: 1
+  blend_mode: 0
+  cull_mode: 1
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_RoughnessMap: 14fd8cf782b86acb5e201653221
+    u_DiffuseMap: 14fd8cd7a639b06950fd08ef223
+    u_NormalMap: 14fd8d175628a7712d1e3a8eff1
+    u_MetallicMap: 14fd8cf782b86acb5e201653221
+    u_EmissiveMap: 14fd8d573da805837abb465db83
