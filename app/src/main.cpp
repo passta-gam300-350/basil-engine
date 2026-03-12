@@ -16,6 +16,7 @@ int main() {
 	if (!std::filesystem::exists("config.yaml")) {
 		Engine::GenerateDefaultConfig("config.yaml");
 	}
+	Engine::InitializeGame();
 	Engine::Init("config.yaml");
 	Engine::LoadEmbeddedIcon();
 	Engine::Update();

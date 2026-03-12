@@ -43,6 +43,8 @@ class Engine
 	on_world_load_cb m_OnWorldLoadCallback{};
 	on_world_unload_cb m_OnWorldUnloadCallback{};
 
+	bool m_IsGame = false;
+
 	// Global render settings
 	float m_Gamma = 2.2f;  // Standard sRGB gamma value
 
@@ -120,6 +122,10 @@ public:
 	static void SetState(Info::State state) { Instance().m_Info.m_State = state; }
 
 	static bool ShouldClose() { return Instance().m_Info.m_State == Info::State::Error || Instance().m_Info.m_State == Info::State::Exit; }
+
+	static bool IsGame() { return Instance().m_IsGame; }
+
+	static void InitializeGame() { Instance().m_IsGame = true; }
 
 	static void OnLoad()
 	{
