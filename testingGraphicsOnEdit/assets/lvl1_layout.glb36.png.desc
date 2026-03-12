@@ -1,7 +1,0 @@
-base:
-  m_guid: 14fd92d7fd7b23746d90224fba4
-  m_importer: texture
-  m_source: lvl1_layout.glb36.png
-  m_name: lvl1_layout.glb36.png
-  m_importer_type: 13238151832854353850
-compression: BC3_RGBA8

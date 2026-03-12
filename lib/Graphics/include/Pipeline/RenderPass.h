@@ -60,15 +60,7 @@ public:
 	const Viewport& GetViewport() const { return m_Viewport; }
 
 	// Pass-isolated command buffer API
-	// Template method: forwards any command type directly to command buffer
-	// This eliminates VariantRenderCommand wrapping overhead
-	template<typename T>
-	void Submit(T&& command) {
-		if (m_PassCommandBuffer) {
-			m_PassCommandBuffer->Submit(std::forward<T>(command));
-		}
-	}
-
+	void Submit(const VariantRenderCommand& command);
 	void ExecuteCommands() const;
 	void ClearCommands();
 

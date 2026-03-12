@@ -27,16 +27,11 @@ RenderCommandBuffer::RenderCommandBuffer() {
     m_Commands.reserve(256);
 }
 
-#if USE_VARIANT_COMMANDS
-// COMMENTED OUT TO FIND DEPENDENCIES
-/*
-// OLD: Variant-based submission (for A/B testing)
 void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
 {
     m_Commands.emplace_back(command);
 }
-*/
-#endif
+
 
 void RenderCommandBuffer::Clear()
 {
@@ -46,33 +41,12 @@ void RenderCommandBuffer::Clear()
 
 void RenderCommandBuffer::Execute()
 {
-#if USE_VARIANT_COMMANDS
-    // COMMENTED OUT TO FIND DEPENDENCIES
-    /*
-    // OLD: std::variant dispatch (slow - 20-25% overhead)
+    // Execute commands in order without batching to ensure proper per-object texture uniforms
     for (const auto& sortableCmd : m_Commands) {
         std::visit([this](const auto& cmd) {
             this->ExecuteCommand(cmd);
         }, sortableCmd);
     }
-    */
-#else
-    // NEW: Direct switch dispatch (fast - predictable branching)
-    for (auto& cmd : m_Commands) {
-        switch (cmd.type) {
-            #define X(name) \
-                case RenderCommandType::name: \
-                    ExecuteCommand(*cmd.as<RenderCommands::name>()); \
-                    break;
-            RENDER_COMMAND_LIST
-            #undef X
-
-            default:
-                assert(false && "Unknown command type");
-                break;
-        }
-    }
-#endif
 
     // Final GPU state cleanup
     CleanupGPUState();
@@ -80,13 +54,7 @@ void RenderCommandBuffer::Execute()
 
 size_t RenderCommandBuffer::GetMemoryUsage() const
 {
-#if USE_VARIANT_COMMANDS
-    // COMMENTED OUT TO FIND DEPENDENCIES
-    // return m_Commands.size() * sizeof(VariantRenderCommand);
-    return 0; // Placeholder
-#else
-    return m_Commands.size() * sizeof(RenderCommand);
-#endif
+    return m_Commands.size() * sizeof(VariantRenderCommand);
 }
 
 // Command execution implementations
