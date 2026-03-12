@@ -49,12 +49,12 @@ class Engine
 	float m_Gamma = 2.2f;  // Standard sRGB gamma value
 
 public:
-	struct Info {
+		struct Info {
 
-		double m_FPS{};
-		double m_DeltaTime{};          // Time elapsed since last profiling update (seconds)
-		double m_ActualDeltaTime{};	   // Actual Time since last frame (seconds)
-		double m_LastFrameTime{};      // Time of last frame (for delta calculation)
+			double m_FPS{};
+			double m_DeltaTime{};          // Authoritative time elapsed since the previous frame (seconds)
+			double m_ActualDeltaTime{};	   // Legacy alias kept in sync with m_DeltaTime
+			double m_LastFrameTime{};      // Previous frame timestamp in seconds
 		std::uint64_t m_TotalFrameCt{};
 		std::uint64_t m_FrameLogCounter{};	//basically total (mod) rate
 		std::uint64_t m_FrameLogRate;
