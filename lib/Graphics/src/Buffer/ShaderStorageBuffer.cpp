@@ -86,6 +86,18 @@ void ShaderStorageBuffer::BindBase(uint32_t bindingPoint) const
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, m_SSBOHandle);
 }
 
+void ShaderStorageBuffer::Bind() const
+{
+    // Persistent buffers can be bound while mapped
+    assert((!m_IsMapped || m_IsPersistent) && "Cannot bind SSBO while mapped (unless persistent)");
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBOHandle);
+}
+
+void ShaderStorageBuffer::Unbind() const
+{
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
 void ShaderStorageBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 {
     assert(!m_IsMapped && "Cannot set data while buffer is mapped");

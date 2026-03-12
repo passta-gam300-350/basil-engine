@@ -38,3 +38,13 @@ void UniformBuffer::SetData(const void *data, uint32_t size, uint32_t offset) co
 	// DSA: Update buffer data without binding
 	glNamedBufferSubData(m_UBOHandle, offset, size, data);
 }
+
+void UniformBuffer::Bind() const
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, m_UBOHandle);
+}
+
+void UniformBuffer::Unbind() const
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
