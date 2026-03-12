@@ -87,47 +87,87 @@ void FrameBuffer::Invalidate()
 		m_Specifications.Height = 720;
 	}
 
-	// DSA: Create framebuffer without binding
-	glCreateFramebuffers(1, &m_FBOHandle);
+	// Create framebuffer
+	glGenFramebuffers(1, &m_FBOHandle);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
 
 	// Create color attachments
 	if (m_ColorAttachmentSpecs.size() > 0)
 	{
 		m_ColorAttachments.resize(m_ColorAttachmentSpecs.size());
+		glGenTextures(static_cast<GLsizei>(m_ColorAttachments.size()), m_ColorAttachments.data());
 
 		bool multisampled = IsMultisampled();
 		GLenum textureTarget = multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 
 		for (uint32_t i = 0; i < m_ColorAttachments.size(); ++i)
 		{
-			// DSA: Create texture without binding
-			glCreateTextures(textureTarget, 1, &m_ColorAttachments[i]);
+			glBindTexture(textureTarget, m_ColorAttachments[i]);
 
 			// Use the actual format from specs instead of hardcoded GL_RGBA8
 			GLenum internalFormat = Utils::TextureFormatToGL(m_ColorAttachmentSpecs[i].TextureFormat);
 
 			if (multisampled)
 			{
-				// DSA: Create multisampled texture storage
-				glTextureStorage2DMultisample(m_ColorAttachments[i], m_Specifications.Samples,
+				// Create multisampled texture
+				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specifications.Samples,
 					internalFormat, m_Specifications.Width, m_Specifications.Height, GL_TRUE);
 			}
 			else
 			{
-				// DSA: Allocate immutable texture storage
-				glTextureStorage2D(m_ColorAttachments[i], 1, internalFormat,
-					m_Specifications.Width, m_Specifications.Height);
+				// Determine format and type based on internal format
+				GLenum format;
+				GLenum type;
 
-				// DSA: Set texture parameters without binding (not supported for multisampled textures)
-				glTextureParameteri(m_ColorAttachments[i], GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTextureParameteri(m_ColorAttachments[i], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTextureParameteri(m_ColorAttachments[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTextureParameteri(m_ColorAttachments[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				switch (m_ColorAttachmentSpecs[i].TextureFormat)
+				{
+					case FBOTextureFormat::RGBA16F:
+						format = GL_RGBA;
+						type = GL_FLOAT;
+						break;
+
+					case FBOTextureFormat::RGB16F:
+						format = GL_RGB;
+						type = GL_FLOAT;
+						break;
+
+					case FBOTextureFormat::RGB11F_G11F_B10F:
+						format = GL_RGB;
+						type = GL_FLOAT;
+						break;
+
+					case FBOTextureFormat::RGB8:
+					case FBOTextureFormat::SRGB8:
+						format = GL_RGB;
+						type = GL_UNSIGNED_BYTE;
+						break;
+
+					case FBOTextureFormat::RED_INTEGER:
+						format = GL_RED_INTEGER;
+						type = GL_INT;
+						break;
+
+					case FBOTextureFormat::SRGB8_ALPHA8:
+					case FBOTextureFormat::RGBA8:
+					default:
+						format = GL_RGBA;
+						type = GL_UNSIGNED_BYTE;
+						break;
+				}
+
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat,
+							 m_Specifications.Width, m_Specifications.Height, 0,
+							 format, type, nullptr);
+
+				// Texture parameters (not supported for multisampled textures)
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
 
-			// DSA: Attach texture to framebuffer without binding
-			glNamedFramebufferTexture(m_FBOHandle, GL_COLOR_ATTACHMENT0 + i,
-									  m_ColorAttachments[i], 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
+								  textureTarget, m_ColorAttachments[i], 0);
 		}
 
 	}
@@ -135,39 +175,39 @@ void FrameBuffer::Invalidate()
 	// Create depth attachment if needed
 	if (m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None)
 	{
+		glGenTextures(1, &m_DepthAttachment);
+
 		bool multisampled = IsMultisampled();
 		GLenum textureTarget = multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 
-		// DSA: Create depth texture without binding
-		glCreateTextures(textureTarget, 1, &m_DepthAttachment);
+		glBindTexture(textureTarget, m_DepthAttachment);
 
 		if (multisampled)
 		{
-			// DSA: Create multisampled depth texture storage
-			glTextureStorage2DMultisample(m_DepthAttachment, m_Specifications.Samples,
+			// Create multisampled depth texture
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specifications.Samples,
 				GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, GL_TRUE);
 		}
 		else
 		{
-			// DSA: Allocate immutable depth-stencil storage
-			glTextureStorage2D(m_DepthAttachment, 1, GL_DEPTH24_STENCIL8,
-				m_Specifications.Width, m_Specifications.Height);
+			// Use standard depth-stencil format
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specifications.Width, m_Specifications.Height, 0,
+				GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
 
-			// DSA: Set texture parameters for depth texture without binding
-			glTextureParameteri(m_DepthAttachment, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTextureParameteri(m_DepthAttachment, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			// Set texture parameters for depth texture (not supported for multisampled)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 			// Use border clamping for shadow maps to prevent sampling outside bounds
-			glTextureParameteri(m_DepthAttachment, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTextureParameteri(m_DepthAttachment, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 			// Set border color to white (1.0) so areas outside shadow map are not in shadow
 			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			glTextureParameterfv(m_DepthAttachment, GL_TEXTURE_BORDER_COLOR, borderColor);
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 		}
 
-		// DSA: Attach depth texture to framebuffer without binding
-		glNamedFramebufferTexture(m_FBOHandle, GL_DEPTH_STENCIL_ATTACHMENT, m_DepthAttachment, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, textureTarget, m_DepthAttachment, 0);
 	}
 
 	// Specify draw buffers
@@ -177,19 +217,17 @@ void FrameBuffer::Invalidate()
 		for (uint32_t i = 0; i < m_ColorAttachments.size(); i++)
 			buffers[i] = GL_COLOR_ATTACHMENT0 + i;
 
-		// DSA: Set draw buffers without binding framebuffer
-		glNamedFramebufferDrawBuffers(m_FBOHandle, static_cast<GLsizei>(m_ColorAttachments.size()), buffers);
+		glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), buffers);
 	}
 	else if (m_ColorAttachments.empty() && m_DepthAttachmentSpec.TextureFormat != FBOTextureFormat::None)
 	{
 		// Only depth-pass
-		// DSA: Set draw/read buffers without binding
-		glNamedFramebufferDrawBuffer(m_FBOHandle, GL_NONE);
-		glNamedFramebufferReadBuffer(m_FBOHandle, GL_NONE);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
 	}
 
-	// DSA: Check if framebuffer is complete without binding
-	GLenum status = glCheckNamedFramebufferStatus(m_FBOHandle, GL_FRAMEBUFFER);
+	// Check if framebuffer is complete
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
 		// Log framebuffer specifications for debugging
@@ -239,7 +277,7 @@ void FrameBuffer::Invalidate()
 			m_Specifications.Samples);
 	}
 
-	// DSA: No need to unbind - we never bound it in the first place!
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void FrameBuffer::ClearAttachments()
