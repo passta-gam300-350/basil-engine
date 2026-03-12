@@ -21,10 +21,9 @@ Technology is prohibited.
 UniformBuffer::UniformBuffer(uint32_t size, uint32_t binding)
 	: m_Binding(binding), m_UBOHandle(0)
 {
-	// DSA: Create and initialize buffer in one step, no binding required
-	glCreateBuffers(1, &m_UBOHandle);
-	glNamedBufferData(m_UBOHandle, size, nullptr, GL_DYNAMIC_DRAW);
-	// Note: glBindBufferBase is already stateless (doesn't require prior binding)
+	glGenBuffers(1, &m_UBOHandle);
+	glBindBuffer(GL_UNIFORM_BUFFER, m_UBOHandle);
+	glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_UBOHandle);
 }
 
@@ -35,8 +34,8 @@ UniformBuffer::~UniformBuffer()
 
 void UniformBuffer::SetData(const void *data, uint32_t size, uint32_t offset) const
 {
-	// DSA: Update buffer data without binding
-	glNamedBufferSubData(m_UBOHandle, offset, size, data);
+	glBindBuffer(GL_UNIFORM_BUFFER, m_UBOHandle);
+	glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data);
 }
 
 void UniformBuffer::Bind() const

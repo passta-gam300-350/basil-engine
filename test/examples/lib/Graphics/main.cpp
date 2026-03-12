@@ -191,11 +191,11 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
-    SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
+    //SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
 
     // Load HUD test textures (once during initialization)
     m_PauseMenuTexture = TextureLoader::TextureFromFile("PauseMenu.png", "assets/hud/Pause", false);
