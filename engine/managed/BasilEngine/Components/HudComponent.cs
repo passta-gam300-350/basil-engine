@@ -59,5 +59,16 @@ namespace BasilEngine.Components
             set => SetPositionInternal(NativeID, value.x, value.y);
         }
 
+        public Vector2 size
+        {
+            get
+            {
+                GetSizeInternal(NativeID, out float width, out float height);
+                return new Vector2(width, height);
+            }
+            set => SetSizeInternal(NativeID, value.x, value.y);
+        }
+
+
     }
 }
