@@ -34,7 +34,15 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedHudComponent", StaticAccessorType.DoubleColon)]
         public static extern void GetPositionInternal(UInt64 handle, out float x, out float y);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetSize")]
+        [StaticAccessor("ManagedHudComponent", StaticAccessorType.DoubleColon)]
+        public static extern void GetSizeInternal(UInt64 handle, out float width, out float height);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetSize")]
+        [StaticAccessor("ManagedHudComponent", StaticAccessorType.DoubleColon)]
+        public static extern void SetSizeInternal(UInt64 handle, float width, float height);
 
         public bool Visible
         {
