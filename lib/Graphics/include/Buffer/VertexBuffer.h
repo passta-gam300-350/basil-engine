@@ -30,12 +30,7 @@ public:
 
     void SetData(const void *data, uint32_t size) const;
 
-    uint32_t GetHandle() const
-    {
-        return m_VBOHandle;
-    }
-
-    uint32_t GetVAOHandle() const  // Legacy: Misnamed, use GetHandle() instead
+    uint32_t GetVAOHandle() const
     {
         return m_VBOHandle;
     }

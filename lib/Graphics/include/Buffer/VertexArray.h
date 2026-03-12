@@ -111,7 +111,6 @@ private:
 	uint32_t m_VAOHandle;
 	std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers;
 	std::shared_ptr<IndexBuffer> m_IndexBuffer;
-	uint32_t m_AttributeIndex = 0;  // DSA: Track next available attribute index
 
 };
 
