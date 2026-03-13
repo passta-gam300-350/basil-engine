@@ -181,23 +181,26 @@ void TextRenderer::CreateQuadMesh()
         1.0f, 0.0f,    1.0f, 1.0f   // Top-right position, top-right texcoord
     };
 
-    glGenVertexArrays(1, &m_QuadVAO);
-    glGenBuffers(1, &m_QuadVBO);
+    // DSA: Create VAO and VBO without binding
+    glCreateVertexArrays(1, &m_QuadVAO);
+    glCreateBuffers(1, &m_QuadVBO);
 
-    glBindVertexArray(m_QuadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    // DSA: Upload vertex data to VBO
+    glNamedBufferData(m_QuadVBO, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
 
-    // Position attribute (location = 0)
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    // DSA: Associate VBO with VAO at binding index 0
+    GLsizei stride = 4 * sizeof(float);
+    glVertexArrayVertexBuffer(m_QuadVAO, 0, m_QuadVBO, 0, stride);
 
-    // TexCoord attribute (location = 1)
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                         (void*)(2 * sizeof(float)));
+    // DSA: Position attribute (location = 0)
+    glEnableVertexArrayAttrib(m_QuadVAO, 0);
+    glVertexArrayAttribFormat(m_QuadVAO, 0, 2, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(m_QuadVAO, 0, 0);  // Attribute 0 -> Binding 0
 
-    glBindVertexArray(0);
+    // DSA: TexCoord attribute (location = 1)
+    glEnableVertexArrayAttrib(m_QuadVAO, 1);
+    glVertexArrayAttribFormat(m_QuadVAO, 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
+    glVertexArrayAttribBinding(m_QuadVAO, 1, 0);  // Attribute 1 -> Binding 0
 }
 
 void TextRenderer::UpdateBatchSSBO(FontBatch& batch)

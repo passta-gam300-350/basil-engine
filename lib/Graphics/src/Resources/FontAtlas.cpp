@@ -138,12 +138,11 @@ unsigned int FontAtlasLoader::CreateGPUAtlasTexture(const void* dds_data, std::s
 		return 0;
 	}
 
-	// Create OpenGL texture
+	// DSA: Create OpenGL texture
 	unsigned int textureID = 0;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 
-	// Upload compressed texture data
+	// Upload texture data
 	const auto* imageData = ddsFile.GetImageData(0, 0);
 	if (!imageData) {
 		spdlog::error("FontAtlasLoader: Failed to get DDS image data");
@@ -151,32 +150,32 @@ unsigned int FontAtlasLoader::CreateGPUAtlasTexture(const void* dds_data, std::s
 		return 0;
 	}
 
+	GLsizei width = static_cast<GLsizei>(ddsFile.GetWidth());
+	GLsizei height = static_cast<GLsizei>(ddsFile.GetHeight());
+
+	// DSA: Allocate immutable storage (no mipmaps for font atlases)
+	glTextureStorage2D(textureID, 1, glCompressedFormat, width, height);
+
 	if (ddsFile.GetFormat() == tinyddsloader::DDSFile::DXGIFormat::BC4_UNorm ||
 		ddsFile.GetFormat() == tinyddsloader::DDSFile::DXGIFormat::BC3_UNorm) {
-		// Compressed format
-		glCompressedTexImage2D(GL_TEXTURE_2D, 0, glCompressedFormat,
-			static_cast<GLsizei>(ddsFile.GetWidth()),
-			static_cast<GLsizei>(ddsFile.GetHeight()),
-			0,
+		// DSA: Upload compressed texture data
+		glCompressedTextureSubImage2D(textureID, 0, 0, 0, width, height,
+			glCompressedFormat,
 			static_cast<GLsizei>(imageData->m_memSlicePitch),
 			imageData->m_mem);
 	}
 	else {
-		// Uncompressed format
+		// DSA: Upload uncompressed texture data
 		GLenum format = (ddsFile.GetFormat() == tinyddsloader::DDSFile::DXGIFormat::R8_UNorm) ? GL_RED : GL_RGBA;
-		glTexImage2D(GL_TEXTURE_2D, 0, glCompressedFormat,
-			static_cast<GLsizei>(ddsFile.GetWidth()),
-			static_cast<GLsizei>(ddsFile.GetHeight()),
-			0, format, GL_UNSIGNED_BYTE, imageData->m_mem);
+		glTextureSubImage2D(textureID, 0, 0, 0, width, height,
+			format, GL_UNSIGNED_BYTE, imageData->m_mem);
 	}
 
-	// Set texture parameters (linear filtering, clamp to edge for text)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+	// DSA: Set texture parameters (linear filtering, clamp to edge for text)
+	glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	return textureID;
 }
