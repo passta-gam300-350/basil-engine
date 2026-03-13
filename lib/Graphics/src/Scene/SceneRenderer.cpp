@@ -1231,40 +1231,33 @@ float SceneRenderer::GetGamma() const
 // ===== SHADOW TEXTURE ARRAY MANAGEMENT =====
 void SceneRenderer::CreateShadow2DTextureArray()
 {
-    // Create layered 2D texture array for directional and spot shadows
-    glGenTextures(1, &m_Shadow2DTextureArray);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, m_Shadow2DTextureArray);
+    // DSA: Create layered 2D texture array for directional and spot shadows (no binding)
+    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_Shadow2DTextureArray);
 
-    // Allocate storage for all layers (GL_TEXTURE_3D-style allocation)
-    glTexImage3D(
-        GL_TEXTURE_2D_ARRAY,
-        0,                          // Mipmap level
+    // DSA: Allocate immutable storage for all layers
+    glTextureStorage3D(
+        m_Shadow2DTextureArray,
+        1,                          // Mipmap levels (no mipmaps for shadow maps)
         GL_DEPTH_COMPONENT24,       // Internal format (24-bit depth)
         SHADOW_MAP_SIZE,            // Width
         SHADOW_MAP_SIZE,            // Height
-        SHADOW_ARRAY_LAYERS,        // Number of layers
-        0,                          // Border (must be 0)
-        GL_DEPTH_COMPONENT,         // Format
-        GL_FLOAT,                   // Type
-        nullptr                     // Data (null = allocate but don't fill)
+        SHADOW_ARRAY_LAYERS         // Number of layers
     );
 
-    // Set texture parameters (same as regular shadow maps)
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    // DSA: Set texture parameters (same as regular shadow maps)
+    glTextureParameteri(m_Shadow2DTextureArray, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(m_Shadow2DTextureArray, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(m_Shadow2DTextureArray, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(m_Shadow2DTextureArray, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    // Set border color to maximum depth (1.0) so fragments outside shadow map are not in shadow
+    // DSA: Set border color to maximum depth (1.0) so fragments outside shadow map are not in shadow
     float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glTextureParameterfv(m_Shadow2DTextureArray, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     // Hardware PCF disabled for better performance on some GPUs
     // (Software PCF is still active via shader-based adaptive sampling)
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    // glTextureParameteri(m_Shadow2DTextureArray, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    // glTextureParameteri(m_Shadow2DTextureArray, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
     spdlog::info("SceneRenderer: Created unified 2D shadow texture array ({} layers, {}x{})",
                  SHADOW_ARRAY_LAYERS, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);

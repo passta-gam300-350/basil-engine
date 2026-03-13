@@ -42,6 +42,7 @@ RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
 RegisterResourceTypeForward(MaterialResourceData, "material", materialdefine)
 RegisterResourceTypeForward(TextureResourceData, "texture", texturedefine)
 RegisterResourceTypeForward(FontAtlasResourceData, "font_atlas", fontatlasdefine)
+RegisterResourceTypeForward(MeshMetaRuntimeData, "meshmeta", meshmetadefine)
 
 /**
  * @brief Component for rendering meshes on entities

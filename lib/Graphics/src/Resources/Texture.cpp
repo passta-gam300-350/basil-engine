@@ -89,21 +89,21 @@ unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma
 
     unsigned int textureID = 0;
 
-    GLenum internalFormat = GL_RGB;
+    GLenum internalFormat = GL_RGB8;
     GLenum dataFormat = GL_RGB;
     if (data.channels == 1) {
-        internalFormat = GL_RED;
+        internalFormat = GL_R8;  // DSA requires sized format
         dataFormat = GL_RED;
     } else if (data.channels == 3) {
         // Use sRGB format for gamma-encoded textures (albedo/diffuse)
-        internalFormat = gamma ? GL_SRGB8 : GL_RGB;
+        internalFormat = gamma ? GL_SRGB8 : GL_RGB8;  // DSA requires sized format
         dataFormat = GL_RGB;
     } else if (data.channels == 4) {
         // Use sRGB format for gamma-encoded textures (albedo/diffuse with alpha)
-        internalFormat = gamma ? GL_SRGB8_ALPHA8 : GL_RGBA;
+        internalFormat = gamma ? GL_SRGB8_ALPHA8 : GL_RGBA8;  // DSA requires sized format
         dataFormat = GL_RGBA;
     } else {
-        internalFormat = GL_RGB; // Default fallback
+        internalFormat = GL_RGB8; // Default fallback (DSA requires sized format)
         dataFormat = GL_RGB;
     }
 
@@ -248,22 +248,22 @@ unsigned int TextureLoader::CreateGPUCubemap(const CubemapTextureData &data, boo
     GLenum internalFormat, dataFormat;
     if (face0.channels == 1)
     {
-        internalFormat = GL_RED;
+        internalFormat = GL_R8;  // DSA requires sized format
         dataFormat = GL_RED;
     }
     else if (face0.channels == 3)
     {
-        internalFormat = GL_RGB;
+        internalFormat = GL_RGB8;  // DSA requires sized format
         dataFormat = GL_RGB;
     }
     else if (face0.channels == 4)
     {
-        internalFormat = GL_RGBA;
+        internalFormat = GL_RGBA8;  // DSA requires sized format
         dataFormat = GL_RGBA;
     }
     else
     {
-        internalFormat = GL_RGB;
+        internalFormat = GL_RGB8;  // DSA requires sized format (default fallback)
         dataFormat = GL_RGB;
     }
 
