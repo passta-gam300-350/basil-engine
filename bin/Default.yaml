@@ -5,7 +5,7 @@ window:
   title: Engine
   vsync: false
 system:
-  system threads: 4
+  system threads: 0
   enabled system:
     camera_system: true
     BehaviourSystem: true
@@ -15,7 +15,7 @@ system:
     HierarchySystem: true
   system configurations: ~
 resource:
-  resource threads: 4
+  resource threads: 0
   resource list: ~
   root directory: C:\Users\yeo_j\Documents\Digipen Repo\Year 3\Project\Project\bin
   enable globbing: false
