@@ -410,9 +410,9 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind cubemap to specified texture unit (or unbind if ID is 0)
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapID);
+    // DSA: Bind cubemap to specified texture unit directly (or unbind if ID is 0)
+    // Note: glBindTextureUnit works for all texture types including cubemaps
+    glBindTextureUnit(cmd.textureUnit, cmd.cubemapID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -429,9 +429,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTextureIDData
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind 2D texture to specified texture unit (or unbind if ID is 0)
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_2D, cmd.textureID);
+    // DSA: Bind 2D texture to specified texture unit directly (or unbind if ID is 0)
+    glBindTextureUnit(cmd.textureUnit, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -447,9 +446,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexture3DData
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind 3D texture to specified texture unit
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_3D, cmd.textureID);
+    // DSA: Bind 3D texture to specified texture unit directly
+    glBindTextureUnit(cmd.textureUnit, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -465,9 +463,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexture2DArra
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind 2D texture array to specified texture unit
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, cmd.textureID);
+    // DSA: Bind 2D texture array to specified texture unit directly
+    glBindTextureUnit(cmd.textureUnit, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -660,7 +657,9 @@ void RenderCommandBuffer::CleanupGPUState()
     // Note: We don't reset shadow map texture (slot 8) here since it should persist
     // for the entire rendering pass. Shadow map will be reset at frame end.
 
-    // Reset to default texture unit
+    // IMPORTANT: Reset to default texture unit for ImGui compatibility
+    // Even though we use DSA (glBindTextureUnit) internally, ImGui's OpenGL3 backend
+    // still uses traditional glBindTexture() which requires GL_TEXTURE0 to be active
     glActiveTexture(GL_TEXTURE0);
 
     // Ensure SSBO binding points are unbound
