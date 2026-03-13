@@ -121,23 +121,24 @@ void DebugRenderPass::RenderDebugLines(RenderContext& context)
 
     // Initialize VAO/VBO on first use (lazy initialization)
     if (m_DebugLineVAO == 0) {
-        glGenVertexArrays(1, &m_DebugLineVAO);
-        glGenBuffers(1, &m_DebugLineVBO);
+        // DSA: Create VAO and VBO without binding
+        glCreateVertexArrays(1, &m_DebugLineVAO);
+        glCreateBuffers(1, &m_DebugLineVBO);
 
-        glBindVertexArray(m_DebugLineVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_DebugLineVBO);
+        // DSA: Associate VBO with VAO at binding index 0
+        GLsizei stride = 6 * sizeof(float);
+        glVertexArrayVertexBuffer(m_DebugLineVAO, 0, m_DebugLineVBO, 0, stride);
 
         // Vertex format: position (vec3) + color (vec3)
-        // Position attribute (location 0)
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        // DSA: Position attribute (location 0)
+        glEnableVertexArrayAttrib(m_DebugLineVAO, 0);
+        glVertexArrayAttribFormat(m_DebugLineVAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+        glVertexArrayAttribBinding(m_DebugLineVAO, 0, 0);  // Attribute 0 -> Binding 0
 
-        // Color attribute (location 1)
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // DSA: Color attribute (location 1)
+        glEnableVertexArrayAttrib(m_DebugLineVAO, 1);
+        glVertexArrayAttribFormat(m_DebugLineVAO, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+        glVertexArrayAttribBinding(m_DebugLineVAO, 1, 0);  // Attribute 1 -> Binding 0
     }
 
     // Prepare vertex data (2 vertices per line: from and to)
@@ -162,10 +163,8 @@ void DebugRenderPass::RenderDebugLines(RenderContext& context)
         vertices.push_back(line.color.b);
     }
 
-    // Upload vertex data to GPU
-    glBindBuffer(GL_ARRAY_BUFFER, m_DebugLineVBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // DSA: Upload vertex data to GPU
+    glNamedBufferData(m_DebugLineVBO, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
 
     // Bind the debug line shader
     RenderCommands::BindShaderData bindShaderCmd{ m_DebugLineShader };

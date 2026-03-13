@@ -33,7 +33,8 @@ uint32_t VertexBufferLayout::Element::GetSizeOfType(uint32_t type)
 VertexArray::VertexArray()
 	: m_VAOHandle(0)
 {
-	glGenVertexArrays(1, &m_VAOHandle);
+	// DSA: Create VAO without binding
+	glCreateVertexArrays(1, &m_VAOHandle);
 }
 
 VertexArray::~VertexArray()
@@ -53,53 +54,66 @@ void VertexArray::Unbind() const
 
 void VertexArray::AddVertexBuffer(std::shared_ptr<VertexBuffer> const &vertexBuffer, VertexBufferLayout const &layout)
 {
-	Bind();
-	vertexBuffer->Bind();
-
+	// DSA: No binding required!
+	const uint32_t bindingIndex = static_cast<uint32_t>(m_VertexBuffers.size());
+	const uint32_t vboHandle = vertexBuffer->GetHandle();
 	const auto &elements = layout.GetElements();
+
+	// Attach VBO to VAO at this binding index
+	glVertexArrayVertexBuffer(m_VAOHandle, bindingIndex, vboHandle, 0, static_cast<GLsizei>(layout.GetStride()));
+
 	uint32_t offset = 0;
 
 	for (uint32_t i = 0; i < elements.size(); ++i)
 	{
 		const auto &element = elements[i];
+		const uint32_t attribIndex = m_AttributeIndex + i;
 
-		glEnableVertexAttribArray(i);
+		// DSA: Enable attribute without binding VAO
+		glEnableVertexArrayAttrib(m_VAOHandle, attribIndex);
 
 		// Integer types (GL_INT, GL_UNSIGNED_INT, GL_BYTE, GL_SHORT, etc.) must use
-		// glVertexAttribIPointer to preserve integer data in the shader.
-		// Using glVertexAttribPointer would convert them to float, corrupting ivec4 attributes
+		// glVertexArrayAttribIFormat to preserve integer data in the shader.
+		// Using glVertexArrayAttribFormat would convert them to float, corrupting ivec4 attributes
 		// like bone IDs.
 		if (element.type == GL_INT || element.type == GL_UNSIGNED_INT ||
 			element.type == GL_BYTE || element.type == GL_UNSIGNED_BYTE ||
 			element.type == GL_SHORT || element.type == GL_UNSIGNED_SHORT)
 		{
-			glVertexAttribIPointer(
-				i, static_cast<GLint>(element.count),
+			// DSA: Set integer attribute format
+			glVertexArrayAttribIFormat(
+				m_VAOHandle, attribIndex,
+				static_cast<GLint>(element.count),
 				element.type,
-				static_cast<GLsizei>(layout.GetStride()), reinterpret_cast<const void *>(static_cast<intptr_t>(offset))
+				offset
 			);
 		}
 		else
 		{
-			glVertexAttribPointer(
-				i, static_cast<GLint>(element.count),
-				element.type, element.normalised != 0 ? GL_TRUE : GL_FALSE,
-				static_cast<GLsizei>(layout.GetStride()), reinterpret_cast<const void *>(static_cast<intptr_t>(offset))
+			// DSA: Set float attribute format
+			glVertexArrayAttribFormat(
+				m_VAOHandle, attribIndex,
+				static_cast<GLint>(element.count),
+				element.type,
+				element.normalised != 0 ? GL_TRUE : GL_FALSE,
+				offset
 			);
 		}
+
+		// DSA: Associate attribute with binding index
+		glVertexArrayAttribBinding(m_VAOHandle, attribIndex, bindingIndex);
 
 		offset += element.count * VertexBufferLayout::Element::GetSizeOfType(element.type);
 	}
 
+	// Update attribute index for next VBO
+	m_AttributeIndex += static_cast<uint32_t>(elements.size());
 	m_VertexBuffers.push_back(vertexBuffer);
 }
 
 void VertexArray::SetIndexBuffer(std::shared_ptr<IndexBuffer> const &indexBuffer)
 {
-	Bind();
-	indexBuffer->Bind();
+	// DSA: Attach index buffer to VAO without binding
+	glVertexArrayElementBuffer(m_VAOHandle, indexBuffer->GetHandle());
 	m_IndexBuffer = indexBuffer;
-
-	// Properly clean up OpenGL state to prevent corruption
-	Unbind();
 }

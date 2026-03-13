@@ -27,11 +27,16 @@ RenderCommandBuffer::RenderCommandBuffer() {
     m_Commands.reserve(256);
 }
 
+#if USE_VARIANT_COMMANDS
+// COMMENTED OUT TO FIND DEPENDENCIES
+/*
+// OLD: Variant-based submission (for A/B testing)
 void RenderCommandBuffer::Submit(const VariantRenderCommand& command)
 {
     m_Commands.emplace_back(command);
 }
-
+*/
+#endif
 
 void RenderCommandBuffer::Clear()
 {
@@ -41,12 +46,33 @@ void RenderCommandBuffer::Clear()
 
 void RenderCommandBuffer::Execute()
 {
-    // Execute commands in order without batching to ensure proper per-object texture uniforms
+#if USE_VARIANT_COMMANDS
+    // COMMENTED OUT TO FIND DEPENDENCIES
+    /*
+    // OLD: std::variant dispatch (slow - 20-25% overhead)
     for (const auto& sortableCmd : m_Commands) {
         std::visit([this](const auto& cmd) {
             this->ExecuteCommand(cmd);
         }, sortableCmd);
     }
+    */
+#else
+    // NEW: Direct switch dispatch (fast - predictable branching)
+    for (auto& cmd : m_Commands) {
+        switch (cmd.type) {
+            #define X(name) \
+                case RenderCommandType::name: \
+                    ExecuteCommand(*cmd.as<RenderCommands::name>()); \
+                    break;
+            RENDER_COMMAND_LIST
+            #undef X
+
+            default:
+                assert(false && "Unknown command type");
+                break;
+        }
+    }
+#endif
 
     // Final GPU state cleanup
     CleanupGPUState();
@@ -54,7 +80,13 @@ void RenderCommandBuffer::Execute()
 
 size_t RenderCommandBuffer::GetMemoryUsage() const
 {
-    return m_Commands.size() * sizeof(VariantRenderCommand);
+#if USE_VARIANT_COMMANDS
+    // COMMENTED OUT TO FIND DEPENDENCIES
+    // return m_Commands.size() * sizeof(VariantRenderCommand);
+    return 0; // Placeholder
+#else
+    return m_Commands.size() * sizeof(RenderCommand);
+#endif
 }
 
 // Command execution implementations
@@ -378,9 +410,9 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindCubemapData &
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind cubemap to specified texture unit (or unbind if ID is 0)
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cmd.cubemapID);
+    // DSA: Bind cubemap to specified texture unit directly (or unbind if ID is 0)
+    // Note: glBindTextureUnit works for all texture types including cubemaps
+    glBindTextureUnit(cmd.textureUnit, cmd.cubemapID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -397,9 +429,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTextureIDData
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind 2D texture to specified texture unit (or unbind if ID is 0)
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_2D, cmd.textureID);
+    // DSA: Bind 2D texture to specified texture unit directly (or unbind if ID is 0)
+    glBindTextureUnit(cmd.textureUnit, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -415,9 +446,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexture3DData
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind 3D texture to specified texture unit
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_3D, cmd.textureID);
+    // DSA: Bind 3D texture to specified texture unit directly
+    glBindTextureUnit(cmd.textureUnit, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -433,9 +463,8 @@ void RenderCommandBuffer::ExecuteCommand(const RenderCommands::BindTexture2DArra
     // Ensure shader is active
     cmd.shader->use();
 
-    // Bind 2D texture array to specified texture unit
-    glActiveTexture(GL_TEXTURE0 + cmd.textureUnit);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, cmd.textureID);
+    // DSA: Bind 2D texture array to specified texture unit directly
+    glBindTextureUnit(cmd.textureUnit, cmd.textureID);
 
     // Set uniform sampler to point to the texture unit
     cmd.shader->setInt(cmd.uniformName, static_cast<int>(cmd.textureUnit));
@@ -628,7 +657,9 @@ void RenderCommandBuffer::CleanupGPUState()
     // Note: We don't reset shadow map texture (slot 8) here since it should persist
     // for the entire rendering pass. Shadow map will be reset at frame end.
 
-    // Reset to default texture unit
+    // IMPORTANT: Reset to default texture unit for ImGui compatibility
+    // Even though we use DSA (glBindTextureUnit) internally, ImGui's OpenGL3 backend
+    // still uses traditional glBindTexture() which requires GL_TEXTURE0 to be active
     glActiveTexture(GL_TEXTURE0);
 
     // Ensure SSBO binding points are unbound
