@@ -191,11 +191,11 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
-    //SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
+    SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
 
     // Load HUD test textures (once during initialization)
     m_PauseMenuTexture = TextureLoader::TextureFromFile("PauseMenu.png", "assets/hud/Pause", false);
@@ -1045,19 +1045,20 @@ void GraphicsTestDriver::SetupLevel1Demo()
 
     // 2. LOAD LEVEL MODEL (GLB format - textures embedded)
     auto levelModel = m_ResourceManager->LoadModel("lvl1",
-        "assets/models/lv1/lvl1_layout.glb");
+        "assets/models/lv1/lv1_layout_linked.glb");
 
     if (!levelModel) {
-        spdlog::error("Failed to load lvl1_layout.glb model!");
+        spdlog::error("Failed to load lv1_layout_linked.glb model!");
         return;
     }
     spdlog::info("Level 1 model loaded successfully: {} meshes", levelModel->meshes.size());
+    spdlog::info("Total mesh entries: {}", levelModel->meshAssimpIndices.size());
 
     // 3. CREATE LEVEL INSTANCE
     // GLB models typically have embedded textures, so we use white material to preserve them
     CreateModelInstance("lvl1", "WhiteMaterial",
                        glm::vec3(0.0f, 0.0f, 0.0f),  // Position at origin
-                       glm::vec3(0.01f),               // Scale down to 10% of original size
+                       glm::vec3(1.0f),               // Scale down to 10% of original size
                        false);                        // Whole-model selection
     spdlog::info("Level 1 instance created: {} objects", m_SceneObjects.size());
 
@@ -1134,35 +1135,50 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
         // Generate hash from vertex/index data to detect identical geometry
         const auto& meshData = model->meshes[meshIndex];
-        uint64_t geometryHash = 0;
+        //uint64_t geometryHash = 0;
 
-        // Hash vertex positions
-        for (const auto& vertex : meshData.vertices) {
-            geometryHash ^= std::hash<float>{}(vertex.Position.x) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
-            geometryHash ^= std::hash<float>{}(vertex.Position.y) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
-            geometryHash ^= std::hash<float>{}(vertex.Position.z) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
-        }
+        //// Hash vertex positions
+        //for (const auto& vertex : meshData.vertices) {
+        //    geometryHash ^= std::hash<float>{}(vertex.Position.x) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
+        //    geometryHash ^= std::hash<float>{}(vertex.Position.y) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
+        //    geometryHash ^= std::hash<float>{}(vertex.Position.z) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
+        //}
 
-        // Hash index count (faster than hashing all indices)
-        geometryHash ^= std::hash<size_t>{}(meshData.indices.size()) + 0x9e3779b9;
-        geometryHash ^= std::hash<size_t>{}(meshData.vertices.size()) + 0x9e3779b9;
+        //// Hash index count (faster than hashing all indices)
+        //geometryHash ^= std::hash<size_t>{}(meshData.indices.size()) + 0x9e3779b9;
+        //geometryHash ^= std::hash<size_t>{}(meshData.vertices.size()) + 0x9e3779b9;
 
-        auto it = s_GeometryCache.find(geometryHash);
+        //auto it = s_GeometryCache.find(geometryHash);
 
+        //std::shared_ptr<Mesh> mesh;
+        //if (it != s_GeometryCache.end()) {
+        //    // Reuse existing mesh
+        //    mesh = it->second;
+        //} else {
+        //    // Create new mesh and cache it
+        //    mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
+        //    s_GeometryCache[geometryHash] = mesh;
+        //}
+
+        // REPLACE with this (fast Assimp index lookup):
+        uint64_t assimpIndex = model->meshAssimpIndices[meshIndex];
+        auto it = s_GeometryCache.find(assimpIndex);
         std::shared_ptr<Mesh> mesh;
-        if (it != s_GeometryCache.end()) {
-            // Reuse existing mesh
+        if (it != s_GeometryCache.end())
+        {
             mesh = it->second;
-        } else {
-            // Create new mesh and cache it
+        }
+        else
+        {
             mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
-            s_GeometryCache[geometryHash] = mesh;
+            s_GeometryCache[assimpIndex] = mesh;
         }
 
         // Create renderable for this mesh
         RenderableData renderable;
         renderable.mesh = mesh;
-        renderable.transform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
+        glm::mat4 instanceTransform = glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
+        renderable.transform = instanceTransform * model->meshNodeTransforms[meshIndex];
         renderable.visible = true;
 
         // Check if this mesh has textures (indicating we should preserve them)

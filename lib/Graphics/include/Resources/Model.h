@@ -20,12 +20,14 @@ Technology is prohibited.
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <glm/glm.hpp>
 
 #include <Resources/Mesh.h>
 
 #include <string>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 class Model
 {
@@ -34,6 +36,8 @@ public:
     std::vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     std::vector<Mesh>    meshes;
     std::vector<std::string> meshNodeNames;  // Node name for each mesh (for per-node selection)
+    std::vector<unsigned int> meshAssimpIndices;  // ADD THIS
+    std::vector<glm::mat4> meshNodeTransforms;  // ADD THIS
     std::string directory;
     bool gammaCorrection;
 
@@ -41,11 +45,14 @@ public:
     Model(std::string const &path, bool gamma = false);
 
 private:
+    std::unordered_map<unsigned int, Mesh> m_MeshCache;  // ADD THIS
+
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const &path);
 
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-    void processNode(aiNode *node, const aiScene *scene);
+    //void processNode(aiNode *node, const aiScene *scene);
+    void processNode(aiNode *node, const aiScene *scene, glm::mat4 parentTransform = glm::mat4(1.0f));
 
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
 
