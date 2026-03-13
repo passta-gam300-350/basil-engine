@@ -167,6 +167,10 @@ void RenderSystem::Init() {
 	// Constructor already initialized everything, just setup debug visualization
 	SetupDebugVisualization();
 
+	if (Engine::IsGame()) {
+		m_editorCameraSnapshot.renderGameViewport = true;
+		m_editorCameraSnapshot.renderSceneViewport = false;
+	}
 	spdlog::info("RenderSystem initialized");
 	spdlog::info("RenderSystem: Call SetupComponentObservers() after world is created");
 }

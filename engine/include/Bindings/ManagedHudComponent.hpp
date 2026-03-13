@@ -28,6 +28,9 @@ public:
 	static bool GetVisibility(uint64_t handle);
 	static void SetVisibility(uint64_t handle, bool visible);
 
+	static void GetSize(uint64_t handle, float* out_width, float* out_height);
+	static void SetSize(uint64_t handle, float width, float height);
+
 };
 
 #endif

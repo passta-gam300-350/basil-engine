@@ -52,3 +52,20 @@ void ManagedHudComponent::SetVisibility(uint64_t handle, bool visible)
 	HUDComponent& cmp = e.get<HUDComponent>();
 	cmp.visible = visible;
 }
+
+void ManagedHudComponent::GetSize(uint64_t handle, float* out_width, float* out_height)
+{
+	ecs::entity e{ handle };
+	HUDComponent& cmp = e.get<HUDComponent>();
+
+	*out_width = cmp.size.x;
+	*out_height = cmp.size.y;
+}
+
+void ManagedHudComponent::SetSize(uint64_t handle, float width, float height)
+{
+	ecs::entity e{ handle };
+	HUDComponent& cmp = e.get<HUDComponent>();
+
+	cmp.size = { width, height };
+}
