@@ -191,11 +191,11 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
     //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
-    SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
+    //SetupLevel1Demo();       // Level 1 layout - GLB model with directional light
 
     // Load HUD test textures (once during initialization)
     m_PauseMenuTexture = TextureLoader::TextureFromFile("PauseMenu.png", "assets/hud/Pause", false);
@@ -537,7 +537,7 @@ bool GraphicsTestDriver::LoadTestResources()
 
         // Load models
         auto tinboxModel = m_ResourceManager->LoadModel("tinbox",
-            "assets/models/table/tin_box.obj");
+            "assets/models/tinbox/tin_box.obj");
 
         if (!tinboxModel) {
             spdlog::error("Failed to load tinbox model!");
@@ -716,7 +716,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(1.0f));
         }
     }
     spdlog::info("tinbox grid created: {} objects", m_SceneObjects.size());
@@ -1127,22 +1127,37 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
     // Create a renderable for each mesh in the model
     for (size_t meshIndex = 0; meshIndex < model->meshes.size(); ++meshIndex) {
-        // Share the same mesh objects instead of creating new ones
-        static std::unordered_map<std::string, std::shared_ptr<Mesh>> s_MeshCache;
+        // GEOMETRY DEDUPLICATION: Share mesh objects with identical vertex data
+        static std::unordered_map<uint64_t, std::shared_ptr<Mesh>> s_GeometryCache;
+        // CRITICAL FIX: Share materials with identical textures/properties to enable instancing
+        static std::unordered_map<std::string, std::shared_ptr<Material>> s_MaterialCache;
 
-        std::string meshKey = modelName + "_mesh" + std::to_string(meshIndex);
-        auto it = s_MeshCache.find(meshKey);
+        // Generate hash from vertex/index data to detect identical geometry
+        const auto& meshData = model->meshes[meshIndex];
+        uint64_t geometryHash = 0;
+
+        // Hash vertex positions
+        for (const auto& vertex : meshData.vertices) {
+            geometryHash ^= std::hash<float>{}(vertex.Position.x) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
+            geometryHash ^= std::hash<float>{}(vertex.Position.y) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
+            geometryHash ^= std::hash<float>{}(vertex.Position.z) + 0x9e3779b9 + (geometryHash << 6) + (geometryHash >> 2);
+        }
+
+        // Hash index count (faster than hashing all indices)
+        geometryHash ^= std::hash<size_t>{}(meshData.indices.size()) + 0x9e3779b9;
+        geometryHash ^= std::hash<size_t>{}(meshData.vertices.size()) + 0x9e3779b9;
+
+        auto it = s_GeometryCache.find(geometryHash);
 
         std::shared_ptr<Mesh> mesh;
-        if (it != s_MeshCache.end()) {
+        if (it != s_GeometryCache.end()) {
             // Reuse existing mesh
             mesh = it->second;
         } else {
             // Create new mesh and cache it
             mesh = std::make_shared<Mesh>(model->meshes[meshIndex]);
-            s_MeshCache[meshKey] = mesh;
+            s_GeometryCache[geometryHash] = mesh;
         }
-
 
         // Create renderable for this mesh
         RenderableData renderable;
@@ -1158,73 +1173,95 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
             //               i, mesh->textures[i].type, mesh->textures[i].id, mesh->textures[i].path);
             //}
 
-            // Create a material that will work with the existing textures
-            auto shader = m_ResourceManager->GetShader("main_pbr");
-            if (!shader) {
-                shader = m_ResourceManager->GetShader("basic");
+            // Generate a material cache key based on texture IDs and glass detection
+            // CRITICAL: Sort textures by type to ensure consistent key regardless of order
+            std::vector<std::pair<std::string, unsigned int>> sortedTextures;
+            for (const auto& tex : mesh->textures) {
+                sortedTextures.push_back({tex.type, tex.id});
+            }
+            std::sort(sortedTextures.begin(), sortedTextures.end());
+
+            std::string materialKey = "textured";
+            for (const auto& [type, id] : sortedTextures) {
+                materialKey += "_" + type + "_" + std::to_string(id);
             }
 
-            if (shader) {
-                renderable.material = std::make_shared<Material>(shader, "TexturedMaterial_" + std::to_string(meshIndex));
-
-                // CRITICAL: Set mesh textures on the material
-                // The mesh has textures, but we need to tell the material to use them
-                // Map Assimp texture types to shader uniform names
-                std::unordered_map<std::string, std::string> textureTypeToUniform = {
-                    {"texture_diffuse", "u_DiffuseMap"},
-                    {"texture_normal", "u_NormalMap"},
-                    {"texture_metallic", "u_MetallicMap"},
-                    {"texture_roughness", "u_RoughnessMap"},
-                    {"texture_ao", "u_AOMap"},
-                    {"texture_emissive", "u_EmissiveMap"},
-                    {"texture_specular", "u_SpecularMap"},
-                    {"texture_height", "u_HeightMap"}
-                };
-
-                for (size_t i = 0; i < mesh->textures.size() && i < 8; ++i) {  // Support up to 8 texture slots
-                    // Create a shared_ptr from the mesh texture
-                    auto texturePtr = std::make_shared<Texture>(mesh->textures[i]);
-
-                    // Map Assimp texture type to shader uniform name
-                    std::string uniformName = mesh->textures[i].type;
-                    auto it = textureTypeToUniform.find(mesh->textures[i].type);
-                    if (it != textureTypeToUniform.end()) {
-                        uniformName = it->second;
+            // Detect glass materials by checking node name or texture paths
+            const std::string& nodeName = model->meshNodeNames[meshIndex];
+            bool isGlass = (nodeName.find("glass") != std::string::npos ||
+                            nodeName.find("Glass") != std::string::npos);
+            if (!isGlass) {
+                for (const auto& texture : mesh->textures) {
+                    if (texture.path.find("glass") != std::string::npos ||
+                        texture.path.find("Glass") != std::string::npos) {
+                        isGlass = true;
+                        break;
                     }
+                }
+            }
+            materialKey += isGlass ? "_glass" : "_opaque";
 
-                    renderable.material->SetTexture(uniformName, texturePtr, static_cast<int>(i));
-                    //spdlog::info("  -> Applied texture {} (ID: {}) as '{}' to material slot {}",
-                    //           mesh->textures[i].type, mesh->textures[i].id, uniformName, i);
+            // Check if we already have a material with this texture combination
+            auto matIt = s_MaterialCache.find(materialKey);
+            if (matIt != s_MaterialCache.end()) {
+                // Reuse existing material - CRITICAL for instancing!
+                renderable.material = matIt->second;
+            } else {
+                // Create a new material and cache it
+                auto shader = m_ResourceManager->GetShader("main_pbr");
+                if (!shader) {
+                    shader = m_ResourceManager->GetShader("basic");
                 }
 
-                // Detect glass materials by checking node name or texture paths
-                const std::string& nodeName = model->meshNodeNames[meshIndex];
-                bool isGlass = (nodeName.find("glass") != std::string::npos ||
-                                nodeName.find("Glass") != std::string::npos);
+                if (shader) {
+                    renderable.material = std::make_shared<Material>(shader, "TexturedMaterial_" + materialKey);
 
-                // Also check texture names for "glass" keyword
-                if (!isGlass) {
-                    for (const auto& texture : mesh->textures) {
-                        if (texture.path.find("glass") != std::string::npos ||
-                            texture.path.find("Glass") != std::string::npos) {
-                            isGlass = true;
-                            break;
+                    // CRITICAL: Set mesh textures on the material
+                    // The mesh has textures, but we need to tell the material to use them
+                    // Map Assimp texture types to shader uniform names
+                    std::unordered_map<std::string, std::string> textureTypeToUniform = {
+                        {"texture_diffuse", "u_DiffuseMap"},
+                        {"texture_normal", "u_NormalMap"},
+                        {"texture_metallic", "u_MetallicMap"},
+                        {"texture_roughness", "u_RoughnessMap"},
+                        {"texture_ao", "u_AOMap"},
+                        {"texture_emissive", "u_EmissiveMap"},
+                        {"texture_specular", "u_SpecularMap"},
+                        {"texture_height", "u_HeightMap"}
+                    };
+
+                    for (size_t i = 0; i < mesh->textures.size() && i < 8; ++i) {  // Support up to 8 texture slots
+                        // Create a shared_ptr from the mesh texture
+                        auto texturePtr = std::make_shared<Texture>(mesh->textures[i]);
+
+                        // Map Assimp texture type to shader uniform name
+                        std::string uniformName = mesh->textures[i].type;
+                        auto texIt = textureTypeToUniform.find(mesh->textures[i].type);
+                        if (texIt != textureTypeToUniform.end()) {
+                            uniformName = texIt->second;
                         }
-                    }
-                }
 
-                if (isGlass) {
-                    // Glass material - transparent with slight blue tint
-                    renderable.material->SetAlbedoColor(glm::vec3(0.9f, 0.95f, 1.0f));
-                    renderable.material->SetMetallicValue(0.0f);
-                    renderable.material->SetRoughnessValue(0.05f);  // Very smooth
-                    renderable.material->SetBlendMode(BlendingMode::Transparent);
-                    //spdlog::info("Detected glass material for mesh '{}' - enabling transparency", nodeName);
-                } else {
-                    // Regular textured material - use white albedo to show texture colors
-                    renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
-                    renderable.material->SetMetallicValue(0.0f);
-                    renderable.material->SetRoughnessValue(0.5f);
+                        renderable.material->SetTexture(uniformName, texturePtr, static_cast<int>(i));
+                        //spdlog::info("  -> Applied texture {} (ID: {}) as '{}' to material slot {}",
+                        //           mesh->textures[i].type, mesh->textures[i].id, uniformName, i);
+                    }
+
+                    if (isGlass) {
+                        // Glass material - transparent with slight blue tint
+                        renderable.material->SetAlbedoColor(glm::vec3(0.9f, 0.95f, 1.0f));
+                        renderable.material->SetMetallicValue(0.0f);
+                        renderable.material->SetRoughnessValue(0.05f);  // Very smooth
+                        renderable.material->SetBlendMode(BlendingMode::Transparent);
+                        //spdlog::info("Detected glass material for mesh '{}' - enabling transparency", nodeName);
+                    } else {
+                        // Regular textured material - use white albedo to show texture colors
+                        renderable.material->SetAlbedoColor(glm::vec3(1.0f, 1.0f, 1.0f));
+                        renderable.material->SetMetallicValue(0.0f);
+                        renderable.material->SetRoughnessValue(0.5f);
+                    }
+
+                    // Cache the material for reuse
+                    s_MaterialCache[materialKey] = renderable.material;
                 }
             }
         } else {
@@ -1235,17 +1272,28 @@ void GraphicsTestDriver::CreateModelInstance(const std::string& modelName, const
 
         // Fallback: create a simple material if nothing worked
         if (!renderable.material) {
-            auto shader = m_ResourceManager->GetShader("main_pbr");
-            if (!shader) {
-                shader = m_ResourceManager->GetShader("basic");
-            }
+            // Use a shared fallback material instead of creating unique ones
+            std::string fallbackKey = "fallback_default";
+            auto matIt = s_MaterialCache.find(fallbackKey);
 
-            if (shader) {
-                renderable.material = std::make_shared<Material>(shader, "FallbackMaterial_" + std::to_string(meshIndex));
-                // Set default PBR properties
-                renderable.material->SetAlbedoColor(glm::vec3(0.8f, 0.7f, 0.6f));
-                renderable.material->SetMetallicValue(0.7f);
-                renderable.material->SetRoughnessValue(0.3f);
+            if (matIt != s_MaterialCache.end()) {
+                renderable.material = matIt->second;
+            } else {
+                auto shader = m_ResourceManager->GetShader("main_pbr");
+                if (!shader) {
+                    shader = m_ResourceManager->GetShader("basic");
+                }
+
+                if (shader) {
+                    renderable.material = std::make_shared<Material>(shader, "FallbackMaterial");
+                    // Set default PBR properties
+                    renderable.material->SetAlbedoColor(glm::vec3(0.8f, 0.7f, 0.6f));
+                    renderable.material->SetMetallicValue(0.7f);
+                    renderable.material->SetRoughnessValue(0.3f);
+
+                    // Cache for reuse
+                    s_MaterialCache[fallbackKey] = renderable.material;
+                }
             }
         }
 
