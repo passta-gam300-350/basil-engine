@@ -213,9 +213,9 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
                 if (scene != nullptr && textureIndex >= 0 && textureIndex < static_cast<int>(scene->mNumTextures)) {
                     const aiTexture* embeddedTexture = scene->mTextures[textureIndex];
 
-                    // Create OpenGL texture from embedded data
+                    // DSA: Create OpenGL texture from embedded data
                     unsigned int textureID;
-                    glGenTextures(1, &textureID);
+                    glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 
                     if (embeddedTexture->mHeight == 0) {
                         // Compressed format (PNG, JPG, etc. stored in memory)
@@ -227,23 +227,38 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
                         );
 
                         if (data) {
-                            GLenum format = GL_RGB;
-                            if (nrComponents == 1) format = GL_RED;
-                            else if (nrComponents == 3) format = GL_RGB;
-                            else if (nrComponents == 4) format = GL_RGBA;
+                            GLenum dataFormat = GL_RGB;
+                            if (nrComponents == 1) dataFormat = GL_RED;
+                            else if (nrComponents == 3) dataFormat = GL_RGB;
+                            else if (nrComponents == 4) dataFormat = GL_RGBA;
 
-                            GLenum internalFormat = useGammaCorrection ?
-                                (nrComponents == 4 ? GL_SRGB_ALPHA : GL_SRGB) :
-                                format;
+                            // DSA: Use sized internal formats
+                            GLenum internalFormat;
+                            if (useGammaCorrection) {
+                                internalFormat = (nrComponents == 4) ? GL_SRGB8_ALPHA8 : GL_SRGB8;
+                            } else {
+                                if (nrComponents == 1) internalFormat = GL_R8;
+                                else if (nrComponents == 3) internalFormat = GL_RGB8;
+                                else internalFormat = GL_RGBA8;
+                            }
 
-                            glBindTexture(GL_TEXTURE_2D, textureID);
-                            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-                            glGenerateMipmap(GL_TEXTURE_2D);
+                            // DSA: Calculate mipmap levels
+                            GLsizei levels = 1 + static_cast<GLsizei>(floor(log2(std::max(width, height))));
 
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                            // DSA: Allocate immutable storage
+                            glTextureStorage2D(textureID, levels, internalFormat, width, height);
+
+                            // DSA: Upload pixel data
+                            glTextureSubImage2D(textureID, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE, data);
+
+                            // DSA: Generate mipmaps
+                            glGenerateTextureMipmap(textureID);
+
+                            // DSA: Set texture parameters
+                            glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                            glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                            glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                            glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
                             stbi_image_free(data);
 
@@ -260,15 +275,28 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
                         }
                     } else {
                         // Uncompressed format (ARGB8888)
-                        glBindTexture(GL_TEXTURE_2D, textureID);
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, embeddedTexture->mWidth, embeddedTexture->mHeight,
-                                   0, GL_BGRA, GL_UNSIGNED_BYTE, embeddedTexture->pcData);
-                        glGenerateMipmap(GL_TEXTURE_2D);
+                        // DSA: Calculate mipmap levels
+                        GLsizei levels = 1 + static_cast<GLsizei>(floor(log2(std::max(
+                            static_cast<int>(embeddedTexture->mWidth),
+                            static_cast<int>(embeddedTexture->mHeight)))));
 
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        // DSA: Allocate immutable storage (RGBA8 sized format)
+                        glTextureStorage2D(textureID, levels, GL_RGBA8,
+                                         embeddedTexture->mWidth, embeddedTexture->mHeight);
+
+                        // DSA: Upload pixel data (BGRA format from Assimp)
+                        glTextureSubImage2D(textureID, 0, 0, 0,
+                                          embeddedTexture->mWidth, embeddedTexture->mHeight,
+                                          GL_BGRA, GL_UNSIGNED_BYTE, embeddedTexture->pcData);
+
+                        // DSA: Generate mipmaps
+                        glGenerateTextureMipmap(textureID);
+
+                        // DSA: Set texture parameters
+                        glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                        glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                        glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
                         texture.id = textureID;
                         texture.type = typeName;
