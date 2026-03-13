@@ -377,6 +377,22 @@ void EditorMain::init()
 					ImGui::EndCombo();
 				}
 
+				// Cull mode selector
+				const char* cull_modes[] = { "Off", "Back", "Front" };
+				const char* current_cull_mode = cull_modes[desc.material.cull_mode];
+				if (ImGui::BeginCombo("Cull Mode", current_cull_mode)) {
+					for (int i = 0; i < 3; i++) {
+						bool is_selected = (desc.material.cull_mode == i);
+						if (ImGui::Selectable(cull_modes[i], is_selected)) {
+							desc.material.cull_mode = i;
+						}
+						if (is_selected) {
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+
 				// Texture properties with dropdowns
 				ImGui::SeparatorText("Texture Properties");
 

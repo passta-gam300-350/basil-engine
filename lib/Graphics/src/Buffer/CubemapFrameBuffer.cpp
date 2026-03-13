@@ -44,42 +44,36 @@ CubemapFrameBuffer::~CubemapFrameBuffer()
 
 void CubemapFrameBuffer::CreateCubemap()
 {
-    // Generate cubemap texture
-    glGenTextures(1, &m_CubemapTexture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapTexture);
+    // DSA: Create cubemap texture without binding
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_CubemapTexture);
 
-    // Create 6 faces of depth cubemap
-    for (unsigned int i = 0; i < 6; ++i) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-                    m_CubemapSize, m_CubemapSize, 0,
-                    GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    }
+    // DSA: Allocate immutable storage for all 6 faces
+    glTextureStorage2D(m_CubemapTexture, 1, GL_DEPTH_COMPONENT32F, m_CubemapSize, m_CubemapSize);
 
-    // Set texture parameters for depth cubemap
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // DSA: Set texture parameters for depth cubemap without binding
+    glTextureParameteri(m_CubemapTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(m_CubemapTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(m_CubemapTexture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_CubemapTexture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_CubemapTexture, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    // DSA: No need to unbind - we never bound it!
 }
 
 void CubemapFrameBuffer::CreateFramebuffer()
 {
-    // Generate framebuffer
-    glGenFramebuffers(1, &m_FBOHandle);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBOHandle);
+    // DSA: Create framebuffer without binding
+    glCreateFramebuffers(1, &m_FBOHandle);
 
-    // Attach cubemap as depth attachment (geometry shader will render to all 6 faces)
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_CubemapTexture, 0);
+    // DSA: Attach cubemap as depth attachment without binding (geometry shader will render to all 6 faces)
+    glNamedFramebufferTexture(m_FBOHandle, GL_DEPTH_ATTACHMENT, m_CubemapTexture, 0);
 
-    // Disable color buffer (depth-only rendering)
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
+    // DSA: Disable color buffer (depth-only rendering) without binding
+    glNamedFramebufferDrawBuffer(m_FBOHandle, GL_NONE);
+    glNamedFramebufferReadBuffer(m_FBOHandle, GL_NONE);
 
-    // Check framebuffer completeness
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    // DSA: Check framebuffer completeness without binding
+    GLenum status = glCheckNamedFramebufferStatus(m_FBOHandle, GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         spdlog::error("CubemapFrameBuffer: Framebuffer incomplete! Status: 0x{:x}", status);
 
@@ -105,7 +99,7 @@ void CubemapFrameBuffer::CreateFramebuffer()
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // DSA: No need to unbind - we never bound it!
 }
 
 void CubemapFrameBuffer::Bind() const
