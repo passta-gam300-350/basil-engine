@@ -294,7 +294,7 @@ void AudioSystem::AdjustChannelVolume(AudioGroup channel, float percentDelta) {
         return;
     float current = 0.0f;
     FMOD_ErrorCheck(group->getVolume(&current));
-    float newVol = current * (1.0f + percentDelta / 100.0f);
+    float newVol = current + percentDelta / 100.0f;
     newVol = std::clamp(newVol, 0.0f, 2.0f);
     FMOD_ErrorCheck(group->setVolume(newVol));
 }
