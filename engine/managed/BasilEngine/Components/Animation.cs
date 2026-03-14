@@ -47,6 +47,14 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedAnimation", StaticAccessorType.DoubleColon)]
         internal static extern bool HasAnimation(UInt64 handle, string animationName);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [StaticAccessor("ManagedAnimation", StaticAccessorType.DoubleColon)]
+        internal static extern void SetSpritesheetMode(UInt64 handle, bool enabled);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [StaticAccessor("ManagedAnimation", StaticAccessorType.DoubleColon)]
+        internal static extern bool GetSpritesheetMode(UInt64 handle);
+
         /// <summary>
         /// Resumes playing the current animation.
         /// </summary>
@@ -102,6 +110,16 @@ namespace BasilEngine.Components
         public bool HasAnimation(string animationName)
         {
             return HasAnimation(NativeID, animationName);
+        }
+
+        /// <summary>
+        /// Enables or disables spritesheet flipbook mode.
+        /// When enabled, bones that displace vertices in Y are used to show/hide sprite rows.
+        /// </summary>
+        public bool SpritesheetMode
+        {
+            get => GetSpritesheetMode(NativeID);
+            set => SetSpritesheetMode(NativeID, value);
         }
     }
 }

@@ -363,7 +363,13 @@ void RenderSystem::Update(ecs::world& world) {
 						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
 						renderData.isSkinned = true;
 					}
-				} 
+				}
+
+				// Spritesheet flipbook mode — set from AnimationComponent flag
+				if (obj.all<AnimationComponent>())
+				{
+					renderData.isSpritesheetMode = obj.get<AnimationComponent>().isSpritesheetMode;
+				}
 
 				// Debug: Log entity UID assignment for first few entities
 				static int debugCount = 0;
