@@ -164,3 +164,23 @@ bool ManagedAnimation::HasAnimation(uint64_t handle, MonoString* animationName)
     }
     return false;
 }
+
+void ManagedAnimation::SetSpritesheetMode(uint64_t handle, bool enabled)
+{
+    ecs::entity entity{ handle };
+    if (!entity.all<AnimationComponent>())
+    {
+        return;
+    }
+    entity.get<AnimationComponent>().isSpritesheetMode = enabled;
+}
+
+bool ManagedAnimation::GetSpritesheetMode(uint64_t handle)
+{
+    ecs::entity entity{ handle };
+    if (!entity.all<AnimationComponent>())
+    {
+        return false;
+    }
+    return entity.get<AnimationComponent>().isSpritesheetMode;
+}
