@@ -94,8 +94,12 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Window->SetVSync(win_vsync);
 
 		if (win_mode) {
-			auto ptr = Instance().m_Window->GetNativeWindow();
 			GLFWmonitor* monitor = glfwGetPrimaryMonitor(); // Get the monitor's video mode (resolution, refresh rate, etc.) const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			auto monVidmode = glfwGetVideoMode(monitor);
+			win_width = monVidmode->width;
+			win_height = monVidmode->height;
+
+			auto ptr = Instance().m_Window->GetNativeWindow();
 			// Switch to fullscreen
 			glfwSetWindowMonitor(ptr, monitor, 0, 0, win_width, win_height, 0);
 		}
