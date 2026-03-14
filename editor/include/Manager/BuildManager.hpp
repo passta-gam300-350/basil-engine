@@ -23,6 +23,16 @@ Technology is prohibited.
 #include <string>
 #include <future>
 
+enum class BuildWindowMode : std::uint8_t {
+	windowed,
+	fullscreen
+};
+
+struct WindowDims {
+	unsigned int width{ 1600 };
+	unsigned int height{ 900 };
+};
+
 //simple m4 build system. this will be fleshed out in m5
 //yaml build
 struct BuildConfiguration {
@@ -30,7 +40,8 @@ struct BuildConfiguration {
 	std::string output_name;
 	std::string icon_relative_path; //relative path //should warn if dne
 	bool strip_unused_assets; //not supported in m4
-	bool fullscreen;
+	BuildWindowMode windowing_mode;
+	WindowDims window_size;
 };
 
 enum class BuildState : std::uint8_t {

@@ -120,7 +120,7 @@ bool InjectIcon(std::string const& exePath, std::string const& icoPath) {
 void MakeTemplateExecutable(std::string const& outputDir, BuildConfiguration const& config) {
 	std::string const& exeName = config.output_name;
 	std::string const& iconPath = std::string(Engine::getWorkingDir().data()) + "/" + config.icon_relative_path;
-	const bool isFullscreen = config.fullscreen;
+	const bool isFullscreen = config.windowing_mode == BuildWindowMode::fullscreen;
 	std::string curr_dir = std::filesystem::current_path().string();
 	std::string exePath = outputDir + "/" + exeName + ".exe";
 	std::filesystem::copy_file(curr_dir + "/bin/application.exe", exePath, std::filesystem::copy_options::update_existing);
@@ -143,6 +143,8 @@ void MakeTemplateExecutable(std::string const& outputDir, BuildConfiguration con
 	YAML::Node nd = YAML::LoadFile(config_output);
 	nd["window"]["title"] = exeName;
 	nd["window"]["fullscreen"] = isFullscreen;
+	nd["window"]["width"] = config.window_size.width;
+	nd["window"]["height"] = config.window_size.height;
 	std::ofstream ofs(config_output);
 	ofs << nd;
 	ofs.close();
