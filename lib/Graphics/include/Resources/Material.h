@@ -33,6 +33,14 @@ enum class BlendingMode
     Transparent = 1  // Alpha blending enabled
 };
 
+// Face culling modes for backface culling
+enum class CullMode
+{
+    Off = 0,    // No culling (render both sides) - for foliage, cloth, billboards
+    Back = 1,   // Cull back faces (default, most efficient) - for solid objects
+    Front = 2   // Cull front faces - for inside-out geometry like skybox interiors
+};
+
 // Unified Material class with PBR properties
 class Material
 {
@@ -58,13 +66,17 @@ public:
     const glm::vec3& GetAlbedoColor() const { return m_AlbedoColor; }
     float GetMetallicValue() const { return m_MetallicValue; }
     float GetRoughnessValue() const { return m_RoughnessValue; }
+    float GetNormalStrength() const { return m_NormalStrength; }
     BlendingMode GetBlendMode() const { return m_BlendMode; }
+    CullMode GetCullMode() const { return m_CullMode; }
 
     void SetAlbedoColor(const glm::vec3& color) { m_AlbedoColor = color; }
     void SetAlbedoColorSRGB(const glm::vec3& srgbColor);
     void SetMetallicValue(float metallic) { m_MetallicValue = metallic; }
     void SetRoughnessValue(float roughness) { m_RoughnessValue = roughness; }
+    void SetNormalStrength(float strength) { m_NormalStrength = strength; }
     void SetBlendMode(BlendingMode mode) { m_BlendMode = mode; }
+    void SetCullMode(CullMode mode) { m_CullMode = mode; }
 
     // Apply all PBR properties to the shader at once
     void ApplyPBRProperties();
@@ -103,7 +115,9 @@ private:
     glm::vec3 m_AlbedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
     float m_MetallicValue = 0.7f;
     float m_RoughnessValue = 0.3f;
+    float m_NormalStrength = 1.0f;
     BlendingMode m_BlendMode = BlendingMode::Opaque;
+    CullMode m_CullMode = CullMode::Back;  // Default: cull back faces (most efficient)
 
     // Performance optimization: Cache uniform locations to avoid repeated glGetUniformLocation calls
     // Using mutable to allow caching in const methods

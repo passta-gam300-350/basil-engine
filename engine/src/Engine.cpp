@@ -51,8 +51,6 @@ namespace {
 	constexpr std::string_view DEFAULT_SINK_NAME{ "Engine" };
 	constexpr std::string_view DEFAULT_OUTPUT_FILE{ "" };
 	constexpr std::string_view DEFAULT_CONFIG_NAME{ "Default.yaml"};
-	
-	static std::unique_ptr<AudioComponent> ambient; // [TEMP]
 }
 
 Engine& Engine::Instance() {
@@ -144,7 +142,6 @@ void Engine::Init(std::string const& cfg ) {
 	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
 	Instance().m_RenderSystem->InitJoltDebugRenderer();
 
-	// [TEMP]
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
 	animationSystem().Init();
@@ -211,7 +208,7 @@ void Engine::CoreUpdate() {
 	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
 	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
 	//messagingSystem.Update();
-	AudioSystem::GetInstance().Update(instance.m_World); // [TEMP]
+	AudioSystem::GetInstance().Update(instance.m_World);
 	ButtonSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	//PF_END_FRAME();
 	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
@@ -361,7 +358,6 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 
 	Scheduler::CompileJobSchedule();
 
-	// [TEMP]
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
 	animationSystem().Init();

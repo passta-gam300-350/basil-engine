@@ -1,0 +1,69 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 1
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+  ambient_light:
+    - 0.0299999993
+    - 0.0299999993
+    - 0.0299999993
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.0399999991
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
+entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 0
+    entity name:
+      name: unnamed
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0

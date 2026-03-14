@@ -1,0 +1,26 @@
+base:
+  m_guid: 157fc5067aafa6d159dabcec3f9b
+  m_importer: material
+  m_source: ""
+  m_name: standardSurface7_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: standardSurface7
+  albedo:
+    x: 0.578299999
+    y: 0.238000005
+    z: 0
+  metallic: 0.699999988
+  roughness: 1
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_DiffuseMap: 00
+    u_HeightMap: 00
+    u_NormalMap: 00
+    u_EmissiveMap: 00
+    u_SpecularMap: 00

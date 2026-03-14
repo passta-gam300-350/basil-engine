@@ -77,6 +77,53 @@ void ManagedAudio::Stop(uint64_t handle)
 	audio.Stop();
 }
 
+void ManagedAudio::SetFilterType(uint64_t handle, int filterType)
+{
+	ecs::entity entity{ handle };
+	auto& audio = entity.get<AudioComponent>();
+	audio.filterParams.type = static_cast<AudioFilterType>(filterType);
+}
+
+int ManagedAudio::GetFilterType(uint64_t handle)
+{
+	ecs::entity entity{ handle };
+	auto& audio = entity.get<AudioComponent>();
+	return static_cast<int>(audio.filterParams.type);
+}
+
+void ManagedAudio::SetFilterCutoff(uint64_t handle, float cutoffHz)
+{
+	ecs::entity entity{ handle };
+	auto& audio = entity.get<AudioComponent>();
+	audio.filterParams.cutoffHz = cutoffHz;
+}
+
+float ManagedAudio::GetFilterCutoff(uint64_t handle)
+{
+	ecs::entity entity{ handle };
+	auto& audio = entity.get<AudioComponent>();
+	return audio.filterParams.cutoffHz;
+}
+
+void ManagedAudio::SetFilterResonance(uint64_t handle, float resonance)
+{
+	ecs::entity entity{ handle };
+	auto& audio = entity.get<AudioComponent>();
+	audio.filterParams.resonance = resonance;
+}
+
+float ManagedAudio::GetFilterResonance(uint64_t handle)
+{
+	ecs::entity entity{ handle };
+	auto& audio = entity.get<AudioComponent>();
+	return audio.filterParams.resonance;
+}
+
+void ManagedAudio::AdjustChannelVolume(std::uint8_t channel, float percentDelta)
+{
+	AudioSystem::GetInstance().AdjustChannelVolume(static_cast<AudioGroup>(channel), percentDelta);
+}
+
 
 
 

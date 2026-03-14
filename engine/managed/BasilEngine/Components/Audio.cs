@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -86,6 +86,25 @@ namespace BasilEngine.Components
         /// <param name="handle">Native audio handle.</param>
         public static extern void InternalStop(UInt64 handle);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("AdjustChannelVolume")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
+        /// </summary>
+        /// <param name="channel">Mix group (0=Master, 1=BGM, 2=SFX, 3=UI, 4=Ambient).</param>
+        /// <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
+        private static extern void AdjustChannelVolume(byte channel, float percentDelta);
+
+        /// <summary>
+        /// Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
+        /// </summary>
+        /// <param name="channel">Mix group (Master, BGM, SFX, UI, Ambient).</param>
+        /// <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
+        public static void AdjustChannelVolume(AudioChannel channel, float percentDelta)
+        {
+            AdjustChannelVolume((byte)channel, percentDelta);
+        }
 
         /// <summary>
         /// Volume multiplier for this audio source.
@@ -127,6 +146,87 @@ namespace BasilEngine.Components
         public void Stop()
         {
             InternalStop(NativeID);
+        }
+
+        /// <summary>
+        /// Mix channel (group) for global volume control. Matches native AudioGroup.
+        /// </summary>
+        public enum AudioChannel : byte
+        {
+            Master = 0,
+            BGM,
+            SFX,
+            UI,
+            Ambient
+        }
+
+        /// <summary>
+        /// Filter type for per-channel DSP: None, Lowpass, Highpass, Echo.
+        /// Backed by int to simplify native interop.
+        /// </summary>
+        public enum FilterType
+        {
+            None = 0,
+            Lowpass,
+            Highpass,
+            Echo
+        }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetFilterType")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        private static extern void SetFilterType(UInt64 handle, int filterType);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetFilterType")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        private static extern int GetFilterType(UInt64 handle);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetFilterCutoff")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        private static extern void SetFilterCutoff(UInt64 handle, float cutoffHz);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetFilterCutoff")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        private static extern float GetFilterCutoff(UInt64 handle);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetFilterResonance")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        private static extern void SetFilterResonance(UInt64 handle, float resonance);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetFilterResonance")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        private static extern float GetFilterResonance(UInt64 handle);
+
+        /// <summary>
+        /// Filter type (None, Lowpass, Highpass, Echo). Applied when playing.
+        /// </summary>
+        public FilterType Filter
+        {
+            get => (FilterType)GetFilterType(NativeID);
+            set => SetFilterType(NativeID, (int)value);
+        }
+
+        /// <summary>
+        /// Filter cutoff frequency in Hz (10–22050). Used when a filter is active.
+        /// </summary>
+        public float FilterCutoffHz
+        {
+            get => GetFilterCutoff(NativeID);
+            set => SetFilterCutoff(NativeID, value);
+        }
+
+        /// <summary>
+        /// Filter resonance (0.5–10). Used for Lowpass/Highpass filters.
+        /// </summary>
+        public float FilterResonance
+        {
+            get => GetFilterResonance(NativeID);
+            set => SetFilterResonance(NativeID, value);
         }
     }
 }

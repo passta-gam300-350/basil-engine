@@ -17,6 +17,7 @@ Technology is prohibited.
 #include "Manager/MonoImGuiRenderer.hpp"
 
 #include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
 
 #include <iomanip>
 #include <Manager/MonoReflectionRegistry.hpp>
@@ -25,6 +26,7 @@ Technology is prohibited.
 #include "ABI/CSKlass.hpp"
 
 #include <sstream>
+#include <mono/metadata/appdomain.h>
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/metadata.h>
@@ -170,8 +172,8 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 	{
 		MonoString* monoStr = nullptr;
 		mono_field_get_value(scriptObject, fieldInfo->field, &monoStr);
-
-		std::string value;
+			
+			static std::string value{};
 		if (monoStr)
 		{
 			char* utf8 = mono_string_to_utf8(monoStr);
@@ -182,11 +184,23 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 			}
 		}
 
+			bool onInput = ImGui::InputText(label, &value, ImGuiInputTextFlags_EnterReturnsTrue);
+			if (onInput)
+			{
+				MonoDomain* domain = mono_object_get_domain(scriptObject);
+				MonoString* newMonoStr = mono_string_new(domain, value.c_str());
+				spdlog::info("Set value for script: {}", value);
+				mono_field_set_value(scriptObject, fieldInfo->field, newMonoStr);
+				modified = true;
+			}
+		
+		
+
 		ImGui::Text("%s: %s", label, value.c_str());
 		break;
 	}
 	case ManagedKind::System_List:
-		{
+	{
 		ImGui::TextDisabled("%s (List type not yet supported)", label);
 		break;
 	}
@@ -199,7 +213,7 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 			if (managed_name == "BasilEngine.Mathematics.Vector3")
 			{
 
-			
+
 				struct { float x, y, z; } value{};
 				mono_field_get_value(scriptObject, fieldInfo->field, &value);
 
@@ -213,7 +227,8 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 					modified = true;
 				}
 
-			} else if (managed_name == "BasilEngine.Mathematics.Vector2")
+			}
+			else if (managed_name == "BasilEngine.Mathematics.Vector2")
 			{
 
 
@@ -242,7 +257,7 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 				RenderUserObjectField(fieldNode, klass, instance, fieldInfo);
 			}
 		}
-		
+
 		else
 		{
 			ImGui::TextDisabled("%s (type unknown)", label);
@@ -280,10 +295,10 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, [[mayb
 
 
 
-	
+
 	std::string selected = "None (GameObject)";
 
-	
+
 
 	std::vector<std::pair<const char*, SceneEntityReference>> entities_ref{};
 
@@ -303,13 +318,13 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, [[mayb
 
 	if (ImGui::BeginPopup("MENU_ENTITY_LIST")) {
 		// List all entities
-	
+
 		get_all_entities_ref();
 		int counter = 0;
 		for (auto& entity : entities_ref)
 		{
 			// Get entity name
-			
+
 			std::string const& entityName = entity.first;
 
 			std::string uuid = std::to_string(counter++) + "_ENTITY_LIST";
@@ -342,7 +357,7 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, [[mayb
 
 				ImGui::PopID();
 				break;
-				
+
 			}
 
 
@@ -386,7 +401,7 @@ void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, [[mayb
 
 	mono_field_get_value(inst, info->field, &gameObjRef);
 
-	
+
 
 	uint64_t nativeID = 0;
 	//Get NativeID field
@@ -468,7 +483,7 @@ void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, [[mayb
 						mono_field_get_value(objInst->Object(), nativeIDField->field, &nativeID);
 						success = true;
 					}
-					
+
 				}
 
 
@@ -476,7 +491,7 @@ void MonoImGuiRenderer::RenderUserObjectField(const FieldNode& fieldNode, [[mayb
 
 				if (!success)
 				{
-				spdlog::warn ("Failed to assign {} to field {}. The selected entity does not have a component of type {}.{}", entityName.c_str(), fieldNode.name.c_str(), managedNamespace.c_str(), managedKlassName.c_str());
+					spdlog::warn("Failed to assign {} to field {}. The selected entity does not have a component of type {}.{}", entityName.c_str(), fieldNode.name.c_str(), managedNamespace.c_str(), managedKlassName.c_str());
 
 
 					ImGui::PopID();
@@ -651,7 +666,8 @@ bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
 				{
 					outValue = "None (GameObject)";
 					return false;
-				} else
+				}
+				else
 				{
 					SceneEntityReference goRef{};
 					CSKlass* goKlass = MonoEntityManager::GetInstance().GetNamedKlass("GameObject", "BasilEngine");
@@ -680,7 +696,7 @@ bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
 					outValue = "None (" + fieldNode.descriptor->managed_name + ")";
 					return false;
 				}
-				
+
 				else
 				{
 					SceneEntityReference goRef{};

@@ -185,9 +185,9 @@ bool GraphicsTestDriver::Initialize()
     // ===== DEMO SELECTION =====
     // Uncomment ONE demo to run:
 
-    SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
+    //SetupSponzaDemo();     // Sponza cathedral - lighting/HDR test
     //SetupTinboxDemo();     // Tinbox grid - outline/PBR test
-    //SetupEditorDemo();       // 3x3 cube grid - matches editor scene
+    SetupEditorDemo();       // 3x3 cube grid - matches editor scene
     //SetupTransparencyDemo();  // Transparency test - like LearnOpenGL
 
     // Load HUD test textures (once during initialization)
@@ -529,11 +529,11 @@ bool GraphicsTestDriver::LoadTestResources()
         }
 
         // Load models
-        auto tableModel = m_ResourceManager->LoadModel("table",
-            "assets/models/table/Table.obj");
+        auto tinboxModel = m_ResourceManager->LoadModel("tinbox",
+            "assets/models/table/tin_box.obj");
 
-        if (!tableModel) {
-            spdlog::error("Failed to load table model!");
+        if (!tinboxModel) {
+            spdlog::error("Failed to load tinbox model!");
             return false;
         }
 
@@ -569,25 +569,28 @@ void GraphicsTestDriver::CreateTestMaterials()
     }
     if (!shader) return;
 
-    // Red material
+    // Red material - Standard back face culling (default)
     auto redMaterial = std::make_shared<Material>(shader, "RedMaterial");
     redMaterial->SetAlbedoColor(glm::vec3(0.8f, 0.2f, 0.2f));
     redMaterial->SetMetallicValue(0.1f);
     redMaterial->SetRoughnessValue(0.8f);
+    redMaterial->SetCullMode(CullMode::Back);  // Standard culling (most efficient)
     m_ResourceManager->AddMaterial("RedMaterial", redMaterial);
 
-    // Green material
+    // Green material - No culling (double-sided rendering)
     auto greenMaterial = std::make_shared<Material>(shader, "GreenMaterial");
     greenMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.8f, 0.2f));
     greenMaterial->SetMetallicValue(0.3f);
     greenMaterial->SetRoughnessValue(0.6f);
+    greenMaterial->SetCullMode(CullMode::Off);  // No culling - render both sides
     m_ResourceManager->AddMaterial("GreenMaterial", greenMaterial);
 
-    // Blue material
+    // Blue material - Front face culling (inside-out rendering)
     auto blueMaterial = std::make_shared<Material>(shader, "BlueMaterial");
     blueMaterial->SetAlbedoColor(glm::vec3(0.2f, 0.2f, 0.8f));
     blueMaterial->SetMetallicValue(0.5f);
     blueMaterial->SetRoughnessValue(0.4f);
+    blueMaterial->SetCullMode(CullMode::Front);  // Cull front faces (inside-out)
     m_ResourceManager->AddMaterial("BlueMaterial", blueMaterial);
 
     // Metallic gold material
@@ -706,10 +709,10 @@ void GraphicsTestDriver::SetupTinboxDemo()
         for (int z = 0; z < gridSize; ++z) {
             glm::vec3 position(startOffset + x * spacing - 8.0f, 0.0f, startOffset + z * spacing);
             int materialIndex = (x + z) % materials.size();
-            CreateModelInstance("table", materials[materialIndex], position, glm::vec3(0.01f));
+            CreateModelInstance("tinbox", materials[materialIndex], position, glm::vec3(0.01f));
         }
     }
-    spdlog::info("Table grid created: {} objects", m_SceneObjects.size());
+    spdlog::info("tinbox grid created: {} objects", m_SceneObjects.size());
 
     // 3. CREATE LIGHTS
     // Directional light
@@ -749,6 +752,7 @@ void GraphicsTestDriver::SetupTinboxDemo()
                  m_SceneObjects.size(), m_SceneLights.size());
     spdlog::info("NOTE: This demo uses WHOLE-MODEL SELECTION - clicking tinbox outlines all meshes together (top + bottom)");
     spdlog::info("NOTE: Press 'B' to toggle spot light shadows (spotlight centered above grid at [-8, 8, 0])");
+    spdlog::info("NOTE: Testing backface culling modes - Red: Back (default), Green: Off (double-sided), Blue: Front (inside-out)");
 }
 
 // ===== DEMO 3: EDITOR DEMO - 3X3 CUBE GRID MATCHING EDITOR SETUP =====
@@ -820,26 +824,26 @@ void GraphicsTestDriver::SetupEditorDemo()
     spdlog::info("Created 3x3 cube grid: {} cubes", gridSize * gridSize);
 
     // 2.5. CREATE GROUND PLANE TO CATCH SHADOWS
-    //auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 1, 1));
-    //RenderableData groundPlane;
-    //groundPlane.mesh = planeMesh;
-    //groundPlane.material = m_ResourceManager->GetMaterial("WhiteMaterial");
+    auto planeMesh = std::make_shared<Mesh>(PrimitiveGenerator::CreatePlane(30.0f, 30.0f, 1, 1));
+    RenderableData groundPlane;
+    groundPlane.mesh = planeMesh;
+    groundPlane.material = m_ResourceManager->GetMaterial("WhiteMaterial");
 
-    //// Create property block for the ground plane with a neutral gray color
-    //auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
-    //groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.8f, 0.8f));  // Neutral gray
-    //groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
-    //groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
-    //groundPlane.propertyBlock = groundPropertyBlock;
+    // Create property block for the ground plane with a neutral gray color
+    auto groundPropertyBlock = std::make_shared<MaterialPropertyBlock>();
+    groundPropertyBlock->SetVec3("u_AlbedoColor", glm::vec3(0.8f, 0.8f, 0.8f));  // Neutral gray
+    groundPropertyBlock->SetFloat("u_MetallicValue", 0.0f);  // Non-metallic
+    groundPropertyBlock->SetFloat("u_RoughnessValue", 0.8f);  // Fairly rough
+    groundPlane.propertyBlock = groundPropertyBlock;
 
-    //// Position plane below cubes (cubes are at y=0, so plane at y=-2.0 is below them)
-    //groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-    //groundPlane.visible = true;
-    //groundPlane.objectID = objectID++;
-    //groundPlane.modelInstanceID = modelInstanceID++;
+    // Position plane below cubes (cubes are at y=0, so plane at y=-2.0 is below them)
+    groundPlane.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+    groundPlane.visible = true;
+    groundPlane.objectID = objectID++;
+    groundPlane.modelInstanceID = modelInstanceID++;
 
-    //m_SceneObjects.push_back(groundPlane);
-    //spdlog::info("Added ground plane at y=-2.0 to catch shadows");
+    m_SceneObjects.push_back(groundPlane);
+    spdlog::info("Added ground plane at y=-2.0 to catch shadows");
 
     m_SceneLights.push_back(CreateDirectionalLight(
         glm::vec3(-0.3f, -0.8f, -0.2f),      // Direction: steep angle from above (like CryEngine Sponza)
@@ -867,7 +871,8 @@ void GraphicsTestDriver::SetupEditorDemo()
 
     // 4. DISABLE SKYBOX - Editor doesn't use skybox
     m_SceneRenderer->EnableSkybox(false);
-    //spdlog::info("Skybox disabled (editor has no skybox)");
+    m_SceneRenderer->SetBackgroundColor(glm::vec4(0.95f, 0.95f, 0.95f, 1.0f));  // Off-white background
+    spdlog::info("Skybox disabled, background color set to off-white");
 
     // 5. SETUP OUTLINE MODE
     m_SceneRenderer->ClearOutlinedObjects();

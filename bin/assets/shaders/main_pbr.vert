@@ -17,7 +17,11 @@ struct InstanceData {
     uint flags;            // 4 bytes
     float metallic;        // 4 bytes
     float roughness;       // 4 bytes
-    // Total: 96 bytes per instance
+    float normalStrength;  // 4 bytes
+    float padding;         // 4 bytes
+    float padding2;        // 4 bytes (pad to multiple of 16)
+    float padding3;        // 4 bytes
+    // Total: 112 bytes per instance (16-byte aligned)
 };
 
 // Instance data SSBO
@@ -51,6 +55,7 @@ out VS_OUT {
     float InstanceMetallic;
     float InstanceRoughness;
     float BoneVisibility;
+    float InstanceNormalStrength;
 } vs_out;
 
 void main()
@@ -118,4 +123,5 @@ void main()
     vs_out.InstanceColor = instance.color;
     vs_out.InstanceMetallic = instance.metallic;
     vs_out.InstanceRoughness = instance.roughness;
+    vs_out.InstanceNormalStrength = instance.normalStrength;
 }

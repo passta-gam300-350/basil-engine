@@ -1,0 +1,29 @@
+base:
+  m_guid: 11efca927778820f6187ebbb08d1
+  m_importer: .material
+  m_source: ""
+  m_name: m_shutter_v2
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: m_shutter_v2
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 0
+  roughness: 0.5
+  blend_mode: 0
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_AOMap: 00
+    u_RoughnessMap: 11ec7943749cb0f0c8bc79733e97
+    u_DiffuseMap: 11ec793d75869f8d319842ab18c2
+    u_EmissiveMap: 11ec793e7a218aea9730dc97a07e
+    u_NormalMap: 11ec79427078b7daf7c7f6fffc2d
+    u_HeightMap: 11ec794072a59fb5fe5497e358b5
+    u_SpecularMap: 00
+    u_MetallicMap: 11ec79417ef88a03dad18efbb905
