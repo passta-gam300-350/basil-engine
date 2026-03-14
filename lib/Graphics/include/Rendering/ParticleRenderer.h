@@ -45,8 +45,6 @@ private:
     void InitializeResources();
     void CreateBillboardQuad();
     void EnsureWhiteTexture();
-    void RenderSystem(ParticleRenderData const& system, FrameData const& frameData, RenderPass& pass);
-    void UpdateSSBO(std::vector<Particle>const& particles);
     void SetBlendMode(BlendMode mode, RenderPass& pass);
 
     std::shared_ptr<VertexArray> m_QuadVAO;
