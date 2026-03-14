@@ -19,17 +19,19 @@ layout(std430, binding = 0) buffer ParticleBuffer
 
 uniform mat4 u_View;
 uniform mat4 u_Projection;
+uniform int uBaseInstance;
 
 out vec2 vTexCoord;
 out vec4 vColor;
 
 void main()
 {
-    // Access the particle data for this instance
-    vec3 particlePos = allParticles[gl_InstanceID].position;
-    float particleSize = allParticles[gl_InstanceID].size;
-    vec4 particleColor = allParticles[gl_InstanceID].color;
-    float particleRotation = allParticles[gl_InstanceID].rotation;
+    // Access the particle data for this instance, offset by base for multi-system support
+    int particleIndex = gl_InstanceID + uBaseInstance;
+    vec3 particlePos = allParticles[particleIndex].position;
+    float particleSize = allParticles[particleIndex].size;
+    vec4 particleColor = allParticles[particleIndex].color;
+    float particleRotation = allParticles[particleIndex].rotation;
 
     // Extract camera basis vectors from view matrix for billboarding
     vec3 cameraRight = vec3(u_View[0][0], u_View[1][0], u_View[2][0]);
