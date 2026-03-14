@@ -17,8 +17,8 @@ layout(std430, binding = 0) buffer ParticleBuffer
     ParticleInstanceData allParticles[];
 };
 
-uniform mat4 uView;
-uniform mat4 uProjection;
+uniform mat4 u_View;
+uniform mat4 u_Projection;
 
 out vec2 vTexCoord;
 out vec4 vColor;
@@ -32,8 +32,8 @@ void main()
     float particleRotation = allParticles[gl_InstanceID].rotation;
 
     // Extract camera basis vectors from view matrix for billboarding
-    vec3 cameraRight = vec3(uView[0][0], uView[1][0], uView[2][0]);
-    vec3 cameraUp = vec3(uView[0][1], uView[1][1], uView[2][1]);
+    vec3 cameraRight = vec3(u_View[0][0], u_View[1][0], u_View[2][0]);
+    vec3 cameraUp = vec3(u_View[0][1], u_View[1][1], u_View[2][1]);
 
     // Apply rotation to the quad vertices
     float c = cos(particleRotation);
@@ -49,7 +49,7 @@ void main()
                           cameraUp * rotatedPos.y * particleSize;
 
     // Final position in clip space
-    gl_Position = uProjection * uView * vec4(vertexWorldPos, 1.0);
+    gl_Position = u_Projection * u_View * vec4(vertexWorldPos, 1.0);
 
     // Pass data to fragment shader
     vTexCoord = aPosition.xy + 0.5;

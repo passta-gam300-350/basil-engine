@@ -91,7 +91,9 @@ void ParticleRenderer::InitializeResources()
 	size_t bufferSize = m_MaxParticles * sizeof(ParticleInstanceData);
 	m_InstanceSSBO = std::make_unique<ShaderStorageBuffer>(nullptr, uint32_t(bufferSize), GL_DYNAMIC_DRAW);
 	m_InstanceSSBO->BindBase(PARTICLE_SSBO_BINDING);
+
 	// NOTE: Shader must be set via SetParticleShader() before rendering!
+	// White fallback texture is created lazily on first render (EnsureWhiteTexture)
 }
 
 void ParticleRenderer::CreateBillboardQuad()
@@ -139,8 +141,26 @@ void ParticleRenderer::CreateBillboardQuad()
 	m_QuadVAO = quadMesh.GetVertexArray();
 }
 
+void ParticleRenderer::EnsureWhiteTexture()
+{
+	if (m_WhiteTexture.id != 0)
+	{
+		return;
+	}
+	unsigned int whiteTexID = 0;
+	glGenTextures(1, &whiteTexID);
+	glBindTexture(GL_TEXTURE_2D, whiteTexID);
+	unsigned char whitePixel[4] = { 255, 255, 255, 255 };
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	m_WhiteTexture = Texture{ whiteTexID, "texture_diffuse", "white", GL_TEXTURE_2D };
+}
+
 void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData const& frameData, RenderPass& pass)
 {
+	EnsureWhiteTexture();
 	UpdateSSBO(system.particles);
 	uint32_t activeCount = 0;
 	for (auto const& eachParticle : system.particles)
@@ -161,12 +181,9 @@ void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData 
 	pass.Submit(RenderCommands::BindSSBOData{m_InstanceSSBO->GetSSBOHandle(), PARTICLE_SSBO_BINDING});
 	// set uniforms
 	pass.Submit(RenderCommands::SetUniformsData{ m_ParticleShader, glm::mat4(1.0f), frameData.viewMatrix, frameData.projectionMatrix, frameData.cameraPosition });
-	// bind texture (commented out for pure color particles)
-	// if (system.texture)
-	// {
-	// 	std::vector<Texture> textures = { *system.texture };
-	// 	pass.Submit(RenderCommands::BindTexturesData{ textures, m_ParticleShader });
-	// }
+	// bind texture: use real texture if available, otherwise white fallback (white * color = color)
+	uint32_t texID = (system.texture && system.texture->id != 0) ? system.texture->id : m_WhiteTexture.id;
+	pass.Submit(RenderCommands::BindTextureIDData{ texID, 0, m_ParticleShader, "uTexture" });
 	// set blend mode
 	SetBlendMode(system.blendMode, pass);
 	// set depth test
