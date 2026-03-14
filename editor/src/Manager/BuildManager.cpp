@@ -215,14 +215,14 @@ void CopySceneManifestData(std::string const& outputDir) {
 	std::string proj_dir = std::string(Engine::getWorkingDir().data()); //this is set to project_dir/asset
 	std::string manifest_path = outputDir + "/scene_manifest.order";
 	if (std::filesystem::exists(proj_dir + "/scene_manifest.order")) {
-		std::filesystem::copy_file(proj_dir + "/scene_manifest.order", manifest_path, std::filesystem::copy_options::update_existing);
+		std::filesystem::copy_file(proj_dir + "/scene_manifest.order", manifest_path, std::filesystem::copy_options::overwrite_existing);
 		auto scene_list = GetSceneManifestSceneList(manifest_path);
 		for (auto const& scene_name : scene_list) {
 			std::string output_scene = outputDir + "/" + scene_name;
 			if (!std::filesystem::exists(std::filesystem::path(output_scene).parent_path())) {
 				std::filesystem::create_directories(std::filesystem::path(output_scene).parent_path());
 			}
-			std::filesystem::copy_file(proj_dir + "/" + scene_name, output_scene, std::filesystem::copy_options::update_existing);
+			std::filesystem::copy_file(proj_dir + "/" + scene_name, output_scene, std::filesystem::copy_options::overwrite_existing);
 		}
 	}
 }
@@ -273,9 +273,9 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 					std::filesystem::create_directories(precompiledpath);
 				}
 				std::string curr = Engine::getWorkingDir().data();
-				std::filesystem::copy_file(curr + "/managed/GameAssembly.dll", precompiledpath+"/GameAssembly.dll", std::filesystem::copy_options::update_existing);
-				std::filesystem::copy_file(std::filesystem::current_path().string() + "/bin/BasilEngine.dll", precompiledpath + "/BasilEngine.dll", std::filesystem::copy_options::update_existing);
-				std::filesystem::copy_file(std::filesystem::current_path().string() + "/bin/Engine.Bindings.dll", precompiledpath + "/Engine.Bindings.dll", std::filesystem::copy_options::update_existing);
+				std::filesystem::copy_file(curr + "/managed/GameAssembly.dll", precompiledpath+"/GameAssembly.dll", std::filesystem::copy_options::overwrite_existing);
+				std::filesystem::copy_file(std::filesystem::current_path().string() + "/bin/BasilEngine.dll", precompiledpath + "/BasilEngine.dll", std::filesystem::copy_options::overwrite_existing);
+				std::filesystem::copy_file(std::filesystem::current_path().string() + "/bin/Engine.Bindings.dll", precompiledpath + "/Engine.Bindings.dll", std::filesystem::copy_options::overwrite_existing);
 			}
 			for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::output_path() }) {
 				if (context->m_state == BuildState::ABORTED)
@@ -286,7 +286,7 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 					if (!std::filesystem::exists(parent)) {
 						std::filesystem::create_directories(parent);
 					}
-					std::filesystem::copy_file(cde,dest, std::filesystem::copy_options::update_existing);
+					std::filesystem::copy_file(cde,dest, std::filesystem::copy_options::overwrite_existing);
 					bytes_copied_mul100 += cde.file_size()*100;
 					file_copied++;
 					int current_progress = int(bytes_copied_mul100 / total_bytes);
@@ -308,7 +308,7 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 					if (!std::filesystem::exists(parent)) {
 						std::filesystem::create_directories(parent);
 					}
-					std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::update_existing);
+					std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
 					bytes_copied_mul100 += cde.file_size()*100;
 					file_copied++; 
 					int current_progress = int(bytes_copied_mul100 / total_bytes);
