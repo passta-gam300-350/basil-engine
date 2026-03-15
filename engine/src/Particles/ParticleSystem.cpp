@@ -55,12 +55,13 @@ void ParticleSystem::Update(ecs::world& world, float dt)
 				particleComponent.emitter->Play();
 			}
 		}
+		particleComponent.emitter->SetConfig(particleComponent.config);
 		particleComponent.emitter->GetConfig().position = transformComponent.m_Translation;
 		particleComponent.emitter->Update(dt);
 		ParticleRenderData renderData;
 		renderData.particles = particleComponent.emitter->GetParticles();
 
-		if (particleComponent.texture != rp::null_guid)
+		if (particleComponent.useTexture && particleComponent.texture != rp::null_guid)
 		{
 			auto* texturePtr = ResourceRegistry::Instance().Get<std::shared_ptr<Texture>>(particleComponent.texture);
 			if (texturePtr)

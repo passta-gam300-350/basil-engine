@@ -40,6 +40,7 @@ uniform vec3 u_ViewPos;
 // Skinning control
 uniform bool u_EnableSkinning;
 uniform int u_BoneOffset;  // Offset into boneMatrices for this instance
+uniform bool u_SpritesheetMode;
 
 // Output to fragment shader
 out VS_OUT {
@@ -83,13 +84,15 @@ void main()
 
             skinnedPos = vec3(skinMatrix * vec4(aPos, 1.0));
 
-            // Bone visibility: if skinning displaced vertex in Y, treat as hidden
-            // This supports spritesheet flipbook animations where bones toggle Y to show/hide
-            float yDisplacement = abs(skinnedPos.y - aPos.y);
-            if (yDisplacement > 0.5)
-                vs_out.BoneVisibility = 0.0;
-            else
-                skinnedPos.y = aPos.y; // Snap Y back to prevent visual jitter during transition
+            // Spritesheet flipbook: bones toggle Y to show/hide rows
+            if (u_SpritesheetMode)
+            {
+                float yDisplacement = abs(skinnedPos.y - aPos.y);
+                if (yDisplacement > 0.5)
+                    vs_out.BoneVisibility = 0.0;
+                else
+                    skinnedPos.y = aPos.y;
+            }
 
             mat3 skinMatrix3 = mat3(skinMatrix);
             skinnedNormal = skinMatrix3 * aNormal;

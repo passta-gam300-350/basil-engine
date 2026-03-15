@@ -3,10 +3,10 @@
 in vec2 vTexCoord; 
 in vec4 vColor;
 
-uniform sampler2D uTexture; // now everyone is same
+uniform sampler2D uTexture;
 out vec4 FragColor;
 
-void main() 
+void main()
 {
 	vec4 texColor = texture(uTexture, vTexCoord);
 	FragColor = texColor * vColor;
