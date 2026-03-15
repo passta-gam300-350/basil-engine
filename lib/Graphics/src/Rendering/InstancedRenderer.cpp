@@ -695,6 +695,8 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         RenderCommands::SetUniformBoolData enableSkinningCmd{ shader, "u_EnableSkinning", true };
         renderPass.Submit(enableSkinningCmd);
 
+        renderPass.Submit(RenderCommands::SetUniformBoolData{ shader, "u_SpritesheetMode", renderable->isSpritesheetMode });
+
         RenderCommands::SetUniformIntData boneOffsetCmd{ shader, "u_BoneOffset", 0 };
         renderPass.Submit(boneOffsetCmd);
 
