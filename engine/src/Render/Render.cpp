@@ -1522,7 +1522,7 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			vert[i].TexCoords = mesh.vertices[i].TexCoords;
 			vert[i].Tangent = mesh.vertices[i].Tangent;
 			vert[i].Bitangent = mesh.vertices[i].Bitangent;
-			for (int a{}; a < 4; a++) {
+			for (int a{}; a < MAX_BONE_INFLUENCE; a++) {
 				vert[i].m_Weights[a] = mesh.vertices[i].m_Weights[a];
 				vert[i].m_BoneIDs[a] = mesh.vertices[i].m_BoneIDs[a];
 			}
