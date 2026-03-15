@@ -208,6 +208,7 @@ animationContainer LoadAnimationContainer(const char* data) {
 		reinterpret_cast<const std::byte*>(data)
 	);
 	animationContainer ac{};
+	ac.name = animData.m_name; // Set the clip name from resource
 	ac.channels.reserve(animData.m_channels.size());
 	for (AnimationResourceData::Channel chl : animData.m_channels) {
 		boneChannel bc{ chl.m_name, chl.m_id };
@@ -242,8 +243,10 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 	}
 	animComp.animatorInstance = new animator(boneCount);
 
-	animComp.animatorInstance->addAnimation("default_ani1", animation);
-	animComp.animatorInstance->playAnimation("default_ani1", true);
+    // Use actual animation name instead of hardcoded string
+    std::string animName = animation->name.empty() ? "default" : animation->name;
+	animComp.animatorInstance->addAnimation(animName, animation);
+	animComp.animatorInstance->playAnimation(animName, true);
 
 	// 3. Set animation
 	animComp.animatorInstance->currentAnimation = animation;

@@ -137,12 +137,44 @@ bool ManagedAnimation::PlayAnimation(uint64_t handle, MonoString* animationName,
         return false;
     }
     auto& anim = entity.get<AnimationComponent>();
+    
+    // If animatorInstance is null, try to initialize it now if we have a skeleton
+    if (!anim.animatorInstance && entity.all<SkeletonComponent>())
+    {
+        auto& skelComp = entity.get<SkeletonComponent>();
+        if (anim.animationdata.m_guid && skelComp.skeletondata.m_guid) {
+            skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skelComp.skeletondata.m_guid);
+            animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
+            if (skel && animCont) {
+                extern void InitializeSkeletalAnimation(AnimationComponent & animComp, SkeletonComponent & skelComp, const skeleton & skeletonData, animationContainer * animation);
+                InitializeSkeletalAnimation(anim, skelComp, *skel, animCont);
+            }
+        }
+    }
+
     if (anim.animatorInstance) 
     {
-        char* name = mono_string_to_utf8(animationName);
-        bool result = anim.animatorInstance->playAnimation(name, shouldLoop);
-        mono_free(name);
-        return result;
+        char* nameStr = mono_string_to_utf8(animationName);
+        std::string name(nameStr);
+        mono_free(nameStr);
+
+        // Check if animator already has this animation
+        if (!anim.animatorInstance->hasAnimation(name))
+        {
+            // Try to find the animation by name in the resource system
+            rp::Guid animGuid = ResourceSystem::Instance().GetGuidByName(name);
+            if (animGuid)
+            {
+                // Load the animation and add it to the animator
+                animationContainer* newAnim = ResourceRegistry::Instance().Get<animationContainer>(animGuid);
+                if (newAnim)
+                {
+                    anim.animatorInstance->addAnimation(name, newAnim);
+                }
+            }
+        }
+
+        return anim.animatorInstance->playAnimation(name, shouldLoop);
     }
     return false;
 }

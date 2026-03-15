@@ -544,6 +544,7 @@ struct ResourceSystem {
             fentry.m_Path = imported_path + "/" + typed.m_guid.to_hex() + "." + (tname == "font_atlas"?"font":tname);
             fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
             ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
+            ResourceSystem::Instance().m_NameToGuid[name] = typed.m_guid;
         }
     }
 
@@ -557,8 +558,14 @@ struct ResourceSystem {
     static void LoadConfig(YAML::Node& cfg);
     static YAML::Node GetDefaultConfig();
 
+    rp::Guid GetGuidByName(std::string const& name) const {
+        auto it = m_NameToGuid.find(name);
+        return it != m_NameToGuid.end() ? it->second : rp::null_guid;
+    }
+
     std::unordered_map<rp::Guid, FileEntry> m_FileEntries;
     std::unordered_map<std::string, MemoryMappedFile> m_MappedIO;
+    std::unordered_map<std::string, rp::Guid> m_NameToGuid;
 
 private:
     std::string m_ResourceRootDirectory;
