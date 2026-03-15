@@ -23,14 +23,31 @@ Technology is prohibited.
 #include <string>
 #include <future>
 
+enum class BuildWindowMode : std::uint8_t {
+	windowed,
+	fullscreen
+};
+
+enum class ResourceCleanUpMode : std::uint8_t {
+	none,
+	minimal //, //removes hard dependencies
+	//all_unused //removes everything unused very slow and dangerous
+};
+
+struct WindowDims {
+	unsigned int width{ 1600 };
+	unsigned int height{ 900 };
+};
+
 //simple m4 build system. this will be fleshed out in m5
 //yaml build
 struct BuildConfiguration {
 	std::string output_dir;
 	std::string output_name;
 	std::string icon_relative_path; //relative path //should warn if dne
-	bool strip_unused_assets; //not supported in m4
-	bool fullscreen;
+	ResourceCleanUpMode resource_cleanup; //limited support for soft dependencies
+	BuildWindowMode windowing_mode;
+	WindowDims window_size;
 };
 
 enum class BuildState : std::uint8_t {
@@ -48,11 +65,15 @@ struct BuildContext {
 	std::atomic_int m_progress100;
 };
 
-//stateless for now (simple impl)
+class EditorMain;
+
 struct BuildManager {
-	static std::future<void> BuildAsync(BuildConfiguration, std::shared_ptr<BuildContext>);
+	std::future<void> BuildAsync(BuildConfiguration, std::shared_ptr<BuildContext>); //remove buildcontext in the future
+	//std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResources(std::uint64_t* total_sz = nullptr, std::uint32_t* file_ct = nullptr, bool discover_soft_dependencies = false);
 	static BuildConfiguration LoadBuildConfiguration();
 	static void SaveBuildConfiguration(BuildConfiguration const&);
+
+	EditorMain* m_editor; //opaque ptr
 };
 
 #endif

@@ -25,12 +25,14 @@ public:
 	VertexBuffer(const void *data, uint32_t size);
     ~VertexBuffer();
 
-    void Bind() const;
-    void Unbind() const;
-
     void SetData(const void *data, uint32_t size) const;
 
-    uint32_t GetVAOHandle() const
+    uint32_t GetHandle() const
+    {
+        return m_VBOHandle;
+    }
+
+    uint32_t GetVAOHandle() const  // Legacy: Misnamed, use GetHandle() instead
     {
         return m_VBOHandle;
     }

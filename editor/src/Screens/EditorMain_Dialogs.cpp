@@ -1008,7 +1008,7 @@ void EditorMain::Render_ExporterSettings()
 				buildStarted.store(true);
 				BuildManager::SaveBuildConfiguration(config);
 				needs_repositioning = true;
-				fut_ptr.reset(new std::future<void> (BuildManager::BuildAsync(config, buildCtx))); //hack
+				fut_ptr.reset(new std::future<void> (m_BuildManager->BuildAsync(config, buildCtx))); //hack
 			}
 			ImGui::SetItemDefaultFocus();
 			ImGui::SameLine();

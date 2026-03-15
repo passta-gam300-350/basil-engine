@@ -369,7 +369,13 @@ void RenderSystem::Update(ecs::world& world) {
 						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
 						renderData.isSkinned = true;
 					}
-				} 
+				}
+
+				// Spritesheet flipbook mode — set from AnimationComponent flag
+				if (obj.all<AnimationComponent>())
+				{
+					renderData.isSpritesheetMode = obj.get<AnimationComponent>().isSpritesheetMode;
+				}
 
 				// Debug: Log entity UID assignment for first few entities
 				static int debugCount = 0;
@@ -1774,6 +1780,9 @@ REGISTER_RESOURCE_TYPE_ALIASE(std::shared_ptr<Material>, material,
 
 		// Apply blend mode (0 = Opaque, 1 = Transparent)
 		material->SetBlendMode(static_cast<BlendingMode>(matData.blend_mode));
+
+		// Apply cull mode (0 = Off, 1 = Back, 2 = Front)
+		material->SetCullMode(static_cast<CullMode>(matData.cull_mode));
 
 		spdlog::info("Successfully loaded material '{}' from resource pipeline ({} textures)",
 			matData.material_name, textureUnit);

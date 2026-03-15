@@ -1,0 +1,7486 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 437
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+  ambient_light:
+    - 0.0299999993
+    - 0.0299999993
+    - 0.0299999993
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.0399999991
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
+  fog:
+    type: 0
+    start: 10
+    end: 50
+    density: 0.0500000007
+    color:
+      - 0.5
+      - 0.5
+      - 0.5
+entities:
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 323
+    Relationship:
+      parent: 308
+    entity name:
+      name: n18
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.3363905
+        y: 0.492376894
+        z: 4.40997744
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:322
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:324
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 4
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 0.600000024
+      "[Dir/Spot] Direction":
+        x: -45
+        y: -45
+        z: 30
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    entity name:
+      name: light
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -11.4752359
+        y: 9.83512115
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8df79d7298b8a3e46485ceb6ae
+        type: 4838001395392124604
+      m_MaterialGuid:
+        ghost_eye_open_material:
+          guid: fd295571eb9c3f1045e834d728
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 181
+    entity name:
+      name: Ghost
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00149999931
+        y: 0.00149999978
+        z: 0.00149999931
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: -0.656336546
+        y: 0.362641215
+        z: 0.127478272
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0.699999988
+        u_RoughnessValue: 0.300000012
+        u_NormalStrength: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.264705896
+          y: 1
+          z: 0
+    Behaviour:
+      classesName:
+        - GameboyGhostBehaviour
+      scriptProperties:
+        - name: GameboyGhostBehaviour.arrivalThreshold
+          type: System.Single
+          value: 0.05
+          is_user_type: false
+        - name: GameboyGhostBehaviour.ghostRadius
+          type: System.Single
+          value: 0.6
+          is_user_type: false
+        - name: GameboyGhostBehaviour.moveSpeed
+          type: System.Single
+          value: 1
+          is_user_type: false
+        - name: GameboyGhostBehaviour.resetCooldown
+          type: System.Single
+          value: 1
+          is_user_type: false
+        - name: GameboyGhostBehaviour.startNode
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:304
+          is_user_type: true
+  - RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: true
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: true
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 53
+    Relationship:
+      parent: 0
+      child:
+        - 55
+        - 57
+        - 303
+    entity name:
+      name: PlayerGroup
+    TransformComponent:
+      m_Scale:
+        x: 0.200000033
+        y: 0.800000012
+        z: 0.200000033
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.0224608183
+        y: 0.415434897
+        z: 3.33102655
+    Behaviour:
+      classesName:
+        - GameboyPlayerController
+      scriptProperties:
+        - name: GameboyPlayerController.baseMoveSpeed
+          type: System.Single
+          value: 1.5
+          is_user_type: false
+        - name: GameboyPlayerController.disabled
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameboyPlayerController.footstepInterval
+          type: System.Single
+          value: 0.5
+          is_user_type: false
+        - name: GameboyPlayerController.mouseSensitivity
+          type: System.Single
+          value: 0.075
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 218ecc1f72f797b8d1dc924e95c3
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trashbag1:
+          guid: 2190515c7012a9df65766726f5a7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 61
+    Relationship:
+      parent: 58
+    entity name:
+      name: ThrashCollect
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.00200000009
+        y: 0.00200000009
+        z: 0.00200000009
+      m_Rotate:
+        x: -15
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: -0.230000004
+        z: 0.300000012
+    Behaviour:
+      classesName:
+        - TrashBag
+      scriptProperties:
+        - name: TrashBag.bagDipAmount
+          type: System.Single
+          value: -0.02
+          is_user_type: false
+        - name: TrashBag.bagDipDuration
+          type: System.Single
+          value: 0.4
+          is_user_type: false
+        - name: TrashBag.bagIsFull
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: TrashBag.maxTrashInHand
+          type: System.Int32
+          value: 5
+          is_user_type: false
+        - name: TrashBag.trashInHand
+          type: System.Int32
+          value: 0
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 310
+    Relationship:
+      parent: 308
+    entity name:
+      name: n5
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.56543303
+        y: 0.492376894
+        z: 0.19726561
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:311
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:371
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:305
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 168c932974029c85cde7456268ac
+        type: 4838001395392124604
+      m_MaterialGuid:
+        GameboyCover_Front_V2_material:
+          guid: 1696e6237e86b759e0d6b23f0515
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 296
+    Relationship:
+      parent: 58
+    entity name:
+      name: gameboy_front
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00599984825
+        y: 0.00600000424
+        z: 0.00599992787
+      m_Rotate:
+        x: 174.099976
+        y: -5.0081585e-06
+        z: -179.999893
+      m_Trans:
+        x: -0.000122070312
+        y: -0.0687164068
+        z: 0.103699386
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 55
+    Relationship:
+      parent: 53
+    entity name:
+      name: Body
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0.00570702553
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 57
+    Relationship:
+      parent: 53
+    entity name:
+      name: Camera
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.200000018
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 7.15255737e-07
+        y: 0.247999996
+        z: -4.76837158e-07
+    Behaviour:
+      classesName:
+        - GameboyCameraPlacementController
+      scriptProperties:
+        - name: GameboyCameraPlacementController.mouseSensitivity
+          type: System.Single
+          value: 0.075
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 306
+    Relationship:
+      parent: 308
+    entity name:
+      name: n3
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.53452003
+        y: 0.492376894
+        z: -0.941700399
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:309
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:313
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:359
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 321
+    Relationship:
+      parent: 308
+    entity name:
+      name: n16
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.559823811
+        y: 0.492376894
+        z: 5.36945677
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:322
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:332
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:320
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2.4000001
+        y: 1
+        z: 0.449999988
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 385
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider10
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 2.4000001
+        y: 1
+        z: 0.449999988
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: -2.12548709
+        y: 0.400000006
+        z: -1.4448024
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 58
+    Relationship:
+      parent: 0
+      child:
+        - 61
+        - 296
+        - 298
+        - 300
+    entity name:
+      name: GlobalCamera
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.999999821
+        y: 1
+        z: 0.999999821
+      m_Rotate:
+        x: 0
+        y: -89.9999771
+        z: 0
+      m_Trans:
+        x: 0.676518559
+        y: 0.707333803
+        z: 1.19901073
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.58169019
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 3.57627869e-07
+        y: 0
+        z: 1
+      m_Front:
+        x: -1
+        y: 0
+        z: 3.57627869e-07
+      m_Yaw: 0
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 138
+    entity name:
+      name: footstep_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87d9f77cba090c4d50000925b
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 316
+    Relationship:
+      parent: 308
+    entity name:
+      name: n11
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.517203927
+        y: 0.492376894
+        z: 2.22921062
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:317
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:312
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 59
+    entity name:
+      name: CameraManager
+    Behaviour:
+      classesName:
+        - CameraManager
+      scriptProperties:
+        - name: CameraManager.activeGameObject
+          type: System.Int32
+          value: 0
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 332
+    Relationship:
+      parent: 308
+    entity name:
+      name: n26
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.586026907
+        y: 0.492376894
+        z: 5.36945677
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:321
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:333
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:340
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 139
+    entity name:
+      name: footstep_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87daf7882b91bd917cc59ff20
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 268
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Menu_Restart
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707b07ef787b38c2b5a5f9588
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 140
+    entity name:
+      name: footstep_3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dbb7de9aac1ef1f1102f778
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 326
+    Relationship:
+      parent: 308
+    entity name:
+      name: n21
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.68610096
+        y: 0.492376894
+        z: 3.3769846
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:325
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:318
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:327
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 141
+    entity name:
+      name: footstep_4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dc675f5beb502e8823e8a41
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 142
+    entity name:
+      name: footstep_5
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dcf78cea2f96732a3732cf7
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 320
+    Relationship:
+      parent: 308
+    entity name:
+      name: n15
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.559823811
+        y: 0.492376894
+        z: 4.40427303
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:321
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:319
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 143
+    entity name:
+      name: footstep_6
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dd9731eb51cc72a38ccca74
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 144
+    entity name:
+      name: footstep_7
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87de27659b4ccc0494f5f9313
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 330
+    Relationship:
+      parent: 308
+    entity name:
+      name: n25
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.72559547
+        y: 0.492376894
+        z: 3.33168197
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:324
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:329
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 145
+    entity name:
+      name: footstep_8
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dec7b9580e58322f0c923e7
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 146
+    entity name:
+      name: footstep_9
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87df67f919e1d9beefb0dcb95
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.349999994
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 276
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Quit_Yes
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707a479dbb0ece368f0d188d5
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 334
+    Relationship:
+      parent: 308
+    entity name:
+      name: n28
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.30406094
+        y: 0.492376894
+        z: 4.35400009
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:333
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:335
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 270
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Menu_MainMenu
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 1297078f72af81dcea768e761d68
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 215
+    entity name:
+      name: BGM
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 2298fd799ea0753fe7e8689247
+        type: 17099568057112876377
+      group: "\x01"
+      volume: 1
+      isLooping: true
+      is3D: false
+      isStreaming: false
+      playOnAwake: true
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 328
+    Relationship:
+      parent: 308
+    entity name:
+      name: n23
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.33947849
+        y: 0.492376894
+        z: 2.24368858
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:329
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:327
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 327
+    Relationship:
+      parent: 308
+    entity name:
+      name: n22
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.68610096
+        y: 0.492376894
+        z: 2.24368858
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:326
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:312
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 263
+    Relationship:
+      parent: 0
+      child:
+        - 265
+        - 268
+        - 270
+        - 272
+        - 274
+        - 276
+        - 278
+    entity name:
+      name: PauseMenuGUI
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PauseMenuManager
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 329
+    Relationship:
+      parent: 308
+    entity name:
+      name: n24
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.33947849
+        y: 0.492376894
+        z: 3.33168197
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:330
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:328
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 265
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Menu_Resume
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707cd714ea914c669891eebfb
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 336
+    Relationship:
+      parent: 308
+    entity name:
+      name: n30
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.6634059
+        y: 0.492376894
+        z: 4.35364389
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:335
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:337
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 272
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Restart_Yes
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707c47e938f8548dca4026ff7
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 274
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Restart_No
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707ba7ca19a09063b1bb3d1a7
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 278
+    Relationship:
+      parent: 263
+    entity name:
+      name: PauseMenu_Quit_No
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707997c5aa017e2f2c70899ab
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 167fd2587252801788a72ef3cb3e
+        type: 4838001395392124604
+      m_MaterialGuid:
+        initialShadingGroup_material:
+          guid: 16800d027cc3b626afe8d2072ce8
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 293
+    entity name:
+      name: levelmap
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00999999978
+        y: 0.0109999999
+        z: 0.00999999978
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.000330686569
+        y: 0.433859944
+        z: 0.0644881949
+    MaterialOverridesComponent:
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0
+          y: 0.0965975523
+          z: 0.656862736
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x02"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 294
+    entity name:
+      name: floor
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 6.46600008
+        y: 7.06599998
+        z: 7.36600018
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.178696364
+        y: -0.0126237869
+        z: 0.244446874
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.899999976
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0
+          y: 0
+          z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 168c9320753885ff83d85aaea36d
+        type: 4838001395392124604
+      m_MaterialGuid:
+        GameboyCover_Back_V2_material:
+          guid: 16a0cd1a76a99ddbdac59ce7147f
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 298
+    Relationship:
+      parent: 58
+    entity name:
+      name: gameboy_back
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00599972066
+        y: 0.00600000424
+        z: 0.00599992787
+      m_Rotate:
+        x: 174.099976
+        y: 8.86355822e-10
+        z: 179.999893
+      m_Trans:
+        x: -0.000139355659
+        y: -0.0691945553
+        z: 0.109411776
+  - Scene ID:
+      Scene ID: 300
+    Relationship:
+      parent: 58
+    entity name:
+      name: gameboy_display
+    WorldUIComponent:
+      textureGuid:
+        guid: 00
+        type: 126269861530532084
+      size:
+        x: 1
+        y: 1
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: true
+    TransformComponent:
+      m_Scale:
+        x: 0.0319974944
+        y: 0.0299999993
+        z: 0.100000001
+      m_Rotate:
+        x: -174.199997
+        y: 3.62611607e-10
+        z: 0
+      m_Trans:
+        x: -5.4359436e-05
+        y: -0.00468540192
+        z: 0.108159482
+  - Scene ID:
+      Scene ID: 301
+    entity name:
+      name: topdown_camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.999999821
+        z: 0.999999821
+      m_Rotate:
+        x: -90.0000229
+        y: -5.00895339e-06
+        z: -179.999893
+      m_Trans:
+        x: -0.100000001
+        y: 86.677002
+        z: 0.453999996
+    CameraComponent:
+      m_Type: "\x00"
+      m_IsActive: false
+      m_Fov: 8
+      m_AspectRatio: 1
+      m_Near: 0.100000001
+      m_Far: 100
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: -90
+      m_Pitch: 0
+    RenderTextureCameraComponent:
+      width: 723
+      height: 723
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x02"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 303
+    Relationship:
+      parent: 53
+    entity name:
+      name: gameboy_player
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.699999988
+        y: 0.699999988
+        z: 0.699999988
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.182492733
+        y: 0.60541302
+        z: 0
+    MaterialOverridesComponent:
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 1
+          y: 0.941176474
+          z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 304
+    Relationship:
+      parent: 308
+    entity name:
+      name: n1
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.0446791947
+        y: 0.492376894
+        z: 0.0798766017
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:309
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 305
+    Relationship:
+      parent: 308
+    entity name:
+      name: n4
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.56543303
+        y: 0.492376894
+        z: -0.941700399
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:310
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:309
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 308
+    Relationship:
+      parent: 0
+      child:
+        - 304
+        - 305
+        - 306
+        - 309
+        - 310
+        - 311
+        - 312
+        - 313
+        - 314
+        - 315
+        - 316
+        - 317
+        - 318
+        - 319
+        - 320
+        - 321
+        - 323
+        - 322
+        - 324
+        - 325
+        - 326
+        - 327
+        - 328
+        - 329
+        - 330
+        - 332
+        - 333
+        - 334
+        - 335
+        - 336
+        - 337
+        - 338
+        - 339
+        - 340
+        - 341
+        - 342
+        - 343
+        - 344
+        - 345
+        - 346
+        - 347
+        - 348
+        - 349
+        - 350
+        - 351
+        - 352
+        - 353
+        - 354
+        - 355
+        - 356
+        - 357
+        - 358
+        - 359
+        - 360
+        - 361
+        - 362
+        - 363
+        - 364
+        - 365
+        - 366
+        - 367
+        - 368
+        - 369
+        - 370
+        - 371
+    entity name:
+      name: nodes
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 309
+    Relationship:
+      parent: 308
+    entity name:
+      name: n2
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.544770718
+        y: 0.492376894
+        z: -0.941700399
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:304
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:305
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:306
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:360
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 311
+    Relationship:
+      parent: 308
+    entity name:
+      name: n6
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.56543303
+        y: 0.492376894
+        z: 1.25273979
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:312
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:315
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:310
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 312
+    Relationship:
+      parent: 308
+    entity name:
+      name: n7
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.56543303
+        y: 0.492376894
+        z: 2.22921062
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:327
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:316
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:311
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 313
+    Relationship:
+      parent: 308
+    entity name:
+      name: n8
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.55388904
+        y: 0.492376894
+        z: -0.941700399
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:314
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:306
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 314
+    Relationship:
+      parent: 308
+    entity name:
+      name: n9
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.55388904
+        y: 0.492376894
+        z: 0.126780838
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:315
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:348
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:313
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 315
+    Relationship:
+      parent: 308
+    entity name:
+      name: n10
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.55388904
+        y: 0.492376894
+        z: 1.2529968
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:343
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:311
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:314
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 317
+    Relationship:
+      parent: 308
+    entity name:
+      name: n12
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.517203927
+        y: 0.492376894
+        z: 3.37332916
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:318
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:341
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:316
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 318
+    Relationship:
+      parent: 308
+    entity name:
+      name: n13
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.57208455
+        y: 0.492376894
+        z: 3.37332916
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:319
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:326
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:317
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 319
+    Relationship:
+      parent: 308
+    entity name:
+      name: n14
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.57208455
+        y: 0.492376894
+        z: 4.36992979
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:320
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:318
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 322
+    Relationship:
+      parent: 308
+    entity name:
+      name: n17
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.3363905
+        y: 0.492376894
+        z: 5.36945677
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:321
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:323
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 324
+    Relationship:
+      parent: 308
+    entity name:
+      name: n19
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.72153115
+        y: 0.492376894
+        z: 4.40997744
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:323
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:325
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:330
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 325
+    Relationship:
+      parent: 308
+    entity name:
+      name: n20
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.68610096
+        y: 0.492376894
+        z: 4.40997744
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:324
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:326
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 333
+    Relationship:
+      parent: 308
+    entity name:
+      name: n27
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.30406094
+        y: 0.492376894
+        z: 5.36945677
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:332
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:334
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 335
+    Relationship:
+      parent: 308
+    entity name:
+      name: n29
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.74064326
+        y: 0.492376894
+        z: 4.35400009
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:336
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:334
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:347
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 337
+    Relationship:
+      parent: 308
+    entity name:
+      name: n31
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.6634059
+        y: 0.492376894
+        z: 3.3688693
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:336
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:338
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:344
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 338
+    Relationship:
+      parent: 308
+    entity name:
+      name: n32
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.56915092
+        y: 0.492376894
+        z: 3.3688693
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:339
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:341
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:337
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 339
+    Relationship:
+      parent: 308
+    entity name:
+      name: n33
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.56915092
+        y: 0.492376894
+        z: 4.36608553
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:340
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:338
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 340
+    Relationship:
+      parent: 308
+    entity name:
+      name: n34
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.585769415
+        y: 0.492376894
+        z: 4.36608553
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:332
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:339
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 341
+    Relationship:
+      parent: 308
+    entity name:
+      name: n35
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.570619285
+        y: 0.492376894
+        z: 3.3688693
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:317
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:338
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:342
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 342
+    Relationship:
+      parent: 308
+    entity name:
+      name: n36
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.570619285
+        y: 0.492376894
+        z: 2.24791384
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:341
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:343
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 343
+    Relationship:
+      parent: 308
+    entity name:
+      name: n37
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.5302968
+        y: 0.492376894
+        z: 2.24791384
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:342
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:344
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:315
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 344
+    Relationship:
+      parent: 308
+    entity name:
+      name: n38
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.6933074
+        y: 0.492376894
+        z: 2.24791384
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:337
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:343
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:345
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:348
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 345
+    Relationship:
+      parent: 308
+    entity name:
+      name: n39
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.29526329
+        y: 0.492376894
+        z: 2.24791384
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:346
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:344
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 346
+    Relationship:
+      parent: 308
+    entity name:
+      name: n40
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.29526329
+        y: 0.492376894
+        z: 3.35500002
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:347
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:345
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 347
+    Relationship:
+      parent: 308
+    entity name:
+      name: n41
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.75463057
+        y: 0.492376894
+        z: 3.35474753
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:335
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:346
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 348
+    Relationship:
+      parent: 308
+    entity name:
+      name: n42
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.6933074
+        y: 0.492376894
+        z: 0.127000004
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:344
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:314
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:349
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 349
+    Relationship:
+      parent: 308
+    entity name:
+      name: n43
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.6933074
+        y: 0.492376894
+        z: -1.995
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:350
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:354
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 350
+    Relationship:
+      parent: 308
+    entity name:
+      name: n44
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.37701654
+        y: 0.492376894
+        z: -1.99495578
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:349
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:351
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 351
+    Relationship:
+      parent: 308
+    entity name:
+      name: n45
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.37701654
+        y: 0.492376894
+        z: -3.1669538
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:350
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:354
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:352
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 352
+    Relationship:
+      parent: 308
+    entity name:
+      name: n46
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.37701654
+        y: 0.492376894
+        z: -4.407372
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:351
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:353
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 353
+    Relationship:
+      parent: 308
+    entity name:
+      name: n47
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.69300008
+        y: 0.492376894
+        z: -4.407372
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:354
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:355
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:352
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 354
+    Relationship:
+      parent: 308
+    entity name:
+      name: n48
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.69287324
+        y: 0.492376894
+        z: -3.1669538
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:349
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:357
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:351
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:353
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 355
+    Relationship:
+      parent: 308
+    entity name:
+      name: n49
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.58474946
+        y: 0.492376894
+        z: -4.407372
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:356
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:353
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 356
+    Relationship:
+      parent: 308
+    entity name:
+      name: n50
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.58474946
+        y: 0.492376894
+        z: -3.16700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:363
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:357
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:355
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 357
+    Relationship:
+      parent: 308
+    entity name:
+      name: n51
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.52190542
+        y: 0.492376894
+        z: -3.16700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:356
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:354
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 358
+    Relationship:
+      parent: 308
+    entity name:
+      name: n52
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.52190542
+        y: 0.492376894
+        z: -2.01460099
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:359
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:357
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 359
+    Relationship:
+      parent: 308
+    entity name:
+      name: n53
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.582778692
+        y: 0.492376894
+        z: -2.01460099
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:306
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:358
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 360
+    Relationship:
+      parent: 308
+    entity name:
+      name: n54
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.545000017
+        y: 0.492376894
+        z: -2.01460099
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:309
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:361
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 361
+    Relationship:
+      parent: 308
+    entity name:
+      name: n55
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.56500006
+        y: 0.492376894
+        z: -2.01460099
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:360
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:362
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 362
+    Relationship:
+      parent: 308
+    entity name:
+      name: n56
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.56500006
+        y: 0.492376894
+        z: -3.16700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:361
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:370
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:363
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 363
+    Relationship:
+      parent: 308
+    entity name:
+      name: n57
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.560058773
+        y: 0.492376894
+        z: -3.16700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:362
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:356
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:364
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 364
+    Relationship:
+      parent: 308
+    entity name:
+      name: n58
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.560058773
+        y: 0.492376894
+        z: -4.40700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:363
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:365
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 365
+    Relationship:
+      parent: 308
+    entity name:
+      name: n59
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.63886046
+        y: 0.492376894
+        z: -4.40700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:370
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:366
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:364
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 366
+    Relationship:
+      parent: 308
+    entity name:
+      name: n60
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.40247726
+        y: 0.492376894
+        z: -4.40700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:367
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:365
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 367
+    Relationship:
+      parent: 308
+    entity name:
+      name: n61
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.40247726
+        y: 0.492376894
+        z: -3.16700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:368
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:370
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:366
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 368
+    Relationship:
+      parent: 308
+    entity name:
+      name: n62
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.40247726
+        y: 0.492376894
+        z: -2.02486682
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:369
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:367
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 369
+    Relationship:
+      parent: 308
+    entity name:
+      name: n63
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.63899994
+        y: 0.492376894
+        z: -2.02486682
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:371
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:368
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:370
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 370
+    Relationship:
+      parent: 308
+    entity name:
+      name: n64
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.63899994
+        y: 0.492376894
+        z: -3.16700006
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:369
+          is_user_type: true
+        - name: GameboyMazeNode.left
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:367
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:362
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:365
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 371
+    Relationship:
+      parent: 308
+    entity name:
+      name: n65
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.100000001
+        y: 0.100000001
+        z: 0.100000001
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.63899994
+        y: 0.492376894
+        z: 0.196999997
+    Behaviour:
+      classesName:
+        - GameboyMazeNode
+      scriptProperties:
+        - name: GameboyMazeNode.down
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:327
+          is_user_type: true
+        - name: GameboyMazeNode.right
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:310
+          is_user_type: true
+        - name: GameboyMazeNode.up
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:369
+          is_user_type: true
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.400000006
+        y: 1
+        z: 10.6999998
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 372
+    Relationship:
+      parent: 386
+    entity name:
+      name: left_collider
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.200000003
+        y: 1
+        z: 10.6999998
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.94374084
+        y: 0.400000006
+        z: 0.352019787
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.400000006
+        y: 1
+        z: 10.6999998
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 373
+    Relationship:
+      parent: 386
+    entity name:
+      name: right_collider
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.200000003
+        y: 1
+        z: 10.6999998
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.91612148
+        y: 0.400000006
+        z: 0.352019787
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.400000006
+        y: 1
+        z: 10.1000004
+      CenterOffset:
+        x: 0.0199999996
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 374
+    Relationship:
+      parent: 386
+    entity name:
+      name: bottom_collider
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.199999958
+        y: 1
+        z: 10.1000004
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 0.0183486901
+        y: 0.400000006
+        z: 5.83041382
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.400000006
+        y: 1
+        z: 10.1000004
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 375
+    Relationship:
+      parent: 386
+    entity name:
+      name: top_collider
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.199999958
+        y: 1
+        z: 10.1000004
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 0.01835257
+        y: 0.400000006
+        z: -4.9802475
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.04999995
+        y: 1
+        z: 0.75
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 376
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider1
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.699999988
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.57568026
+        y: 0.400000006
+        z: -3.8144486
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.35000002
+        y: 1
+        z: 0.725000024
+      CenterOffset:
+        x: 0
+        y: 0
+        z: -0.00999999978
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 377
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider2
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.35000002
+        y: 1
+        z: 0.699999988
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.57297647
+        y: 0.400000006
+        z: -3.75082588
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.04999995
+        y: 1
+        z: 0.550000012
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 378
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider3
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.04999995
+        y: 1
+        z: 0.550000012
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.5915494
+        y: 0.400000006
+        z: -2.63210225
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.35000002
+        y: 1
+        z: 0.699999988
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 379
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider4
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.35000002
+        y: 1
+        z: 0.699999988
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.57615483
+        y: 0.400000006
+        z: -3.75082588
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.04999995
+        y: 1
+        z: 0.699999988
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 380
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider5
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.699999988
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.52942944
+        y: 0.400000006
+        z: -3.8144486
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.04999995
+        y: 1
+        z: 0.550000012
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 381
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider6
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.04999995
+        y: 1
+        z: 0.550000012
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.523031
+        y: 0.400000006
+        z: -2.63210225
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.35000002
+        y: 1
+        z: 0.449999988
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 382
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider7
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.35000002
+        y: 1
+        z: 0.449999988
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 0.0156944245
+        y: 0.400000006
+        z: -4.09772205
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.379999995
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 383
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider8
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.379999995
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 0.0118151372
+        y: 0.400000006
+        z: -1.92591107
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2.4000001
+        y: 1
+        z: 0.340000004
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 384
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider9
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 2.4000001
+        y: 1
+        z: 0.340000004
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.0122831166
+        y: 0.400000006
+        z: -2.56300116
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 386
+    Relationship:
+      parent: 0
+      child:
+        - 376
+        - 377
+        - 378
+        - 379
+        - 380
+        - 381
+        - 382
+        - 383
+        - 384
+        - 385
+        - 372
+        - 373
+        - 374
+        - 375
+        - 389
+        - 390
+        - 391
+        - 392
+        - 393
+        - 394
+        - 395
+        - 396
+        - 397
+        - 398
+        - 399
+        - 400
+        - 401
+        - 402
+        - 403
+        - 404
+        - 405
+        - 406
+        - 407
+        - 408
+        - 409
+        - 410
+        - 411
+        - 412
+        - 413
+        - 414
+        - 415
+        - 416
+        - 417
+        - 418
+    entity name:
+      name: colliders
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.435000002
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 389
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider11
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.435000002
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.42436075
+        y: 0.400000006
+        z: -1.4892267
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.435000002
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 390
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider12
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.435000002
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.44826722
+        y: 0.400000006
+        z: -1.4892267
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2.4000001
+        y: 1
+        z: 0.449999988
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 391
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider13
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 2.39999986
+        y: 1
+        z: 0.449999988
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 2.13831234
+        y: 0.400000006
+        z: -1.44333017
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.64999998
+        y: 1
+        z: 1.44000006
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 392
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider14
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.64999998
+        y: 1
+        z: 1.44000006
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.87860084
+        y: 0.400000006
+        z: -0.94175756
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.64999998
+        y: 1
+        z: 1.47500002
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 393
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider15
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.64999998
+        y: 1
+        z: 1.47500002
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.83042908
+        y: 0.400000006
+        z: 1.16282225
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.64999998
+        y: 1
+        z: 1.42999995
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 394
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider16
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.64999998
+        y: 1
+        z: 1.42999995
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.83374143
+        y: 0.400000006
+        z: 1.14199293
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.64999998
+        y: 1
+        z: 1.42499995
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 395
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider17
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.64999998
+        y: 1
+        z: 1.42499995
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.83968496
+        y: 0.400000006
+        z: -0.93840754
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.34000003
+        y: 1
+        z: 0.460000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 396
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider18
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.34000003
+        y: 1
+        z: 0.460000008
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: -2.1209023
+        y: 0.400000006
+        z: 1.19821227
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.34000003
+        y: 1
+        z: 0.460000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 397
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider19
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.34000003
+        y: 1
+        z: 0.460000008
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 2.14100409
+        y: 0.400000006
+        z: 1.19968474
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.50999999
+        y: 1
+        z: 0.460000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 398
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider20
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.50999999
+        y: 1
+        z: 0.460000008
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.5651803
+        y: 0.400000006
+        z: 2.77573347
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.50999999
+        y: 1
+        z: 0.460000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 399
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider21
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.50999999
+        y: 1
+        z: 0.460000008
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 1.58034587
+        y: 0.400000006
+        z: 2.77573347
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.379999995
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 400
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider22
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.379999995
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 0.010328535
+        y: 0.400000006
+        z: 2.37575459
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2.4000001
+        y: 1
+        z: 0.340000004
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 401
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider23
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 2.4000001
+        y: 1
+        z: 0.340000004
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.0122831166
+        y: 0.400000006
+        z: 1.72825861
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.379999995
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 402
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider24
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.379999995
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 0.00959507655
+        y: 0.400000006
+        z: 4.49809074
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2.4000001
+        y: 1
+        z: 0.340000004
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 403
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider25
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 2.4000001
+        y: 1
+        z: 0.340000004
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.0122831166
+        y: 0.400000006
+        z: 3.85897756
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.899999976
+        y: 1
+        z: 0.409999996
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 404
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider26
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.899999976
+        y: 1
+        z: 0.409999967
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: -2.11783457
+        y: 0.400000006
+        z: 4.16468811
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 3.01999998
+        y: 1
+        z: 0.460000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 405
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider27
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 3.01999998
+        y: 1
+        z: 0.460000008
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -2.50833631
+        y: 0.400000006
+        z: 4.89379311
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.899999976
+        y: 1
+        z: 0.414999992
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 406
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider28
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.899999976
+        y: 1
+        z: 0.414999992
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 2.10546112
+        y: 0.400000006
+        z: 4.16614437
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 3.01999998
+        y: 1
+        z: 0.460000008
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 407
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider29
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 3.01999998
+        y: 1
+        z: 0.460000008
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.49681258
+        y: 0.400000006
+        z: 4.89379311
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.610000014
+        y: 1
+        z: 0.389999986
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 408
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider30
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.610000014
+        y: 1
+        z: 0.389999986
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -4.41505671
+        y: 0.400000006
+        z: 3.82494831
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.610000014
+        y: 1
+        z: 0.389999986
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 409
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider31
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.610000014
+        y: 1
+        z: 0.389999986
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 4.40784597
+        y: 0.400000006
+        z: 3.81924057
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.409999996
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 410
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider32
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.409999967
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: -3.18987393
+        y: 0.400000006
+        z: 3.51153255
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.02999997
+        y: 1
+        z: 0.409999996
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 411
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider33
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.02999997
+        y: 1
+        z: 0.409999967
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -3.49660468
+        y: 0.400000006
+        z: 2.78756857
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1
+        y: 1
+        z: 0.409999996
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 412
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider34
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 0.409999967
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 3.19798636
+        y: 0.400000006
+        z: 3.51374125
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.02999997
+        y: 1
+        z: 0.409999996
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 413
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider35
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.02999997
+        y: 1
+        z: 0.409999967
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 3.50897145
+        y: 0.400000006
+        z: 2.78756857
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 2
+        y: 1
+        z: 0.25
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 414
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider36
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 2
+        y: 1
+        z: 0.25
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.0122831166
+        y: 0.400000006
+        z: 0.73455745
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.45500004
+        y: 1
+        z: 0.219999999
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 415
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider37
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.45500004
+        y: 1
+        z: 0.219999999
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: 1.14643788
+        y: 0.400000006
+        z: 0.129238904
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.47000003
+        y: 1
+        z: 0.219999999
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 416
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider38
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1.47000003
+        y: 1
+        z: 0.219999999
+      m_Rotate:
+        x: 0
+        y: 89.980217
+        z: 0
+      m_Trans:
+        x: -1.1421411
+        y: 0.400000006
+        z: 0.122645155
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.550000012
+        y: 1
+        z: 0.219999999
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 417
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider39
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.550000012
+        y: 1
+        z: 0.219999999
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.765840232
+        y: 0.400000006
+        z: -0.501684666
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.550000012
+        y: 1
+        z: 0.189999998
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 418
+    Relationship:
+      parent: 386
+    entity name:
+      name: collider40
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.550000012
+        y: 1
+        z: 0.189999998
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.762407303
+        y: 0.400000006
+        z: -0.501684666
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 419
+    Relationship:
+      parent: 0
+      child:
+        - 424
+    entity name:
+      name: Collectible1
+    WorldUIComponent:
+      textureGuid:
+        guid: 1a0b956373519eb874728332f81d
+        type: 126269861530532084
+      size:
+        x: 0.5
+        y: 0.5
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: false
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 30
+      m_Trans:
+        x: -4.39487696
+        y: 0.298384279
+        z: 5.25323963
+    Behaviour:
+      classesName:
+        - GameboyCollectible
+      scriptProperties:
+        - name: GameboyCollectible.collectDistance
+          type: System.Single
+          value: 0.5
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 8df79d7298b8a3e46485ceb6ae
+        type: 4838001395392124604
+      m_MaterialGuid:
+        ghost_eye_open_material:
+          guid: fd295571eb9c3f1045e834d728
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 420
+    entity name:
+      name: Ghost2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00149999931
+        y: 0.00149999978
+        z: 0.00149999931
+      m_Rotate:
+        x: 0
+        y: 89.9999771
+        z: 0
+      m_Trans:
+        x: 0.38764742
+        y: 0.362641215
+        z: 0.1274786
+    MaterialOverridesComponent:
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 1
+          y: 0
+          z: 0
+    Behaviour:
+      classesName:
+        - GameboyGhost2Behaviour
+      scriptProperties:
+        - name: GameboyGhost2Behaviour.arrivalThreshold
+          type: System.Single
+          value: 0.05
+          is_user_type: false
+        - name: GameboyGhost2Behaviour.ghostRadius
+          type: System.Single
+          value: 0.6
+          is_user_type: false
+        - name: GameboyGhost2Behaviour.moveSpeed
+          type: System.Single
+          value: 1
+          is_user_type: false
+        - name: GameboyGhost2Behaviour.predictionDistance
+          type: System.Single
+          value: 2
+          is_user_type: false
+        - name: GameboyGhost2Behaviour.resetCooldown
+          type: System.Single
+          value: 2
+          is_user_type: false
+        - name: GameboyGhost2Behaviour.startNode
+          type: BasilEngine.GameObject
+          value: scene_guid:00;scene_id:304
+          is_user_type: true
+  - Scene ID:
+      Scene ID: 421
+    entity name:
+      name: PlayerStart
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.414999992
+        z: 3.27667475
+  - Scene ID:
+      Scene ID: 422
+    entity name:
+      name: GameboyLevel
+    Behaviour:
+      classesName:
+        - GameboyLevel
+      scriptProperties:
+        - name: GameboyLevel.speedIncrease
+          type: System.Single
+          value: 0.2
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 423
+    Relationship:
+      parent: 0
+      child:
+        - 425
+    entity name:
+      name: Collectible2
+    WorldUIComponent:
+      textureGuid:
+        guid: 1a0b955878eaa7efda6ab7af0dd7
+        type: 126269861530532084
+      size:
+        x: 0.25
+        y: 0.400000006
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.41687536
+        y: 0.469999999
+        z: -4.30999994
+    Behaviour:
+      classesName:
+        - GameboyCollectible
+      scriptProperties:
+        - name: GameboyCollectible.collectDistance
+          type: System.Single
+          value: 0.5
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 424
+    Relationship:
+      parent: 419
+    entity name:
+      name: Collectible1_display
+    WorldUIComponent:
+      textureGuid:
+        guid: 1a0b956373519eb874728332f81d
+        type: 126269861530532084
+      size:
+        x: 0.150000006
+        y: 0.200000003
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 0.999999762
+        y: 1.00013721
+        z: 0.999999821
+      m_Rotate:
+        x: 89.9999542
+        y: -8.53773599e-07
+        z: -29.9999828
+      m_Trans:
+        x: 32.663147
+        y: 50.5789871
+        z: -3.38058996
+  - Scene ID:
+      Scene ID: 425
+    Relationship:
+      parent: 423
+    entity name:
+      name: Collectible2_display
+    WorldUIComponent:
+      textureGuid:
+        guid: 1a0b955878eaa7efda6ab7af0dd7
+        type: 126269861530532084
+      size:
+        x: 0.100000001
+        y: 0.180000007
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.999999821
+        z: 0.999999821
+      m_Rotate:
+        x: -89.9999847
+        y: 0
+        z: 0
+      m_Trans:
+        x: -1.95000005
+        y: 59.5340004
+        z: 3.29999995
+  - Scene ID:
+      Scene ID: 428
+    Relationship:
+      parent: 0
+      child:
+        - 429
+    entity name:
+      name: Collectible3
+    WorldUIComponent:
+      textureGuid:
+        guid: 1a0b956a73b5befb270390dbc977
+        type: 126269861530532084
+      size:
+        x: 0.400000006
+        y: 0.400000006
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 7.3834548
+        y: 0.469999999
+        z: -1.6550262
+    Behaviour:
+      classesName:
+        - GameboyCollectible
+      scriptProperties:
+        - name: GameboyCollectible.collectDistance
+          type: System.Single
+          value: 0.5
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 429
+    Relationship:
+      parent: 428
+    entity name:
+      name: Collectible3_display
+    WorldUIComponent:
+      textureGuid:
+        guid: 1a0b956a73b5befb270390dbc977
+        type: 126269861530532084
+      size:
+        x: 0.400000006
+        y: 0.400000006
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.999999821
+        z: 1
+      m_Rotate:
+        x: -89.9999847
+        y: 0
+        z: 0
+      m_Trans:
+        x: -0.0940032452
+        y: 59.5344391
+        z: 0.330000013
+  - Scene ID:
+      Scene ID: 430
+    entity name:
+      name: SFXGameboyClick_1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 2299077e29a09afbd888981165
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.421696514
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 431
+    entity name:
+      name: SFXGameboyClick_2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 2299107528ac25e80fb4028e61
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.421696514
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 432
+    entity name:
+      name: SFXGameboyClick_3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 22991870ada52ad76f43631972
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.421696514
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 434
+    entity name:
+      name: SFXGameboyGetItem
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 22992076c0a9e44ae80851ad3b
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 1
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 436
+    entity name:
+      name: SFXGameboyPlayerHurt
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 16a39e173459cb5196ee8fa918b
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.199526235
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
