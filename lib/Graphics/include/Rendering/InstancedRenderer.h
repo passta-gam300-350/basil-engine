@@ -63,9 +63,12 @@ public:
     void Clear();
 
     // Helper to compute mesh ID from mesh + material pointers (zero allocations)
-    static inline uint64_t ComputeMeshId(const void* meshPtr, const void* materialPtr) {
-        return (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(meshPtr)) << 32)
-             | static_cast<uint64_t>(reinterpret_cast<uintptr_t>(materialPtr));
+    static inline uint64_t ComputeMeshId(const void *meshPtr, const void *materialPtr)
+    {
+        uint64_t h = reinterpret_cast<uintptr_t>(meshPtr);
+        uint64_t mat = reinterpret_cast<uintptr_t>(materialPtr);
+        h ^= mat + 0x9E3779B97F4A7C15ULL + (h << 12) + (h >> 4);
+        return h;
     }
 
     // Rendering using pass-isolated command buffers
