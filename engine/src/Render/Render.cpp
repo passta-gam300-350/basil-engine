@@ -167,6 +167,10 @@ void RenderSystem::Init() {
 	// Constructor already initialized everything, just setup debug visualization
 	SetupDebugVisualization();
 
+	if (Engine::IsGame()) {
+		m_editorCameraSnapshot.renderGameViewport = true;
+		m_editorCameraSnapshot.renderSceneViewport = false;
+	}
 	spdlog::info("RenderSystem initialized");
 	spdlog::info("RenderSystem: Call SetupComponentObservers() after world is created");
 }
@@ -365,7 +369,13 @@ void RenderSystem::Update(ecs::world& world) {
 						renderData.boneCount = static_cast<uint32_t>(skelComp.finalBoneMatrices.size());
 						renderData.isSkinned = true;
 					}
-				} 
+				}
+
+				// Spritesheet flipbook mode — set from AnimationComponent flag
+				if (obj.all<AnimationComponent>())
+				{
+					renderData.isSpritesheetMode = obj.get<AnimationComponent>().isSpritesheetMode;
+				}
 
 				// Debug: Log entity UID assignment for first few entities
 				static int debugCount = 0;
@@ -858,6 +868,11 @@ void RenderSystem::Update(ecs::world& world) {
 			frameData.viewportWidth = m_gameViewportWidth;
 			frameData.viewportHeight = m_gameViewportHeight;
 		}
+		//else if (Engine::IsGame()) {
+		//	// In game build mode, use window framebuffer size since editor viewport doesn't exist
+		//	frameData.viewportWidth = Engine::GetWindowInstance().GetWidth();
+		//	frameData.viewportHeight = Engine::GetWindowInstance().GetHeight();
+		//}
 
 		// Set game camera data (using separate variables instead of Camera struct)
 		glm::mat4 view = glm::lookAt(
@@ -953,6 +968,29 @@ void RenderSystem::Update(ecs::world& world) {
 
 		m_SceneRenderer->EnablePass("RenderTextureResolvePass", false);
 		break;  // MVP: only the first active render texture camera is rendered
+	}
+
+	// ========== GAME BUILD: Present final frame to screen ==========
+	// In game builds, we need to blit the gameResolvedBuffer to the default framebuffer (screen)
+	// In editor mode, the editor displays the buffer via ImGui::Image() instead
+	if (Engine::IsGame() && frameData.gameResolvedBuffer) {
+		auto& gameBuffer = frameData.gameResolvedBuffer;
+		const auto& spec = gameBuffer->GetSpecification();
+
+		// Bind default framebuffer (screen) as destination
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gameBuffer->GetFBOHandle());
+
+		// Blit to screen
+		glBlitFramebuffer(
+			0, 0, spec.Width, spec.Height,     // Source rectangle
+			0, 0, spec.Width, spec.Height,     // Destination rectangle (screen)
+			GL_COLOR_BUFFER_BIT,
+			GL_NEAREST
+		);
+
+		// Unbind framebuffers
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	//clear frame data AFTER rendering (so particles submitted before render are included)

@@ -70,6 +70,7 @@ Technology is prohibited.
 #include <Messaging/Messaging_System.h>
 #include "MonoResolver/MonoTypeDescriptor.hpp"
 #include "Manager/MonoImGuiRenderer.hpp"
+#include "Manager/BuildManager.hpp"
 #include <Scene/Scene.hpp>
 
 #include "Particles/ParticleComponent.h"
@@ -244,6 +245,8 @@ void EditorMain::init()
 	m_AssetManager->m_ActivityCallback = [&](std::string const& str) {m_AssetBrowserCache.needsRefresh = true; };
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	m_BuildManager = std::make_unique<BuildManager>(this);
 
 	// Register custom audio inspector with import settings
 	{

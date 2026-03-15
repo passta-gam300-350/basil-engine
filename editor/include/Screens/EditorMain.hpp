@@ -44,6 +44,7 @@ Technology is prohibited.
 #include "Messaging/Messaging_System.h"
 
 struct AudioComponent; // Forward declaration
+struct BuildManager;
 
 // Prefab override detection context (global state for rendering)
 struct PrefabOverrideContext {
@@ -236,6 +237,8 @@ private:
 	std::atomic<bool> m_ScriptHotReloadInFlight = false;
 	std::chrono::steady_clock::time_point m_LastScriptChangeTime{};
 	static constexpr std::chrono::milliseconds m_ScriptHotReloadDebounce{ 750 };
+
+	std::unique_ptr<BuildManager> m_BuildManager;
 
 	// Prefab override detection
 	PrefabOverrideContext m_PrefabContext;

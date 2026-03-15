@@ -1,0 +1,27 @@
+base:
+  m_guid: 14fdf0c75a4ab2d021b2bf59473
+  m_importer: material
+  m_source: ""
+  m_name: cheese_bs_bx_ch_bx_tape1_material
+  m_importer_type: 12248969845253211364
+material:
+  vert_name: main_pbr.vert
+  frag_name: main_pbr.frag
+  material_name: cheese_bs_bx_ch_bx_tape1
+  albedo:
+    x: 1
+    y: 1
+    z: 1
+  metallic: 1
+  roughness: 1
+  blend_mode: 0
+  cull_mode: 1
+  float_properties: ~
+  vec3_properties: ~
+  vec4_properties: ~
+  texture_properties:
+    u_RoughnessMap: 14fd94976f99864fe77619c224b
+    u_DiffuseMap: 14fd9457c6f9d4d194d395b5a0b
+    u_NormalMap: 14fd94c7a818997c6311e724787
+    u_MetallicMap: 14fd94976f99864fe77619c224b
+    u_EmissiveMap: 14fd94f77f5b21701b62a843f27

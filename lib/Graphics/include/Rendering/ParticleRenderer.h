@@ -23,6 +23,7 @@ Technology is prohibited.
 #include "../Utility/Particle.h"
 #include "../Resources/Shader.h"
 #include "../Resources/Mesh.h"
+#include "../Resources/Texture.h"
 #include "Pipeline/RenderPass.h"
 #include "Utility/FrameData.h"
 #include <memory>
@@ -43,14 +44,14 @@ public:
 private:
     void InitializeResources();
     void CreateBillboardQuad();
-    void RenderSystem(ParticleRenderData const& system, FrameData const& frameData, RenderPass& pass);
-    void UpdateSSBO(std::vector<Particle>const& particles);
+    void EnsureWhiteTexture();
     void SetBlendMode(BlendMode mode, RenderPass& pass);
 
     std::shared_ptr<VertexArray> m_QuadVAO;
     std::shared_ptr<Shader> m_ParticleShader;
-    std::unique_ptr<ShaderStorageBuffer> m_InstanceSSBO; 
+    std::unique_ptr<ShaderStorageBuffer> m_InstanceSSBO;
     std::vector<ParticleRenderData> m_SubmittedSystems; // different packaged data
+    Texture m_WhiteTexture{}; // 1x1 white fallback for untextured particles (zero-init ensures id=0)
 
     uint32_t m_MaxParticles = 10000;
     uint32_t m_TotalParticleCount = 0;

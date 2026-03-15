@@ -31,6 +31,8 @@ public:
     static bool IsAnimationFinished(uint64_t handle);
     static bool PlayAnimation(uint64_t handle, MonoString* animationName, bool shouldLoop);
     static bool HasAnimation(uint64_t handle, MonoString* animationName);
+    static void SetSpritesheetMode(uint64_t handle, bool enabled);
+    static bool GetSpritesheetMode(uint64_t handle);
 };
 
 #endif // MANAGED_ANIMATION_HPP

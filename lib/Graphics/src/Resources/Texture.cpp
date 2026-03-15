@@ -18,6 +18,7 @@ Technology is prohibited.
 #include <Resources/Texture.h>
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
+#include <cmath>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -87,46 +88,57 @@ unsigned int TextureLoader::CreateGPUTexture(const TextureData& data, bool gamma
     }
 
     unsigned int textureID = 0;
-    glGenTextures(1, &textureID);
 
-    GLenum internalFormat = GL_RGB;
+    GLenum internalFormat = GL_RGB8;
     GLenum dataFormat = GL_RGB;
     if (data.channels == 1) {
-        internalFormat = GL_RED;
+        internalFormat = GL_R8;  // DSA requires sized format
         dataFormat = GL_RED;
     } else if (data.channels == 3) {
         // Use sRGB format for gamma-encoded textures (albedo/diffuse)
-        internalFormat = gamma ? GL_SRGB8 : GL_RGB;
+        internalFormat = gamma ? GL_SRGB8 : GL_RGB8;  // DSA requires sized format
         dataFormat = GL_RGB;
     } else if (data.channels == 4) {
         // Use sRGB format for gamma-encoded textures (albedo/diffuse with alpha)
-        internalFormat = gamma ? GL_SRGB8_ALPHA8 : GL_RGBA;
+        internalFormat = gamma ? GL_SRGB8_ALPHA8 : GL_RGBA8;  // DSA requires sized format
         dataFormat = GL_RGBA;
     } else {
-        internalFormat = GL_RGB; // Default fallback
+        internalFormat = GL_RGB8; // Default fallback (DSA requires sized format)
         dataFormat = GL_RGB;
     }
-    
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(internalFormat), data.width, data.height, 0, dataFormat, GL_UNSIGNED_BYTE, data.pixels);
-    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // DSA: Create texture without binding
+    glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
+
+    // Calculate mipmap levels (1 + floor(log2(max(width, height))))
+    GLsizei levels = 1 + static_cast<GLsizei>(floor(log2(std::max(data.width, data.height))));
+
+    // DSA: Allocate immutable storage (preferred in modern GL)
+    glTextureStorage2D(textureID, levels, internalFormat, data.width, data.height);
+
+    // DSA: Upload pixel data to base level without binding
+    glTextureSubImage2D(textureID, 0, 0, 0, data.width, data.height, dataFormat, GL_UNSIGNED_BYTE, data.pixels);
+
+    // DSA: Generate mipmaps without binding
+    glGenerateTextureMipmap(textureID);
 
     // Enable anisotropic filtering for maximum texture clarity (matches ogldev)
     GLfloat maxAnisotropy = 0.0f;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+    glTextureParameterf(textureID, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
+    // DSA: Set texture parameters without binding
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     return textureID;
 }
 
 unsigned int TextureLoader::CreateGPUTextureCompressed(tinyddsloader::DDSFile& ddsimg) {
     GLenum glCompressedFormat = 0;
-    
+
     // map block compression format, bc7 not support. too bad. its too expensive anyways
     switch (ddsimg.GetFormat()) {
     case tinyddsloader::DDSFile::DXGIFormat::BC1_UNorm:  glCompressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT; break;
@@ -137,21 +149,31 @@ unsigned int TextureLoader::CreateGPUTextureCompressed(tinyddsloader::DDSFile& d
     }
 
     unsigned int textureID{};
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glCompressedTexImage2D(GL_TEXTURE_2D, 0, glCompressedFormat,
-        static_cast<GLsizei>(ddsimg.GetWidth()),
-        static_cast<GLsizei>(ddsimg.GetHeight()),
-        0,
+    // DSA: Create texture without binding
+    glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
+
+    // Calculate mipmap levels
+    GLsizei width = static_cast<GLsizei>(ddsimg.GetWidth());
+    GLsizei height = static_cast<GLsizei>(ddsimg.GetHeight());
+    GLsizei levels = 1 + static_cast<GLsizei>(floor(log2(std::max(width, height))));
+
+    // DSA: Allocate compressed immutable storage
+    glTextureStorage2D(textureID, levels, glCompressedFormat, width, height);
+
+    // DSA: Upload compressed pixel data without binding
+    glCompressedTextureSubImage2D(textureID, 0, 0, 0, width, height, glCompressedFormat,
         static_cast<GLsizei>(ddsimg.GetImageData(0,0)->m_memSlicePitch),
         ddsimg.GetImageData(0,0)->m_mem);
-    glGenerateMipmap(GL_TEXTURE_2D);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // DSA: Generate mipmaps without binding
+    glGenerateTextureMipmap(textureID);
+
+    // DSA: Set texture parameters without binding
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     return textureID;
 }
@@ -211,68 +233,84 @@ unsigned int TextureLoader::CreateGPUCubemap(const CubemapTextureData &data, boo
         return 0;
     }
 
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    // Validate all faces first
+    for (int i = 0; i < 6; ++i)
+    {
+        if (!data.faces[i].isValid || !data.faces[i].pixels)
+        {
+            spdlog::error("Invalid face data for cubemap face {}", i);
+            return 0;
+        }
+    }
 
-    //Load all 6 faces
+    // Determine format from first face (assume all faces have same format)
+    const auto &face0 = data.faces[0];
+    GLenum internalFormat, dataFormat;
+    if (face0.channels == 1)
+    {
+        internalFormat = GL_R8;  // DSA requires sized format
+        dataFormat = GL_RED;
+    }
+    else if (face0.channels == 3)
+    {
+        internalFormat = GL_RGB8;  // DSA requires sized format
+        dataFormat = GL_RGB;
+    }
+    else if (face0.channels == 4)
+    {
+        internalFormat = GL_RGBA8;  // DSA requires sized format
+        dataFormat = GL_RGBA;
+    }
+    else
+    {
+        internalFormat = GL_RGB8;  // DSA requires sized format (default fallback)
+        dataFormat = GL_RGB;
+    }
+
+    unsigned int textureID;
+
+    // DSA: Create cubemap texture without binding
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &textureID);
+
+    // Calculate mipmap levels if needed
+    GLsizei levels = 1;
+    if (generateMipmaps)
+    {
+        levels = 1 + static_cast<GLsizei>(floor(log2(std::max(face0.width, face0.height))));
+    }
+
+    // DSA: Allocate immutable storage for all 6 faces
+    glTextureStorage2D(textureID, levels, internalFormat, face0.width, face0.height);
+
+    // Load all 6 faces using DSA
     for (int i = 0; i < 6; ++i)
     {
         const auto &face = data.faces[i];
 
-        if (!face.isValid || !face.pixels)
-        {
-            spdlog::error("Invalid face data for cubemap face {}", i);
-            glDeleteTextures(1, &textureID);
-            return 0;
-        }
-
-        GLenum internalFormat, dataFormat;
-        if (face.channels == 1)
-        {
-            internalFormat = GL_RED;
-            dataFormat = GL_RED;
-        }
-        else if (face.channels == 3)
-        {
-            internalFormat = GL_RGB;
-            dataFormat = GL_RGB;
-        }
-        else if (face.channels == 4)
-        {
-            internalFormat = GL_RGBA;
-            dataFormat = GL_RGBA;
-        }
-        else
-        {
-            internalFormat = GL_RGB;
-            dataFormat = GL_RGB;
-        }
-
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat,
-            face.width, face.height, 0, dataFormat, GL_UNSIGNED_BYTE, face.pixels);
-
+        // DSA: Upload face data as a layer in the cubemap (faces are layers 0-5)
+        glTextureSubImage3D(textureID, 0, 0, 0, i, face.width, face.height, 1,
+            dataFormat, GL_UNSIGNED_BYTE, face.pixels);
     }
 
-    // Set cubemap parameters
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // DSA: Set cubemap parameters without binding
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     if (generateMipmaps)
     {
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        // DSA: Generate mipmaps without binding
+        glGenerateTextureMipmap(textureID);
+        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
         // Enable anisotropic filtering for cubemaps with mipmaps
         GLfloat maxAnisotropy = 0.0f;
         glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
-        glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+        glTextureParameterf(textureID, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
     }
 
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     return textureID;
 }
 

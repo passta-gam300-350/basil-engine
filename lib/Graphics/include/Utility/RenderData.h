@@ -43,6 +43,7 @@ struct RenderableData {
     const glm::mat4* boneMatrices = nullptr;  // Pointer to bone matrices (null if not skinned)
     uint32_t boneCount = 0;                    // Number of bones
     bool isSkinned = false;                    // Flag for skinned mesh
+    bool isSpritesheetMode = false;            // Enable Y-displacement bone visibility hack for spritesheet flipbook
 };
 
 struct SubmittedLightData {
