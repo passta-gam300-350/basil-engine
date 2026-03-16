@@ -99,7 +99,7 @@ void BehaviourSystem::Reload()
 
 	for (auto entity : entities) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
-		for (int i =0; i < component.scriptIDs.size(); i++) {
+		for (int i = 0; i < component.scriptIDs.size(); i++) {
 			rp::Guid scriptID = component.scriptIDs[i];
 			std::string klassName = component.classesName[i];
 			ApplyScriptProperties(component, klassName, scriptID);
@@ -107,10 +107,40 @@ void BehaviourSystem::Reload()
 		}
 	}
 
-	
+
 
 	firstRun = true;
 	spdlog::info("BehaviourSystem: Managed behaviour reload complete");
+}
+
+void BehaviourSystem::InitScripts(ecs::world& world)
+{
+	if (!firstRun) return;
+	auto entities = world.filter_entities<behaviour>();
+	for (auto entity : entities) {
+		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		for (auto scriptID : component.scriptIDs) {
+			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
+			if (instance) {
+				MonoObject* exception = nullptr;
+				spdlog::info("First run is invoked for ScriptId: {}", scriptID.to_hex_prefix());
+				instance->Invoke("Init", nullptr, &exception, 0);
+				if (exception) {
+					MonoString* excStr = mono_object_to_string(exception, nullptr);
+					ManagedConsole::LogError(excStr);
+
+					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
+					auto instance2 = MonoEntityManager::GetInstance().GetInstance(scriptID);
+					if (it != component.scriptIDs.end()) {
+						instance2->Reset();
+						component.scriptIDs.erase(it);
+					}
+				}
+			}
+		}
+	}
+
+	firstRun = false;
 }
 
 void BehaviourSystem::Update(ecs::world& world, float)
@@ -128,12 +158,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
 				MonoObject* exception = nullptr;
-				if (firstRun)
-				{
-					instance->Invoke("Init", nullptr, &exception, 0);
-					spdlog::info("First run is executed for script {}", scriptID.to_hex());
-				}
-				else instance->Invoke("Update", nullptr, &exception, 0);
+				instance->Invoke("Update", nullptr, &exception, 0);
 
 
 				if (exception) {
@@ -295,7 +320,7 @@ namespace
 		std::string_view fieldName,
 		std::string_view typeName,
 		std::string_view value,
-		bool is_user=false)
+		bool is_user = false)
 	{
 		if (!scriptObject || !klass)
 		{
@@ -520,7 +545,7 @@ void BehaviourSystem::AddScriptToEntityComponent(ecs::entity& entity, ecs::world
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		component.scriptIDs.push_back(scriptID);
 		std::string managedName = (klass_ns && *klass_ns) ? (std::string(klass_ns) + "." + klassname) : std::string(klassname);
-		
+
 	}
 
 }

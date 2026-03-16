@@ -22,6 +22,11 @@ namespace BasilEngine
         [StaticAccessor("ManagedTime", StaticAccessorType.DoubleColon)]
         private extern static float GetDeltaTimeInternal();
 
+        [NativeMethod("GetFixedDeltaTime")]
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [StaticAccessor("ManagedTime", StaticAccessorType.DoubleColon)]
+        private extern static float GetFixedDeltaTimeInternal();
+
 
 
         /// <summary>
@@ -30,6 +35,10 @@ namespace BasilEngine
         public static float deltaTime
         {
             get { return GetDeltaTimeInternal(); }
+        }
+        
+        public static float fixedDeltaTime {
+             get { return GetFixedDeltaTimeInternal(); }
         }
 
     }

@@ -23,7 +23,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 	std::string working_dir = Editor::GetInstance().GetConfig().project_workingDir;
 	std::string asset_dir = working_dir + "assets";
 
-	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "assets"/ "scripts";
+	std::filesystem::path scripts_dir = std::filesystem::path{ working_dir } / "assets" / "scripts";
 	if (std::filesystem::exists(scripts_dir)) {
 		MonoEntityManager::GetInstance().AddSearchDirectory(scripts_dir.string().c_str());
 		MonoEntityManager::GetInstance().SetProjectOutputDirectory(scripts_dir.string().c_str());
@@ -35,14 +35,14 @@ void EngineContainerService::EngineContainer::engine_service() {
 	}
 
 
-	
+
 	Engine::Instance().setWorkingDir(working_dir.c_str());
-	
+
 
 
 
 	//Mono Configuration here
-	
+
 
 
 	//messagingSystem.Subscribe(MessageID::ENGINE_CORE_UPDATE_COMPLETE, nullptr, std::bind(&EngineContainer::engine_snapshot_callback,std::ref(*this)));
@@ -56,22 +56,49 @@ void EngineContainerService::EngineContainer::engine_service() {
 
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
-			while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
-				// Begin profiling frame at the start of the entire iteration
-				Engine::BeginFrame();
+		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
+			// Begin profiling frame at the start of the entire iteration
+			Engine::BeginFrame();
 
-				{
+			{
 				{
 					PF_SCOPE("EngineWork");
-						{
-							PF_SYSTEM("Snapshot callback");
-							engine_snapshot_callback();
-						}
-						Engine::TickFrameClock();
-						Engine::CoreUpdate();
-						Engine::UpdateDebug();
+					{
+						PF_SYSTEM("Snapshot callback");
+						engine_snapshot_callback();
 					}
+					Engine::TickFrameClock();
+
+					Engine& inst = Engine::Instance();
+
+
+
+
+
+
+
+
+
+
+
+					Engine::CorePreUpdate();
+
+					double& accum = inst.GetAccumulator();
+					accum += Engine::GetDeltaTime();
+
+					if (accum >= Engine::GetFixedDeltaTime())
+					{
+						
+						Engine::CoreFixedUpdate();
+					}
+
+
+					Engine::CoreUpdate();
+					Engine::UpdateDebug();
+
+					Engine::CoreLateUpdate();
 				}
+			}
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
 			// This prevents screen tearing when editor reads the framebuffer texture
@@ -81,7 +108,7 @@ void EngineContainerService::EngineContainer::engine_service() {
 				PF_SYSTEM("EntityPicking");
 				if (m_hasPickingQuery)
 				{
-					auto *sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
+					auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 					if (sceneRenderer)
 					{
 						// Create picking query
@@ -223,7 +250,8 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 
 		try {
 			command();  // Execute lambda on engine thread
-		} catch (const std::exception& e) {
+		}
+		catch (const std::exception& e) {
 			spdlog::error("EngineService: Command execution failed: {}", e.what());
 		}
 	}
@@ -339,16 +367,20 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 									audioComp->RefreshSoundInfo();
 									//spdlog::info("AudioComponent: Loaded sound handle {} from GUID, isInitialized={}",
 									//             audioComp->soundHandle, audioComp->isInitialized);
-								} else {
+								}
+								else {
 									//spdlog::info("AudioComponent: Sound already correctly loaded (handle: {})", audioComp->soundHandle);
 								}
-							} else {
+							}
+							else {
 								//spdlog::warn("AudioComponent: Failed to load sound from GUID (invalid handle)");
 							}
-						} else {
+						}
+						else {
 							//spdlog::warn("AudioComponent: Failed to get resource pool for audio GUID");
 						}
-					} else {
+					}
+					else {
 						//spdlog::info("AudioComponent: Skipping load - GUID is null");
 
 						// If GUID is null but we have a loaded sound, unload it
@@ -451,9 +483,9 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 					}
 				}
 			}
-			if (type_id == entt::type_hash<BoxCollider>::value() || 
-				type_id == entt::type_hash<SphereCollider>::value() || 
-				type_id == entt::type_hash<CapsuleCollider>::value() || 
+			if (type_id == entt::type_hash<BoxCollider>::value() ||
+				type_id == entt::type_hash<SphereCollider>::value() ||
+				type_id == entt::type_hash<CapsuleCollider>::value() ||
 				type_id == entt::type_hash<MeshCollider>::value())
 				Engine::FitEntityColliderToMesh(entity);
 		}
@@ -468,7 +500,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 		ecs::entity entity{ ehdl };
 		entity.destroy();
 	}
-	
+
 }
 
 void EngineContainerService::reset() {
@@ -551,7 +583,7 @@ void EngineContainerService::create_child_entity(entity_handle parent)
 			scene_res.value().get().AddEntityToScene(child);
 		}
 		SceneGraph::AddChild(parentent, child);
-		});
+	});
 }
 
 void EngineContainerService::orphan_children_entities(entity_handle parent)
@@ -562,7 +594,7 @@ void EngineContainerService::orphan_children_entities(entity_handle parent)
 		for (auto child : children) {
 			SceneGraph::RemoveParent(child, true);
 		}
-		});
+	});
 }
 
 void EngineContainerService::create_parent_entity(entity_handle child)
@@ -572,7 +604,7 @@ void EngineContainerService::create_parent_entity(entity_handle child)
 		ecs::entity parent = ecs::world(childent.get_world_handle()).add_entity();
 		SceneGraph::SetParent(childent, parent, true);
 		parent.add<TransformComponent>();
-		});
+	});
 }
 
 void EngineContainerService::create_parent_entity(std::unordered_set<std::uint32_t> const& children)
@@ -586,7 +618,7 @@ void EngineContainerService::create_parent_entity(std::unordered_set<std::uint32
 			SceneGraph::SetParent(childent, parent, true);
 		}
 		parent.add<TransformComponent>();
-		});
+	});
 }
 
 void EngineContainerService::clear_parent_entity(entity_handle child)
@@ -594,7 +626,7 @@ void EngineContainerService::clear_parent_entity(entity_handle child)
 	ecs::entity childent = ecs::entity(child);
 	ExecuteOnEngineThread([childent]() {
 		SceneGraph::RemoveParent(childent, true);
-		});
+	});
 }
 
 void EngineContainerService::make_parent_entity(entity_handle parent, entity_handle child)
@@ -603,7 +635,7 @@ void EngineContainerService::make_parent_entity(entity_handle parent, entity_han
 	ecs::entity childent = ecs::entity(child);
 	ExecuteOnEngineThread([parentent, childent]() {
 		SceneGraph::SetParent(childent, parentent, true);
-		});
+	});
 }
 
 void EngineContainerService::delete_entity(entity_handle ehdl) {
@@ -644,7 +676,7 @@ void EngineContainerService::delete_component(entity_handle ehdl, std::uint32_t 
 }
 
 std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainerService::get_reflectible_component_id_name_list() {
-	static std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> s_id_type_name_list{ [] () {
+	static std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> s_id_type_name_list{ []() {
 		std::vector<std::pair<ReflectionRegistry::TypeID, std::string>> temp{};
 		auto& reg {Engine::GetWorld().impl.get_registry()};
 		auto& type_reg{ ReflectionRegistry::types() };
@@ -670,7 +702,7 @@ std::vector<std::pair<ReflectionRegistry::TypeID, std::string>>& EngineContainer
 		}
 
 		return temp;
-	}()};
+	}() };
 	return s_id_type_name_list;
 }
 
@@ -751,7 +783,7 @@ void EngineContainerService::SelectEntityByObjectID(uint32_t objectID) {
 }
 
 void EngineContainerService::PerformEntityPicking(float mouseX, float mouseY, float viewportWidth, float viewportHeight,
-                                                    std::function<void(bool hasHit, uint32_t objectID)> resultCallback) {
+	std::function<void(bool hasHit, uint32_t objectID)> resultCallback) {
 	ExecuteOnEngineThread([mouseX, mouseY, viewportWidth, viewportHeight, resultCallback, this]() {
 		auto* sceneRenderer = Engine::GetRenderSystem().m_SceneRenderer.get();
 		if (!sceneRenderer) {
@@ -838,7 +870,8 @@ void EngineContainerService::SaveScene(const char* path) {
 		if (activeSceneOpt.has_value()) {
 			activeSceneOpt.value().get().SerializeYaml(path);
 			spdlog::info("EngineService: Scene saved to {}", path);
-		} else {
+		}
+		else {
 			spdlog::error("EngineService: No active scene to save!");
 		}
 	});
@@ -859,7 +892,8 @@ void EngineContainerService::LoadScene(const char* path) {
 		auto sceneRefOpt = Engine::GetSceneRegistry().LoadSceneFromPath(path);
 		if (sceneRefOpt.has_value()) {
 			spdlog::info("EngineService: Scene loaded from {}", path);
-		} else {
+		}
+		else {
 			spdlog::error("EngineService: Failed to load scene from {}", path);
 		}
 		TransformSystem().FixedUpdate(world);
@@ -880,7 +914,7 @@ void EngineContainerService::NewScene() {
 		TransformSystem().FixedUpdate(world);
 		Engine::GetRenderSystem().BuildBVH(world);
 		Engine::GetRenderSystem().BuildInteractableBVH(world);
-		});
+	});
 }
 
 void EngineContainerService::set_on_load()
@@ -890,7 +924,7 @@ void EngineContainerService::set_on_load()
 		Engine::SetOnLoadCallBack([]([[maybe_unused]] ecs::world& w)
 		{
 			BehaviourSystem::Instance().Reload();
-			
+
 		});
 	});
 }
@@ -901,7 +935,7 @@ void EngineContainerService::set_on_unload()
 	{
 		Engine::SetOnUnloadCallBack([]([[maybe_unused]] ecs::world& w)
 		{
-			
+
 			BehaviourSystem::Instance().firstRun = true;
 			BehaviourSystem::Instance().unloaded = true;
 		});
