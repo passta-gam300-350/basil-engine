@@ -129,6 +129,17 @@ public:
         return true;
     }
 
+    void UnloadAll() {
+        std::vector<rp::Guid> guids;
+        guids.reserve(m_GuidSlots.size());
+        for (auto [g, i] : m_GuidSlots) {
+            guids.emplace_back(g);
+        }
+        for (auto g : guids) {
+            Unload(g);
+        }
+    }
+
     /**
      * @brief Insert a pre-loaded resource directly into the pool (for in-memory editor resources)
      * @param guid GUID to associate with the resource

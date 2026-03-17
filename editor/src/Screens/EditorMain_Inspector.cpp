@@ -1006,10 +1006,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 				int currentGroup = static_cast<int>(*audioGroup);
 				
 				if (ImGui::BeginCombo(field_name.c_str(), groupNames[currentGroup])) {
-					for (int i = 0; i < 5; ++i) {
-						bool selected = (i == currentGroup);
-						if (ImGui::Selectable(groupNames[i], selected)) {
-							*audioGroup = static_cast<AudioGroup>(i);
+					for (int audio_id = 0; audio_id < 5; ++audio_id) {
+						bool selected = (audio_id == currentGroup);
+						if (ImGui::Selectable(groupNames[audio_id], selected)) {
+							*audioGroup = static_cast<AudioGroup>(audio_id);
 							is_dirty = true;
 						}
 						if (selected) ImGui::SetItemDefaultFocus();
