@@ -56,21 +56,22 @@ void EngineContainerService::EngineContainer::engine_service() {
 
 	Engine::SetState(Engine::Info::State::Wait);
 	while (!Engine::ShouldClose()) {
-		while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
-			// Begin profiling frame at the start of the entire iteration
-			Engine::BeginFrame();
+			while (!Engine::ShouldClose() && Engine::GetState() != Engine::Info::State::Wait && Engine::GetState() != Engine::Info::State::Pause && Engine::GetState() != Engine::Info::State::Init) { //wait completely suspends the engine
+				// Begin profiling frame at the start of the entire iteration
+				Engine::BeginFrame();
 
-			{
+				{
 				{
 					PF_SCOPE("EngineWork");
-					{
-						PF_SYSTEM("Snapshot callback");
-						engine_snapshot_callback();
+						{
+							PF_SYSTEM("Snapshot callback");
+							engine_snapshot_callback();
+						}
+						Engine::TickFrameClock();
+						Engine::CoreUpdate();
+						Engine::UpdateDebug();
 					}
-					Engine::CoreUpdate();
-					Engine::UpdateDebug();
 				}
-			}
 
 			// GPU synchronization: Ensure all rendering is complete before releasing semaphore
 			// This prevents screen tearing when editor reads the framebuffer texture
@@ -438,9 +439,9 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 
 					// Initialize MaterialOverridesComponent with default PBR properties
 					if (type_id == entt::type_hash<MaterialOverridesComponent>::value()) {
-						ecs::entity entity{ ehdl };
+						ecs::entity mat_entity{ ehdl };
 						if (entity.all<MaterialOverridesComponent>()) {
-							MaterialOverridesComponent& component = entity.get<MaterialOverridesComponent>();
+							MaterialOverridesComponent& component = mat_entity.get<MaterialOverridesComponent>();
 							// Populate with standard PBR properties by default
 							component.floatOverrides["u_MetallicValue"] = 0.7f;
 							component.floatOverrides["u_RoughnessValue"] = 0.3f;

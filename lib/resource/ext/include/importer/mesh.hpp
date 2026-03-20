@@ -20,6 +20,7 @@
 #include <native/mesh.h>
 
 #include <stb_image.h>
+#include <meshoptimizer.h>
 
 // --- helper: build transform matrix ---
 inline glm::mat4 BuildTransform(ModelDescriptor const& desc) {
@@ -177,11 +178,6 @@ bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans
     // 4. Check if diffuse/base color texture has alpha channel
     aiString texPath;
     if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-        // Assimp doesn�t expose alpha directly here.
-        // You�d need to load the texture image and inspect its pixel format.
-        // For example, if you use stb_image or another loader, check if it has 4 channels.
-        // If so, you can decide based on alpha values.
-        int index{};
         if (*texPath.C_Str() == '*') {
             if (int index = std::stoi(texPath.C_Str()+1); index < trans.size()) {
                 return trans[index];
@@ -192,7 +188,6 @@ bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans
             int x{};
             int y{};
             int comp{};
-            int len{};
             int status = stbi_info((basepath + '\\' + texPath.C_Str()).c_str(), &x, &y, &comp);
             return (status && (comp == 2 || comp == 4));
         }
@@ -272,6 +267,7 @@ inline MaterialDescriptor ExtractMaterial(aiMaterial* aimat, std::string const& 
     matDesc.material.vert_name = "main_pbr.vert";
     matDesc.material.frag_name = "main_pbr.frag";
     matDesc.material.blend_mode = IsMaterialTransparent(aimat, embeddedTextureTrans, base_path) ? 1 : 0;
+	matDesc.material.cull_mode = 1; // default to back culling, can be extended to read from material properties if needed
 
     // Assign a new Guid for this material
     matDesc.base.m_guid = rp::Guid::generate();
@@ -421,14 +417,14 @@ inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, gl
 
     // Extract bone weights from Assimp
     if (mesh->HasBones() && !boneMap.empty()) {
+        std::vector<std::vector<std::pair<int, float>>> tempWeights(out.vertices.size());
+
         for (unsigned int b = 0; b < mesh->mNumBones; b++) {
             const aiBone* bone = mesh->mBones[b];
             std::string boneName(bone->mName.C_Str());
 
             auto it = boneMap.find(boneName);
-            if (it == boneMap.end()) {
-                continue;
-            }
+            if (it == boneMap.end()) continue;
 
             int boneID = it->second;
 
@@ -436,38 +432,42 @@ inline MeshResourceData::Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene, gl
                 unsigned int vertexId = bone->mWeights[w].mVertexId;
                 float weight = bone->mWeights[w].mWeight;
 
-                if (vertexId >= out.vertices.size())
-                    continue;
+                if (vertexId >= out.vertices.size()) continue;
 
-                // Find the first unused bone slot for this vertex
-                auto& vert = out.vertices[vertexId];
+                tempWeights[vertexId].push_back({ boneID, weight });
+            }
+        }
+
+        for (size_t v = 0; v < out.vertices.size(); v++) {
+            auto& vert = out.vertices[v];
+            auto& weights = tempWeights[v];
+
+            // Sort descending by weight
+            std::sort(weights.begin(), weights.end(),
+                [](auto& a, auto& b) { return a.second > b.second; });
+
+            // Keep top 4
+            float total = 0.0f;
+            for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
+                if (j < (int)weights.size()) {
+                    vert.m_BoneIDs[j] = weights[j].first;
+                    vert.m_Weights[j] = weights[j].second;
+                    total += weights[j].second;
+                }
+                else {
+                    vert.m_BoneIDs[j] = -1;
+                    vert.m_Weights[j] = 0.0f;
+                }
+            }
+
+            // Normalize
+            if (total > 0.0f) {
                 for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
-                    if (vert.m_BoneIDs[j] < 0) {
-                        vert.m_BoneIDs[j] = boneID;
-                        vert.m_Weights[j] = weight;
-                        break;
-                    }
+                    vert.m_Weights[j] /= total;
                 }
             }
         }
     }
-
-    for (auto& vert : out.vertices) {
-        float totalWeight = 0.0f;
-
-        // Sum all weights for this vertex
-        for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
-            totalWeight += vert.m_Weights[j];
-        }
-
-        // Normalize if needed
-        if (totalWeight > 0.0f) {
-            for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
-                vert.m_Weights[j] /= totalWeight;
-            }
-        }
-    }
-
 
     // indices
     for (unsigned int f = 0; f < mesh->mNumFaces; f++) {
@@ -526,13 +526,39 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         aiProcess_Triangulate |
         aiProcess_GenSmoothNormals |
         aiProcess_CalcTangentSpace |
-        //aiProcess_LimitBoneWeights |
+        /*aiProcess_LimitBoneWeights |*/
         aiProcess_JoinIdenticalVertices
     );
 
     if (!scene || !scene->HasMeshes()) {
         throw std::runtime_error("Failed to load model: " + desc.base.m_source);
     }
+
+    unsigned int maxWeights = 0;
+
+    for (unsigned int m = 0; m < scene->mNumMeshes; ++m) {
+        aiMesh* mesh = scene->mMeshes[m];
+
+        // Track weights per vertex
+        std::vector<unsigned int> weightCount(mesh->mNumVertices, 0);
+
+        for (unsigned int b = 0; b < mesh->mNumBones; ++b) {
+            aiBone* bone = mesh->mBones[b];
+            for (unsigned int w = 0; w < bone->mNumWeights; ++w) {
+                const aiVertexWeight& vw = bone->mWeights[w];
+                weightCount[vw.mVertexId]++;
+            }
+        }
+
+        // Find max for this mesh
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            if (weightCount[v] > maxWeights) {
+                maxWeights = weightCount[v];
+            }
+        }
+    }
+
+    std::cout << "Max bone weights per vertex: " << maxWeights << std::endl;
 
     glm::mat4 transform = BuildTransform(desc);
 
@@ -568,7 +594,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
             //dont bake transform hierarchies if skinned
             glm::mat4 nodeWorldTransform = parentTransform;
             glm::mat4 nodeLocalTransform = ToMat4(ndptr->mTransformation);
-            int nodeid = mdl_node_desc.meta.node_local_bind.size();
+            int nodeid = static_cast<int>(mdl_node_desc.meta.node_local_bind.size());
             mdl_node_desc.meta.node_local_bind.emplace_back(mtx44{nodeLocalTransform[0], nodeLocalTransform[1], nodeLocalTransform[2], nodeLocalTransform[3]});
             mdl_node_desc.meta.node_parent.emplace_back(parentidx);
             for (unsigned int m = 0; m < ndptr->mNumMeshes; m++) {
@@ -579,7 +605,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                         mrdata.meshes.emplace_back(mesh);
                         mres.emplace_back(std::pair<rp::Guid, MeshResourceData>(desc.base.m_guid, std::move(mrdata)));
                         // adjust material slot
-                        for (auto& slot : mesh.materials) {
+                        for ([[maybe_unused]] auto& slot : mesh.materials) {
                             mdl_node_desc.meta.mesh_node_idx.emplace_back(nodeid);
                         }
                     }
@@ -587,6 +613,18 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                         MeshResourceData::Mesh& mergedMesh = mres[0].second.meshes[0];
                         unsigned int index_vertex_offset{ static_cast<unsigned int>(mergedMesh.vertices.size()) };
                         unsigned int index_size{ static_cast<unsigned int>(mergedMesh.indices.size()) };
+                        
+                        // Reorder for better GPU vertex cache usage
+                        meshopt_optimizeVertexCache(mesh.indices.data(), mesh.indices.data(), mesh.indices.size(), mesh.vertices.size());
+
+                        // Optimize overdraw (reduces pixel shading work)
+                        meshopt_optimizeOverdraw(mesh.indices.data(), mesh.indices.data(), mesh.indices.size(),
+                            &mesh.vertices[0].Position.x, mesh.vertices.size(), sizeof(MeshResourceData::Vertex), 1.05f);
+
+                        // Optimize vertex fetch (improves memory access)
+                        meshopt_optimizeVertexFetch(mesh.vertices.data(), mesh.indices.data(), mesh.indices.size(),
+                            mesh.vertices.data(), mesh.vertices.size(), sizeof(MeshResourceData::Vertex));
+
                         mergedMesh.vertices.insert(mergedMesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 
                         // append indices with offset
@@ -615,7 +653,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                     else {
                         mres[0].second.meshes.emplace_back(mesh);
                     }
-                    for (auto& slot : mesh.materials) {
+                    for ([[maybe_unused]] auto& slot : mesh.materials) {
                         mdl_node_desc.meta.mesh_node_idx.emplace_back(nodeid);
                     }
                 }
@@ -635,6 +673,23 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
         SaveOrOverwriteDescriptors(matDesc, parent);
     }
         
+    if (!desc.merge_mesh) {
+        for (auto& [g, mesh] : result) {
+            for (auto& submesh : mesh.meshes) {
+                // Reorder for better GPU vertex cache usage
+                meshopt_optimizeVertexCache(submesh.indices.data(), submesh.indices.data(), submesh.indices.size(), submesh.vertices.size());
+
+                // Optimize overdraw (reduces pixel shading work)
+                meshopt_optimizeOverdraw(submesh.indices.data(), submesh.indices.data(), submesh.indices.size(),
+                    &submesh.vertices[0].Position.x, submesh.vertices.size(), sizeof(MeshResourceData::Vertex), 1.05f);
+
+                // Optimize vertex fetch (improves memory access)
+                meshopt_optimizeVertexFetch(submesh.vertices.data(), submesh.indices.data(), submesh.indices.size(),
+                    submesh.vertices.data(), submesh.vertices.size(), sizeof(MeshResourceData::Vertex));
+            }
+        }
+    }
+
     if (desc.extract_animation) {
         for (unsigned int a = 0; a < scene->mNumAnimations; a++) {
             auto anim = scene->mAnimations[a];

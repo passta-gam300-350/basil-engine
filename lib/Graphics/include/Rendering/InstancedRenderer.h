@@ -58,9 +58,18 @@ public:
     
     // Instance management
     void BeginInstanceBatch();
-    void AddInstance(const std::string& meshId, const InstanceData& instance);
+    void AddInstance(uint64_t meshId, const InstanceData& instance);
     void EndInstanceBatch();
     void Clear();
+
+    // Helper to compute mesh ID from mesh + material pointers (zero allocations)
+    static inline uint64_t ComputeMeshId(const void *meshPtr, const void *materialPtr)
+    {
+        uint64_t h = reinterpret_cast<uintptr_t>(meshPtr);
+        uint64_t mat = reinterpret_cast<uintptr_t>(materialPtr);
+        h ^= mat + 0x9E3779B97F4A7C15ULL + (h << 12) + (h >> 4);
+        return h;
+    }
 
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque);
@@ -74,9 +83,12 @@ public:
     // Force rebuild of cached instance data (called when components are updated in editor)
     void ForceRebuildCache();
 
+    // Reset change tracking for new frame (call at frame start to enable per-frame caching)
+    void ResetFrameChangeTracking();
+
     // Mesh and material setup
-    void SetMeshData(const std::string& meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
-    
+    void SetMeshData(uint64_t meshId, const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Material>& material);
+
     // Render skinned meshes (called after regular instanced rendering)
     void RenderSkinnedMeshes(RenderPass& renderPass, const FrameData& frameData);
 
@@ -100,11 +112,13 @@ private:
         std::vector<InstanceData> instances;
         std::shared_ptr<Mesh> mesh;
         std::shared_ptr<Material> material;
+        std::vector<Texture> cachedTextures;  // OPTIMIZED: Cache material textures to avoid repeated GetAllTextures() allocations
         bool dirty = true;
+        bool texturesCached = false;  // Track if cachedTextures is up-to-date
     };
     
-    std::unordered_map<std::string, MeshInstances> m_MeshInstances;
-    std::unordered_map<std::string, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
+    std::unordered_map<uint64_t, MeshInstances> m_MeshInstances;
+    std::unordered_map<uint64_t, std::unique_ptr<ShaderStorageBuffer>> m_InstanceSSBOs;
 
     // Skinned renderables (rendered individually, not batched)
     std::vector<const RenderableData*> m_SkinnedRenderables;
@@ -120,17 +134,15 @@ private:
     size_t m_LastRenderableCount = 0;
     std::vector<uint32_t> m_LastObjectIDs;
     std::vector<float> m_LastTransformHashes;  // Cache transform hashes for change detection
-    std::vector<float> m_LastPropertyBlockHashes;  // Cache property block hashes for MaterialOverrides changes
+    std::vector<uintptr_t> m_LastPropertyBlockPointers;  // OPTIMIZED: Just track pointers, not hash contents
     std::vector<uintptr_t> m_LastMaterialPointers;  // Cache material pointers for material change detection
     std::vector<uintptr_t> m_LastMeshPointers;  // Cache mesh pointers for mesh change detection
+    bool m_ChangeCheckDoneThisFrame = false;  // OPTIMIZED: Only check changes once per frame
+    bool m_LastFrameHadChanges = false;  // OPTIMIZED: Cache result of last check
 
-    void UpdateInstanceSSBO(const std::string& meshId);
-    void RenderInstancedMeshToPass(RenderPass& renderPass, const std::string& meshId, const FrameData& frameData, bool isOpaque);
+    void UpdateInstanceSSBO(uint64_t meshId);
+    void RenderInstancedMeshToPass(RenderPass& renderPass, uint64_t meshId, const FrameData& frameData, bool isOpaque);
     void SubmitFogCommands(RenderPass& renderPass, std::shared_ptr<Shader> shader, const FrameData& frameData);
     bool HasRenderablesChanged(const std::vector<RenderableData> &renderables);
-    void UpdateTransformHashes(const std::vector<RenderableData>& renderables);
-    void UpdatePropertyBlockHashes(const std::vector<RenderableData>& renderables);
-    void UpdateMaterialPointers(const std::vector<RenderableData>& renderables);
-    void UpdateMeshPointers(const std::vector<RenderableData>& renderables);
     void UpdateAllTrackingData(const std::vector<RenderableData>& renderables);
 };

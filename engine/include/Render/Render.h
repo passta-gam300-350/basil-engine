@@ -42,6 +42,7 @@ RegisterResourceTypeForward(MeshResourceData, "mesh", meshdefine)
 RegisterResourceTypeForward(MaterialResourceData, "material", materialdefine)
 RegisterResourceTypeForward(TextureResourceData, "texture", texturedefine)
 RegisterResourceTypeForward(FontAtlasResourceData, "font_atlas", fontatlasdefine)
+RegisterResourceTypeForward(MeshMetaRuntimeData, "meshmeta", meshmetadefine)
 
 /**
  * @brief Component for rendering meshes on entities
@@ -651,6 +652,15 @@ public:
      */
     void DestroyMaterialInstance(uint64_t entityUID);
 
+    using StaticNodeHierarchy = std::pair<std::vector<glm::mat4>, std::vector<int>>;
+    using StaticNodeHierarchyRepository = std::unordered_map<rp::Guid, StaticNodeHierarchy>;
+
+    static rp::Guid ConvertGuidToStaticNodeGuid(rp::BasicIndexedGuid const& guid);
+    bool ExistsStaticNodeHierarchy(rp::BasicIndexedGuid const& guid) const;
+    StaticNodeHierarchy const& RegisterStaticNodeHierarchy(rp::BasicIndexedGuid const& guid);
+    std::optional<StaticNodeHierarchy const*> GetStaticNodeHierarchy(rp::BasicIndexedGuid const& guid) const;
+    void DestroyStaticNodeHierarchy(rp::BasicIndexedGuid const& guid);
+
     // ========== Material Property Block Management ==========
 
     /**
@@ -811,6 +821,7 @@ private:
     std::unique_ptr<ComponentInitializer> m_ComponentInitializer; ///< Component initialization logic
     std::unique_ptr<MaterialInstanceManager> m_MaterialInstanceManager; ///< Material instance management
     std::unique_ptr<JoltDebugRenderer> m_JoltDebugRenderer;     ///< Jolt physics debug renderer
+    std::unique_ptr<StaticNodeHierarchyRepository> m_StaticNodeHierarchy; ///< Static Mesh Model Transform caching
 
     // ========== Material Property Blocks ==========
 

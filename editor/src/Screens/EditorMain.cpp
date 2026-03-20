@@ -70,6 +70,7 @@ Technology is prohibited.
 #include <Messaging/Messaging_System.h>
 #include "MonoResolver/MonoTypeDescriptor.hpp"
 #include "Manager/MonoImGuiRenderer.hpp"
+#include "Manager/BuildManager.hpp"
 #include <Scene/Scene.hpp>
 
 #include "Particles/ParticleComponent.h"
@@ -245,6 +246,8 @@ void EditorMain::init()
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+	m_BuildManager = std::make_unique<BuildManager>(this);
+
 	// Register custom audio inspector with import settings
 	{
 		constexpr auto audio_type_hash = rp::utility::type_hash<AudioDescriptor>::value();
@@ -369,6 +372,22 @@ void EditorMain::init()
 						bool is_selected = (desc.material.blend_mode == i);
 						if (ImGui::Selectable(blend_modes[i], is_selected)) {
 							desc.material.blend_mode = i;
+						}
+						if (is_selected) {
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				// Cull mode selector
+				const char* cull_modes[] = { "Off", "Back", "Front" };
+				const char* current_cull_mode = cull_modes[desc.material.cull_mode];
+				if (ImGui::BeginCombo("Cull Mode", current_cull_mode)) {
+					for (int i = 0; i < 3; i++) {
+						bool is_selected = (desc.material.cull_mode == i);
+						if (ImGui::Selectable(cull_modes[i], is_selected)) {
+							desc.material.cull_mode = i;
 						}
 						if (is_selected) {
 							ImGui::SetItemDefaultFocus();

@@ -70,11 +70,8 @@ void TextureSlotManager::BindTextureID(unsigned int textureID, int slot) {
 }
 
 void TextureSlotManager::BindTextureToSlot(unsigned int textureID, int slot) {
-    // Activate the texture unit
-    glActiveTexture(GL_TEXTURE0 + slot);
-
-    // Bind the texture
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    // DSA: Bind texture to texture unit directly (no glActiveTexture needed!)
+    glBindTextureUnit(slot, textureID);
 
     // Track the binding
     m_BoundTextures[slot] = textureID;
@@ -86,8 +83,8 @@ void TextureSlotManager::UnbindTexture(int slot) {
         return;
     }
 
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // DSA: Unbind texture from texture unit directly
+    glBindTextureUnit(slot, 0);
 
     m_BoundTextures[slot] = 0;
     m_SlotUsed[slot] = false;

@@ -15,7 +15,7 @@ Technology is prohibited.
 #include <Ecs/ecs.h>
 
 namespace {
-	constexpr std::uint64_t DEFAULT_SYSTEM_THREADS{ 4 };
+	constexpr std::uint64_t DEFAULT_SYSTEM_THREADS{ 0 };
 	constexpr bool DEFAULT_SYSTEM_STATE{ true };
 }
 

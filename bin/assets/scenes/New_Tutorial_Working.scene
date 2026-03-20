@@ -1,0 +1,3313 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 283
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: true
+    exposure: 0.474000007
+    rotation:
+      - 0
+      - 78
+      - 0
+    tint:
+      - 0.80392158
+      - 0.80392158
+      - 0.480776638
+    face_textures:
+      - d8b172d72c6b7483b0f048d3c89
+      - d8b16837b42a5dd3114ae3242b2
+      - d8b17877ce5ba3b286f5789acd0
+      - d8b156a7f7dab2591de43726e55
+      - d8b15167931942c4d4809169900
+      - d8b16157cd2a5d8f2367e7910f5
+  ambient_light:
+    - 0.132352948
+    - 0.132352948
+    - 0.132352948
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.00800000038
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
+  fog:
+    type: 0
+    start: 10
+    end: 50
+    density: 0.0500000007
+    color:
+      - 0.5
+      - 0.5
+      - 0.5
+entities:
+  - Scene ID:
+      Scene ID: 148
+    entity name:
+      name: garbage_bin_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267a87c778239bab1d38a94a2
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.699999988
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 4
+    LightComponent:
+      Type: 0
+      Color:
+        x: 1
+        y: 1
+        z: 1
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 1
+      "[Dir/Spot] Direction":
+        x: -45
+        y: -45
+        z: 47
+      "[Point/Spot] Range": 10
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 45
+    entity name:
+      name: Directional_light
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 10.4424181
+        z: 0
+  - Scene ID:
+      Scene ID: 146
+    entity name:
+      name: footstep_9
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87df67f919e1d9beefb0dcb95
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 150
+    entity name:
+      name: trash_bag_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267b977ffad9b36b8bd00d6ca
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.600000024
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 152
+    entity name:
+      name: ambience_traffic
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: -4.67682171
+    Behaviour:
+      classesName:
+        - PlayAudioLoop
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3ace2f075dbacc951c03bdff7a6
+        type: 17099568057112876377
+      group: "\x04"
+      volume: 0.630957365
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 2
+      maxDistance: 7
+      position:
+        x: 0
+        y: 0
+        z: -4.67682171
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 268
+    entity name:
+      name: trash_collectable_UI_1
+    WorldUIComponent:
+      textureGuid:
+        guid: ac4113d7674ae81ad4565139bff
+        type: 126269861530532084
+      size:
+        x: 0.200000003
+        y: 0.0500000007
+      billboardMode: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.879993796
+        z: 0.880000055
+      m_Rotate:
+        x: 2.78824429e-11
+        y: -0
+        z: -179.999893
+      m_Trans:
+        x: -0.287
+        y: 0.161842465
+        z: -0.703999996
+  - Scene ID:
+      Scene ID: 139
+    entity name:
+      name: footstep_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87daf7882b91bd917cc59ff20
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 203
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Restart_No
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707ba7ca19a09063b1bb3d1a7
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 195
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Menu_Resume
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707cd714ea914c669891eebfb
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 67
+    entity name:
+      name: Camera3
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 0.0243000295
+        y: 0.0242999624
+        z: 0.0242999624
+      m_Rotate:
+        x: 90
+        y: -180
+        z: 0
+      m_Trans:
+        x: -1.94828773
+        y: 0.696306884
+        z: -0.177012876
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: false
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 8.74227766e-08
+        y: 5.96046448e-08
+        z: -0.99999994
+      m_Right:
+        x: -0.999999881
+        y: 0
+        z: -8.74227766e-08
+      m_Front:
+        x: 0
+        y: -0.99999994
+        z: 5.96046448e-08
+      m_Yaw: 0
+      m_Pitch: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 140
+    entity name:
+      name: footstep_3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dbb7de9aac1ef1f1102f778
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 138
+    entity name:
+      name: footstep_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87d9f77cba090c4d50000925b
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 74
+    entity name:
+      name: GameManager
+    Behaviour:
+      classesName:
+        - GameManager
+      scriptProperties:
+        - name: GameManager.GameboyPuzzleCompleted
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.KitePuzzleCompleted
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.TrainPuzzleCompleted
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: GameManager.isCleaned
+          type: System.Boolean
+          value: false
+          is_user_type: false
+  - RigidBodyComponent:
+      motionType: "\x01"
+      mass: 1
+      drag: 0
+      angularDrag: 0.0500000007
+      friction: 0
+      linearDamping: 0
+      gravityFactor: 1
+      useGravity: true
+      isKinematic: false
+      freezePositionX: false
+      freezePositionY: true
+      freezePositionZ: false
+      freezeRotationX: true
+      freezeRotationY: true
+      freezeRotationZ: true
+      freezeLinearVelocityX: false
+      freezeLinearVelocityY: false
+      freezeLinearVelocityZ: false
+      freezeAngularVelocityX: false
+      freezeAngularVelocityY: false
+      freezeAngularVelocityZ: false
+      centerOfMass:
+        x: 0
+        y: 0
+        z: 0
+      linearVelocity:
+        x: 0
+        y: 0
+        z: 0
+      angularVelocity:
+        x: 0
+        y: 0
+        z: 0
+      isActive: true
+      isDirty: false
+    BoxCollider:
+      size:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 53
+    Relationship:
+      parent: 0
+      child:
+        - 55
+        - 57
+    entity name:
+      name: PlayerGroup
+    TransformComponent:
+      m_Scale:
+        x: 0.200000003
+        y: 0.800000012
+        z: 0.200000003
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.273036182
+        y: 0.415434897
+        z: -2.58328509
+    Behaviour:
+      classesName:
+        - PlayerController3D
+      scriptProperties:
+        - name: PlayerController3D.baseMoveSpeed
+          type: System.Single
+          value: 1.5
+          is_user_type: false
+        - name: PlayerController3D.canCollectTrash
+          type: System.Boolean
+          value: true
+          is_user_type: false
+        - name: PlayerController3D.disabled
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.footstepInterval
+          type: System.Single
+          value: 0.5
+          is_user_type: false
+        - name: PlayerController3D.interactionsLocked
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.mouseSensitivity
+          type: System.Single
+          value: 0.075
+          is_user_type: false
+        - name: PlayerController3D.onMopEnabled
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.speedMultiplier
+          type: System.Single
+          value: 1
+          is_user_type: false
+        - name: PlayerController3D.wantsToCollect
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: PlayerController3D.wantsToMop
+          type: System.Boolean
+          value: false
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 245
+    entity name:
+      name: Room_Cleanliness3_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e2959743f96420cc85c229229
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 1050
+      size:
+        x: 600
+        y: 100
+      anchor: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 55
+    Relationship:
+      parent: 53
+    entity name:
+      name: Body
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0.00570702553
+  - Scene ID:
+      Scene ID: 247
+    entity name:
+      name: KeyPartCollection_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e29697868a8fdf91ca4e2fbaa
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 1080
+      size:
+        x: 300
+        y: 100
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 17fef2d72ccae80989d5a2c221b
+        type: 4838001395392124604
+      m_MaterialGuid:
+        cheese_bs_bx_ch_bx1_material:
+          guid: 18303b278fa8b246b25fa0fb6cf
+          type: 175488002581160416
+        speed_breaker_material:
+          guid: 18303f77d259a9a19d292798f82
+          type: 175488002581160416
+        tutorial_wall_material:
+          guid: 18303b07a84ad4da49e79d373ac
+          type: 175488002581160416
+        tutorial_trashbag_material:
+          guid: 1830402717b9909231a73f4537d
+          type: 175488002581160416
+        choco_bx_c_bx1_material:
+          guid: 18303d178759e83076691524503
+          type: 175488002581160416
+        cheese_bs_bx_ch_bx_tape1_material:
+          guid: 18303b1769faa39b84fa0df511d
+          type: 175488002581160416
+        cardboard_box_crushed_material:
+          guid: b53c117c229122e7368cd07d7a
+          type: 175488002581160416
+        choco_bx_c_bx_tape1_material:
+          guid: 18303d0713687a23d1b328fadc7
+          type: 175488002581160416
+        choco_bx_opened_c_bx_opened1_material:
+          guid: 18303d17018b3a9ec8bb8ea3af3
+          type: 175488002581160416
+        choco_wafer_halfOpened_cw_halfOp1_material:
+          guid: 18303d27bbe91f44bb571b7fd97
+          type: 175488002581160416
+        tutorial_door_material:
+          guid: 18303d37624a4f8e256447b5098
+          type: 175488002581160416
+        tutorial_doorway_material:
+          guid: 18303d47742bbe1e86a2e6fe205
+          type: 175488002581160416
+        tutorial_floor_material:
+          guid: 18303d579f38ddeeccb366509dc
+          type: 175488002581160416
+        gem_bx_gem_bx_tape1_material:
+          guid: 18303e87b4a8afb44b7ac2d33ce
+          type: 175488002581160416
+        gem_bx_gem_bx1_material:
+          guid: 18303e973e29ccb187950e720c1
+          type: 175488002581160416
+        gem_bx_halfOp_g_bx_halfOp1_material:
+          guid: 18303ea7fdd80608cf1747c8a87
+          type: 175488002581160416
+        gem_bx_Opened_g_bx_opened1_material:
+          guid: 18303eb70ce9eb07395256ca85c
+          type: 175488002581160416
+        tutorial_hdb_material:
+          guid: 18303eb7abeb79a4c8a246f717d
+          type: 175488002581160416
+        tutorial_traffic_pole_material:
+          guid: 18303f877c688b37ee322152bbd
+          type: 175488002581160416
+        tutorial_trees_material:
+          guid: 183040d7403a3d17f4b7faf9dc7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 249
+    AnimationComponent:
+      Duration: 1083.33337
+      CurrentTime: 0
+      TicksPerSecond: 1000
+      State:
+        IsPlaying: false
+        Loop: false
+        PlaybackSpeed: 1
+        StartTime: 0
+        EndTime: -1
+      Animation:
+        guid: 18304217db2bfc2a31fe0b11c53
+        type: 10466365863016233885
+    entity name:
+      name: environment
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.5
+        y: 0.5
+        z: 0.5
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 57
+    Relationship:
+      parent: 53
+    entity name:
+      name: Camera
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.200000018
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 2.14576721e-06
+        y: 0.247999996
+        z: -2.86102295e-06
+    Behaviour:
+      classesName:
+        - PlayerCameraPlacementController
+      scriptProperties:
+        - name: PlayerCameraPlacementController.mouseSensitivity
+          type: System.Single
+          value: 0.075
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 169670170658ddc403af3519223
+        type: 4838001395392124604
+      m_MaterialGuid:
+        dust_material:
+          guid: 16a1f517a458a473b009f9aefbc
+          type: 175488002581160416
+        cardboard_box_crushed_material:
+          guid: b53c117c229122e7368cd07d7a
+          type: 175488002581160416
+        stain_mat_material:
+          guid: 552f7b47d3fb3e13eec39d9e79e
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.400000006
+        y: 0.201000005
+        z: 0.300000012
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 257
+    entity name:
+      name: trash_collectable_1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1.78995168
+        y: 1.78995168
+        z: 1.78995168
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.287434965
+        y: -0.0220211819
+        z: -0.703672588
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+    Behaviour:
+      classesName:
+        - TrashCollectable
+      scriptProperties:
+        - name: TrashCollectable.collect_distance
+          type: System.Single
+          value: 0.8
+          is_user_type: false
+        - name: TrashCollectable.uiObjectName
+          type: System.String
+          value: trash_collectable_UI_1
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.55999994
+        y: 1
+        z: 0.300000012
+      CenterOffset:
+        x: 0
+        y: -0.400000006
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 250
+    entity name:
+      name: wall_end_block
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1.56600964
+        y: 1.56599998
+        z: 0.162518457
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.0946630239
+        y: 0.899948299
+        z: -3.07213783
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 58
+    Relationship:
+      parent: 0
+      child:
+        - 61
+    entity name:
+      name: GlobalCamera
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.480175376
+        y: 1.02380919
+        z: 0.54210192
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.45906043
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: 0
+      m_Pitch: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.70000005
+        y: 0.100000001
+        z: 5
+      CenterOffset:
+        x: 0.100000001
+        y: -0.349999994
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 251
+    entity name:
+      name: floor_collider
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.182648867
+        y: 0.311185986
+        z: -1.17749596
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 59
+    entity name:
+      name: CameraManager
+    Behaviour:
+      classesName:
+        - CameraManager
+      scriptProperties:
+        - name: CameraManager.activeGameObject
+          type: System.Int32
+          value: 0
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 218ecc1f72f797b8d1dc924e95c3
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trashbag1:
+          guid: 2190515c7012a9df65766726f5a7
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 61
+    Relationship:
+      parent: 58
+    entity name:
+      name: ThrashCollect
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.00200000009
+        y: 0.00200000009
+        z: 0.00200000009
+      m_Rotate:
+        x: -15.000001
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: -0.230000004
+        z: 0.300000012
+    Behaviour:
+      classesName:
+        - TrashBag
+      scriptProperties:
+        - name: TrashBag.bagDipAmount
+          type: System.Single
+          value: -0.02
+          is_user_type: false
+        - name: TrashBag.bagDipDuration
+          type: System.Single
+          value: 0.4
+          is_user_type: false
+        - name: TrashBag.bagIsFull
+          type: System.Boolean
+          value: false
+          is_user_type: false
+        - name: TrashBag.maxTrashInHand
+          type: System.Int32
+          value: 5
+          is_user_type: false
+        - name: TrashBag.trashInHand
+          type: System.Int32
+          value: 0
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 253
+    LightComponent:
+      Type: 1
+      Color:
+        x: 1
+        y: 0.888984978
+        z: 0.656862736
+      Enabled: true
+      Cast Shadows: true
+      Intensity: 15
+      "[Dir/Spot] Direction":
+        x: 0
+        y: -1
+        z: 0
+      "[Point/Spot] Range": 5
+      "[Spot] Inner Cone Angle": 30
+      "[Spot] Outer Cone Angle": 114
+    entity name:
+      name: spot_light
+    TransformComponent:
+      m_Scale:
+        x: 0.175499991
+        y: 0.175499991
+        z: 0.175499991
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.107658207
+        y: 2.39191771
+        z: -1.22557807
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x01"
+      hasAttachedMaterial: false
+      isPrimitive: true
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 62
+    entity name:
+      name: Camera2
+    TransformComponent:
+      m_Scale:
+        x: 0.0575999841
+        y: 0.0575999878
+        z: 0.0575999767
+      m_Rotate:
+        x: 90
+        y: 89.9999466
+        z: 0
+      m_Trans:
+        x: -0.583733857
+        y: 0.981609762
+        z: -0.904262125
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: false
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 1000
+      m_Up:
+        x: 1
+        y: 0
+        z: 9.53674316e-07
+      m_Right:
+        x: 9.53674316e-07
+        y: 0
+        z: -1
+      m_Front:
+        x: 0
+        y: -1
+        z: 0
+      m_Yaw: 0
+      m_Pitch: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.101000004
+        y: 3.70000005
+        z: 5.30000019
+      CenterOffset:
+        x: -0.0799999982
+        y: 0
+        z: -1.26999998
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 254
+    entity name:
+      name: back_wall_collider
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.89033711
+        y: 1.26356566
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 141
+    entity name:
+      name: footstep_4
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dc675f5beb502e8823e8a41
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 262
+    entity name:
+      name: SFX_MenuHover
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976ee17ee7b67842f7c8130173
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 205
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Quit_Yes
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707a479dbb0ece368f0d188d5
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 142
+    entity name:
+      name: footstep_5
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dcf78cea2f96732a3732cf7
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 143
+    entity name:
+      name: footstep_6
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dd9731eb51cc72a38ccca74
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 207
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Quit_No
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707997c5aa017e2f2c70899ab
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 144
+    entity name:
+      name: footstep_7
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87de27659b4ccc0494f5f9313
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 145
+    entity name:
+      name: footstep_8
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3a87dec7b9580e58322f0c923e7
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 0.398107171
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 1.98509884
+        y: 3.18635917
+        z: 0.101221167
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 266
+    entity name:
+      name: backwall_collider
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1.98509884
+        y: 3.18635917
+        z: 0.101221167
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.0884587765
+        y: 1.56858683
+        z: 1.25107753
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 147
+    entity name:
+      name: garbage_bin_1
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267a07094be3ddc131aefe43e
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.699999988
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 276
+    entity name:
+      name: TextMengVO_2
+    HUDComponent:
+      m_TextureGuid:
+        guid: c35adf7cd68ccdeb09b7523699
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 1259
+        y: 56
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 270
+    entity name:
+      name: trash_collectable_UI_3
+    WorldUIComponent:
+      textureGuid:
+        guid: ac4113d7674ae81ad4565139bff
+        type: 126269861530532084
+      size:
+        x: 0.200000003
+        y: 0.0500000007
+      billboardMode: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.879993796
+        z: 0.880000055
+      m_Rotate:
+        x: 2.78824429e-11
+        y: -0
+        z: -179.999893
+      m_Trans:
+        x: 0.250999987
+        y: 0.161163792
+        z: -1.98899996
+  - Scene ID:
+      Scene ID: 149
+    entity name:
+      name: garbage_bin_3
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.210871607
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267b07a7583af560e542e4caf
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.699999988
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0.210871607
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 151
+    entity name:
+      name: trash_bag_2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0.394465536
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 3b267c171f0aa5c48a49a198a98
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.600000024
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0.394465536
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 264
+    entity name:
+      name: SFX_MenuConfirm
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976eee7c5ba7d6a47dd7639b95
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 172
+    entity name:
+      name: MengMaxTrashAudio
+    AudioComponent:
+      audioAssetGuid:
+        guid: 10c525e7e9194f5b86cce86e0ff
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 0.300000012
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 236
+    entity name:
+      name: BagMeter2_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e29197b9383e45f8269359756
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 105
+      size:
+        x: 400
+        y: 175
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 175
+    entity name:
+      name: TutorialScript
+    Behaviour:
+      classesName:
+        - TutorialLevel
+      scriptProperties:
+        - name: TutorialLevel.cameraTurnSpeed
+          type: System.Single
+          value: 4.5
+          is_user_type: false
+        - name: TutorialLevel.endVODuration
+          type: System.Single
+          value: 2.5
+          is_user_type: false
+        - name: TutorialLevel.playerTurnSpeed
+          type: System.Single
+          value: 3.5
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 239
+    entity name:
+      name: BagMeter5_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e293878b68885d9f0aa009e10
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 105
+      size:
+        x: 400
+        y: 175
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 176
+    entity name:
+      name: TutorialIntroVO
+    AudioComponent:
+      audioAssetGuid:
+        guid: aa1c2e2745c99db806cba11941e
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 240
+    entity name:
+      name: EquippedTrashBag_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e29817d25a4eea17af3b2bd8d
+        type: 126269861530532084
+      position:
+        x: 1600
+        y: 105
+      size:
+        x: 250
+        y: 75
+      anchor: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 178
+    entity name:
+      name: TutorialEndVO
+    AudioComponent:
+      audioAssetGuid:
+        guid: 10c52727eab9bdf433140a3e0a2
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 242
+    entity name:
+      name: Room_Cleanliness0_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e2940786bb65bd8be83b8cf67
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 1050
+      size:
+        x: 600
+        y: 100
+      anchor: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 179
+    Relationship:
+      parent: 0
+      child:
+        - 195
+        - 197
+        - 199
+        - 201
+        - 203
+        - 205
+        - 207
+    entity name:
+      name: PauseMenuGUI
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - PauseMenuManager
+  - Scene ID:
+      Scene ID: 243
+    entity name:
+      name: Room_Cleanliness1_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e29497b6fa0e111ac2f397efc
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 1050
+      size:
+        x: 600
+        y: 100
+      anchor: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 197
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Menu_Restart
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707b07ef787b38c2b5a5f9588
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 199
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Menu_MainMenu
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 1297078f72af81dcea768e761d68
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 5f8ecb37a9bb32d9abb815a9e84
+        type: 4838001395392124604
+      m_MaterialGuid:
+        newspaperV1_material:
+          guid: 5f990ef735784c9e4e65ba501ac
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 258
+    entity name:
+      name: trash_collectable_2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1.78995168
+        y: 1.78995168
+        z: 1.78995168
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.700820863
+        y: -0.0198809728
+        z: -1.56169903
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+    Behaviour:
+      classesName:
+        - TrashCollectable
+      scriptProperties:
+        - name: TrashCollectable.collect_distance
+          type: System.Single
+          value: 0.8
+          is_user_type: false
+        - name: TrashCollectable.uiObjectName
+          type: System.String
+          value: trash_collectable_UI_2
+          is_user_type: false
+  - Scene ID:
+      Scene ID: 201
+    Relationship:
+      parent: 179
+    entity name:
+      name: PauseMenu_Restart_Yes
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 129707c47e938f8548dca4026ff7
+        type: 126269861530532084
+      position:
+        x: 0
+        y: 0
+      size:
+        x: 1920
+        y: 1080
+      anchor: "\x06"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 234
+    entity name:
+      name: BagMeter0_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e2904756f9e24ed3b94e0b230
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 105
+      size:
+        x: 400
+        y: 175
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 235
+    entity name:
+      name: BagMeter1_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e290f7447afffc93a9a265ca1
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 105
+      size:
+        x: 400
+        y: 175
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 237
+    entity name:
+      name: BagMeter3_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e292272eaadee424f4af83662
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 105
+      size:
+        x: 400
+        y: 175
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 238
+    entity name:
+      name: BagMeter4_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e292f7bd9bd618d3bfed9915b
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 105
+      size:
+        x: 400
+        y: 175
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 241
+    entity name:
+      name: EquippedMop_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e29767b87bcf7d809c104c208
+        type: 126269861530532084
+      position:
+        x: 1600
+        y: 105
+      size:
+        x: 250
+        y: 75
+      anchor: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 244
+    entity name:
+      name: Room_Cleanliness2_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e29517cc99ac128aee345b081
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 1050
+      size:
+        x: 600
+        y: 100
+      anchor: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 246
+    entity name:
+      name: Room_Cleanliness4_UI
+    HUDComponent:
+      m_TextureGuid:
+        guid: 4e2961709b87bcb6e7d7cca676
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 1050
+      size:
+        x: 600
+        y: 100
+      anchor: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 52b07147291934d5f93845a8c51
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trashbin_mat_material:
+          guid: 52b8a7e70a69cc341df0634fd75
+          type: 175488002581160416
+        trashbag1_material:
+          guid: 52b8a8877d3b1bc94b6d5b9340c
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0
+        y: 0.201000005
+        z: 0.120600007
+      CenterOffset:
+        x: 0
+        y: 0.300000012
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 252
+    AnimationComponent:
+      Duration: 3666.66675
+      CurrentTime: 0
+      TicksPerSecond: 1000
+      State:
+        IsPlaying: false
+        Loop: false
+        PlaybackSpeed: 1
+        StartTime: 0
+        EndTime: -1
+      Animation:
+        guid: 52b8a887b3b87a9d9c8cf58cab8
+        type: 10466365863016233885
+    entity name:
+      name: trashbin
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.40200001
+        y: 0.40200001
+        z: 0.40200001
+      m_Rotate:
+        x: -179.999893
+        y: 25.7361088
+        z: -179.999893
+      m_Trans:
+        x: -0.131803736
+        y: 0.0025842092
+        z: 0.636354029
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+    Behaviour:
+      classesName:
+        - Dustbin
+      scriptProperties:
+        - name: Dustbin.thrashRemaining
+          type: System.Int32
+          value: 3
+          is_user_type: false
+        - name: Dustbin.tossDistance
+          type: System.Single
+          value: 0.8
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.101000004
+        y: 3.20000005
+        z: 5.30000019
+      CenterOffset:
+        x: 0
+        y: -0.449999988
+        z: -1.27999997
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 255
+    entity name:
+      name: front_wall_collider
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -1.01677501
+        y: 2
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 6e3d937de48b5db9f0fbf25e9e
+        type: 4838001395392124604
+      m_MaterialGuid:
+        trashV2_stain_mat_material:
+          guid: 6f6b6e7291af77d94d45e6a07d
+          type: 175488002581160416
+        trashV2_pile_mat_material:
+          guid: 6f6b6f7c6a942125dfeb930294
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.300000012
+        y: 0.101000004
+        z: 0.300000012
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 259
+    entity name:
+      name: trash_collectable_3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1.42301142
+        y: 1.42301142
+        z: 1.42301142
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: 0.251432598
+        y: -0.0075507462
+        z: -1.98912239
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+    Behaviour:
+      classesName:
+        - TrashCollectable
+      scriptProperties:
+        - name: TrashCollectable.collect_distance
+          type: System.Single
+          value: 0.8
+          is_user_type: false
+        - name: TrashCollectable.uiObjectName
+          type: System.String
+          value: trash_collectable_UI_3
+          is_user_type: false
+  - BoxCollider:
+      size:
+        x: 0.400000006
+        y: 1
+        z: 0.699999988
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0.0700000003
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 260
+    entity name:
+      name: box_collider
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.773344755
+        y: 0.261784732
+        z: -1.20080185
+  - BoxCollider:
+      size:
+        x: 0.300000012
+        y: 0.300000012
+        z: 0.25
+      CenterOffset:
+        x: 0
+        y: -0.0500000007
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 261
+    entity name:
+      name: box_collider2
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.433909565
+        y: 0.162442073
+        z: 0.333607256
+  - Scene ID:
+      Scene ID: 263
+    entity name:
+      name: SFX_MenuQuit
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976efa7b839256004822a3ef23
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 265
+    entity name:
+      name: DoorLookTarget
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0.000151771514
+        y: 90
+        z: 0.000153270943
+      m_Trans:
+        x: -0.735000014
+        y: 0.582000017
+        z: -0.00400000019
+  - Scene ID:
+      Scene ID: 267
+    entity name:
+      name: trashbin_interact_UI
+    WorldUIComponent:
+      textureGuid:
+        guid: ac4114a7844b92e7030a53941f6
+        type: 126269861530532084
+      size:
+        x: 0.200000003
+        y: 0.0500000007
+      billboardMode: "\x00"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.879993796
+        z: 0.880000055
+      m_Rotate:
+        x: 179.999893
+        y: -5.00895612e-06
+        z: -179.999893
+      m_Trans:
+        x: -0.129552886
+        y: 0.579110086
+        z: 0.671654284
+  - Scene ID:
+      Scene ID: 269
+    entity name:
+      name: trash_collectable_UI_2
+    WorldUIComponent:
+      textureGuid:
+        guid: ac4113d7674ae81ad4565139bff
+        type: 126269861530532084
+      size:
+        x: 0.200000003
+        y: 0.0500000007
+      billboardMode: "\x01"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      layer: 0
+      visible: true
+      interactable: true
+      m_useRenderTexture: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 0.879993796
+        z: 0.880000055
+      m_Rotate:
+        x: 2.78824429e-11
+        y: -0
+        z: -179.999893
+      m_Trans:
+        x: -0.405000001
+        y: 0.338999987
+        z: -1.71200001
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.363471955
+        y: 1.60416412
+        z: 1.55377281
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 271
+    entity name:
+      name: door_wall_collider
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.363471955
+        y: 1.60416412
+        z: 1.55377281
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.881649971
+        y: 0.80431354
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: false
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 00
+        type: 4838001395392124604
+      m_MaterialGuid:
+        unnamed slot:
+          guid: 00
+          type: 175488002581160416
+    BoxCollider:
+      size:
+        x: 0.269576043
+        y: 0.288140148
+        z: 0.445617706
+      CenterOffset:
+        x: 0
+        y: 0
+        z: 0
+      isTrigger: false
+      friction: 0.5
+      restitution: 0
+      density: 1
+    Scene ID:
+      Scene ID: 273
+    entity name:
+      name: trashbag_colldier
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.269576043
+        y: 0.288140148
+        z: 0.445617706
+      m_Rotate:
+        x: 0
+        y: -0
+        z: 0
+      m_Trans:
+        x: -0.793007553
+        y: 0.170969009
+        z: -1.74659669
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 0.699999988
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.5
+          y: 0.5
+          z: 1
+  - Scene ID:
+      Scene ID: 274
+    entity name:
+      name: TextMengVO_1
+    HUDComponent:
+      m_TextureGuid:
+        guid: c35ad774c494fceacda4a0ff04
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 1150
+        y: 56
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 277
+    entity name:
+      name: TextMengVO_4
+    HUDComponent:
+      m_TextureGuid:
+        guid: c35ae67f4da053beaabdd534ce
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 700
+      size:
+        x: 329
+        y: 54
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 0
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 278
+    entity name:
+      name: TutorialHudVO
+    Behaviour:
+      classesName:
+        - TutorialHudVO
+  - Scene ID:
+      Scene ID: 279
+    entity name:
+      name: SmokePool
+    Behaviour:
+      classesName:
+        - SmokePool
+      scriptProperties:
+        - name: SmokePool.poolSize
+          type: System.Int32
+          value: 3
+          is_user_type: false
+        - name: SmokePool.smokeOffset
+          type: BasilEngine.Mathematics.Vector3
+          value: 0,0.3,0
+          is_user_type: true
+        - name: SmokePool.smokePrefix
+          type: System.String
+          value: trash_collect_smoke_
+          is_user_type: false
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 37799ee7cf995c46c3f9df0e028
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Material.001_material:
+          guid: 377f4dd75318170715a78fe45b9
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 280
+    AnimationComponent:
+      Duration: 500
+      CurrentTime: 0
+      TicksPerSecond: 1000
+      State:
+        IsPlaying: false
+        Loop: false
+        PlaybackSpeed: 1
+        StartTime: 0
+        EndTime: -1
+      Animation:
+        guid: 377f4de727dac1bc2fb26d44281
+        type: 10466365863016233885
+    SkeletonComponent:
+      SkeletonData:
+        guid: 377f4cf74de8d7b767de5f32523
+        type: 6801494594526287214
+    entity name:
+      name: trash_collect_smoke_1
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.5
+        y: 0.5
+        z: 0.5
+      m_Rotate:
+        x: -180
+        y: 0.611404002
+        z: 0.000180183561
+      m_Trans:
+        x: -0.0582802892
+        y: 2
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+        u_NormalStrength: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 37799ee7cf995c46c3f9df0e028
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Material.001_material:
+          guid: 377f4dd75318170715a78fe45b9
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 281
+    AnimationComponent:
+      Duration: 500
+      CurrentTime: 0
+      TicksPerSecond: 1000
+      State:
+        IsPlaying: false
+        Loop: false
+        PlaybackSpeed: 1
+        StartTime: 0
+        EndTime: -1
+      Animation:
+        guid: 377f4de727dac1bc2fb26d44281
+        type: 10466365863016233885
+    SkeletonComponent:
+      SkeletonData:
+        guid: 377f4cf74de8d7b767de5f32523
+        type: 6801494594526287214
+    entity name:
+      name: trash_collect_smoke_2
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.5
+        y: 0.5
+        z: 0.5
+      m_Rotate:
+        x: -180
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+        u_NormalStrength: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
+  - MeshRendererComponent:
+      m_PrimitiveType: "\x00"
+      hasAttachedMaterial: true
+      isPrimitive: false
+      m_MeshGuid:
+        guid: 37799ee7cf995c46c3f9df0e028
+        type: 4838001395392124604
+      m_MaterialGuid:
+        Material.001_material:
+          guid: 377f4dd75318170715a78fe45b9
+          type: 175488002581160416
+    Scene ID:
+      Scene ID: 282
+    AnimationComponent:
+      Duration: 500
+      CurrentTime: 0
+      TicksPerSecond: 1000
+      State:
+        IsPlaying: false
+        Loop: false
+        PlaybackSpeed: 1
+        StartTime: 0
+        EndTime: -1
+      Animation:
+        guid: 377f4de727dac1bc2fb26d44281
+        type: 10466365863016233885
+    SkeletonComponent:
+      SkeletonData:
+        guid: 377f4cf74de8d7b767de5f32523
+        type: 6801494594526287214
+    entity name:
+      name: trash_collect_smoke_3
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 0.5
+        y: 0.5
+        z: 0.5
+      m_Rotate:
+        x: -180
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 0
+    MaterialOverridesComponent:
+      floatOverrides:
+        u_MetallicValue: 0
+        u_RoughnessValue: 1
+        u_NormalStrength: 1
+      vec3Overrides:
+        u_AlbedoColor:
+          x: 0.800000012
+          y: 0.699999988
+          z: 0.600000024
