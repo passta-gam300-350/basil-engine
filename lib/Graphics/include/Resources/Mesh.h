@@ -51,7 +51,6 @@ public:
     uint16_t meshSortIndex = 0;
 
     // constructor
-    Mesh() = default;
     Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
 
     // Note: Removed Draw() method - rendering is now handled by RenderCommand system

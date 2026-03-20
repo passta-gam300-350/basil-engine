@@ -21,18 +21,6 @@ Technology is prohibited.
 #include <glad/glad.h>
 #include <stb_image.h>
 
-
-// Add helper to convert aiMatrix4x4 to glm::mat4
-static glm::mat4 aiToGlm(const aiMatrix4x4 &m)
-{
-    return glm::mat4(
-        m.a1, m.b1, m.c1, m.d1,
-        m.a2, m.b2, m.c2, m.d2,
-        m.a3, m.b3, m.c3, m.d3,
-        m.a4, m.b4, m.c4, m.d4
-    );
-}
-
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 {
     loadModel(path);
@@ -57,77 +45,29 @@ void Model::loadModel(std::string const &path)
     directory = path.substr(0, path.find_last_of('/'));
 
     // process ASSIMP's root node recursively
-    processNode(scene->mRootNode, scene, glm::mat4(1.0f));
+    processNode(scene->mRootNode, scene);
 
 }
 
-//void Model::processNode(aiNode *node, const aiScene *scene)
-//{
-//    // Get node name for selection grouping
-//    std::string nodeName = node->mName.C_Str();
-//
-//    // process each mesh located at the current node
-//    for(unsigned int i = 0; i < node->mNumMeshes; ++i)
-//    {
-//        // the node object only contains indices to index the actual objects in the scene.
-//        // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-//        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-//        meshes.push_back(processMesh(mesh, scene));
-//        meshNodeNames.push_back(nodeName);  // Store node name for this mesh
-//    }
-//    // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-//    for(unsigned int i = 0; i < node->mNumChildren; ++i)
-//    {
-//        processNode(node->mChildren[i], scene);
-//    }
-//}
-
-//void Model::processNode(aiNode *node, const aiScene *scene)
-//{
-//    std::string nodeName = node->mName.C_Str();
-//
-//    for (unsigned int i = 0; i < node->mNumMeshes; ++i)
-//    {
-//        unsigned int assimpMeshIndex = node->mMeshes[i];
-//
-//        // Cache by Assimp index so shared meshes reuse same object
-//        auto it = m_MeshCache.find(assimpMeshIndex);
-//        if (it == m_MeshCache.end())
-//        {
-//            aiMesh *mesh = scene->mMeshes[assimpMeshIndex];
-//            m_MeshCache[assimpMeshIndex] = processMesh(mesh, scene);
-//        }
-//
-//        meshes.push_back(m_MeshCache[assimpMeshIndex]);
-//        meshAssimpIndices.push_back(assimpMeshIndex); // store original index
-//        meshNodeNames.push_back(nodeName);
-//    }
-//    for (unsigned int i = 0; i < node->mNumChildren; ++i)
-//        processNode(node->mChildren[i], scene);
-//}
-
-void Model::processNode(aiNode *node, const aiScene *scene, glm::mat4 parentTransform)
+void Model::processNode(aiNode *node, const aiScene *scene)
 {
-    glm::mat4 nodeTransform = parentTransform * aiToGlm(node->mTransformation);
+    // Get node name for selection grouping
     std::string nodeName = node->mName.C_Str();
 
-    for (unsigned int i = 0; i < node->mNumMeshes; ++i)
+    // process each mesh located at the current node
+    for(unsigned int i = 0; i < node->mNumMeshes; ++i)
     {
-        unsigned int assimpMeshIndex = node->mMeshes[i];
-        auto it = m_MeshCache.find(assimpMeshIndex);
-        if (it == m_MeshCache.end())
-        {
-            aiMesh *mesh = scene->mMeshes[assimpMeshIndex];
-            m_MeshCache.emplace(assimpMeshIndex, processMesh(mesh, scene));
-        }
-        meshes.push_back(m_MeshCache.at(assimpMeshIndex));
-        meshAssimpIndices.push_back(assimpMeshIndex);
-        meshNodeNames.push_back(nodeName);
-        meshNodeTransforms.push_back(nodeTransform);  // ADD THIS
+        // the node object only contains indices to index the actual objects in the scene.
+        // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        meshes.push_back(processMesh(mesh, scene));
+        meshNodeNames.push_back(nodeName);  // Store node name for this mesh
     }
-
-    for (unsigned int i = 0; i < node->mNumChildren; ++i)
-        processNode(node->mChildren[i], scene, nodeTransform);
+    // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
+    for(unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        processNode(node->mChildren[i], scene);
+    }
 }
 
 Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
