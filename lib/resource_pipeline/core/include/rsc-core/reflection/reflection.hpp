@@ -61,6 +61,9 @@ namespace rp {
 		template <typename Type, auto... ptrs>
 		using ExternalTypeBinderMetadata = internal::binding_helper<Type, ptrs...>;
 
+		//template <typename Type, auto... ptrs>
+		//using ExternalTypeFieldTagMetadata = internal::binding_helper<Type, ptrs...>;
+
 		//specialise and add arity static member
 		template <typename Type, typename = void>
 		struct is_external_reflection_type : std::false_type {};

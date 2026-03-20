@@ -23,6 +23,7 @@
 #include "System/AnimationSystem.hpp"
 #include "System/ButtonSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
+#include <chrono>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -51,6 +52,12 @@ namespace {
 	constexpr std::string_view DEFAULT_SINK_NAME{ "Engine" };
 	constexpr std::string_view DEFAULT_OUTPUT_FILE{ "" };
 	constexpr std::string_view DEFAULT_CONFIG_NAME{ "Default.yaml"};
+
+	double GetFrameTimestampSeconds()
+	{
+		using clock = std::chrono::steady_clock;
+		return std::chrono::duration<double>(clock::now().time_since_epoch()).count();
+	}
 }
 
 Engine& Engine::Instance() {
@@ -87,8 +94,12 @@ void Engine::Init(std::string const& cfg ) {
 		Instance().m_Window->SetVSync(win_vsync);
 
 		if (win_mode) {
-			auto ptr = Instance().m_Window->GetNativeWindow();
 			GLFWmonitor* monitor = glfwGetPrimaryMonitor(); // Get the monitor's video mode (resolution, refresh rate, etc.) const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			auto monVidmode = glfwGetVideoMode(monitor);
+			win_width = monVidmode->width;
+			win_height = monVidmode->height;
+
+			auto ptr = Instance().m_Window->GetNativeWindow();
 			// Switch to fullscreen
 			glfwSetWindowMonitor(ptr, monitor, 0, 0, win_width, win_height, 0);
 		}
@@ -184,7 +195,6 @@ void Engine::Init(std::string const& cfg ) {
 }
 
 void Engine::CoreUpdate() {
-	Engine::Instance().m_Info.m_StartTime.reset();
 	//thread_local auto physic_system{PhysicsSystem()};
 	Engine& instance{ Instance() };
 	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
@@ -217,7 +227,24 @@ void Engine::CoreUpdate() {
 
 
 	instance.m_SceneRegistry->PollRequestSceneChange();
-	instance.m_Info.m_ActualDeltaTime = instance.m_Info.m_StartTime.elapsed().count();
+}
+
+void Engine::TickFrameClock()
+{
+	Engine& instance{ Instance() };
+	const double currentFrameTime = GetFrameTimestampSeconds();
+	if (instance.m_Info.m_LastFrameTime <= 0.0) {
+		instance.m_Info.m_LastFrameTime = currentFrameTime;
+	}
+
+	double frameDelta = currentFrameTime - instance.m_Info.m_LastFrameTime;
+	if (frameDelta < 0.0) {
+		frameDelta = 0.0;
+	}
+
+	instance.m_Info.m_LastFrameTime = currentFrameTime;
+	instance.m_Info.m_DeltaTime = frameDelta;
+	instance.m_Info.m_ActualDeltaTime = frameDelta;
 }
 
 void Engine::Update() {
@@ -231,6 +258,7 @@ void Engine::Update() {
 					break;
 				}
 				{
+					TickFrameClock();
 					CoreUpdate();
 					UpdateDebug();
 					Engine::GetWindowInstance().SwapBuffers();
@@ -252,19 +280,17 @@ void Engine::UpdateDebug() {
 	PF_SYSTEM("Update Debug");
 	Engine& instance{ Instance() };
 	std::uint64_t& frame_number{ instance.m_Info.m_TotalFrameCt };
-	std::uint64_t& frame_counter{ instance.m_Info.m_FrameLogCounter };
 	std::uint64_t& frame_log_rate{ instance.m_Info.m_FrameLogRate };
 
+	instance.m_Info.m_FPS = instance.m_Info.m_DeltaTime > 0.0
+		? 1.0 / instance.m_Info.m_DeltaTime
+		: 0.0;
 
-
-	if (frame_log_rate && frame_counter >= frame_log_rate) {
+	if (frame_log_rate && frame_number > 0 && frame_number % frame_log_rate == 0) {
 		Profiler::instance().printLastFrameSummary();
-		Engine::Instance().GetInfo().m_FPS = Profiler::instance().getLastFps();
-		Engine::Instance().GetInfo().m_DeltaTime = 1 / Engine::Instance().GetInfo().m_FPS;
 	}
 
 	frame_number++;
-	frame_counter--;
 
 	//TODO: DEBUG REMOVE LATER
 	//BehaviourSystem::Instance().Update(instance.m_World, 0.f);
@@ -348,10 +374,11 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 
 	Instance().m_SceneRegistry = std::make_unique<SceneRegistry>();
 
-	BindingSystem::RegisterBindings();
+		BindingSystem::RegisterBindings();
 
-	PhysicsSystem::Instance().Init();
-	PhysicsSystem::Instance().SetupObservers();
+		PhysicsSystem::Instance().Init();
+		PhysicsSystem::Instance().SetupObservers();
+		Instance().m_Info.m_LastFrameTime = GetFrameTimestampSeconds();
 
 	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
 	Instance().m_RenderSystem->InitJoltDebugRenderer();
@@ -409,7 +436,7 @@ double Engine::GetDeltaTime() {
 }
 
 double Engine::GetLastDeltaTime() {
-	return Instance().m_Info.m_ActualDeltaTime;
+	return Instance().m_Info.m_DeltaTime;
 }
 
 void Engine::GenerateDefaultConfig(std::string_view name) {

@@ -1,0 +1,24 @@
+base:
+  m_guid: 14fc6c17bb9a234206ef454da08
+  m_importer: .mesh
+  m_source: lvl1_layout.glb
+  m_name: lvl1_layout.glb
+  m_importer_type: 3262350505779219304
+merge_mesh: true
+extract_material: true
+extract_animation: true
+extract_textures: true
+import_extracted: true
+is_skinned: false
+scale:
+  x: 1
+  y: 1
+  z: 1
+rotate:
+  x: 0
+  y: 0
+  z: 0
+translate:
+  x: 0
+  y: 0
+  z: 0

@@ -1,0 +1,7 @@
+base:
+  m_guid: 14fd91d7afb854bc7bd6c6067a6
+  m_importer: texture
+  m_source: lvl1_layout.glb30.png
+  m_name: lvl1_layout.glb30.png
+  m_importer_type: 13238151832854353850
+compression: BC3_RGBA8
