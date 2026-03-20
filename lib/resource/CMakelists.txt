@@ -23,6 +23,7 @@ set(RESOURCE_CORE_DEP_LIBS
     INTERFACE tinyddsloader
     INTERFACE yaml-cpp::yaml-cpp
     INTERFACE resource-pipeline-core
+    
 )
 
 set(RESOURCE_EXT_DEP_LIBS
@@ -32,6 +33,7 @@ set(RESOURCE_EXT_DEP_LIBS
     INTERFACE freetype
     INTERFACE msdfgen-core
     INTERFACE resource-pipeline-ext
+    INTERFACE stb
     ${RESOURCE_CORE_DEP_LIBS}
 )
 
