@@ -111,6 +111,10 @@ public:
     // Channel (mix group) volume: percent delta, e.g. +10 = increase by 10%, -20 = decrease by 20%
     void AdjustChannelVolume(AudioGroup channel, float percentDelta);
 
+    // Channel (mix group) volume as linear multiplier (FMOD ChannelGroup volume).
+    // Useful for persisting/carrying audio settings between scenes.
+    float GetChannelVolume(AudioGroup channel);
+
     // Non-copyable
     AudioSystem(const AudioSystem&) = delete;
     AudioSystem& operator=(const AudioSystem&) = delete;

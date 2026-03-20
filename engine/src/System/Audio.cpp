@@ -299,6 +299,27 @@ void AudioSystem::AdjustChannelVolume(AudioGroup channel, float percentDelta) {
     FMOD_ErrorCheck(group->setVolume(newVol));
 }
 
+float AudioSystem::GetChannelVolume(AudioGroup channel) {
+    FMOD::ChannelGroup* group = nullptr;
+    if (channel == AudioGroup::MASTER) {
+        group = m_masterGroup;
+    } else {
+        auto it = m_groups.find(channel);
+        if (it != m_groups.end())
+            group = it->second;
+    }
+
+    // If audio system wasn't fully initialized (or FMOD groups aren't available),
+    // return a safe default so scene carry-over logic doesn't break.
+    if (!group) {
+        return 1.0f;
+    }
+
+    float current = 1.0f;
+    FMOD_ErrorCheck(group->getVolume(&current));
+    return current;
+}
+
 int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, bool isLooping) {
 	auto it = m_pathToHandle.find(dir);
 	if (it != m_pathToHandle.end()) {

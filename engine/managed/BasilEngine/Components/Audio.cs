@@ -96,6 +96,16 @@ namespace BasilEngine.Components
         /// <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
         private static extern void AdjustChannelVolume(byte channel, float percentDelta);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetChannelVolume")]
+        [StaticAccessor("ManagedAudio", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Gets the current mix channel (group) volume as a linear multiplier.
+        /// </summary>
+        /// <param name="channel">Mix group (0=Master, 1=BGM, 2=SFX, 3=UI, 4=Ambient).</param>
+        /// <returns>Linear volume multiplier for that channel/group.</returns>
+        private static extern float GetChannelVolume(byte channel);
+
         /// <summary>
         /// Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
         /// </summary>
@@ -104,6 +114,17 @@ namespace BasilEngine.Components
         public static void AdjustChannelVolume(AudioChannel channel, float percentDelta)
         {
             AdjustChannelVolume((byte)channel, percentDelta);
+        }
+
+        /// <summary>
+        /// Gets the current mix channel (group) volume as a linear multiplier.
+        /// Useful for persisting/carrying audio settings between scenes.
+        /// </summary>
+        /// <param name="channel">Mix group.</param>
+        /// <returns>Linear volume multiplier for that channel/group.</returns>
+        public static float GetChannelVolume(AudioChannel channel)
+        {
+            return GetChannelVolume((byte)channel);
         }
 
         /// <summary>
