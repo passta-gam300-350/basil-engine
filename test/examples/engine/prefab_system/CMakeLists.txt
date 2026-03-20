@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(PrefabSystemExample)
 
-# Find the engine headers
-set(ENGINE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../engine/include)
-set(ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../engine/src)
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../lib)
 
 # ============================================================
@@ -37,21 +34,12 @@ add_executable(prefab_example
     main.cpp
 )
 
-# Link against engine libraries (adjust based on your build system)
 target_include_directories(prefab_example PRIVATE
-    ${ENGINE_INCLUDE_DIR}
     ${LIB_DIR}/uuid/include
 )
 
-# Link libraries using imported targets from FetchContent
 target_link_libraries(prefab_example PRIVATE
-    EnTT
-    glm
-    yaml-cpp
-    resource-pipeline-core
-    
-    # engine  # Uncomment if you have a compiled engine library
-    # Add other required libraries
+    engine
 )
 
 # Set C++20 standard
@@ -65,7 +53,11 @@ if(WIN32)
 endif()
 
 # Organize in IDE
-set_target_properties(prefab_example PROPERTIES FOLDER lib_example)
+set_target_properties(prefab_example PROPERTIES
+    FOLDER lib_example
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
 
 # Copy sample prefab to build directory
 configure_file(
