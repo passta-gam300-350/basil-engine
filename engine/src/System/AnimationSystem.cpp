@@ -57,7 +57,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 			animationComponent.animatorInstance = nullptr;
 			continue;
 		}
-		if (animationComponent.animatorInstance->currentAnimation != ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid)) {
+		if (animationComponent.lastKnownAnimGuid != animationComponent.animationdata.m_guid) {
 			CleanupSkeletalAnimation(animationComponent);
 			skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
 			InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
@@ -255,6 +255,9 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 
 	// 4. Enable skeletal mode
 	animComp.isSkeletalAnim = true;
+
+	// Record the GUID so AnimationSystem can detect future editor asset swaps
+	animComp.lastKnownAnimGuid = animComp.animationdata.m_guid;
 }
 
 void CleanupSkeletalAnimation(AnimationComponent& animComp)
