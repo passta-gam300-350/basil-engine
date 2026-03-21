@@ -19,6 +19,8 @@ Technology is prohibited.
 #include "Engine.hpp"
 #include "ecs/ecs.h"
 #include "Component/AnimationComponent.hpp"
+#include "Component/SkeletonComponent.hpp"
+#include "Manager/ResourceSystem.hpp"
 #include "Animation/Animation.h"
 #include "spdlog/spdlog.h"
 

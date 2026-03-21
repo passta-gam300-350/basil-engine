@@ -302,6 +302,8 @@ void RenderSystem::Update(ecs::world& world) {
 		}
 		auto [mesh, transform, visible] = obj.get<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 
+		if (!visible.m_IsVisible) continue;
+
 		// === RESOURCE LOOKUP (ON-DEMAND LOADING FROM ResourceRegistry) ===
 
 		// Load mesh resource (from ResourceRegistry or PrimitiveManager)
