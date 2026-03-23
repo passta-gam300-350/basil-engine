@@ -38,6 +38,7 @@ struct AnimationComponent
 	animationContainer* currentAnimationContainer = nullptr;
 	blendState blend;
 	bool isSkeletalAnim = false;
+	bool isSpritesheetMode = false;
 	animator* animatorInstance = nullptr;
 };
 
@@ -61,7 +62,8 @@ MemberRegistrationV<&AnimationComponent::duration, "Duration">,
 MemberRegistrationV<&AnimationComponent::currentTime, "CurrentTime">,
 MemberRegistrationV<&AnimationComponent::ticksPerSecond, "TicksPerSecond">,
 MemberRegistrationV<&AnimationComponent::state, "State">,
-MemberRegistrationV<&AnimationComponent::animationdata, "Animation">
+MemberRegistrationV<&AnimationComponent::animationdata, "Animation">,
+MemberRegistrationV<&AnimationComponent::isSpritesheetMode, "SpritesheetMode">
 // Note: channel is NOT registered (runtime pointer, not serializable)
 RegisterReflectionTypeEnd
 

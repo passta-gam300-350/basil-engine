@@ -51,14 +51,73 @@ void ParticleRenderer::RenderToPass(RenderPass& pass, FrameData const& frameData
 	{
 		return;
 	}
-	m_TotalParticleCount = 0;
-	for (auto const& eachSystem : m_SubmittedSystems)
+
+	// Pack all active particles from all systems contiguously into the SSBO first,
+	// then submit deferred draw commands with per-system base offsets.
+	// This avoids the overwrite bug where immediate SSBO writes corrupt earlier draws.
+	EnsureWhiteTexture();
+	std::vector<ParticleInstanceData> allInstanceData;
+	allInstanceData.reserve(m_MaxParticles);
+
+	struct SystemDrawInfo
 	{
-		if (eachSystem.particles.empty() == false)
+		uint32_t baseInstance;
+		uint32_t activeCount;
+		size_t systemIndex;
+	};
+	std::vector<SystemDrawInfo> drawInfos;
+	drawInfos.reserve(m_SubmittedSystems.size());
+
+	for (size_t i = 0; i < m_SubmittedSystems.size(); ++i)
+	{
+		auto const& system = m_SubmittedSystems[i];
+		uint32_t base = static_cast<uint32_t>(allInstanceData.size());
+		uint32_t activeCount = 0;
+		for (auto const& p : system.particles)
 		{
-			RenderSystem(eachSystem, frameData, pass);
-			m_TotalParticleCount += static_cast<uint32_t>(eachSystem.particles.size());
+			if (p.active)
+			{
+				ParticleInstanceData d;
+				d.color = p.color;
+				d.position = p.position;
+				d.rotation = p.rotation;
+				d.size = p.size;
+				d.textureID = 0;
+				d.padding[0] = 0;
+				d.padding[1] = 0;
+				allInstanceData.push_back(d);
+				++activeCount;
+			}
 		}
+		if (activeCount > 0)
+		{
+			drawInfos.push_back({ base, activeCount, i });
+		}
+	}
+
+	if (allInstanceData.empty())
+	{
+		return;
+	}
+
+	// Single SSBO upload covering all systems
+	m_InstanceSSBO->SetData(allInstanceData.data(), static_cast<uint32_t>(allInstanceData.size() * sizeof(ParticleInstanceData)));
+	m_TotalParticleCount = static_cast<uint32_t>(allInstanceData.size());
+
+	// Submit deferred draw commands per system with correct base offset
+	uint32_t vaoHandle = m_QuadVAO->GetVAOHandle();
+	for (auto const& info : drawInfos)
+	{
+		auto const& system = m_SubmittedSystems[info.systemIndex];
+		pass.Submit(RenderCommands::BindShaderData{ m_ParticleShader });
+		pass.Submit(RenderCommands::BindSSBOData{ m_InstanceSSBO->GetSSBOHandle(), PARTICLE_SSBO_BINDING });
+		pass.Submit(RenderCommands::SetUniformsData{ m_ParticleShader, glm::mat4(1.0f), frameData.viewMatrix, frameData.projectionMatrix, frameData.cameraPosition });
+		pass.Submit(RenderCommands::SetUniformIntData{ m_ParticleShader, "uBaseInstance", static_cast<int>(info.baseInstance) });
+		uint32_t texID = (system.texture && system.texture->id != 0) ? system.texture->id : m_WhiteTexture.id;
+		pass.Submit(RenderCommands::BindTextureIDData{ texID, 0, m_ParticleShader, "uTexture" });
+		SetBlendMode(system.blendMode, pass);
+		pass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, false });
+		pass.Submit(RenderCommands::DrawElementsInstancedData{ vaoHandle, 6, info.activeCount, 0, GL_TRIANGLES });
 	}
 }
 
@@ -91,7 +150,9 @@ void ParticleRenderer::InitializeResources()
 	size_t bufferSize = m_MaxParticles * sizeof(ParticleInstanceData);
 	m_InstanceSSBO = std::make_unique<ShaderStorageBuffer>(nullptr, uint32_t(bufferSize), GL_DYNAMIC_DRAW);
 	m_InstanceSSBO->BindBase(PARTICLE_SSBO_BINDING);
+
 	// NOTE: Shader must be set via SetParticleShader() before rendering!
+	// White fallback texture is created lazily on first render (EnsureWhiteTexture)
 }
 
 void ParticleRenderer::CreateBillboardQuad()
@@ -139,67 +200,23 @@ void ParticleRenderer::CreateBillboardQuad()
 	m_QuadVAO = quadMesh.GetVertexArray();
 }
 
-void ParticleRenderer::RenderSystem(ParticleRenderData const& system, FrameData const& frameData, RenderPass& pass)
+void ParticleRenderer::EnsureWhiteTexture()
 {
-	UpdateSSBO(system.particles);
-	uint32_t activeCount = 0;
-	for (auto const& eachParticle : system.particles)
-	{
-		if (eachParticle.active == true)
-		{
-			activeCount++;
-		}
-	}
-	if (activeCount == 0)
+	if (m_WhiteTexture.id != 0)
 	{
 		return;
 	}
-
-	// bind shader
-	pass.Submit(RenderCommands::BindShaderData{ m_ParticleShader });
-	// bind ssbo
-	pass.Submit(RenderCommands::BindSSBOData{m_InstanceSSBO->GetSSBOHandle(), PARTICLE_SSBO_BINDING});
-	// set uniforms
-	pass.Submit(RenderCommands::SetUniformsData{ m_ParticleShader, glm::mat4(1.0f), frameData.viewMatrix, frameData.projectionMatrix, frameData.cameraPosition });
-	// bind texture (commented out for pure color particles)
-	// if (system.texture)
-	// {
-	// 	std::vector<Texture> textures = { *system.texture };
-	// 	pass.Submit(RenderCommands::BindTexturesData{ textures, m_ParticleShader });
-	// }
-	// set blend mode
-	SetBlendMode(system.blendMode, pass);
-	// set depth test
-	pass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, false });
-	// draw instanced
-	uint32_t vaoHandle = m_QuadVAO->GetVAOHandle();
-	pass.Submit(RenderCommands::DrawElementsInstancedData{ vaoHandle, 6, activeCount, 0, GL_TRIANGLES });
+	unsigned int whiteTexID = 0;
+	glGenTextures(1, &whiteTexID);
+	glBindTexture(GL_TEXTURE_2D, whiteTexID);
+	unsigned char whitePixel[4] = { 255, 255, 255, 255 };
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	m_WhiteTexture = Texture{ whiteTexID, "texture_diffuse", "white", GL_TEXTURE_2D };
 }
 
-void ParticleRenderer::UpdateSSBO(std::vector<Particle> const& particles)
-{
-	std::vector<ParticleInstanceData> instanceParticleData;
-	instanceParticleData.reserve(particles.size());
-	for (auto const& eachParticle : particles)
-	{
-		if (eachParticle.active == true)
-		{
-			ParticleInstanceData eachParticleData;
-			eachParticleData.color = eachParticle.color;
-			eachParticleData.position = eachParticle.position;
-			eachParticleData.rotation = eachParticle.rotation;
-			eachParticleData.size = eachParticle.size;
-			eachParticleData.textureID = 0; // havent implemented texture arrays yet, no worries
-			eachParticleData.padding[0] = 0;
-			eachParticleData.padding[1] = 0;
-			instanceParticleData.push_back(eachParticleData);
-		}
-	}
-	if (instanceParticleData.empty() == false)
-	{
-		m_InstanceSSBO->SetData(instanceParticleData.data(), static_cast<uint32_t>(instanceParticleData.size() * sizeof(ParticleInstanceData)));
-	}
-}
 
 void ParticleRenderer::SetBlendMode(BlendMode mode, RenderPass& pass)
 {

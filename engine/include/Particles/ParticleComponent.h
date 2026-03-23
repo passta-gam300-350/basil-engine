@@ -27,8 +27,8 @@ Technology is prohibited.
 struct ParticleComponent
 {
 	ParticleEmitterConfiguration config; // serializable
-	//std::shared_ptr<Texture> texture = nullptr;
 	rp::Guid texture{};
+	bool useTexture = false;
 	BlendMode blendSettings = BlendMode::Alpha;
 	bool depthWrite = false;
 	uint32_t renderLayer = 10;
@@ -40,6 +40,7 @@ struct ParticleComponent
 	ParticleComponent(const ParticleComponent& other)
 		: config(other.config)
 		, texture(other.texture)
+		, useTexture(other.useTexture)
 		, blendSettings(other.blendSettings)
 		, depthWrite(other.depthWrite)
 		, renderLayer(other.renderLayer)
@@ -51,6 +52,7 @@ struct ParticleComponent
 		if (this != &other) {
 			config = other.config;
 			texture = other.texture;
+			useTexture = other.useTexture;
 			blendSettings = other.blendSettings;
 			depthWrite = other.depthWrite;
 			renderLayer = other.renderLayer;
@@ -95,9 +97,10 @@ RegisterReflectionTypeEnd
 
 RegisterReflectionTypeBegin(ParticleComponent, "ParticleComponent")
 	MemberRegistrationV<&ParticleComponent::config, "EmitterConfig">,
-	MemberRegistrationV<&ParticleComponent::texture, "Texture">,
 	MemberRegistrationV<&ParticleComponent::autoPlay, "AutoPlay">,
 	MemberRegistrationV<&ParticleComponent::blendSettings, "BlendSetting">
+	//MemberRegistrationV<&ParticleComponent::useTexture, "Use Texture">,  // TODO: expose when texture support is ready
+	//MemberRegistrationV<&ParticleComponent::texture, "Texture">,
 	//MemberRegistrationV<&ParticleComponent::depthWrite, "DepthWrite">,
 	//MemberRegistrationV<&ParticleComponent::renderLayer, "RenderLayer">
 RegisterReflectionTypeEnd

@@ -250,8 +250,12 @@ void EditorMain::Render_SceneExplorer()
 							auto  world = Engine::GetWorld();
 							auto newEntity = world.add_entity();
 							
-							newEntity.add<VisibilityComponent>(current.get<VisibilityComponent>());
-							newEntity.add<TransformComponent>(current.get<TransformComponent>());
+							if (current.all<VisibilityComponent>()) {
+								newEntity.add<VisibilityComponent>(current.get<VisibilityComponent>());
+							}
+							if (current.all<TransformComponent>()) {
+								newEntity.add<TransformComponent>(current.get<TransformComponent>());
+							}
 							if (current.any<MeshRendererComponent>()) {
 								newEntity.add<MeshRendererComponent>(current.get<MeshRendererComponent>());
 							}

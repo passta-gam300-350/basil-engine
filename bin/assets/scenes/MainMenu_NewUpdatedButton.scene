@@ -1,0 +1,1478 @@
+scene:
+  name: Scene
+  version: v0.0.1
+  slot: 37
+  guid: 00
+  dependencies: ~
+render_settings:
+  skybox:
+    enabled: false
+    exposure: 1
+    rotation:
+      - 0
+      - 0
+      - 0
+    tint:
+      - 1
+      - 1
+      - 1
+    face_textures:
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+      - 00
+  ambient_light:
+    - 0.0299999993
+    - 0.0299999993
+    - 0.0299999993
+  background_color:
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+    - 1
+  bloom_strength: 0.0399999991
+  tone_map_method: 2
+  exposure_min: 0.100000001
+  exposure_max: 2
+  fog:
+    type: 0
+    start: 10
+    end: 50
+    density: 0.0500000007
+    color:
+      - 0.5
+      - 0.5
+      - 0.5
+entities:
+  - Scene ID:
+      Scene ID: 0
+    entity name:
+      name: Camera
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 2
+        z: 5
+    CameraComponent:
+      m_Type: "\x01"
+      m_IsActive: true
+      m_Fov: 45
+      m_AspectRatio: 1.77777779
+      m_Near: 0.100000001
+      m_Far: 100
+      m_Up:
+        x: 0
+        y: 1
+        z: 0
+      m_Right:
+        x: 1
+        y: 0
+        z: 0
+      m_Front:
+        x: 0
+        y: 0
+        z: 1
+      m_Yaw: -90
+      m_Pitch: 0
+  - Scene ID:
+      Scene ID: 8
+    entity name:
+      name: SFX_UI_Quit
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976efa7b839256004822a3ef23
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 1
+      isLooping: false
+      is3D: false
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 3
+    entity name:
+      name: MenuManager
+    VisibilityComponent:
+      m_IsVisible: false
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    Behaviour:
+      classesName:
+        - MainMenuManager
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976ed47a38af008cb37e443eb1
+        type: 17099568057112876377
+      group: "\x01"
+      volume: 1.41253757
+      isLooping: true
+      is3D: false
+      isStreaming: false
+      playOnAwake: true
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 4
+    entity name:
+      name: Ambience_LightFlicker
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976eb97327b5a9c92a6bc7f3a0
+        type: 17099568057112876377
+      group: "\x02"
+      volume: 1
+      isLooping: true
+      is3D: true
+      isStreaming: false
+      playOnAwake: true
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 5
+    entity name:
+      name: Ambience_Night
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976ec778ceab8f6e62e95eb341
+        type: 17099568057112876377
+      group: "\x04"
+      volume: 1
+      isLooping: true
+      is3D: true
+      isStreaming: false
+      playOnAwake: true
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 6
+    entity name:
+      name: SFX_UI_Hover
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976ee17ee7b67842f7c8130173
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 7
+    entity name:
+      name: SFX_UI_Confirm
+    VisibilityComponent:
+      m_IsVisible: true
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    AudioComponent:
+      audioAssetGuid:
+        guid: 976eee7c5ba7d6a47dd7639b95
+        type: 17099568057112876377
+      group: "\x00"
+      volume: 1
+      isLooping: false
+      is3D: true
+      isStreaming: false
+      playOnAwake: false
+      filterParams:
+        type: 0
+        cutoffHz: 5000
+        resonance: 1
+        echoDelayMs: 500
+        echoFeedback: 0.5
+      minDistance: 1
+      maxDistance: 1000
+      position:
+        x: 0
+        y: 0
+        z: 0
+      velocity:
+        x: 0
+        y: 0
+        z: 0
+  - Scene ID:
+      Scene ID: 9
+    entity name:
+      name: PLAY_BUTTON
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 977
+      position_y: 582
+      width: 250
+      height: 80
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 141b0ef7c6eaf51597f63826d16
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 141b0f97698aeafbccba4bd4717
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 141b100756a8286150036cdbbf6
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 141b0ef7c6eaf51597f63826d16
+        type: 126269861530532084
+      position:
+        x: 977
+        y: 582
+      size:
+        x: 250
+        y: 80
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 10
+    entity name:
+      name: SETTINGS_BUTTON
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 960
+      position_y: 420
+      width: 489
+      height: 77
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 141b1207b3ca41858146ecd53a6
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 141b12971ad966c18d45ea62338
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 141b1307b3aa3ba2f0f9ec2a5fc
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 141b1207b3ca41858146ecd53a6
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 420
+      size:
+        x: 489
+        y: 77
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 11
+    entity name:
+      name: QUIT_BUTTON
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 960
+      position_y: 251
+      width: 220
+      height: 88
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 141b1087eff864923b82fc22b25
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 141b1127059914fa4417e93524e
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 141b1197ba4b9fa72c5745af053
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 141b1087eff864923b82fc22b25
+        type: 126269861530532084
+      position:
+        x: 960
+        y: 251
+      size:
+        x: 220
+        y: 88
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: true
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 15
+    entity name:
+      name: BGM_Text
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da63176bd816af4ebc1c30953
+        type: 126269861530532084
+      position:
+        x: 635
+        y: 665
+      size:
+        x: 174
+        y: 73
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 16
+    entity name:
+      name: SFX_Text
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da63876c58bf1670f03181af9
+        type: 126269861530532084
+      position:
+        x: 635
+        y: 535
+      size:
+        x: 174
+        y: 73
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 17
+    entity name:
+      name: UI_Text
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6397e9c868bc7bc8e8d48cc
+        type: 126269861530532084
+      position:
+        x: 635
+        y: 420
+      size:
+        x: 174
+        y: 73
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 18
+    entity name:
+      name: Ambience_Text
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6307043a2bbeb52f20067e5
+        type: 126269861530532084
+      position:
+        x: 635
+        y: 305
+      size:
+        x: 174
+        y: 73
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 19
+    entity name:
+      name: BGM_Minus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 820
+      position_y: 665
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da63474c89515c04cdb4ed51c
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      position:
+        x: 820
+        y: 665
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 20
+    entity name:
+      name: BGM_Plus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 1400
+      position_y: 665
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da62e704c9c6184585ab5256e
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      position:
+        x: 1400
+        y: 665
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 21
+    entity name:
+      name: BGM_EmptyBar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6327a94aa756afe15d6989b
+        type: 126269861530532084
+      position:
+        x: 1110
+        y: 665
+      size:
+        x: 503
+        y: 45
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 22
+    entity name:
+      name: BGM_Bar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6337a6c836e1991a57532fc
+        type: 126269861530532084
+      position:
+        x: 858
+        y: 665
+      size:
+        x: 503
+        y: 45
+      anchor: "\x03"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 2
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 23
+    VideoComponent:
+      Video GUID:
+        guid: 141b19979e4860f89b91ab2d736
+        type: 14081220367743959884
+      Auto Play: true
+      Loop: false
+      Playback Speed: 0
+      Render Fullscreen: false
+      Render Fullscreen Mode: "\x00"
+      Background Texture:
+        guid: 00
+        type: 126269861530532084
+      Background Color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      Background Visible: true
+      layer: 0
+      Render Layer: 1
+    entity name:
+      name: Video
+    Behaviour:
+      classesName:
+        - MainMenuManager2
+  - Scene ID:
+      Scene ID: 24
+    entity name:
+      name: SFX_Minus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 820
+      position_y: 535
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da63474c89515c04cdb4ed51c
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      position:
+        x: 820
+        y: 535
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 25
+    entity name:
+      name: SFX_Plus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 1400
+      position_y: 535
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da62e704c9c6184585ab5256e
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      position:
+        x: 1400
+        y: 535
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 26
+    entity name:
+      name: SFX_Bar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6337a6c836e1991a57532fc
+        type: 126269861530532084
+      position:
+        x: 858
+        y: 535
+      size:
+        x: 503
+        y: 45
+      anchor: "\x03"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 2
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 27
+    entity name:
+      name: SFX_EmptyBar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6327a94aa756afe15d6989b
+        type: 126269861530532084
+      position:
+        x: 1110
+        y: 535
+      size:
+        x: 503
+        y: 45
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 28
+    entity name:
+      name: UI_Minus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 820
+      position_y: 420
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da63474c89515c04cdb4ed51c
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      position:
+        x: 820
+        y: 420
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 29
+    entity name:
+      name: UI_Plus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 1400
+      position_y: 420
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da62e704c9c6184585ab5256e
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      position:
+        x: 1400
+        y: 420
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 30
+    entity name:
+      name: UI_Bar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6337a6c836e1991a57532fc
+        type: 126269861530532084
+      position:
+        x: 858
+        y: 420
+      size:
+        x: 503
+        y: 45
+      anchor: "\x03"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 2
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 31
+    entity name:
+      name: UI_EmptyBar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6327a94aa756afe15d6989b
+        type: 126269861530532084
+      position:
+        x: 1110
+        y: 420
+      size:
+        x: 503
+        y: 45
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 32
+    entity name:
+      name: Ambience_Minus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 820
+      position_y: 305
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da63474c89515c04cdb4ed51c
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da634702b8c3fb5368d21ae94
+        type: 126269861530532084
+      position:
+        x: 820
+        y: 305
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 33
+    entity name:
+      name: Ambience_Plus
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 1400
+      position_y: 305
+      width: 41
+      height: 41
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 2f0da62e704c9c6184585ab5256e
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da62f71a19f4dd54ec119ef8c
+        type: 126269861530532084
+      position:
+        x: 1400
+        y: 305
+      size:
+        x: 41
+        y: 41
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 34
+    entity name:
+      name: Ambience_Bar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6337a6c836e1991a57532fc
+        type: 126269861530532084
+      position:
+        x: 858
+        y: 305
+      size:
+        x: 503
+        y: 45
+      anchor: "\x03"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 2
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 35
+    entity name:
+      name: Ambience_EmptyBar
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    HUDComponent:
+      m_TextureGuid:
+        guid: 2f0da6327a94aa756afe15d6989b
+        type: 126269861530532084
+      position:
+        x: 1110
+        y: 305
+      size:
+        x: 503
+        y: 45
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false
+  - Scene ID:
+      Scene ID: 36
+    entity name:
+      name: Back_Button
+    TransformComponent:
+      m_Scale:
+        x: 1
+        y: 1
+        z: 1
+      m_Rotate:
+        x: 0
+        y: 0
+        z: 0
+      m_Trans:
+        x: 0
+        y: 0
+        z: 0
+    ButtonComponent:
+      position_x: 550
+      position_y: 124
+      width: 73
+      height: 43
+      anchor: "\x04"
+      disabled: false
+      Text: ""
+      defaultTextureGuid:
+        guid: fef96a672c6bd4e79960e9d1b22
+        type: 126269861530532084
+      hoverTextureGuid:
+        guid: 00
+        type: 126269861530532084
+      pressedTextureGuid:
+        guid: 00
+        type: 126269861530532084
+    HUDComponent:
+      m_TextureGuid:
+        guid: fef96a672c6bd4e79960e9d1b22
+        type: 126269861530532084
+      position:
+        x: 550
+        y: 124
+      size:
+        x: 73
+        y: 43
+      anchor: "\x04"
+      color:
+        x: 1
+        y: 1
+        z: 1
+        w: 1
+      rotation: 0
+      layer: 1
+      visible: false
+      m_useRenderTexture: false

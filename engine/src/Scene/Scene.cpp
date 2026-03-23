@@ -173,7 +173,9 @@ std::optional<std::reference_wrapper<Scene>> SceneRegistry::LoadSceneFromPath(st
 
 
 	auto scene = GetScene(sceneGuid);
+	auto entts = scene.value().get().GetSceneEntitites();
 
+	std::cout << entts.size() << "\n";
 
 	Engine::OnLoad();
 
@@ -213,6 +215,7 @@ void SceneRegistry::UnloadScene(rp::Guid scn_guid)
 	if (scnres) {
 		scnres.value().get().Clear();
 		m_loaded_scenes.erase(scn_guid);
+		ResourceRegistry::Instance().ReleaseAll();
 	}
 }
 ecs::entity Scene::CreateEntity() {
