@@ -94,7 +94,8 @@ rp::Guid getGeneratedTextures(ecs::entity ent, VideoComponent& vc) {
 		vc.aspectratio = static_cast<float>(texdata.width) / texdata.height;
 		texdata.guid = rp::Guid::generate();
 		TextureData texldrdata;
-		texldrdata.pixels = new unsigned char[vc.height * vc.width * 3] {};
+		unsigned int row_size = ((vc.width * 3 + 3) / 4) * 4; //ogl alignment
+		texldrdata.pixels = new unsigned char[row_size * vc.width] {}; //this is necessary since graphics lib does not support purely allocating texture (no pixel upload)
 		texldrdata.width = vc.width;
 		texldrdata.channels = 3;
 		texldrdata.isValid = true;
@@ -235,8 +236,10 @@ std::vector<uint8_t> getNextFrame(VideoComponent& vc, RuntimeVideoData& rvd) {
 	vc.width = frame->width;
 	vc.height = frame->height;
 
-	std::vector<uint8_t> rgb(vc.width * vc.height * 3);
-	plm_frame_to_rgb_unflipped(frame, rgb.data(), frame->width * 3);
+
+	unsigned int row_size = ((vc.width * 3 + 3) / 4) * 4; //ogl alignment
+	std::vector<uint8_t> rgb(row_size * vc.height);
+	plm_frame_to_rgb_unflipped(frame, rgb.data(), row_size);
 
 	return rgb;
 }
