@@ -220,24 +220,27 @@ void AudioSystem::Update(ecs::world& world) {
     FMOD_ErrorCheck(m_system->update());
 }
 
+void AudioSystem::StopAll() {
+    if (!m_initialized || !m_system || !m_masterGroup)
+        return;
+
+    spdlog::info("Audio: Stopping all playback");
+    // Release filter DSPs (need channel to remove DSP from)
+    for (auto& pair : m_componentChannels) {
+        if (pair.first && pair.second)
+            RemoveFilterDsp(pair.first, pair.second);
+    }
+    m_componentFilterDsp.clear();
+    // Stop every channel in the mix (component, video, BGM, dialogue, etc.)
+    FMOD_ErrorCheck(m_masterGroup->stop());
+    m_componentChannels.clear();
+}
+
 void AudioSystem::Exit() {
     spdlog::info("Audio: Exiting");
     if (!m_initialized)  return;
 
-    spdlog::info("Audio: Stopping all channels");
-    for (auto& pair : m_componentChannels) {
-        if (pair.second) {
-            pair.second->stop();
-        }
-    }
-    m_componentChannels.clear();
-
-    for (auto& pair : m_componentFilterDsp) {
-        if (pair.second) {
-            FMOD_ErrorCheck(pair.second->release());
-        }
-    }
-    m_componentFilterDsp.clear();
+    StopAll();
 
     spdlog::info("Audio: Unregistering audio components");
     m_components.clear();
