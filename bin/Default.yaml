@@ -17,7 +17,7 @@ system:
 resource:
   resource threads: 0
   resource list: ~
-  root directory: C:\Users\thamk\gam300\bin
+  root directory: M:\gam300\bin
   enable globbing: false
 logger:
   name: Engine

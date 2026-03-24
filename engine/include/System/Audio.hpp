@@ -88,6 +88,9 @@ public:
     void Update(ecs::world& world);
     void Exit();
 
+    // Stops all playback (e.g. on scene unload). Keeps system initialized.
+    void StopAll();
+
     // Set position and orientation for audio listeners (i.e. camera)
     void SetListenerPosition(const glm::vec3& position = glm::vec3(), const glm::vec3& velocity = glm::vec3()) noexcept;
     void SetListenerOrientation(const glm::vec3& forward = glm::vec3(), const glm::vec3& up = glm::vec3()) noexcept;
