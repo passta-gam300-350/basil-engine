@@ -178,11 +178,6 @@ bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans
     // 4. Check if diffuse/base color texture has alpha channel
     aiString texPath;
     if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-        // Assimp doesn�t expose alpha directly here.
-        // You�d need to load the texture image and inspect its pixel format.
-        // For example, if you use stb_image or another loader, check if it has 4 channels.
-        // If so, you can decide based on alpha values.
-        int index{};
         if (*texPath.C_Str() == '*') {
             if (int index = std::stoi(texPath.C_Str()+1); index < trans.size()) {
                 return trans[index];
@@ -193,7 +188,6 @@ bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans
             int x{};
             int y{};
             int comp{};
-            int len{};
             int status = stbi_info((basepath + '\\' + texPath.C_Str()).c_str(), &x, &y, &comp);
             return (status && (comp == 2 || comp == 4));
         }
@@ -566,8 +560,6 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
 
     std::cout << "Max bone weights per vertex: " << maxWeights << std::endl;
 
-
-
     glm::mat4 transform = BuildTransform(desc);
 
     std::string parent_path{ std::filesystem::path(rp::utility::resolve_path(desc.base.m_source)).parent_path().string() };
@@ -602,7 +594,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
             //dont bake transform hierarchies if skinned
             glm::mat4 nodeWorldTransform = parentTransform;
             glm::mat4 nodeLocalTransform = ToMat4(ndptr->mTransformation);
-            int nodeid = mdl_node_desc.meta.node_local_bind.size();
+            int nodeid = static_cast<int>(mdl_node_desc.meta.node_local_bind.size());
             mdl_node_desc.meta.node_local_bind.emplace_back(mtx44{nodeLocalTransform[0], nodeLocalTransform[1], nodeLocalTransform[2], nodeLocalTransform[3]});
             mdl_node_desc.meta.node_parent.emplace_back(parentidx);
             for (unsigned int m = 0; m < ndptr->mNumMeshes; m++) {
@@ -613,7 +605,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                         mrdata.meshes.emplace_back(mesh);
                         mres.emplace_back(std::pair<rp::Guid, MeshResourceData>(desc.base.m_guid, std::move(mrdata)));
                         // adjust material slot
-                        for (auto& slot : mesh.materials) {
+                        for ([[maybe_unused]] auto& slot : mesh.materials) {
                             mdl_node_desc.meta.mesh_node_idx.emplace_back(nodeid);
                         }
                     }
@@ -661,7 +653,7 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
                     else {
                         mres[0].second.meshes.emplace_back(mesh);
                     }
-                    for (auto& slot : mesh.materials) {
+                    for ([[maybe_unused]] auto& slot : mesh.materials) {
                         mdl_node_desc.meta.mesh_node_idx.emplace_back(nodeid);
                     }
                 }

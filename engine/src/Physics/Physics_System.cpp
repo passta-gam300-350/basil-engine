@@ -278,12 +278,12 @@ void PhysicsSystem::SyncTransformsToPhysics(ecs::world& world) {
     if (!m_bodyInterface) return;
 
     // Update kinematic bodies from ECS transforms
-    auto list_of_entities = world.filter_entities<RigidBodyComponent, TransformComponent>();
-
+    auto list_of_entities = world.filter_entities<TransformComponent>(); // This is not ideal we need a collider tag for better filtering.
+    
     for (auto const& entity : list_of_entities) 
     {
         if (!world.has_any_components_in_entity<BoxCollider, SphereCollider, CapsuleCollider, MeshCollider>(entity)) { continue; }
-        auto [RigidBody, Transform] {entity.get<RigidBodyComponent, TransformComponent>()};
+        auto Transform = entity.get<TransformComponent>();
 
         m_bodyInterface->SetPositionAndRotation(m_entityToBodyID[entity], PhysicsUtils::ToJolt(Transform.m_Translation), PhysicsUtils::EulerDegreesToJoltQuat(Transform.m_Rotation), JPH::EActivation::Activate);
     }

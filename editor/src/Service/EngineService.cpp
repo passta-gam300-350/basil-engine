@@ -471,9 +471,9 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 
 					// Initialize MaterialOverridesComponent with default PBR properties
 					if (type_id == entt::type_hash<MaterialOverridesComponent>::value()) {
-						ecs::entity entity{ ehdl };
+						ecs::entity mat_entity{ ehdl };
 						if (entity.all<MaterialOverridesComponent>()) {
-							MaterialOverridesComponent& component = entity.get<MaterialOverridesComponent>();
+							MaterialOverridesComponent& component = mat_entity.get<MaterialOverridesComponent>();
 							// Populate with standard PBR properties by default
 							component.floatOverrides["u_MetallicValue"] = 0.7f;
 							component.floatOverrides["u_RoughnessValue"] = 0.3f;

@@ -87,7 +87,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		{
 			continue;
 		}
-		auto& transformComponent = eachAEntity.get<TransformComponent>();
+		[[maybe_unused]] auto& transformComponent = eachAEntity.get<TransformComponent>();
 		if (!animationComponent.state.isPlaying)
 		{
 			continue;

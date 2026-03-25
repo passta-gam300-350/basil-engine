@@ -441,6 +441,12 @@ void RenderSystem::Update(ecs::world& world) {
 					else {
 						if (!ExistsStaticNodeHierarchy(mesh.m_MeshGuid)) {
 							RegisterStaticNodeHierarchy(mesh.m_MeshGuid);
+							if (mesh.m_MeshGuid.m_guid == rp::Guid::to_guid("85d8d971e1b74fa3273f6acab4")) {
+								auto res = GetStaticNodeHierarchy(mesh.m_MeshGuid);
+								for (glm::mat4 mat4 : res.value()->first) {
+									std::cout << mat4 << "\n";
+								}
+							}
 						}
 						auto res = GetStaticNodeHierarchy(mesh.m_MeshGuid);
 						assert(res && "res is empty!");
@@ -1610,11 +1616,12 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 				vert[i].m_BoneIDs[a] = mesh.vertices[i].m_BoneIDs[a];
 			}
 		}
-		std::vector<unsigned int> indices{};
-		std::vector<Vertex> mat_vert{};
+		
 
 		// per sub mesh (material) in mesh
 		for (const auto& matslot : mesh.materials) {
+			std::vector<unsigned int> indices{};
+			std::vector<Vertex> mat_vert{};
 			indices.resize(matslot.index_count);
 			unsigned int min_vert_idx{~0x0u};
 			unsigned int max_vert_idx{};
@@ -1631,6 +1638,7 @@ std::vector<std::pair<std::string, std::shared_ptr<Mesh>>> LoadMeshFromResource(
 			meshes.emplace_back(std::pair<std::string, std::shared_ptr<Mesh>>(matslot.material_slot_name, std::make_shared<Mesh>(mat_vert, indices, std::vector<Texture>{})));
 		}
 	}
+
 	return meshes;
 	}
 
