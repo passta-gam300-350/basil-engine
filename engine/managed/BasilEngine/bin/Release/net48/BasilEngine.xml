@@ -78,6 +78,14 @@
             <param name="channel">Mix group (Master, BGM, SFX, UI, Ambient).</param>
             <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
         </member>
+        <member name="M:BasilEngine.Components.Audio.GetChannelVolume(BasilEngine.Components.Audio.AudioChannel)">
+            <summary>
+            Gets the current mix channel (group) volume as a linear multiplier.
+            Useful for persisting/carrying audio settings between scenes.
+            </summary>
+            <param name="channel">Mix group.</param>
+            <returns>Linear volume multiplier for that channel/group.</returns>
+        </member>
         <member name="P:BasilEngine.Components.Audio.Volume">
             <summary>
             Volume multiplier for this audio source.
