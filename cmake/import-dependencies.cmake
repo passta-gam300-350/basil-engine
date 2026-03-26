@@ -622,8 +622,7 @@ macro(import_plmpeg)
 endmacro()
 
 function(hide_dependencies)
-    # hide external targets to folders
-    set_target_properties(
+    set(dep_targets
         glad
         glfw
         uninstall
@@ -654,48 +653,18 @@ function(hide_dependencies)
         freetype
         msdfgen-core
         Jolt
-        PROPERTIES FOLDER dep)
+        msdfgen-ext)
 
-    # Handle msdfgen-ext separately since it's only built with FreeType support
-    if(TARGET msdfgen-ext)
-        set_target_properties(msdfgen-ext PROPERTIES FOLDER dep)
-    endif()
+    set(existing_dep_targets)
+    foreach(dep_target IN LISTS dep_targets)
+        if(TARGET ${dep_target})
+            list(APPEND existing_dep_targets ${dep_target})
+        endif()
+    endforeach()
 
-    suppress_dep_warnings(
-        glad
-        glfw
-        uninstall
-        update_mappings
-        glm
-        assimp
-        EnTT
-        imgui
-        UpdateAssimpLibsDebugSymbolsAndDLLs
-        zlibstatic
-        Catch2
-        Catch2WithMain
-        ddsloader
-        ddsview
-        DirectXTex
-        meshoptimizer
-        pugixml-static
-        spdlog
-        stb
-        texassemble
-        texconv
-        texdiag
-        yaml-cpp
-        yaml-cpp-parse
-        yaml-cpp-read
-        yaml-cpp-sandbox
-        imgui_backends
-        freetype
-        msdfgen-core
-        Jolt)
-
-    # Handle msdfgen-ext separately since it's only built with FreeType support
-    if(TARGET msdfgen-ext)
-        suppress_dep_warnings(msdfgen-ext)
+    if(existing_dep_targets)
+        set_target_properties(${existing_dep_targets} PROPERTIES FOLDER dep)
+        suppress_dep_warnings(${existing_dep_targets})
     endif()
 endfunction()
 
