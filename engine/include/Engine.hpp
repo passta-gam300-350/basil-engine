@@ -48,13 +48,17 @@ class Engine
 	// Global render settings
 	float m_Gamma = 2.2f;  // Standard sRGB gamma value
 
-public:
-		struct Info {
 
-			double m_FPS{};
-			double m_DeltaTime{};          // Authoritative time elapsed since the previous frame (seconds)
-			double m_ActualDeltaTime{};	   // Legacy alias kept in sync with m_DeltaTime
-			double m_LastFrameTime{};      // Previous frame timestamp in seconds
+	double m_Accumulator{};	  // Accumulated time for fixed updates (seconds)
+
+public:
+	struct Info {
+
+		double m_FPS{};
+		double m_DeltaTime{};          // Authoritative time elapsed since the previous frame (seconds)
+		double m_FixedDeltaTime{1.0 / 165.0}; // Fixed timestep (seconds)
+		double m_ActualDeltaTime{};	   // Legacy alias kept in sync with m_DeltaTime
+		double m_LastFrameTime{};      // Previous frame timestamp in seconds
 		std::uint64_t m_TotalFrameCt{};
 		std::uint64_t m_FrameLogCounter{};	//basically total (mod) rate
 		std::uint64_t m_FrameLogRate;
@@ -81,7 +85,11 @@ public:
 	static void InitWithoutWindow(std::string const& cfg = {}, bool is_precompiled = false);
 	static void LoadEmbeddedIcon();
 	static void Update();
+	static void FixedUpdate();
+	static void CoreFixedUpdate();
+	static void CorePreUpdate();
 	static void CoreUpdate();
+	static void CoreLateUpdate();
 	static void UpdateDebug();
 	static void TickFrameClock();
 	static void Exit();
@@ -107,6 +115,7 @@ public:
 	static void ReportLastError();
 	static ecs::world GetWorld();
 	static double GetDeltaTime();
+	static double GetFixedDeltaTime();
 	static double GetLastDeltaTime();
 
 	// Unity-style skybox system - sync active scene's render settings to renderer
@@ -118,7 +127,7 @@ public:
 
 	Info const& GetInfo() const { return m_Info; }
 	Info& GetInfo() { return m_Info; }
-	
+
 	static Info::State GetState() { return Instance().m_Info.m_State; }
 	static void SetState(Info::State state) { Instance().m_Info.m_State = state; }
 
@@ -166,6 +175,10 @@ public:
 	// Global render settings
 	static void SetGamma(float gamma);
 	static float GetGamma();
+
+
+	static double& GetAccumulator() { return Instance().m_Accumulator; }
+
 };
 
 

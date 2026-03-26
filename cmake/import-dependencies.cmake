@@ -207,6 +207,9 @@ macro(import_tinyddsloader)
     set(GLFW_LIBRARIES glfw CACHE STRING "" FORCE)
 
     FetchContent_MakeAvailable(tinyddsloader)
+    if(TARGET ddsloader)
+        set_target_properties(ddsloader PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    endif()
     add_library(tinyddsloader INTERFACE)
     #target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
     target_include_directories(tinyddsloader INTERFACE SYSTEM $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
@@ -357,6 +360,7 @@ macro(import_stb)
 endmacro()
 
 macro(import_directxtex)
+    set(BUILD_SAMPLE OFF CACHE BOOL "Build DDSView sample (requires fxc.exe)" FORCE)
     FetchContent_Declare(
         directxtex
         GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
@@ -622,8 +626,7 @@ macro(import_plmpeg)
 endmacro()
 
 function(hide_dependencies)
-    # hide external targets to folders
-    set_target_properties(
+    set(dep_targets
         glad
         glfw
         uninstall
@@ -654,44 +657,20 @@ function(hide_dependencies)
         freetype
         msdfgen-core
         Jolt
-        PROPERTIES FOLDER dep)
+        msdfgen-ext)
 
-    # Handle msdfgen-ext separately since it's only built with FreeType support
-    if(TARGET msdfgen-ext)
-        set_target_properties(msdfgen-ext PROPERTIES FOLDER dep)
+    set(existing_dep_targets)
+    foreach(dep_target IN LISTS dep_targets)
+        if(TARGET ${dep_target})
+            list(APPEND existing_dep_targets ${dep_target})
+        endif()
+    endforeach()
+
+    if(existing_dep_targets)
+        set_target_properties(${existing_dep_targets} PROPERTIES FOLDER dep)
+        suppress_dep_warnings(${existing_dep_targets})
+        suppress_dep_warnings(${existing_dep_targets})
     endif()
-
-    suppress_dep_warnings(
-        glad
-        glfw
-        uninstall
-        update_mappings
-        glm
-        assimp
-        EnTT
-        imgui
-        UpdateAssimpLibsDebugSymbolsAndDLLs
-        zlibstatic
-        Catch2
-        Catch2WithMain
-        ddsloader
-        ddsview
-        DirectXTex
-        meshoptimizer
-        pugixml-static
-        spdlog
-        stb
-        texassemble
-        texconv
-        texdiag
-        yaml-cpp
-        yaml-cpp-parse
-        yaml-cpp-read
-        yaml-cpp-sandbox
-        imgui_backends
-        freetype
-        msdfgen-core
-        Jolt)
 
     # Handle msdfgen-ext separately since it's only built with FreeType support
     if(TARGET msdfgen-ext)

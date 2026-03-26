@@ -12,10 +12,12 @@
  * 4. UUID round-trip (generate -> toString -> fromString -> compare)
  */
 
-#include "uuid/uuid.hpp"
 #include <iostream>
 #include <cassert>
 #include <string>
+#include <uuid/uuid.hpp>
+
+using namespace uuid;
 
 void TestUUIDGeneration()
 {

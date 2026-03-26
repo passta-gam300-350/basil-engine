@@ -38,11 +38,11 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E touch ${DOTNET_OUTPUT}.timestamp
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS ${CSPROJPath} ${MANAGED_FILES}
-  COMMENT "Build EngineAPI.dll and run CSBridge"
+  COMMENT "Build BasilEngine.dll and run CSBridge"
   VERBATIM USES_TERMINAL
 )
 
-add_custom_target(EngineAPI_Managed ALL
+add_custom_target(BasilEngine_Managed
   DEPENDS "${DOTNET_OUTPUT}.timestamp"
   SOURCES "${CSPROJPath}"
 )

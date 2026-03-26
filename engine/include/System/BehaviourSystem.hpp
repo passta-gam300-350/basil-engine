@@ -45,6 +45,7 @@ public:
 	static BehaviourSystem& Instance();
 	void Init() override;
 	void Reload();
+	void InitScripts(ecs::world&);
 	void Update(ecs::world&, float dt) override;
 	void FixedUpdate(ecs::world&) override;
 	void Exit() override;

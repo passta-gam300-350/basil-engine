@@ -27,24 +27,27 @@ jobs:
   build:
     name: Build Check
     runs-on: windows-latest
+    strategy:
+      matrix:
+        config: [Release, Debug]
 
     steps:
       - name: 1. Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Restore Build Cache
-        uses: actions/cache@v4
-        with: 
-          path: build
-          key: ${{ runner.os }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-      
       - name: Cache Mono Dependency
         uses: actions/cache@v4
         with:
           path: dep/vendor/mono
           key: ${{ runner.os }}-mono
+
+      - name: Cache Fetched Dependencies
+        uses: actions/cache@v4
+        with:
+          path: out/_dep
+          key: ${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**/*.cmake', '**/CMakeLists.txt', '**/CMakelists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-
 
       - name: 2. Install Dependencies (Mono)
         run: |
@@ -56,5 +59,5 @@ jobs:
       - name: 3. Configure CMake
         run: cmake -S . -B build -A x64
 
-      - name: 4. Build Editor and Engine
-        run: cmake --build build --config Release --target editor engine --parallel
+      - name: 4. Build All targets and configuration
+        run: cmake --build build --config ${{ matrix.config }} --parallel

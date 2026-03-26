@@ -20,6 +20,64 @@
             <param name="b">Second operand.</param>
             <returns>Sum of the inputs.</returns>
         </member>
+        <member name="M:BasilEngine.Components.Animation.Play">
+            <summary>
+            Resumes playing the current animation.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.Pause">
+            <summary>
+            Pauses the current animation.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.Stop">
+            <summary>
+            Stops the current animation and resets it to the start.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.Loop">
+            <summary>
+            Whether the animation should loop.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.PlaybackSpeed">
+            <summary>
+            Speed multiplier for animation playback.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.IsFinished">
+            <summary>
+            Whether the current non-looping animation has finished playing.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.Play(System.String,System.Boolean)">
+            <summary>
+            Plays an animation by name.
+            </summary>
+            <param name="animationName">Name of the animation clip.</param>
+            <param name="shouldLoop">Whether the animation should loop.</param>
+            <returns>True if the animation was found and started playing.</returns>
+        </member>
+        <member name="M:BasilEngine.Components.Animation.HasAnimation(System.String)">
+            <summary>
+            Checks if an animation clip exists by name.
+            </summary>
+            <param name="animationName">Name of the animation clip.</param>
+            <returns>True if found.</returns>
+        </member>
+        <member name="P:BasilEngine.Components.Animation.SpritesheetMode">
+            <summary>
+            Enables or disables spritesheet flipbook mode.
+            When enabled, bones that displace vertices in Y are used to show/hide sprite rows.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.Audio.AdjustChannelVolume(BasilEngine.Components.Audio.AudioChannel,System.Single)">
+            <summary>
+            Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
+            </summary>
+            <param name="channel">Mix group (Master, BGM, SFX, UI, Ambient).</param>
+            <param name="percentDelta">Percent to add; positive = increase, negative = decrease.</param>
+        </member>
         <member name="P:BasilEngine.Components.Audio.Volume">
             <summary>
             Volume multiplier for this audio source.
@@ -43,6 +101,32 @@
         <member name="M:BasilEngine.Components.Audio.Stop">
             <summary>
             Stops playback and resets the cursor to the start.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Audio.AudioChannel">
+            <summary>
+            Mix channel (group) for global volume control. Matches native AudioGroup.
+            </summary>
+        </member>
+        <member name="T:BasilEngine.Components.Audio.FilterType">
+            <summary>
+            Filter type for per-channel DSP: None, Lowpass, Highpass, Echo.
+            Backed by int to simplify native interop.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.Filter">
+            <summary>
+            Filter type (None, Lowpass, Highpass, Echo). Applied when playing.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.FilterCutoffHz">
+            <summary>
+            Filter cutoff frequency in Hz (10–22050). Used when a filter is active.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.Audio.FilterResonance">
+            <summary>
+            Filter resonance (0.5–10). Used for Lowpass/Highpass filters.
             </summary>
         </member>
         <member name="T:BasilEngine.Components.Camera.CameraType">
@@ -226,6 +310,77 @@
         <member name="M:BasilEngine.Components.Light.SetCones(System.Single,System.Single)">
             <summary>
             Sets both inner and outer cone angles at once.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.MeshRenderer.albedoColor">
+            <summary>
+            Base albedo color of the material (RGB).
+            This modifies the MeshRendererComponent.material struct directly.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.MeshRenderer.metallic">
+            <summary>
+            Metallic value (0.0 = dielectric, 1.0 = metallic).
+            This modifies the MeshRendererComponent.material struct directly.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.MeshRenderer.roughness">
+            <summary>
+            Surface roughness (0.0 = smooth, 1.0 = rough).
+            This modifies the MeshRendererComponent.material struct directly.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Components.MeshRenderer.visible">
+            <summary>
+            Visibility toggle for this renderer.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Components.MeshRenderer.SetFloatProperty(System.String,System.Single)">
+            <summary>
+            Set a float material property override.
+            This creates a MaterialOverridesComponent and preserves GPU instancing.
+            Use shader uniform names (e.g., "u_MetallicValue", "u_RoughnessValue").
+            </summary>
+            <param name="propertyName">Shader uniform name</param>
+            <param name="value">Float value</param>
+        </member>
+        <member name="M:BasilEngine.Components.MeshRenderer.SetVec3Property(System.String,BasilEngine.Mathematics.Vector3)">
+            <summary>
+            Set a Vector3 material property override.
+            This creates a MaterialOverridesComponent and preserves GPU instancing.
+            Use shader uniform names (e.g., "u_AlbedoColor", "u_EmissionColor").
+            </summary>
+            <param name="propertyName">Shader uniform name</param>
+            <param name="value">Vector3 value</param>
+        </member>
+        <member name="M:BasilEngine.Components.MeshRenderer.SetVec4Property(System.String,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Set a Vector4 material property override.
+            This creates a MaterialOverridesComponent and preserves GPU instancing.
+            Use shader uniform names (e.g., "u_CustomColor").
+            </summary>
+            <param name="propertyName">Shader uniform name</param>
+            <param name="x">X component</param>
+            <param name="y">Y component</param>
+            <param name="z">Z component</param>
+            <param name="w">W component</param>
+        </member>
+        <member name="M:BasilEngine.Components.MeshRenderer.HasPropertyOverride(System.String)">
+            <summary>
+            Check if a material property override exists for the specified property.
+            </summary>
+            <param name="propertyName">Shader uniform name</param>
+            <returns>True if override exists</returns>
+        </member>
+        <member name="M:BasilEngine.Components.MeshRenderer.ClearPropertyOverride(System.String)">
+            <summary>
+            Clear a specific material property override.
+            </summary>
+            <param name="propertyName">Shader uniform name</param>
+        </member>
+        <member name="M:BasilEngine.Components.MeshRenderer.ClearAllPropertyOverrides">
+            <summary>
+            Clear all material property overrides.
             </summary>
         </member>
         <member name="T:BasilEngine.Components.Particle.EmissionType">
