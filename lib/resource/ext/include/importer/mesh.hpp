@@ -17,6 +17,7 @@
 #include "descriptors/texture.hpp"
 #include "descriptors/animation.hpp"
 #include "descriptors/skeleton.hpp"
+#include "descriptors/descriptors.hpp"
 #include <native/mesh.h>
 
 #include <stb_image.h>

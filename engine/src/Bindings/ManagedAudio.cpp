@@ -30,7 +30,7 @@ void ManagedAudio::SetIsLooping(uint64_t handle, bool isLooping)
 	audio.SetLoop(isLooping);
 }
 
-float ManagedAudio::GetIsLooping(uint64_t handle)
+bool ManagedAudio::GetIsLooping(uint64_t handle)
 {
 	ecs::entity entity{ handle };
 	auto& audio = entity.get<AudioComponent>();
