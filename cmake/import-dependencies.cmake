@@ -207,6 +207,9 @@ macro(import_tinyddsloader)
     set(GLFW_LIBRARIES glfw CACHE STRING "" FORCE)
 
     FetchContent_MakeAvailable(tinyddsloader)
+    if(TARGET ddsloader)
+        set_target_properties(ddsloader PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    endif()
     add_library(tinyddsloader INTERFACE)
     #target_sources(tinyddsloader INTERFACE "${tinyddsloader_SOURCE_DIR}/tinyddsloader.h")
     target_include_directories(tinyddsloader INTERFACE SYSTEM $<BUILD_INTERFACE:${tinyddsloader_SOURCE_DIR}>)
@@ -357,6 +360,7 @@ macro(import_stb)
 endmacro()
 
 macro(import_directxtex)
+    set(BUILD_SAMPLE OFF CACHE BOOL "Build DDSView sample (requires fxc.exe)" FORCE)
     FetchContent_Declare(
         directxtex
         GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
@@ -665,6 +669,12 @@ function(hide_dependencies)
     if(existing_dep_targets)
         set_target_properties(${existing_dep_targets} PROPERTIES FOLDER dep)
         suppress_dep_warnings(${existing_dep_targets})
+        suppress_dep_warnings(${existing_dep_targets})
+    endif()
+
+    # Handle msdfgen-ext separately since it's only built with FreeType support
+    if(TARGET msdfgen-ext)
+        suppress_dep_warnings(msdfgen-ext)
     endif()
 endfunction()
 
