@@ -1,3 +1,42 @@
+def updateGitHubStatus(String state, String description) {
+    if (!params.GIT_SHA?.trim() || !params.REPO_FULL_NAME?.trim()) {
+        echo 'Skipping GitHub status update because SHA or repository name is missing.'
+        return
+    }
+
+    def repoParts = params.REPO_FULL_NAME.tokenize('/')
+    if (repoParts.size() != 2) {
+        echo "Skipping GitHub status update because REPO_FULL_NAME is invalid: ${params.REPO_FULL_NAME}"
+        return
+    }
+
+    withCredentials([string(credentialsId: 'github-status-token', variable: 'GITHUB_STATUS_TOKEN')]) {
+        def payload = groovy.json.JsonOutput.toJson([
+            state      : state,
+            context    : params.STATUS_CONTEXT ?: 'jenkins/build',
+            description: description,
+            target_url : env.BUILD_URL
+        ])
+
+        powershell """
+            \$headers = @{
+                Authorization = 'token $env:GITHUB_STATUS_TOKEN'
+                Accept = 'application/vnd.github+json'
+                'User-Agent' = 'jenkins-build-check'
+            }
+            \$body = @'
+${payload}
+'@
+            Invoke-RestMethod `
+                -Method Post `
+                -Uri 'https://api.github.com/repos/${repoParts[0]}/${repoParts[1]}/statuses/${params.GIT_SHA}' `
+                -Headers \$headers `
+                -Body \$body `
+                -ContentType 'application/json'
+        """
+    }
+}
+
 pipeline {
     agent none
 
@@ -80,7 +119,7 @@ pipeline {
 
                 stage('Configure CMake') {
                     steps {
-                        powershell 'cmake -S . -B build -A x64'
+                        powershell 'cmake -S . -B build -A x64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5'
                     }
                 }
 
@@ -93,6 +132,29 @@ pipeline {
                 stage('Build Debug') {
                     steps {
                         powershell 'cmake --build build --config Debug --parallel'
+                    }
+                }
+            }
+
+            post {
+                success {
+                    script {
+                        updateGitHubStatus('success', 'Jenkins build succeeded')
+                    }
+                }
+                failure {
+                    script {
+                        updateGitHubStatus('failure', 'Jenkins build failed')
+                    }
+                }
+                aborted {
+                    script {
+                        updateGitHubStatus('error', 'Jenkins build aborted')
+                    }
+                }
+                unstable {
+                    script {
+                        updateGitHubStatus('failure', 'Jenkins build unstable')
                     }
                 }
             }
