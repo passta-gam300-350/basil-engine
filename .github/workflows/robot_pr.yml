@@ -30,7 +30,7 @@ permissions:
 jobs:
   handoff-to-jenkins:
     name: Trigger Jenkins
-    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'Merge pull request #')) }}
+    if: "${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'Merge pull request #')) }}"
     runs-on: ubuntu-latest
     environment: build-check
 
