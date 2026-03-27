@@ -36,8 +36,35 @@ pipeline {
             stages {
                 stage('Checkout') {
                     steps {
-                        deleteDir()
-                        checkout scm
+                        script {
+                            def remoteConfig = scm.userRemoteConfigs[0]
+                            def branchName = params.GIT_REF?.trim() ? params.GIT_REF.trim() : 'main'
+
+                            echo "SCM class: ${scm.getClass().name}"
+                            echo "SCM branch target: ${branchName}"
+                            echo "SCM remote URL: ${remoteConfig.url}"
+                            echo "SCM credentials ID: ${remoteConfig.credentialsId}"
+
+                            deleteDir()
+                            checkout([
+                                $class: 'GitSCM',
+                                branches: [[name: "*/${branchName}"]],
+                                doGenerateSubmoduleConfigurations: false,
+                                extensions: [[
+                                    $class: 'CloneOption',
+                                    depth: 1,
+                                    honorRefspec: true,
+                                    noTags: true,
+                                    shallow: true,
+                                    timeout: 60
+                                ]],
+                                userRemoteConfigs: [[
+                                    credentialsId: remoteConfig.credentialsId,
+                                    refspec: "+refs/heads/${branchName}:refs/remotes/origin/${branchName}",
+                                    url: remoteConfig.url
+                                ]]
+                            ])
+                        }
                     }
                 }
 
