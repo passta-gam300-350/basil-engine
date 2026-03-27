@@ -62,15 +62,7 @@ jobs:
             exit 1
           fi
 
-          ENCODED_JOB_PATH="$(python3 - <<'PY'
-import os
-from urllib.parse import quote
-
-raw = os.environ["JENKINS_JOB"]
-parts = [p for p in raw.split("/job/") if p]
-print("/".join(f"job/{quote(p, safe='')}" for p in parts))
-PY
-          )"
+          ENCODED_JOB_PATH="$(python3 -c 'import os; from urllib.parse import quote; raw = os.environ[\"JENKINS_JOB\"]; parts = [p for p in raw.split(\"/job/\") if p]; print(\"/\".join(f\"job/{quote(p, safe=\"\")}\" for p in parts))')"
 
           BUILD_URL="${JENKINS_URL%/}/${ENCODED_JOB_PATH}/buildWithParameters?token=${JENKINS_BUILD_CHECK_TOKEN}"
 
