@@ -15,6 +15,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -27,6 +30,7 @@ permissions:
 jobs:
   handoff-to-jenkins:
     name: Trigger Jenkins
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'Merge pull request #')) }}
     runs-on: ubuntu-latest
     environment: build-check
 
@@ -40,6 +44,7 @@ jobs:
 
     steps:
       - name: Mark commit status as pending
+        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -69,9 +74,9 @@ jobs:
           curl --fail --show-error --silent --location \
             --user "$JENKINS_USER:$JENKINS_API_TOKEN" \
             --request POST "$BUILD_URL" \
-            --data-urlencode "GIT_SHA=${{ github.event.pull_request.head.sha }}" \
-            --data-urlencode "GIT_REF=${{ github.event.pull_request.head.ref }}" \
-            --data-urlencode "PR_NUMBER=${{ github.event.pull_request.number }}" \
+            --data-urlencode "GIT_SHA=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}" \
+            --data-urlencode "GIT_REF=${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}" \
+            --data-urlencode "PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.pull_request.number || '' }}" \
             --data-urlencode "REPO_FULL_NAME=${{ github.repository }}" \
-            --data-urlencode "PR_URL=${{ github.event.pull_request.html_url }}" \
+            --data-urlencode "PR_URL=${{ github.event_name == 'pull_request' && github.event.pull_request.html_url || '' }}" \
             --data-urlencode "STATUS_CONTEXT=${STATUS_CONTEXT}"
