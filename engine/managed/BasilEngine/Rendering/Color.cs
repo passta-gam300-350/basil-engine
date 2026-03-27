@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Engine.Bindings;
+using BasilEngine.Mathematics;
 namespace BasilEngine.Rendering
 {
+
     // Color struct representing RGBA color normalized between 0 and 1
     [Disabled]
     /// <summary>
@@ -96,6 +98,26 @@ namespace BasilEngine.Rendering
                 color32.A / 255.0f
             );
         }
+
+        /// <summary>
+        /// Converts a <see cref="Vector4"/> to a <see cref="Color"/>.
+        /// </summary>
+        /// <param name="vector">Vector containing RGBA values.</param>
+        public static implicit operator Color(Vector4 vector)
+        {
+            return new Color(vector.x, vector.y, vector.z, vector.w);
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Color"/> to a <see cref="Vector4"/>.
+        /// </summary>
+        /// <param name="color">Color containing RGBA values.</param>
+        public static implicit operator Vector4(Color color)
+        {
+            return new Vector4(color.R, color.G, color.B, color.A);
+        }
+
+        
 
     }
 }

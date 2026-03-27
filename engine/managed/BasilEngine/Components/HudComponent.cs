@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using BasilEngine.Mathematics;
+using BasilEngine.Rendering;
 using Engine.Bindings;
 
 namespace BasilEngine.Components
@@ -44,6 +45,16 @@ namespace BasilEngine.Components
         [StaticAccessor("ManagedHudComponent", StaticAccessorType.DoubleColon)]
         public static extern void SetSizeInternal(UInt64 handle, float width, float height);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetColor")]
+        [StaticAccessor("ManagedHudComponent", StaticAccessorType.DoubleColon)]
+        public static extern void GetColorInternal(UInt64 handle, out float r, out float g, out float b, out float a);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("SetColor")]
+        [StaticAccessor("ManagedHudComponent", StaticAccessorType.DoubleColon)]
+        public static extern void SetColorInternal(UInt64 handle, float r, float g, float b, float a);
+
         public bool Visible
         {
             get => GetVisibleInternal(NativeID);
@@ -67,6 +78,16 @@ namespace BasilEngine.Components
                 return new Vector2(width, height);
             }
             set => SetSizeInternal(NativeID, value.x, value.y);
+        }
+
+        public Color color
+        {
+            get
+            {
+                GetColorInternal(NativeID, out float r, out float g, out float b, out float a);
+                return new Color(r, g, b, a);
+            }
+            set => SetColorInternal(NativeID, value.R, value.G, value.B, value.A);
         }
 
 

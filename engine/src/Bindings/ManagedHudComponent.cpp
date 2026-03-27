@@ -69,3 +69,22 @@ void ManagedHudComponent::SetSize(uint64_t handle, float width, float height)
 
 	cmp.size = { width, height };
 }
+
+void ManagedHudComponent::GetColor(uint64_t handle, float* out_r, float* out_g, float* out_b, float* out_a)
+{
+	ecs::entity e{ handle };
+	HUDComponent& cmp = e.get<HUDComponent>();
+
+	*out_r = cmp.color.r;
+	*out_g = cmp.color.g;
+	*out_b = cmp.color.b;
+	*out_a = cmp.color.a;
+}
+
+void ManagedHudComponent::SetColor(uint64_t handle, float r, float g, float b, float a)
+{
+	ecs::entity e{ handle };
+	HUDComponent& cmp = e.get<HUDComponent>();
+
+	cmp.color = { r, g, b, a };
+}
