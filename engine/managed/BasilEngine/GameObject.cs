@@ -167,6 +167,16 @@ namespace BasilEngine
                 DeleteGameObjectInternal(obj.NativeID);
             }
         }
+
+        /// <summary>
+        /// Retrieves a component of the specified type from this game object.
+        /// </summary>
+        /// <typeparam name="T">Component type to query.</typeparam>
+        /// <returns>An instance of <typeparamref name="T"/> if found; otherwise null.</returns>
+        public T GetComponent<T>() where T : Component, new()
+        {
+            return transform.GetComponent<T>();
+        }
     }
 }
          

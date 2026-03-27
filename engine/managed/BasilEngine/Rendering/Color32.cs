@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BasilEngine.Mathematics;
 
 namespace BasilEngine.Rendering
 {
@@ -91,6 +92,29 @@ namespace BasilEngine.Rendering
                 (byte)(color.G * 255.0f),
                 (byte)(color.B * 255.0f),
                 (byte)(color.A * 255.0f)
+            );
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Vector4"/> to a <see cref="Color32"/>.
+        /// </summary>
+        /// <param name="vector">Vector containing normalized RGBA values.</param>
+        public static implicit operator Color32(Vector4 vector)
+        {
+            return (Color32)new Color(vector.x, vector.y, vector.z, vector.w);
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Color32"/> to a <see cref="Vector4"/>.
+        /// </summary>
+        /// <param name="color">Color with 8-bit components.</param>
+        public static implicit operator Vector4(Color32 color)
+        {
+            return new Vector4(
+                color.R / 255.0f,
+                color.G / 255.0f,
+                color.B / 255.0f,
+                color.A / 255.0f
             );
         }
 
