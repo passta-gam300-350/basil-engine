@@ -624,6 +624,8 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
     {
         if (!renderable || !renderable->mesh || !renderable->material)
             continue;
+        if (!renderable->visible)
+            continue;
         if (!renderable->boneMatrices || renderable->boneCount == 0)
             continue;
 

@@ -143,6 +143,7 @@ private:
 // contains all those channels for one clips
 struct animationContainer
 { 
+    std::string name; // Name of the animation clip (e.g. "Idle", "Walk")
     float duration; // total length in ticks
     float ticksPerSecond; // how fast animation time runs (some files use 24fps, 30fps, or custom).
     std::vector<boneChannel> channels; // one channel per bone

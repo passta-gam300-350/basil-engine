@@ -6,8 +6,14 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
 layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
-layout (location = 5) in ivec4 aBoneIDs;
-layout (location = 6) in vec4 aWeights;
+layout (location = 5) in ivec4 aBoneIDs;   // bone slots  0- 3
+layout (location = 6) in ivec4 aBoneIDs2;  // bone slots  4- 7
+layout (location = 7) in ivec4 aBoneIDs3;  // bone slots  8-11
+layout (location = 8) in ivec4 aBoneIDs4;  // bone slots 12-15
+layout (location = 9) in vec4 aWeights;    // weights for slots  0- 3
+layout (location = 10) in vec4 aWeights2;  // weights for slots  4- 7
+layout (location = 11) in vec4 aWeights3;  // weights for slots  8-11
+layout (location = 12) in vec4 aWeights4;  // weights for slots 12-15
 
 // Instance data structure (must match C++ InstanceData exactly)
 struct InstanceData {
@@ -70,18 +76,37 @@ void main()
     vec3 skinnedBitangent = aBitangent;
     if (u_EnableSkinning)
     {
-        mat4 skinMatrix =
-        boneMatrices[u_BoneOffset + aBoneIDs.x] * aWeights.x +
-        boneMatrices[u_BoneOffset + aBoneIDs.y] * aWeights.y +
-        boneMatrices[u_BoneOffset + aBoneIDs.z] * aWeights.z +
-        boneMatrices[u_BoneOffset + aBoneIDs.w] * aWeights.w;
+        float totalWeight = aWeights.x + aWeights.y + aWeights.z + aWeights.w
+                          + aWeights2.x + aWeights2.y + aWeights2.z + aWeights2.w
+                          + aWeights3.x + aWeights3.y + aWeights3.z + aWeights3.w
+                          + aWeights4.x + aWeights4.y + aWeights4.z + aWeights4.w;
+        if (totalWeight > 0.0)
+        {
+            mat4 skinMatrix =
+            boneMatrices[u_BoneOffset + max(aBoneIDs.x, 0)] * aWeights.x +
+            boneMatrices[u_BoneOffset + max(aBoneIDs.y, 0)] * aWeights.y +
+            boneMatrices[u_BoneOffset + max(aBoneIDs.z, 0)] * aWeights.z +
+            boneMatrices[u_BoneOffset + max(aBoneIDs.w, 0)] * aWeights.w +
+            boneMatrices[u_BoneOffset + max(aBoneIDs2.x, 0)] * aWeights2.x +
+            boneMatrices[u_BoneOffset + max(aBoneIDs2.y, 0)] * aWeights2.y +
+            boneMatrices[u_BoneOffset + max(aBoneIDs2.z, 0)] * aWeights2.z +
+            boneMatrices[u_BoneOffset + max(aBoneIDs2.w, 0)] * aWeights2.w +
+            boneMatrices[u_BoneOffset + max(aBoneIDs3.x, 0)] * aWeights3.x +
+            boneMatrices[u_BoneOffset + max(aBoneIDs3.y, 0)] * aWeights3.y +
+            boneMatrices[u_BoneOffset + max(aBoneIDs3.z, 0)] * aWeights3.z +
+            boneMatrices[u_BoneOffset + max(aBoneIDs3.w, 0)] * aWeights3.w +
+            boneMatrices[u_BoneOffset + max(aBoneIDs4.x, 0)] * aWeights4.x +
+            boneMatrices[u_BoneOffset + max(aBoneIDs4.y, 0)] * aWeights4.y +
+            boneMatrices[u_BoneOffset + max(aBoneIDs4.z, 0)] * aWeights4.z +
+            boneMatrices[u_BoneOffset + max(aBoneIDs4.w, 0)] * aWeights4.w;
 
-        skinnedPos = vec3(skinMatrix * vec4(aPos, 1.0));
+            skinnedPos = vec3(skinMatrix * vec4(aPos, 1.0));
 
-        mat3 skinMatrix3 = mat3(skinMatrix);
-        skinnedNormal = skinMatrix3 * aNormal;
-        skinnedTangent = skinMatrix3 * aTangent;
-        skinnedBitangent = skinMatrix3 * aBitangent;
+            mat3 skinMatrix3 = mat3(skinMatrix);
+            skinnedNormal = skinMatrix3 * aNormal;
+            skinnedTangent = skinMatrix3 * aTangent;
+            skinnedBitangent = skinMatrix3 * aBitangent;
+        }
     }
     // Transform vertex to world space using instance matrix
     vec4 worldPos = model * vec4(skinnedPos, 1.0);

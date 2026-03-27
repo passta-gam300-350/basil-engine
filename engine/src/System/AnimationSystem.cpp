@@ -57,7 +57,7 @@ void animationSystem::FixedUpdate(ecs::world& world)
 			animationComponent.animatorInstance = nullptr;
 			continue;
 		}
-		if (animationComponent.animatorInstance->currentAnimation != ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid)) {
+		if (animationComponent.lastKnownAnimGuid != animationComponent.animationdata.m_guid) {
 			CleanupSkeletalAnimation(animationComponent);
 			skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skeletonComponent.skeletondata.m_guid);
 			InitializeSkeletalAnimation(animationComponent, skeletonComponent, *skel, ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid));
@@ -208,6 +208,7 @@ animationContainer LoadAnimationContainer(const char* data) {
 		reinterpret_cast<const std::byte*>(data)
 	);
 	animationContainer ac{};
+	ac.name = animData.m_name; // Set the clip name from resource
 	ac.channels.reserve(animData.m_channels.size());
 	for (AnimationResourceData::Channel chl : animData.m_channels) {
 		boneChannel bc{ chl.m_name, chl.m_id };
@@ -242,8 +243,10 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 	}
 	animComp.animatorInstance = new animator(boneCount);
 
-	animComp.animatorInstance->addAnimation("default_ani1", animation);
-	animComp.animatorInstance->playAnimation("default_ani1", true);
+    // Use actual animation name instead of hardcoded string
+    std::string animName = animation->name.empty() ? "default" : animation->name;
+	animComp.animatorInstance->addAnimation(animName, animation);
+	animComp.animatorInstance->playAnimation(animName, true);
 
 	// 3. Set animation
 	animComp.animatorInstance->currentAnimation = animation;
@@ -252,6 +255,9 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 
 	// 4. Enable skeletal mode
 	animComp.isSkeletalAnim = true;
+
+	// Record the GUID so AnimationSystem can detect future editor asset swaps
+	animComp.lastKnownAnimGuid = animComp.animationdata.m_guid;
 }
 
 void CleanupSkeletalAnimation(AnimationComponent& animComp)
