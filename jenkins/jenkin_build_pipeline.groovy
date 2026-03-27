@@ -12,6 +12,7 @@ pipeline {
 
     options {
         disableConcurrentBuilds(abortPrevious: true)
+        skipDefaultCheckout()
         timestamps()
     }
 
