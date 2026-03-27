@@ -1470,13 +1470,72 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			}
 			else if (auto* map_name_guid = value.try_cast<std::unordered_map<std::string, rp::BasicIndexedGuid>>()) {
 				if (ImGui::TreeNode(field_name.c_str())) {
+					// Add-new-entry UI
+					if (field_name != "m_MaterialGuid") {
+					static char newKeyBuf[128] = {};
+					static int newAssetIdx = 0;
+
+					// Infer asset type from existing entries; fall back to all assets
+					std::size_t typeHint = 0;
+					if (!map_name_guid->empty()) {
+						typeHint = map_name_guid->begin()->second.m_typeindex;
+					}
+					// If map is empty, scan sibling BasicIndexedGuid fields to infer asset type
+					if (typeHint == 0) {
+						for (auto [sibId, sibData] : type.data()) {
+							auto sibVal = sibData.get(comp);
+							if (rp::BasicIndexedGuid const* sibGuid = sibVal.try_cast<rp::BasicIndexedGuid>()) {
+								if (sibGuid->m_typeindex != 0) {
+									typeHint = sibGuid->m_typeindex;
+									break;
+								}
+							}
+						}
+					}
+					std::vector<std::string> addAssetNames;
+					if (typeHint != 0) {
+						addAssetNames = m_AssetManager->GetAssetTypeNames(typeHint);
+					} else {
+						for (auto& [n, g] : m_AssetManager->m_AssetNameGuid) {
+							addAssetNames.push_back(n);
+						}
+					}
+					addAssetNames.insert(addAssetNames.begin(), ""); // index 0 = unset
+
+					std::vector<const char*> addAssetCstr;
+					addAssetCstr.reserve(addAssetNames.size());
+					for (auto& n : addAssetNames) addAssetCstr.push_back(n.c_str());
+
+					if (newAssetIdx >= static_cast<int>(addAssetCstr.size())) newAssetIdx = 0;
+					ImGui::SetNextItemWidth(100);
+					ImGui::InputText("##newkey", newKeyBuf, sizeof(newKeyBuf));
+					ImGui::SameLine();
+					ImGui::SetNextItemWidth(160);
+					ImGui::Combo("##newasset", &newAssetIdx, addAssetCstr.data(), static_cast<int>(addAssetCstr.size()));
+					ImGui::SameLine();
+					if (ImGui::SmallButton("+")) {
+						if (newKeyBuf[0] != '\0' && newAssetIdx > 0 && newAssetIdx < static_cast<int>(addAssetNames.size()) && !addAssetNames[newAssetIdx].empty()) {
+							(*map_name_guid)[std::string(newKeyBuf)] = m_AssetManager->ResolveAssetGuid(addAssetNames[newAssetIdx]);
+							newKeyBuf[0] = '\0';
+							newAssetIdx = 0;
+							is_dirty = true;
+						}
+					}
+
+					}
+					// Existing entries
 					if (map_name_guid->empty()) {
 						ImGui::TextDisabled("(empty)");
-					}
-					else {
+					} else {
+						std::string toRemove;
 						int idx{};
 						for (auto& [name, guid] : *map_name_guid) {
 							ImGui::PushID(idx++);
+							if (ImGui::SmallButton("X")) {
+								toRemove = name;
+								is_dirty = true;
+							}
+							ImGui::SameLine();
 							std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(guid.m_typeindex);
 							std::string currentselectionname = m_AssetManager->ResolveAssetName(guid);
 							std::size_t typehash = guid.m_typeindex;
@@ -1492,20 +1551,21 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 
 							std::vector<const char*> assetnames_cstr;
 							assetnames_cstr.reserve(assetnames.size());
-							for (auto& n : assetnames)
-							{
+							for (auto& n : assetnames) {
 								assetnames_cstr.push_back(n.c_str());
 							}
 
 							if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
-								// Check if selected item is valid and not empty (instead of checking index)
-								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
+								if (current_item >= 0 && current_item < static_cast<int>(assetnames.size()) && !assetnames[current_item].empty()) {
 									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 									guid.m_typeindex = typehash;
 									is_dirty = true;
 								}
 							}
 							ImGui::PopID();
+						}
+						if (!toRemove.empty()) {
+							map_name_guid->erase(toRemove);
 						}
 					}
 					ImGui::TreePop();

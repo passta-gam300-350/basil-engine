@@ -143,11 +143,14 @@ bool ManagedAnimation::PlayAnimation(uint64_t handle, MonoString* animationName,
     // If animatorInstance is null, try to initialize it now if we have a skeleton
     if (!anim.animatorInstance && entity.all<SkeletonComponent>())
     {
+        spdlog::info("Enter Animation");
         auto& skelComp = entity.get<SkeletonComponent>();
         if (anim.animationdata.m_guid && skelComp.skeletondata.m_guid) {
+            spdlog::info("Enter Animation");
             skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skelComp.skeletondata.m_guid);
             animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
             if (skel && animCont) {
+                spdlog::info("Enter Animation");
                 extern void InitializeSkeletalAnimation(AnimationComponent & animComp, SkeletonComponent & skelComp, const skeleton & skeletonData, animationContainer * animation);
                 InitializeSkeletalAnimation(anim, skelComp, *skel, animCont);
             }
