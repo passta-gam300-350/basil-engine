@@ -28,13 +28,14 @@ jobs:
   handoff-to-jenkins:
     name: Trigger Jenkins
     runs-on: ubuntu-latest
+    environment: build-check
 
     env:
       STATUS_CONTEXT: jenkins/build
-      JENKINS_URL: ${{ secrets.JENKINS_URL }}
-      JENKINS_USER: ${{ secrets.JENKINS_USER }}
+      JENKINS_URL: ${{ vars.JENKINS_URL }}
+      JENKINS_USER: ${{ vars.JENKINS_USER }}
       JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
-      JENKINS_JOB: ${{ secrets.JENKINS_JOB }}
+      JENKINS_JOB: ${{ vars.JENKINS_JOB }}
       JENKINS_BUILD_CHECK_TOKEN: ${{ secrets.JENKINS_BUILD_CHECK_TOKEN }}
 
     steps:
