@@ -12,9 +12,11 @@ pipeline {
 
     options {
         disableConcurrentBuilds(abortPrevious: true)
+        skipDefaultCheckout()
         timestamps()
     }
 
+    
     stages {
         stage('Build Context') {
             agent any
