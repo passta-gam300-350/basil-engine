@@ -1,12 +1,31 @@
 pipeline {
     agent none
 
+    parameters {
+        string(name: 'GIT_SHA', defaultValue: '', description: 'Git commit SHA from GitHub.')
+        string(name: 'GIT_REF', defaultValue: '', description: 'Git ref or branch name from GitHub.')
+        string(name: 'PR_NUMBER', defaultValue: '', description: 'Pull request number.')
+        string(name: 'REPO_FULL_NAME', defaultValue: '', description: 'GitHub owner/repository name.')
+        string(name: 'PR_URL', defaultValue: '', description: 'Pull request URL.')
+        string(name: 'STATUS_CONTEXT', defaultValue: 'jenkins/build', description: 'GitHub commit status context.')
+    }
+
     options {
         disableConcurrentBuilds(abortPrevious: true)
         timestamps()
     }
 
     stages {
+        stage('Build Context') {
+            agent any
+            steps {
+                echo "PR #${params.PR_NUMBER} from ${params.REPO_FULL_NAME}"
+                echo "Ref: ${params.GIT_REF}"
+                echo "SHA: ${params.GIT_SHA}"
+                echo "Status context: ${params.STATUS_CONTEXT}"
+            }
+        }
+
         stage('Build Matrix') {
             matrix {
                 axes {
