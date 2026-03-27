@@ -40,7 +40,7 @@ pipeline {
                 
 
                 agent {
-                    label 'windows'
+                    label 'Windows Agent 01'
                 }
 
                 stages {
