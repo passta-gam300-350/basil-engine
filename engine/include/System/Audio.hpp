@@ -70,7 +70,7 @@ inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, -v.z
 inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, -v.z }; }
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
 	if (result != FMOD_OK) {
-        spdlog::warn("Audio: {}", FMOD_ErrorString(result));
+        //spdlog::warn("Audio: {}", FMOD_ErrorString(result));
 		//assert(false && "FMOD Error encountered");
 	}
 }
