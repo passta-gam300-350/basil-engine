@@ -28,7 +28,7 @@ Technology is prohibited.
 #include <string>
 #include <glm/glm.hpp>
 
-#define MAX_BONE_INFLUENCE 16
+#define MAX_BONE_INFLUENCE 4
 
 struct Vertex {
     glm::vec3 Position;
