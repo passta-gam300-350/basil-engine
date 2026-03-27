@@ -16,7 +16,7 @@ pipeline {
         timestamps()
     }
 
-    
+
     stages {
         stage('Build Context') {
             agent any
@@ -36,6 +36,8 @@ pipeline {
                         values 'Release', 'Debug'
                     }
                 }
+
+                
 
                 agent {
                     label 'windows'
