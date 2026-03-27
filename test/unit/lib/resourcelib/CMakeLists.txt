@@ -8,6 +8,9 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 set(ALL_LIBS
   PRIVATE GTest::gtest
   PRIVATE resource_lib_ext
+  PRIVATE stb
+  PRIVATE job_system_lib
+  
 )
 
 add_executable(${PROJECT_NAME} ${ALL_FILES})

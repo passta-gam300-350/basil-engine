@@ -40,6 +40,7 @@ struct AnimationComponent
 	bool isSkeletalAnim = false;
 	bool isSpritesheetMode = false;
 	animator* animatorInstance = nullptr;
+	rp::Guid lastKnownAnimGuid{}; // runtime only: detects editor asset swaps vs script clip switches
 };
 
 struct AnimationBoneChannelTransformComponent {

@@ -49,8 +49,8 @@ void Mesh::setupMesh()
     layout.Push<float>(2); // TexCoords
     layout.Push<float>(3); // Tangent
     layout.Push<float>(3); // Bitangent
-    layout.Push<int>(4);   // BoneIDs
-    layout.Push<float>(4); // Weights
+    layout.Push<int>(4);   // BoneIDs  (bones 0-3, location 5)
+    layout.Push<float>(4); // Weights  (bones 0-3, location 6)
 
     m_VertexArray->AddVertexBuffer(m_VertexBuffer, layout);
     m_VertexArray->SetIndexBuffer(m_IndexBuffer);

@@ -15,7 +15,7 @@
 #include "System/PrefabSystem.hpp"
 #include "Component/Transform.hpp"
 #include "Component/PrefabComponent.hpp"
-#include "Reflection/ReflectionRegistry.hpp"
+#include "Ecs/internal/reflection.h"
 #include <iostream>
 
 // Simple tag component for testing
@@ -29,7 +29,7 @@ void PrintSeparator(const std::string& title)
     std::cout << "\n========== " << title << " ==========\n";
 }
 
-void PrintEntity(ecs::world& world, ecs::entity entity, const std::string& label)
+void PrintEntity(ecs::world& /*world*/, ecs::entity entity, const std::string& label)
 {
     std::cout << label << ":\n";
 
@@ -104,21 +104,21 @@ int main()
     std::string prefabPath = "player.prefab";
     std::cout << "Creating prefab at: " << prefabPath << "\n";
 
-    UUID<128> prefabId = PrefabSystem::CreatePrefabFromEntity(
+    rp::BasicIndexedGuid prefabId = PrefabSystem::CreatePrefabFromEntity(
         world,
         playerTemplate,
         "Player",
         prefabPath
     );
 
-    if (prefabId == UUID<128>())
+    if (prefabId == rp::null_indexed_guid)
     {
         std::cerr << "ERROR: Failed to create prefab!\n";
         return 1;
     }
 
     std::cout << "Prefab created successfully!\n";
-    std::cout << "Prefab UUID: " << prefabId.ToString() << "\n";
+    std::cout << "Prefab GUID: " << prefabId.m_guid.to_hex() << "\n";
 
     // We can remove the template entity now
     world.remove_entity(playerTemplate);
@@ -139,7 +139,7 @@ int main()
 
     std::cout << "Prefab loaded successfully!\n";
     std::cout << "  Name: " << loadedPrefab.name << "\n";
-    std::cout << "  UUID: " << loadedPrefab.GetUuidString() << "\n";
+    std::cout << "  GUID: " << loadedPrefab.GetGuidString() << "\n";
     std::cout << "  Version: " << loadedPrefab.version << "\n";
     std::cout << "  Components: " << loadedPrefab.root.components.size() << "\n";
 

@@ -15,6 +15,7 @@ Technology is prohibited.
 #include <iostream>
 
 #include "uuid/uuid.hpp"
+using namespace uuid;
 int main(int argc, char* argv[]) {
 	UUID<128> uuid128 = UUID<128>::Generate();
 	std::cout << "Generated UUID (128 bits): " << uuid128.ToString() << '\n';

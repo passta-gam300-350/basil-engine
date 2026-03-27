@@ -25,5 +25,10 @@ public:
 	{
 		return static_cast<float>(Engine::GetLastDeltaTime());
 	}
+
+	static float GetFixedDeltaTime()
+	{
+		return static_cast<float>(Engine::GetFixedDeltaTime());
+	}
 };
 #endif// MANAGED_TIME_HPP

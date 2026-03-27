@@ -17,6 +17,7 @@
 #include "descriptors/texture.hpp"
 #include "descriptors/animation.hpp"
 #include "descriptors/skeleton.hpp"
+#include "descriptors/descriptors.hpp"
 #include <native/mesh.h>
 
 #include <stb_image.h>
@@ -354,7 +355,7 @@ inline AnimationDescriptor ExtractAnimation(aiAnimation* anim, [[maybe_unused]] 
             chldata.m_scales.emplace(float(sclkey.mTime), ToVec3(sclkey.mValue));
         }
         auto res_it = boneMap.find(chldata.m_name);
-        chldata.m_id = (res_it==boneMap.end()) ? 0 : res_it->second;
+        chldata.m_id = (res_it==boneMap.end()) ? -1 : res_it->second;
         anidesc.anim.m_channels.emplace_back(chldata);
     }
 

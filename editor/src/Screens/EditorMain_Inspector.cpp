@@ -1076,13 +1076,49 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 					assetnames_cstr.push_back(name.c_str());
 				}
 
-				if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
+				/*if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
 					// Check if selected item is valid and not empty (instead of checking index)
 					if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
 						*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 						v->m_typeindex = typehash;
 						is_dirty = true;
 					}
+				}*/
+
+				if (ImGui::BeginCombo("##guid_selector2",
+					current_item >= 0 ? assetnames[current_item].c_str() : "Select...")) {
+					static char searchBuffer[256]{};
+					const auto StringContainsCaseInsensitive{ [](const std::string& str, const std::string& substr) -> bool {
+						std::string strLower = str;
+						std::string substrLower = substr;
+						std::transform(strLower.begin(), strLower.end(), strLower.begin(), ::tolower);
+						std::transform(substrLower.begin(), substrLower.end(), substrLower.begin(), ::tolower);
+						return strLower.find(substrLower) != std::string::npos;
+					} };
+
+					// Search box inside dropdown
+					ImGui::SetNextItemWidth(300.0f);
+					ImGui::InputTextWithHint("##ResSearch", "Search resources...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+					// Filtered list //todo: optimise this next time
+					for (int id = 0; id < assetnames.size(); id++) {
+						if (strlen(searchBuffer) == 0 ||
+							StringContainsCaseInsensitive(assetnames[id], searchBuffer)) {
+
+							bool isSelected = (current_item == id);
+							if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
+								current_item = id;
+								*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+								v->m_typeindex = typehash;
+								is_dirty = true;
+							}
+							if (isSelected) {
+								ImGui::SetItemDefaultFocus();
+							}
+						}
+					}
+
+					ImGui::EndCombo();
 				}
 			}
 

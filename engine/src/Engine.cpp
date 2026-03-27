@@ -194,20 +194,42 @@ void Engine::Init(std::string const& cfg ) {
 	Engine::Instance().m_Info.m_State = Info::State::Running;
 }
 
-void Engine::CoreUpdate() {
-	//thread_local auto physic_system{PhysicsSystem()};
+void Engine::CoreFixedUpdate()
+{
 	Engine& instance{ Instance() };
-	//PF_BEGIN_FRAME(instance.m_Info.m_TotalFrameCt);
+	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
+	animationSystem().FixedUpdate(instance.m_World);
+	BehaviourSystem::Instance().FixedUpdate(instance.m_World);
+}
+
+
+void Engine::CorePreUpdate()
+{
+	Engine& instance{ Instance() };
+
 	instance.m_World.pre_update();
-	//TransformSystem().FixedUpdate(instance.m_World);
+
 	HierarchySystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);
+
+	BehaviourSystem::Instance().InitScripts(instance.m_World);
+}
+
+
+void Engine::CoreUpdate() {
+	
+	Engine& instance{ Instance() };
+	
+	/*HierarchySystem().FixedUpdate(instance.m_World);
+	CameraSystem::Instance().FixedUpdate(instance.m_World);*/
 	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialInstance
 	//physic_system.FixedUpdate(instance.m_World);
 	//instance.m_World.update();
 	//JobID last_job{ instance.m_World.update_async()};
-	animationSystem().FixedUpdate(instance.m_World);
-	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
+	/*animationSystem().FixedUpdate(instance.m_World);
+	PhysicsSystem::Instance().FixedUpdate(instance.m_World);*/
+	
+	
 	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 
 	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
@@ -225,7 +247,11 @@ void Engine::CoreUpdate() {
 	InputManager::Get_Instance()->Update();
 	messagingSystem.Update();
 
+}
 
+void Engine::CoreLateUpdate() {
+
+	Engine& instance{ Instance() };
 	instance.m_SceneRegistry->PollRequestSceneChange();
 }
 
@@ -258,9 +284,33 @@ void Engine::Update() {
 					break;
 				}
 				{
+					
+
 					TickFrameClock();
+					
+					CorePreUpdate();
+
+
+
+					instance.m_Accumulator += instance.m_Info.m_DeltaTime;
+
+					
+					
+
+
+
+					while (instance.m_Accumulator >= instance.m_Info.m_FixedDeltaTime) {
+						FixedUpdate();
+						instance.m_Accumulator -= instance.m_Info.m_FixedDeltaTime;
+					}
+
 					CoreUpdate();
 					UpdateDebug();
+
+					CoreLateUpdate();
+
+					
+
 					Engine::GetWindowInstance().SwapBuffers();
 				}
 				
@@ -274,6 +324,11 @@ void Engine::Update() {
 	catch (...) {							//this is for whatever alien
 		GetSink()->logger()->critical("Fatal error! Caught unknown exception");
 	}
+}
+
+void Engine::FixedUpdate()
+{
+	CoreFixedUpdate();
 }
 
 void Engine::UpdateDebug() {
@@ -435,9 +490,15 @@ double Engine::GetDeltaTime() {
 	return Instance().m_Info.m_DeltaTime;
 }
 
+double Engine::GetFixedDeltaTime() {
+	return Instance().m_Info.m_FixedDeltaTime;
+}
+
 double Engine::GetLastDeltaTime() {
 	return Instance().m_Info.m_DeltaTime;
 }
+
+
 
 void Engine::GenerateDefaultConfig(std::string_view name) {
 	YAML::Node root{  };
