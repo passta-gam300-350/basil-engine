@@ -10,30 +10,32 @@ def updateGitHubStatus(String state, String description) {
         return
     }
 
-    withCredentials([string(credentialsId: 'github-status-token', variable: 'GITHUB_STATUS_TOKEN')]) {
-        def payload = groovy.json.JsonOutput.toJson([
-            state      : state,
-            context    : params.STATUS_CONTEXT ?: 'jenkins/build',
-            description: description,
-            target_url : env.BUILD_URL
-        ])
+    node('Windows Agent 01') {
+        withCredentials([string(credentialsId: 'github-status-token', variable: 'GITHUB_STATUS_TOKEN')]) {
+            def payload = groovy.json.JsonOutput.toJson([
+                state      : state,
+                context    : params.STATUS_CONTEXT ?: 'jenkins/build',
+                description: description,
+                target_url : env.BUILD_URL
+            ])
 
-        powershell """
-            \$headers = @{
-                Authorization = 'token $env:GITHUB_STATUS_TOKEN'
-                Accept = 'application/vnd.github+json'
-                'User-Agent' = 'jenkins-build-check'
-            }
-            \$body = @'
+            powershell """
+                \$headers = @{
+                    Authorization = 'token $env:GITHUB_STATUS_TOKEN'
+                    Accept = 'application/vnd.github+json'
+                    'User-Agent' = 'jenkins-build-check'
+                }
+                \$body = @'
 ${payload}
 '@
-            Invoke-RestMethod `
-                -Method Post `
-                -Uri 'https://api.github.com/repos/${repoParts[0]}/${repoParts[1]}/statuses/${params.GIT_SHA}' `
-                -Headers \$headers `
-                -Body \$body `
-                -ContentType 'application/json'
-        """
+                Invoke-RestMethod `
+                    -Method Post `
+                    -Uri 'https://api.github.com/repos/${repoParts[0]}/${repoParts[1]}/statuses/${params.GIT_SHA}' `
+                    -Headers \$headers `
+                    -Body \$body `
+                    -ContentType 'application/json'
+            """
+        }
     }
 }
 
