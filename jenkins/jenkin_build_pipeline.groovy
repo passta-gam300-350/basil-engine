@@ -136,27 +136,28 @@ pipeline {
                 }
             }
 
-            post {
-                success {
-                    script {
-                        updateGitHubStatus('success', 'Jenkins build succeeded')
-                    }
-                }
-                failure {
-                    script {
-                        updateGitHubStatus('failure', 'Jenkins build failed')
-                    }
-                }
-                aborted {
-                    script {
-                        updateGitHubStatus('error', 'Jenkins build aborted')
-                    }
-                }
-                unstable {
-                    script {
-                        updateGitHubStatus('failure', 'Jenkins build unstable')
-                    }
-                }
+        }
+    }
+
+    post {
+        success {
+            script {
+                updateGitHubStatus('success', 'Jenkins build succeeded')
+            }
+        }
+        failure {
+            script {
+                updateGitHubStatus('failure', 'Jenkins build failed')
+            }
+        }
+        aborted {
+            script {
+                updateGitHubStatus('error', 'Jenkins build aborted')
+            }
+        }
+        unstable {
+            script {
+                updateGitHubStatus('failure', 'Jenkins build unstable')
             }
         }
     }
