@@ -20,7 +20,7 @@ def updateGitHubStatus(String state, String description) {
             ])
 
             powershell """
-                \$token = $env:GITHUB_STATUS_TOKEN.Trim()
+                \$token = \$env:GITHUB_STATUS_TOKEN.Trim()
                 Write-Host ("GitHub status token length: {0}" -f \$token.Length)
                 Write-Host ("GitHub status token last4: {0}" -f \$token.Substring([Math]::Max(0, \$token.Length - 4)))
                 \$headers = @{
