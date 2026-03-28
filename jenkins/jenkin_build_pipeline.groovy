@@ -21,7 +21,7 @@ def updateGitHubStatus(String state, String description) {
 
             powershell """
                 \$headers = @{
-                    Authorization = 'token $env:GITHUB_STATUS_TOKEN'
+                    Authorization = 'Bearer $env:GITHUB_STATUS_TOKEN'
                     Accept = 'application/vnd.github+json'
                     'User-Agent' = 'jenkins-build-check'
                 }
