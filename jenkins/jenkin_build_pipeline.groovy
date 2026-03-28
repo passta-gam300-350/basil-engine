@@ -119,7 +119,7 @@ pipeline {
 
                 stage('Configure CMake') {
                     steps {
-                        powershell 'cmake -S . -B build -A x64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5'
+                        powershell 'cmake --% -S . -B build -A x64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5'
                     }
                 }
 
