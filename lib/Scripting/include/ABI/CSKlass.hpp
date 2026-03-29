@@ -80,6 +80,10 @@ struct CSKlassInstance
 	CSKlassInstance() = default;
 	explicit CSKlassInstance(const CSKlass* klass, bool isNative=false);
 	CSKlassInstance(const CSKlass* klass, MonoObject* instance, bool isNative=false);
+	CSKlassInstance(const CSKlassInstance&) = delete;
+	CSKlassInstance& operator=(const CSKlassInstance&) = delete;
+	CSKlassInstance(CSKlassInstance&& other) noexcept;
+	CSKlassInstance& operator=(CSKlassInstance&& other) noexcept;
 
 	void Attach(const CSKlass* klass, MonoObject* instance, bool isNative=false);
 	void Reset() noexcept;

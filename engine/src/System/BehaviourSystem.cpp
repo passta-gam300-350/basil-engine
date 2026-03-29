@@ -119,6 +119,7 @@ void BehaviourSystem::InitScripts(ecs::world& world)
 	auto entities = world.filter_entities<behaviour>();
 	for (auto entity : entities) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		std::vector<rp::Guid> scriptIDsToRemove;
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
@@ -128,14 +129,18 @@ void BehaviourSystem::InitScripts(ecs::world& world)
 				if (exception) {
 					MonoString* excStr = mono_object_to_string(exception, nullptr);
 					ManagedConsole::LogError(excStr);
-
-					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
-					auto instance2 = MonoEntityManager::GetInstance().GetInstance(scriptID);
-					if (it != component.scriptIDs.end()) {
-						instance2->Reset();
-						component.scriptIDs.erase(it);
-					}
+					scriptIDsToRemove.push_back(scriptID);
 				}
+			}
+		}
+
+		for (const auto& scriptID : scriptIDsToRemove)
+		{
+			auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
+			if (it != component.scriptIDs.end())
+			{
+				MonoEntityManager::GetInstance().RemoveInstance(scriptID);
+				component.scriptIDs.erase(it);
 			}
 		}
 	}
@@ -154,6 +159,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 
 	for (auto entity : entites) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		std::vector<rp::Guid> scriptIDsToRemove;
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
@@ -164,15 +170,8 @@ void BehaviourSystem::Update(ecs::world& world, float)
 				if (exception) {
 					MonoString* excStr = mono_object_to_string(exception, nullptr);
 					ManagedConsole::LogError(excStr);
-					// Unload the script instance to prevent further errors
-					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
-					auto instance2 = MonoEntityManager::GetInstance().GetInstance(scriptID);
-					if (it != component.scriptIDs.end()) {
-						instance2->Reset();
-						component.scriptIDs.erase(it);
-					}
-
-
+					// Unload the script instance after iteration to avoid invalidating the loop.
+					scriptIDsToRemove.push_back(scriptID);
 				}
 
 				/*if (unloaded)
@@ -180,6 +179,16 @@ void BehaviourSystem::Update(ecs::world& world, float)
 					unloaded = false;
 					return;
 				}*/
+			}
+		}
+
+		for (const auto& scriptID : scriptIDsToRemove)
+		{
+			auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
+			if (it != component.scriptIDs.end())
+			{
+				MonoEntityManager::GetInstance().RemoveInstance(scriptID);
+				component.scriptIDs.erase(it);
 			}
 		}
 
@@ -694,9 +703,14 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 	void* args[1];
 	args[0] = &other;
 	auto monoOther = GameObjectKlass->CreateInstance(nullptr, args);
+	MonoObject* otherObj = monoOther.Object();
+	if (!otherObj)
+	{
+		return;
+	}
 
 	void* argsCollision[1];
-	argsCollision[0] = &monoOther;
+	argsCollision[0] = otherObj;
 	for (auto ScriptID : component.scriptIDs)
 	{
 		CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(ScriptID);

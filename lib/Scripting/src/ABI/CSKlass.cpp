@@ -340,12 +340,39 @@ CSKlassInstance::CSKlassInstance(const CSKlass* klass, MonoObject* instance, boo
 	Attach(klass, instance, isNative);
 }
 
-void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance, [[maybe_unused]] bool isNative)
+CSKlassInstance::CSKlassInstance(CSKlassInstance&& other) noexcept
+	: m_klass(other.m_klass)
+	, m_instanceHandle(other.m_instanceHandle)
+	, m_instance(other.m_instance)
+{
+	other.m_klass = nullptr;
+	other.m_instanceHandle = 0;
+	other.m_instance = nullptr;
+}
+
+CSKlassInstance& CSKlassInstance::operator=(CSKlassInstance&& other) noexcept
+{
+	if (this != &other)
+	{
+		Reset();
+		m_klass = other.m_klass;
+		m_instanceHandle = other.m_instanceHandle;
+		m_instance = other.m_instance;
+
+		other.m_klass = nullptr;
+		other.m_instanceHandle = 0;
+		other.m_instance = nullptr;
+	}
+
+	return *this;
+}
+
+void CSKlassInstance::Attach(const CSKlass* klass, MonoObject* instance, bool isNative)
 {
 	m_klass = klass;
 	m_instance = instance;
 	if (instance)
-		m_instanceHandle = (true) ? mono_gchandle_new(instance, false) : mono_gchandle_new_weakref(instance, false);
+		m_instanceHandle = isNative ? mono_gchandle_new_weakref(instance, false) : mono_gchandle_new(instance, false);
 	else m_instanceHandle = 0;
 }
 
@@ -362,7 +389,7 @@ void CSKlassInstance::Reset() noexcept
 
 bool CSKlassInstance::IsValid() const noexcept
 {
-	return m_klass && m_klass->IsValid() && m_instance;
+	return m_klass && m_klass->IsValid() && Object() != nullptr;
 }
 
 const CSKlass* CSKlassInstance::Klass() const noexcept
@@ -396,7 +423,13 @@ MonoObject* CSKlassInstance::Invoke(const char* methodName, void** args, MonoObj
 		return nullptr;
 	}
 
-	return mono_runtime_invoke(method, m_instance, args, exception);
+	MonoObject* object = Object();
+	if (!object)
+	{
+		return nullptr;
+	}
+
+	return mono_runtime_invoke(method, object, args, exception);
 }
 
 
@@ -405,6 +438,10 @@ CSKlassInstance::~CSKlassInstance()
 {
 	if (m_instanceHandle)
 	{
-		//mono_gchandle_free(m_instanceHandle);
+		mono_gchandle_free(m_instanceHandle);
+		m_instanceHandle = 0;
 	}
+
+	m_klass = nullptr;
+	m_instance = nullptr;
 }
