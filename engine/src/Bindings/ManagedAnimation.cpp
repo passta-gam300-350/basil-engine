@@ -24,6 +24,35 @@ Technology is prohibited.
 #include "Animation/Animation.h"
 #include "spdlog/spdlog.h"
 
+extern void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent& skelComp, const skeleton& skeletonData, animationContainer* animation);
+
+namespace
+{
+    bool EnsureSkeletalAnimatorInitialized(ecs::entity entity, AnimationComponent& anim)
+    {
+        if (anim.animatorInstance || !entity.all<SkeletonComponent>())
+        {
+            return anim.animatorInstance != nullptr;
+        }
+
+        auto& skelComp = entity.get<SkeletonComponent>();
+        if (!anim.animationdata.m_guid || !skelComp.skeletondata.m_guid)
+        {
+            return false;
+        }
+
+        skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skelComp.skeletondata.m_guid);
+        animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
+        if (!skel || !animCont)
+        {
+            return false;
+        }
+
+        ::InitializeSkeletalAnimation(anim, skelComp, *skel, animCont);
+        return anim.animatorInstance != nullptr;
+    }
+}
+
 void ManagedAnimation::Play(uint64_t handle)
 {
     ecs::entity entity{ handle };
@@ -33,6 +62,7 @@ void ManagedAnimation::Play(uint64_t handle)
     }
     auto& anim = entity.get<AnimationComponent>();
     anim.state.isPlaying = true;
+    EnsureSkeletalAnimatorInitialized(entity, anim);
     if (anim.animatorInstance)
     {
         anim.animatorInstance->play();
@@ -130,23 +160,7 @@ bool ManagedAnimation::PlayAnimation(uint64_t handle, MonoString* animationName,
         return false;
     }
     auto& anim = entity.get<AnimationComponent>();
-    
-    // If animatorInstance is null, try to initialize it now if we have a skeleton
-    if (!anim.animatorInstance && entity.all<SkeletonComponent>())
-    {
-        spdlog::info("Enter Animation");
-        auto& skelComp = entity.get<SkeletonComponent>();
-        if (anim.animationdata.m_guid && skelComp.skeletondata.m_guid) {
-            spdlog::info("Enter Animation");
-            skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skelComp.skeletondata.m_guid);
-            animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
-            if (skel && animCont) {
-                spdlog::info("Enter Animation");
-                extern void InitializeSkeletalAnimation(AnimationComponent & animComp, SkeletonComponent & skelComp, const skeleton & skeletonData, animationContainer * animation);
-                InitializeSkeletalAnimation(anim, skelComp, *skel, animCont);
-            }
-        }
-    }
+    EnsureSkeletalAnimatorInitialized(entity, anim);
 
     if (anim.animatorInstance) 
     {
