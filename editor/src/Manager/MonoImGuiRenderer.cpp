@@ -395,13 +395,18 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, [[mayb
 					uint64_t nativeIDValue = e.get_uuid();
 					void* data[1] = { &nativeIDValue };
 
-					rp::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", data);
-					CSKlassInstance* goInstance = MonoEntityManager::GetInstance().GetInstance(id);
+					CSKlassInstance goInstance = gameObjectKlass->CreateInstance(nullptr, data);
+					MonoObject* goObject = goInstance.Object();
+					if (!goObject)
+					{
+						ImGui::PopID();
+						break;
+					}
 					//Set NativeID field
 					CSKlass::FieldInfo* nativeIDField1 = gameObjectKlass->ResolveField("NativeID");
-					mono_field_set_value(goInstance->Object(), nativeIDField1->field, &nativeIDValue);
+					mono_field_set_value(goObject, nativeIDField1->field, &nativeIDValue);
 					//Set GameObject field in the script instance
-					mono_field_set_value(inst, info->field, (goInstance->Object()));
+					mono_field_set_value(inst, info->field, goObject);
 					nativeID = nativeIDValue;
 				}
 

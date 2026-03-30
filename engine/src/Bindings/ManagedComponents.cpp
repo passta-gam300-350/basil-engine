@@ -270,11 +270,18 @@ MonoObject* ManagedComponents::GetManagedComponent(uint64_t handle, MonoString* 
 	ecs::entity ent{ handle };
 
 	const char* nativeName = mono_string_to_utf8(fullname);
+	if (!nativeName)
+	{
+		return nullptr;
+	}
 
-	std::string strName = nativeName;
+	if (!ent.all<behaviour>())
+	{
+		mono_free((void*)nativeName);
+		return nullptr;
+	}
 
 	behaviour& bhvr = ent.get<behaviour>();
-
 	{
 		for (auto id : bhvr.scriptIDs)
 		{
@@ -282,6 +289,8 @@ MonoObject* ManagedComponents::GetManagedComponent(uint64_t handle, MonoString* 
 			if (!instance)
 				continue;
 			auto klass = instance->Klass();
+			if (!klass)
+				continue;
 
 			std::string_view name = klass->Name();
 			std::string_view ns = klass->Namespace();
@@ -296,12 +305,15 @@ MonoObject* ManagedComponents::GetManagedComponent(uint64_t handle, MonoString* 
 			}
 			if (fn == nativeName)
 			{
-				return instance->Object();
+				MonoObject* object = instance->Object();
+				mono_free((void*)nativeName);
+				return object;
 			}
 
 		}
 	}
 
+	mono_free((void*)nativeName);
 	return nullptr;
 }
 

@@ -247,6 +247,10 @@ macro(import_jolt)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
     )
 
+    if(MSVC)
+        target_compile_options(Jolt PRIVATE /wd4865)
+    endif()
+
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs Jolt INTERFACE_INCLUDE_DIRECTORIES)
 
