@@ -1,6 +1,7 @@
 #include "Engine.hpp"
 #include "Core/Window.h"
 #include "Render/Render.h"
+#include "Render/Preload.hpp"
 #include "Profiler/profiler.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include "Input/InputManager.h"
@@ -219,6 +220,12 @@ void Engine::CorePreUpdate()
 void Engine::CoreUpdate() {
 	
 	Engine& instance{ Instance() };
+	
+	// Process preload queue (non-blocking, one resource per frame)
+	// This keeps UI responsive during scene loading
+	if (preload::PreloadManager::Instance().IsPreloading()) {
+		preload::PreloadManager::Instance().ProcessBatch();
+	}
 	
 	/*HierarchySystem().FixedUpdate(instance.m_World);
 	CameraSystem::Instance().FixedUpdate(instance.m_World);*/
