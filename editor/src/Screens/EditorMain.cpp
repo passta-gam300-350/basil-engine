@@ -232,20 +232,31 @@ EditorMain::EditorMain(GLFWwindow* _window) : Screen(_window)
 
 void EditorMain::init()
 {
-	// Set window title
 	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* v_mode = glfwGetVideoMode(primaryMonitor);
 	UNREF_PARAM(primaryMonitor);
 	UNREF_PARAM(v_mode);
-	// Set maximized
 	glfwMaximizeWindow(window);
+	
+	m_TaskQueue = std::make_unique<editor::AsyncTaskQueue>(2);
+	
+	m_ShowLoadingScreen = true;
+	m_LoadingStatus = "Initializing asset manager...";
+	m_LoadingProgress = 0.0f;
+	
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	m_AssetManager->InitWorkerLoop();
 	m_AssetManager->m_ActivityCallback = [&](std::string const& str) {m_AssetBrowserCache.needsRefresh = true; };
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
+	
+	m_LoadingStatus = "Loading asset list...";
+	m_LoadingProgress = 0.5f;
+	
+	//m_AssetManager->ImportAssetList();
+	
+	m_LoadingStatus = "Initializing build manager...";
+	m_LoadingProgress = 0.7f;
+	
 	m_BuildManager = std::make_unique<BuildManager>(this);
 
 	// Register custom audio inspector with import settings
@@ -531,6 +542,9 @@ void EditorMain::init()
 
 	engineService.set_on_load();
 	engineService.set_on_unload();
+	
+	m_ShowLoadingScreen = false;
+	m_LoadingProgress = 1.0f;
 }
 
 
@@ -689,6 +703,33 @@ void EditorMain::render()
 		Render_Game();
 		Render_CameraControls();
 		Render_ScriptCompileModal();
+		Render_NotificationBar();
+		
+		// Render loading screen overlay if needed
+		if (m_ShowLoadingScreen) {
+			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+			ImGui::SetNextWindowSize(ImVec2(400, 150), ImGuiCond_Always);
+			
+			ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | 
+				ImGuiWindowFlags_NoResize | 
+				ImGuiWindowFlags_NoMove | 
+				ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoInputs;
+			
+			if (ImGui::Begin("##LoadingScreen", nullptr, flags)) {
+				ImGui::Text("Loading Editor");
+				ImGui::Separator();
+				ImGui::Text("%s", m_LoadingStatus.c_str());
+				ImGui::Spacing();
+				ImGui::ProgressBar(m_LoadingProgress, ImVec2(-1, 0), "");
+				
+				static constexpr const char* spinnerFrames[] = { "|", "/", "-", "\\" };
+				auto ticks = static_cast<std::size_t>(ImGui::GetTime() * 8.0);
+				const char* spinner = spinnerFrames[ticks % 4];
+				ImGui::Text("%s Please wait...", spinner);
+			}
+			ImGui::End();
+		}
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar();
@@ -764,6 +805,83 @@ void EditorMain::Render_ScriptCompileModal()
 	}
 
 	ImGui::EndPopup();
+}
+
+void EditorMain::Render_NotificationBar()
+{
+	if (!m_ShowNotificationBar || !m_TaskQueue) {
+		return;
+	}
+	
+	auto tasks = m_TaskQueue->GetActiveTasks();
+	if (tasks.empty()) {
+		m_NotificationBarHeight = 0.0f;
+		return;
+	}
+	
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - 30.0f));
+	ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, 30.0f));
+	
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | 
+		ImGuiWindowFlags_NoResize | 
+		ImGuiWindowFlags_NoMove | 
+		ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoDocking;
+	
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.15f, 0.95f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 5));
+	
+	if (ImGui::Begin("##NotificationBar", nullptr, flags)) {
+		float windowWidth = ImGui::GetContentRegionAvail().x;
+		float taskWidth = 250.0f;
+		int maxVisible = static_cast<int>(windowWidth / taskWidth);
+		if (maxVisible < 1) maxVisible = 1;
+		
+		int visible = 0;
+		for (auto const& task : tasks) {
+			if (visible >= maxVisible) break;
+			
+			ImGui::PushID(task.m_id.c_str());
+			
+			ImGui::Text("%s", task.m_name.c_str());
+			ImGui::SameLine();
+			
+			if (task.m_isIndeterminate) {
+				static constexpr const char* spinnerFrames[] = { "|", "/", "-", "\\" };
+				auto ticks = static_cast<std::size_t>(ImGui::GetTime() * 8.0);
+				ImGui::Text("%s", spinnerFrames[ticks % 4]);
+			} else {
+				ImGui::ProgressBar(task.m_progress, ImVec2(80, 0), "");
+			}
+			
+			if (task.m_canCancel) {
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.2f, 0.2f, 1.0f));
+				if (ImGui::SmallButton("X")) {
+					m_TaskQueue->CancelTask(task.m_id);
+				}
+				ImGui::PopStyleColor();
+			}
+			
+			ImGui::SameLine();
+			ImGui::Spacing();
+			ImGui::SameLine();
+			
+			ImGui::PopID();
+			visible++;
+		}
+		
+		if (tasks.size() > static_cast<size_t>(maxVisible)) {
+			ImGui::SameLine();
+			ImGui::TextDisabled("+%zu more", tasks.size() - maxVisible);
+		}
+	}
+	
+	m_NotificationBarHeight = ImGui::GetWindowHeight();
+	ImGui::End();
+	ImGui::PopStyleVar();
+	ImGui::PopStyleColor();
 }
 
 

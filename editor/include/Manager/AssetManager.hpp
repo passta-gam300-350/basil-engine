@@ -21,23 +21,37 @@ Technology is prohibited.
 #include <map>
 #include <thread>
 #include <mutex>
+#include <functional>
 #include <rsc-ext/rp.hpp>
 #include <chrono>
 
 using ResourceType = std::uint64_t;
 
-//future improvements
-// TODO: do not recompute the subdirectories, store it and update using filewatcher
+struct ImportResult {
+	bool success{false};
+	rp::BasicIndexedGuid guid{};
+	std::string errorMessage;
+};
+
+struct ImportProgress {
+	int current{0};
+	int total{0};
+	std::string currentAsset;
+	bool isIndeterminate{false};
+};
+
+using ImportProgressCallback = std::function<void(ImportProgress const&)>;
+
 struct AssetManager {
-	std::map<std::string, rp::BasicIndexedGuid> m_AssetNameGuid; //potentially unsafe
-	std::map<rp::BasicIndexedGuid, std::string> m_AssetReverse; //reverse lookup
+	std::map<std::string, rp::BasicIndexedGuid> m_AssetNameGuid;
+	std::map<rp::BasicIndexedGuid, std::string> m_AssetReverse;
 
 	std::unordered_multimap<std::string, std::string> m_FileList;
 	std::string m_RootPath;
 	std::string m_CurrentPath;
 	std::string m_ImportedAssetPath;
 	std::mutex m_DescriptorListMtx;
-	std::unique_ptr<std::thread> m_IndexingWorker; //indexing file watcher thread, automatically creates descriptors
+	std::unique_ptr<std::thread> m_IndexingWorker;
 
 	// Performance optimization: Cache asset names by type to avoid repeated full-map scans
 	std::unordered_map<ResourceType, std::vector<std::string>> m_AssetTypeCache;
@@ -53,11 +67,12 @@ struct AssetManager {
 
 	std::function<void(std::string const&)> m_ActivityCallback;
 
-	// Prefab synchronization tracking
-	std::vector<std::string> m_ChangedPrefabs;  ///< List of prefab file paths that have changed
-	std::mutex m_ChangedPrefabsMtx;              ///< Mutex for thread-safe access to changed prefabs list
-	std::vector<std::string> m_ChangedScripts;   ///< List of C# source files that have changed
-	std::mutex m_ChangedScriptsMtx;              ///< Mutex for thread-safe access to changed scripts list
+	std::vector<std::string> m_ChangedPrefabs;
+	std::mutex m_ChangedPrefabsMtx;
+	std::vector<std::string> m_ChangedScripts;
+	std::mutex m_ChangedScriptsMtx;
+	
+	std::mutex m_AssetNameGuidMtx;
 
 	static constexpr std::string_view cx_AssetListFilename{".assetlist"};
 
@@ -80,8 +95,15 @@ struct AssetManager {
 
 	rp::BasicIndexedGuid ImportAsset(std::string const&);
 	std::vector<rp::BasicIndexedGuid> ImportAssetDirectory(std::string const&);
+	
+	ImportResult ImportAssetAsync(std::string const& descPath, 
+		std::atomic<bool>& cancelFlag, 
+		ImportProgressCallback progressCallback = nullptr);
+	
+	std::vector<ImportResult> ImportAssetDirectoryAsync(std::string const& dir,
+		std::atomic<bool>& cancelFlag,
+		ImportProgressCallback progressCallback = nullptr);
 
-	// Create new material descriptor with defaults
 	void CreateMaterialDescriptor(std::string const& material_name);
 
 	//import settings for 1 active descriptor

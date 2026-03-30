@@ -758,3 +758,163 @@ std::vector<std::string> AssetManager::GetAndClearChangedScripts() {
 	m_ChangedScripts.clear();
 	return changed;
 }
+
+ImportResult AssetManager::ImportAssetAsync(std::string const& rdesc, 
+	std::atomic<bool>& cancelFlag, 
+	ImportProgressCallback progressCallback) {
+	
+	ImportResult result;
+	
+	if (cancelFlag.load()) {
+		result.success = false;
+		result.errorMessage = "Import cancelled";
+		return result;
+	}
+	
+	try {
+		if (progressCallback) {
+			ImportProgress prog{0, 1, rdesc, false};
+			progressCallback(prog);
+		}
+		
+		auto importertype{ rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(rdesc) };
+		std::atomic_bool importnewfiles{};
+		std::future<std::vector<std::string>> fut{};
+		
+		if (importertype == rp::utility::type_hash<ModelDescriptor>::value()) {
+			importnewfiles = rp::serialization::yaml_serializer::deserialize<ModelDescriptor>(rdesc).import_extracted;
+			fut = std::async(std::launch::async, trackDirectory, string_to_wstring(getParentPath(rdesc)), std::ref(importnewfiles));
+		}
+		
+		auto biguid{ rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc) };
+		auto file_path{ normalizePath(m_ImportedAssetPath + "/" + biguid.m_guid.to_hex() + rp::ResourceTypeImporterRegistry::GetImporterSuffix(importertype)) };
+		
+		{
+			std::lock_guard<std::mutex> lock(m_AssetNameGuidMtx);
+			if (ResourceSystem::Instance().m_MappedIO.find(file_path) != ResourceSystem::Instance().m_MappedIO.end()) {
+				ResourceSystem::Instance().m_MappedIO.erase(file_path);
+			}
+		}
+		
+		if (cancelFlag.load()) {
+			importnewfiles = false;
+			result.success = false;
+			result.errorMessage = "Import cancelled";
+			return result;
+		}
+		
+		rp::ResourceTypeImporterRegistry::Import(importertype, rdesc, file_path);
+		rp::ResourceTypeImporterRegistry::GetDescriptorGuid(rdesc);
+		
+		{
+			std::lock_guard<std::mutex> lock(m_AssetNameGuidMtx);
+			m_AssetNameGuid.emplace(rp::ResourceTypeImporterRegistry::GetDescriptorName(rdesc), biguid);
+		}
+
+		{
+			std::lock_guard lg{ m_AssetTypeCacheMtx };
+			m_AssetTypeCacheValid = false;
+		}
+
+		ResourceSystem::FileEntry fentry{};
+		fentry.m_Guid = biguid.m_guid;
+		fentry.m_Path = file_path;
+		if (!std::filesystem::exists(fentry.m_Path)) {
+			std::cerr << "Import produced no output file: " << fentry.m_Path << " (from " << rdesc << ")\n";
+			importnewfiles = false;
+			result.success = false;
+			result.errorMessage = "Import produced no output file";
+			return result;
+		}
+		fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
+		
+		{
+			std::lock_guard<std::mutex> lock(m_AssetNameGuidMtx);
+			ResourceSystem::Instance().m_FileEntries.emplace(fentry.m_Guid, fentry);
+		}
+		
+		importnewfiles = false;
+		
+		if (fut.valid()) {
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(1000ms);
+			
+			if (cancelFlag.load()) {
+				result.success = false;
+				result.errorMessage = "Import cancelled";
+				return result;
+			}
+			
+			for (auto const& file : fut.get()) {
+				if (cancelFlag.load()) {
+					result.success = false;
+					result.errorMessage = "Import cancelled";
+					return result;
+				}
+				
+				std::string ext = getFileExtension(file);
+				if (ext == ".desc") {
+					auto subResult = ImportAssetAsync(getParentPath(rdesc) + "/" + file, cancelFlag, progressCallback);
+					if (!subResult.success && subResult.errorMessage != "Import cancelled") {
+						std::cerr << "Failed to import sub-asset: " << file << "\n";
+					}
+				}
+			}
+		}
+		
+		result.success = true;
+		result.guid = biguid;
+		
+		if (progressCallback) {
+			ImportProgress prog{1, 1, rdesc, false};
+			progressCallback(prog);
+		}
+	} catch (const std::exception& e) {
+		result.success = false;
+		result.errorMessage = e.what();
+	}
+	
+	return result;
+}
+
+std::vector<ImportResult> AssetManager::ImportAssetDirectoryAsync(std::string const& dir,
+	std::atomic<bool>& cancelFlag,
+	ImportProgressCallback progressCallback) {
+	
+	std::vector<ImportResult> results;
+	std::vector<std::string> allDescFiles;
+	
+	auto files = GetFiles(dir);
+	for (auto it = files.first; it != files.second; ++it) {
+		allDescFiles.push_back(it->second);
+	}
+	
+	int total = static_cast<int>(allDescFiles.size());
+	int current = 0;
+	
+	for (auto const& descFile : allDescFiles) {
+		if (cancelFlag.load()) {
+			ImportResult cancelled;
+			cancelled.success = false;
+			cancelled.errorMessage = "Import cancelled";
+			results.push_back(cancelled);
+			break;
+		}
+		
+		if (progressCallback) {
+			ImportProgress prog{current, total, descFile, false};
+			progressCallback(prog);
+		}
+		
+		auto result = ImportAssetAsync(descFile, cancelFlag, nullptr);
+		results.push_back(result);
+		current++;
+	}
+	
+	if (progressCallback) {
+		ImportProgress prog{total, total, "", false};
+		progressCallback(prog);
+	}
+	
+	return results;
+}
