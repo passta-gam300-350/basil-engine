@@ -20,6 +20,7 @@ Technology is prohibited.
 #include "Component/AnimationComponent.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include "Component/SkeletonComponent.hpp"
+#include <glm/common.hpp>
 
 void animationSystem::FixedUpdate(ecs::world& world)
 {
@@ -31,9 +32,13 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		auto& animationComponent = eachAEntity.get<AnimationComponent>();
 		auto& skeletonComponent = eachAEntity.get<SkeletonComponent>();
 
-		// Entities with a SkeletonComponent can still carry AnimationComponent for other uses.
-		// Only run this path when the component is explicitly in skeletal mode.
-		if (animationComponent.isSkeletalAnim == false)
+		// Scene-loaded entities do not serialize the runtime-only isSkeletalAnim flag,
+		// so infer skeletal usage from the presence of a live animator or valid asset refs.
+		bool shouldUseSkeletalPath =
+			animationComponent.isSkeletalAnim ||
+			animationComponent.animatorInstance != nullptr ||
+			(animationComponent.animationdata.m_guid && skeletonComponent.skeletondata.m_guid);
+		if (!shouldUseSkeletalPath)
 		{
 			continue;
 		}
@@ -257,11 +262,15 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 	// Re-fetch main animation pointer now that all reallocations are done.
 	animationContainer* freshAnim = ResourceRegistry::Instance().Get<animationContainer>(animComp.animationdata.m_guid);
 	if (!freshAnim) freshAnim = animation; // fallback; shouldn't happen
+	if (!freshAnim)
+	{
+		return;
+	}
 
     // Use actual animation name instead of hardcoded string
     std::string animName = freshAnim->name.empty() ? "default" : freshAnim->name;
 	animComp.animatorInstance->addAnimation(animName, freshAnim);
-	animComp.animatorInstance->playAnimation(animName, true);
+	animComp.animatorInstance->playAnimation(animName, animComp.state.loop);
 
 	// Add all clips - pointers are stable now (no further pool allocations will occur)
 	for (auto& [clipName, clipGuid] : animComp.animationClips)
@@ -276,9 +285,31 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 
 	// 3. Set animation
 	animComp.animatorInstance->currentAnimation = freshAnim;
+	animComp.animatorInstance->currentAnimationName = animName;
 	animComp.currentAnimationContainer = freshAnim;
 	animComp.duration = freshAnim->duration;
 	animComp.ticksPerSecond = freshAnim->ticksPerSecond;
+	animComp.animatorInstance->state = animComp.state;
+	if (freshAnim->duration > 0.0f)
+	{
+		if (animComp.state.loop)
+		{
+			animComp.animatorInstance->currentTime = fmod(animComp.currentTime, freshAnim->duration);
+			if (animComp.animatorInstance->currentTime < 0.0f)
+			{
+				animComp.animatorInstance->currentTime += freshAnim->duration;
+			}
+		}
+		else
+		{
+			animComp.animatorInstance->currentTime = glm::clamp(animComp.currentTime, 0.0f, freshAnim->duration);
+		}
+	}
+	else
+	{
+		animComp.animatorInstance->currentTime = 0.0f;
+	}
+	animComp.currentTime = animComp.animatorInstance->currentTime;
 
 	// 4. Enable skeletal mode
 	animComp.isSkeletalAnim = true;
