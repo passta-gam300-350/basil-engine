@@ -65,6 +65,12 @@
             <param name="animationName">Name of the animation clip.</param>
             <returns>True if found.</returns>
         </member>
+        <member name="P:BasilEngine.Components.Animation.SpritesheetMode">
+            <summary>
+            Enables or disables spritesheet flipbook mode.
+            When enabled, bones that displace vertices in Y are used to show/hide sprite rows.
+            </summary>
+        </member>
         <member name="M:BasilEngine.Components.Audio.AdjustChannelVolume(BasilEngine.Components.Audio.AudioChannel,System.Single)">
             <summary>
             Adjusts the volume of a mix channel by a percentage (e.g. +10 = increase by 10%, -20 = decrease by 20%).
