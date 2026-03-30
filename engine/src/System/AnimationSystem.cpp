@@ -243,15 +243,40 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 	}
 	animComp.animatorInstance = new animator(boneCount);
 
+	// Pre-load all clips FIRST to force any ResourcePool<animationContainer> vector
+	// reallocations before we cache raw pointers. Each Get<> on a new GUID calls
+	// AllocateSlot() which may call m_Slots.emplace_back(), invalidating all previously
+	// returned T* pointers. The 'animation' parameter is dangling after reallocation.
+	for (auto& [clipName, clipGuid] : animComp.animationClips)
+	{
+		if (!clipGuid.m_guid) continue;
+		ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+	}
+
+	// Re-fetch main animation pointer now that all reallocations are done.
+	animationContainer* freshAnim = ResourceRegistry::Instance().Get<animationContainer>(animComp.animationdata.m_guid);
+	if (!freshAnim) freshAnim = animation; // fallback; shouldn't happen
+
     // Use actual animation name instead of hardcoded string
-    std::string animName = animation->name.empty() ? "default" : animation->name;
-	animComp.animatorInstance->addAnimation(animName, animation);
+    std::string animName = freshAnim->name.empty() ? "default" : freshAnim->name;
+	animComp.animatorInstance->addAnimation(animName, freshAnim);
 	animComp.animatorInstance->playAnimation(animName, true);
 
+	// Add all clips - pointers are stable now (no further pool allocations will occur)
+	for (auto& [clipName, clipGuid] : animComp.animationClips)
+	{
+		if (!clipGuid.m_guid) continue;
+		animationContainer* clipCont = ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+		if (clipCont)
+		{
+			animComp.animatorInstance->addAnimation(clipName, clipCont);
+		}
+	}
+
 	// 3. Set animation
-	animComp.animatorInstance->currentAnimation = animation;
-	animComp.duration = animation->duration;
-	animComp.ticksPerSecond = animation->ticksPerSecond;
+	animComp.animatorInstance->currentAnimation = freshAnim;
+	animComp.duration = freshAnim->duration;
+	animComp.ticksPerSecond = freshAnim->ticksPerSecond;
 
 	// 4. Enable skeletal mode
 	animComp.isSkeletalAnim = true;

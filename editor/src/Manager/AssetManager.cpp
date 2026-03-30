@@ -426,6 +426,7 @@ void AssetManager::ImportAssetList() {
 		}
 		fentry.m_Size = std::filesystem::file_size(fentry.m_Path);
 		ResourceSystem::Instance().m_FileEntries.emplace(typed.m_guid, fentry);
+		ResourceSystem::Instance().m_NameToGuid[name] = typed.m_guid;
 	}
 }
 

@@ -125,34 +125,50 @@ void OutlineRenderPass::RenderFirstPass(RenderContext& context)
     // Bind simple outline shader once (more reliable than complex material shaders)
     Submit(RenderCommands::BindShaderData{ m_OutlineShader });
 
-    // Render each outlined object to write to stencil buffer
-    // Uses simple outline shader to ensure reliable fragment generation
+    // Non-skinned objects — batch and execute once
     for (const auto& renderable : context.renderables) {
-        // Skip if this object is not in the outlined set
-        if (m_OutlinedObjects.count(renderable.objectID) == 0) {
-            continue;
-        }
+        if (m_OutlinedObjects.count(renderable.objectID) == 0) continue;
+        if (!renderable.visible) continue;
+        if (renderable.isSkinned) continue;
 
-        // Skip if not visible
-        if (!renderable.visible) {
-            continue;
-        }
-
-        // Set uniforms (shader already bound above)
+        Submit(RenderCommands::SetUniformBoolData{ m_OutlineShader, "u_EnableSkinning", false });
         Submit(RenderCommands::SetUniformsData{
-            m_OutlineShader,
-            renderable.transform,  // Use normal transform (not scaled)
-            context.frameData.viewMatrix,
-            context.frameData.projectionMatrix,
-            context.frameData.cameraPosition
+            m_OutlineShader, renderable.transform,
+            context.frameData.viewMatrix, context.frameData.projectionMatrix, context.frameData.cameraPosition
         });
-
-        // Draw the mesh
         Submit(RenderCommands::DrawElementsData{
             renderable.mesh->GetVertexArray()->GetVAOHandle(),
-            renderable.mesh->GetIndexCount(),
-            GL_TRIANGLES
+            renderable.mesh->GetIndexCount(), GL_TRIANGLES
         });
+    }
+    ExecuteCommands();
+    ClearCommands();
+
+    // Skinned objects — per-entity upload + execute (bone matrices must be current for each draw)
+    for (const auto& renderable : context.renderables) {
+        if (m_OutlinedObjects.count(renderable.objectID) == 0) continue;
+        if (!renderable.visible) continue;
+        if (!renderable.isSkinned || !renderable.boneMatrices || renderable.boneCount == 0) continue;
+
+        context.instancedRenderer.UploadBoneMatrices(renderable.boneMatrices, renderable.boneCount);
+
+        Submit(RenderCommands::SetColorMaskData{ false, false, false, false });
+        Submit(RenderCommands::SetDepthTestData{ false, GL_LESS, false });
+        Submit(RenderCommands::SetStencilFuncData{ GL_ALWAYS, 1, 0xFF });
+        Submit(RenderCommands::SetStencilMaskData{ 0xFF });
+        Submit(RenderCommands::BindShaderData{ m_OutlineShader });
+        Submit(RenderCommands::SetUniformBoolData{ m_OutlineShader, "u_EnableSkinning", true });
+        Submit(RenderCommands::SetUniformIntData{ m_OutlineShader, "u_BoneOffset", 0 });
+        Submit(RenderCommands::SetUniformsData{
+            m_OutlineShader, renderable.transform,
+            context.frameData.viewMatrix, context.frameData.projectionMatrix, context.frameData.cameraPosition
+        });
+        Submit(RenderCommands::DrawElementsData{
+            renderable.mesh->GetVertexArray()->GetVAOHandle(),
+            renderable.mesh->GetIndexCount(), GL_TRIANGLES
+        });
+        ExecuteCommands();
+        ClearCommands();
     }
 }
 
@@ -198,25 +214,49 @@ void OutlineRenderPass::RenderSecondPass(RenderContext& context)
         outlinedPtrs.push_back(&renderable);
     }
 
-    // Render each outlined object with scaled transform
-    // (Must be done individually since each has a unique scaled transform)
+    // Non-skinned objects — batch and execute once
     for (const auto* renderable : outlinedPtrs) {
+        if (renderable->isSkinned) continue;
+
         glm::mat4 scaledTransform = glm::scale(renderable->transform, glm::vec3(m_OutlineScale));
-
-        // Set uniforms
+        Submit(RenderCommands::SetUniformBoolData{ m_OutlineShader, "u_EnableSkinning", false });
         Submit(RenderCommands::SetUniformsData{
-            m_OutlineShader,
-            scaledTransform,
-            context.frameData.viewMatrix,
-            context.frameData.projectionMatrix,
-            context.frameData.cameraPosition
+            m_OutlineShader, scaledTransform,
+            context.frameData.viewMatrix, context.frameData.projectionMatrix, context.frameData.cameraPosition
         });
-
-        // Draw the mesh
         Submit(RenderCommands::DrawElementsData{
             renderable->mesh->GetVertexArray()->GetVAOHandle(),
-            renderable->mesh->GetIndexCount(),
-            GL_TRIANGLES
+            renderable->mesh->GetIndexCount(), GL_TRIANGLES
         });
+    }
+    ExecuteCommands();
+    ClearCommands();
+
+    // Skinned objects — per-entity upload + execute
+    for (const auto* renderable : outlinedPtrs) {
+        if (!renderable->isSkinned || !renderable->boneMatrices || renderable->boneCount == 0) continue;
+
+        context.instancedRenderer.UploadBoneMatrices(renderable->boneMatrices, renderable->boneCount);
+
+        glm::mat4 scaledTransform = glm::scale(renderable->transform, glm::vec3(m_OutlineScale));
+        Submit(RenderCommands::SetColorMaskData{ true, true, true, true });
+        Submit(RenderCommands::SetStencilFuncData{ GL_NOTEQUAL, 1, 0xFF });
+        Submit(RenderCommands::SetStencilMaskData{ 0x00 });
+        Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, false });
+        Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
+        Submit(RenderCommands::BindShaderData{ m_OutlineShader });
+        Submit(RenderCommands::SetUniformVec3Data{ m_OutlineShader, "u_OutlineColor", m_OutlineColor });
+        Submit(RenderCommands::SetUniformBoolData{ m_OutlineShader, "u_EnableSkinning", true });
+        Submit(RenderCommands::SetUniformIntData{ m_OutlineShader, "u_BoneOffset", 0 });
+        Submit(RenderCommands::SetUniformsData{
+            m_OutlineShader, scaledTransform,
+            context.frameData.viewMatrix, context.frameData.projectionMatrix, context.frameData.cameraPosition
+        });
+        Submit(RenderCommands::DrawElementsData{
+            renderable->mesh->GetVertexArray()->GetVAOHandle(),
+            renderable->mesh->GetIndexCount(), GL_TRIANGLES
+        });
+        ExecuteCommands();
+        ClearCommands();
     }
 }
