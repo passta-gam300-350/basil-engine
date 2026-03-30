@@ -1548,7 +1548,7 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							int current_item{};
 							//ImGui::Text(name.c_str());
 							float textWidth = ImGui::CalcTextSize(name.c_str()).x;
-							float availWidth = 200.0f; // your child width
+							float availWidth = 150.f; // your child width
 							float childHeight = ImGui::GetTextLineHeightWithSpacing();
 							ImGuiWindowFlags flags = 0;
 							if (textWidth > availWidth) {
