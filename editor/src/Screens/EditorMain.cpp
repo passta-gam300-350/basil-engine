@@ -46,6 +46,8 @@ Technology is prohibited.
 #include "Editor.hpp"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include "Core/Window.h"
 #include "GLFW/glfw3.h"
 #include "Profiler/profiler.hpp"
@@ -235,27 +237,216 @@ void EditorMain::init()
 	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* v_mode = glfwGetVideoMode(primaryMonitor);
+	ImGuiContext* editorContext = ImGui::GetCurrentContext();
 	UNREF_PARAM(primaryMonitor);
 	UNREF_PARAM(v_mode);
-	glfwMaximizeWindow(window);
 	
+	glfwHideWindow(window);
+
+	std::atomic<int> msgIdx{ 0 };
+
+	// Create loading overlay window with separate OpenGL/ImGui context
+	// This avoids breaking the main editor's ImGui state
+	std::jthread loadingScreen{ [&msgIdx]() {
+		static constexpr const char* loadingMessages[] = {
+			"Preparing editor...",
+			"Initializing engine...",
+			"Almost ready..."
+		};
+
+		GLFWwindow* mainWindow = Editor::GetInstance().GetWindowPtr();
+		std::string projName = Editor::GetInstance().GetConfig().workspace_name;
+		int winX, winY, winW, winH;
+		glfwGetWindowPos(mainWindow, &winX, &winY);
+		glfwGetWindowSize(mainWindow, &winW, &winH);
+		
+		// manual set to look nice
+		int oriH = winH;
+		winH = 150;
+		oriH = std::max(oriH, winH);
+
+		// Create overlay window (transparent background, always on top)
+		glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+		glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+		glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+		GLFWwindow* loadingWindow = glfwCreateWindow(winW, winH, "Loading", nullptr, nullptr);
+		if (loadingWindow) {
+			glfwSetWindowPos(loadingWindow, winX, winY + ((oriH-winH)/2));
+			glfwSetWindowSize(loadingWindow, winW, winH);
+			glfwShowWindow(loadingWindow);
+			glfwMakeContextCurrent(loadingWindow);
+
+			// Initialize ImGui for loading window (separate context)
+			IMGUI_CHECKVERSION();
+			ImGuiContext* loadingContext = ImGui::CreateContext();
+			ImGui::SetCurrentContext(loadingContext);
+			ImGuiIO& io = ImGui::GetIO();
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+			io.IniFilename = nullptr;
+			io.LogFilename = nullptr;
+
+			ImGui_ImplGlfw_InitForOpenGL(loadingWindow, true);
+			ImGui_ImplOpenGL3_Init("#version 460");
+
+			ImGuiStyle& style = ImGui::GetStyle();
+			style.WindowRounding = 8.0f;
+			style.FrameRounding = 4.0f;
+			style.GrabRounding = 4.0f;
+			style.WindowBorderSize = 0.0f;
+			style.PopupBorderSize = 0.0f;
+			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.08f, 0.92f);
+			style.Colors[ImGuiCol_Border] = ImVec4(0.2f, 0.2f, 0.24f, 0.8f);
+			style.Colors[ImGuiCol_Text] = ImVec4(0.9f, 0.9f, 0.95f, 1.0f);
+			style.Colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 0.8f);
+			style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.0f);
+
+			const auto IndeterminateProgressBar{ [](float oheight = 0.0f, const ImVec2& size = ImVec2(-1, 0), float speed = 1.5f, float min_width = 0.2f, float max_width = 0.5f)
+				{
+					ImGuiWindow* window = ImGui::GetCurrentWindow();
+					if (window->SkipItems)
+						return;
+
+					ImGuiContext& g = *GImGui;
+					const ImGuiStyle& style = g.Style;
+
+					// Calculate size
+					ImVec2 pos = window->DC.CursorPos;
+					ImVec2 bar_size = ImGui::CalcItemSize(size, ImGui::CalcItemWidth(), oheight > 0.0f ? oheight : ImGui::GetFrameHeight());
+
+					ImRect bb(pos, ImVec2(pos.x + bar_size.x, pos.y + bar_size.y));
+					ImGui::ItemSize(bb, style.FramePadding.y);
+					if (!ImGui::ItemAdd(bb, 0))
+						return;
+
+					ImU32 bg_col = ImGui::GetColorU32(ImGuiCol_FrameBg);
+					ImU32 fg_col = ImGui::GetColorU32(ImGuiCol_PlotHistogram);
+
+					ImDrawList* draw_list = ImGui::GetWindowDrawList();
+					draw_list->AddRectFilled(bb.Min, bb.Max, bg_col, style.FrameRounding);
+
+					// Time values
+					float time = static_cast<float>(ImGui::GetTime());
+
+					// Constant-speed motion (allow going beyond edges)
+					float motion_phase = fmod(time * speed, 1.0f + max_width) - max_width * 0.5f;
+
+					// Independent pulsation
+					float pulse = (sinf(time * 2.0f) + 1.0f) * 0.5f;
+					float segment_width = min_width + (max_width - min_width) * pulse;
+
+					// Compute raw start/end (can be outside 0..1)
+					float start = motion_phase - segment_width * 0.5f;
+					float end = motion_phase + segment_width * 0.5f;
+
+					// Intersect with visible range
+					float visible_start = ImClamp(start, 0.0f, 1.0f);
+					float visible_end = ImClamp(end,   0.0f, 1.0f);
+
+					// Only draw if visible
+					if (visible_end > visible_start)
+					{
+						float x_start = bb.Min.x + visible_start * bar_size.x;
+						float x_end = bb.Min.x + visible_end * bar_size.x;
+						draw_list->AddRectFilled(ImVec2(x_start, bb.Min.y), ImVec2(x_end, bb.Max.y),
+												 fg_col, style.FrameRounding);
+					}
+				} };
+
+			io.Fonts->AddFontDefault();
+
+			// Render loading screen while engine initializes
+			while (msgIdx.load() < sizeof(loadingMessages)/sizeof(loadingMessages[0])) {
+				glfwPollEvents();
+
+				int displayW, displayH;
+				glfwGetFramebufferSize(loadingWindow, &displayW, &displayH);
+				glViewport(0, 0, displayW, displayH);
+				glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
+				glClear(GL_COLOR_BUFFER_BIT);
+
+				ImGui_ImplOpenGL3_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+
+				// Center the loading dialog
+				ImVec2 center = ImVec2(displayW * 0.5f, displayH * 0.5f);
+				ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+				ImGui::SetNextWindowSize(ImVec2(displayW, displayH), ImGuiCond_Always);
+
+				ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar |
+					ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove |
+					ImGuiWindowFlags_NoScrollbar |
+					ImGuiWindowFlags_NoInputs |
+					ImGuiWindowFlags_NoDocking;
+
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24, 20));
+
+				if (ImGui::Begin("##LoadingOverlay", nullptr, flags)) {
+					// Title with accent color
+					ImGui::SetCursorPosY(6);
+					ImGui::TextColored(ImVec4(0.4f, 0.75f, 1.0f, 1.0f), "GAM300 Editor");
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::Spacing();
+
+					// Animated status message
+					ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.75f, 1.0f), "%s", loadingMessages[msgIdx]);
+					ImGui::Spacing();
+
+					// Spinner animation
+					ImGui::Text("Opening %s...", projName.c_str());
+					ImGui::Spacing();
+					ImGui::Spacing();
+
+					// Indeterminate progress bar with animation
+					ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
+					ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.12f, 0.12f, 0.14f, 1.0f));
+					//float progress = sinf((float)glfwGetTime() * 2.0f) * 0.5f + 0.5f;
+					//ImGui::ProgressBar(progress, ImVec2(-1, 16), "");
+
+					IndeterminateProgressBar(0.f, ImVec2(-1, 16), 0.5f);
+					ImGui::PopStyleColor(2);
+
+					ImGui::Spacing();
+					ImGui::Spacing();
+					ImGui::Spacing();
+
+					// Hint text
+					ImGui::TextDisabled("Please wait while the engine initializes...");
+				}
+				ImGui::End();
+
+				ImGui::PopStyleVar(2);
+
+				ImGui::Render();
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+				glfwSwapBuffers(loadingWindow);
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(16));
+			}
+
+			// Cleanup loading window
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext(loadingContext);
+			glfwDestroyWindow(loadingWindow);
+		}
+	} };
+
 	m_TaskQueue = std::make_unique<editor::AsyncTaskQueue>(2);
-	
-	m_ShowLoadingScreen = true;
-	m_LoadingStatus = "Initializing asset manager...";
-	m_LoadingProgress = 0.0f;
 	
 	m_AssetManager = std::make_unique<AssetManager>(Editor::GetInstance().GetConfig().project_workingDir + "/assets", Editor::GetInstance().GetConfig().project_workingDir + "/.imports");
 	m_AssetManager->InitWorkerLoop();
 	m_AssetManager->m_ActivityCallback = [&](std::string const& str) {m_AssetBrowserCache.needsRefresh = true; };
 	
-	m_LoadingStatus = "Loading asset list...";
-	m_LoadingProgress = 0.5f;
-	
 	//m_AssetManager->ImportAssetList();
-	
-	m_LoadingStatus = "Initializing build manager...";
-	m_LoadingProgress = 0.7f;
 	
 	m_BuildManager = std::make_unique<BuildManager>(this);
 
@@ -518,9 +709,16 @@ void EditorMain::init()
 
 	// Phase 3: Removed SetAuxCamera and SetActiveCamera calls - camera data flows via snapshot
 	glfwMakeContextCurrent(nullptr);
+
+	msgIdx++;
 	// init engine
 	engineService.init();
 	while (Engine::GetState() == Engine::Info::State::Init);
+	msgIdx++;
+
+	// Restore window title
+	glfwSetWindowTitle(window, (Editor::GetInstance().GetConfig().workspace_name + " | No Scene").c_str());
+	
 	engineService.block();
 	glfwMakeContextCurrent(Editor::GetInstance().GetWindowPtr());
 	engineService.ExecuteOnEngineThread([&]() {
@@ -528,8 +726,9 @@ void EditorMain::init()
 		spdlog::info("Physics Active");
 		});
 	CreateDemoScene();
-	
-	SetupUnityStyle();
+
+	glfwMaximizeWindow(window);
+
 	//std::jthread jth(&Engine::Update);
 	// Note: ImGui callbacks are already set up in main.cpp
 	// We need to chain our input handling with ImGui's callbacks
@@ -542,9 +741,13 @@ void EditorMain::init()
 
 	engineService.set_on_load();
 	engineService.set_on_unload();
-	
-	m_ShowLoadingScreen = false;
-	m_LoadingProgress = 1.0f;
+
+	msgIdx++;
+	loadingScreen.join();
+	glfwShowWindow(window);
+	ImGui::SetCurrentContext(editorContext);
+
+	SetupUnityStyle();
 }
 
 
