@@ -60,6 +60,7 @@ namespace BasilEngine.Components
             get => GetVisibleInternal(NativeID);
             set => SetVisibleInternal(NativeID, value);
         }
+
         public Vector2 position
         {
             get

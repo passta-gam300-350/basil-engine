@@ -318,6 +318,45 @@ CSKlassInstance* MonoEntityManager::GetInstance(const ScriptID id) {
 	return nullptr;
 }
 
+bool MonoEntityManager::RemoveInstance(const ScriptID id)
+{
+	auto it = m_EntityInstanceMap.find(id);
+	if (it == m_EntityInstanceMap.end())
+	{
+		return false;
+	}
+
+	const size_t index = it->second;
+	if (index >= m_Instances.size())
+	{
+		m_EntityInstanceMap.erase(it);
+		return false;
+	}
+
+	if (m_Instances[index])
+	{
+		m_Instances[index]->Reset();
+	}
+
+	const size_t lastIndex = m_Instances.size() - 1;
+	if (index != lastIndex)
+	{
+		m_Instances[index] = std::move(m_Instances[lastIndex]);
+		for (auto& [scriptID, mappedIndex] : m_EntityInstanceMap)
+		{
+			if (mappedIndex == lastIndex)
+			{
+				mappedIndex = index;
+				break;
+			}
+		}
+	}
+
+	m_Instances.pop_back();
+	m_EntityInstanceMap.erase(it);
+	return true;
+}
+
 
 
 CSKlass* MonoEntityManager::GetNamedKlass(const char* klassName, const char* klassNamespace) {

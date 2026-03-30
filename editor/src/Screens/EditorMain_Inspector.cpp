@@ -138,6 +138,30 @@ void EditorMain::Render_Inspector()
 	ImGui::End();
 }
 
+void ShowLongTextWindow(const std::string& longText) {
+	ImGui::Begin("Long Text Viewer");
+
+	// Optional: Add scrollable region
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::TextUnformatted(longText.c_str());
+	ImGui::EndChild();
+
+	ImGui::End();
+}
+
+void ShowLongTextWindowChain(const std::string& longText, auto&& fn) {
+	ImGui::Begin("Long Text Viewer");
+
+	// Optional: Add scrollable region
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::TextUnformatted(longText.c_str());
+	ImGui::EndChild();
+
+	fn();
+
+	ImGui::End();
+}
+
 void EditorMain::Render_Components()
 {
 	std::unique_lock ul{ engineService.m_cont->m_mtx };
@@ -1522,25 +1546,58 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 								std::swap(*it, assetnames.front());
 							}
 							int current_item{};
+							//ImGui::Text(name.c_str());
+							float textWidth = ImGui::CalcTextSize(name.c_str()).x;
+							float availWidth = 150.f; // your child width
+							float childHeight = ImGui::GetTextLineHeightWithSpacing();
+							ImGuiWindowFlags flags = 0;
+							if (textWidth > availWidth) {
+								childHeight += ImGui::GetStyle().ScrollbarSize;
+								flags = ImGuiWindowFlags_HorizontalScrollbar;
+							}
+							ImGui::BeginChild("ScrollingRegion", ImVec2(150, childHeight), false, flags);
 							ImGui::Text(name.c_str());
-							ImGui::SameLine(150);
+							ImGui::EndChild();
+							ImGui::SameLine();
 							ImGui::SetNextItemWidth(-1);
 
-							std::vector<const char*> assetnames_cstr;
-							assetnames_cstr.reserve(assetnames.size());
-							for (auto& n : assetnames)
-							{
-								assetnames_cstr.push_back(n.c_str());
-							}
+							//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, (childHeight - ImGui::GetTextLineHeightWithSpacing()) * 0.5f));
+							if (ImGui::BeginCombo("##guid_selector2",
+								current_item >= 0 ? assetnames[current_item].c_str() : "Select...")) {
+								static char searchBuffer[256]{};
+								const auto StringContainsCaseInsensitive{ [](const std::string& str, const std::string& substr) -> bool {
+									std::string strLower = str;
+									std::string substrLower = substr;
+									std::transform(strLower.begin(), strLower.end(), strLower.begin(), ::tolower);
+									std::transform(substrLower.begin(), substrLower.end(), substrLower.begin(), ::tolower);
+									return strLower.find(substrLower) != std::string::npos;
+								} };
 
-							if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
-								// Check if selected item is valid and not empty (instead of checking index)
-								if (current_item >= 0 && current_item < assetnames.size() && !assetnames[current_item].empty()) {
-									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-									guid.m_typeindex = typehash;
-									is_dirty = true;
+								// Search box inside dropdown
+								ImGui::SetNextItemWidth(300.0f);
+								ImGui::InputTextWithHint("##ResSearch", "Search resources...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+								// Filtered list //todo: optimise this next time
+								for (int id = 0; id < assetnames.size(); id++) {
+									if (strlen(searchBuffer) == 0 ||
+										StringContainsCaseInsensitive(assetnames[id], searchBuffer)) {
+
+										bool isSelected = (current_item == id);
+										if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
+											current_item = id;
+											*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+											v->m_typeindex = typehash;
+											is_dirty = true;
+										}
+										if (isSelected) {
+											ImGui::SetItemDefaultFocus();
+										}
+									}
 								}
+
+								ImGui::EndCombo();
 							}
+						//	ImGui::PopStyleVar();
 							ImGui::PopID();
 						}
 					}
