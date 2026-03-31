@@ -22,9 +22,8 @@ Technology is prohibited.
 #include "Component/SkeletonComponent.hpp"
 #include <glm/common.hpp>
 
-void animationSystem::FixedUpdate(ecs::world& world)
+void animationSystem::Update(ecs::world& world, float dt)
 {
-	float dt = float(Engine::GetDeltaTime());
 	// SKELETAL ANIMATION //
 	auto skeletalEntities = world.filter_entities<AnimationComponent, SkeletonComponent>();
 	for (auto eachAEntity : skeletalEntities)

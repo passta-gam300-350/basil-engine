@@ -761,7 +761,17 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         // 5. Disable skinning for next draw (immediate)
         shader->use();
         shader->setBool("u_EnableSkinning", false);
+        shader->setBool("u_SpritesheetMode", false);
     }
+
+    // Skinned draws execute outside the main pass's normal state restoration path.
+    // Restore the default scene state so transparent spritesheet smoke cannot leak
+    // blend/depth/cull settings into later passes or subsequent frames.
+    renderPass.Submit(RenderCommands::SetBlendingData{ false });
+    renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
+    renderPass.Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
+    renderPass.ExecuteCommands();
+    renderPass.ClearCommands();
 }
 
 bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> &renderables)

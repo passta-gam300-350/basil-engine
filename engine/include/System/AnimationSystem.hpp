@@ -23,7 +23,7 @@ Technology is prohibited.
 
 struct animationSystem : public ecs::SystemBase
 {
-	void FixedUpdate(ecs::world& world) override;
+	void Update(ecs::world& world, float dt) override;
     void Init() override;
     void Exit() override;
 };
