@@ -82,7 +82,8 @@ uniform int u_NumLights = 0;
 // Camera
 uniform vec3 u_ViewPos;
 
-// Material properties (fallback when no textures available)
+// Material properties retained for compatibility and non-instanced paths.
+// The main instanced PBR path consumes the per-instance values in fs_in instead.
 uniform vec3 u_AlbedoColor = vec3(0.8, 0.8, 0.8);
 uniform float u_MetallicValue = 0.0;
 uniform float u_RoughnessValue = 0.5;
