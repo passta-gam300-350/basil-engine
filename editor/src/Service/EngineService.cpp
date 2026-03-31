@@ -207,7 +207,8 @@ void EngineContainerService::EngineContainer::engine_snapshot_callback()
 		return;
 	}
 
-	ecs::entity inspected_entity{ m_snapshot_entity_handle };
+	m_snapshot_taken_for_entity = m_snapshot_entity_handle;
+	ecs::entity inspected_entity{ m_snapshot_taken_for_entity };
 	m_component_list_snapshot = inspected_entity.get_reflectible_components();
 }
 
@@ -230,7 +231,7 @@ void EngineContainerService::EngineContainer::engine_snapshot_writeback()
 
 	// Existing writeback operations
 	ecs::world w{ Engine::GetWorld() };
-	ecs::entity inspected_entity{ m_snapshot_entity_handle };
+	ecs::entity inspected_entity{ m_snapshot_taken_for_entity };
 	while (!m_write_back_queue.empty()) {
 		ReflectionRegistry::TypeID type_id = m_write_back_queue.front();
 		m_write_back_queue.pop();

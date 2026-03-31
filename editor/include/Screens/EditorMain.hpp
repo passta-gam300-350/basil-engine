@@ -85,6 +85,7 @@ public:
 	// ========================================================================
 	unsigned char m_EngineConsoleFilterType = 0x7F;  // All message types enabled by default
 	std::vector<std::pair<int, EngineConsole::Message>> m_EngineConsoleLocalMessages;  // Editor-local message storage with counts
+	std::vector<std::function<void()>> m_pending_ecs_map_cmds;
 
 	// ========================================================================
 	// PROFILER STATE
