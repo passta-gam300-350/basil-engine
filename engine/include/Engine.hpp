@@ -19,6 +19,7 @@ Technology is prohibited.
 #include <memory>
 #include <spdlog/stopwatch.h>
 #include "Ecs/ecs.h"
+#include "Diagnostics/ErrorQueue.h"
 
 class Window;
 struct RenderSystem;
@@ -113,6 +114,9 @@ public:
 	//static void CreateDefaultResources();
 
 	static void ReportLastError();
+	static void PushFatalError(ErrorCode code, std::string const& message);
+	static std::optional<ErrorEvent> GetLastErrorEvent();
+	static std::vector<ErrorEvent> GetAllErrorEvents();
 	static ecs::world GetWorld();
 	static double GetDeltaTime();
 	static double GetFixedDeltaTime();
