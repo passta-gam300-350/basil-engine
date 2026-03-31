@@ -138,6 +138,30 @@ void EditorMain::Render_Inspector()
 	ImGui::End();
 }
 
+void ShowLongTextWindow(const std::string& longText) {
+	ImGui::Begin("Long Text Viewer");
+
+	// Optional: Add scrollable region
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::TextUnformatted(longText.c_str());
+	ImGui::EndChild();
+
+	ImGui::End();
+}
+
+void ShowLongTextWindowChain(const std::string& longText, auto&& fn) {
+	ImGui::Begin("Long Text Viewer");
+
+	// Optional: Add scrollable region
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::TextUnformatted(longText.c_str());
+	ImGui::EndChild();
+
+	fn();
+
+	ImGui::End();
+}
+
 void EditorMain::Render_Components()
 {
 	std::unique_lock ul{ engineService.m_cont->m_mtx };
@@ -1581,8 +1605,19 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 								std::swap(*it, assetnames.front());
 							}
 							int current_item{};
+							//ImGui::Text(name.c_str());
+							float textWidth = ImGui::CalcTextSize(name.c_str()).x;
+							float availWidth = 150.f; // your child width
+							float childHeight = ImGui::GetTextLineHeightWithSpacing();
+							ImGuiWindowFlags flags = 0;
+							if (textWidth > availWidth) {
+								childHeight += ImGui::GetStyle().ScrollbarSize;
+								flags = ImGuiWindowFlags_HorizontalScrollbar;
+							}
+							ImGui::BeginChild("ScrollingRegion", ImVec2(150, childHeight), false, flags);
 							ImGui::Text(name.c_str());
-							ImGui::SameLine(150);
+							ImGui::EndChild();
+							ImGui::SameLine();
 							ImGui::SetNextItemWidth(-1);
 
 							std::vector<const char*> assetnames_cstr;
@@ -1597,7 +1632,10 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 									guid.m_typeindex = typehash;
 									is_dirty = true;
 								}
+
+								ImGui::EndCombo();
 							}
+						//	ImGui::PopStyleVar();
 							ImGui::PopID();
 						}
 						if (!toRemove.empty()) {

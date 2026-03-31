@@ -37,6 +37,7 @@ Technology is prohibited.
 #include "Render/Camera.h"
 #include "Service/FileService.hpp"
 #include "Service/EngineService.hpp"
+#include "Manager/AsyncTaskQueue.hpp"
 #include <rsc-ext/rp.hpp>
 #include "Physics/Physics_Components.h"
 #include "Prefab/PrefabData.hpp"
@@ -237,6 +238,22 @@ private:
 	std::atomic<bool> m_ScriptHotReloadInFlight = false;
 	std::chrono::steady_clock::time_point m_LastScriptChangeTime{};
 	static constexpr std::chrono::milliseconds m_ScriptHotReloadDebounce{ 750 };
+
+	// ========================================================================
+	// ASYNC TASK QUEUE
+	// ========================================================================
+	std::unique_ptr<editor::AsyncTaskQueue> m_TaskQueue;
+	bool m_IsInitializingAssets = false;
+	bool m_ShowLoadingScreen = false;
+	std::string m_LoadingStatus;
+	float m_LoadingProgress = 0.0f;
+
+	// ========================================================================
+	// NOTIFICATION BAR
+	// ========================================================================
+	void Render_NotificationBar();
+	bool m_ShowNotificationBar = true;
+	float m_NotificationBarHeight = 0.0f;
 
 	std::unique_ptr<BuildManager> m_BuildManager;
 
