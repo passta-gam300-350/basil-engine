@@ -75,6 +75,45 @@ void animationSystem::Update(ecs::world& world, float dt)
 		// Sync component state to animator so editor changes take effect
 		anim->state = animationComponent.state;
 
+		// Refresh raw pointers each frame using a two-pass approach.
+		// Phase 1: Touch all GUIDs first to force any ResourcePool<animationContainer>
+		// reallocation (AllocateSlot -> emplace_back) BEFORE caching any T* pointers.
+		// If Phase 2 stored a pointer and then Phase 1 of the next item reallocated,
+		// the stored pointer would dangle. Two passes eliminate this ordering hazard.
+		{
+			// Phase 1: pre-touch all GUIDs to trigger any pool reallocations.
+			if (animationComponent.animationdata.m_guid)
+				ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+			for (auto& [clipName, clipGuid] : animationComponent.animationClips)
+				if (clipGuid.m_guid)
+					ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+
+			// Phase 2: all reallocations done; fetch stable pointers and update map.
+			if (animationComponent.animationdata.m_guid)
+			{
+				animationContainer* freshAnim = ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+				if (freshAnim)
+				{
+					std::string mainName = freshAnim->name.empty() ? "default" : freshAnim->name;
+					anim->allAnimations[mainName] = freshAnim;
+				}
+			}
+			for (auto& [clipName, clipGuid] : animationComponent.animationClips)
+			{
+				if (!clipGuid.m_guid) continue;
+				animationContainer* freshClip = ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+				if (freshClip) anim->allAnimations[clipName] = freshClip;
+			}
+
+			// Phase 3: re-resolve currentAnimation from the now-stable map.
+			if (!anim->currentAnimationName.empty())
+			{
+				auto it = anim->allAnimations.find(anim->currentAnimationName);
+				if (it != anim->allAnimations.end())
+					anim->currentAnimation = it->second;
+			}
+		}
+
 		anim->updateAnimation(dt, skel);
 
 		// Sync back so animator changes (e.g. non-loop finished) reflect in editor
