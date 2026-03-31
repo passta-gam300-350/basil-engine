@@ -41,7 +41,6 @@ void ManagedAnimation::Play(uint64_t handle)
     else
     {
         anim.state.isPlaying = true;
-        anim.animatorInstance->state = anim.state;
     }
 }
 
@@ -81,8 +80,6 @@ void ManagedAnimation::Stop(uint64_t handle)
     {
         anim.state.isPlaying = false;
         anim.currentTime = 0.0f;
-        anim.animatorInstance->state = anim.state;
-        anim.animatorInstance->currentTime = 0.0f;
     }
 }
 
@@ -103,7 +100,6 @@ void ManagedAnimation::SetLoop(uint64_t handle, bool loop)
     else
     {
         anim.state.loop = loop;
-        anim.animatorInstance->state = anim.state;
     }
 }
 
