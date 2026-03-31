@@ -40,6 +40,7 @@ struct AnimationComponent
 	float currentTime = 0.0f;
 	float ticksPerSecond = 60.0f;
 	animationState state;
+	std::unordered_map<std::string, rp::BasicIndexedGuid> animationClips{};
 	animationContainer* currentAnimationContainer = nullptr;
 	blendState blend;
 	bool isSkeletalAnim = false;
@@ -68,6 +69,7 @@ MemberRegistrationV<&AnimationComponent::duration, "Duration">,
 MemberRegistrationV<&AnimationComponent::currentTime, "CurrentTime">,
 MemberRegistrationV<&AnimationComponent::ticksPerSecond, "TicksPerSecond">,
 MemberRegistrationV<&AnimationComponent::state, "State">,
+MemberRegistrationV<&AnimationComponent::animationClips, "AnimationClips">,
 MemberRegistrationV<&AnimationComponent::animationdata, "Animation">,
 MemberRegistrationV<&AnimationComponent::animationClips, "AnimationClips">,
 MemberRegistrationV<&AnimationComponent::isSpritesheetMode, "SpritesheetMode">

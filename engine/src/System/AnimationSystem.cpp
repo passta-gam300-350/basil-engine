@@ -31,8 +31,9 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		auto& animationComponent = eachAEntity.get<AnimationComponent>();
 		auto& skeletonComponent = eachAEntity.get<SkeletonComponent>();
 
-		// Skip if not skeletal or not playing
-		if (animationComponent.isSkeletalAnim == false && animationComponent.animatorInstance)
+		// Entities with a SkeletonComponent can still carry AnimationComponent for other uses.
+		// Only run this path when the component is explicitly in skeletal mode.
+		if (animationComponent.isSkeletalAnim == false)
 		{
 			continue;
 		}
@@ -314,6 +315,7 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 
 	// 3. Set animation
 	animComp.animatorInstance->currentAnimation = freshAnim;
+	animComp.currentAnimationContainer = freshAnim;
 	animComp.duration = freshAnim->duration;
 	animComp.ticksPerSecond = freshAnim->ticksPerSecond;
 
