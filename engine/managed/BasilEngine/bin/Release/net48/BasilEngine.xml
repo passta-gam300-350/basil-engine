@@ -787,6 +787,13 @@
             </summary>
             <param name="obj">Object to delete.</param>
         </member>
+        <member name="M:BasilEngine.GameObject.GetComponent``1">
+            <summary>
+            Retrieves a component of the specified type from this game object.
+            </summary>
+            <typeparam name="T">Component type to query.</typeparam>
+            <returns>An instance of <typeparamref name="T"/> if found; otherwise null.</returns>
+        </member>
         <member name="T:BasilEngine.KeyCode">
             <summary>
             The keycodes for the input class.
@@ -1424,6 +1431,106 @@
             Linearly interpolates between two vectors with clamping.
             </summary>
         </member>
+        <member name="F:BasilEngine.Mathematics.Vector4.x">
+            <summary>
+            X component of the vector.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector4.y">
+            <summary>
+            Y component of the vector.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector4.z">
+            <summary>
+            Z component of the vector.
+            </summary>
+        </member>
+        <member name="F:BasilEngine.Mathematics.Vector4.w">
+            <summary>
+            W component of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.#ctor(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Initializes a new <see cref="T:BasilEngine.Mathematics.Vector4"/>.
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector4.Zero">
+            <summary>
+            Vector representing (0, 0, 0, 0).
+            </summary>
+        </member>
+        <member name="P:BasilEngine.Mathematics.Vector4.One">
+            <summary>
+            Vector representing (1, 1, 1, 1).
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.op_Addition(BasilEngine.Mathematics.Vector4,BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Adds two vectors component-wise.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.op_Subtraction(BasilEngine.Mathematics.Vector4,BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Subtracts two vectors component-wise.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.op_Multiply(BasilEngine.Mathematics.Vector4,System.Single)">
+            <summary>
+            Multiplies a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.op_Multiply(System.Single,BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Multiplies a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.op_Division(BasilEngine.Mathematics.Vector4,System.Single)">
+            <summary>
+            Divides a vector by a scalar.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.op_UnaryNegation(BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Negates a vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.Dot(BasilEngine.Mathematics.Vector4,BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Calculates the dot product of two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.Magnitude">
+            <summary>
+            Magnitude (length) of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.MagnitudeSqr">
+            <summary>
+            Squared magnitude of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.Normalize">
+            <summary>
+            Returns a normalized copy of the vector.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.Distance(BasilEngine.Mathematics.Vector4,BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Distance between two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.DistanceSqr(BasilEngine.Mathematics.Vector4,BasilEngine.Mathematics.Vector4)">
+            <summary>
+            Squared distance between two vectors.
+            </summary>
+        </member>
+        <member name="M:BasilEngine.Mathematics.Vector4.Lerp(BasilEngine.Mathematics.Vector4,BasilEngine.Mathematics.Vector4,System.Single)">
+            <summary>
+            Linearly interpolates between two vectors with clamping.
+            </summary>
+        </member>
         <member name="F:BasilEngine.NativeObject.NativeID">
             <summary>
             Unique identifier assigned by the native engine for this object instance.
@@ -1572,6 +1679,18 @@
             </summary>
             <param name="color32">Color with 8-bit components.</param>
         </member>
+        <member name="M:BasilEngine.Rendering.Color.op_Implicit(BasilEngine.Mathematics.Vector4)~BasilEngine.Rendering.Color">
+            <summary>
+            Converts a <see cref="T:BasilEngine.Mathematics.Vector4"/> to a <see cref="T:BasilEngine.Rendering.Color"/>.
+            </summary>
+            <param name="vector">Vector containing RGBA values.</param>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color.op_Implicit(BasilEngine.Rendering.Color)~BasilEngine.Mathematics.Vector4">
+            <summary>
+            Converts a <see cref="T:BasilEngine.Rendering.Color"/> to a <see cref="T:BasilEngine.Mathematics.Vector4"/>.
+            </summary>
+            <param name="color">Color containing RGBA values.</param>
+        </member>
         <member name="M:BasilEngine.Rendering.Color32.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
             <summary>
             Initializes a new <see cref="T:BasilEngine.Rendering.Color32"/>.
@@ -1646,6 +1765,18 @@
             Converts a normalized <see cref="T:BasilEngine.Rendering.Color"/> to a <see cref="T:BasilEngine.Rendering.Color32"/>.
             </summary>
             <param name="color">Color with normalized channels.</param>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color32.op_Implicit(BasilEngine.Mathematics.Vector4)~BasilEngine.Rendering.Color32">
+            <summary>
+            Converts a <see cref="T:BasilEngine.Mathematics.Vector4"/> to a <see cref="T:BasilEngine.Rendering.Color32"/>.
+            </summary>
+            <param name="vector">Vector containing normalized RGBA values.</param>
+        </member>
+        <member name="M:BasilEngine.Rendering.Color32.op_Implicit(BasilEngine.Rendering.Color32)~BasilEngine.Mathematics.Vector4">
+            <summary>
+            Converts a <see cref="T:BasilEngine.Rendering.Color32"/> to a <see cref="T:BasilEngine.Mathematics.Vector4"/>.
+            </summary>
+            <param name="color">Color with 8-bit components.</param>
         </member>
         <member name="M:BasilEngine.SceneManagement.Scene.LoadScene(System.Int32)">
             <summary>

@@ -1,5 +1,6 @@
 #include"Screens/EditorMain.hpp"
 #include "Manager/ResourceSystem.hpp"
+#include "Manager/AsyncTaskQueue.hpp"
 #include "Profiler/profiler.hpp"
 #include <stack>
 
@@ -283,20 +284,43 @@ void EditorMain::Render_AssetBrowser()
 						m_AssetBrowserCache.needsRefresh = true;  // Invalidate cache
 					}
 
-					// Right-click context menu
-					if (ImGui::BeginPopupContextItem())
-					{
-						if (ImGui::MenuItem("Import All"))
-						{
-							auto biguids{ m_AssetManager->ImportAssetDirectory(subd) };
-							engineService.ExecuteOnEngineThread([biguids] {
-								std::for_each(biguids.begin(), biguids.end(), [](rp::BasicIndexedGuid biguid) {
-									ResourceRegistry::Instance().Unload(biguid);
-									});
-								});
-						}
-						ImGui::EndPopup();
-					}
+                    // Right-click context menu
+                    if (ImGui::BeginPopupContextItem())
+                    {
+                        if (ImGui::MenuItem("Import All"))
+                        {
+                            std::string dirPath = subd;
+                            m_TaskQueue->SubmitTask(
+                                "Import Directory",
+                                [this, dirPath](editor::TaskInfo& task, std::atomic<bool>& cancelFlag) {
+                                    task.m_statusMessage = "Importing directory: " + dirPath;
+                                    auto results = m_AssetManager->ImportAssetDirectoryAsync(dirPath, cancelFlag, 
+                                        [&task](ImportProgress const& prog) {
+                                            task.m_progress = static_cast<float>(prog.current) / std::max(1, prog.total);
+                                            task.m_statusMessage = "Importing: " + prog.currentAsset;
+                                        });
+                                    
+                                    int successCount = 0;
+                                    for (auto const& result : results) {
+                                        if (result.success) {
+                                            successCount++;
+                                            engineService.ExecuteOnEngineThread([guid = result.guid]() {
+                                                ResourceRegistry::Instance().Unload(guid);
+                                            });
+                                        }
+                                    }
+                                    task.m_statusMessage = "Imported " + std::to_string(successCount) + " assets";
+                                },
+                                [this](editor::TaskInfo const& task) {
+                                    m_AssetBrowserCache.needsRefresh = true;
+                                },
+                                editor::TaskPriority::Normal,
+                                "Importing directory assets",
+                                true
+                            );
+                        }
+                        ImGui::EndPopup();
+                    }
 
 					// Clip filename if too long instead of wrapping
 					ImGui::Text("%s", folderName.c_str());
@@ -382,10 +406,25 @@ void EditorMain::Render_AssetBrowser()
 					{
 						if (ImGui::MenuItem("Import Asset"))
 						{
-							rp::BasicIndexedGuid biguid{ m_AssetManager->ImportAsset(filePair.second) };
-							engineService.ExecuteOnEngineThread([biguid] {
-								ResourceRegistry::Instance().Unload(biguid);
-								});
+							std::string assetPath = filePair.second;
+							m_TaskQueue->SubmitTask(
+								"Import Asset",
+								[this, assetPath](editor::TaskInfo& task, std::atomic<bool>& cancelFlag) {
+									task.m_statusMessage = "Importing: " + assetPath;
+									auto result = m_AssetManager->ImportAssetAsync(assetPath, cancelFlag, nullptr);
+									if (result.success) {
+										engineService.ExecuteOnEngineThread([guid = result.guid]() {
+											ResourceRegistry::Instance().Unload(guid);
+										});
+									}
+								},
+								[this](editor::TaskInfo const& task) {
+									m_AssetBrowserCache.needsRefresh = true;
+								},
+								editor::TaskPriority::Normal,
+								"Importing asset",
+								true
+							);
 						}
 						if (ImGui::MenuItem("Import Settings"))
 						{

@@ -31,6 +31,9 @@ public:
 	static void GetSize(uint64_t handle, float* out_width, float* out_height);
 	static void SetSize(uint64_t handle, float width, float height);
 
+	static void GetColor(uint64_t handle, float* out_r, float* out_g, float* out_b, float* out_a);
+	static void SetColor(uint64_t handle, float r, float g, float b, float a);
+
 };
 
 #endif

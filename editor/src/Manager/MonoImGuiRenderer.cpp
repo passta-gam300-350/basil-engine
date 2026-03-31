@@ -228,6 +228,22 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 				}
 
 			}
+			else if (managed_name == "BasilEngine.Mathematics.Vector4")
+			{
+				struct { float x, y, z, w; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				float vals[4] = { value.x, value.y, value.z, value.w };
+				if (ImGui::InputFloat4(label, vals))
+				{
+					value.x = vals[0];
+					value.y = vals[1];
+					value.z = vals[2];
+					value.w = vals[3];
+					mono_field_set_value(scriptObject, fieldInfo->field, &value);
+					modified = true;
+				}
+			}
 			else if (managed_name == "BasilEngine.Mathematics.Vector2")
 			{
 
@@ -246,6 +262,43 @@ bool MonoImGuiRenderer::RenderField(const FieldNode& fieldNode, CSKlass* klass, 
 				}
 
 				break;
+			}
+			else if (managed_name == "BasilEngine.Rendering.Color")
+			{
+				struct { float r, g, b, a; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				float vals[4] = { value.r, value.g, value.b, value.a };
+				if (ImGui::ColorEdit4(label, vals, ImGuiColorEditFlags_PickerHueWheel))
+				{
+					value.r = vals[0];
+					value.g = vals[1];
+					value.b = vals[2];
+					value.a = vals[3];
+					mono_field_set_value(scriptObject, fieldInfo->field, &value);
+					modified = true;
+				}
+			}
+			else if (managed_name == "BasilEngine.Rendering.Color32")
+			{
+				struct { unsigned char r, g, b, a; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				float vals[4] = {
+					value.r / 255.0f,
+					value.g / 255.0f,
+					value.b / 255.0f,
+					value.a / 255.0f
+				};
+				if (ImGui::ColorEdit4(label, vals, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_Uint8))
+				{
+					value.r = static_cast<unsigned char>(std::clamp(vals[0], 0.0f, 1.0f) * 255.0f);
+					value.g = static_cast<unsigned char>(std::clamp(vals[1], 0.0f, 1.0f) * 255.0f);
+					value.b = static_cast<unsigned char>(std::clamp(vals[2], 0.0f, 1.0f) * 255.0f);
+					value.a = static_cast<unsigned char>(std::clamp(vals[3], 0.0f, 1.0f) * 255.0f);
+					mono_field_set_value(scriptObject, fieldInfo->field, &value);
+					modified = true;
+				}
 			}
 			else if (fieldNode.descriptor->managed_name == "BasilEngine.GameObject")
 			{
@@ -342,13 +395,18 @@ void MonoImGuiRenderer::RenderGameObjectField(const FieldNode& fieldNode, [[mayb
 					uint64_t nativeIDValue = e.get_uuid();
 					void* data[1] = { &nativeIDValue };
 
-					rp::Guid id = MonoEntityManager::GetInstance().AddInstance("GameObject", "BasilEngine", data);
-					CSKlassInstance* goInstance = MonoEntityManager::GetInstance().GetInstance(id);
+					CSKlassInstance goInstance = gameObjectKlass->CreateInstance(nullptr, data);
+					MonoObject* goObject = goInstance.Object();
+					if (!goObject)
+					{
+						ImGui::PopID();
+						break;
+					}
 					//Set NativeID field
 					CSKlass::FieldInfo* nativeIDField1 = gameObjectKlass->ResolveField("NativeID");
-					mono_field_set_value(goInstance->Object(), nativeIDField1->field, &nativeIDValue);
+					mono_field_set_value(goObject, nativeIDField1->field, &nativeIDValue);
 					//Set GameObject field in the script instance
-					mono_field_set_value(inst, info->field, (goInstance->Object()));
+					mono_field_set_value(inst, info->field, goObject);
 					nativeID = nativeIDValue;
 				}
 
@@ -640,6 +698,16 @@ bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
 				outValue = stream.str();
 				return true;
 			}
+			else if (managed_name == "BasilEngine.Mathematics.Vector4")
+			{
+				struct { float x, y, z, w; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				std::ostringstream stream;
+				stream << std::setprecision(7) << value.x << "," << value.y << "," << value.z << "," << value.w;
+				outValue = stream.str();
+				return true;
+			}
 			else if (managed_name == "BasilEngine.Mathematics.Vector2")
 			{
 				struct { float x, y; } value{};
@@ -647,6 +715,29 @@ bool MonoImGuiRenderer::TryGetFieldValueString(const FieldNode& fieldNode,
 
 				std::ostringstream stream;
 				stream << std::setprecision(7) << value.x << "," << value.y;
+				outValue = stream.str();
+				return true;
+			}
+			else if (managed_name == "BasilEngine.Rendering.Color")
+			{
+				struct { float r, g, b, a; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				std::ostringstream stream;
+				stream << std::setprecision(7) << value.r << "," << value.g << "," << value.b << "," << value.a;
+				outValue = stream.str();
+				return true;
+			}
+			else if (managed_name == "BasilEngine.Rendering.Color32")
+			{
+				struct { unsigned char r, g, b, a; } value{};
+				mono_field_get_value(scriptObject, fieldInfo->field, &value);
+
+				std::ostringstream stream;
+				stream << static_cast<int>(value.r) << ","
+					   << static_cast<int>(value.g) << ","
+					   << static_cast<int>(value.b) << ","
+					   << static_cast<int>(value.a);
 				outValue = stream.str();
 				return true;
 			}

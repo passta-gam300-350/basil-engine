@@ -97,6 +97,7 @@ public:
 	ManagedAssembly* GetAssembly(ScriptID id);
 	CSKlass* GetKlass(ScriptID id);	
 	CSKlassInstance* GetInstance(ScriptID id);
+	bool RemoveInstance(ScriptID id);
 
 
 	CSKlass* GetNamedKlass(const char* klassName, const char* klassNamespace);

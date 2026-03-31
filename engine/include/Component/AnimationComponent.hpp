@@ -19,6 +19,8 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <string>
+#include <unordered_map>
 #include "Animation/Animation.h"
 #include <native/animation.h>
 
@@ -35,6 +37,7 @@ struct AnimationComponent
 	float currentTime = 0.0f;
 	float ticksPerSecond = 60.0f;
 	animationState state;
+	std::unordered_map<std::string, rp::BasicIndexedGuid> animationClips{};
 	animationContainer* currentAnimationContainer = nullptr;
 	blendState blend;
 	bool isSkeletalAnim = false;
@@ -63,6 +66,7 @@ MemberRegistrationV<&AnimationComponent::duration, "Duration">,
 MemberRegistrationV<&AnimationComponent::currentTime, "CurrentTime">,
 MemberRegistrationV<&AnimationComponent::ticksPerSecond, "TicksPerSecond">,
 MemberRegistrationV<&AnimationComponent::state, "State">,
+MemberRegistrationV<&AnimationComponent::animationClips, "AnimationClips">,
 MemberRegistrationV<&AnimationComponent::animationdata, "Animation">,
 MemberRegistrationV<&AnimationComponent::isSpritesheetMode, "SpritesheetMode">
 // Note: channel is NOT registered (runtime pointer, not serializable)

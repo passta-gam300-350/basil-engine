@@ -119,6 +119,7 @@ void BehaviourSystem::InitScripts(ecs::world& world)
 	auto entities = world.filter_entities<behaviour>();
 	for (auto entity : entities) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		std::vector<rp::Guid> scriptIDsToRemove;
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
@@ -128,14 +129,18 @@ void BehaviourSystem::InitScripts(ecs::world& world)
 				if (exception) {
 					MonoString* excStr = mono_object_to_string(exception, nullptr);
 					ManagedConsole::LogError(excStr);
-
-					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
-					auto instance2 = MonoEntityManager::GetInstance().GetInstance(scriptID);
-					if (it != component.scriptIDs.end()) {
-						instance2->Reset();
-						component.scriptIDs.erase(it);
-					}
+					scriptIDsToRemove.push_back(scriptID);
 				}
+			}
+		}
+
+		for (const auto& scriptID : scriptIDsToRemove)
+		{
+			auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
+			if (it != component.scriptIDs.end())
+			{
+				MonoEntityManager::GetInstance().RemoveInstance(scriptID);
+				component.scriptIDs.erase(it);
 			}
 		}
 	}
@@ -154,6 +159,7 @@ void BehaviourSystem::Update(ecs::world& world, float)
 
 	for (auto entity : entites) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
+		std::vector<rp::Guid> scriptIDsToRemove;
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
@@ -164,15 +170,8 @@ void BehaviourSystem::Update(ecs::world& world, float)
 				if (exception) {
 					MonoString* excStr = mono_object_to_string(exception, nullptr);
 					ManagedConsole::LogError(excStr);
-					// Unload the script instance to prevent further errors
-					auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
-					auto instance2 = MonoEntityManager::GetInstance().GetInstance(scriptID);
-					if (it != component.scriptIDs.end()) {
-						instance2->Reset();
-						component.scriptIDs.erase(it);
-					}
-
-
+					// Unload the script instance after iteration to avoid invalidating the loop.
+					scriptIDsToRemove.push_back(scriptID);
 				}
 
 				/*if (unloaded)
@@ -180,6 +179,16 @@ void BehaviourSystem::Update(ecs::world& world, float)
 					unloaded = false;
 					return;
 				}*/
+			}
+		}
+
+		for (const auto& scriptID : scriptIDsToRemove)
+		{
+			auto it = std::find(component.scriptIDs.begin(), component.scriptIDs.end(), scriptID);
+			if (it != component.scriptIDs.end())
+			{
+				MonoEntityManager::GetInstance().RemoveInstance(scriptID);
+				component.scriptIDs.erase(it);
 			}
 		}
 
@@ -275,6 +284,42 @@ namespace
 		if (stream >> x >> comma1 >> y >> comma2 >> z)
 		{
 			return comma1 == ',' && comma2 == ',';
+		}
+		return false;
+	}
+
+	bool ParseVec4(std::string_view value, float& x, float& y, float& z, float& w)
+	{
+		std::string tmp(value);
+		std::stringstream stream(tmp);
+		char comma1 = '\0';
+		char comma2 = '\0';
+		char comma3 = '\0';
+		if (stream >> x >> comma1 >> y >> comma2 >> z >> comma3 >> w)
+		{
+			return comma1 == ',' && comma2 == ',' && comma3 == ',';
+		}
+		return false;
+	}
+
+	bool ParseColor32(std::string_view value, unsigned char& r, unsigned char& g, unsigned char& b, unsigned char& a)
+	{
+		std::string tmp(value);
+		std::stringstream stream(tmp);
+		int ri = 0, gi = 0, bi = 0, ai = 0;
+		char comma1 = '\0';
+		char comma2 = '\0';
+		char comma3 = '\0';
+		if (stream >> ri >> comma1 >> gi >> comma2 >> bi >> comma3 >> ai)
+		{
+			if (comma1 == ',' && comma2 == ',' && comma3 == ',')
+			{
+				r = static_cast<unsigned char>(std::clamp(ri, 0, 255));
+				g = static_cast<unsigned char>(std::clamp(gi, 0, 255));
+				b = static_cast<unsigned char>(std::clamp(bi, 0, 255));
+				a = static_cast<unsigned char>(std::clamp(ai, 0, 255));
+				return true;
+			}
 		}
 		return false;
 	}
@@ -413,6 +458,48 @@ namespace
 			}
 			struct { float x, y, z; } vec{ x, y, z };
 			mono_field_set_value(scriptObject, fieldInfo->field, &vec);
+			return true;
+		}
+		if (typeName == "BasilEngine.Mathematics.Vector4")
+		{
+			float x = 0.0f;
+			float y = 0.0f;
+			float z = 0.0f;
+			float w = 0.0f;
+			if (!ParseVec4(value, x, y, z, w))
+			{
+				return false;
+			}
+			struct { float x, y, z, w; } vec{ x, y, z, w };
+			mono_field_set_value(scriptObject, fieldInfo->field, &vec);
+			return true;
+		}
+		if (typeName == "BasilEngine.Rendering.Color")
+		{
+			float r = 0.0f;
+			float g = 0.0f;
+			float b = 0.0f;
+			float a = 1.0f;
+			if (!ParseVec4(value, r, g, b, a))
+			{
+				return false;
+			}
+			struct { float r, g, b, a; } color{ r, g, b, a };
+			mono_field_set_value(scriptObject, fieldInfo->field, &color);
+			return true;
+		}
+		if (typeName == "BasilEngine.Rendering.Color32")
+		{
+			unsigned char r = 0;
+			unsigned char g = 0;
+			unsigned char b = 0;
+			unsigned char a = 255;
+			if (!ParseColor32(value, r, g, b, a))
+			{
+				return false;
+			}
+			struct { unsigned char r, g, b, a; } color{ r, g, b, a };
+			mono_field_set_value(scriptObject, fieldInfo->field, &color);
 			return true;
 		}
 		if (typeName == "BasilEngine.GameObject")
@@ -616,9 +703,14 @@ void BehaviourSystem::OnCollisionCallback(ecs::entity& entity, ecs::entity other
 	void* args[1];
 	args[0] = &other;
 	auto monoOther = GameObjectKlass->CreateInstance(nullptr, args);
+	MonoObject* otherObj = monoOther.Object();
+	if (!otherObj)
+	{
+		return;
+	}
 
 	void* argsCollision[1];
-	argsCollision[0] = &monoOther;
+	argsCollision[0] = otherObj;
 	for (auto ScriptID : component.scriptIDs)
 	{
 		CSKlassInstance* inst = MonoEntityManager::GetInstance().GetInstance(ScriptID);

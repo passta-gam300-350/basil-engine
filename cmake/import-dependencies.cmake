@@ -247,6 +247,10 @@ macro(import_jolt)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
     )
 
+    if(MSVC)
+        target_compile_options(Jolt PRIVATE /wd4865)
+    endif()
+
     # Mark includes as SYSTEM to exclude from static analysis
     get_target_property(inc_dirs Jolt INTERFACE_INCLUDE_DIRECTORIES)
 
@@ -364,7 +368,7 @@ macro(import_directxtex)
     FetchContent_Declare(
         directxtex
         GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
-        GIT_TAG jul2025
+        GIT_TAG 32b2a8ef351ab08f822f6c0937fa37e07484714a
     )
 
     FetchContent_MakeAvailable(directxtex)
