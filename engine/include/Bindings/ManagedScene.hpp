@@ -25,6 +25,7 @@ class ManagedScene
 public:
 	static void LoadSceneIndex(int32_t index);
 	static void LoadSceneName(MonoString* name);
+	static int GetCurrentSceneIndex();
 	static void ExitApplication();
 
 };

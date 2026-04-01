@@ -675,10 +675,7 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
     }
 
     static int logCount = 0;
-    bool shouldLog = (logCount++ % 120 == 0);
-
-    if (shouldLog)
-        spdlog::info("[Skinned] RenderSkinnedMeshes: {} skinned renderables", m_SkinnedRenderables.size());
+    bool shouldLog = false;
 
     for (const RenderableData* renderable : m_SkinnedRenderables)
     {
@@ -722,9 +719,18 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
 
         // 3. Submit deferred commands: shader, uniforms, lighting, textures, draw
 
-        // Restore GL state that CleanupGPUState may have changed
-        renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
-        renderPass.Submit(RenderCommands::SetBlendingData{ false });
+        // Set blend state based on material blend mode
+        bool isTransparent = renderable->material->GetBlendMode() == BlendingMode::Transparent;
+        if (isTransparent)
+        {
+            renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, false });
+            renderPass.Submit(RenderCommands::SetBlendingData{ true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA });
+        }
+        else
+        {
+            renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
+            renderPass.Submit(RenderCommands::SetBlendingData{ false });
+        }
 
         // Set face culling based on material cull mode
         CullMode cullMode = renderable->material->GetCullMode();
@@ -755,8 +761,7 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         RenderCommands::SetUniformIntData boneOffsetCmd{ shader, "u_BoneOffset", 0 };
         renderPass.Submit(boneOffsetCmd);
 
-        // Set opaque pass flag (missing before)
-        renderPass.Submit(RenderCommands::SetUniformBoolData{ shader, "u_IsOpaquePass", true });
+        renderPass.Submit(RenderCommands::SetUniformBoolData{ shader, "u_IsOpaquePass", !isTransparent });
 
         RenderCommands::SetUniformsData uniformsCmd{
             shader,
@@ -809,7 +814,17 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         // 5. Disable skinning for next draw (immediate)
         shader->use();
         shader->setBool("u_EnableSkinning", false);
+        shader->setBool("u_SpritesheetMode", false);
     }
+
+    // Skinned draws execute outside the main pass's normal state restoration path.
+    // Restore the default scene state so transparent spritesheet smoke cannot leak
+    // blend/depth/cull settings into later passes or subsequent frames.
+    renderPass.Submit(RenderCommands::SetBlendingData{ false });
+    renderPass.Submit(RenderCommands::SetDepthTestData{ true, GL_LESS, true });
+    renderPass.Submit(RenderCommands::SetFaceCullingData{ true, GL_BACK });
+    renderPass.ExecuteCommands();
+    renderPass.ClearCommands();
 }
 
 bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> &renderables)

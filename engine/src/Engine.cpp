@@ -25,6 +25,7 @@
 #include "System/ButtonSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <chrono>
+#include <algorithm>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -199,7 +200,6 @@ void Engine::CoreFixedUpdate()
 {
 	Engine& instance{ Instance() };
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
-	animationSystem().FixedUpdate(instance.m_World);
 	BehaviourSystem::Instance().FixedUpdate(instance.m_World);
 }
 
@@ -236,6 +236,7 @@ void Engine::CoreUpdate() {
 	/*animationSystem().FixedUpdate(instance.m_World);
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);*/
 	
+	animationSystem().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 	
 	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
 
@@ -274,6 +275,7 @@ void Engine::TickFrameClock()
 	if (frameDelta < 0.0) {
 		frameDelta = 0.0;
 	}
+	frameDelta = std::min(frameDelta, 0.1);
 
 	instance.m_Info.m_LastFrameTime = currentFrameTime;
 	instance.m_Info.m_DeltaTime = frameDelta;

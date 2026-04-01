@@ -19,6 +19,8 @@ Technology is prohibited.
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <unordered_map>
+#include <string>
 #include "Animation/Animation.h"
 #include <native/animation.h>
 
@@ -31,10 +33,14 @@ RegisterResourceTypeForward(AnimationResourceData, "animation", unusedanimations
 struct AnimationComponent
 {
 	rp::BasicIndexedGuid animationdata{static_cast<rp::BasicIndexedGuid>(rp::TypeNameGuid<"animation">())};
+	// Additional animation clips available to scripts via animation.Play("name")
+	// Key = friendly clip name used in scripts, Value = animation asset GUID
+	std::unordered_map<std::string, rp::BasicIndexedGuid> animationClips;
 	float duration = 0.0f;
 	float currentTime = 0.0f;
 	float ticksPerSecond = 60.0f;
 	animationState state;
+
 	animationContainer* currentAnimationContainer = nullptr;
 	blendState blend;
 	bool isSkeletalAnim = false;
@@ -63,9 +69,11 @@ MemberRegistrationV<&AnimationComponent::duration, "Duration">,
 MemberRegistrationV<&AnimationComponent::currentTime, "CurrentTime">,
 MemberRegistrationV<&AnimationComponent::ticksPerSecond, "TicksPerSecond">,
 MemberRegistrationV<&AnimationComponent::state, "State">,
+MemberRegistrationV<&AnimationComponent::animationClips, "AnimationClips">,
 MemberRegistrationV<&AnimationComponent::animationdata, "Animation">,
+MemberRegistrationV<&AnimationComponent::animationClips, "AnimationClips">,
 MemberRegistrationV<&AnimationComponent::isSpritesheetMode, "SpritesheetMode">
-// Note: channel is NOT registered (runtime pointer, not serializable)
+// Note: animatorInstance/lastKnownAnimGuid are NOT registered (runtime only, not serializable)
 RegisterReflectionTypeEnd
 
 #endif

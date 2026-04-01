@@ -368,7 +368,7 @@ macro(import_directxtex)
     FetchContent_Declare(
         directxtex
         GIT_REPOSITORY https://github.com/microsoft/DirectXTex.git
-        GIT_TAG jul2025
+        GIT_TAG 32b2a8ef351ab08f822f6c0937fa37e07484714a
     )
 
     FetchContent_MakeAvailable(directxtex)

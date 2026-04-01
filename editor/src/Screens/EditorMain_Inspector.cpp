@@ -11,6 +11,7 @@
 #include <Render/Render.h>
 #include "Physics/Physics_Components.h"
 #include "Profiler/profiler.hpp"
+#include <Engine.hpp>
 
 template <typename T>
 void assign_enum_helper(void* dest, const void* src) {
@@ -872,6 +873,11 @@ void EditorMain::Render_Components()
 		ImGui::Separator();
 		ImGui::Spacing();
 	}
+
+	for (auto& cmd : m_pending_ecs_map_cmds) {
+		next_frame_queue.push(std::move(cmd));
+	}
+	m_pending_ecs_map_cmds.clear();
 }
 
 void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
@@ -1130,12 +1136,15 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							StringContainsCaseInsensitive(assetnames[id], searchBuffer)) {
 
 							bool isSelected = (current_item == id);
+							std::string idString = assetnames[id] + "_guid_asset_type_selection";
+							ImGui::PushID(idString.c_str());
 							if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
 								current_item = id;
 								*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 								v->m_typeindex = typehash;
 								is_dirty = true;
 							}
+							ImGui::PopID();
 							if (isSelected) {
 								ImGui::SetItemDefaultFocus();
 							}
@@ -1530,13 +1539,110 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 			}
 			else if (auto* map_name_guid = value.try_cast<std::unordered_map<std::string, rp::BasicIndexedGuid>>()) {
 				if (ImGui::TreeNode(field_name.c_str())) {
+					// Add-new-entry UI
+					if (field_name != "m_MaterialGuid") {
+					static std::uint64_t s_clipEntryLastEntity = ~0ull;
+					static char newKeyBuf[128] = {};
+					static int newAssetIdx = 0;
+					{
+						auto curEnt = engineService.m_cont->m_snapshot_entity_handle;
+						if (curEnt != s_clipEntryLastEntity) {
+							s_clipEntryLastEntity = curEnt;
+							newKeyBuf[0] = '\0';
+							newAssetIdx = 0;
+						}
+					}
+
+					// Infer asset type from existing entries; fall back to all assets
+					std::size_t typeHint = 0;
+					if (!map_name_guid->empty()) {
+						typeHint = map_name_guid->begin()->second.m_typeindex;
+					}
+					// If map is empty, scan sibling BasicIndexedGuid fields to infer asset type
+					if (typeHint == 0) {
+						for (auto [sibId, sibData] : type.data()) {
+							auto sibVal = sibData.get(comp);
+							if (rp::BasicIndexedGuid const* sibGuid = sibVal.try_cast<rp::BasicIndexedGuid>()) {
+								if (sibGuid->m_typeindex != 0) {
+									typeHint = sibGuid->m_typeindex;
+									break;
+								}
+							}
+						}
+					}
+					std::vector<std::string> addAssetNames;
+					if (typeHint != 0) {
+						addAssetNames = m_AssetManager->GetAssetTypeNames(typeHint);
+					} else {
+						for (auto& [n, g] : m_AssetManager->m_AssetNameGuid) {
+							addAssetNames.push_back(n);
+						}
+					}
+					addAssetNames.insert(addAssetNames.begin(), ""); // index 0 = unset
+
+					std::vector<const char*> addAssetCstr;
+					addAssetCstr.reserve(addAssetNames.size());
+					for (auto& n : addAssetNames) addAssetCstr.push_back(n.c_str());
+
+					if (newAssetIdx >= static_cast<int>(addAssetCstr.size())) newAssetIdx = 0;
+					ImGui::SetNextItemWidth(100);
+					ImGui::InputText("##newkey", newKeyBuf, sizeof(newKeyBuf));
+					ImGui::SameLine();
+					ImGui::SetNextItemWidth(160);
+					ImGui::Combo("##newasset", &newAssetIdx, addAssetCstr.data(), static_cast<int>(addAssetCstr.size()));
+					ImGui::SameLine();
+					if (ImGui::SmallButton("+")) {
+						if (newKeyBuf[0] != '\0' && newAssetIdx > 0 && newAssetIdx < static_cast<int>(addAssetNames.size()) && !addAssetNames[newAssetIdx].empty()) {
+							std::string newClipName{ newKeyBuf };
+							rp::BasicIndexedGuid newClipGuid = m_AssetManager->ResolveAssetGuid(addAssetNames[newAssetIdx]);
+							(*map_name_guid)[newClipName] = newClipGuid;
+							auto capturedEntity = engineService.m_cont->m_snapshot_entity_handle;
+							auto capturedType = type;
+							auto capturedData = data;
+							m_pending_ecs_map_cmds.push_back([capturedEntity, capturedType, capturedData, newClipName, newClipGuid]() {
+								ecs::world w{ Engine::GetWorld() };
+								ecs::entity e{ capturedEntity };
+								auto* stor = w.impl.get_registry().storage(capturedType.info().hash());
+								if (!stor || !stor->contains(ecs::world::detail::entt_entity_cast(e))) return;
+								entt::meta_any c = capturedType.from_void(stor->value(ecs::world::detail::entt_entity_cast(e)));
+								auto v = capturedData.get(c);
+								if (auto* m = v.try_cast<std::unordered_map<std::string, rp::BasicIndexedGuid>>())
+									(*m)[newClipName] = newClipGuid;
+							});
+							newKeyBuf[0] = '\0';
+							newAssetIdx = 0;
+							is_dirty = true;
+						}
+					}
+
+					}
+					// Existing entries
 					if (map_name_guid->empty()) {
 						ImGui::TextDisabled("(empty)");
-					}
-					else {
+					} else {
+						std::string toRemove;
 						int idx{};
 						for (auto& [name, guid] : *map_name_guid) {
 							ImGui::PushID(idx++);
+							if (ImGui::SmallButton("X")) {
+								toRemove = name;
+								auto capturedEntity = engineService.m_cont->m_snapshot_entity_handle;
+								auto capturedType = type;
+								auto capturedData = data;
+								std::string capturedKey = name;
+								m_pending_ecs_map_cmds.push_back([capturedEntity, capturedType, capturedData, capturedKey]() {
+									ecs::world w{ Engine::GetWorld() };
+									ecs::entity e{ capturedEntity };
+									auto* stor = w.impl.get_registry().storage(capturedType.info().hash());
+									if (!stor || !stor->contains(ecs::world::detail::entt_entity_cast(e))) return;
+									entt::meta_any c = capturedType.from_void(stor->value(ecs::world::detail::entt_entity_cast(e)));
+									auto v = capturedData.get(c);
+									if (auto* m = v.try_cast<std::unordered_map<std::string, rp::BasicIndexedGuid>>())
+										m->erase(capturedKey);
+								});
+								is_dirty = true;
+							}
+							ImGui::SameLine();
 							std::vector<std::string> assetnames = m_AssetManager->GetAssetTypeNames(guid.m_typeindex);
 							std::string currentselectionname = m_AssetManager->ResolveAssetName(guid);
 							std::size_t typehash = guid.m_typeindex;
@@ -1561,9 +1667,12 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::SameLine();
 							ImGui::SetNextItemWidth(-1);
 
-							//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, (childHeight - ImGui::GetTextLineHeightWithSpacing()) * 0.5f));
-							if (ImGui::BeginCombo("##guid_selector2",
-								current_item >= 0 ? assetnames[current_item].c_str() : "Select...")) {
+							const char* previewText =
+								(current_item >= 0 && current_item < static_cast<int>(assetnames.size()) && !assetnames[current_item].empty())
+								? assetnames[current_item].c_str()
+								: "Select...";
+
+							if (ImGui::BeginCombo("##guid_selector2", previewText)) {
 								static char searchBuffer[256]{};
 								const auto StringContainsCaseInsensitive{ [](const std::string& str, const std::string& substr) -> bool {
 									std::string strLower = str;
@@ -1573,22 +1682,24 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 									return strLower.find(substrLower) != std::string::npos;
 								} };
 
-								// Search box inside dropdown
 								ImGui::SetNextItemWidth(300.0f);
 								ImGui::InputTextWithHint("##ResSearch", "Search resources...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
 
-								// Filtered list //todo: optimise this next time
-								for (int id = 0; id < assetnames.size(); id++) {
+								for (int id = 0; id < static_cast<int>(assetnames.size()); ++id) {
 									if (strlen(searchBuffer) == 0 ||
 										StringContainsCaseInsensitive(assetnames[id], searchBuffer)) {
-
 										bool isSelected = (current_item == id);
+										std::string idString = assetnames[id] + "_guid_asset_type_selection";
+										ImGui::PushID(idString.c_str());
 										if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
 											current_item = id;
-											guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-											guid.m_typeindex = typehash;
+											if (!assetnames[current_item].empty()) {
+												guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+												guid.m_typeindex = typehash;
+											}
 											is_dirty = true;
 										}
+										ImGui::PopID();
 										if (isSelected) {
 											ImGui::SetItemDefaultFocus();
 										}
@@ -1599,6 +1710,9 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							}
 						//	ImGui::PopStyleVar();
 							ImGui::PopID();
+						}
+						if (!toRemove.empty()) {
+							map_name_guid->erase(toRemove);
 						}
 					}
 					ImGui::TreePop();

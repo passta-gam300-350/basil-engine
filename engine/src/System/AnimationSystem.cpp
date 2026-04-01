@@ -20,10 +20,10 @@ Technology is prohibited.
 #include "Component/AnimationComponent.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include "Component/SkeletonComponent.hpp"
+#include <glm/common.hpp>
 
-void animationSystem::FixedUpdate(ecs::world& world)
+void animationSystem::Update(ecs::world& world, float dt)
 {
-	float dt = float(Engine::GetDeltaTime());
 	// SKELETAL ANIMATION //
 	auto skeletalEntities = world.filter_entities<AnimationComponent, SkeletonComponent>();
 	for (auto eachAEntity : skeletalEntities)
@@ -31,8 +31,13 @@ void animationSystem::FixedUpdate(ecs::world& world)
 		auto& animationComponent = eachAEntity.get<AnimationComponent>();
 		auto& skeletonComponent = eachAEntity.get<SkeletonComponent>();
 
-		// Skip if not skeletal or not playing
-		if (animationComponent.isSkeletalAnim == false && animationComponent.animatorInstance)
+		// Scene-loaded entities do not serialize the runtime-only isSkeletalAnim flag,
+		// so infer skeletal usage from the presence of a live animator or valid asset refs.
+		bool shouldUseSkeletalPath =
+			animationComponent.isSkeletalAnim ||
+			animationComponent.animatorInstance != nullptr ||
+			(animationComponent.animationdata.m_guid && skeletonComponent.skeletondata.m_guid);
+		if (!shouldUseSkeletalPath)
 		{
 			continue;
 		}
@@ -69,6 +74,45 @@ void animationSystem::FixedUpdate(ecs::world& world)
 
 		// Sync component state to animator so editor changes take effect
 		anim->state = animationComponent.state;
+
+		// Refresh raw pointers each frame using a two-pass approach.
+		// Phase 1: Touch all GUIDs first to force any ResourcePool<animationContainer>
+		// reallocation (AllocateSlot -> emplace_back) BEFORE caching any T* pointers.
+		// If Phase 2 stored a pointer and then Phase 1 of the next item reallocated,
+		// the stored pointer would dangle. Two passes eliminate this ordering hazard.
+		{
+			// Phase 1: pre-touch all GUIDs to trigger any pool reallocations.
+			if (animationComponent.animationdata.m_guid)
+				ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+			for (auto& [clipName, clipGuid] : animationComponent.animationClips)
+				if (clipGuid.m_guid)
+					ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+
+			// Phase 2: all reallocations done; fetch stable pointers and update map.
+			if (animationComponent.animationdata.m_guid)
+			{
+				animationContainer* freshAnim = ResourceRegistry::Instance().Get<animationContainer>(animationComponent.animationdata.m_guid);
+				if (freshAnim)
+				{
+					std::string mainName = freshAnim->name.empty() ? "default" : freshAnim->name;
+					anim->allAnimations[mainName] = freshAnim;
+				}
+			}
+			for (auto& [clipName, clipGuid] : animationComponent.animationClips)
+			{
+				if (!clipGuid.m_guid) continue;
+				animationContainer* freshClip = ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+				if (freshClip) anim->allAnimations[clipName] = freshClip;
+			}
+
+			// Phase 3: re-resolve currentAnimation from the now-stable map.
+			if (!anim->currentAnimationName.empty())
+			{
+				auto it = anim->allAnimations.find(anim->currentAnimationName);
+				if (it != anim->allAnimations.end())
+					anim->currentAnimation = it->second;
+			}
+		}
 
 		anim->updateAnimation(dt, skel);
 
@@ -243,15 +287,67 @@ void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent
 	}
 	animComp.animatorInstance = new animator(boneCount);
 
+	// Pre-load all clips FIRST to force any ResourcePool<animationContainer> vector
+	// reallocations before we cache raw pointers. Each Get<> on a new GUID calls
+	// AllocateSlot() which may call m_Slots.emplace_back(), invalidating all previously
+	// returned T* pointers. The 'animation' parameter is dangling after reallocation.
+	for (auto& [clipName, clipGuid] : animComp.animationClips)
+	{
+		if (!clipGuid.m_guid) continue;
+		ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+	}
+
+	// Re-fetch main animation pointer now that all reallocations are done.
+	animationContainer* freshAnim = ResourceRegistry::Instance().Get<animationContainer>(animComp.animationdata.m_guid);
+	if (!freshAnim) freshAnim = animation; // fallback; shouldn't happen
+	if (!freshAnim)
+	{
+		return;
+	}
+
     // Use actual animation name instead of hardcoded string
-    std::string animName = animation->name.empty() ? "default" : animation->name;
-	animComp.animatorInstance->addAnimation(animName, animation);
-	animComp.animatorInstance->playAnimation(animName, true);
+    std::string animName = freshAnim->name.empty() ? "default" : freshAnim->name;
+	animComp.animatorInstance->addAnimation(animName, freshAnim);
+	animComp.animatorInstance->playAnimation(animName, animComp.state.loop);
+
+	// Add all clips - pointers are stable now (no further pool allocations will occur)
+	for (auto& [clipName, clipGuid] : animComp.animationClips)
+	{
+		if (!clipGuid.m_guid) continue;
+		animationContainer* clipCont = ResourceRegistry::Instance().Get<animationContainer>(clipGuid.m_guid);
+		if (clipCont)
+		{
+			animComp.animatorInstance->addAnimation(clipName, clipCont);
+		}
+	}
 
 	// 3. Set animation
-	animComp.animatorInstance->currentAnimation = animation;
-	animComp.duration = animation->duration;
-	animComp.ticksPerSecond = animation->ticksPerSecond;
+	animComp.animatorInstance->currentAnimation = freshAnim;
+	animComp.animatorInstance->currentAnimationName = animName;
+	animComp.currentAnimationContainer = freshAnim;
+	animComp.duration = freshAnim->duration;
+	animComp.ticksPerSecond = freshAnim->ticksPerSecond;
+	animComp.animatorInstance->state = animComp.state;
+	if (freshAnim->duration > 0.0f)
+	{
+		if (animComp.state.loop)
+		{
+			animComp.animatorInstance->currentTime = fmod(animComp.currentTime, freshAnim->duration);
+			if (animComp.animatorInstance->currentTime < 0.0f)
+			{
+				animComp.animatorInstance->currentTime += freshAnim->duration;
+			}
+		}
+		else
+		{
+			animComp.animatorInstance->currentTime = glm::clamp(animComp.currentTime, 0.0f, freshAnim->duration);
+		}
+	}
+	else
+	{
+		animComp.animatorInstance->currentTime = 0.0f;
+	}
+	animComp.currentTime = animComp.animatorInstance->currentTime;
 
 	// 4. Enable skeletal mode
 	animComp.isSkeletalAnim = true;
