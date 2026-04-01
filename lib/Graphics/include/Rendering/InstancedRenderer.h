@@ -88,6 +88,11 @@ public:
         const ResolvedMaterialData& rhs,
         float epsilon = 0.0001f);
 
+    static bool AreTransformsEqual(
+        const glm::mat4& lhs,
+        const glm::mat4& rhs,
+        float epsilon = 0.0001f);
+
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque);
 
@@ -150,7 +155,7 @@ private:
     // Change detection for efficient rebuilding
     size_t m_LastRenderableCount = 0;
     std::vector<uint32_t> m_LastObjectIDs;
-    std::vector<float> m_LastTransformHashes;  // Cache transform hashes for change detection
+    std::vector<glm::mat4> m_LastTransforms;  // Cache full transforms so scale/rotation edits invalidate instance data
     std::vector<ResolvedMaterialData> m_LastResolvedMaterialData;  // Track effective per-instance material data
     std::vector<uintptr_t> m_LastMaterialPointers;  // Cache material pointers for material change detection
     std::vector<uintptr_t> m_LastMeshPointers;  // Cache mesh pointers for mesh change detection

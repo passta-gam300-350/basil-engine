@@ -1585,8 +1585,8 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 										bool isSelected = (current_item == id);
 										if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
 											current_item = id;
-											*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-											v->m_typeindex = typehash;
+											guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+											guid.m_typeindex = typehash;
 											is_dirty = true;
 										}
 										if (isSelected) {
