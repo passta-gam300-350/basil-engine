@@ -1696,8 +1696,9 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 											if (!assetnames[current_item].empty()) {
 												guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 												guid.m_typeindex = typehash;
+												is_dirty = true;
 											}
-											is_dirty = true;
+											
 										}
 										ImGui::PopID();
 										if (isSelected) {
