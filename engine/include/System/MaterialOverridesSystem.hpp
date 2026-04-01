@@ -4,12 +4,12 @@
 \author Team PASSTA
 \par    Course : CSD3401 / UXG3400
 \date   2025/10/31
-\brief  System for managing MaterialOverridesComponent and MaterialInstance lifecycle
+\brief  System for managing MaterialOverridesComponent and MaterialPropertyBlock lifecycle
 
         This system bridges the gap between MaterialOverridesComponent (serialized data)
-        and MaterialInstance (runtime representation). It follows Unity's pattern:
+        and MaterialPropertyBlock (runtime representation). It follows Unity's pattern:
         - MaterialOverridesComponent: Serializable overrides (editor/scene data)
-        - MaterialInstance: Runtime material customization (created lazily)
+        - MaterialPropertyBlock: Runtime override storage (created lazily)
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents
@@ -43,7 +43,8 @@ class MaterialPropertyBlock;
  * - RenderSystem MUST provide MaterialPropertyBlock management
  *
  * @note MaterialPropertyBlock is used instead of MaterialInstance to preserve GPU instancing.
- *       Property blocks are lightweight and applied per-draw call by SceneRenderer.
+ *       For main_pbr, InstancedRenderer resolves these overrides into the
+ *       per-instance SSBO payload instead of applying them as direct draw-time uniforms.
  *
  * @usage
  * @code
@@ -55,7 +56,7 @@ class MaterialPropertyBlock;
  * // MaterialOverridesSystem will:
  * // 1. Create MaterialPropertyBlock (lazy)
  * // 2. Apply all overrides to MaterialPropertyBlock
- * // 3. SceneRenderer will apply property block after base material during rendering
+ * // 3. InstancedRenderer will resolve the relevant PBR values into instance data
  * @endcode
  */
 class MaterialOverridesSystem : public ecs::SystemBase
@@ -72,7 +73,7 @@ public:
     /**
      * @brief Initialize the system
      *
-     * Sets up references to MaterialInstanceManager and ResourceSystem.
+     * Clears runtime tracking for override-backed property blocks.
      */
     void Init() override;
 
@@ -81,9 +82,9 @@ public:
      *
      * For each entity with both MeshRendererComponent and MaterialOverridesComponent:
      * 1. Check if entity has overrides (HasOverrides())
-     * 2. If has overrides && no instance: Create MaterialInstance and apply properties
-     * 3. If has overrides && has instance: Update MaterialInstance properties (if changed)
-     * 4. If no overrides && has instance: Destroy MaterialInstance
+     * 2. If has overrides && no property block: Create MaterialPropertyBlock and apply properties
+     * 3. If has overrides && has property block: Update MaterialPropertyBlock properties
+     * 4. If no overrides && has property block: Clear MaterialPropertyBlock
      *
      * @param world ECS world
      * @param dt Delta time (unused)

@@ -45,6 +45,14 @@ Technology is prohibited.
 #include <cassert>
 #include <spdlog/spdlog.h>
 
+namespace
+{
+    bool ShouldUseContextFramebufferSize(GLFWwindow* window)
+    {
+        return window != nullptr && glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE;
+    }
+}
+
 SceneRenderer::SceneRenderer()
 {
     m_ResourceManager = std::make_unique<ResourceManager>();
@@ -272,19 +280,24 @@ void SceneRenderer::Render()
     assert(m_ResourceManager && "ResourceManager must be initialized before rendering");
     assert(m_TextureSlotManager && "TextureSlotManager must be initialized before rendering");
     assert(m_ParticleRenderer && "ParticleRenderer must be initialized before rendering");
-    // Update viewport dimensions in frame data
+    // Use the current context's framebuffer size for standalone visible-window rendering.
+    // In editor mode, the engine renders on a hidden shared context and the Scene/Game
+    // viewport dimensions are provided externally through FrameData.
     GLFWwindow* currentWindow = glfwGetCurrentContext();
     if (currentWindow) {
         int width, height;
         glfwGetFramebufferSize(currentWindow, &width, &height);
 
-        // Skip rendering if window is minimized (framebuffer size = 0)
-        if (width == 0 || height == 0) {
-            return;
-        }
+        if (ShouldUseContextFramebufferSize(currentWindow))
+        {
+            // Skip rendering if window is minimized (framebuffer size = 0)
+            if (width == 0 || height == 0) {
+                return;
+            }
 
-        m_FrameData.viewportWidth = static_cast<uint32_t>(width);
-        m_FrameData.viewportHeight = static_cast<uint32_t>(height);
+            m_FrameData.viewportWidth = static_cast<uint32_t>(width);
+            m_FrameData.viewportHeight = static_cast<uint32_t>(height);
+        }
     }
 
     // Finalize HUD elements before rendering

@@ -354,9 +354,9 @@ void RenderSystem::Update(ecs::world& world) {
 		const auto shared_ptr_visitor = [&](std::shared_ptr<Mesh>& meshResourcePtr, std::shared_ptr<Material> const& materialResourcePtr, glm::mat4 const& local = glm::mat4{1.f})
 			// Render the entity
 			{
-				// Material customization is now handled by MaterialPropertyBlocks
-				// MaterialOverridesSystem creates property blocks from MaterialOverridesComponent
-				// Property blocks are applied by SceneRenderer after base material
+				// MaterialOverridesSystem creates property blocks from MaterialOverridesComponent.
+				// InstancedRenderer resolves the relevant PBR overrides into the per-instance
+				// SSBO payload consumed by main_pbr.
 
 				RenderableData renderData;
 				renderData.mesh = meshResourcePtr;
