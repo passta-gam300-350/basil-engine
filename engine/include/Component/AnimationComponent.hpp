@@ -40,7 +40,7 @@ struct AnimationComponent
 	float currentTime = 0.0f;
 	float ticksPerSecond = 60.0f;
 	animationState state;
-	std::unordered_map<std::string, rp::BasicIndexedGuid> animationClips{};
+
 	animationContainer* currentAnimationContainer = nullptr;
 	blendState blend;
 	bool isSkeletalAnim = false;

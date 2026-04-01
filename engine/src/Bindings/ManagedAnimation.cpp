@@ -71,7 +71,9 @@ void ManagedAnimation::Play(uint64_t handle)
     else
     {
         anim.state.isPlaying = true;
-        anim.animatorInstance->state = anim.state;
+		// can this be remove? - cuz if anim.animatorInstance is null is a null dereference
+        // Is this intended?
+        //anim.animatorInstance->state = anim.state;
     }
 }
 
@@ -111,8 +113,8 @@ void ManagedAnimation::Stop(uint64_t handle)
     {
         anim.state.isPlaying = false;
         anim.currentTime = 0.0f;
-        anim.animatorInstance->state = anim.state;
-        anim.animatorInstance->currentTime = 0.0f;
+        /*anim.animatorInstance->state = anim.state;
+        anim.animatorInstance->currentTime = 0.0f;*/
     }
 }
 

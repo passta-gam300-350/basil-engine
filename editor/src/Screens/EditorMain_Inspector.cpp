@@ -1136,12 +1136,15 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							StringContainsCaseInsensitive(assetnames[id], searchBuffer)) {
 
 							bool isSelected = (current_item == id);
+							std::string idString = assetnames[id] + "_guid_asset_type_selection";
+							ImGui::PushID(idString.c_str());
 							if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
 								current_item = id;
 								*v = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
 								v->m_typeindex = typehash;
 								is_dirty = true;
 							}
+							ImGui::PopID();
 							if (isSelected) {
 								ImGui::SetItemDefaultFocus();
 							}

@@ -28,7 +28,7 @@ void ManagedScene::LoadSceneIndex(int32_t index)
 }
 void ManagedScene::LoadSceneName(MonoString* name)
 {
-	
+
 
 	auto& Engine = ::Engine::Instance();
 	char* name_cstr = mono_string_to_utf8(name);
@@ -37,6 +37,13 @@ void ManagedScene::LoadSceneName(MonoString* name)
 	Engine.GetSceneRegistry().RequestSceneChange(path);
 
 	mono_free(name_cstr);
+}
+
+int ManagedScene::GetCurrentSceneIndex()
+{	
+	auto& Engine = ::Engine::Instance();
+	return Engine.GetSceneRegistry().GetCurrentIndex();
+
 }
 
 void ManagedScene::ExitApplication()
