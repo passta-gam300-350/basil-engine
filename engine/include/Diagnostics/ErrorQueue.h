@@ -13,6 +13,7 @@ enum class ErrorCode
 	Init_WindowCreationFailed,
 	Init_SubsystemFailed,
 	Init_SceneLoadFailed,
+	Runtime_Exception,
 	Runtime_UnhandledException,
 	Runtime_UnknownException
 };

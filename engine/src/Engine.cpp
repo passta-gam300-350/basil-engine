@@ -202,6 +202,9 @@ void Engine::Init(std::string const& cfg ) {
 	Engine::Instance().m_Info.m_State = Info::State::Running;
 
 	}
+	catch (EngineException const& ee) {
+		//fall through since engineexception calls PushFatalError()
+	}
 	catch (std::exception const& e)
 	{
 		PushFatalError(ErrorCode::Init_SubsystemFailed, e.what());
@@ -237,38 +240,47 @@ void Engine::CorePreUpdate()
 
 
 void Engine::CoreUpdate() {
-	try
-	{
-	Engine& instance{ Instance() };
-	
-	if (preload::PreloadManager::Instance().IsPreloading()) {
-		preload::PreloadManager::Instance().ProcessBatch();
+	//Engine& instance{ Instance() };
+
+	auto systems = std::make_tuple(
+		[]() {
+			if (preload::PreloadManager::Instance().IsPreloading()) {
+				preload::PreloadManager::Instance().ProcessBatch();
+			}
+		},
+		[]() { MaterialOverridesSystem::Instance().Update(Engine::Instance().m_World, 0.0f); },
+		[]() { ParticleSystem::GetInstance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { Engine::SyncActiveSceneRenderSettings(); },
+		[]() { VideoSystem().Update(Engine::Instance().m_World); },
+		[]() { Engine::GetRenderSystem().Update(Engine::Instance().m_World); },
+		[]() { AudioSystem::GetInstance().Update(Engine::Instance().m_World); },
+		[]() { ButtonSystem::Instance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { BehaviourSystem::Instance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { InputManager::Get_Instance()->Update(); },
+		[]() { messagingSystem.Update(); }
+	);
+
+	const auto ExecuteSystem{ [](auto&& ivk) {
+		if (Instance().GetState() != Engine::Info::State::Error && !ErrorQueue::Instance().HasErrors()) {
+			ivk();
+		}
+		} };
+
+	try {
+		std::apply([&](auto&... sys) {
+			(ExecuteSystem(sys), ...);
+			}, systems);
 	}
-	
-	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f);
-	
-	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
-
-	Engine::SyncActiveSceneRenderSettings();
-	VideoSystem().Update(instance.m_World);
-
-	Engine::GetRenderSystem().Update(instance.m_World);
-	AudioSystem::GetInstance().Update(instance.m_World);
-	ButtonSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
-	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
-	InputManager::Get_Instance()->Update();
-	messagingSystem.Update();
-
+	catch (EngineException const& ee) {
+		//fall through since engineexception calls PushFatalError()
 	}
 	catch (std::exception const& e)
 	{
 		PushFatalError(ErrorCode::Runtime_UnhandledException, e.what());
-		Engine::Instance().m_Info.m_State = Info::State::Error;
 	}
 	catch (...)
 	{
 		PushFatalError(ErrorCode::Runtime_UnknownException, "Unknown exception during Engine::CoreUpdate");
-		Engine::Instance().m_Info.m_State = Info::State::Error;
 	}
 }
 
@@ -341,6 +353,10 @@ void Engine::Update() {
 		}
 		ReportLastError();					//this is the intended error handler
 	}
+	catch (EngineException const& ee) {
+		GetSink()->logger()->critical("An error occured! Exception thrown {}", ee.what());
+		ReportLastError();
+	}
 	catch (std::exception const& e) {
 		PushFatalError(ErrorCode::Runtime_UnhandledException, e.what());
 		GetSink()->logger()->critical("An error occured! Exception thrown {}", e.what());
@@ -384,7 +400,7 @@ void Engine::ReportLastError() {
 		return;
 
 	std::ostringstream oss;
-	oss << "=== GAM300 Engine Fatal Error Report ===\n";
+	oss << "=== BasilEngine Fatal Error Report ===\n";
 	for (size_t i = 0; i < errors.size(); ++i) {
 		auto const& err = errors[i];
 		oss << "\n--- Error " << (i + 1) << " ---\n";
@@ -408,7 +424,7 @@ void Engine::ReportLastError() {
 		msg += last.message;
 		msg += "\n\nStacktrace:\n";
 		msg += last.stacktrace;
-		::MessageBoxA(nullptr, msg.c_str(), "GAM300 Engine - Fatal Error",
+		::MessageBoxA(nullptr, msg.c_str(), "BasilEngine - Fatal Error",
 			MB_OK | MB_ICONERROR | MB_TASKMODAL);
 	}
 #endif
@@ -421,6 +437,7 @@ void Engine::PushFatalError(ErrorCode code, std::string const& message) {
 	evt.stacktrace = CaptureCurrentStacktrace(2);
 	evt.timestamp = GetFrameTimestampSeconds();
 	ErrorQueue::Instance().Push(std::move(evt));
+	Engine::Instance().m_Info.m_State = Info::State::Error;
 }
 
 std::optional<ErrorEvent> Engine::GetLastErrorEvent() {
