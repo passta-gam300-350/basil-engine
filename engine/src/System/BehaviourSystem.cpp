@@ -160,20 +160,28 @@ void BehaviourSystem::Update(ecs::world& world, float)
 	for (auto entity : entites) {
 		behaviour& component = world.get_component_from_entity<behaviour>(entity);
 		std::vector<rp::Guid> scriptIDsToRemove;
+		int idx{};
 		for (auto scriptID : component.scriptIDs) {
 			CSKlassInstance* instance = MonoEntityManager::GetInstance().GetInstance(scriptID);
 			if (instance) {
-				MonoObject* exception = nullptr;
-				instance->Invoke("Update", nullptr, &exception, 0);
+				try {
+					MonoObject* exception = nullptr;
+					instance->Invoke("Update", nullptr, &exception, 0);
 
 
-				if (exception) {
-					MonoString* excStr = mono_object_to_string(exception, nullptr);
-					ManagedConsole::LogError(excStr);
-					// Unload the script instance after iteration to avoid invalidating the loop.
-					scriptIDsToRemove.push_back(scriptID);
+					if (exception) {
+						MonoString* excStr = mono_object_to_string(exception, nullptr);
+						ManagedConsole::LogError(excStr);
+						// Unload the script instance after iteration to avoid invalidating the loop.
+						scriptIDsToRemove.push_back(scriptID);
+					}
+				}
+				catch (...) {
+					auto klassname = instance->Klass()->Name();
+					throw EngineException(("Exception thrown at " + std::string(klassname.begin(), klassname.end()) + "::Update()").c_str());
 				}
 
+				idx++;
 				/*if (unloaded)
 				{
 					unloaded = false;
