@@ -31,6 +31,7 @@ struct RenderableData;
 struct FrameData;
 class Mesh;
 class Material;
+class MaterialPropertyBlock;
 class RenderPass;
 
 // GPU Instanced Rendering using SSBO - integrates with existing architecture
@@ -49,6 +50,13 @@ public:
         float padding2;             // 4 bytes (pad to 112 bytes - multiple of 16)
         float padding3;             // 4 bytes
         // Total: 112 bytes per instance (properly aligned to 16-byte boundary)
+    };
+
+    struct ResolvedMaterialData {
+        glm::vec3 albedoColor = glm::vec3(0.8f, 0.7f, 0.6f);
+        float metallic = 0.7f;
+        float roughness = 0.3f;
+        float normalStrength = 1.0f;
     };
     
     
@@ -70,6 +78,15 @@ public:
         h ^= mat + 0x9E3779B97F4A7C15ULL + (h << 12) + (h >> 4);
         return h;
     }
+
+    static ResolvedMaterialData ResolvePerInstanceMaterialData(
+        const Material* material,
+        const MaterialPropertyBlock* propertyBlock);
+
+    static bool AreResolvedMaterialDataEqual(
+        const ResolvedMaterialData& lhs,
+        const ResolvedMaterialData& rhs,
+        float epsilon = 0.0001f);
 
     // Rendering using pass-isolated command buffers
     void RenderToPass(RenderPass& renderPass, const std::vector<RenderableData>& renderables, const FrameData& frameData, bool isOpaque);
@@ -134,7 +151,7 @@ private:
     size_t m_LastRenderableCount = 0;
     std::vector<uint32_t> m_LastObjectIDs;
     std::vector<float> m_LastTransformHashes;  // Cache transform hashes for change detection
-    std::vector<uintptr_t> m_LastPropertyBlockPointers;  // OPTIMIZED: Just track pointers, not hash contents
+    std::vector<ResolvedMaterialData> m_LastResolvedMaterialData;  // Track effective per-instance material data
     std::vector<uintptr_t> m_LastMaterialPointers;  // Cache material pointers for material change detection
     std::vector<uintptr_t> m_LastMeshPointers;  // Cache mesh pointers for mesh change detection
     bool m_ChangeCheckDoneThisFrame = false;  // OPTIMIZED: Only check changes once per frame

@@ -681,7 +681,7 @@ public:
      * // Example: Red tint on specific entity
      * auto propBlock = renderSystem.GetPropertyBlock(entityUID);
      * propBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.0f, 0.0f));
-     * propBlock->SetFloat("u_Roughness", 0.8f);
+     * propBlock->SetFloat("u_RoughnessValue", 0.8f);
      * @endcode
      */
     std::shared_ptr<MaterialPropertyBlock> GetPropertyBlock(uint64_t entityUID);
