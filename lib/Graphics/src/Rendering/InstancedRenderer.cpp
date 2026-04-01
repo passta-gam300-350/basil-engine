@@ -124,6 +124,22 @@ bool InstancedRenderer::AreResolvedMaterialDataEqual(
            std::abs(lhs.normalStrength - rhs.normalStrength) <= epsilon;
 }
 
+bool InstancedRenderer::AreTransformsEqual(
+    const glm::mat4& lhs,
+    const glm::mat4& rhs,
+    float epsilon)
+{
+    for (int column = 0; column < 4; ++column) {
+        for (int row = 0; row < 4; ++row) {
+            if (std::abs(lhs[column][row] - rhs[column][row]) > epsilon) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 void InstancedRenderer::BeginInstanceBatch()
 {
     if (m_BatchActive) {
@@ -199,7 +215,7 @@ void InstancedRenderer::Clear()
     // after a clear, forcing BuildDynamicInstanceData() to repopulate.
     m_LastRenderableCount = 0;
     m_LastObjectIDs.clear();
-    m_LastTransformHashes.clear();
+    m_LastTransforms.clear();
     m_LastResolvedMaterialData.clear();
     m_LastMaterialPointers.clear();
     m_LastMeshPointers.clear();
@@ -459,7 +475,7 @@ void InstancedRenderer::ForceRebuildCache()
     // This is called when components are updated in the editor (mesh/material changes)
     m_LastRenderableCount = 0;
     m_LastObjectIDs.clear();
-    m_LastTransformHashes.clear();
+    m_LastTransforms.clear();
     m_LastResolvedMaterialData.clear();
     m_LastMaterialPointers.clear();
     m_LastMeshPointers.clear();
@@ -899,11 +915,7 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
             return true;
         }
 
-        // OPTIMIZED: Simplified transform hash (only position, not full matrix)
-        // This is 75% faster than summing all 16 elements
-        const glm::mat4& t = r.transform;
-        float currentHash = t[3][0] + t[3][1] + t[3][2];  // Just position (translation column)
-        if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
+        if (!AreTransformsEqual(r.transform, m_LastTransforms[i]))
         {
             UpdateAllTrackingData(renderables);
             m_ChangeCheckDoneThisFrame = true;
@@ -932,8 +944,8 @@ void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>&
     m_LastMaterialPointers.clear();
     m_LastMaterialPointers.reserve(count);
 
-    m_LastTransformHashes.clear();
-    m_LastTransformHashes.reserve(count);
+    m_LastTransforms.clear();
+    m_LastTransforms.reserve(count);
 
     m_LastResolvedMaterialData.clear();
     m_LastResolvedMaterialData.reserve(count);
@@ -947,9 +959,7 @@ void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>&
         m_LastResolvedMaterialData.push_back(
             ResolvePerInstanceMaterialData(r.material.get(), r.propertyBlock.get()));
 
-        // OPTIMIZED: Simplified transform hash (position only, 75% faster)
-        const glm::mat4& t = r.transform;
-        m_LastTransformHashes.push_back(t[3][0] + t[3][1] + t[3][2]);
+        m_LastTransforms.push_back(r.transform);
     }
 }
 

@@ -1667,17 +1667,44 @@ void EditorMain::Render_Component_Member(auto& comp, bool& is_dirty)
 							ImGui::SameLine();
 							ImGui::SetNextItemWidth(-1);
 
-							std::vector<const char*> assetnames_cstr;
-							assetnames_cstr.reserve(assetnames.size());
-							for (auto& n : assetnames) {
-								assetnames_cstr.push_back(n.c_str());
-							}
+							const char* previewText =
+								(current_item >= 0 && current_item < static_cast<int>(assetnames.size()) && !assetnames[current_item].empty())
+								? assetnames[current_item].c_str()
+								: "Select...";
 
-							if (ImGui::Combo("##guid selector", &current_item, assetnames_cstr.data(), static_cast<int>(assetnames_cstr.size()))) {
-								if (current_item >= 0 && current_item < static_cast<int>(assetnames.size()) && !assetnames[current_item].empty()) {
-									guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
-									guid.m_typeindex = typehash;
-									is_dirty = true;
+							if (ImGui::BeginCombo("##guid_selector2", previewText)) {
+								static char searchBuffer[256]{};
+								const auto StringContainsCaseInsensitive{ [](const std::string& str, const std::string& substr) -> bool {
+									std::string strLower = str;
+									std::string substrLower = substr;
+									std::transform(strLower.begin(), strLower.end(), strLower.begin(), ::tolower);
+									std::transform(substrLower.begin(), substrLower.end(), substrLower.begin(), ::tolower);
+									return strLower.find(substrLower) != std::string::npos;
+								} };
+
+								ImGui::SetNextItemWidth(300.0f);
+								ImGui::InputTextWithHint("##ResSearch", "Search resources...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+								for (int id = 0; id < static_cast<int>(assetnames.size()); ++id) {
+									if (strlen(searchBuffer) == 0 ||
+										StringContainsCaseInsensitive(assetnames[id], searchBuffer)) {
+										bool isSelected = (current_item == id);
+										std::string idString = assetnames[id] + "_guid_asset_type_selection";
+										ImGui::PushID(idString.c_str());
+										if (ImGui::Selectable(assetnames[id].c_str(), isSelected)) {
+											current_item = id;
+											if (!assetnames[current_item].empty()) {
+												guid = m_AssetManager->ResolveAssetGuid(assetnames[current_item]);
+												guid.m_typeindex = typehash;
+												is_dirty = true;
+											}
+											
+										}
+										ImGui::PopID();
+										if (isSelected) {
+											ImGui::SetItemDefaultFocus();
+										}
+									}
 								}
 
 								ImGui::EndCombo();
