@@ -19,6 +19,7 @@ Technology is prohibited.
 #include <memory>
 #include <spdlog/stopwatch.h>
 #include "Ecs/ecs.h"
+#include "Diagnostics/ErrorQueue.h"
 
 class Window;
 struct RenderSystem;
@@ -113,6 +114,9 @@ public:
 	//static void CreateDefaultResources();
 
 	static void ReportLastError();
+	static void PushFatalError(ErrorCode code, std::string const& message);
+	static std::optional<ErrorEvent> GetLastErrorEvent();
+	static std::vector<ErrorEvent> GetAllErrorEvents();
 	static ecs::world GetWorld();
 	static double GetDeltaTime();
 	static double GetFixedDeltaTime();
@@ -176,9 +180,18 @@ public:
 	static void SetGamma(float gamma);
 	static float GetGamma();
 
-
 	static double& GetAccumulator() { return Instance().m_Accumulator; }
 
+};
+
+struct EngineException : public std::exception {
+private:
+	const char* msg;
+public:
+	EngineException(const char* m = "Unnamed Exception", ErrorCode code = ErrorCode::Runtime_Exception) : msg{ m } {
+		Engine::PushFatalError(code, msg);
+	}
+	const char* what() const noexcept override { return msg; }
 };
 
 
