@@ -44,6 +44,10 @@ public:
 
 	// Channel (mix group) volume: percent delta, e.g. +10 = increase by 10%, -20 = decrease by 20%
 	static void AdjustChannelVolume(std::uint8_t channel, float percentDelta);
+
+	// Channel (mix group) volume as linear multiplier (FMOD ChannelGroup volume).
+	// Useful for persisting/carrying audio settings between scenes.
+	static float GetChannelVolume(std::uint8_t channel);
 };
 
 #endif //!AUDIOBINDING_HPP

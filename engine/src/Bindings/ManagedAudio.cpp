@@ -124,6 +124,11 @@ void ManagedAudio::AdjustChannelVolume(std::uint8_t channel, float percentDelta)
 	AudioSystem::GetInstance().AdjustChannelVolume(static_cast<AudioGroup>(channel), percentDelta);
 }
 
+float ManagedAudio::GetChannelVolume(std::uint8_t channel)
+{
+	return AudioSystem::GetInstance().GetChannelVolume(static_cast<AudioGroup>(channel));
+}
+
 
 
 

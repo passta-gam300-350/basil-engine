@@ -70,7 +70,7 @@ inline FMOD_VECTOR ToFMOD(const glm::vec3& v) noexcept { return { v.x, v.y, -v.z
 inline glm::vec3 ToVec3(const FMOD_VECTOR& v) noexcept { return { v.x, v.y, -v.z }; }
 inline void FMOD_ErrorCheck(FMOD_RESULT result) {
 	if (result != FMOD_OK) {
-        spdlog::warn("Audio: {}", FMOD_ErrorString(result));
+        //spdlog::warn("Audio: {}", FMOD_ErrorString(result));
 		//assert(false && "FMOD Error encountered");
 	}
 }
@@ -87,6 +87,9 @@ public:
     bool Init(void* extraDriverData = nullptr);
     void Update(ecs::world& world);
     void Exit();
+
+    // Stops all playback (e.g. on scene unload). Keeps system initialized.
+    void StopAll();
 
     // Set position and orientation for audio listeners (i.e. camera)
     void SetListenerPosition(const glm::vec3& position = glm::vec3(), const glm::vec3& velocity = glm::vec3()) noexcept;
@@ -110,6 +113,10 @@ public:
 
     // Channel (mix group) volume: percent delta, e.g. +10 = increase by 10%, -20 = decrease by 20%
     void AdjustChannelVolume(AudioGroup channel, float percentDelta);
+
+    // Channel (mix group) volume as linear multiplier (FMOD ChannelGroup volume).
+    // Useful for persisting/carrying audio settings between scenes.
+    float GetChannelVolume(AudioGroup channel);
 
     // Non-copyable
     AudioSystem(const AudioSystem&) = delete;

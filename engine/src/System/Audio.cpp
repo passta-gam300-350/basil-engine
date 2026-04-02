@@ -220,24 +220,27 @@ void AudioSystem::Update(ecs::world& world) {
     FMOD_ErrorCheck(m_system->update());
 }
 
+void AudioSystem::StopAll() {
+    if (!m_initialized || !m_system || !m_masterGroup)
+        return;
+
+    spdlog::info("Audio: Stopping all playback");
+    // Release filter DSPs (need channel to remove DSP from)
+    for (auto& pair : m_componentChannels) {
+        if (pair.first && pair.second)
+            RemoveFilterDsp(pair.first, pair.second);
+    }
+    m_componentFilterDsp.clear();
+    // Stop every channel in the mix (component, video, BGM, dialogue, etc.)
+    FMOD_ErrorCheck(m_masterGroup->stop());
+    m_componentChannels.clear();
+}
+
 void AudioSystem::Exit() {
     spdlog::info("Audio: Exiting");
     if (!m_initialized)  return;
 
-    spdlog::info("Audio: Stopping all channels");
-    for (auto& pair : m_componentChannels) {
-        if (pair.second) {
-            pair.second->stop();
-        }
-    }
-    m_componentChannels.clear();
-
-    for (auto& pair : m_componentFilterDsp) {
-        if (pair.second) {
-            FMOD_ErrorCheck(pair.second->release());
-        }
-    }
-    m_componentFilterDsp.clear();
+    StopAll();
 
     spdlog::info("Audio: Unregistering audio components");
     m_components.clear();
@@ -294,9 +297,30 @@ void AudioSystem::AdjustChannelVolume(AudioGroup channel, float percentDelta) {
         return;
     float current = 0.0f;
     FMOD_ErrorCheck(group->getVolume(&current));
-    float newVol = current * (1.0f + percentDelta / 100.0f);
+    float newVol = current + percentDelta / 100.0f;
     newVol = std::clamp(newVol, 0.0f, 2.0f);
     FMOD_ErrorCheck(group->setVolume(newVol));
+}
+
+float AudioSystem::GetChannelVolume(AudioGroup channel) {
+    FMOD::ChannelGroup* group = nullptr;
+    if (channel == AudioGroup::MASTER) {
+        group = m_masterGroup;
+    } else {
+        auto it = m_groups.find(channel);
+        if (it != m_groups.end())
+            group = it->second;
+    }
+
+    // If audio system wasn't fully initialized (or FMOD groups aren't available),
+    // return a safe default so scene carry-over logic doesn't break.
+    if (!group) {
+        return 1.0f;
+    }
+
+    float current = 1.0f;
+    FMOD_ErrorCheck(group->getVolume(&current));
+    return current;
 }
 
 int AudioSystem::LoadSound(const std::string& dir, bool is3D, bool isStream, bool isLooping) {
