@@ -1770,7 +1770,7 @@
             </summary>
             <param name="color">Color with 8-bit components.</param>
         </member>
-        <member name="M:BasilEngine.SceneManagement.Scene.LoadScene(System.Int32)">
+        <member name="P:BasilEngine.SceneManagement.Scene.CurrentIndex">
             <summary>
             Loads a scene by build index.
             </summary>

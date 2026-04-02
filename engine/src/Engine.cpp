@@ -25,6 +25,8 @@
 #include "System/ButtonSystem.hpp"
 #include "Manager/ResourceSystem.hpp"
 #include <chrono>
+#include <sstream>
+#include <algorithm>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -42,6 +44,10 @@ extern "C" {
 #include <System/BindingSystem.hpp>
 
 #include <Physics/Physics_System.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace {
 	constexpr std::uint32_t DEFAULT_RESOLUTION_WIDTH{ 1600ul };
@@ -73,6 +79,8 @@ std::unique_ptr<Engine>& Engine::InstancePtr() {
 using namespace ecs; //lazy
 
 void Engine::Init(std::string const& cfg ) {
+	try
+	{
 
 	Engine::SetState(Info::State::Init);
 	std::string playerDir = std::filesystem::absolute(std::filesystem::path{"."}).string();
@@ -193,13 +201,27 @@ void Engine::Init(std::string const& cfg ) {
 	e.destroy();
 
 	Engine::Instance().m_Info.m_State = Info::State::Running;
+
+	}
+	catch (EngineException const& ee) {
+		//fall through since engineexception calls PushFatalError()
+	}
+	catch (std::exception const& e)
+	{
+		PushFatalError(ErrorCode::Init_SubsystemFailed, e.what());
+		Engine::Instance().m_Info.m_State = Info::State::Error;
+	}
+	catch (...)
+	{
+		PushFatalError(ErrorCode::Runtime_UnknownException, "Unknown exception during Engine::Init");
+		Engine::Instance().m_Info.m_State = Info::State::Error;
+	}
 }
 
 void Engine::CoreFixedUpdate()
 {
 	Engine& instance{ Instance() };
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
-	animationSystem().FixedUpdate(instance.m_World);
 	BehaviourSystem::Instance().FixedUpdate(instance.m_World);
 }
 
@@ -218,42 +240,49 @@ void Engine::CorePreUpdate()
 
 
 void Engine::CoreUpdate() {
-	
-	Engine& instance{ Instance() };
-	
-	// Process preload queue (non-blocking, one resource per frame)
-	// This keeps UI responsive during scene loading
-	if (preload::PreloadManager::Instance().IsPreloading()) {
-		preload::PreloadManager::Instance().ProcessBatch();
+	//Engine& instance{ Instance() };
+
+	auto systems = std::make_tuple(
+		[]() {
+			if (preload::PreloadManager::Instance().IsPreloading()) {
+				preload::PreloadManager::Instance().ProcessBatch();
+			}
+		},
+		[]() { MaterialOverridesSystem::Instance().Update(Engine::Instance().m_World, 0.0f); },
+		[]() { animationSystem().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { ParticleSystem::GetInstance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { Engine::SyncActiveSceneRenderSettings(); },
+		[]() { VideoSystem().Update(Engine::Instance().m_World); },
+		[]() { Engine::GetRenderSystem().Update(Engine::Instance().m_World); },
+		[]() { AudioSystem::GetInstance().Update(Engine::Instance().m_World); },
+		[]() { ButtonSystem::Instance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { BehaviourSystem::Instance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
+		[]() { InputManager::Get_Instance()->Update(); },
+		[]() { messagingSystem.Update(); }
+	);
+
+	const auto ExecuteSystem{ [](auto&& ivk) {
+		if (Instance().GetState() != Engine::Info::State::Error && !ErrorQueue::Instance().HasErrors()) {
+			ivk();
+		}
+		} };
+
+	try {
+		std::apply([&](auto&... sys) {
+			(ExecuteSystem(sys), ...);
+			}, systems);
 	}
-	
-	/*HierarchySystem().FixedUpdate(instance.m_World);
-	CameraSystem::Instance().FixedUpdate(instance.m_World);*/
-	MaterialOverridesSystem::Instance().Update(instance.m_World, 0.0f); // Sync MaterialOverridesComponent -> MaterialPropertyBlock
-	//physic_system.FixedUpdate(instance.m_World);
-	//instance.m_World.update();
-	//JobID last_job{ instance.m_World.update_async()};
-	/*animationSystem().FixedUpdate(instance.m_World);
-	PhysicsSystem::Instance().FixedUpdate(instance.m_World);*/
-	
-	
-	ParticleSystem::GetInstance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
-
-	// Unity-style: Sync active scene's render settings (skybox, etc.) to renderer
-	Engine::SyncActiveSceneRenderSettings();
-	VideoSystem().Update(instance.m_World);
-
-	Engine::GetRenderSystem().Update(instance.m_World);
-	//Scheduler::Instance().m_JobSystem.wait_for(last_job);
-	//messagingSystem.Publish(MessageID::ENGINE_CORE_UPDATE_COMPLETE, std::make_unique<NullMessage>());
-	//messagingSystem.Update();
-	AudioSystem::GetInstance().Update(instance.m_World);
-	ButtonSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
-	//PF_END_FRAME();
-	BehaviourSystem::Instance().Update(instance.m_World, float(instance.GetLastDeltaTime()));
-	InputManager::Get_Instance()->Update();
-	messagingSystem.Update();
-
+	catch (EngineException const& ee) {
+		//fall through since engineexception calls PushFatalError()
+	}
+	catch (std::exception const& e)
+	{
+		PushFatalError(ErrorCode::Runtime_UnhandledException, e.what());
+	}
+	catch (...)
+	{
+		PushFatalError(ErrorCode::Runtime_UnknownException, "Unknown exception during Engine::CoreUpdate");
+	}
 }
 
 void Engine::CoreLateUpdate() {
@@ -274,6 +303,7 @@ void Engine::TickFrameClock()
 	if (frameDelta < 0.0) {
 		frameDelta = 0.0;
 	}
+	frameDelta = std::min(frameDelta, 0.1);
 
 	instance.m_Info.m_LastFrameTime = currentFrameTime;
 	instance.m_Info.m_DeltaTime = frameDelta;
@@ -325,11 +355,19 @@ void Engine::Update() {
 		}
 		ReportLastError();					//this is the intended error handler
 	}
-	catch (std::exception const& e) {		//this is the unintended exception handling, from stl and 3rd party that is unhandled by the engine
-		GetSink()->logger()->critical("An error occured! Exception thrown {}", e.what());
+	catch (EngineException const& ee) {
+		GetSink()->logger()->critical("An error occured! Exception thrown {}", ee.what());
+		ReportLastError();
 	}
-	catch (...) {							//this is for whatever alien
+	catch (std::exception const& e) {
+		PushFatalError(ErrorCode::Runtime_UnhandledException, e.what());
+		GetSink()->logger()->critical("An error occured! Exception thrown {}", e.what());
+		ReportLastError();
+	}
+	catch (...) {
+		PushFatalError(ErrorCode::Runtime_UnknownException, "Caught unknown exception in Engine::Update");
 		GetSink()->logger()->critical("Fatal error! Caught unknown exception");
+		ReportLastError();
 	}
 }
 
@@ -359,7 +397,57 @@ void Engine::UpdateDebug() {
 }
 
 void Engine::ReportLastError() {
-	
+	auto errors = ErrorQueue::Instance().Drain();
+	if (errors.empty())
+		return;
+
+	std::ostringstream oss;
+	oss << "=== BasilEngine Fatal Error Report ===\n";
+	for (size_t i = 0; i < errors.size(); ++i) {
+		auto const& err = errors[i];
+		oss << "\n--- Error " << (i + 1) << " ---\n";
+		oss << "Code: " << ErrorCodeToString(err.code) << "\n";
+		oss << "Message: " << err.message << "\n";
+		oss << "Stacktrace:\n" << err.stacktrace << "\n";
+	}
+
+	std::string report = oss.str();
+
+	if (auto* sink = GetSink()) {
+		sink->logger()->critical(report);
+	}
+
+#ifdef _WIN32
+	if (IsGame() && !errors.empty()) {
+		auto const& last = errors.back();
+		std::string msg = "Fatal Error: ";
+		msg += ErrorCodeToString(last.code);
+		msg += "\n\n";
+		msg += last.message;
+		msg += "\n\nStacktrace:\n";
+		msg += last.stacktrace;
+		::MessageBoxA(nullptr, msg.c_str(), "BasilEngine - Fatal Error",
+			MB_OK | MB_ICONERROR | MB_TASKMODAL);
+	}
+#endif
+}
+
+void Engine::PushFatalError(ErrorCode code, std::string const& message) {
+	ErrorEvent evt;
+	evt.code = code;
+	evt.message = message;
+	evt.stacktrace = CaptureCurrentStacktrace(2);
+	evt.timestamp = GetFrameTimestampSeconds();
+	ErrorQueue::Instance().Push(std::move(evt));
+	Engine::Instance().m_Info.m_State = Info::State::Error;
+}
+
+std::optional<ErrorEvent> Engine::GetLastErrorEvent() {
+	return ErrorQueue::Instance().Pop();
+}
+
+std::vector<ErrorEvent> Engine::GetAllErrorEvents() {
+	return ErrorQueue::Instance().Drain();
 }
 
 
@@ -377,6 +465,8 @@ void Engine::InitInheritWindow(std::string const& cfg, GLFWwindow* wptr) {
 }
 
 void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
+	try
+	{
 	Engine::SetState(Info::State::Init);
 	Engine::SetOnLoadCallBack([](ecs::world& world) {
 		spdlog::info("World loaded with {} entities", world.get_all_entities().size());
@@ -425,11 +515,9 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 		Instance().m_Sink.reset(new Logger::Sink{ DEFAULT_SINK_NAME.data(), std::string{}});
 	}
 
-	// Create and initialize RenderSystem
 	Instance().m_RenderSystem = std::make_unique<RenderSystem>();
 	Instance().m_RenderSystem->Init();
 
-	// Set up RenderSystem observers
 	Instance().m_RenderSystem->SetupComponentObservers(Instance().m_World);
 
 	ParticleSystem::GetInstance().setRenderer(Engine::GetRenderSystem().GetSceneRenderer());
@@ -442,7 +530,6 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 		PhysicsSystem::Instance().SetupObservers();
 		Instance().m_Info.m_LastFrameTime = GetFrameTimestampSeconds();
 
-	// Initialize Jolt debug renderer AFTER PhysicsSystem::Init (Jolt must be initialized first)
 	Instance().m_RenderSystem->InitJoltDebugRenderer();
 
 	Scheduler::CompileJobSchedule();
@@ -450,30 +537,27 @@ void Engine::InitWithoutWindow(std::string const& cfg, bool is_precompiled) {
 	AudioSystem::GetInstance().Init();
 	VideoSystem().Init();
 	animationSystem().Init();
-	///*for (const auto& entry : std::filesystem::directory_iterator(AUDIO_PATH)) {
-	//	if (entry.is_regular_file() && entry.path().extension() == AUDIO_EXTENSION) {
-	//		std::string filename = entry.path().stem().string();
-	//		AudioSystem::GetInstance().LoadSound((AUDIO_PATH + filename + AUDIO_EXTENSION), true, false, true);
-	//	}
-	//	else
-	//		spdlog::warn("Audio: File extension for {} is not {}!", entry.path().filename().string(), AUDIO_EXTENSION);
-	//}*/
-	// Persist the ambient audio component so it doesn't get destroyed after init
-	/*ambient = std::make_unique<AudioComponent>();
-	if (ambient->Init("Singapore Koi Ambience_Loop.ogg", true, true, true)) {
-		ambient->Play();
-		ambient->SetVolume(6.0f);
-	}*/
-	// [ENDTEMP]
-
 
 	auto e = Engine::GetWorld().add_entity();
 	e.destroy();
 
 	Engine::SetState(Info::State::Running);
+
+	}
+	catch (std::exception const& e)
+	{
+		PushFatalError(ErrorCode::Init_SubsystemFailed, e.what());
+		Engine::Instance().m_Info.m_State = Info::State::Error;
+	}
+	catch (...)
+	{
+		PushFatalError(ErrorCode::Runtime_UnknownException, "Unknown exception during Engine::InitWithoutWindow");
+		Engine::Instance().m_Info.m_State = Info::State::Error;
+	}
 }
 
 void Engine::Exit() {
+	ErrorQueue::Instance().Clear();
 	SystemRegistry::Exit();
 	InputManager::Get_Instance()->Destroy_Instance();
 	if (Instance().m_RenderSystem) {

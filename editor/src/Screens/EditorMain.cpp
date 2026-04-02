@@ -775,10 +775,11 @@ void EditorMain::update()
 			snapshot.farPlane = m_EditorCamera->m_Far;
 			snapshot.isPerspective = (m_EditorCamera->m_Type == EditorCamera::CameraType::PERSPECTIVE);
 
-			// Viewport rendering optimization: only render focused viewport
-			// Focus state is tracked by Render_Scene() and Render_Game() from previous frame
-			snapshot.renderSceneViewport = true;  // Always render scene viewport so inspector edits update immediately
-			snapshot.renderGameViewport = g_GameViewportFocused;
+			// Keep the scene viewport live for editor workflows.
+			// During play/pause, keep the game viewport live as well so its resolved buffer
+			// cannot go stale while gameplay and VFX continue to update in the background.
+			snapshot.renderSceneViewport = true;
+			snapshot.renderGameViewport = (isPlaying || isPaused || g_GameViewportFocused);
 		}
 	}
 

@@ -252,9 +252,30 @@ void RenderSystem::Update(ecs::world& world) {
 		}
 	}
 
+	struct RenderCameraData
+	{
+		glm::vec3 position{ 0.f };
+		glm::vec3 front{ 0.f, 0.f, -1.f };
+		glm::vec3 up{ 0.f, 1.f, 0.f };
+		float fov{ 45.f };
+		float aspectRatio{ 16.f / 9.f };
+		float nearPlane{ 0.1f };
+		float farPlane{ 1000.f };
+	};
+
+	const RenderCameraData activeGameCamera{
+		gameCameraPos,
+		gameCameraFront,
+		gameCameraUp,
+		gameCameraFov,
+		gameCameraAspectRatio,
+		gameCameraNear,
+		gameCameraFar
+	};
+
 	auto sceneObjects = world.filter_entities<MeshRendererComponent, TransformMtxComponent, VisibilityComponent>();
 	// ========== Frustum Culling: Get visible entities ==========
-	std::vector<unsigned> visibleEntityIDs = hasGameCamera ? GetVisibleEntities(world, CameraSystem::Instance().GetActiveCameraData()) : GetVisibleEntities(world, editorCameraSnapshot);
+	std::vector<unsigned> visibleEntityIDs = hasGameCamera ? GetVisibleEntities(world, activeGameCamera) : GetVisibleEntities(world, editorCameraSnapshot);
 
 	auto sceneLights = world.filter_entities<LightComponent, TransformComponent>();
 	auto sceneHUDElements = world.filter_entities<HUDComponent>();
@@ -651,16 +672,16 @@ void RenderSystem::Update(ecs::world& world) {
 
 		// Get camera data for billboard calculation and text sizing
 		glm::vec3 cameraPosition = hasGameCamera
-			? CameraSystem::Instance().GetActiveCameraData().position
+			? activeGameCamera.position
 			: editorCameraSnapshot.position;
 		glm::vec3 cameraForward = hasGameCamera
-			? CameraSystem::Instance().GetActiveCameraData().front
+			? activeGameCamera.front
 			: editorCameraSnapshot.front;
 		glm::vec3 cameraUp = hasGameCamera
-			? CameraSystem::Instance().GetActiveCameraData().up
+			? activeGameCamera.up
 			: editorCameraSnapshot.up;
 		float cameraFOV = hasGameCamera
-			? glm::radians(CameraSystem::Instance().GetActiveCameraData().fov)
+			? glm::radians(activeGameCamera.fov)
 			: glm::radians(editorCameraSnapshot.fov);
 		float screenHeight = hasGameCamera
 			? static_cast<float>(m_gameViewportHeight)
@@ -770,10 +791,10 @@ void RenderSystem::Update(ecs::world& world) {
 
 		// Camera data for billboard calculation
 		worldUIData.cameraPosition = hasGameCamera
-			? CameraSystem::Instance().GetActiveCameraData().position
+			? activeGameCamera.position
 			: editorCameraSnapshot.position;
 		worldUIData.cameraUp = hasGameCamera
-			? CameraSystem::Instance().GetActiveCameraData().up
+			? activeGameCamera.up
 			: editorCameraSnapshot.up;
 
 		worldUIData.color = worldUI.color;

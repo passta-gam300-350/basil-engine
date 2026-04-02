@@ -24,6 +24,35 @@ Technology is prohibited.
 #include "Animation/Animation.h"
 #include "spdlog/spdlog.h"
 
+extern void InitializeSkeletalAnimation(AnimationComponent& animComp, SkeletonComponent& skelComp, const skeleton& skeletonData, animationContainer* animation);
+
+namespace
+{
+    bool EnsureSkeletalAnimatorInitialized(ecs::entity entity, AnimationComponent& anim)
+    {
+        if (anim.animatorInstance || !entity.all<SkeletonComponent>())
+        {
+            return anim.animatorInstance != nullptr;
+        }
+
+        auto& skelComp = entity.get<SkeletonComponent>();
+        if (!anim.animationdata.m_guid || !skelComp.skeletondata.m_guid)
+        {
+            return false;
+        }
+
+        skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skelComp.skeletondata.m_guid);
+        animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
+        if (!skel || !animCont)
+        {
+            return false;
+        }
+
+        ::InitializeSkeletalAnimation(anim, skelComp, *skel, animCont);
+        return anim.animatorInstance != nullptr;
+    }
+}
+
 void ManagedAnimation::Play(uint64_t handle)
 {
     ecs::entity entity{ handle };
@@ -32,9 +61,12 @@ void ManagedAnimation::Play(uint64_t handle)
         return;
     }
     auto& anim = entity.get<AnimationComponent>();
+    anim.state.isPlaying = true;
+    EnsureSkeletalAnimatorInitialized(entity, anim);
     if (anim.animatorInstance)
     {
         anim.animatorInstance->play();
+        anim.state.isPlaying = true; // sync component state so AnimationSystem doesn't skip
     }
     else
     {
@@ -50,13 +82,11 @@ void ManagedAnimation::Pause(uint64_t handle)
         return;
     }
     auto& anim = entity.get<AnimationComponent>();
+    anim.state.isPlaying = false;
     if (anim.animatorInstance)
     {
         anim.animatorInstance->pause();
-    }
-    else
-    {
-        anim.state.isPlaying = false;
+        anim.animatorInstance->state = anim.state;
     }
 }
 
@@ -68,9 +98,13 @@ void ManagedAnimation::Stop(uint64_t handle)
         return;
     }
     auto& anim = entity.get<AnimationComponent>();
+    anim.state.isPlaying = false;
+    anim.currentTime = 0.0f;
     if (anim.animatorInstance)
     {
         anim.animatorInstance->stop();
+        anim.state.isPlaying = false; // sync component state so AnimationSystem doesn't skip
+        anim.currentTime = 0.0f;
     }
     else
     {
@@ -87,9 +121,11 @@ void ManagedAnimation::SetLoop(uint64_t handle, bool loop)
         return;
     }
     auto& anim = entity.get<AnimationComponent>();
+    anim.state.loop = loop;
     if (anim.animatorInstance)
     {
         anim.animatorInstance->setLoop(loop);
+        anim.state.loop = loop; // sync component state so AnimationSystem doesn't overwrite it
     }
     else
     {
@@ -105,13 +141,11 @@ void ManagedAnimation::SetPlaybackSpeed(uint64_t handle, float speed)
         return;
     }
     auto& anim = entity.get<AnimationComponent>();
+    anim.state.playbackSpeed = speed;
     if (anim.animatorInstance)
     {
         anim.animatorInstance->setPlayBackSpeed(speed);
-    }
-    else
-    {
-        anim.state.playbackSpeed = speed;
+        anim.animatorInstance->state = anim.state;
     }
 }
 
@@ -139,20 +173,7 @@ bool ManagedAnimation::PlayAnimation(uint64_t handle, MonoString* animationName,
         return false;
     }
     auto& anim = entity.get<AnimationComponent>();
-    
-    // If animatorInstance is null, try to initialize it now if we have a skeleton
-    if (!anim.animatorInstance && entity.all<SkeletonComponent>())
-    {
-        auto& skelComp = entity.get<SkeletonComponent>();
-        if (anim.animationdata.m_guid && skelComp.skeletondata.m_guid) {
-            skeleton* skel = ResourceRegistry::Instance().Get<skeleton>(skelComp.skeletondata.m_guid);
-            animationContainer* animCont = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
-            if (skel && animCont) {
-                extern void InitializeSkeletalAnimation(AnimationComponent & animComp, SkeletonComponent & skelComp, const skeleton & skeletonData, animationContainer * animation);
-                InitializeSkeletalAnimation(anim, skelComp, *skel, animCont);
-            }
-        }
-    }
+    EnsureSkeletalAnimatorInitialized(entity, anim);
 
     if (anim.animatorInstance) 
     {
@@ -176,7 +197,14 @@ bool ManagedAnimation::PlayAnimation(uint64_t handle, MonoString* animationName,
             }
         }
 
-        return anim.animatorInstance->playAnimation(name, shouldLoop);
+        bool played = anim.animatorInstance->playAnimation(name, shouldLoop);
+        if (played)
+        {
+            anim.state = anim.animatorInstance->state;
+            anim.currentTime = anim.animatorInstance->currentTime;
+            anim.currentAnimationContainer = anim.animatorInstance->currentAnimation;
+        }
+        return played;
     }
     return false;
 }
@@ -189,14 +217,33 @@ bool ManagedAnimation::HasAnimation(uint64_t handle, MonoString* animationName)
         return false;
     }
     auto& anim = entity.get<AnimationComponent>();
+    char* name = mono_string_to_utf8(animationName);
+    std::string clipName(name);
+    mono_free(name);
+
     if (anim.animatorInstance)
     {
-        char* name = mono_string_to_utf8(animationName);
-        bool result = anim.animatorInstance->hasAnimation(name);
-        mono_free(name);
-        return result;
+        return anim.animatorInstance->hasAnimation(clipName);
     }
-    return false;
+
+    if (anim.animationClips.find(clipName) != anim.animationClips.end())
+    {
+        return true;
+    }
+
+    animationContainer* currentAnim = nullptr;
+    if (anim.animationdata.m_guid)
+    {
+        currentAnim = ResourceRegistry::Instance().Get<animationContainer>(anim.animationdata.m_guid);
+    }
+
+    if (currentAnim && currentAnim->name == clipName)
+    {
+        return true;
+    }
+
+    rp::Guid animGuid = ResourceSystem::Instance().GetGuidByName(clipName);
+    return static_cast<bool>(animGuid);
 }
 
 void ManagedAnimation::SetSpritesheetMode(uint64_t handle, bool enabled)

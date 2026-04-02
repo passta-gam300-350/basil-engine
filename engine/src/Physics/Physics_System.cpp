@@ -218,7 +218,7 @@ void PhysicsSystem::FixedUpdate(ecs::world& world) {
     PF_SYSTEM("PhysicsSystem");
     if (!m_physicsSystem || !m_bodyInterface) return;
 
-    const float deltaTime = 1.0f / 60.f;
+    const float deltaTime = static_cast<float>(Engine::GetFixedDeltaTime());
     // 0. Sync dirty components BEFORE physics update
     {
         PF_SCOPE("SyncDirtyComponents");

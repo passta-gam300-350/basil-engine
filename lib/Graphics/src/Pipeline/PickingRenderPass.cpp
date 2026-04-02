@@ -89,58 +89,61 @@ void PickingRenderPass::Execute(RenderContext& context)
 void PickingRenderPass::RenderPickingData(RenderContext& context)
 {
     if (context.renderables.empty() || !m_PickingShader) {
-        spdlog::info("RenderPickingData - Skipped (renderables: {}, shader: {})", context.renderables.size(), m_PickingShader != nullptr);
         return;
     }
 
-    //spdlog::info("RenderPickingData - Processing {} renderables", context.renderables.size());
-
-    // Bind the picking shader
-    RenderCommands::BindShaderData bindShaderCmd{ m_PickingShader };
-    Submit(bindShaderCmd);
-
-    // Render each visible object with its unique ID color
-    uint32_t renderedCount = 0;
+    // Non-skinned objects — batch and execute once (Clear + DepthTest from Execute are flushed here too)
+    Submit(RenderCommands::BindShaderData{ m_PickingShader });
     for (const auto& renderable : context.renderables) {
-        if (!renderable.visible || !renderable.mesh || renderable.objectID == 0) {
-            spdlog::info("Skipping renderable: visible={}, mesh={}, objectID={}",
-                        renderable.visible, (renderable.mesh != nullptr), renderable.objectID);
-            continue; // Skip invisible objects or objects without picking IDs
-        }
+        if (!renderable.visible || !renderable.mesh || renderable.objectID == 0) continue;
+        if (renderable.isSkinned) continue;
 
-        //spdlog::info("Rendering object with ID: {}", renderable.objectID);
-        renderedCount++;
+        Submit(RenderCommands::SetUniformBoolData{ m_PickingShader, "u_EnableSkinning", false });
+        Submit(RenderCommands::SetUniformsData{
+            m_PickingShader, renderable.transform,
+            context.frameData.viewMatrix, context.frameData.projectionMatrix, context.frameData.cameraPosition
+        });
+        Submit(RenderCommands::SetObjectIDData{ m_PickingShader, renderable.objectID });
 
-        // Set camera uniforms
-        RenderCommands::SetUniformsData uniformsCmd{
-            m_PickingShader,
-            renderable.transform,
-            context.frameData.viewMatrix,
-            context.frameData.projectionMatrix,
-            context.frameData.cameraPosition
-        };
-        Submit(uniformsCmd);
-
-        // Set object ID as uniform (shader converts to color)
-        RenderCommands::SetObjectIDData objectIDCmd{
-            m_PickingShader,
-            renderable.objectID
-        };
-        Submit(objectIDCmd);
-
-        // Draw the mesh
         auto vao = renderable.mesh->GetVertexArray();
         if (vao && vao->GetVAOHandle() != 0) {
-            RenderCommands::DrawElementsData drawCmd{
+            Submit(RenderCommands::DrawElementsData{
                 vao->GetVAOHandle(),
                 static_cast<uint32_t>(renderable.mesh->GetIndexCount()),
                 GL_TRIANGLES
-            };
-            Submit(drawCmd);
+            });
         }
     }
+    ExecuteCommands();
+    ClearCommands();
 
-    //spdlog::info("RenderPickingData - Rendered {} objects with valid IDs out of {} total renderables", renderedCount, context.renderables.size());
+    // Skinned objects — per-entity bone matrix upload + execute
+    for (const auto& renderable : context.renderables) {
+        if (!renderable.visible || !renderable.mesh || renderable.objectID == 0) continue;
+        if (!renderable.isSkinned || !renderable.boneMatrices || renderable.boneCount == 0) continue;
+
+        context.instancedRenderer.UploadBoneMatrices(renderable.boneMatrices, renderable.boneCount);
+
+        Submit(RenderCommands::BindShaderData{ m_PickingShader });
+        Submit(RenderCommands::SetUniformBoolData{ m_PickingShader, "u_EnableSkinning", true });
+        Submit(RenderCommands::SetUniformIntData{ m_PickingShader, "u_BoneOffset", 0 });
+        Submit(RenderCommands::SetUniformsData{
+            m_PickingShader, renderable.transform,
+            context.frameData.viewMatrix, context.frameData.projectionMatrix, context.frameData.cameraPosition
+        });
+        Submit(RenderCommands::SetObjectIDData{ m_PickingShader, renderable.objectID });
+
+        auto vao = renderable.mesh->GetVertexArray();
+        if (vao && vao->GetVAOHandle() != 0) {
+            Submit(RenderCommands::DrawElementsData{
+                vao->GetVAOHandle(),
+                static_cast<uint32_t>(renderable.mesh->GetIndexCount()),
+                GL_TRIANGLES
+            });
+        }
+        ExecuteCommands();
+        ClearCommands();
+    }
 }
 
 PickingResult PickingRenderPass::QueryPicking(const MousePickingQuery& query, const RenderContext& context)

@@ -131,6 +131,7 @@ public:
 		std::queue<std::tuple<entity_handle, std::uint32_t, bool>> m_entity_component_update_queue;
 		std::vector<std::pair<std::uint32_t, std::unique_ptr<std::byte[]>>> m_component_list_snapshot;
 		entity_handle m_snapshot_entity_handle{ ~0ull };
+		entity_handle m_snapshot_taken_for_entity{ ~0ull };
 		std::binary_semaphore m_container_is_closed{ 0 };
 		std::binary_semaphore m_container_is_presentable{ 0 };
 
