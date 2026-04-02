@@ -88,6 +88,12 @@ struct BuildContext {
 	std::atomic<BuildState> m_state{BuildState::IDLE};
 	std::atomic_int m_progress100{0};
 	std::atomic<BuildPhase> m_phase{BuildPhase::Idle};
+	std::atomic_uint32_t m_scenes_discovered{0};
+	std::atomic_uint32_t m_scenes_total{0};
+	std::atomic_uint32_t m_resources_found{0};
+	std::atomic_uint32_t m_files_copied{0};
+	std::atomic_uint32_t m_files_total{0};
+	std::string m_output_path;
 };
 
 struct DescriptorInfo {

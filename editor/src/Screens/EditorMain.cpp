@@ -358,8 +358,9 @@ void EditorMain::init()
 
 			io.Fonts->AddFontDefault();
 
+			int lclMsgIdx{ msgIdx.load() };
 			// Render loading screen while engine initializes
-			while (msgIdx.load() < sizeof(loadingMessages)/sizeof(loadingMessages[0])) {
+			while (lclMsgIdx < sizeof(loadingMessages)/sizeof(loadingMessages[0])) {
 				glfwPollEvents();
 
 				int displayW, displayH;
@@ -390,13 +391,13 @@ void EditorMain::init()
 				if (ImGui::Begin("##LoadingOverlay", nullptr, flags)) {
 					// Title with accent color
 					ImGui::SetCursorPosY(6);
-					ImGui::TextColored(ImVec4(0.4f, 0.75f, 1.0f, 1.0f), "GAM300 Editor");
+					ImGui::TextColored(ImVec4(0.4f, 0.75f, 1.0f, 1.0f), "Basil Editor");
 					ImGui::Spacing();
 					ImGui::Separator();
 					ImGui::Spacing();
 
 					// Animated status message
-					ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.75f, 1.0f), "%s", loadingMessages[msgIdx]);
+					ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.75f, 1.0f), "%s", loadingMessages[lclMsgIdx]);
 					ImGui::Spacing();
 
 					// Spinner animation
@@ -430,6 +431,7 @@ void EditorMain::init()
 				glfwSwapBuffers(loadingWindow);
 
 				std::this_thread::sleep_for(std::chrono::milliseconds(16));
+				lclMsgIdx = msgIdx.load();
 			}
 
 			// Cleanup loading window

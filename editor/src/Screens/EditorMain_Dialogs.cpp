@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include "Manager/BuildManager.hpp"
 #include "Editor.hpp"
+#include <imgui.h>
+#include "imgui_internal.h"
 
 void EditorMain::Render_Profiler()
 {
@@ -961,6 +963,78 @@ void EditorMain::Render_PhysicsDebugPanel()
 
 void EditorMain::Render_ExporterSettings() 
 {
+	const auto IndeterminateProgressBar{ [](float oheight = 0.0f, const ImVec2& size = ImVec2(-1, 0), float speed = 1.5f, float min_width = 0.2f, float max_width = 0.5f)
+				{
+					ImGuiWindow* window = ImGui::GetCurrentWindow();
+					if (window->SkipItems)
+						return;
+
+					ImGuiContext& g = *GImGui;
+					const ImGuiStyle& style = g.Style;
+
+					// Calculate size
+					ImVec2 pos = window->DC.CursorPos;
+					ImVec2 bar_size = ImGui::CalcItemSize(size, ImGui::CalcItemWidth(), oheight > 0.0f ? oheight : ImGui::GetFrameHeight());
+
+					ImRect bb(pos, ImVec2(pos.x + bar_size.x, pos.y + bar_size.y));
+					ImGui::ItemSize(bb, style.FramePadding.y);
+					if (!ImGui::ItemAdd(bb, 0))
+						return;
+
+					ImU32 bg_col = ImGui::GetColorU32(ImGuiCol_FrameBg);
+					ImU32 fg_col = ImGui::GetColorU32(ImGuiCol_PlotHistogram);
+
+					ImDrawList* draw_list = ImGui::GetWindowDrawList();
+					draw_list->AddRectFilled(bb.Min, bb.Max, bg_col, style.FrameRounding);
+
+					// Time values
+					float time = static_cast<float>(ImGui::GetTime());
+
+					// Constant-speed motion (allow going beyond edges)
+					float motion_phase = fmod(time * speed, 1.0f + max_width) - max_width * 0.5f;
+
+					// Independent pulsation
+					float pulse = (sinf(time * 2.0f) + 1.0f) * 0.5f;
+					float segment_width = min_width + (max_width - min_width) * pulse;
+
+					// Compute raw start/end (can be outside 0..1)
+					float start = motion_phase - segment_width * 0.5f;
+					float end = motion_phase + segment_width * 0.5f;
+
+					// Intersect with visible range
+					float visible_start = ImClamp(start, 0.0f, 1.0f);
+					float visible_end = ImClamp(end,   0.0f, 1.0f);
+
+					// Only draw if visible
+					if (visible_end > visible_start)
+					{
+						float x_start = bb.Min.x + visible_start * bar_size.x;
+						float x_end = bb.Min.x + visible_end * bar_size.x;
+						draw_list->AddRectFilled(ImVec2(x_start, bb.Min.y), ImVec2(x_end, bb.Max.y),
+												 fg_col, style.FrameRounding);
+					}
+				} };
+	const auto CustomTitle{ [](std::string const& title, int theight = 30) {
+			ImGuiContext& g = *GImGui;
+			const ImGuiStyle& style = g.Style;
+			ImVec2 min = ImGui::GetWindowContentRegionMin();
+			ImVec2 max = ImGui::GetWindowContentRegionMax();
+			min.x += ImGui::GetWindowPos().x;
+			max.x += ImGui::GetWindowPos().x;
+			/*
+			ImGui::GetWindowDrawList()->AddRectFilled(min, ImVec2(max.x, min.y + theight),
+													  ImGui::GetColorU32(ImGuiCol_TitleBgActive), style.FrameRounding);
+
+			ImGui::Dummy(ImVec2(0, theight)); // reserve vertical space
+			*/
+			/*ImGui::GetWindowDrawList()->AddText(
+				ImVec2(min.x + 8, min.y + 6),
+				ImGui::GetColorU32(ImGuiCol_Text),
+				title.c_str()
+			);*/
+			ImGui::Text(title.c_str()); // left aligned by default
+		} };
+
 	if (showExporter) {
 		showExporter = false;
 		ImGui::OpenPopup("Build Menu");
@@ -972,13 +1046,15 @@ void EditorMain::Render_ExporterSettings()
 		needs_repositioning = false;
 	}
 	else {
-		//ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 	}
-	// Begin the popup modal
-	if (ImGui::BeginPopupModal("Build Menu", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	ImGui::SetNextWindowSize(ImVec2(1200.f, 0.f));
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24, 20));
+
+	if (ImGui::BeginPopupModal("Build Menu", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar))
 	{
-		//temp static
 		static std::atomic_bool buildStarted{};
 		static BuildConfiguration config{ [](std::string name, std::string dir) {
 			auto config1 = BuildManager::LoadBuildConfiguration();
@@ -995,20 +1071,21 @@ void EditorMain::Render_ExporterSettings()
 			return config1;
 			}(Editor::GetInstance().GetConfig().workspace_name, std::string(Engine::getWorkingDir().data()) + "/build")};
 		static std::shared_ptr<BuildContext> buildCtx{ std::make_shared<BuildContext>() };
-		static std::unique_ptr<std::future<void>> fut_ptr{}; //hack
+		static std::unique_ptr<std::future<void>> fut_ptr{};
 
 		if (!buildStarted) {
-			ImGui::Text("Build Settings");
+			CustomTitle("Build Settings");
 			ImGui::Separator();
 
-			ImguiInspectTypeRenderer::present(config, "Build Configuration                                              ");//i dunno how to resize this
+			ImguiInspectTypeRenderer::present(config, "Build Configuration");
 			ImGui::Separator();
 			if (ImGui::Button("Build", ImVec2(120, 0)))
 			{
 				buildStarted.store(true);
 				BuildManager::SaveBuildConfiguration(config);
 				needs_repositioning = true;
-				fut_ptr.reset(new std::future<void> (m_BuildManager->BuildAsync(config, buildCtx))); //hack
+				buildCtx = std::make_shared<BuildContext>();
+				fut_ptr.reset(new std::future<void>(m_BuildManager->BuildAsync(config, buildCtx)));
 			}
 			ImGui::SetItemDefaultFocus();
 			ImGui::SameLine();
@@ -1025,19 +1102,61 @@ void EditorMain::Render_ExporterSettings()
 		}
 		else {
 			needs_repositioning = true;
-			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(0, 122, 204, 255)); // blue fill 
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(40, 40, 40, 255)); // dark background
-			ImGui::Text("Build Progress");
-			float progress = buildCtx->m_progress100 / 100.f;
-			ImGui::Dummy(ImVec2(10, 5));
-			ImGui::SameLine();
-			ImGui::ProgressBar(progress, ImVec2(750, 25));
-			ImGui::SameLine();
-			ImGui::Dummy(ImVec2(10, 5));
-			ImGui::PopStyleColor(2);
+
+			BuildPhase phase = buildCtx->m_phase.load();
+			bool isDiscovering = (phase == BuildPhase::DiscoveringResources);
+			float progress = buildCtx->m_progress100.load() / 100.f;
+
+			CustomTitle("Build Progress");
 			ImGui::Separator();
-			if (fut_ptr->valid()&&fut_ptr->wait_for(std::chrono::nanoseconds(0))==std::future_status::ready) {
-				ImGui::Text(buildCtx->m_state == BuildState::FAILED ? "Build Failed!" : "Build Success!");
+
+			ImGui::TextColored(ImVec4(0.7f, 0.85f, 1.0f, 1.0f), "%s", BuildPhaseLabel(phase));
+			if (isDiscovering && buildCtx->m_scenes_total.load() > 0) {
+				ImGui::SameLine();
+				ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(%u/%u scenes)",
+					buildCtx->m_scenes_discovered.load(),
+					buildCtx->m_scenes_total.load());
+			}
+
+			ImGui::Spacing();
+
+			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(0, 122, 204, isDiscovering ? 127 : 255));
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(40, 40, 40, 255));
+
+			if (isDiscovering) {
+				IndeterminateProgressBar(0.f, ImVec2(-1, 25));
+			}
+			else if (progress <= 0.001f) {
+				ImGui::ProgressBar(0.f, ImVec2(-1, 25));
+			}
+			else {
+				ImGui::ProgressBar(progress, ImVec2(-1, 25));
+			}
+
+			ImGui::PopStyleColor(2);
+
+			if (buildCtx->m_files_total.load() > 0 && !isDiscovering && phase != BuildPhase::Done) {
+				ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Files: %u / %u",
+					buildCtx->m_files_copied.load(), buildCtx->m_files_total.load());
+			}
+
+			ImGui::Separator();
+			bool buildFinished = fut_ptr->valid() && fut_ptr->wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
+			if (buildFinished) {
+				bool failed = buildCtx->m_state == BuildState::FAILED;
+				if (failed) {
+					ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Build Failed!");
+				}
+				else {
+					ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Build Complete");
+					ImGui::Separator();
+					if (!buildCtx->m_output_path.empty()) {
+						ImGui::Text("Output: %s", buildCtx->m_output_path.c_str());
+					}
+					ImGui::Text("Resources: %u", buildCtx->m_resources_found.load());
+					ImGui::Text("Files: %u / %u", buildCtx->m_files_copied.load(), buildCtx->m_files_total.load());
+				}
+				ImGui::Separator();
 				if (ImGui::Button("OK", ImVec2(120, 0))) {
 					fut_ptr->get();
 					ImGui::CloseCurrentPopup();
@@ -1053,13 +1172,14 @@ void EditorMain::Render_ExporterSettings()
 		}
 		ImGui::EndPopup();
 	}
+
+	ImGui::PopStyleVar(2);
 }
 
 void EditorMain::Render_ImporterSettings()
 {
 	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-	// Begin the popup modal
 	if (ImGui::BeginPopupModal("DescriptorInspector", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Importer Settings");
@@ -1088,7 +1208,6 @@ void EditorMain::Render_ImporterSettings()
 
 void EditorMain::Render_AboutUI()
 {
-	// Render About Modal
 	if (showAboutModal)
 	{
 		ImGui::OpenPopup("About");
@@ -1104,5 +1223,4 @@ void EditorMain::Render_AboutUI()
 		if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
 		ImGui::EndPopup();
 	}
-
 }
