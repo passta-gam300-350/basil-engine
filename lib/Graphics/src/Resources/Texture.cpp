@@ -328,113 +328,224 @@ unsigned int TextureLoader::CubemapFromTextureIDs(
     const std::array<unsigned int, 6>& textureIDs,
     bool generateMipmaps)
 {
-    // Validate all texture IDs
+    struct SourceTextureInfo {
+        unsigned int id = 0;
+        GLint target = GL_NONE;
+        GLint width = 0;
+        GLint height = 0;
+        GLint internalFormat = GL_NONE;
+        GLint compressed = GL_FALSE;
+    };
+
+    auto consumePendingErrors = []() {
+        while (glGetError() != GL_NO_ERROR) {
+        }
+    };
+
+    auto logValidationFailure = [](int face,
+                                   const SourceTextureInfo& info,
+                                   const char* reason) {
+        spdlog::error(
+            "CubemapFromTextureIDs: Validation failed for face {} (texture {}, target 0x{:X}, size {}x{}, internal format 0x{:X}, compressed {}) - {}",
+            face,
+            info.id,
+            static_cast<unsigned int>(info.target),
+            info.width,
+            info.height,
+            static_cast<unsigned int>(info.internalFormat),
+            info.compressed == GL_TRUE,
+            reason
+        );
+    };
+
+    std::array<SourceTextureInfo, 6> sourceTextures{};
+    GLint previousTexture2DBinding = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &previousTexture2DBinding);
+
     for (int i = 0; i < 6; ++i) {
-        if (textureIDs[i] == 0) {
-            spdlog::error("CubemapFromTextureIDs: Texture ID {} is invalid (face {})", textureIDs[i], i);
+        SourceTextureInfo& info = sourceTextures[i];
+        info.id = textureIDs[i];
+
+        if (info.id == 0) {
+            logValidationFailure(i, info, "texture ID is 0");
+            return 0;
+        }
+
+        consumePendingErrors();
+        glBindTexture(GL_TEXTURE_2D, info.id);
+        GLenum bindError = glGetError();
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previousTexture2DBinding));
+
+        if (bindError != GL_NO_ERROR) {
+            spdlog::error(
+                "CubemapFromTextureIDs: Failed to validate source texture target for face {} (texture {}, expected GL_TEXTURE_2D, OpenGL error: 0x{:X})",
+                i,
+                info.id,
+                bindError
+            );
+            return 0;
+        }
+
+        info.target = GL_TEXTURE_2D;
+
+        consumePendingErrors();
+        glGetTextureLevelParameteriv(info.id, 0, GL_TEXTURE_WIDTH, &info.width);
+        glGetTextureLevelParameteriv(info.id, 0, GL_TEXTURE_HEIGHT, &info.height);
+        glGetTextureLevelParameteriv(info.id, 0, GL_TEXTURE_INTERNAL_FORMAT, &info.internalFormat);
+        glGetTextureLevelParameteriv(info.id, 0, GL_TEXTURE_COMPRESSED, &info.compressed);
+
+        GLenum queryError = glGetError();
+        if (queryError != GL_NO_ERROR) {
+            spdlog::error(
+                "CubemapFromTextureIDs: Failed to query source texture for face {} (texture {}, OpenGL error: 0x{:X})",
+                i,
+                info.id,
+                queryError
+            );
+            return 0;
+        }
+
+        if (info.width <= 0 || info.height <= 0) {
+            logValidationFailure(i, info, "source texture has invalid level 0 dimensions");
+            return 0;
+        }
+
+        if (info.width != info.height) {
+            logValidationFailure(i, info, "cubemap faces must be square");
+            return 0;
+        }
+
+        if (info.internalFormat == GL_NONE) {
+            logValidationFailure(i, info, "source texture reported an invalid internal format");
+            return 0;
+        }
+
+        if (i == 0) {
+            continue;
+        }
+
+        const SourceTextureInfo& reference = sourceTextures[0];
+        if (info.width != reference.width || info.height != reference.height) {
+            logValidationFailure(i, info, "all source textures must have the same dimensions as face 0");
+            return 0;
+        }
+
+        if (info.internalFormat != reference.internalFormat) {
+            logValidationFailure(i, info, "all source textures must have the same internal format as face 0");
+            return 0;
+        }
+
+        if (info.compressed != reference.compressed) {
+            logValidationFailure(i, info, "all source textures must have the same compression state as face 0");
             return 0;
         }
     }
 
-    // Get dimensions from first texture (assume all are same size)
-    int width, height;
-    glBindTexture(GL_TEXTURE_2D, textureIDs[0]);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-
-    if (width != height) {
-        spdlog::warn("CubemapFromTextureIDs: Texture dimensions are not square ({}x{}), cubemap may look distorted", width, height);
+    const SourceTextureInfo& face0 = sourceTextures[0];
+    unsigned int cubemapID = 0;
+    GLsizei levels = 1;
+    if (generateMipmaps) {
+        levels = 1 + static_cast<GLsizei>(floor(log2(std::max(face0.width, face0.height))));
     }
 
-    // Create cubemap texture
-    unsigned int cubemapID;
-    glGenTextures(1, &cubemapID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+    consumePendingErrors();
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &cubemapID);
+    glTextureStorage2D(cubemapID, levels, static_cast<GLenum>(face0.internalFormat), face0.width, face0.height);
 
-    // Get internal format from first texture to match it
-    GLint internalFormat;
-    glBindTexture(GL_TEXTURE_2D, textureIDs[0]);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
-
-    // Allocate storage for all 6 cubemap faces BEFORE copying
-    // (glCopyImageSubData requires destination to have allocated storage)
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
-    for (int i = 0; i < 6; ++i) {
-        // Determine data format from internal format
-        GLenum format = GL_RGBA;
-        if (internalFormat == GL_RGB || internalFormat == GL_SRGB8 || internalFormat == GL_RGB8) {
-            format = GL_RGB;
-        } else if (internalFormat == GL_RED || internalFormat == GL_R8) {
-            format = GL_RED;
-        }
-
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat,
-                     width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
-    }
-
-    // Copy each face from the 2D textures to cubemap faces
-    // Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (back), -Z (front)
-    // Determine format for data transfer
-    GLenum format = GL_RGBA;
-    int numComponents = 4;
-    if (internalFormat == GL_RGB || internalFormat == GL_SRGB8 || internalFormat == GL_RGB8) {
-        format = GL_RGB;
-        numComponents = 3;
-    } else if (internalFormat == GL_RED || internalFormat == GL_R8) {
-        format = GL_RED;
-        numComponents = 1;
-    }
-
-    // Allocate temporary buffer for texture data
-    std::vector<unsigned char> tempData(width * height * numComponents);
-
-    for (int i = 0; i < 6; ++i) {
-        // Swap Top (+Y, index 2) and Bottom (-Y, index 3) to compensate for Y-negation in shader
-        // This allows users to assign textures intuitively (up.png to Top, dn.png to Bottom)
-        int sourceIndex = i;
-        if (i == 2) sourceIndex = 3;      // +Y face gets Bottom texture
-        else if (i == 3) sourceIndex = 2; // -Y face gets Top texture
-
-        // Read data from source 2D texture
-        glBindTexture(GL_TEXTURE_2D, textureIDs[sourceIndex]);
-        glGetTexImage(GL_TEXTURE_2D, 0, format, GL_UNSIGNED_BYTE, tempData.data());
-
-        GLenum error = glGetError();
-        if (error != GL_NO_ERROR) {
-            spdlog::error("CubemapFromTextureIDs: Failed to read face {} from source texture (OpenGL error: 0x{:X})", i, error);
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR || cubemapID == 0) {
+        spdlog::error(
+            "CubemapFromTextureIDs: Failed to create cubemap storage (OpenGL error: 0x{:X}, size {}x{}, internal format 0x{:X}, compressed {})",
+            error,
+            face0.width,
+            face0.height,
+            static_cast<unsigned int>(face0.internalFormat),
+            face0.compressed == GL_TRUE
+        );
+        if (cubemapID != 0) {
             glDeleteTextures(1, &cubemapID);
-            return 0;
         }
+        return 0;
+    }
 
-        // Write data to cubemap face
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
-        glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
-                        0, 0, width, height,
-                        format, GL_UNSIGNED_BYTE, tempData.data());
+    // Order: +X (right), -X (left), +Y (top), -Y (bottom), +Z (back), -Z (front)
+    for (int i = 0; i < 6; ++i) {
+        // Swap Top (+Y, index 2) and Bottom (-Y, index 3) to compensate for Y-negation in shader.
+        // This preserves the existing editor assignment behavior.
+        int sourceIndex = i;
+        if (i == 2) sourceIndex = 3;
+        else if (i == 3) sourceIndex = 2;
+
+        const SourceTextureInfo& source = sourceTextures[sourceIndex];
+
+        consumePendingErrors();
+        glCopyImageSubData(
+            source.id,
+            GL_TEXTURE_2D,
+            0,
+            0, 0, 0,
+            cubemapID,
+            GL_TEXTURE_CUBE_MAP,
+            0,
+            0, 0, i,
+            source.width,
+            source.height,
+            1
+        );
 
         error = glGetError();
         if (error != GL_NO_ERROR) {
-            spdlog::error("CubemapFromTextureIDs: Failed to copy face {} (OpenGL error: 0x{:X})", i, error);
+            spdlog::error(
+                "CubemapFromTextureIDs: Failed to copy source face {} into cubemap face {} (texture {}, target 0x{:X}, size {}x{}, internal format 0x{:X}, compressed {}) (OpenGL error: 0x{:X})",
+                sourceIndex,
+                i,
+                source.id,
+                static_cast<unsigned int>(source.target),
+                source.width,
+                source.height,
+                static_cast<unsigned int>(source.internalFormat),
+                source.compressed == GL_TRUE,
+                error
+            );
             glDeleteTextures(1, &cubemapID);
             return 0;
         }
     }
 
-    // Set cubemap parameters
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(cubemapID, GL_TEXTURE_MIN_FILTER, generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    glTextureParameteri(cubemapID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(cubemapID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(cubemapID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(cubemapID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     if (generateMipmaps) {
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+        consumePendingErrors();
+        glGenerateTextureMipmap(cubemapID);
+
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            spdlog::error(
+                "CubemapFromTextureIDs: Failed to generate cubemap mipmaps (texture {}, size {}x{}, internal format 0x{:X}, compressed {}) (OpenGL error: 0x{:X})",
+                cubemapID,
+                face0.width,
+                face0.height,
+                static_cast<unsigned int>(face0.internalFormat),
+                face0.compressed == GL_TRUE,
+                error
+            );
+            glDeleteTextures(1, &cubemapID);
+            return 0;
+        }
     }
 
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-    spdlog::info("CubemapFromTextureIDs: Successfully created cubemap (ID: {}) from 6 textures ({}x{})",
-        cubemapID, width, height);
+    spdlog::info(
+        "CubemapFromTextureIDs: Successfully created cubemap (ID: {}) from 6 textures ({}x{}, internal format 0x{:X}, compressed {})",
+        cubemapID,
+        face0.width,
+        face0.height,
+        static_cast<unsigned int>(face0.internalFormat),
+        face0.compressed == GL_TRUE
+    );
 
     return cubemapID;
 }

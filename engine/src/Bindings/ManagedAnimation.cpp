@@ -66,7 +66,11 @@ void ManagedAnimation::Play(uint64_t handle)
     if (anim.animatorInstance)
     {
         anim.animatorInstance->play();
-        anim.animatorInstance->state = anim.state;
+        anim.state.isPlaying = true; // sync component state so AnimationSystem doesn't skip
+    }
+    else
+    {
+        anim.state.isPlaying = true;
     }
 }
 
@@ -99,8 +103,13 @@ void ManagedAnimation::Stop(uint64_t handle)
     if (anim.animatorInstance)
     {
         anim.animatorInstance->stop();
-        anim.animatorInstance->state = anim.state;
-        anim.animatorInstance->currentTime = 0.0f;
+        anim.state.isPlaying = false; // sync component state so AnimationSystem doesn't skip
+        anim.currentTime = 0.0f;
+    }
+    else
+    {
+        anim.state.isPlaying = false;
+        anim.currentTime = 0.0f;
     }
 }
 
@@ -116,7 +125,11 @@ void ManagedAnimation::SetLoop(uint64_t handle, bool loop)
     if (anim.animatorInstance)
     {
         anim.animatorInstance->setLoop(loop);
-        anim.animatorInstance->state = anim.state;
+        anim.state.loop = loop; // sync component state so AnimationSystem doesn't overwrite it
+    }
+    else
+    {
+        anim.state.loop = loop;
     }
 }
 

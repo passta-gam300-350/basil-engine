@@ -20,10 +20,46 @@ Technology is prohibited.
 #include "Utility/AABB.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
+#include "Resources/MaterialPropertyBlock.h"
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
 #include <cassert>
 #include <algorithm>
+#include <cmath>
+
+namespace {
+
+bool TryGetFloatOverrideWithAlias(const MaterialPropertyBlock* propertyBlock,
+                                  const char* canonicalName,
+                                  const char* legacyAlias,
+                                  float& outValue)
+{
+    if (!propertyBlock) {
+        return false;
+    }
+
+    if (propertyBlock->TryGetFloat(canonicalName, outValue)) {
+        return true;
+    }
+
+    return legacyAlias && propertyBlock->TryGetFloat(legacyAlias, outValue);
+}
+
+void FillInstanceMaterialData(InstancedRenderer::InstanceData& instanceData,
+                              const InstancedRenderer::ResolvedMaterialData& resolvedData)
+{
+    instanceData.color = glm::vec4(resolvedData.albedoColor, 1.0f);
+    instanceData.materialId = 0;
+    instanceData.flags = 0;
+    instanceData.metallic = resolvedData.metallic;
+    instanceData.roughness = resolvedData.roughness;
+    instanceData.normalStrength = resolvedData.normalStrength;
+    instanceData.padding = 0.0f;
+    instanceData.padding2 = 0.0f;
+    instanceData.padding3 = 0.0f;
+}
+
+} // namespace
 
 InstancedRenderer::InstancedRenderer(PBRLightingRenderer* lighting)
     : m_MaxInstances(10000), m_TotalInstances(0), m_BatchActive(false), m_PBRLighting(lighting)
@@ -35,6 +71,73 @@ InstancedRenderer::InstancedRenderer(PBRLightingRenderer* lighting)
 InstancedRenderer::~InstancedRenderer()
 {
     Clear();
+}
+
+InstancedRenderer::ResolvedMaterialData InstancedRenderer::ResolvePerInstanceMaterialData(
+    const Material* material,
+    const MaterialPropertyBlock* propertyBlock)
+{
+    ResolvedMaterialData resolvedData{};
+
+    if (material) {
+        resolvedData.albedoColor = material->GetAlbedoColor();
+        resolvedData.metallic = material->GetMetallicValue();
+        resolvedData.roughness = material->GetRoughnessValue();
+        resolvedData.normalStrength = material->GetNormalStrength();
+    }
+
+    if (!propertyBlock) {
+        return resolvedData;
+    }
+
+    glm::vec3 overrideColor{};
+    if (propertyBlock->TryGetVec3("u_AlbedoColor", overrideColor)) {
+        resolvedData.albedoColor = overrideColor;
+    }
+
+    float overrideScalar = 0.0f;
+    if (TryGetFloatOverrideWithAlias(propertyBlock, "u_MetallicValue", "u_Metallic", overrideScalar)) {
+        resolvedData.metallic = overrideScalar;
+    }
+
+    if (TryGetFloatOverrideWithAlias(propertyBlock, "u_RoughnessValue", "u_Roughness", overrideScalar)) {
+        resolvedData.roughness = overrideScalar;
+    }
+
+    if (propertyBlock->TryGetFloat("u_NormalStrength", overrideScalar)) {
+        resolvedData.normalStrength = overrideScalar;
+    }
+
+    return resolvedData;
+}
+
+bool InstancedRenderer::AreResolvedMaterialDataEqual(
+    const ResolvedMaterialData& lhs,
+    const ResolvedMaterialData& rhs,
+    float epsilon)
+{
+    return std::abs(lhs.albedoColor.x - rhs.albedoColor.x) <= epsilon &&
+           std::abs(lhs.albedoColor.y - rhs.albedoColor.y) <= epsilon &&
+           std::abs(lhs.albedoColor.z - rhs.albedoColor.z) <= epsilon &&
+           std::abs(lhs.metallic - rhs.metallic) <= epsilon &&
+           std::abs(lhs.roughness - rhs.roughness) <= epsilon &&
+           std::abs(lhs.normalStrength - rhs.normalStrength) <= epsilon;
+}
+
+bool InstancedRenderer::AreTransformsEqual(
+    const glm::mat4& lhs,
+    const glm::mat4& rhs,
+    float epsilon)
+{
+    for (int column = 0; column < 4; ++column) {
+        for (int row = 0; row < 4; ++row) {
+            if (std::abs(lhs[column][row] - rhs[column][row]) > epsilon) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 void InstancedRenderer::BeginInstanceBatch()
@@ -112,8 +215,8 @@ void InstancedRenderer::Clear()
     // after a clear, forcing BuildDynamicInstanceData() to repopulate.
     m_LastRenderableCount = 0;
     m_LastObjectIDs.clear();
-    m_LastTransformHashes.clear();
-    m_LastPropertyBlockPointers.clear();
+    m_LastTransforms.clear();
+    m_LastResolvedMaterialData.clear();
     m_LastMaterialPointers.clear();
     m_LastMeshPointers.clear();
     m_ChangeCheckDoneThisFrame = false;
@@ -350,53 +453,10 @@ void InstancedRenderer::BuildDynamicInstanceData(const std::vector<RenderableDat
         // Add instance data with actual material properties
         InstanceData instanceData;
         instanceData.modelMatrix = renderable.transform;
+        const ResolvedMaterialData resolvedData =
+            ResolvePerInstanceMaterialData(renderable.material.get(), renderable.propertyBlock.get());
 
-        // Apply base material properties first
-        glm::vec3 albedoColor = renderable.material->GetAlbedoColor();
-        float metallicValue = renderable.material->GetMetallicValue();
-        float roughnessValue = renderable.material->GetRoughnessValue();
-        float normalStrength = renderable.material->GetNormalStrength();
-
-        // Apply property block overrides if present
-        if (renderable.propertyBlock) {
-            glm::vec3 overrideColor;
-            if (renderable.propertyBlock->TryGetVec3("u_AlbedoColor", overrideColor)) {
-                albedoColor = overrideColor;
-
-                // Debug: Log property block application (only first few times)
-                static int propBlockApplyCount = 0;
-                if (propBlockApplyCount < 3) {
-                    spdlog::info("InstancedRenderer: Applied property block albedo color override ({}, {}, {})",
-                        overrideColor.x, overrideColor.y, overrideColor.z);
-                    propBlockApplyCount++;
-                }
-            }
-
-            float overrideMetallic;
-            if (renderable.propertyBlock->TryGetFloat("u_MetallicValue", overrideMetallic)) {
-                metallicValue = overrideMetallic;
-            }
-
-            float overrideRoughness;
-            if (renderable.propertyBlock->TryGetFloat("u_RoughnessValue", overrideRoughness)) {
-                roughnessValue = overrideRoughness;
-            }
-
-            float overrideNormalStrength;
-            if (renderable.propertyBlock->TryGetFloat("u_NormalStrength", overrideNormalStrength)) {
-                normalStrength = overrideNormalStrength;
-            }
-        }
-
-        instanceData.color = glm::vec4(albedoColor, 1.0f);
-        instanceData.materialId = 0; // Not used yet, could be used for texture indexing
-        instanceData.flags = 0;
-        instanceData.metallic = metallicValue;
-        instanceData.roughness = roughnessValue;
-        instanceData.normalStrength = normalStrength;
-        instanceData.padding = 0.0f;
-        instanceData.padding2 = 0.0f;
-        instanceData.padding3 = 0.0f;
+        FillInstanceMaterialData(instanceData, resolvedData);
 
         // Set mesh data if not already set (use first material encountered for the mesh)
         if (m_MeshInstances.find(meshId) == m_MeshInstances.end()) {
@@ -415,8 +475,8 @@ void InstancedRenderer::ForceRebuildCache()
     // This is called when components are updated in the editor (mesh/material changes)
     m_LastRenderableCount = 0;
     m_LastObjectIDs.clear();
-    m_LastTransformHashes.clear();
-    m_LastPropertyBlockPointers.clear();
+    m_LastTransforms.clear();
+    m_LastResolvedMaterialData.clear();
     m_LastMaterialPointers.clear();
     m_LastMeshPointers.clear();
     m_ChangeCheckDoneThisFrame = false;
@@ -640,17 +700,10 @@ void InstancedRenderer::RenderSkinnedMeshes(RenderPass& renderPass, const FrameD
         {
             InstanceData instanceData{};
             instanceData.modelMatrix = renderable->transform;
+            const ResolvedMaterialData resolvedData =
+                ResolvePerInstanceMaterialData(renderable->material.get(), renderable->propertyBlock.get());
 
-            glm::vec3 albedo = renderable->material->GetAlbedoColor();
-            instanceData.color = glm::vec4(albedo, 1.0f);
-            instanceData.metallic = renderable->material->GetMetallicValue();
-            instanceData.roughness = renderable->material->GetRoughnessValue();
-            instanceData.normalStrength = renderable->material->GetNormalStrength();
-            instanceData.materialId = 0;
-            instanceData.flags = 0;
-            instanceData.padding = 0.0f;
-            instanceData.padding2 = 0.0f;
-            instanceData.padding3 = 0.0f;
+            FillInstanceMaterialData(instanceData, resolvedData);
 
             if (!m_SkinnedInstanceSSBO)
             {
@@ -810,6 +863,14 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
         return true;
     }
 
+    if (m_LastResolvedMaterialData.size() != renderables.size())
+    {
+        UpdateAllTrackingData(renderables);
+        m_ChangeCheckDoneThisFrame = true;
+        m_LastFrameHadChanges = true;
+        return true;
+    }
+
     // OPTIMIZATION: Single-pass check of all cheap comparisons (better cache locality)
     for (size_t i = 0; i < renderables.size(); ++i)
     {
@@ -844,10 +905,9 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
             return true;
         }
 
-        // OPTIMIZED: Only check property block POINTER, not contents (much faster!)
-        // If user wants per-frame property changes to trigger rebuild, they can call ForceRebuildCache()
-        uintptr_t propBlockPtr = reinterpret_cast<uintptr_t>(r.propertyBlock.get());
-        if (propBlockPtr != m_LastPropertyBlockPointers[i])
+        const ResolvedMaterialData currentMaterialData =
+            ResolvePerInstanceMaterialData(r.material.get(), r.propertyBlock.get());
+        if (!AreResolvedMaterialDataEqual(currentMaterialData, m_LastResolvedMaterialData[i]))
         {
             UpdateAllTrackingData(renderables);
             m_ChangeCheckDoneThisFrame = true;
@@ -855,11 +915,7 @@ bool InstancedRenderer::HasRenderablesChanged(const std::vector<RenderableData> 
             return true;
         }
 
-        // OPTIMIZED: Simplified transform hash (only position, not full matrix)
-        // This is 75% faster than summing all 16 elements
-        const glm::mat4& t = r.transform;
-        float currentHash = t[3][0] + t[3][1] + t[3][2];  // Just position (translation column)
-        if (std::abs(currentHash - m_LastTransformHashes[i]) > 0.0001f)
+        if (!AreTransformsEqual(r.transform, m_LastTransforms[i]))
         {
             UpdateAllTrackingData(renderables);
             m_ChangeCheckDoneThisFrame = true;
@@ -888,11 +944,11 @@ void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>&
     m_LastMaterialPointers.clear();
     m_LastMaterialPointers.reserve(count);
 
-    m_LastTransformHashes.clear();
-    m_LastTransformHashes.reserve(count);
+    m_LastTransforms.clear();
+    m_LastTransforms.reserve(count);
 
-    m_LastPropertyBlockPointers.clear();
-    m_LastPropertyBlockPointers.reserve(count);
+    m_LastResolvedMaterialData.clear();
+    m_LastResolvedMaterialData.reserve(count);
 
     // Single loop to update all tracking data
     for (const auto& r : renderables)
@@ -900,11 +956,10 @@ void InstancedRenderer::UpdateAllTrackingData(const std::vector<RenderableData>&
         m_LastObjectIDs.push_back(r.objectID);
         m_LastMeshPointers.push_back(reinterpret_cast<uintptr_t>(r.mesh.get()));
         m_LastMaterialPointers.push_back(reinterpret_cast<uintptr_t>(r.material.get()));
-        m_LastPropertyBlockPointers.push_back(reinterpret_cast<uintptr_t>(r.propertyBlock.get()));
+        m_LastResolvedMaterialData.push_back(
+            ResolvePerInstanceMaterialData(r.material.get(), r.propertyBlock.get()));
 
-        // OPTIMIZED: Simplified transform hash (position only, 75% faster)
-        const glm::mat4& t = r.transform;
-        m_LastTransformHashes.push_back(t[3][0] + t[3][1] + t[3][2]);
+        m_LastTransforms.push_back(r.transform);
     }
 }
 

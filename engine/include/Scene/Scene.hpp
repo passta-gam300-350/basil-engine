@@ -350,6 +350,11 @@ public:
 		}
 		m_loaded_scenes.clear();
 	}
+
+
+	std::uint32_t GetCurrentIndex() const noexcept {
+		return requested_index >= 0 ? requested_index : std::uint32_t(0);
+	}
 };
 
 RegisterReflectionTypeBegin(SceneIDComponent, "Scene ID")

@@ -7,8 +7,8 @@
 \brief  Component for storing per-entity material property overrides.
 
         This component stores serializable material property overrides that are
-        applied via MaterialInstance at runtime. Follows Unity's pattern of
-        separating mesh rendering from material customization.
+        packed into per-instance material data at runtime. Follows Unity's
+        pattern of separating mesh rendering from material customization.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents
@@ -29,6 +29,9 @@ Technology is prohibited.
  *
  * Stores serializable material property overrides that differ from the base material.
  * MaterialOverridesSystem creates MaterialPropertyBlocks from this data at runtime.
+ * The instanced renderer then resolves the relevant main_pbr values into the
+ * per-instance payload consumed by `InstanceColor`, `InstanceMetallic`,
+ * `InstanceRoughness`, and `InstanceNormalStrength`.
  *
  * Usage:
  * - Override float properties: floatOverrides["u_MetallicValue"] = 0.8f

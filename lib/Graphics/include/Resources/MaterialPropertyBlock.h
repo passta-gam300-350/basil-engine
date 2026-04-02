@@ -11,7 +11,9 @@
         material property overrides without creating material instances.
 
         Unity-style MaterialPropertyBlock enables GPU instancing-friendly
-        per-object customization by applying property overrides per-draw call.
+        per-object customization. For the main PBR renderer, supported overrides
+        are resolved into per-instance SSBO data before drawing; generic shaders
+        can still consume the block via ApplyToShader().
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents
@@ -36,7 +38,7 @@ Technology is prohibited.
  * MaterialPropertyBlock provides Unity-style per-object property customization that:
  * - Preserves GPU instancing (doesn't create material copies)
  * - Uses minimal memory (only stores overridden properties)
- * - Applied per-draw call, not stored in material
+ * - Stores lightweight per-object overrides, not full material copies
  * - No shader/material reference needed
  *
  * Use Cases:
@@ -53,12 +55,12 @@ Technology is prohibited.
  * // Create property block (reusable across frames)
  * auto propBlock = std::make_shared<MaterialPropertyBlock>();
  * propBlock->SetVec3("u_AlbedoColor", glm::vec3(1.0f, 0.0f, 0.0f));  // Red tint
- * propBlock->SetFloat("u_Roughness", 0.8f);  // Override roughness
+ * propBlock->SetFloat("u_RoughnessValue", 0.8f);  // Override roughness
  *
- * // Apply during rendering (called per-draw)
- * material->ApplyAllProperties();       // Base material properties
- * propBlock->ApplyToShader(shader);     // Override with block properties
- * // Draw call here
+ * // For the main PBR path, the renderer resolves the block into per-instance data.
+ * // For custom shaders, you can still apply it directly:
+ * material->ApplyAllProperties();
+ * propBlock->ApplyToShader(shader);
  * @endcode
  */
 class MaterialPropertyBlock
