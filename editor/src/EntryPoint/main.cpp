@@ -75,7 +75,14 @@ int main(int argc, char** argv)
 			cliOutputDir = argv[++i];
 		}
 	}
-
+	if (!cliProjectDir.empty() && cliOutputDir.empty()) {
+		cliOutputDir = cliProjectDir + "/build";
+		std::cout << "no output directory specified, defaulting to <project-dir>\\build\n";
+	}
+	if (argc>1 && cliOutputDir.empty()) {
+		std::cout << "usage: editor.exe -b <project-dir> -o <output-dir>\n";
+		return 1;
+	}
 	if (!cliProjectDir.empty() && !cliOutputDir.empty()) {
 		BuildConfiguration config = BuildManager::LoadBuildConfigurationFrom(cliProjectDir);
 		config.output_dir = cliOutputDir;

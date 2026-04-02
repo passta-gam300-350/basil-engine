@@ -10,8 +10,11 @@
 #include <iostream>
 #include <algorithm>
 
+#include <Manager/ResourceSystem.hpp>
+
 #include "Screens/EditorMain.hpp"
-#include <descriptors/material.hpp>
+#include <descriptors/descriptors.hpp>
+#include <importer/importer.hpp>
 #include <Manager/MonoEntityManager.hpp>
 #include <MonoManager.hpp>
 #include <ScriptCompiler.hpp>
@@ -236,7 +239,7 @@ DescriptorIndex BuildManager::BuildDescriptorIndex(std::string const& assetsDir)
 			try {
 				rp::BasicIndexedGuid big = rp::ResourceTypeImporterRegistry::GetDescriptorGuid(descPath);
 				if (big.m_guid) {
-					index.emplace(big.m_guid, DescriptorInfo{ descPath, big.m_typeindex });
+					index.emplace(big.m_guid, DescriptorInfo{ descPath, rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(descPath)});
 				}
 			}
 			catch (...) {}
@@ -245,13 +248,7 @@ DescriptorIndex BuildManager::BuildDescriptorIndex(std::string const& assetsDir)
 	return index;
 }
 
-std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(
-	std::string const& projectDir,
-	DescriptorIndex const* descIndex,
-	std::uint64_t* total_sz,
-	std::uint32_t* file_ct,
-	bool discover_soft_dependencies)
-{
+std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::string const& projectDir, DescriptorIndex const* descIndex, std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies) {
 	std::string manifest_path = projectDir + "/scene_manifest.order";
 	std::unordered_set<rp::BasicIndexedGuid> res;
 	auto AddResource{ [&](rp::BasicIndexedGuid big) {
@@ -270,8 +267,9 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(
 			else if (descIndex) {
 				auto it = descIndex->find(big.m_guid);
 				if (it != descIndex->end()) {
-					std::cout << "  Importing missing resource: " << big.m_guid.to_hex() << suffix << std::endl;
-					rp::ResourceTypeImporterRegistry::Import(it->second.importer_type, it->second.desc_path);
+					std::cout << "  Importing missing resource: " << big.m_guid.to_hex() << suffix << "\n";
+					rp::ResourceTypeImporterRegistry::Import(it->second.importer_type, it->second.desc_path, fileph);
+					//std::cout << "  Imported resource @loc: " << big.m_guid.to_hex() << fileph << "\n";
 					if (std::filesystem::exists(fileph)) {
 						res.insert(big);
 						if (total_sz) {
@@ -488,6 +486,7 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 			int local_progress{};
 			std::uint32_t file_ct{};
 			std::unordered_set<rp::BasicIndexedGuid> rsc;
+			DescriptorIndex desc_idx;
 			if (!std::filesystem::exists(rp::utility::working_path() + "/audio")) {
 				std::filesystem::create_directories(rp::utility::working_path() + "/audio");
 			}
@@ -500,7 +499,8 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 				}
 			}
 			else {
-				rsc = DiscoverSceneResources(&total_bytes, &file_ct, false);
+				desc_idx = BuildDescriptorIndex(rp::utility::working_path());
+				rsc = DiscoverSceneResourcesWithIndex(std::string(Engine::getWorkingDir().data()), &desc_idx, &total_bytes, &file_ct, true);
 			}
 			for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
 				if (!cde.is_directory()) {
@@ -669,6 +669,9 @@ int BuildManager::BuildSync(BuildConfiguration config, std::string projectDir, s
 		}
 
 		std::cout << "[2/6] Discovering resources..." << std::endl;
+		if (!std::filesystem::exists(importsDir)) {
+			std::filesystem::create_directories(importsDir);
+		}
 		DescriptorIndex descIndex = BuildDescriptorIndex(assetsDir);
 		std::uint64_t total_bytes{};
 		std::uint32_t file_ct{};
