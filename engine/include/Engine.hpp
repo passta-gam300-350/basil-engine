@@ -57,7 +57,7 @@ public:
 
 		double m_FPS{};
 		double m_DeltaTime{};          // Authoritative time elapsed since the previous frame (seconds)
-		double m_FixedDeltaTime{1.0 / 165.0}; // Fixed timestep (seconds)
+		double m_FixedDeltaTime{1.0 / 60.0}; // Fixed timestep (seconds)
 		double m_ActualDeltaTime{};	   // Legacy alias kept in sync with m_DeltaTime
 		double m_LastFrameTime{};      // Previous frame timestamp in seconds
 		std::uint64_t m_TotalFrameCt{};

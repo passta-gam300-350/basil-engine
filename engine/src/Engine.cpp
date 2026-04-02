@@ -26,6 +26,7 @@
 #include "Manager/ResourceSystem.hpp"
 #include <chrono>
 #include <sstream>
+#include <algorithm>
 
 #ifdef _WIN32
 // NVIDIA Optimus - force discrete GPU
@@ -221,7 +222,6 @@ void Engine::CoreFixedUpdate()
 {
 	Engine& instance{ Instance() };
 	PhysicsSystem::Instance().FixedUpdate(instance.m_World);
-	animationSystem().FixedUpdate(instance.m_World);
 	BehaviourSystem::Instance().FixedUpdate(instance.m_World);
 }
 
@@ -249,6 +249,7 @@ void Engine::CoreUpdate() {
 			}
 		},
 		[]() { MaterialOverridesSystem::Instance().Update(Engine::Instance().m_World, 0.0f); },
+		[]() { animationSystem().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
 		[]() { ParticleSystem::GetInstance().Update(Engine::Instance().m_World, float(Engine::Instance().GetLastDeltaTime())); },
 		[]() { Engine::SyncActiveSceneRenderSettings(); },
 		[]() { VideoSystem().Update(Engine::Instance().m_World); },
@@ -302,6 +303,7 @@ void Engine::TickFrameClock()
 	if (frameDelta < 0.0) {
 		frameDelta = 0.0;
 	}
+	frameDelta = std::min(frameDelta, 0.1);
 
 	instance.m_Info.m_LastFrameTime = currentFrameTime;
 	instance.m_Info.m_DeltaTime = frameDelta;

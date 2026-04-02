@@ -18,6 +18,7 @@ Technology is prohibited.
 #include <algorithm>
 #include <iostream>
 #include <set>
+#include <spdlog/spdlog.h>
 
 namespace helperTools
 {
@@ -25,7 +26,9 @@ namespace helperTools
     template<typename keyFrame>
     int findKeyFrameIndex(std::vector<keyFrame> const& allKeyFrames, float time)
     {
-        for (int i = 0; i < allKeyFrames.size() - 1; i++)
+        if (allKeyFrames.size() < 2)
+            return 0; // callers guard for 0/1, but prevent size_t underflow here too
+        for (int i = 0; i < static_cast<int>(allKeyFrames.size()) - 1; i++)
         {
             if (time < allKeyFrames[i + 1].timeStamp)
             {
@@ -349,9 +352,14 @@ bool animator::playAnimation(std::string const& animationName, bool shouldLoop)
 {
     assert(animationName.empty() == false && "Animation name should not be empty");
     auto currentPtr = allAnimations.find(animationName);
-    if (currentPtr == allAnimations.end() || currentPtr->second == nullptr)
+    if (currentPtr == allAnimations.end())
     {
-        assert(false && ("Animation " + animationName + " not found or is null").c_str());
+        spdlog::warn("[Animator] playAnimation: clip '{}' not found. Add it to AnimationClips in the inspector.", animationName);
+        return false;
+    }
+    if (currentPtr->second == nullptr)
+    {
+        spdlog::warn("[Animator] playAnimation: clip '{}' is null", animationName);
         return false;
     }
     animationContainer* newAnimation = currentPtr->second;
@@ -361,6 +369,7 @@ bool animator::playAnimation(std::string const& animationName, bool shouldLoop)
         blend.isActive = true;
         blend.sourceAnimation = currentAnimation;  // save the OLD one
         blend.sourceAnimationTime = currentTime;
+        blend.currentTime = 0.0f;  // reset blend timer so blend always runs full duration
     }
     // then change to new animation
     currentAnimation = newAnimation;
@@ -421,6 +430,12 @@ void animator::updateSingleAnimation(float deltaTime, skeleton const& theSkeleto
 
 void animator::updateBlendedAnimation(float deltaTime, skeleton const& theSkeleton)
 {
+    if (blend.sourceAnimation == nullptr)
+    {
+        blend.isActive = false;
+        updateSingleAnimation(deltaTime, theSkeleton);
+        return;
+    }
     blend.currentTime += deltaTime;
     float blendFactor = blend.getBlendFactor();
     blend.sourceAnimationTime += blend.sourceAnimation->ticksPerSecond * deltaTime * state.playbackSpeed;

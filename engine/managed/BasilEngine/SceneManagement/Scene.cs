@@ -40,10 +40,22 @@ namespace BasilEngine.SceneManagement
         [StaticAccessor("ManagedScene", StaticAccessorType.DoubleColon)]
         public extern static void ExitApplication();
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [NativeMethod("GetCurrentSceneIndex")]
+        [StaticAccessor("ManagedScene", StaticAccessorType.DoubleColon)]
+        /// <summary>
+        /// Gets the build index of the currently active scene.
+        /// </summary>
+        /// <returns>Build index of the currently active scene.</returns>   
+        public extern static int GetCurrentSceneIndexInternal();
+
         /// <summary>
         /// Loads a scene by build index.
         /// </summary>
         /// <param name="index">Scene index.</param>
+        
+
+        public static int CurrentIndex => GetCurrentSceneIndexInternal();
         public static void LoadScene(int index)
         {
             LoadSceneByIndex(index);
@@ -62,6 +74,14 @@ namespace BasilEngine.SceneManagement
         {
             ExitApplication();
         }
+
+
+        public static void Restart()
+        {
+            LoadSceneByIndex(GetCurrentSceneIndexInternal());
+        }
+
+
 
     }
 }
