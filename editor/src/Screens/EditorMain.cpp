@@ -448,7 +448,7 @@ void EditorMain::init()
 	
 	//m_AssetManager->ImportAssetList();
 	
-	m_BuildManager = std::make_unique<BuildManager>(this);
+	m_BuildManager = std::make_unique<BuildManager>();
 
 	// Register custom audio inspector with import settings
 	{
