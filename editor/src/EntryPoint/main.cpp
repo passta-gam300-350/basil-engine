@@ -35,12 +35,15 @@ Technology is prohibited.
 #endif
 
 #include <iostream>
+#include <string>
+#include <filesystem>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 #include "Editor.hpp"
 #include "Screens/SplashScreen.hpp"
 #include "Input/InputManager.h"
+#include "Manager/BuildManager.hpp"
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
 // Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
@@ -59,8 +62,36 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 // Main code
-int main(int, char**)
+int main(int argc, char** argv)
 {
+	std::string cliProjectDir;
+	std::string cliOutputDir;
+	for (int i = 1; i < argc; ++i) {
+		std::string arg = argv[i];
+		if (arg == "-b" && i + 1 < argc) {
+			cliProjectDir = argv[++i];
+		}
+		else if (arg == "-o" && i + 1 < argc) {
+			cliOutputDir = argv[++i];
+		}
+	}
+	if (!cliProjectDir.empty() && cliOutputDir.empty()) {
+		cliOutputDir = cliProjectDir + "/build";
+		std::cout << "no output directory specified, defaulting to <project-dir>\\build\n";
+	}
+	if (argc>1 && cliOutputDir.empty()) {
+		std::cout << "usage: editor.exe -b <project-dir> -o <output-dir>\n";
+		return 1;
+	}
+	if (!cliProjectDir.empty() && !cliOutputDir.empty()) {
+		BuildConfiguration config = BuildManager::LoadBuildConfigurationFrom(cliProjectDir);
+		config.output_dir = cliOutputDir;
+		if (config.output_name.empty()) {
+			config.output_name = std::filesystem::path(cliProjectDir).filename().string();
+		}
+		return BuildManager::BuildSync(config, cliProjectDir, cliOutputDir);
+	}
+
 	// Enable run-time memory check for debug builds.
 #if defined(DEBUG) | defined(_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);

@@ -22,6 +22,8 @@ Technology is prohibited.
 #include <memory>
 #include <string>
 #include <future>
+#include <unordered_map>
+#include <rsc-core/rp.hpp>
 
 enum class BuildWindowMode : std::uint8_t {
 	windowed,
@@ -30,8 +32,7 @@ enum class BuildWindowMode : std::uint8_t {
 
 enum class ResourceCleanUpMode : std::uint8_t {
 	none,
-	minimal //, //removes hard dependencies
-	//all_unused //removes everything unused very slow and dangerous
+	minimal
 };
 
 struct WindowDims {
@@ -39,13 +40,11 @@ struct WindowDims {
 	unsigned int height{ 900 };
 };
 
-//simple m4 build system. this will be fleshed out in m5
-//yaml build
 struct BuildConfiguration {
 	std::string output_dir;
 	std::string output_name;
-	std::string icon_relative_path; //relative path //should warn if dne
-	ResourceCleanUpMode resource_cleanup; //limited support for soft dependencies
+	std::string icon_relative_path;
+	ResourceCleanUpMode resource_cleanup;
 	BuildWindowMode windowing_mode;
 	WindowDims window_size;
 };
@@ -59,21 +58,59 @@ enum class BuildState : std::uint8_t {
 	ABORTED
 };
 
-//contract between caller and async callee. ensures caller resource lifetime does not cause problems for callee
-struct BuildContext {
-	std::atomic<BuildState> m_state;
-	std::atomic_int m_progress100;
+enum class BuildPhase : std::uint8_t {
+	Idle,
+	DiscoveringResources,
+	CompilingScripts,
+	CreatingExecutable,
+	CopyingMonoRuntime,
+	CopyingManagedDLLs,
+	PackagingResources,
+	CopyingAudio,
+	Done
 };
 
-class EditorMain;
+inline const char* BuildPhaseLabel(BuildPhase phase) {
+	switch (phase) {
+	case BuildPhase::DiscoveringResources:  return "Discovering resources...";
+	case BuildPhase::CompilingScripts:       return "Compiling scripts...";
+	case BuildPhase::CreatingExecutable:     return "Creating executable...";
+	case BuildPhase::CopyingMonoRuntime:     return "Copying Mono runtime...";
+	case BuildPhase::CopyingManagedDLLs:     return "Copying managed DLLs...";
+	case BuildPhase::PackagingResources:     return "Packaging resources...";
+	case BuildPhase::CopyingAudio:           return "Copying audio...";
+	case BuildPhase::Done:                   return "Done!";
+	default:                                 return "Preparing...";
+	}
+}
+
+struct BuildContext {
+	std::atomic<BuildState> m_state{BuildState::IDLE};
+	std::atomic_int m_progress100{0};
+	std::atomic<BuildPhase> m_phase{BuildPhase::Idle};
+	std::atomic_uint32_t m_scenes_discovered{0};
+	std::atomic_uint32_t m_scenes_total{0};
+	std::atomic_uint32_t m_resources_found{0};
+	std::atomic_uint32_t m_files_copied{0};
+	std::atomic_uint32_t m_files_total{0};
+	std::string m_output_path;
+};
+
+struct DescriptorInfo {
+	std::string desc_path;
+	std::uint64_t importer_type;
+};
+
+using DescriptorIndex = std::unordered_map<rp::Guid, DescriptorInfo>;
 
 struct BuildManager {
-	std::future<void> BuildAsync(BuildConfiguration, std::shared_ptr<BuildContext>); //remove buildcontext in the future
-	//std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResources(std::uint64_t* total_sz = nullptr, std::uint32_t* file_ct = nullptr, bool discover_soft_dependencies = false);
-	static BuildConfiguration LoadBuildConfiguration();
-	static void SaveBuildConfiguration(BuildConfiguration const&);
+	std::future<void> BuildAsync(BuildConfiguration, std::shared_ptr<BuildContext>);
+	static int BuildSync(BuildConfiguration, std::string projectDir, std::string outputDir);
 
-	EditorMain* m_editor; //opaque ptr
+	static DescriptorIndex BuildDescriptorIndex(std::string const& assetsDir);
+	static BuildConfiguration LoadBuildConfiguration();
+	static BuildConfiguration LoadBuildConfigurationFrom(std::string const& projectDir);
+	static void SaveBuildConfiguration(BuildConfiguration const&);
 };
 
 #endif

@@ -8,8 +8,16 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+
+#include <Manager/ResourceSystem.hpp>
 
 #include "Screens/EditorMain.hpp"
+#include <descriptors/descriptors.hpp>
+#include <importer/importer.hpp>
+#include <Manager/MonoEntityManager.hpp>
+#include <MonoManager.hpp>
+#include <ScriptCompiler.hpp>
 
 // Structures for parsing ICO files
 #pragma pack(push, 2)
@@ -119,9 +127,9 @@ bool InjectIcon(std::string const& exePath, std::string const& icoPath) {
 	return true;
 }
 
-void MakeTemplateExecutable(std::string const& outputDir, BuildConfiguration const& config) {
+void MakeTemplateExecutable(std::string const& outputDir, BuildConfiguration const& config, std::string const& projectDir) {
 	std::string const& exeName = config.output_name;
-	std::string const& iconPath = std::string(Engine::getWorkingDir().data()) + "/" + config.icon_relative_path;
+	std::string const& iconPath = projectDir + "/" + config.icon_relative_path;
 	const bool isFullscreen = config.windowing_mode == BuildWindowMode::fullscreen;
 	std::string curr_dir = std::filesystem::current_path().string();
 	std::string exePath = outputDir + "/" + exeName + ".exe";
@@ -221,7 +229,118 @@ std::pair<std::uint64_t, std::uint32_t> DiscoverMonoRuntimeFiles() {
 	return { total_mono_bytes, total_mono_file_ct };
 }
 
-std::unordered_set<rp::BasicIndexedGuid> /*BuildManager::*/DiscoverSceneResources(std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies) {
+DescriptorIndex BuildManager::BuildDescriptorIndex(std::string const& assetsDir) {
+	DescriptorIndex index;
+	if (!std::filesystem::exists(assetsDir))
+		return index;
+	for (auto const& entry : std::filesystem::recursive_directory_iterator(assetsDir)) {
+		if (!entry.is_directory() && entry.path().extension() == ".desc") {
+			std::string descPath = entry.path().string();
+			try {
+				rp::BasicIndexedGuid big = rp::ResourceTypeImporterRegistry::GetDescriptorGuid(descPath);
+				if (big.m_guid) {
+					index.emplace(big.m_guid, DescriptorInfo{ descPath, rp::ResourceTypeImporterRegistry::GetDescriptorImporterType(descPath)});
+				}
+			}
+			catch (...) {}
+		}
+	}
+	return index;
+}
+
+std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::string const& projectDir, DescriptorIndex const* descIndex, std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies, BuildContext* context=nullptr) {
+	std::string manifest_path = projectDir + "/scene_manifest.order";
+	std::unordered_set<rp::BasicIndexedGuid> res;
+	auto AddResource{ [&](rp::BasicIndexedGuid big) {
+		if (!res.contains(big)) {
+			std::string suffix = rp::ResourceTypeImporterRegistry::GetResourceExt(big.m_typeindex);
+			std::string fileph = rp::utility::output_path() + "/" + big.m_guid.to_hex() + suffix;
+			if (std::filesystem::exists(fileph)) {
+				res.insert(big);
+				if (total_sz) {
+					(*total_sz) += std::filesystem::directory_entry(fileph).file_size();
+				}
+				if (file_ct) {
+					(*file_ct)++;
+				}
+			}
+			else if (descIndex) {
+				auto it = descIndex->find(big.m_guid);
+				if (it != descIndex->end()) {
+					std::cout << "  Importing missing resource: " << big.m_guid.to_hex() << suffix << "\n";
+					rp::ResourceTypeImporterRegistry::Import(it->second.importer_type, it->second.desc_path, fileph);
+					if (std::filesystem::exists(fileph)) {
+						res.insert(big);
+						if (total_sz) {
+							(*total_sz) += std::filesystem::directory_entry(fileph).file_size();
+						}
+						if (file_ct) {
+							(*file_ct)++;
+						}
+					}
+				}
+				else {
+					std::cerr << "  Warning: resource " << big.m_guid.to_hex() << suffix << " not found in .imports and no descriptor exists." << std::endl;
+				}
+			}
+		}
+	} };
+
+	if (std::filesystem::exists(manifest_path)) {
+		auto scene_list = GetSceneManifestSceneList(manifest_path);
+		if (context) {
+			context->m_scenes_total = static_cast<std::uint32_t>(scene_list.size());
+		}
+		for (auto const& scene_name : scene_list) {
+			std::string scene_path = projectDir + "/" + scene_name;
+			if (std::filesystem::exists(scene_path)) {
+				YAML::Node scn_root = YAML::LoadFile(scene_path);
+				std::vector<YAML::Node> guid_nodes;
+				FindNodesWithKeys(scn_root, { "guid", "type" }, guid_nodes);
+
+				for (YAML::Node guid_nd : guid_nodes) {
+					rp::BasicIndexedGuid full_guid{ rp::Guid::to_guid(guid_nd["guid"].as<std::string>()), guid_nd["type"].as<std::uint64_t>() };
+					if (!full_guid.m_guid)
+						continue;
+					if (full_guid.m_typeindex == rp::utility::string_hash("mesh")) {
+						rp::BasicIndexedGuid meshmeta_guid{ full_guid.m_guid, rp::utility::string_hash("meshmeta") };
+						meshmeta_guid.m_guid.m_low += 1;
+						AddResource(meshmeta_guid);
+					}
+					else if (discover_soft_dependencies && full_guid.m_typeindex == rp::utility::string_hash("material")) {
+						auto descIt = descIndex ? descIndex->find(full_guid.m_guid) : DescriptorIndex::const_iterator{};
+						std::string descPath;
+						if (descIndex && descIt != descIndex->end()) {
+							descPath = descIt->second.desc_path;
+						}
+						else {
+							std::string suffix = rp::ResourceTypeImporterRegistry::GetResourceExt(full_guid.m_typeindex);
+							descPath = rp::utility::working_path() + "/" + full_guid.m_guid.to_hex() + suffix + ".desc";
+						}
+						if (std::filesystem::exists(descPath)) {
+							try {
+								MaterialDescriptor matDesc = rp::serialization::yaml_serializer::deserialize<MaterialDescriptor>(descPath);
+								for (auto const& [key, texGuid] : matDesc.material.texture_properties) {
+									if (texGuid) {
+										AddResource({ texGuid, rp::utility::string_hash("texture") });
+									}
+								}
+							}
+							catch (...) {}
+						}
+					}
+					AddResource(full_guid);
+				}
+			}
+			if (context) {
+				context->m_scenes_discovered.fetch_add(1, std::memory_order_relaxed);
+			}
+		}
+	}
+	return res;
+}
+
+std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResources(std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies) {
 	std::string proj_dir = std::string(Engine::getWorkingDir().data()); //this is set to project_dir/asset
 	std::string manifest_path = proj_dir + "/scene_manifest.order";
 	std::unordered_set<rp::BasicIndexedGuid> res;
@@ -257,12 +376,22 @@ std::unordered_set<rp::BasicIndexedGuid> /*BuildManager::*/DiscoverSceneResource
 						meshmeta_guid.m_guid.m_low += 1;
 						AddResource(meshmeta_guid);
 					}
-					else if (discover_soft_dependencies) {
-						switch (full_guid.m_typeindex) {
-						case rp::utility::string_hash("material"):
-							break;
-						case rp::utility::string_hash("audio"):
-							break;
+					else if (discover_soft_dependencies && full_guid.m_typeindex == rp::utility::string_hash("material")) {
+						std::string suffix = rp::ResourceTypeImporterRegistry::GetResourceExt(full_guid.m_typeindex);
+						std::string descPath = rp::utility::working_path() + "/" + full_guid.m_guid.to_hex() + suffix + ".desc";
+						if (!std::filesystem::exists(descPath)) {
+							descPath = rp::utility::working_path() + "/" + full_guid.m_guid.to_hex() + ".desc";
+						}
+						if (std::filesystem::exists(descPath)) {
+							try {
+								MaterialDescriptor matDesc = rp::serialization::yaml_serializer::deserialize<MaterialDescriptor>(descPath);
+								for (auto const& [key, texGuid] : matDesc.material.texture_properties) {
+									if (texGuid) {
+										AddResource({ texGuid, rp::utility::string_hash("texture") });
+									}
+								}
+							}
+							catch (...) {}
 						}
 					}
 					AddResource(full_guid);
@@ -301,26 +430,27 @@ std::pair<std::uint64_t, std::uint32_t> CopyMonoRuntime(std::string const& outpu
 	return { bytes_copied_mul100, file_copied };
 }
 
-void CopySceneManifestData(std::string const& outputDir) {
-	std::string proj_dir = std::string(Engine::getWorkingDir().data()); //this is set to project_dir/asset
+void CopySceneManifestData(std::string const& outputDir, std::string const& projectDir) {
 	std::string manifest_path = outputDir + "/scene_manifest.order";
-	if (std::filesystem::exists(proj_dir + "/scene_manifest.order")) {
-		std::filesystem::copy_file(proj_dir + "/scene_manifest.order", manifest_path, std::filesystem::copy_options::overwrite_existing);
+	if (std::filesystem::exists(projectDir + "/scene_manifest.order")) {
+		std::filesystem::copy_file(projectDir + "/scene_manifest.order", manifest_path, std::filesystem::copy_options::overwrite_existing);
 		auto scene_list = GetSceneManifestSceneList(manifest_path);
 		for (auto const& scene_name : scene_list) {
 			std::string output_scene = outputDir + "/" + scene_name;
 			if (!std::filesystem::exists(std::filesystem::path(output_scene).parent_path())) {
 				std::filesystem::create_directories(std::filesystem::path(output_scene).parent_path());
 			}
-			std::filesystem::copy_file(proj_dir + "/" + scene_name, output_scene, std::filesystem::copy_options::overwrite_existing);
+			std::filesystem::copy_file(projectDir + "/" + scene_name, output_scene, std::filesystem::copy_options::overwrite_existing);
 		}
 	}
 }
 
-std::map<std::string, rp::BasicIndexedGuid> PackageResources(std::unordered_set<rp::BasicIndexedGuid> resources, std::uint64_t total_bytes, std::uint64_t& bytes_copied_mul100, std::uint32_t& file_copied, std::string const& outputDir, std::shared_ptr<BuildContext> context) {
+std::map<std::string, rp::BasicIndexedGuid> PackageResources(std::unordered_set<rp::BasicIndexedGuid> resources, std::string const& outputDir, std::uint64_t total_bytes = 0, std::uint64_t* bytes_copied_mul100 = nullptr, std::uint32_t* file_copied = nullptr, std::shared_ptr<BuildContext> context = nullptr) {
 	std::string res_folder{ rp::utility::output_path() };
 	std::map<std::string, rp::BasicIndexedGuid> pkgs;
-	int local_progress{context->m_progress100};
+	int local_progress{ context ? context->m_progress100.load() : 0};
+	uint64_t local_bytes_cpd_mul100 = bytes_copied_mul100 ? *bytes_copied_mul100 : 0;
+	std::uint32_t fcp = file_copied ? *file_copied : 0;
 	if (!std::filesystem::exists(outputDir)) {
 		std::filesystem::create_directories(outputDir);
 	}
@@ -332,14 +462,22 @@ std::map<std::string, rp::BasicIndexedGuid> PackageResources(std::unordered_set<
 		std::string outpath = outputDir + "/" + rsc.m_guid.to_hex() + suffix;
 		std::filesystem::copy_file(tgtpath, outpath, std::filesystem::copy_options::overwrite_existing);
 		pkgs.emplace(outpath, rsc);
-		bytes_copied_mul100 += std::filesystem::directory_entry(tgtpath).file_size() * 100;
-		file_copied++;
-		int current_progress = int(bytes_copied_mul100 / total_bytes);
-		if (current_progress > local_progress) {
-			context->m_progress100 = local_progress = current_progress;
+		local_bytes_cpd_mul100 += std::filesystem::directory_entry(tgtpath).file_size() * 100;
+		fcp++;
+		if (context)
+			context->m_files_copied++;
+		if (total_bytes && context) {
+			int current_progress = int(local_bytes_cpd_mul100 / total_bytes);
+			if (current_progress > local_progress) {
+				context->m_progress100 = local_progress = current_progress;
+			}
 		}
 	}
-	return pkgs;
+	if (bytes_copied_mul100)
+		*bytes_copied_mul100 = local_bytes_cpd_mul100;
+	if (file_copied)
+		*file_copied = fcp;
+;	return pkgs;
 }
 
 std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::shared_ptr<BuildContext> context)
@@ -351,10 +489,14 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 		try {
 			std::string outputDir = config.output_dir + "/" + config.output_name;
 			std::filesystem::create_directories(outputDir);
+			context->m_output_path = outputDir;
 			std::uint64_t total_bytes{};
 			int local_progress{};
 			std::uint32_t file_ct{};
 			std::unordered_set<rp::BasicIndexedGuid> rsc;
+			DescriptorIndex desc_idx;
+
+			context->m_phase = BuildPhase::DiscoveringResources;
 			if (!std::filesystem::exists(rp::utility::working_path() + "/audio")) {
 				std::filesystem::create_directories(rp::utility::working_path() + "/audio");
 			}
@@ -367,19 +509,9 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 				}
 			}
 			else {
-				rsc = DiscoverSceneResources(&total_bytes, &file_ct, false);
-				if (config.resource_cleanup == ResourceCleanUpMode::minimal) {
-					for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::output_path() }) {
-						if (!cde.is_directory() && cde.path().extension() == ".texture") {
-							rp::BasicIndexedGuid tex_guid{ rp::Guid::to_guid(cde.path().stem().string()), rp::utility::string_hash("texture") };
-							if (!rsc.contains(tex_guid)) {
-								rsc.insert(tex_guid);
-								total_bytes += cde.file_size();
-								file_ct++;
-							}
-						}
-					}
-				}
+				desc_idx = BuildDescriptorIndex(rp::utility::working_path());
+				rsc = DiscoverSceneResourcesWithIndex(std::string(Engine::getWorkingDir().data()), &desc_idx, &total_bytes, &file_ct, true, context.get());
+				context->m_resources_found = static_cast<std::uint32_t>(rsc.size());
 			}
 			for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
 				if (!cde.is_directory()) {
@@ -390,26 +522,32 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 			auto [mono_bytes, mono_files] = DiscoverMonoRuntimeFiles();
 			total_bytes += mono_bytes;
 			file_ct += mono_files;
+			context->m_files_total = file_ct;
 
 			std::uint64_t bytes_copied_mul100{};
 			std::uint32_t file_copied{};
 
 			if (context->m_state != BuildState::ABORTED) {
-				MakeTemplateExecutable(outputDir, config);
-				CopySceneManifestData(outputDir);
+				context->m_phase = BuildPhase::CreatingExecutable;
+				std::string projDir = std::string(Engine::getWorkingDir().data());
+				MakeTemplateExecutable(outputDir, config, projDir);
+				CopySceneManifestData(outputDir, projDir);
+
+				context->m_phase = BuildPhase::CopyingMonoRuntime;
 				auto [mono_bytes_copied_mul100, mono_files_copied] = CopyMonoRuntime(outputDir, context, total_bytes);
 				bytes_copied_mul100 = mono_bytes_copied_mul100;
 				file_copied = mono_files_copied;
-				//copy game binaries
+
+				context->m_phase = BuildPhase::CopyingManagedDLLs;
 				std::string precompiledpath = outputDir + "/data/managed";
 				if (!std::filesystem::exists(precompiledpath)) {
 					std::filesystem::create_directories(precompiledpath);
 				}
-				std::string curr = Engine::getWorkingDir().data();
-				std::filesystem::copy_file(curr + "/managed/GameAssembly.dll", precompiledpath+"/GameAssembly.dll", std::filesystem::copy_options::overwrite_existing);
+				std::filesystem::copy_file(projDir + "/managed/GameAssembly.dll", precompiledpath+"/GameAssembly.dll", std::filesystem::copy_options::overwrite_existing);
 				std::filesystem::copy_file(std::filesystem::current_path().string() + "/bin/BasilEngine.dll", precompiledpath + "/BasilEngine.dll", std::filesystem::copy_options::overwrite_existing);
 				std::filesystem::copy_file(std::filesystem::current_path().string() + "/bin/Engine.Bindings.dll", precompiledpath + "/Engine.Bindings.dll", std::filesystem::copy_options::overwrite_existing);
 			}
+			context->m_phase = BuildPhase::PackagingResources;
 			if (config.resource_cleanup == ResourceCleanUpMode::none) {
 				for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::output_path() }) {
 					if (context->m_state == BuildState::ABORTED)
@@ -423,6 +561,7 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 						std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
 						bytes_copied_mul100 += cde.file_size() * 100;
 						file_copied++;
+						context->m_files_copied = file_copied;
 						int current_progress = int(bytes_copied_mul100 / total_bytes);
 						if (current_progress > local_progress) {
 							context->m_progress100 = local_progress = current_progress;
@@ -435,9 +574,11 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 				}
 			}
 			else {
-				std::map<std::string, rp::BasicIndexedGuid> packages = PackageResources(rsc, total_bytes, bytes_copied_mul100, file_copied, outputDir + "/assets/bin/", context);
+				std::map<std::string, rp::BasicIndexedGuid> packages = PackageResources(rsc, outputDir + "/assets/bin/", total_bytes, &bytes_copied_mul100, &file_copied, context);
+				context->m_files_copied = file_copied;
 				rp::serialization::yaml_serializer::serialize(packages, outputDir + "/resource.manifest");
 			}
+			context->m_phase = BuildPhase::CopyingAudio;
 			for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
 				if (context->m_state == BuildState::ABORTED)
 					return;
@@ -449,15 +590,18 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 					}
 					std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
 					bytes_copied_mul100 += cde.file_size()*100;
-					file_copied++; 
+					file_copied++;
+					context->m_files_copied = file_copied;
 					int current_progress = int(bytes_copied_mul100 / total_bytes);
 					if (current_progress > local_progress) {
 						context->m_progress100 = local_progress = current_progress;
 					}
 				}
 			}
+			context->m_phase = BuildPhase::Done;
 			context->m_state = BuildState::SUCCESS;
 			context->m_progress100 = 100;
+			context->m_files_copied = file_copied;
 		}
 		catch (...) {
 			context->m_state = BuildState::FAILED;
@@ -472,8 +616,148 @@ BuildConfiguration BuildManager::LoadBuildConfiguration()
 	return (std::filesystem::exists(configname)) ? rp::serialization::yaml_serializer::deserialize<BuildConfiguration>(configname) : BuildConfiguration{};
 }
 
+BuildConfiguration BuildManager::LoadBuildConfigurationFrom(std::string const& projectDir)
+{
+	std::string configname = projectDir + "/build.yaml";
+	return (std::filesystem::exists(configname)) ? rp::serialization::yaml_serializer::deserialize<BuildConfiguration>(configname) : BuildConfiguration{};
+}
+
 void BuildManager::SaveBuildConfiguration(BuildConfiguration const& config)
 {
 	std::string configname = std::string(Engine::getWorkingDir().data()) + "/build.yaml";
 	rp::serialization::yaml_serializer::serialize(config, configname);
+}
+
+static void CopyMonoRuntimeSync(std::string const& outputDir) {
+	std::string curr_dir = std::filesystem::current_path().string();
+	std::filesystem::recursive_directory_iterator rdit{ curr_dir + "/lib/mono" };
+	std::string mono_base = curr_dir + "/lib";
+	for (auto const& cde : rdit) {
+		if (!cde.is_directory()) {
+			std::string dest = outputDir + "/" + rp::utility::get_relative_path(cde.path().string(), mono_base);
+			std::filesystem::path parent = std::filesystem::path(dest).parent_path();
+			if (!std::filesystem::exists(parent)) {
+				std::filesystem::create_directories(parent);
+			}
+			std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::update_existing);
+		}
+	}
+}
+
+int BuildManager::BuildSync(BuildConfiguration config, std::string projectDir, std::string outputDir)
+{
+	try {
+		std::string assetsDir = projectDir + "/assets";
+		std::string importsDir = projectDir + "/.imports";
+		std::string manifestPath = projectDir + "/scene_manifest.order";
+
+		if (!std::filesystem::exists(manifestPath)) {
+			std::cerr << "error: scene_manifest.order not found at " << manifestPath << std::endl;
+			return 1;
+		}
+
+		rp::utility::working_path() = assetsDir;
+		rp::utility::output_path() = importsDir;
+
+		std::string fullOutputDir = outputDir + "/" + config.output_name;
+		std::filesystem::create_directories(fullOutputDir);
+
+		std::cout << "[1/6] Compiling scripts..." << std::endl;
+		MonoEntityManager::GetInstance().initialize();
+		std::string scriptsDir = assetsDir + "/scripts";
+		if (std::filesystem::exists(scriptsDir)) {
+			MonoEntityManager::GetInstance().AddSearchDirectory(scriptsDir.c_str());
+		}
+		std::string managedOutput = fullOutputDir + "/data/managed";
+		std::filesystem::create_directories(managedOutput);
+		MonoEntityManager::GetInstance().SetOutputDirectory(managedOutput.c_str());
+
+		MonoManager::disableCompile(false);
+		MonoEntityManager::GetInstance().StartCompilation();
+
+		ScriptCompiler* compiler = MonoManager::GetCompiler();
+		if (compiler && (!compiler->LastCompileSucceeded() || !compiler->diagnostics.empty())) {
+			bool hasErrors = false;
+			for (auto const& diag : compiler->diagnostics) {
+				std::string severity = diag.severity;
+				std::transform(severity.begin(), severity.end(), severity.begin(),
+					[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+				std::cerr << diag.filename << "(" << diag.position << "): "
+					<< diag.severity << " " << diag.diagnosticID << ": " << diag.message << std::endl;
+				if (severity == "error") hasErrors = true;
+			}
+			if (hasErrors || !compiler->LastCompileSucceeded()) {
+				std::cerr << "error: script compilation failed." << std::endl;
+				return 1;
+			}
+		}
+
+		std::cout << "[2/6] Discovering resources..." << std::endl;
+		if (!std::filesystem::exists(importsDir)) {
+			std::filesystem::create_directories(importsDir);
+		}
+		DescriptorIndex descIndex = BuildDescriptorIndex(assetsDir);
+		std::uint64_t total_bytes{};
+		std::uint32_t file_ct{};
+		std::unordered_set<rp::BasicIndexedGuid> rsc = DiscoverSceneResourcesWithIndex(projectDir, &descIndex, &total_bytes, &file_ct, true);
+		if (total_bytes == 0 && file_ct == 0) {
+			for (const auto& cde : std::filesystem::recursive_directory_iterator{ importsDir }) {
+				if (!cde.is_directory()) {
+					total_bytes += cde.file_size();
+					file_ct++;
+				}
+			}
+		}
+
+		std::cout << "[3/6] Creating executable..." << std::endl;
+		MakeTemplateExecutable(fullOutputDir, config, projectDir);
+
+		std::cout << "[4/6] Copying Mono runtime..." << std::endl;
+		CopyMonoRuntimeSync(fullOutputDir);
+
+		std::cout << "[5/6] Packaging resources..." << std::endl;
+		CopySceneManifestData(fullOutputDir, projectDir);
+
+		std::filesystem::copy_file(
+			std::filesystem::current_path().string() + "/bin/BasilEngine.dll",
+			managedOutput + "/BasilEngine.dll",
+			std::filesystem::copy_options::overwrite_existing);
+		std::filesystem::copy_file(
+			std::filesystem::current_path().string() + "/bin/Engine.Bindings.dll",
+			managedOutput + "/Engine.Bindings.dll",
+			std::filesystem::copy_options::overwrite_existing);
+
+		std::string outputAssetDir = fullOutputDir + "/assets/bin";
+
+		if (!std::filesystem::exists(outputAssetDir)) {
+			std::filesystem::create_directories(outputAssetDir);
+		}
+		auto packages = PackageResources(rsc, outputAssetDir);
+		std::string audioDir = assetsDir + "/audio";
+		if (std::filesystem::exists(audioDir)) {
+			for (auto const& cde : std::filesystem::recursive_directory_iterator{ audioDir }) {
+				if (!cde.is_directory() && cde.path().extension().string() != ".desc") {
+					std::string dest = fullOutputDir + "/assets/audio/" + rp::utility::get_relative_path(cde.path().string(), audioDir);
+					std::filesystem::path parent = std::filesystem::path(dest).parent_path();
+					if (!std::filesystem::exists(parent)) {
+						std::filesystem::create_directories(parent);
+					}
+					std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
+				}
+			}
+		}
+		rp::serialization::yaml_serializer::serialize(packages, fullOutputDir + "/resource.manifest");
+
+		std::cout << "[6/6] Done!" << std::endl;
+		std::cout << "Build output: " << fullOutputDir << std::endl;
+		return 0;
+	}
+	catch (std::exception const& e) {
+		std::cerr << "error: build failed with exception: " << e.what() << std::endl;
+		return 1;
+	}
+	catch (...) {
+		std::cerr << "error: build failed with unknown exception." << std::endl;
+		return 1;
+	}
 }

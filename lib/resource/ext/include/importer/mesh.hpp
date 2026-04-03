@@ -62,7 +62,7 @@ inline glm::mat4 ToMat4(const aiMatrix4x4& m)
 }
 
 // Save compressed texture to file
-void saveCompressedTexture(const aiTexture* tex, const std::string& filename) {
+inline void saveCompressedTexture(const aiTexture* tex, const std::string& filename) {
     size_t size = tex->mWidth; // length in bytes
     std::ofstream out(filename, std::ios::binary);
     out.write(reinterpret_cast<const char*>(tex->pcData), size);
@@ -70,7 +70,7 @@ void saveCompressedTexture(const aiTexture* tex, const std::string& filename) {
 }
 
 // Save raw BGRA texture to file (simple TGA writer for demo)
-void saveRawTexture(const aiTexture* tex, const std::string& filename) {
+inline void saveRawTexture(const aiTexture* tex, const std::string& filename) {
     std::ofstream out(filename, std::ios::binary);
 
     // Write minimal TGA header
@@ -134,7 +134,7 @@ inline std::pair<std::vector<TextureDescriptor>, std::vector<bool>> ExtractEmbed
     return { embedded_tex, is_transparent };
 }
 
-bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans, std::string const& basepath) {
+inline bool IsMaterialTransparent(const aiMaterial* mat, std::vector<bool> const& trans, std::string const& basepath) {
     if (!mat) return false;
 
     // 1. Check opacity
@@ -558,8 +558,6 @@ inline std::vector<std::pair<rp::Guid, MeshResourceData>> ImportModel(ModelDescr
             }
         }
     }
-
-    std::cout << "Max bone weights per vertex: " << maxWeights << std::endl;
 
     glm::mat4 transform = BuildTransform(desc);
 
