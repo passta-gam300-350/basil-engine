@@ -19,9 +19,6 @@ int main() {
 	Engine::InitializeGame();
 	Engine::Init("config.yaml");
 
-
-
-
 	Engine::LoadEmbeddedIcon();
 	Engine::Update();
 	Engine::Exit();

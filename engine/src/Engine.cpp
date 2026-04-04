@@ -203,7 +203,7 @@ void Engine::Init(std::string const& cfg ) {
 	Engine::Instance().m_Info.m_State = Info::State::Running;
 
 	}
-	catch (EngineException const& ee) {
+	catch ([[maybe_unused]] EngineException const& ee) {
 		//fall through since engineexception calls PushFatalError()
 	}
 	catch (std::exception const& e)
@@ -272,7 +272,7 @@ void Engine::CoreUpdate() {
 			(ExecuteSystem(sys), ...);
 			}, systems);
 	}
-	catch (EngineException const& ee) {
+	catch ([[maybe_unused]] EngineException const& ee) {
 		//fall through since engineexception calls PushFatalError()
 	}
 	catch (std::exception const& e)
