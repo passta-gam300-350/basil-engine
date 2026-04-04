@@ -129,7 +129,7 @@ bool InjectIcon(std::string const& exePath, std::string const& icoPath) {
 
 void MakeTemplateExecutable(std::string const& outputDir, BuildConfiguration const& config, std::string const& projectDir) {
 	std::string const& exeName = config.output_name;
-	std::string const& iconPath = projectDir + "/" + config.icon_relative_path;
+	std::string iconPath = projectDir + "/" + config.icon_relative_path;
 	const bool isFullscreen = config.windowing_mode == BuildWindowMode::fullscreen;
 	std::string curr_dir = std::filesystem::current_path().string();
 	std::string exePath = outputDir + "/" + exeName + ".exe";
@@ -146,6 +146,9 @@ void MakeTemplateExecutable(std::string const& outputDir, BuildConfiguration con
 			}
 			std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::update_existing);
 		}
+	}
+	if (!std::filesystem::exists(iconPath)) {
+		iconPath = projectDir + "/Icon.ico"; //default to this
 	}
 	InjectIcon(exePath, iconPath);
 	std::string config_output = std::string(outputDir + "/config.yaml");
@@ -248,7 +251,7 @@ DescriptorIndex BuildManager::BuildDescriptorIndex(std::string const& assetsDir)
 	return index;
 }
 
-std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::string const& projectDir, DescriptorIndex const* descIndex, std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies, BuildContext* context=nullptr) {
+std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::string const& projectDir, DescriptorIndex const* descIndex, std::uint64_t* total_sz, std::uint32_t* file_ct, std::unordered_set<std::string>* audio_paths = nullptr, BuildContext* context=nullptr) {
 	std::string manifest_path = projectDir + "/scene_manifest.order";
 	std::unordered_set<rp::BasicIndexedGuid> res;
 	auto AddResource{ [&](rp::BasicIndexedGuid big) {
@@ -296,7 +299,16 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::st
 			if (std::filesystem::exists(scene_path)) {
 				YAML::Node scn_root = YAML::LoadFile(scene_path);
 				std::vector<YAML::Node> guid_nodes;
+				std::vector<YAML::Node> scn_render_nodes;
+				FindValues(scn_root, { "face_textures" }, scn_render_nodes);
 				FindNodesWithKeys(scn_root, { "guid", "type" }, guid_nodes);
+
+				for (YAML::Node scn_render_nd : scn_render_nodes) {
+					for (auto val : scn_render_nd) {
+						rp::BasicIndexedGuid full_guid{ rp::Guid::to_guid(val.as<std::string>()), rp::utility::string_hash("texture")};
+						AddResource(full_guid);
+					}
+				}
 
 				for (YAML::Node guid_nd : guid_nodes) {
 					rp::BasicIndexedGuid full_guid{ rp::Guid::to_guid(guid_nd["guid"].as<std::string>()), guid_nd["type"].as<std::uint64_t>() };
@@ -307,7 +319,7 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::st
 						meshmeta_guid.m_guid.m_low += 1;
 						AddResource(meshmeta_guid);
 					}
-					else if (discover_soft_dependencies && full_guid.m_typeindex == rp::utility::string_hash("material")) {
+					else if (full_guid.m_typeindex == rp::utility::string_hash("material") || full_guid.m_typeindex == rp::utility::string_hash("audio")) {
 						auto descIt = descIndex ? descIndex->find(full_guid.m_guid) : DescriptorIndex::const_iterator{};
 						std::string descPath;
 						if (descIndex && descIt != descIndex->end()) {
@@ -319,11 +331,26 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::st
 						}
 						if (std::filesystem::exists(descPath)) {
 							try {
-								MaterialDescriptor matDesc = rp::serialization::yaml_serializer::deserialize<MaterialDescriptor>(descPath);
-								for (auto const& [key, texGuid] : matDesc.material.texture_properties) {
-									if (texGuid) {
-										AddResource({ texGuid, rp::utility::string_hash("texture") });
+								MaterialDescriptor matDesc;
+								AudioDescriptor audDesc;
+								switch (full_guid.m_typeindex) {
+								case rp::utility::string_hash("material"):
+									matDesc = rp::serialization::yaml_serializer::deserialize<MaterialDescriptor>(descPath);
+									for (auto const& [key, texGuid] : matDesc.material.texture_properties) {
+										if (texGuid) {
+											AddResource({ texGuid, rp::utility::string_hash("texture") });
+										}
 									}
+									break;
+								case rp::utility::string_hash("audio"):
+									if (audio_paths) {
+										audDesc = rp::serialization::yaml_serializer::deserialize<AudioDescriptor>(descPath);
+										audio_paths->insert(audDesc.base.m_source);
+										total_sz+=std::filesystem::directory_entry(rp::utility::working_path()+audDesc.base.m_source).file_size();
+									}
+									break;
+								default:
+									break;
 								}
 							}
 							catch (...) {}
@@ -340,7 +367,7 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::st
 	return res;
 }
 
-std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResources(std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies) {
+[[deprecated]] std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResources(std::uint64_t* total_sz, std::uint32_t* file_ct, bool discover_soft_dependencies) {
 	std::string proj_dir = std::string(Engine::getWorkingDir().data()); //this is set to project_dir/asset
 	std::string manifest_path = proj_dir + "/scene_manifest.order";
 	std::unordered_set<rp::BasicIndexedGuid> res;
@@ -494,6 +521,7 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 			int local_progress{};
 			std::uint32_t file_ct{};
 			std::unordered_set<rp::BasicIndexedGuid> rsc;
+			std::unordered_set<std::string> audios;
 			DescriptorIndex desc_idx;
 
 			context->m_phase = BuildPhase::DiscoveringResources;
@@ -507,17 +535,18 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 						file_ct++;
 					}
 				}
+				for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
+					if (!cde.is_directory()) {
+						total_bytes += cde.file_size();
+						file_ct++;
+					}
+				}
 			}
 			else {
 				desc_idx = BuildDescriptorIndex(rp::utility::working_path());
-				rsc = DiscoverSceneResourcesWithIndex(std::string(Engine::getWorkingDir().data()), &desc_idx, &total_bytes, &file_ct, true, context.get());
+				rsc = DiscoverSceneResourcesWithIndex(std::string(Engine::getWorkingDir().data()), &desc_idx, &total_bytes, &file_ct, &audios, context.get());
 				context->m_resources_found = static_cast<std::uint32_t>(rsc.size());
-			}
-			for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
-				if (!cde.is_directory()) {
-					total_bytes += cde.file_size();
-					file_ct++;
-				}
+				file_ct += audios.size();
 			}
 			auto [mono_bytes, mono_files] = DiscoverMonoRuntimeFiles();
 			total_bytes += mono_bytes;
@@ -579,22 +608,46 @@ std::future<void> BuildManager::BuildAsync(BuildConfiguration config, std::share
 				rp::serialization::yaml_serializer::serialize(packages, outputDir + "/resource.manifest");
 			}
 			context->m_phase = BuildPhase::CopyingAudio;
-			for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
-				if (context->m_state == BuildState::ABORTED)
-					return;
-				if (!cde.is_directory() && cde.path().extension().string() != ".desc") {
-					std::string dest = outputDir + "/assets/" + rp::utility::get_relative_path(cde.path().string(), rp::utility::working_path());
-					std::filesystem::path parent = std::filesystem::path(dest).parent_path();
-					if (!std::filesystem::exists(parent)) {
-						std::filesystem::create_directories(parent);
+			if (config.resource_cleanup == ResourceCleanUpMode::none) {
+				for (const auto& cde : std::filesystem::recursive_directory_iterator{ rp::utility::working_path() + "/audio" }) {
+					if (context->m_state == BuildState::ABORTED)
+						return;
+					if (!cde.is_directory() && cde.path().extension().string() != ".desc") {
+						std::string dest = outputDir + "/assets/" + rp::utility::get_relative_path(cde.path().string(), rp::utility::working_path());
+						std::filesystem::path parent = std::filesystem::path(dest).parent_path();
+						if (!std::filesystem::exists(parent)) {
+							std::filesystem::create_directories(parent);
+						}
+						std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
+						bytes_copied_mul100 += cde.file_size() * 100;
+						file_copied++;
+						context->m_files_copied = file_copied;
+						int current_progress = int(bytes_copied_mul100 / total_bytes);
+						if (current_progress > local_progress) {
+							context->m_progress100 = local_progress = current_progress;
+						}
 					}
-					std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
-					bytes_copied_mul100 += cde.file_size()*100;
-					file_copied++;
-					context->m_files_copied = file_copied;
-					int current_progress = int(bytes_copied_mul100 / total_bytes);
-					if (current_progress > local_progress) {
-						context->m_progress100 = local_progress = current_progress;
+				}
+			}
+			else {
+				for (std::string const& audio : audios) {
+					if (context->m_state == BuildState::ABORTED)
+						return;
+					std::string const audio_path = rp::utility::working_path()+ "/" + audio;
+					if (std::filesystem::exists(audio_path)) {
+						std::string dest = outputDir + "/assets/" + audio;
+						std::filesystem::path parent = std::filesystem::path(dest).parent_path();
+						if (!std::filesystem::exists(parent)) {
+							std::filesystem::create_directories(parent);
+						}
+						std::filesystem::copy_file(audio_path, dest, std::filesystem::copy_options::overwrite_existing);
+						bytes_copied_mul100 += std::filesystem::directory_entry(audio_path).file_size() * 100;
+						file_copied++;
+						context->m_files_copied = file_copied;
+						int current_progress = int(bytes_copied_mul100 / total_bytes);
+						if (current_progress > local_progress) {
+							context->m_progress100 = local_progress = current_progress;
+						}
 					}
 				}
 			}
@@ -699,7 +752,8 @@ int BuildManager::BuildSync(BuildConfiguration config, std::string projectDir, s
 		DescriptorIndex descIndex = BuildDescriptorIndex(assetsDir);
 		std::uint64_t total_bytes{};
 		std::uint32_t file_ct{};
-		std::unordered_set<rp::BasicIndexedGuid> rsc = DiscoverSceneResourcesWithIndex(projectDir, &descIndex, &total_bytes, &file_ct, true);
+		std::unordered_set<std::string> audios;
+		std::unordered_set<rp::BasicIndexedGuid> rsc = DiscoverSceneResourcesWithIndex(projectDir, &descIndex, &total_bytes, &file_ct, &audios);
 		if (total_bytes == 0 && file_ct == 0) {
 			for (const auto& cde : std::filesystem::recursive_directory_iterator{ importsDir }) {
 				if (!cde.is_directory()) {
@@ -733,17 +787,15 @@ int BuildManager::BuildSync(BuildConfiguration config, std::string projectDir, s
 			std::filesystem::create_directories(outputAssetDir);
 		}
 		auto packages = PackageResources(rsc, outputAssetDir);
-		std::string audioDir = assetsDir + "/audio";
-		if (std::filesystem::exists(audioDir)) {
-			for (auto const& cde : std::filesystem::recursive_directory_iterator{ audioDir }) {
-				if (!cde.is_directory() && cde.path().extension().string() != ".desc") {
-					std::string dest = fullOutputDir + "/assets/audio/" + rp::utility::get_relative_path(cde.path().string(), audioDir);
-					std::filesystem::path parent = std::filesystem::path(dest).parent_path();
-					if (!std::filesystem::exists(parent)) {
-						std::filesystem::create_directories(parent);
-					}
-					std::filesystem::copy_file(cde, dest, std::filesystem::copy_options::overwrite_existing);
+		for (std::string const& audio : audios) {
+			std::string const audio_path = rp::utility::working_path() + "/" + audio;
+			if (std::filesystem::exists(audio_path)) {
+				std::string dest = fullOutputDir + "/assets/" + audio;
+				std::filesystem::path parent = std::filesystem::path(dest).parent_path();
+				if (!std::filesystem::exists(parent)) {
+					std::filesystem::create_directories(parent);
 				}
+				std::filesystem::copy_file(audio_path, dest, std::filesystem::copy_options::overwrite_existing);
 			}
 		}
 		rp::serialization::yaml_serializer::serialize(packages, fullOutputDir + "/resource.manifest");
