@@ -92,9 +92,9 @@ Source: .\REDIST\VC_redist.x64.exe; DestDir: {tmp}; Flags: ignoreversion
 ;   {commondesktop} is your Windows desktop directory.
 [Icons]
 Name: {group}\Tangled Memories; Filename: {app}\Tangled Memories.exe; WorkingDir: {app}; IconFilename: "{app}\Icon.ico"
-Name: {group}\{cm:UninstallProgram,Snabbit's Adventure}; Filename: {uninstallexe}
-Name: {group}\{cm:UninstallProgram,Snabbit's Adventure}; Filename: {uninstallexe};  IconFilename: "{app}\Icon.ico"
-Name: {commonstartmenu}\{cm:UninstallProgram,Snabbit's Adventure}; Filename: {uninstallexe};  IconFilename: "{app}\Icon.ico"
+Name: {group}\{cm:UninstallProgram,Tangled Memories}; Filename: {uninstallexe}
+Name: {group}\{cm:UninstallProgram,Tangled Memories}; Filename: {uninstallexe};  IconFilename: "{app}\Icon.ico"
+Name: {commonstartmenu}\{cm:UninstallProgram,Tangled Memories}; Filename: {uninstallexe};  IconFilename: "{app}\Icon.ico"
 Name: {commondesktop}\Tangled Memories; Filename: {app}\Tangled Memories.exe; Tasks: desktopicon; WorkingDir: {app}; IconFilename: "{app}\Icon.ico"
 
 ; List of items to execute in the installer.
@@ -106,7 +106,7 @@ Name: {commondesktop}\Tangled Memories; Filename: {app}\Tangled Memories.exe; Ta
 ;Filename: {tmp}\vc_redist.x86.exe; Parameters: /q; StatusMsg: Installing Visual C++ 2015 Redistributable...
 Filename: {tmp}\VC_redist.x64.exe; Parameters: /q; StatusMsg: Installing Visual C++ 2022 Redistributable...
 ;Filename: {tmp}\dxwebsetup.exe; Parameters: /q; StatusMsg: Installing DirectX...
-Filename: {app}\Tangled Memories.exe; Description: {cm:LaunchProgram,Snabbit's Adventure}; Flags: nowait postinstall skipifsilent
+Filename: {app}\Tangled Memories.exe; Description: {cm:LaunchProgram,Tangled Memories}; Flags: nowait postinstall skipifsilent
 
 
-;To be able to run and generate the Snabbit's Adventure_Setup.exe you need to download and install "Inno Setup" application, then open this file with the application.
+;To be able to run and generate the Tangled Memories_Setup.exe you need to download and install "Inno Setup" application, then open this file with the application.

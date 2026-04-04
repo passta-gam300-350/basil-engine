@@ -5,6 +5,9 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 #proj
 project(gam300)
 
+#vars
+set(ENABLE_RELEASE_DEB_INFO false)
+
 #cfg c++
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,7 +34,7 @@ import_dependencies()
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-DNOMINMAX) 
 
-if(MSVC)
+if(MSVC AND ENABLE_RELEASE_DEB_INFO)
 add_compile_options($<$<CONFIG:Release>:/Zi>)
 add_link_options($<$<CONFIG:Release>:/DEBUG>)
 add_link_options($<$<CONFIG:Release>:/OPT:REF>)
