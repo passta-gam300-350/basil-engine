@@ -346,7 +346,7 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::st
 									if (audio_paths) {
 										audDesc = rp::serialization::yaml_serializer::deserialize<AudioDescriptor>(descPath);
 										audio_paths->insert(audDesc.base.m_source);
-										total_sz+=std::filesystem::directory_entry(rp::utility::working_path()+audDesc.base.m_source).file_size();
+										*total_sz+=std::filesystem::directory_entry(rp::utility::working_path()+audDesc.base.m_source).file_size();
 									}
 									break;
 								default:
@@ -354,6 +354,30 @@ std::unordered_set<rp::BasicIndexedGuid> DiscoverSceneResourcesWithIndex(std::st
 								}
 							}
 							catch (...) {}
+						}
+						else if (std::string fileph = rp::utility::output_path() + "/" + full_guid.m_guid.to_hex() + ".audio";
+								full_guid.m_typeindex == rp::utility::string_hash("audio") && std::filesystem::exists(fileph)) {
+							std::cout << "  Warning: audio descriptor not found for " << full_guid.m_guid.to_hex() << " but audio import exists, likely a deprecated guid, fallback to extracting audio dependencies from imported audio\n";
+							AudioResourceData audioData = rp::serialization::serializer<"bin">::deserialize<AudioResourceData>(
+								fileph
+							);
+							std::string aph = audioData.sourcePath;
+							std::uint64_t asset_loc = aph.find("assets");
+							std::string raph = (asset_loc != std::string::npos) ? aph.substr(asset_loc + 7) : aph;
+
+							aph = rp::utility::working_path() + "/" + raph;
+							try {
+								if (std::filesystem::exists(aph)) {
+									audio_paths->insert(raph);
+									*total_sz += std::filesystem::directory_entry(std::filesystem::path(aph).lexically_normal()).file_size();
+								}
+								else {
+									std::cout << "  Warning: audio source not found for " << aph << "\n";
+								}
+							}
+							catch (std::exception const& e){
+								std::cout << "   Error: " << e.what() << "\n";
+							}
 						}
 					}
 					AddResource(full_guid);
@@ -789,6 +813,7 @@ int BuildManager::BuildSync(BuildConfiguration config, std::string projectDir, s
 		auto packages = PackageResources(rsc, outputAssetDir);
 		for (std::string const& audio : audios) {
 			std::string const audio_path = rp::utility::working_path() + "/" + audio;
+			std::cout << "   Packing audio " << audio_path << "\n";
 			if (std::filesystem::exists(audio_path)) {
 				std::string dest = fullOutputDir + "/assets/" + audio;
 				std::filesystem::path parent = std::filesystem::path(dest).parent_path();
