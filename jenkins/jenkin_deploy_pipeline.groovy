@@ -146,44 +146,64 @@ pipeline {
 
                 stage('Install Tooling') {
                     steps {
-                        powershell '''
-                            $ErrorActionPreference = 'Stop'
+                        bat '''
+                            echo === DEBUG START ===
 
-                            if (-not (Test-Path "dep/vendor/mono")) {
-                                git clone https://github.com/Silver1713/MONO.git dep/vendor/mono
-                            }
+                            IF NOT EXIST dep\\vendor\\mono (
+                                echo Cloning mono...
+                                git clone https://github.com/Silver1713/MONO.git dep\\vendor\\mono
+                                IF %ERRORLEVEL% NEQ 0 (
+                                    echo Git clone failed!
+                                    exit /b %ERRORLEVEL%
+                                )
+                            ) ELSE (
+                                echo mono already exists
+                            )
 
-                            if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-                                if (Get-Command winget -ErrorAction SilentlyContinue) {
+                            where gh >nul 2>nul
+                            IF %ERRORLEVEL% NEQ 0 (
+                                echo Installing GitHub CLI...
+
+                                where winget >nul 2>nul
+                                IF %ERRORLEVEL% EQU 0 (
                                     winget install --id GitHub.cli -e --accept-source-agreements --accept-package-agreements --silent
-                                }
-                                elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-                                    choco install gh -y --no-progress
-                                }
-                                else {
-                                    throw "GitHub CLI (gh) is not installed and no supported package manager was found."
-                                }
-                            }
-                        '''
+                                ) ELSE (
+                                    where choco >nul 2>nul
+                                    IF %ERRORLEVEL% EQU 0 (
+                                        choco install gh -y --no-progress
+                                    ) ELSE (
+                                        echo No package manager found
+                                        exit /b 1
+                                    )
+                                )
+                            )
+
+                            echo === DEBUG END ===
+                            '''
                     }
                 }
 
                 stage('Fetch Game Project') {
                     steps {
-                        powershell '''
-                            $ErrorActionPreference = 'Stop'
+                        withCredentials([string(
+                            credentialsId: scm.userRemoteConfigs[0].credentialsId,
+                            variable: 'GIT_TOKEN'
+                        )]) {
+                            powershell '''
+                                $ErrorActionPreference = 'Stop'
 
-                            if (Test-Path $env:GAME_REPO_DIR) {
-                                Remove-Item $env:GAME_REPO_DIR -Recurse -Force
-                            }
+                                if (Test-Path $env:GAME_REPO_DIR) {
+                                    Remove-Item $env:GAME_REPO_DIR -Recurse -Force
+                                }
+                                $repoUrl = $env:GAME_REPO_URL -replace "https://", "https://x-access-token:$env:GIT_TOKEN@"
+                                git clone --depth 1 $repoUrl $env:GAME_REPO_DIR
 
-                            git clone --depth 1 $env:GAME_REPO_URL $env:GAME_REPO_DIR
-
-                            $gitDir = Join-Path $env:GAME_REPO_DIR ".git"
-                            if (Test-Path $gitDir) {
-                                Remove-Item $gitDir -Recurse -Force
-                            }
-                        '''
+                                $gitDir = Join-Path $env:GAME_REPO_DIR ".git"
+                                if (Test-Path $gitDir) {
+                                    Remove-Item $gitDir -Recurse -Force
+                                }
+                            '''
+                        }
                     }
                 }
 
