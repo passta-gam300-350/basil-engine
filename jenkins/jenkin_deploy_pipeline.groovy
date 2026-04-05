@@ -170,20 +170,25 @@ pipeline {
 
                 stage('Fetch Game Project') {
                     steps {
-                        powershell '''
-                            $ErrorActionPreference = 'Stop'
+                        withCredentials([string(
+                            credentialsId: scm.userRemoteConfigs[0].credentialsId,
+                            variable: 'GIT_TOKEN'
+                        )]){
+                            powershell '''
+                                $ErrorActionPreference = 'Stop'
 
-                            if (Test-Path $env:GAME_REPO_DIR) {
-                                Remove-Item $env:GAME_REPO_DIR -Recurse -Force
-                            }
+                                if (Test-Path $env:GAME_REPO_DIR) {
+                                    Remove-Item $env:GAME_REPO_DIR -Recurse -Force
+                                }
+                                $repoUrl = $env:GAME_REPO_URL -replace "https://", "https://x-access-token:$env:GIT_TOKEN@"
+                                git clone --depth 1 $repoUrl $env:GAME_REPO_DIR
 
-                            git clone --depth 1 $env:GAME_REPO_URL $env:GAME_REPO_DIR
-
-                            $gitDir = Join-Path $env:GAME_REPO_DIR ".git"
-                            if (Test-Path $gitDir) {
-                                Remove-Item $gitDir -Recurse -Force
-                            }
-                        '''
+                                $gitDir = Join-Path $env:GAME_REPO_DIR ".git"
+                                if (Test-Path $gitDir) {
+                                    Remove-Item $gitDir -Recurse -Force
+                                }
+                            '''
+                        }
                     }
                 }
 
