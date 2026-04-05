@@ -813,7 +813,6 @@ int BuildManager::BuildSync(BuildConfiguration config, std::string projectDir, s
 		auto packages = PackageResources(rsc, outputAssetDir);
 		for (std::string const& audio : audios) {
 			std::string const audio_path = rp::utility::working_path() + "/" + audio;
-			std::cout << "   Packing audio " << audio_path << "\n";
 			if (std::filesystem::exists(audio_path)) {
 				std::string dest = fullOutputDir + "/assets/" + audio;
 				std::filesystem::path parent = std::filesystem::path(dest).parent_path();

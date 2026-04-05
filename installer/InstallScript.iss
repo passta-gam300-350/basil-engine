@@ -13,7 +13,7 @@ AppId={{E181FE59-6BF2-4B71-9EC7-9EFADFB6D516}}
 ; Standard app data stuff
 ; !!NOTE!!: Replace all instances of "GameTest" with your game name.
 AppName=Tangled Memories
-AppVerName=Tangled Memories Version 0.1
+AppVerName=Tangled Memories Version 1.0
 AppPublisher=DigiPen Institute of Technology
 AppPublisherURL=http://www.digipen.edu/
 AppSupportURL=http://www.digipen.edu/
